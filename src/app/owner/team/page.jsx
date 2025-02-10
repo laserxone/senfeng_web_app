@@ -41,7 +41,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   Command,
@@ -102,94 +102,10 @@ import {
 } from "@/components/ui/select";
 import PageContainer from "@/components/page-container";
 import { Heading } from "@/components/ui/heading";
+import { Textarea } from "@/components/ui/textarea";
+import axios from "axios";
 
-const data = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john.doe@example.com",
-    designation: "Software Engineer",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    designation: "Product Manager",
-  },
-  {
-    id: 3,
-    name: "Alice Johnson",
-    email: "alice.johnson@example.com",
-    designation: "UI/UX Designer",
-  },
-  {
-    id: 4,
-    name: "Robert Brown",
-    email: "robert.brown@example.com",
-    designation: "DevOps Engineer",
-  },
-  {
-    id: 5,
-    name: "Emily Davis",
-    email: "emily.davis@example.com",
-    designation: "Marketing Specialist",
-  },
-  {
-    id: 6,
-    name: "Michael Wilson",
-    email: "michael.wilson@example.com",
-    designation: "Data Scientist",
-  },
-  {
-    id: 7,
-    name: "Sarah Miller",
-    email: "sarah.miller@example.com",
-    designation: "HR Manager",
-  },
-  {
-    id: 8,
-    name: "David Martinez",
-    email: "david.martinez@example.com",
-    designation: "Cybersecurity Analyst",
-  },
-  {
-    id: 9,
-    name: "Olivia Anderson",
-    email: "olivia.anderson@example.com",
-    designation: "Business Analyst",
-  },
-  {
-    id: 10,
-    name: "William Taylor",
-    email: "william.taylor@example.com",
-    designation: "Full Stack Developer",
-  },
 
-  {
-    id: 11,
-    name: "Sarah Miller",
-    email: "sarah.miller@example.com",
-    designation: "HR Manager",
-  },
-  {
-    id: 12,
-    name: "David Martinez",
-    email: "david.martinez@example.com",
-    designation: "Cybersecurity Analyst",
-  },
-  {
-    id: 13,
-    name: "Olivia Anderson",
-    email: "olivia.anderson@example.com",
-    designation: "Business Analyst",
-  },
-  {
-    id: 14,
-    name: "William Taylor",
-    email: "william.taylor@example.com",
-    designation: "Full Stack Developer",
-  },
-];
 
 const columns = [
   {
@@ -243,8 +159,6 @@ const columns = [
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const payment = row.original;
-
       return <TeamDetail detail={row.original} />;
     },
   },
@@ -275,25 +189,19 @@ export default function Page() {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const pageTableRef = useRef();
+  const [data, setData] = useState([])
 
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
-  });
+  useEffect(()=>{
+    async function fetchData(){
+      axios.get("/api/users")
+      .then((response)=>{
+        setData(response.data)
+      })
+    }
+    fetchData()
+  },[])
+
+  
 
   function handleClear() {
     if (pageTableRef.current) {
@@ -360,27 +268,45 @@ export default function Page() {
 }
 
 const TeamDetail = ({ detail }) => {
-  const [totalSalary, setTotalSalary] = useState("");
-  const [basicSalary, setBasicSalary] = useState("");
-  const [monthlyTarget, setMonthlyTarget] = useState("");
-  const [note, setNote] = useState("");
-  const [branch, setBranch] = useState(false);
+  const [totalSalary, setTotalSalary] = useState(detail?.total_salary ? Number(detail?.total_salary) : null);
+  const [basicSalary, setBasicSalary] = useState(detail?.basic_salary ? Number(detail?.basic_salary) : null);
+  const [monthlyTarget, setMonthlyTarget] = useState(detail?.monthly_target ? Number(detail?.monthly_target) :  null);
+  const [note, setNote] = useState(detail?.note || '');
+  const [inventory, setInventory] = useState(detail?.inventory_assigned || false)
+  const [branch, setBranch] = useState(detail?.branch_expenses_assigned || false);
+  const [writeAccess, setWriteAccess] = useState(detail?.branch_expenses_write_access || false);
+  const [deleteAccess, setDeleteAccess] = useState(detail?.branch_expenses_delete_access || false);
+
 
   function handleChange(e) {
     const { value, id } = e.target;
     if (id === "basicsalary") {
-      setBasicSalary(value);
+      setBasicSalary(Number(value));
     }
     if (id === "totalsalary") {
-      setTotalSalary(value);
+      setTotalSalary(Number(value));
     }
     if (id === "monthlytarget") {
-      setMonthlyTarget(value);
+      setMonthlyTarget(Number(value));
     }
     if (id == "note") {
       setNote(value);
     }
   }
+
+  function checkStatus() {
+    return (
+      totalSalary !== Number(detail?.total_salary) ||
+      basicSalary !== Number(detail?.basic_salary) ||
+      monthlyTarget !== Number(detail?.monthly_target) ||
+      note !== detail?.note ||
+      inventory !== detail?.inventory_assigned ||
+      branch !== detail?.branch_expenses_assigned ||
+      writeAccess !== detail?.branch_expenses_write_access ||
+      deleteAccess !== detail?.branch_expenses_delete_access
+    );
+  }
+  
 
   return (
     <Sheet>
@@ -402,9 +328,10 @@ const TeamDetail = ({ detail }) => {
               Total Salary
             </Label>
             <Input
+            placeholder="Enter total salary.."
               type="number"
               id="totalsalary"
-              value={totalSalary}
+              value={totalSalary || ""}
               onChange={handleChange}
               className="col-span-3"
             />
@@ -414,9 +341,10 @@ const TeamDetail = ({ detail }) => {
               Basic Salary
             </Label>
             <Input
+            placeholder="Enter basic salary.."
               type="number"
               id="basicsalary"
-              value={basicSalary}
+              value={basicSalary || ""}
               onChange={handleChange}
               className="col-span-3"
             />
@@ -430,9 +358,10 @@ const TeamDetail = ({ detail }) => {
               Monthly Target
             </Label>
             <Input
+            placeholder="Enter monthly target.."
               type="number"
               id="monthlytarget"
-              value={monthlyTarget}
+              value={monthlyTarget || ""}
               onChange={handleChange}
               className="col-span-3"
             />
@@ -441,13 +370,14 @@ const TeamDetail = ({ detail }) => {
             <Label htmlFor="note" className="text-left">
               Note
             </Label>
-            <Input
+            <Textarea 
+              placeholder="Enter additional note.."
               type="text"
               id="note"
               value={note}
               onChange={handleChange}
-              className="col-span-3"
-            />
+              className="col-span-3"/>
+           
           </div>
           <div className="flex items-center space-x-2">
             <label
@@ -456,7 +386,9 @@ const TeamDetail = ({ detail }) => {
             >
               Assign Inventory
             </label>
-            <Checkbox id="inventory" />
+            <Checkbox id="inventory" 
+             checked={inventory}
+             onCheckedChange={(e) => setInventory(e)}/>
           </div>
 
           <div className="flex flex-1 gap-4">
@@ -483,7 +415,9 @@ const TeamDetail = ({ detail }) => {
                   >
                     Write
                   </label>
-                  <Checkbox id="write" />
+                  <Checkbox id="write" 
+                   checked={writeAccess}
+                   onCheckedChange={(e) => setWriteAccess(e)}/>
                 </div>
                 <div className="flex items-center space-x-2">
                   <label
@@ -492,7 +426,9 @@ const TeamDetail = ({ detail }) => {
                   >
                     Delete
                   </label>
-                  <Checkbox id="delete" />
+                  <Checkbox id="delete" 
+                   checked={deleteAccess}
+                   onCheckedChange={(e) => setDeleteAccess(e)}/>
                 </div>
               </>
             )}
@@ -500,7 +436,7 @@ const TeamDetail = ({ detail }) => {
         </div>
         <SheetFooter>
           <SheetClose asChild>
-            <Button type="submit">Save changes</Button>
+            <Button onClick={()=>{}} disabled={!checkStatus()}>Save changes</Button>
           </SheetClose>
         </SheetFooter>
       </SheetContent>

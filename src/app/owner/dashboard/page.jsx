@@ -1,11 +1,53 @@
+"use client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { AreaStats } from "@/components/charts/area_stats/page";
 import { BarStats } from "@/components/charts/bar_stats/page";
 import { Stats } from "@/components/charts/pie_stats/page";
 import { Sale } from "@/components/charts/sales/page";
+import { MapProvider } from "@/providers/map-provider";
+import { CustomerMapComponent } from "@/components/customerMapComponent";
+import axios from "axios";
+import { PakCities } from "@/constants/data";
 
 export default function Page() {
+  const [customers, setCustomers] = useState([]);
+
+  useEffect(() => {
+    fetchCustomerList();
+  }, []);
+
+  async function fetchCustomerList() {
+    try {
+      let list1 = [];
+      axios.get("/api/customer").then((response) => {
+        const customerList = response.data;
+        const newArray = mergeArrays(customerList, PakCities);
+        setCustomers(newArray);
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  function mergeArrays(array1, array2) {
+    return array1
+      .map((obj1) => {
+        const matchingCity = array2.find((obj2) => obj2.name === obj1.location);
+
+        if (matchingCity) {
+          return {
+            ...obj1,
+            latitude: matchingCity.lat,
+            longitude: matchingCity.lng,
+          };
+        } else {
+          return null;
+        }
+      })
+      .filter(Boolean);
+  }
+
   return (
     <div className="flex flex-1 flex-col space-y-2">
       <div className="flex items-center justify-between space-y-2">
@@ -118,6 +160,14 @@ export default function Page() {
         </div>
         <div className="col-span-4">{<AreaStats />}</div>
         <div className="col-span-4 md:col-span-3">{<Stats />}</div>
+      </div>
+
+      <div className="mb-5">
+        {customers.length > 0 && (
+          <MapProvider>
+            <CustomerMapComponent data={customers} />
+          </MapProvider>
+        )}
       </div>
     </div>
   );

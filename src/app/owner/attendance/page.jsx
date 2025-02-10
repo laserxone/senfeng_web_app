@@ -325,7 +325,8 @@ export default function Page() {
       >
         <div className=" flex justify-between">
           <div className="flex gap-4">
-            <Select onValueChange={setValue} value={value}>
+            <Select onValueChange={(val)=>{
+              setValue(val)}} value={value}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Select filter..." />
               </SelectTrigger>

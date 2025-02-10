@@ -1,7 +1,7 @@
 "use client";
 
 //Map component Component from library
-import { GoogleMap } from "@react-google-maps/api";
+import { GoogleMap, Marker } from "@react-google-maps/api";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useState } from "react";
 
@@ -51,7 +51,9 @@ const MapComponent = () => {
         center={defaultMapCenter}
         zoom={defaultMapZoom}
         options={defaultMapOptions}
-      />
+      >
+        <Marker />
+      </GoogleMap>
     );
   }, [defaultMapOptions]);
 

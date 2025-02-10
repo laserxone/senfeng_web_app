@@ -26,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 
 import {
@@ -72,44 +72,11 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import Dropzone from "@/components/dropzone";
-
-const data = [
-  {
-    id: 1,
-    title: "Groceries",
-    amount: 50.75,
-    description: "Weekly grocery shopping",
-    date: "2024-02-01",
-  },
-  {
-    id: 2,
-    title: "Electricity Bill",
-    amount: 120.0,
-    description: "Monthly electricity bill payment",
-    date: "2024-02-02",
-  },
-  {
-    id: 3,
-    title: "Internet Subscription",
-    amount: 60.99,
-    description: "High-speed internet plan",
-    date: "2024-02-03",
-  },
-  {
-    id: 4,
-    title: "Dinner Out",
-    amount: 45.5,
-    description: "Dinner at a local restaurant",
-    date: "2024-02-04",
-  },
-  {
-    id: 5,
-    title: "Gym Membership",
-    amount: 30.0,
-    description: "Monthly gym subscription",
-    date: "2024-02-05",
-  },
-];
+import axios from "axios";
+import { Controlled as ControlledZoom } from "react-medium-image-zoom";
+import "react-medium-image-zoom/dist/styles.css";
+import exportToExcel from "@/lib/exportToExcel";
+import { Title } from "@radix-ui/react-dialog";
 
 export default function Page() {
   const [sorting, setSorting] = useState([]);
@@ -118,6 +85,45 @@ export default function Page() {
   const [rowSelection, setRowSelection] = useState({});
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
+  const [data, setData] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [filterValues, setFilterValues] = useState(null);
+  const [imageURL, setImageURL] = useState(null);
+  const [visible, setVisible] = useState(false);
+  const [allUsers, setAllUsers] = useState([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      axios
+        .get("/api/reimbursement")
+        .then((response) => {
+          console.log(response.data);
+          setData(response.data);
+          const uniqueUsersMap = new Map();
+
+          response.data.forEach((item) => {
+            if (!uniqueUsersMap.has(item.submitted_by)) {
+              uniqueUsersMap.set(item.submitted_by, {
+                value: item.submitted_by,
+                label: item.submitted_by_name,
+              });
+            }
+          });
+
+          const apiDataUsers = Array.from(uniqueUsersMap.values());
+          setUsers(apiDataUsers);
+        })
+        .catch((e) => {
+          console.log(e);
+        });
+
+      axios.get("/api/users").then((response) => {
+        setAllUsers(response.data);
+      });
+    }
+
+    fetchData();
+  }, []);
 
   const columns = [
     {
@@ -180,13 +186,19 @@ export default function Page() {
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("date")}</div>,
+      cell: ({ row }) => (
+        <div>
+          {row.getValue("date")
+            ? new Date(row.getValue("date")).toLocaleDateString("en-GB")
+            : ""}
+        </div>
+      ),
     },
 
     {
       id: "actions",
       cell: ({ row }) => {
-        const payment = row.original;
+        const currentItem = row.original;
 
         return (
           <DropdownMenu>
@@ -198,7 +210,11 @@ export default function Page() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(payment.id)}
+                className="hover:cursor-pointer"
+                onClick={() => {
+                  setImageURL(currentItem);
+                  setVisible(true);
+                }}
               >
                 View
               </DropdownMenuItem>
@@ -213,37 +229,38 @@ export default function Page() {
     },
   ];
 
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
-  });
-
-  const handleDrop = async (type, file) => {
-    if (file) {
-      console.log(file);
-      console.log(type);
+  function handleDownload() {
+    const headers = ["Title", "Description", "Amount", "Date", "Submitted By"];
+    let finalData = [];
+    if (filterValues) {
+      data.filter((item) => {
+        const itemDate = new Date(item.date);
+        if (
+          item.submitted_by == filterValues.user &&
+          itemDate >= filterValues.start &&
+          itemDate <= filterValues.end
+        ) {
+          finalData.push(item);
+        }
+      });
+    } else {
+      finalData = [...data];
     }
-  };
+    const formattedData = finalData.map((item) => [
+      item.title,
+      item.description,
+      item.amount,
+      new Date(item.date).toLocaleDateString("en-GB"),
+      item.submitted_by_name,
+    ]);
+    exportToExcel(headers, formattedData, "Reimbursement.xlsx");
+  }
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-center justify-between">
         <Heading title="Reimbursement" description="Manage reimbursements" />
-        <AddReimbursementDialog />
+        <AddReimbursementDialog users={allUsers} />
       </div>
 
       <ConfimationDialog
@@ -255,8 +272,34 @@ export default function Page() {
       />
       <PageTable
         columns={columns}
-        data={data}
-        totalItems={data.length}
+        data={
+          filterValues
+            ? data.filter((item) => {
+                const itemDate = new Date(item.date);
+                if (
+                  item.submitted_by == filterValues.user &&
+                  itemDate >= filterValues.start &&
+                  itemDate <= filterValues.end
+                ) {
+                  return item;
+                }
+              })
+            : data
+        }
+        totalItems={
+          filterValues
+            ? data.filter((item) => {
+                const itemDate = new Date(item.date);
+                if (
+                  item.submitted_by == filterValues.user &&
+                  itemDate >= filterValues.start &&
+                  itemDate <= filterValues.end
+                ) {
+                  return item;
+                }
+              }).length
+            : data.length
+        }
         searchItem={"title"}
         searchName={"Search bill..."}
         // filter={true}
@@ -269,52 +312,101 @@ export default function Page() {
         >
           <Filter />
         </Button>
-        <Button>Download</Button>
+        {filterValues && (
+          <Button
+            variant="destructive"
+            onClick={() => {
+              setFilterValues(null);
+            }}
+          >
+            Clear
+          </Button>
+        )}
+        <Button onClick={handleDownload}>Download</Button>
       </PageTable>
       <FilterSheet
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
+        users={users}
+        onReturn={(val) => {
+          setFilterValues(val);
+        }}
+      />
+      <ImageSheet
+        visible={visible}
+        onClose={() => setVisible(false)}
+        img={imageURL?.image || null}
+        description={imageURL?.description || null}
+        submittedBy={imageURL?.submitted_by_name || null}
       />
     </div>
   );
 }
 
-const FilterSheet = ({ visible, onClose }) => {
-  const [startDate, setStartDate] = useState();
-  const [endDate, setEndDate] = useState();
-  const [user, setUser] = useState();
-  const users = [
-    {
-      label: "Abdul Rehman",
-      value: "Abdul Rehman",
-    },
-    {
-      label: "Junaid Abid",
-      value: "Junaid Abid",
-    },
-    {
-      label: "Adeel Ahsan",
-      value: "Adeel Ahsan",
-    },
-  ];
+const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
+  const [imageOpen, setImageOpen] = useState(false);
 
+  function handleClose() {
+    if (!imageOpen) {
+      onClose();
+    }
+  }
+
+  const [isZoomed, setIsZoomed] = useState(false);
+
+  const handleZoomChange = useCallback((shouldZoom) => {
+    setIsZoomed(shouldZoom);
+    if (!shouldZoom) {
+      setImageOpen(false);
+    }
+  }, []);
+
+  return (
+    <Sheet open={visible} onOpenChange={handleClose}>
+      <SheetContent>
+        <SheetHeader className="mb-4">
+          <SheetTitle>Bill detail</SheetTitle>
+
+          <strong>Submitted by</strong>
+          <Label>{submittedBy}</Label>
+
+          <strong>Description</strong>
+          <Label>{description}</Label>
+
+          <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
+            <img
+              onClick={() => setImageOpen(true)}
+              className="hover:cursor-pointer"
+              src={img}
+              alt="reimbursement-img"
+              style={{ flex: 1 }}
+            />
+          </ControlledZoom>
+        </SheetHeader>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+const FilterSheet = ({ visible, onClose, users, onReturn }) => {
   const formSchema = z.object({
     start: z.date({ required_error: "Start date is required." }),
     end: z.date({ required_error: "End date is required." }),
-    user: z.string().min(1, { message: "User is required." }),
+    user: z.number({ required_error: "User is required." }),
   });
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      start: null,
-      end: null,
-      user: "",
+      start: undefined,
+      end: undefined,
+      user: null,
     },
   });
 
   function onSubmit(values) {
-    console.log("Form Data:", values);
+    onReturn(values);
+    onClose();
   }
 
   return (
@@ -335,20 +427,18 @@ const FilterSheet = ({ visible, onClose }) => {
                   <FormLabel>Select User</FormLabel>
                   <FormControl>
                     <Select
-                      value={field.value}
-                      onValueChange={(value) => field.onChange(value)}
+                      onValueChange={(val) => field.onChange(Number(val))}
+                      value={field.value || ""}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue />
+                        <SelectValue placeholder="Select user..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectGroup>
-                          {users.map((city) => (
-                            <SelectItem key={city.value} value={city.value}>
-                              {city.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
+                        {users.map((user) => (
+                          <SelectItem key={user.value} value={user.value}>
+                            {user.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -394,94 +484,26 @@ const FilterSheet = ({ visible, onClose }) => {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="end"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Upload Image</FormLabel>
-                  <FormControl>
-                    <Dropzone
-                    value={field.value}
-                      onDrop={(file) => field.onChange(file)}
-                      title={"Click to upload"}
-                      subheading={"or drag and drop"}
-                      description={"PNG or JPG"}
-                      drag={"Drop the files here..."}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <Button className="w-full" type="submit">
-              Submit
+              Filter
             </Button>
           </form>
         </Form>
-
-        {/* <div className="flex flex-col gap-4 py-4 w-full">
-          <div className="grid grid-cols-4 items-center gap-4 w-full">
-            <Label htmlFor="monthlysalary" className="text-left">
-              Select User
-            </Label>
-            <Select onValueChange={setUser} value={user}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select user..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {users.map((eachUser) => (
-                    <SelectItem
-                      key={eachUser.value}
-                      value={eachUser.value}
-                      onClick={() => {
-                        setValue(
-                          eachUser.value === value ? "" : framework.value
-                        );
-                      }}
-                    >
-                      {eachUser.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="totalsalary" className="text-left">
-              Start Date
-            </Label>
-            <AppCalendar date={startDate} onChange={setStartDate} />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="monthlysalary" className="text-left">
-              End Date
-            </Label>
-            <AppCalendar date={endDate} onChange={setEndDate} />
-          </div>
-        </div> */}
-        {/* <SheetFooter>
-          <SheetClose disabled={!startDate || !endDate} asChild>
-            <Button onClick={() => console.log("press")}>Filter</Button>
-          </SheetClose>
-        </SheetFooter> */}
       </SheetContent>
     </Sheet>
   );
 };
 
-const AddReimbursementDialog = () => {
+const AddReimbursementDialog = ({ users }) => {
   const formSchema = z.object({
     title: z.string().min(1, { message: "Title is required." }),
     description: z.string().min(1, { message: "Description is required." }),
     amount: z
       .number()
       .min(0.01, { message: "Amount must be greater than zero." }),
-    date: z.date({ required_error: "Start date is required." }),
-    user: z.string().min(1, { message: "User selection is required." }),
+    date: z.date({ required_error: "Date is required." }),
+    user: z.number({ required_error: "User is required." }),
+    image: z.string().min(1, { message: "Image is required." }),
   });
 
   const form = useForm({
@@ -491,19 +513,14 @@ const AddReimbursementDialog = () => {
       description: "",
       amount: "",
       date: "",
-      user: "",
+      user: null,
+      image: "",
     },
   });
 
   function onSubmit(values) {
     console.log("Form Data:", values);
   }
-
-  const users = [
-    { label: "John Doe", value: "john_doe" },
-    { label: "Jane Smith", value: "jane_smith" },
-    { label: "Alice Johnson", value: "alice_johnson" },
-  ];
 
   return (
     <Dialog>
@@ -514,126 +531,144 @@ const AddReimbursementDialog = () => {
         <DialogHeader>
           <DialogTitle>Add New Reimbursement</DialogTitle>
         </DialogHeader>
-        <div>
-          <ScrollArea className="max-h-[80vh] px-2">
-            <div className="px-2">
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
-                >
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Title</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter title" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Enter description"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+        <ScrollArea className="max-h-[80vh] px-2">
+          <div className="px-2">
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter title" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="amount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Amount</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="Enter amount"
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Enter description" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Amount</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="Enter amount"
+                          value={field.value}
+                          onChange={(e) => {
+                            if (!isNaN(e.target.value)) {
+                              field.onChange(Number(e.target.value));
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date</FormLabel>
+                      <FormControl>
+                        <AppCalendar
+                          date={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="user"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>User</FormLabel>
+                      <FormControl>
+                        <Select
+                          value={field?.value || ""}
+                          onValueChange={(val) => field.onChange(Number(val))}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select user" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              {users.map((user) => (
+                                <SelectItem key={user.id} value={user.id}>
+                                  {user.name}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="image"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Image</FormLabel>
+                      <FormControl>
+                        <div className="flex flex-1 items-center justify-center">
+                          <Dropzone
                             value={field.value}
-                            onChange={(e) => {
-                              if (!isNaN(e.target.value)) {
-                                field.onChange(Number(e.target.value));
-                              }
+                            onDrop={(file) => {
+                              field.onChange(file);
                             }}
+                            title={"Click to upload"}
+                            subheading={"or drag and drop"}
+                            description={"PNG or JPG"}
+                            drag={"Drop the files here..."}
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Date</FormLabel>
-                        <FormControl>
-                          <AppCalendar
-                            date={field.value}
-                            onChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="user"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>User</FormLabel>
-                        <FormControl>
-                          <Select
-                            value={field.value}
-                            onValueChange={field.onChange}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select user" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectGroup>
-                                {users.map((user) => (
-                                  <SelectItem
-                                    key={user.value}
-                                    value={user.value}
-                                  >
-                                    {user.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectGroup>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button className="w-full" type="submit">
-                    Submit
-                  </Button>
-                </form>
-              </Form>
-            </div>
-          </ScrollArea>
-        </div>
+                <Button className="w-full" type="submit">
+                  Submit
+                </Button>
+              </form>
+            </Form>
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

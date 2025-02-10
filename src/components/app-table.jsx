@@ -123,6 +123,7 @@ const PageTable = ({
   searchName,
   ref,
   tableHeader,
+  disableInput = false
 }) => {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
@@ -197,6 +198,7 @@ const PageTable = ({
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex w-full flex-wrap gap-4 items-center">
         {
+          !disableInput &&
           <Input
             ref={inputRef}
             placeholder={`${searchName}`}
@@ -244,7 +246,7 @@ const PageTable = ({
                       data-state={row.getIsSelected() && "selected"}
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
+                        <TableCell className="text-[13px]" key={cell.id}>
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext()

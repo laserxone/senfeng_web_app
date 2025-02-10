@@ -41,7 +41,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   Command,
@@ -104,6 +104,10 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Heading } from "@/components/ui/heading";
+import { useRouter } from "next/navigation";
+import PageContainer from "@/components/page-container";
+import axios from "axios";
+import Link from "next/link";
 
 const data = [
   {
@@ -155,8 +159,8 @@ const data = [
 
 const tableHeader = [
   {
-    value: "Company",
-    label: "Company",
+    value: "Name",
+    label: "Name",
   },
   {
     value: "Owner",
@@ -178,6 +182,10 @@ const tableHeader = [
     value: "Machines",
     label: "Machines",
   },
+  {
+    value : "created_at",
+    label : "Added"
+  }
 ];
 
 export default function Page() {
@@ -192,10 +200,26 @@ export default function Page() {
   const pageTableRef = useRef();
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
+  const router = useRouter();
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      axios.get("/api/customer").then((response) => {
+        const apiData = response.data
+        const temp = apiData.map((item)=>{
+          return ({...item, machines : item.machines.join(", ")})
+        })
+        setData([...temp]);
+      });
+    }
+
+    fetchData();
+  }, []);
 
   const columns = [
     {
-      accessorKey: "company",
+      accessorKey: "name",
       header: ({ column }) => {
         return (
           <Button
@@ -207,7 +231,7 @@ export default function Page() {
           </Button>
         );
       },
-      cell: ({ row }) => <div className="ml-2">{row.getValue("company")}</div>,
+      cell: ({ row }) => <div className="ml-2">{row.getValue("name")}</div>,
     },
     {
       accessorKey: "owner",
@@ -290,9 +314,25 @@ export default function Page() {
     },
 
     {
+      accessorKey: "created_at",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Added
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{new Date(row.getValue("created_at")).toLocaleDateString("en-GB")}</div>,
+    },
+
+    {
       id: "actions",
       cell: ({ row }) => {
-        const payment = row.original;
+        const currentItem = row.original;
 
         return (
           <DropdownMenu>
@@ -303,13 +343,19 @@ export default function Page() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <Link   href={`customer/detail?id=${currentItem.id}`}>
               <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(payment.id)}
+            
+                className="hover:cursor-pointer"
+             
               >
                 View
               </DropdownMenuItem>
-
-              <DropdownMenuItem onClick={() => setShowConfirmation(true)}>
+              </Link>
+              <DropdownMenuItem
+                className="hover:cursor-pointer"
+                onClick={() => setShowConfirmation(true)}
+              >
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -327,72 +373,74 @@ export default function Page() {
   }
 
   return (
-    <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-center justify-between">
-        <Heading title="Customers" description="Manage your customers" />
-        <AddCustomerDialog />
-      </div>
-
-      <PageTable
-        ref={pageTableRef}
-        columns={columns}
-        data={data}
-        totalItems={data.length}
-        searchItem={value.toLowerCase()}
-        searchName={value ? `Search ${value}...` : "Select filter first..."}
-        tableHeader={tableHeader}
-        // filter={true}
-        // onFilterClick={() => setFilterVisible(true)}
-      >
-        <div className=" flex justify-between">
-          <div className="flex gap-4">
-            <Select onValueChange={setValue} value={value}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select filter..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {tableHeader.map((framework) => (
-                    <SelectItem
-                      key={framework.value}
-                      value={framework.value}
-                      onClick={() => {
-                        setValue(
-                          framework.value === value ? "" : framework.value
-                        );
-                      }}
-                    >
-                      {framework.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-
-            <Button
-              onClick={() => {
-                handleClear();
-              }}
-            >
-              Clear
-            </Button>
-          </div>
+    <PageContainer scrollable={false}>
+      <div className="flex flex-1 flex-col space-y-4">
+        <div className="flex items-center justify-between">
+          <Heading title="Customers" description="Manage your customers" />
+          <AddCustomerDialog />
         </div>
-      </PageTable>
 
-      <FilterSheet
-        visible={filterVisible}
-        onClose={() => setFilterVisible(false)}
-      />
+        <PageTable
+          ref={pageTableRef}
+          columns={columns}
+          data={data}
+          totalItems={data.length}
+          searchItem={value.toLowerCase()}
+          searchName={value ? `Search ${value}...` : "Select filter first..."}
+          tableHeader={tableHeader}
+          // filter={true}
+          // onFilterClick={() => setFilterVisible(true)}
+        >
+          <div className=" flex justify-between">
+            <div className="flex gap-4">
+              <Select onValueChange={setValue} value={value}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Select filter..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {tableHeader.map((framework) => (
+                      <SelectItem
+                        key={framework.value}
+                        value={framework.value}
+                        onClick={() => {
+                          setValue(
+                            framework.value === value ? "" : framework.value
+                          );
+                        }}
+                      >
+                        {framework.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
 
-      <ConfimationDialog
-        open={showConfirmation}
-        title={"Are you sure you want to delete?"}
-        description={"Your action will remove branch expense from the system"}
-        onPressYes={() => console.log("press yes")}
-        onPressCancel={() => setShowConfirmation(false)}
-      />
-    </div>
+              <Button
+                onClick={() => {
+                  handleClear();
+                }}
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+        </PageTable>
+
+        <FilterSheet
+          visible={filterVisible}
+          onClose={() => setFilterVisible(false)}
+        />
+
+        <ConfimationDialog
+          open={showConfirmation}
+          title={"Are you sure you want to delete?"}
+          description={"Your action will remove branch expense from the system"}
+          onPressYes={() => console.log("press yes")}
+          onPressCancel={() => setShowConfirmation(false)}
+        />
+      </div>
+    </PageContainer>
   );
 }
 
@@ -480,7 +528,6 @@ const AddCustomerDialog = () => {
           onClick={() => {
             form.reset();
           }}
-          
         >
           Add Customer
         </Button>
@@ -563,10 +610,9 @@ const AddCustomerDialog = () => {
                           <Select
                             value={field.value}
                             onValueChange={(value) => field.onChange(value)}
-                           
                           >
-                            <SelectTrigger className="w-full"  >
-                              <SelectValue placeholder="Select city"/>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select city" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectGroup>
@@ -597,10 +643,9 @@ const AddCustomerDialog = () => {
                           <Select
                             value={field.value}
                             onValueChange={(value) => field.onChange(value)}
-                           
                           >
-                            <SelectTrigger className="w-full"  >
-                              <SelectValue placeholder="Select industry"/>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select industry" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectGroup>
