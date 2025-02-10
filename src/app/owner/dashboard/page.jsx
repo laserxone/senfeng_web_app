@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import React, { useEffect, useState } from "react";
 import { AreaStats } from "@/components/charts/area_stats/page";
@@ -9,13 +9,28 @@ import { MapProvider } from "@/providers/map-provider";
 import { CustomerMapComponent } from "@/components/customerMapComponent";
 import axios from "axios";
 import { PakCities } from "@/constants/data";
+import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Page() {
   const [customers, setCustomers] = useState([]);
+  const [data, setData] = useState();
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchCustomerList();
+    fetchDashboardData();
   }, []);
+
+  async function fetchDashboardData() {
+    axios.get("/api/dashboard").then((response) => {
+      setData(response.data);
+    }).catch((e)=>
+    console.log(e))
+    .finally(()=>{
+      setLoading(false)
+    })
+  }
 
   async function fetchCustomerList() {
     try {
@@ -58,7 +73,9 @@ export default function Page() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total Payments This Month
+            </CardTitle>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -73,15 +90,70 @@ export default function Page() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
-            <p className="text-xs text-muted-foreground">
-              +20.1% from last month
-            </p>
+            {loading ? (
+              <Skeleton className="h-6 w-32" />
+            ) : (
+              <div className="text-2xl font-bold">
+                {data?.total_payment_this_month
+                  ? new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "PKR",
+                    }).format(data?.total_payment_this_month || 0)
+                  : ""}
+              </div>
+            )}
+            {loading ? (
+              <Skeleton className="h-4 w-24" />
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                {data?.payment_change_percentage}% from last month
+              </p>
+            )}
           </CardContent>
         </Card>
+  
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Employee</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Machines Sold This Month
+            </CardTitle>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              className="h-4 w-4 text-muted-foreground"
+            >
+              <rect width="20" height="14" x="2" y="5" rx="2" />
+              <path d="M2 10h20" />
+            </svg>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-6 w-24" />
+            ) : (
+              <div className="text-2xl font-bold">
+                {data?.total_machines_sold_this_month}
+              </div>
+            )}
+            {loading ? (
+              <Skeleton className="h-4 w-24" />
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                {data?.machines_sold_change_percentage}% from last month
+              </p>
+            )}
+          </CardContent>
+        </Card>
+  
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              New Customers This Month
+            </CardTitle>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -98,39 +170,28 @@ export default function Page() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+2350</div>
-            <p className="text-xs text-muted-foreground">
-              +180.1% from last month
-            </p>
+            {loading ? (
+              <Skeleton className="h-6 w-24" />
+            ) : (
+              <div className="text-2xl font-bold">
+                {data?.total_new_customers_this_month}
+              </div>
+            )}
+            {loading ? (
+              <Skeleton className="h-4 w-24" />
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                {data?.new_customer_change_percentage}% from last month
+              </p>
+            )}
           </CardContent>
         </Card>
+  
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sales</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <rect width="20" height="14" x="2" y="5" rx="2" />
-              <path d="M2 10h20" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">+12,234</div>
-            <p className="text-xs text-muted-foreground">
-              +19% from last month
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Now</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Low Stock Items
+            </CardTitle>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -145,28 +206,59 @@ export default function Page() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+573</div>
-            <p className="text-xs text-muted-foreground">
-              +201 since last hour
-            </p>
+            {loading ? (
+              <Skeleton className="h-6 w-24" />
+            ) : (
+              <Link href={"/owner/inventory"}>
+                <div className="text-2xl font-bold hover:underline cursor-pointer">
+                  {data?.total_low_stock}
+                </div>
+              </Link>
+            )}
           </CardContent>
         </Card>
       </div>
+  
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <div className="col-span-4">{<BarStats />}</div>
-        <div className="col-span-4 md:col-span-3">
-          {/* sales arallel routes */}
-          {<Sale />}
+        <div className="col-span-4">
+          {loading ? (
+            <Skeleton className="h-64" />
+          ) : (
+            <BarStats data={data?.machines_sold_last_3_months || []} />
+          )}
         </div>
-        <div className="col-span-4">{<AreaStats />}</div>
-        <div className="col-span-4 md:col-span-3">{<Stats />}</div>
+        <div className="col-span-4 md:col-span-3">
+          {loading ? (
+            <Skeleton className="h-64" />
+          ) : (
+            <Sale data={data?.recent_sales || []} />
+          )}
+        </div>
+        <div className="col-span-4">
+          {loading ? (
+            <Skeleton className="h-64" />
+          ) : (
+            <AreaStats data={data?.feedback_status_last_6_months || []} />
+          )}
+        </div>
+        <div className="col-span-4 md:col-span-3">
+          {loading ? (
+            <Skeleton className="h-64" />
+          ) : (
+            <Stats industryData={data?.industry_count || []} />
+          )}
+        </div>
       </div>
-
+  
       <div className="mb-5">
-        {customers.length > 0 && (
-          <MapProvider>
-            <CustomerMapComponent data={customers} />
-          </MapProvider>
+        {loading ? (
+          <Skeleton className="h-96" />
+        ) : (
+          customers.length > 0 && (
+            <MapProvider>
+              <CustomerMapComponent data={customers} />
+            </MapProvider>
+          )
         )}
       </div>
     </div>

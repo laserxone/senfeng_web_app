@@ -182,7 +182,6 @@ const PageTable = ({
       return {
         handleClear() {
           tableHeader.map((item) => {
-            console.log(item.value);
             table.getColumn(item.value?.toLowerCase())?.setFilterValue("");
           });
         },

@@ -13,55 +13,66 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import {
-  ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent
 } from '@/components/ui/chart';
-const chartData = [
-  { browser: 'chrome', visitors: 275, fill: 'var(--color-chrome)' },
-  { browser: 'safari', visitors: 200, fill: 'var(--color-safari)' },
-  { browser: 'firefox', visitors: 287, fill: 'var(--color-firefox)' },
-  { browser: 'edge', visitors: 173, fill: 'var(--color-edge)' },
-  { browser: 'other', visitors: 190, fill: 'var(--color-other)' }
-];
 
-const chartConfig = {
-  visitors: {
-    label: 'Visitors'
-  },
-  chrome: {
-    label: 'Chrome',
-    color: 'hsl(var(--chart-1))'
-  },
-  safari: {
-    label: 'Safari',
-    color: 'hsl(var(--chart-2))'
-  },
-  firefox: {
-    label: 'Firefox',
-    color: 'hsl(var(--chart-3))'
-  },
-  edge: {
-    label: 'Edge',
-    color: 'hsl(var(--chart-4))'
-  },
-  other: {
-    label: 'Other',
-    color: 'hsl(var(--chart-5))'
-  }
-} 
 
-export function Stats() {
-  const totalVisitors = React.useMemo(() => {
-    return chartData.reduce((acc, curr) => acc + curr.visitors, 0);
-  }, []);
+export function Stats({industryData}) {
+  const chartConfig = React.useMemo(() => {
+    const config = {
+      customer_count: {
+        label: "Customers",
+      },
+    };
 
+    const colors = [
+      "hsl(var(--chart-1))",
+      "hsl(var(--chart-2))",
+      "hsl(var(--chart-3))",
+      "hsl(var(--chart-4))",
+      "hsl(var(--chart-5))",
+      "hsl(var(--chart-6))",
+      "hsl(var(--chart-7))",
+      "hsl(var(--chart-8))",
+      
+    ];
+    let i = 0
+    industryData.sort((a,b)=>Number(b.customer_count) - Number(a.customer_count)).forEach((industry, index) => {
+      const key = industry.industry.toLowerCase().replace(/\s+/g, "");
+
+      config[key] = {
+        label: industry.industry,
+        color: colors[i],
+      };
+      i++
+      if(i === 9){
+        i = 0
+      }
+    });
+
+    return config;
+  }, [industryData]);
+
+  // Step 2: Transform Data to Match Normalized Keys
+  const processedData = React.useMemo(() => {
+    return industryData.map((industry) => ({
+      industry: industry.industry.toLowerCase().replace(/\s+/g, ""), // Normalized key
+      customer_count: Number(industry.customer_count),
+      fill : `var(--color-${industry.industry.toLowerCase().replace(/\s+/g, "")})`
+    }));
+  }, [industryData]);
+
+  // Step 3: Calculate Total Customers
+  const totalCustomers = React.useMemo(() => {
+    return processedData.reduce((acc, curr) => acc + curr.customer_count, 0);
+  }, [processedData]);
   return (
     <Card className='flex flex-col'>
       <CardHeader className='items-center pb-0'>
-        <CardTitle>Pie Chart - Donut with Text</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+        <CardTitle>Working Industries</CardTitle>
+        {/* <CardDescription>January - June 2024</CardDescription> */}
       </CardHeader>
       <CardContent className='flex-1 pb-0'>
         <ChartContainer
@@ -74,9 +85,9 @@ export function Stats() {
               content={<ChartTooltipContent hideLabel />}
             />
             <Pie
-              data={chartData}
-              dataKey='visitors'
-              nameKey='browser'
+              data={processedData}
+              dataKey='customer_count'
+              nameKey='industry'
               innerRadius={60}
               strokeWidth={5}
             >
@@ -95,14 +106,14 @@ export function Stats() {
                           y={viewBox.cy}
                           className='fill-foreground text-3xl font-bold'
                         >
-                          {totalVisitors.toLocaleString()}
+                          {totalCustomers.toLocaleString()}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) + 24}
                           className='fill-muted-foreground'
                         >
-                          Visitors
+                          Customers
                         </tspan>
                       </text>
                     );
@@ -114,11 +125,11 @@ export function Stats() {
         </ChartContainer>
       </CardContent>
       <CardFooter className='flex-col gap-2 text-sm'>
-        <div className='flex items-center gap-2 font-medium leading-none'>
-          Trending up by 5.2% this month <TrendingUp className='h-4 w-4' />
-        </div>
+        {/* <div className='flex items-center gap-2 font-medium leading-none'>
+          Showing total industries you have worked with so far
+        </div> */}
         <div className='leading-none text-muted-foreground'>
-          Showing total visitors for the last 6 months
+        Showing total industries you have worked with so far
         </div>
       </CardFooter>
     </Card>

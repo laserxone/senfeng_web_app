@@ -22,6 +22,7 @@ export default function Page() {
   const [users, setUsers] = useState([]);
   const [reimbursement, setReimbursement] = useState([]);
   const [expenses, setExpenses] = useState([]);
+  const [feedback, setFeedback] = useState([]);
   // async function getData() {
   //   await getDocs(collection(db, "Customer")).then((snapshot) => {
   //     let list = [];
@@ -169,29 +170,46 @@ export default function Page() {
   //     });
   // }
 
-  function saveExpenses() {
-    axios
-      .post("/api/expenses", { data: expenses })
-      .then(() => {
-        console.log("done");
-      })
-      .catch((e) => {
-        console.log(e);
-      });
-  }
+  // function saveExpenses() {
+  //   axios
+  //     .post("/api/expenses", { data: expenses })
+  //     .then(() => {
+  //       console.log("done");
+  //     })
+  //     .catch((e) => {
+  //       console.log(e);
+  //     });
+  // }
 
-  function getExpenses() {
-    getDocs(collection(db, "BranchExpenses")).then((snapshot) => {
+  // function getExpenses() {
+  //   getDocs(collection(db, "BranchExpenses")).then((snapshot) => {
+  //     let list = [];
+  //     snapshot.forEach((docs) => {
+  //       list.push(docs.data());
+  //     });
+  //     console.log(list);
+  //     setExpenses(list);
+  //   });
+  // }
+
+  function getFeedback() {
+    getDocs(collection(db, "Feedback")).then((snapshot) => {
       let list = [];
       snapshot.forEach((docs) => {
         list.push(docs.data());
       });
       console.log(list);
-      setExpenses(list);
+      setFeedback(list);
+    });
+  }
+
+  function saveFeedback() {
+    axios.post("/api/feedback", { data: feedback }).then((response) => {
+      console.log("done");
     });
   }
   return (
-    <div className="flex flex-1 w-full h-[100vh] items-center justify-center">
+    <div className="flex flex-1 w-full h-[100vh] items-center justify-center gap-4">
       {/* <Button onClick={getData}>Get Data</Button>
       {customerData.length != 0 && (
         <Button onClick={() => downloadJSON(customerData, "customer.json")}>
@@ -224,13 +242,17 @@ export default function Page() {
       {reimbursement.length > 0 && (
         <Button onClick={saveReimbursement}>Save reimbursement</Button>
       )} */}
-{/* 
+      {/* 
       <Button onClick={getExpenses}>Get</Button>
       {expenses.length > 0 && (
         <Button onClick={saveExpenses}>Save Expenses</Button>
       )} */}
 
-      <Button onClick={()=> updateCustomerOwnership()}>Update customers</Button>
+      {/* <Button onClick={()=> updateCustomerOwnership()}>Update customers</Button> */}
+      <Button onClick={getFeedback}>Get feedback</Button>
+      {feedback.length > 0 && (
+        <Button onClick={saveFeedback}>Save feedback</Button>
+      )}
     </div>
   );
 }

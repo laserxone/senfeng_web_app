@@ -134,12 +134,27 @@ export default function Page() {
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Title
+            Customer
             <ArrowUpDown />
           </Button>
         );
       },
       cell: ({ row }) => <div className="ml-2">{row.getValue("title")}</div>,
+    },
+    {
+      accessorKey: "city",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            City
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div className="ml-2">{row.getValue("city")}</div>,
     },
     {
       accessorKey: "amount",
@@ -230,7 +245,7 @@ export default function Page() {
   ];
 
   function handleDownload() {
-    const headers = ["Title", "Description", "Amount", "Date", "Submitted By"];
+    const headers = ["Customer", "City", "Description", "Amount", "Date", "Submitted By"];
     let finalData = [];
     if (filterValues) {
       data.filter((item) => {
@@ -248,6 +263,7 @@ export default function Page() {
     }
     const formattedData = finalData.map((item) => [
       item.title,
+      item?.city,
       item.description,
       item.amount,
       new Date(item.date).toLocaleDateString("en-GB"),
@@ -504,6 +520,7 @@ const AddReimbursementDialog = ({ users }) => {
     date: z.date({ required_error: "Date is required." }),
     user: z.number({ required_error: "User is required." }),
     image: z.string().min(1, { message: "Image is required." }),
+    city: z.string().min(1, { message: "City is required." }),
   });
 
   const form = useForm({
@@ -515,6 +532,7 @@ const AddReimbursementDialog = ({ users }) => {
       date: "",
       user: null,
       image: "",
+      city: ""
     },
   });
 
@@ -544,9 +562,23 @@ const AddReimbursementDialog = ({ users }) => {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <FormLabel>Customer</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter title" {...field} />
+                        <Input placeholder="Enter customer" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+<FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter city" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

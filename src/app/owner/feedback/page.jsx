@@ -18,9 +18,12 @@ import {
   ChevronsRight,
   ChevronsUpDown,
   CircleArrowRight,
+  DeleteIcon,
   Frown,
   MoreHorizontal,
   Smile,
+  Trash,
+  Trash2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -43,7 +46,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   Command,
@@ -106,91 +109,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Heading } from "@/components/ui/heading";
-
-const data = [
-  {
-    id: 1,
-    client: "John Doe",
-    feedback: "Excellent service, very responsive.",
-    status: "Satisfactory",
-    date: "2024-02-01",
-  },
-  {
-    id: 2,
-    client: "Jane Smith",
-    feedback: "The support team was slow to respond.",
-    status: "Unsatisfactory",
-    date: "2024-01-28",
-  },
-  {
-    id: 3,
-    client: "Michael Johnson",
-    feedback: "Product quality exceeded expectations.",
-    status: "Satisfactory",
-    date: "2024-01-25",
-  },
-  {
-    id: 4,
-    client: "Emily Davis",
-    feedback: "Had issues with the payment process.",
-    status: "Unsatisfactory",
-    date: "2024-01-30",
-  },
-  {
-    id: 5,
-    client: "David Wilson",
-    feedback: "Great customer service and timely delivery.",
-    status: "Satisfactory",
-    date: "2024-01-29",
-  },
-  {
-    id: 6,
-    client: "Sarah Brown",
-    feedback: "Would love more customization options.",
-    status: "Satisfactory",
-    date: "2024-01-27",
-  },
-  {
-    id: 7,
-    client: "James Anderson",
-    feedback: "The website was difficult to navigate.",
-    status: "Unsatisfactory",
-    date: "2024-01-26",
-  },
-  {
-    id: 8,
-    client: "Olivia Martinez",
-    feedback: "Fast shipping and well-packaged items.",
-    status: "Satisfactory",
-    date: "2024-01-24",
-  },
-  {
-    id: 9,
-    client: "William Taylor",
-    feedback: "Had to wait too long for a response.",
-    status: "Unsatisfactory",
-    date: "2024-01-31",
-  },
-  {
-    id: 10,
-    client: "Sophia Thomas",
-    feedback: "Very user-friendly experience.",
-    status: "Satisfactory",
-    date: "2024-01-23",
-  },
-];
+import axios from "axios";
+import Link from "next/link";
 
 const tableHeader = [
   {
-    value: "Client",
+    value: "customer_name",
     label: "Client",
   },
   {
-    value: "Feedback",
+    value: "note",
     label: "Feedback",
   },
   {
-    value: "Status",
+    value: "status",
     label: "Status",
   },
 ];
@@ -207,25 +139,45 @@ export default function Page() {
   const pageTableRef = useRef();
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      axios.get("/api/feedback").then((response) => {
+        setData(response.data);
+      });
+    }
+    fetchData();
+  }, []);
 
   const columns = [
     {
-      accessorKey: "client",
+      accessorKey: "customer_name",
       header: ({ column }) => {
         return (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Client
+            Customer
             <ArrowUpDown />
           </Button>
         );
       },
-      cell: ({ row }) => <div className="ml-2">{row.getValue("client")}</div>,
+      cell: ({ row }) => {
+        const item = row.original;
+        return (
+          <Link
+            className="hover:underline"
+            href={`/owner/customer/detail?id=${item.id}`}
+          >
+            <div className="ml-2">{row.getValue("customer_name")}</div>
+          </Link>
+        );
+      },
     },
     {
-      accessorKey: "feedback",
+      accessorKey: "note",
       header: ({ column }) => {
         return (
           <Button
@@ -237,7 +189,7 @@ export default function Page() {
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("feedback")}</div>,
+      cell: ({ row }) => <div>{row.getValue("note")}</div>,
     },
 
     {
@@ -269,7 +221,7 @@ export default function Page() {
     },
 
     {
-      accessorKey: "date",
+      accessorKey: "created_at",
       header: ({ column }) => {
         return (
           <Button
@@ -281,7 +233,13 @@ export default function Page() {
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("date")}</div>,
+      cell: ({ row }) => (
+        <div>
+          {row.getValue("created_at")
+            ? new Date(row.getValue("created_at")).toLocaleDateString("en-GB")
+            : ""}
+        </div>
+      ),
     },
 
     {
@@ -290,25 +248,12 @@ export default function Page() {
         const payment = row.original;
 
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(payment.id)}
-              >
-                View
-              </DropdownMenuItem>
-
-              <DropdownMenuItem onClick={() => setShowConfirmation(true)}>
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button  variant="ghost" onClick={() => setShowConfirmation(true)}>
+          <Trash2
+            
+            className="h-5 w-5 text-red-500"
+          />
+          </Button>
         );
       },
     },
@@ -369,7 +314,7 @@ export default function Page() {
       <ConfimationDialog
         open={showConfirmation}
         title={"Are you sure you want to delete?"}
-        description={"Your action will remove branch expense from the system"}
+        description={"Your action will remove feedback from the system"}
         onPressYes={() => console.log("press yes")}
         onPressCancel={() => setShowConfirmation(false)}
       />
@@ -446,7 +391,6 @@ const FeedbackDialog = ({ visible, onClose }) => {
           onClick={() => {
             form.reset();
           }}
-          
         >
           Add Feedback
         </Button>
