@@ -2,6 +2,36 @@ import pool from "@/config/db";
 import { NextResponse } from "next/server"
 
 
+export async function POST(req) {
+
+    try {
+        const data = await req.json();
+
+        if (!data || Object.keys(data).length === 0) {
+            return NextResponse.json({ error: "No data provided for insertion" }, { status: 400 });
+        }
+
+        const fields = Object.keys(data);
+        const values = Object.values(data);
+        const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
+
+        const query = `
+        INSERT INTO customer (${fields.join(", ")})
+        VALUES (${placeholders})
+    `;
+
+        await pool.query(query, values);
+
+        console.log("data inserted successfully");
+        return NextResponse.json({ message: "Inserted successfully" }, { status: 201 });
+
+    } catch (error) {
+        console.error('Error inserting data: ', error);
+        return NextResponse.json({ message: 'Error adding customer' }, { status: 500 })
+    }
+}
+
+
 // export async function POST(req) {
 //     const { data } = await req.json()
 //     const client = await pool.connect();
@@ -48,26 +78,44 @@ import { NextResponse } from "next/server"
 
 export async function GET(req) {
 
-
-
+    const searchParams = req.nextUrl.searchParams
+    const urlQuery = searchParams.get('withoutsale')
     try {
-        const query = `
-      SELECT 
-        c.*, 
-        COALESCE(json_agg(s.name) FILTER (WHERE s.name IS NOT NULL), '[]') AS machines
-      FROM customer c
-      LEFT JOIN sale s ON c.id = s.customer_id
-      GROUP BY c.id
-    `;
+        if (urlQuery) {
 
-        const result = await pool.query(query);
-        return NextResponse.json(result.rows, { status: 200 })
+            const result = await pool.query(`SELECT * FROM customer ORDER BY name ASC`)
+            return NextResponse.json(result.rows, { status: 200 });
+        }
+        else {
+            const customerQuery = await pool.query(`SELECT * FROM customer ORDER BY name ASC`);
+            const customers = customerQuery.rows;
+
+            if (customers.length === 0) {
+                return NextResponse.json({ customers: [] }, { status: 200 });
+            }
+
+            // Extract customer IDs
+            const customerIds = customers.map((customer) => customer.id);
+
+            // Fetch all sales related to the customers
+            const salesQuery = await pool.query(
+                `SELECT * FROM sale WHERE customer_id = ANY($1)`,
+                [customerIds]
+            );
+            const sales = salesQuery.rows;
+
+            // Map sales back to their respective customers
+            const customersWithSales = customers.map((customer) => ({
+                ...customer,
+                sales: sales.filter((sale) => sale.customer_id === customer.id),
+            }));
+
+            return NextResponse.json(customersWithSales, { status: 200 });
+        }
 
     } catch (error) {
-        console.error('Error inserting data: ', error);
-        return NextResponse.json({message : error.message || "Something went wrong"}, { status: 500 })
+        return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }
-
 }
 
 export const revalidate = 0

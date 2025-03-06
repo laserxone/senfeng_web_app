@@ -68,6 +68,9 @@ import html2canvas from "html2canvas";
 import { debounce } from "@/lib/debounce";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import DropzoneMulti from "@/components/dropzone-multi";
+import { Textarea } from "@/components/ui/textarea";
+import moment from "moment";
+
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -127,7 +130,7 @@ export default function Page() {
       });
 
     axios
-      .get("/api/users")
+      .get("/api/user")
       .then((response) => {
         setUsers(response.data);
       })
@@ -169,9 +172,7 @@ export default function Page() {
       cell: ({ row }) => (
         <div>
           {row.getValue("transaction_date")
-            ? new Date(row.getValue("transaction_date")).toLocaleDateString(
-                "en-GB"
-              )
+            ? moment(new Date(row.getValue("transaction_date"))).format("YYYY-MM-DD") 
             : ""}
         </div>
       ),
@@ -195,9 +196,7 @@ export default function Page() {
           style={{ color: !row.getValue("clearance_date") ? "red" : "green" }}
         >
           {row.getValue("clearance_date")
-            ? new Date(row.getValue("clearance_date")).toLocaleDateString(
-                "en-GB"
-              )
+            ? moment(new Date(row.getValue("clearance_date"))).format("YYYY-MM-DD")
             : "Pending"}
         </div>
       ),
@@ -409,13 +408,14 @@ const AddPayment = ({ users }) => {
       .number()
       .min(0.01, { message: "Amount must be greater than zero." }),
     paymentMode: z.string().min(1, { message: "Payment mode is required." }),
-    receivedBy: z.number({ required_error: "Received by is required." }),
+    receivedBy: z.string().min(1, { message: "Bank name is required." }),
     transactionDate: z.date({
       required_error: "Transaction date is required.",
     }),
     clearanceDate: z.date().optional(),
     status: z.string().optional(),
     image: z.string().min(1, { message: "Image by is required." }),
+    remarks: z.string().optional(),
   });
 
   const form = useForm({
@@ -424,11 +424,12 @@ const AddPayment = ({ users }) => {
       note: "",
       amount: "",
       paymentMode: "",
-      receivedBy: null,
+      receivedBy: "",
       transactionDate: undefined,
       clearanceDate: undefined,
       status: "Pending",
       image: null,
+      remarks: "",
     },
   });
   function onSubmit(values) {
@@ -442,42 +443,26 @@ const AddPayment = ({ users }) => {
       <DialogTrigger asChild>
         <Button onClick={() => form.reset()}>Add Payment</Button>
       </DialogTrigger>
-      <DialogContent className={`max-w-[95vw] sm:max-w-md lg:max-w-2xl p-4`}>
+      <DialogContent className="max-w-[95vw] p-4">
         <DialogHeader>
           <DialogTitle>Add New Payment</DialogTitle>
         </DialogHeader>
         <div
-          className={`flex flex-col sm:flex-row gap-4 sm:gap-6`}
+          className="flex flex-col sm:flex-row gap-4 sm:gap-6 max-h-[90vh]"
           style={{
             display: "flex",
             flexDirection: imageFile ? "row" : "column",
             gap: imageFile ? 16 : 0,
           }}
         >
-          <div className="flex flex-1">
-            <ScrollArea className="max-h-[80vh] px-2 w-full">
+          <div className="w-full sm:w-[25%] flex">
+            <ScrollArea className="px-2 w-full max-h-[90vh]">
               <div className="px-2">
                 <Form {...form}>
                   <form
                     onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-4"
+                    className="space-y-2"
                   >
-                    {/* Note Field */}
-                    <FormField
-                      control={form.control}
-                      name="note"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Note / TID</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter note / TID" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Amount Field */}
                     <FormField
                       control={form.control}
                       name="amount"
@@ -501,6 +486,20 @@ const AddPayment = ({ users }) => {
                       )}
                     />
 
+                    <FormField
+                      control={form.control}
+                      name="note"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>TID</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter TID" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     {/* Payment Mode */}
                     <FormField
                       control={form.control}
@@ -517,13 +516,17 @@ const AddPayment = ({ users }) => {
                                 <SelectValue placeholder="Select payment mode" />
                               </SelectTrigger>
                               <SelectContent>
-                                {["Cheque", "Cash", "Deposit", "Online"].map(
-                                  (user) => (
-                                    <SelectItem key={user} value={user}>
-                                      {user}
-                                    </SelectItem>
-                                  )
-                                )}
+                                {[
+                                  "Cheque",
+                                  "Cash",
+                                  "Deposit",
+                                  "Online",
+                                  "Pay Order",
+                                ].map((user) => (
+                                  <SelectItem key={user} value={user}>
+                                    {user}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </FormControl>
@@ -538,27 +541,9 @@ const AddPayment = ({ users }) => {
                       name="receivedBy"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Received By</FormLabel>
+                          <FormLabel>Bank Name</FormLabel>
                           <FormControl>
-                            <Select
-                              onValueChange={(val) =>
-                                field.onChange(Number(val))
-                              }
-                              value={field.value || ""}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select user" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectGroup>
-                                  {users?.map((item) => (
-                                    <SelectItem key={item.id} value={item.id}>
-                                      {item.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectGroup>
-                              </SelectContent>
-                            </Select>
+                            <Input placeholder="Enter bank name" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -608,6 +593,20 @@ const AddPayment = ({ users }) => {
                       )}
                     />
 
+                    <FormField
+                      control={form.control}
+                      name="remarks"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Remarks</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="Enter remarks" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     {/* Image Field */}
                     <FormField
                       control={form.control}
@@ -618,6 +617,7 @@ const AddPayment = ({ users }) => {
                           <FormControl>
                             <div className="flex flex-1 items-center justify-center">
                               <Dropzone
+                                noImage={true}
                                 value={field.value}
                                 onDrop={(file) => {
                                   field.onChange(file);
@@ -645,16 +645,12 @@ const AddPayment = ({ users }) => {
           </div>
 
           {imageFile && (
-            <div className="flex flex-1">
-              <div className="mt-2 hidden sm:block">
-                <Image
-                  src={imageFile}
-                  width={1000}
-                  height={1000}
-                  alt="Selected Image"
-                  className="w-full"
-                />
-              </div>
+            <div className="w-full sm:w-[75%] flex justify-center items-center">
+              <img
+                src={imageFile}
+                alt="Selected Image"
+                className="w-full max-h-[90vh] object-contain"
+              />
             </div>
           )}
         </div>
@@ -685,7 +681,7 @@ const AddImages = () => {
     if (event.target.files && event.target.files.length > 0) {
       const files = Array.from(event.target.files);
 
-      console.log(files)
+      console.log(files);
 
       let localImages = [];
 
@@ -788,10 +784,10 @@ const AddImages = () => {
                     )}
                   />
                   <div className="flex flex-1 gap-2 items-center">
-                    <Separator className="flex flex-1"/>
+                    <Separator className="flex flex-1" />
                     <Label className="mx-2 text-[16px]">or</Label>
                     <Separator className="flex flex-1" />
-                    </div>
+                  </div>
                   <Label className="font-medium text-[16px]">Select Pdf</Label>
                   <input
                     multiple

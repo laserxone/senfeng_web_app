@@ -195,7 +195,7 @@ const PageTable = ({
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex w-full flex-wrap gap-4 items-center">
+      <div className="flex w-full flex-wrap gap-4 items-center ">
         {
           !disableInput &&
           <Input
@@ -217,8 +217,8 @@ const PageTable = ({
         {children}
       </div>
 
-      <div className="relative flex flex-1 flex-col">
-        <div className="absolute bottom-0 left-0 right-0 top-0 flex overflow-scroll rounded-md border md:overflow-auto">
+      <div className="relative flex flex-1 flex-col ">
+        <div className="absolute bottom-0 left-0 right-0 top-0 flex overflow-scroll rounded-md border md:overflow-auto ">
           <ScrollArea className="flex-1">
             <Table className="relative">
               <TableHeader>
@@ -241,6 +241,7 @@ const PageTable = ({
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
                     <TableRow
+                  className="even:bg-gray-100 dark:even:bg-gray-800 dark:text-white text-black"
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
                     >

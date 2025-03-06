@@ -25,9 +25,10 @@ export default async function RootLayout({
       <body className={'overflow-hidden'}>
         <NextTopLoader showSpinner={false} />
         <Providers>
-          <Toaster />
           {children}
+         
         </Providers>
+        <Toaster />
       </body>
     </html>
   );

@@ -14,6 +14,8 @@ import data from "./combined.json";
 // import userData from './users.json'
 import axios from "axios";
 import updateCustomerOwnership from "@/lib/tempFunction";
+import { list } from "firebase/storage";
+import * as XLSX from "xlsx";
 
 export default function Page() {
   const [customerData, setCustomerData] = useState([]);
@@ -23,6 +25,8 @@ export default function Page() {
   const [reimbursement, setReimbursement] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [feedback, setFeedback] = useState([]);
+  const [task, setTask] = useState([]);
+  const [attendance, setAttendance] = useState([]);
   // async function getData() {
   //   await getDocs(collection(db, "Customer")).then((snapshot) => {
   //     let list = [];
@@ -148,27 +152,29 @@ export default function Page() {
   //     });
   // }
 
-  // function getReimbursement() {
-  //   getDocs(collection(db, "Reimbursement")).then((snapshot) => {
-  //     let list = [];
-  //     snapshot.forEach((docs) => {
-  //       list.push(docs.data());
-  //     });
-  //     console.log(list);
-  //     setReimbursement(list);
-  //   });
-  // }
+  function getReimbursement() {
+    getDocs(collection(db, "Reimbursement")).then((snapshot) => {
+      let list = [];
+      snapshot.forEach((docs) => {
+        list.push(docs.data());
+      });
+      const sortedData = list.sort((a,b)=> b.TimeStamp - a.TimeStamp)
+      const first100Entries = sortedData.slice(0, 100);
+      console.log(first100Entries);
+      setReimbursement(first100Entries);
+    });
+  }
 
-  // function saveReimbursement() {
-  //   axios
-  //     .post("/api/reimbursement", { data: reimbursement })
-  //     .then(() => {
-  //       console.log("done");
-  //     })
-  //     .catch((e) => {
-  //       console.log(e);
-  //     });
-  // }
+  function saveReimbursement() {
+    axios
+      .post("/api/reimbursement", { data: reimbursement })
+      .then(() => {
+        console.log("done");
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+  }
 
   // function saveExpenses() {
   //   axios
@@ -192,22 +198,70 @@ export default function Page() {
   //   });
   // }
 
-  function getFeedback() {
-    getDocs(collection(db, "Feedback")).then((snapshot) => {
-      let list = [];
-      snapshot.forEach((docs) => {
-        list.push(docs.data());
-      });
-      console.log(list);
-      setFeedback(list);
-    });
-  }
+  // function getFeedback() {
+  //   getDocs(collection(db, "Feedback")).then((snapshot) => {
+  //     let list = [];
+  //     snapshot.forEach((docs) => {
+  //       list.push(docs.data());
+  //     });
+  //     console.log(list);
+  //     setFeedback(list);
+  //   });
+  // }
 
-  function saveFeedback() {
-    axios.post("/api/feedback", { data: feedback }).then((response) => {
-      console.log("done");
-    });
-  }
+  // function saveFeedback() {
+  //   axios.post("/api/feedback", { data: feedback }).then((response) => {
+  //     console.log("done");
+  //   });
+  // }
+
+  // function getTask() {
+  //   getDocs(collection(db, "Tasks")).then((snapshot) => {
+  //     let list = [];
+  //     const sixMonthsAgo = Date.now() - 3 * 30 * 24 * 60 * 60 * 1000; // Approximate 6 months in milliseconds
+
+  //     snapshot.forEach((docs) => {
+  //       let data = docs.data();
+  //       if (data.TimeStamp >= sixMonthsAgo) { // Filter last 6 months
+  //         list.push(data);
+  //       }
+  //     });
+
+  //     console.log(list);
+  //     setTask(list);
+  //   });
+  // }
+
+  // function saveTask() {
+  //   axios.post("/api/task", { data: task }).then((response) => {
+  //     console.log("done");
+  //   });
+  // }
+
+  // function getAttendance() {
+  //   getDocs(collection(db, "EmployeeAttendance")).then((snapshot) => {
+  //     let list = [];
+  //     const sixMonthsAgo = Date.now() - 4 * 30 * 24 * 60 * 60 * 1000;
+
+  //     snapshot.forEach((docs) => {
+  //       let data = docs.data();
+  //       if (data.timeIn >= sixMonthsAgo) {
+  //         // Filter last 6 months
+  //         list.push(data);
+  //       }
+  //       // list.push(docs.data());
+  //     });
+
+  //     console.log(list);
+  //     setAttendance(list);
+  //   });
+  // }
+
+  // function saveAttendance() {
+  //   axios.post("/api/attendance", { data: attendance }).then((response) => {
+  //     console.log("done");
+  //   });
+  // }
   return (
     <div className="flex flex-1 w-full h-[100vh] items-center justify-center gap-4">
       {/* <Button onClick={getData}>Get Data</Button>
@@ -249,10 +303,65 @@ export default function Page() {
       )} */}
 
       {/* <Button onClick={()=> updateCustomerOwnership()}>Update customers</Button> */}
-      <Button onClick={getFeedback}>Get feedback</Button>
+      {/* <Button onClick={getFeedback}>Get feedback</Button>
       {feedback.length > 0 && (
         <Button onClick={saveFeedback}>Save feedback</Button>
-      )}
+      )} */}
+
+      {/* <Button onClick={getAttendance}>Get Attendance</Button>
+      {attendance.length > 0 && (
+        <Button onClick={saveAttendance}>save Attendance</Button>
+      )} */}
+
+      <ExcelUploader />
+    </div>
+  );
+}
+
+
+const ExcelUploader = () => {
+  const [file, setFile] = useState(null);
+
+  const handleFileUpload = async (event) => {
+    const uploadedFile = event.target.files?.[0];
+    if (uploadedFile) setFile(uploadedFile);
+  };
+
+  const handleImport = async () => {
+    if (!file) return alert("Please select a file!");
+
+    const reader = new FileReader();
+    reader.readAsBinaryString(file);
+
+    reader.onload = async (e) => {
+      const binaryData = e.target?.result;
+      const workbook = XLSX.read(binaryData, { type: "binary" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet); // Convert sheet data to JSON
+
+      console.log(rows)
+
+      axios.post("/api/inventory", {data : rows})
+      .then((response)=>{
+        alert("Import completed!");
+      })
+
+      // for (const row of rows) {
+      //   await fetch("/api/import", {
+      //     method: "POST",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify(row),
+      //   });
+      // }
+    
+    };
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-4 p-6">
+      <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
+      <Button onClick={handleImport} disabled={!file}>Import Data</Button>
     </div>
   );
 }

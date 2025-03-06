@@ -2,7 +2,7 @@
 export const ownerNavItems = [
   {
     title: 'Dashboard',
-    url: '/owner/dashboard',
+    url: '/dashboard',
     icon: 'dashboard',
     isActive: false,
     shortcut: ['d', 'd'],
@@ -11,20 +11,20 @@ export const ownerNavItems = [
   {
     title: 'Task Management',
     url: '#', 
-    icon: 'billing',
+    icon: 'task',
     isActive: true,
 
     items: [
       {
         title: 'Assign Task',
-        url: '/owner/task',
+        url: '/task',
         icon: 'userPen',
         shortcut: ['m', 'm']
       },
       {
         title: 'Map View',
         shortcut: ['l', 'l'],
-        url: '/owner/map',
+        url: '/map',
         icon: 'login'
       }
     ]
@@ -32,26 +32,26 @@ export const ownerNavItems = [
   {
     title: 'Human Resource',
     url: '#', 
-    icon: 'billing',
+    icon: 'hr',
     isActive: true,
 
     items: [
       {
         title: 'Attendance',
-        url: '/owner/attendance',
+        url: '/attendance',
         icon: 'userPen',
         shortcut: ['m', 'm']
       },
       {
         title: 'Salary',
         shortcut: ['l', 'l'],
-        url: '/owner/salary',
+        url: '/salary',
         icon: 'login'
       },
       {
         title: 'Reimbursement',
         shortcut: ['l', 'l'],
-        url: '/owner/reimbursement',
+        url: '/reimbursement',
         icon: 'login'
       }
     ]
@@ -59,49 +59,139 @@ export const ownerNavItems = [
   {
     title: 'Customer',
     url: '#', 
-    icon: 'billing',
+    icon: 'customer',
     isActive: true,
 
     items: [
       {
         title: 'Customer List',
-        url: '/owner/customer',
+        url: '/customer',
         icon: 'userPen',
         shortcut: ['m', 'm']
       },
       {
         title: 'Feedback',
         shortcut: ['l', 'l'],
-        url: '/owner/feedback',
+        url: '/feedback',
         icon: 'login'
       },
     ]
   },
   {
     title: 'Office Expense',
-    url: '/owner/expense',
-    icon: 'product',
+    url: '/expense',
+    icon: 'expense',
     shortcut: ['p', 'p'],
     isActive: false,
     items: [] // No child items
   },
   {
     title: 'Inventory',
-    url: '/owner/inventory',
-    icon: 'product',
+    url: '/inventory',
+    icon: 'inventory',
     shortcut: ['p', 'p'],
     isActive: false,
     items: [] // No child items
   },
   {
     title: 'Team',
-    url: '/owner/team',
-    icon: 'product',
+    url: '/team',
+    icon: 'team',
     shortcut: ['p', 'p'],
     isActive: false,
     items: [] // No child items
   },
+  {
+    title: 'Stock',
+    url: '#', 
+    icon: 'stock',
+    isActive: true,
+    items: [
+      {
+        title: 'In-house',
+        url: '/task',
+        icon: 'userPen',
+        shortcut: ['m', 'm']
+      },
+      {
+        title: 'On the way',
+        shortcut: ['l', 'l'],
+        url: '/map',
+        icon: 'login'
+      }
+    ]
+  },
 ];
+
+export const employeeNavItems = [
+  {
+    title: 'Dashboard',
+    url: '/dashboard',
+    icon: 'dashboard',
+    isActive: true,
+    shortcut: ['d', 'd'],
+    items: [] 
+  },
+  {
+    title: 'Task Management',
+    url: '/task',
+    icon: 'task',
+    isActive: false,
+    shortcut: ['t', 't'],
+    items: []
+  },
+ 
+  {
+    title: 'Members',
+    url: '/customer',
+    icon: 'customer',
+    isActive: false,
+    icon: 'userPen',
+    shortcut: ['m', 'm'],
+    items: []
+  },
+
+  
+];
+
+export const branchNavItem =  {
+  title: 'Office Expense',
+  url: '/expense',
+  icon: 'expense',
+  shortcut: ['p', 'p'],
+  isActive: false,
+  items: [] // No child items
+}
+
+export const InventoryNavItem = {
+  title: 'Inventory',
+  url: '/inventory',
+  icon: 'inventory',
+  shortcut: ['p', 'p'],
+  isActive: false,
+  items: []
+}
+
+export const stockNavItem = {
+  title: 'Stock',
+  url: '#', 
+  icon: 'stock',
+  isActive: true,
+  items: [
+    {
+      title: 'In-house',
+      url: '/in-house',
+      icon: 'userPen',
+      shortcut: ['m', 'm']
+    },
+    {
+      title: 'On the way',
+      shortcut: ['l', 'l'],
+      url: '/on-the-way',
+      icon: 'login'
+    }
+  ]
+}
 
 
 

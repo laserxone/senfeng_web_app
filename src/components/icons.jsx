@@ -1,15 +1,18 @@
 import {
   AlertTriangle,
   ArrowRight,
+  Briefcase,
   Check,
   ChevronLeft,
   ChevronRight,
   CircuitBoardIcon,
+  ClipboardList,
   Command,
   CreditCard,
   File,
   FileText,
   HelpCircle,
+  Home,
   Image,
   Laptop,
   LayoutDashboardIcon,
@@ -20,6 +23,7 @@ import {
   LucideShoppingBag,
   Moon,
   MoreVertical,
+  Package,
   Pizza,
   Plus,
   Settings,
@@ -29,8 +33,10 @@ import {
   User,
   UserCircle2Icon,
   UserPen,
+  Users,
   UserX2Icon,
-  X
+  X,
+  Container
 } from 'lucide-react';
 
 
@@ -64,6 +70,14 @@ export const Icons = {
   sun: SunMedium,
   moon: Moon,
   laptop: Laptop,
+  task: ClipboardList, // Task Management
+  hr: Users, // Human Resources
+  customer: User, // Customers
+  expense: FileText, // Office Expenses
+  inventory: Package, // Inventory Management
+  team: Briefcase, // Team Management
+  office: Home, // Office Overview
+  stock : Container,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden='true'

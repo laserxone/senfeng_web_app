@@ -31,7 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 
 import {
@@ -75,69 +75,46 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-const data = [
-  {
-    id: 1,
-    user: "John Doe",
-    time_in: "08:30 AM",
-    time_out: "05:00 PM",
-    note_time_in: "Arrived on time",
-    note_time_out: "Left on time",
-    date: "2024-02-01",
-    status: "Present",
-  },
-  {
-    id: 2,
-    user: "Jane Smith",
-    time_in: "09:15 AM",
-    time_out: "04:45 PM",
-    note_time_in: "Slightly late",
-    note_time_out: "Left early",
-    date: "2024-02-02",
-    status: "Present",
-  },
-  {
-    id: 3,
-    user: "Michael Johnson",
-    time_in: "",
-    time_out: "",
-    note_time_in: "Did not check in",
-    note_time_out: "Did not check out",
-    date: "2024-02-03",
-    status: "Absent",
-  },
-  {
-    id: 4,
-    user: "Emily Brown",
-    time_in: "08:45 AM",
-    time_out: "05:10 PM",
-    note_time_in: "On time",
-    note_time_out: "Stayed a little longer",
-    date: "2024-02-04",
-    status: "Present",
-  },
-  {
-    id: 5,
-    user: "David Wilson",
-    time_in: "",
-    time_out: "",
-    note_time_in: "No show",
-    note_time_out: "No show",
-    date: "2024-02-05",
-    status: "Absent",
-  },
-];
+import { UserContext } from "@/store/context/UserContext";
+import axios from "axios";
+import Image from "next/image";
+import { MapProvider } from "@/providers/map-provider";
+import { useTheme } from "next-themes";
+import { GoogleMap, Marker } from "@react-google-maps/api";
+import { UserSearch } from "@/components/user-search";
 
 export default function Page() {
-  const [sorting, setSorting] = useState([]);
-  const [columnFilters, setColumnFilters] = useState([]);
-  const [columnVisibility, setColumnVisibility] = useState({});
-  const [rowSelection, setRowSelection] = useState({});
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [value, setValue] = useState("");
   const pageTableRef = useRef();
+  const { state: UserState } = useContext(UserContext);
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      axios
+        .get("/api/attendance")
+        .then((response) => {
+          if (response.data.length > 0) {
+            const apiData = response.data.map((item) => {
+              return {
+                ...item,
+                date: item?.time_in,
+                status: item?.time_in ? "Present" : "Absent",
+              };
+            });
+            setData(apiData);
+          }
+        })
+        .catch((e) => {
+          console.log(e);
+        });
+    }
+    if (UserState?.value?.data?.id) {
+      fetchData();
+    }
+  }, [UserState?.value?.data]);
 
   const columns = [
     {
@@ -153,22 +130,28 @@ export default function Page() {
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("date")}</div>,
+      cell: ({ row }) => (
+        <div>
+          {row.getValue("date")
+            ? new Date(row.getValue("date")).toLocaleDateString("en-GB")
+            : ""}
+        </div>
+      ),
     },
     {
-      accessorKey: "user",
+      accessorKey: "user_name",
       header: ({ column }) => {
         return (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            User
+            Employee
             <ArrowUpDown />
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("user")}</div>,
+      cell: ({ row }) => <div>{row.getValue("user_name")}</div>,
     },
     {
       accessorKey: "time_in",
@@ -183,7 +166,16 @@ export default function Page() {
           </Button>
         );
       },
-      cell: ({ row }) => <div className="ml-2">{row.getValue("time_in")}</div>,
+      cell: ({ row }) => (
+        <div className="ml-2">
+          {row.getValue("time_in")
+            ? new Date(new Date(row.getValue("time_in")).toISOString()).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : ""}
+        </div>
+      ),
     },
     {
       accessorKey: "time_out",
@@ -198,7 +190,16 @@ export default function Page() {
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("time_out")}</div>,
+      cell: ({ row }) => (
+        <div className="ml-2">
+          {row.getValue("time_out")
+            ? new Date(row.getValue("time_out")).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : ""}
+        </div>
+      ),
     },
 
     {
@@ -246,42 +247,29 @@ export default function Page() {
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("status")}</div>,
+      cell: ({ row }) => (
+        <div
+          style={{
+            color: row.getValue("status") === "Present" ? "green" : "red",
+          }}
+        >
+          {row.getValue("status")}
+        </div>
+      ),
     },
 
     {
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
-        const payment = row.original;
-
         return <AttendanceDetail detail={row.original} />;
       },
     },
   ];
 
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
-  });
-
   const tableHeader = [
     {
-      value: "User",
+      value: "user_name",
       label: "User",
     },
     {
@@ -325,8 +313,12 @@ export default function Page() {
       >
         <div className=" flex justify-between">
           <div className="flex gap-4">
-            <Select onValueChange={(val)=>{
-              setValue(val)}} value={value}>
+            <Select
+              onValueChange={(val) => {
+                setValue(val);
+              }}
+              value={value}
+            >
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Select filter..." />
               </SelectTrigger>
@@ -356,15 +348,14 @@ export default function Page() {
             >
               Clear
             </Button>
-          
-          <Button
-            onClick={()=> setFilterVisible(true)}
-            variant="ghost"
-            className="h-8 w-8 p-0"
-          >
-            <Filter />
-          </Button>
-        
+
+            <Button
+              onClick={() => setFilterVisible(true)}
+              variant="ghost"
+              className="h-8 w-8 p-0"
+            >
+              <Filter />
+            </Button>
           </div>
         </div>
         <Button>Download</Button>
@@ -381,25 +372,11 @@ const FilterSheet = ({ visible, onClose }) => {
   const [startDate, setStartDate] = useState();
   const [endDate, setEndDate] = useState();
   const [user, setUser] = useState();
-  const users = [
-    {
-      label: "Abdul Rehman",
-      value: "Abdul Rehman",
-    },
-    {
-      label: "Junaid Abid",
-      value: "Junaid Abid",
-    },
-    {
-      label: "Adeel Ahsan",
-      value: "Adeel Ahsan",
-    },
-  ];
 
   const formSchema = z.object({
     start: z.date({ required_error: "Start date is required." }),
     end: z.date({ required_error: "End date is required." }),
-    user: z.string().min(1, { message: "User is required." }),
+    user: z.number({ required_error: "User is required" }),
   });
 
   const form = useForm({
@@ -407,7 +384,7 @@ const FilterSheet = ({ visible, onClose }) => {
     defaultValues: {
       start: null,
       end: null,
-      user: "",
+      user: null,
     },
   });
 
@@ -432,23 +409,10 @@ const FilterSheet = ({ visible, onClose }) => {
                 <FormItem>
                   <FormLabel>Select User</FormLabel>
                   <FormControl>
-                    <Select
+                    <UserSearch
                       value={field.value}
-                      onValueChange={(value) => field.onChange(value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {users.map((city) => (
-                            <SelectItem key={city.value} value={city.value}>
-                              {city.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                      onReturn={(val) => field.onChange(val)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -482,7 +446,6 @@ const FilterSheet = ({ visible, onClose }) => {
                     <AppCalendar
                       date={field.value}
                       onChange={(date) => {
-                        console.log(date);
                         field.onChange(date);
                       }}
                     />
@@ -558,16 +521,113 @@ const AttendanceDetail = ({ detail }) => {
           <ChevronRight />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent
+        className={`${
+          detail?.time_out
+            ? " sm:max-w-4xl lg:max-w-5xl"
+            : "sm:max-w-2xl lg:max-w-xl"
+        } `}
+      >
         <DialogHeader>
           <DialogTitle>Attendance detail</DialogTitle>
         </DialogHeader>
         <div>
           <ScrollArea className="h-[80vh] px-2">
-            <div className="px-2"></div>
+            <div className="px-2 flex flex-col gap-4 sm:flex-row">
+              {detail?.time_in && (
+                <div className="flex-1 flex flex-col gap-4">
+                  <img
+                    src={detail.image_time_in}
+                    alt="timein-img"
+                    className="w-full object-cover rounded-lg"
+                  />
+                  <MapProvider>
+                    <LocationMap position={detail.location_time_in} />
+                  </MapProvider>
+                </div>
+              )}
+
+              {detail?.time_out && (
+                <div className="flex-1 flex flex-col gap-4 sm:ml-4">
+                  <img
+                    src={detail.image_time_out}
+                    alt="timeout-img"
+                    className="w-full object-cover rounded-lg"
+                  />
+                  <MapProvider>
+                    <LocationMap position={detail.location_time_out} />
+                  </MapProvider>
+                </div>
+              )}
+            </div>
           </ScrollArea>
         </div>
       </DialogContent>
     </Dialog>
+  );
+};
+
+const LocationMap = ({ position }) => {
+  const { theme } = useTheme();
+
+  const defaultMapContainerStyle = {
+    width: "100%",
+    height: "80vh",
+    borderRadius: "15px 0px 0px 15px",
+  };
+
+  const defaultMapCenter = {
+    lat: position[0],
+    lng: position[1],
+  };
+  const defaultMapZoom = 16;
+
+  const [defaultMapOptions, setDefaultMapOptions] = useState({
+    zoomControl: true,
+    tilt: 0,
+    gestureHandling: "auto",
+    mapTypeId: "roadmap",
+    colorScheme: "DARK",
+  });
+
+  useEffect(() => {
+    if (theme === "dark") {
+      setDefaultMapOptions((prevState) => ({
+        ...prevState,
+        colorScheme: "DARK",
+      }));
+    } else {
+      setDefaultMapOptions((prevState) => ({
+        ...prevState,
+        colorScheme: "LIGHT",
+      }));
+    }
+  }, [theme]);
+
+  const RenderMap = useCallback(
+    ({ position }) => {
+      return (
+        <GoogleMap
+          mapContainerStyle={defaultMapContainerStyle}
+          center={defaultMapCenter}
+          zoom={defaultMapZoom}
+          options={defaultMapOptions}
+        >
+          <Marker
+            position={{
+              lat: parseFloat(position[0]),
+              lng: parseFloat(position[1]),
+            }}
+          />
+        </GoogleMap>
+      );
+    },
+    [defaultMapOptions]
+  );
+
+  return (
+    <div className="w-full">
+      <RenderMap position={position} />
+    </div>
   );
 };

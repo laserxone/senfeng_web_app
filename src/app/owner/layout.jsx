@@ -1,27 +1,22 @@
-import AppSidebar from '@/components/app-sidebar';
-import Header from '@/components/header';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import KBar from '@/components/kbar';
+import AppSidebar from "@/components/app-sidebar";
+import Header from "@/components/header";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import KBar from "@/components/kbar";
+import UserContextProvider from "@/store/context/UserContext";
+import { ownerNavItems } from "@/constants/data";
 
-
-
-export default async function DashboardLayout({
-  children
-}) {
-
+export default async function DashboardLayout({ children }) {
   return (
     <KBar>
-      <SidebarProvider >
-        <AppSidebar />
-        <SidebarInset>
-          <Header />
-          {/* page main content */}
-          <div className='flex flex-1'>
-          {children}
-          </div>
-          {/* page main content ends */}
-        </SidebarInset>
-      </SidebarProvider>
+      <UserContextProvider>
+        <SidebarProvider>
+          <AppSidebar/>
+          <SidebarInset>
+            <Header />
+            <div className="flex flex-1">{children}</div>
+          </SidebarInset>
+        </SidebarProvider>
+      </UserContextProvider>
     </KBar>
   );
 }

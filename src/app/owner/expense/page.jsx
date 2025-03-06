@@ -26,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 
 import {
@@ -77,53 +77,34 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import exportToExcel from "@/lib/exportToExcel";
 import { Title } from "@radix-ui/react-dialog";
+import { UserContext } from "@/store/context/UserContext";
+import { UserSearch } from "@/components/user-search";
 
 export default function Page() {
-  const [sorting, setSorting] = useState([]);
-  const [columnFilters, setColumnFilters] = useState([]);
-  const [columnVisibility, setColumnVisibility] = useState({});
-  const [rowSelection, setRowSelection] = useState({});
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
-  const [users, setUsers] = useState([]);
   const [filterValues, setFilterValues] = useState(null);
   const [imageURL, setImageURL] = useState(null);
   const [visible, setVisible] = useState(false);
-  const [allUsers, setAllUsers] = useState([]);
+  const { state: UserState } = useContext(UserContext);
 
   useEffect(() => {
     async function fetchData() {
       axios
         .get("/api/expenses")
         .then((response) => {
-          console.log(response.data);
           setData(response.data);
-          const uniqueUsersMap = new Map();
-
-          response.data.forEach((item) => {
-            if (!uniqueUsersMap.has(item.submitted_by)) {
-              uniqueUsersMap.set(item.submitted_by, {
-                value: item.submitted_by,
-                label: item.submitted_by_name,
-              });
-            }
-          });
-
-          const apiDataUsers = Array.from(uniqueUsersMap.values());
-          setUsers(apiDataUsers);
         })
         .catch((e) => {
           console.log(e);
         });
 
-      axios.get("/api/users").then((response) => {
-        setAllUsers(response.data);
-      });
     }
-
-    fetchData();
-  }, []);
+    if (UserState?.value?.data?.id) {
+      fetchData();
+    }
+  }, [UserState?.value?.data]);
 
   const columns = [
     {
@@ -243,7 +224,7 @@ export default function Page() {
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-center justify-between">
         <Heading title="Office Expenses" description="Manage office expenses" />
-        <AddExpensesDialog users={allUsers} />
+        <AddExpensesDialog  />
       </div>
 
       <ConfimationDialog
@@ -310,7 +291,6 @@ export default function Page() {
       <FilterSheet
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
-        users={users}
         onReturn={(val) => {
           setFilterValues(val);
         }}
@@ -371,7 +351,7 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
   );
 };
 
-const FilterSheet = ({ visible, onClose, users, onReturn }) => {
+const FilterSheet = ({ visible, onClose,onReturn }) => {
   const formSchema = z.object({
     start: z.date({ required_error: "Start date is required." }),
     end: z.date({ required_error: "End date is required." }),
@@ -397,7 +377,7 @@ const FilterSheet = ({ visible, onClose, users, onReturn }) => {
       <SheetContent>
         <SheetHeader className="mb-4">
           <SheetTitle>Filter</SheetTitle>
-          <SheetDescription>Filter remibursement data</SheetDescription>
+          <SheetDescription>Filter office expense data</SheetDescription>
         </SheetHeader>
 
         <Form {...form}>
@@ -409,21 +389,10 @@ const FilterSheet = ({ visible, onClose, users, onReturn }) => {
                 <FormItem>
                   <FormLabel>Select User</FormLabel>
                   <FormControl>
-                    <Select
-                      onValueChange={(val) => field.onChange(Number(val))}
-                      value={field.value || ""}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select user..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {users.map((user) => (
-                          <SelectItem key={user.value} value={user.value}>
-                            {user.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <UserSearch
+                          value={field.value}
+                          onReturn={(val) => field.onChange(val)}
+                        />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -468,7 +437,7 @@ const FilterSheet = ({ visible, onClose, users, onReturn }) => {
   );
 };
 
-const AddExpensesDialog = ({ users }) => {
+const AddExpensesDialog = () => {
   const formSchema = z.object({
     note: z.string().min(1, { message: "Note is required." }),
     amount: z
@@ -572,23 +541,10 @@ const AddExpensesDialog = ({ users }) => {
                     <FormItem>
                       <FormLabel>User</FormLabel>
                       <FormControl>
-                        <Select
-                          value={field?.value || ""}
-                          onValueChange={(val) => field.onChange(Number(val))}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select user" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              {users.map((user) => (
-                                <SelectItem key={user.id} value={user.id}>
-                                  {user.name}
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
+                      <UserSearch
+                          value={field.value}
+                          onReturn={(val) => field.onChange(val)}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

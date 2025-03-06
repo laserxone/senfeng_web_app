@@ -205,7 +205,7 @@ export default function Page() {
 
   useEffect(() => {
     async function fetchData() {
-      axios.get("/api/customer").then((response) => {
+      axios.get("/api/customer/machines").then((response) => {
         const apiData = response.data
         const temp = apiData.map((item)=>{
           return ({...item, machines : item.machines.join(", ")})

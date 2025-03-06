@@ -51,7 +51,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import {
   Command,
@@ -113,54 +113,10 @@ import {
 } from "@/components/ui/select";
 import PageTable from "@/components/app-table";
 import { Heading } from "@/components/ui/heading";
-
-const data = [
-  {
-    id: 1,
-    status: "Pending",
-    task_name: "Design Homepage",
-    assigned_to: "John Doe",
-    assigned_by: "Jane Smith",
-    assign_time: "10:30 AM",
-    assign_date: "2024-01-31",
-  },
-  {
-    id: 2,
-    status: "Completed",
-    task_name: "Database Optimization",
-    assigned_to: "Alice Johnson",
-    assigned_by: "Robert Brown",
-    assign_time: "02:15 PM",
-    assign_date: "2024-01-30",
-  },
-  {
-    id: 3,
-    status: "Pending",
-    task_name: "Write API Documentation",
-    assigned_to: "Emily Davis",
-    assigned_by: "Michael Lee",
-    assign_time: "11:45 AM",
-    assign_date: "2024-01-29",
-  },
-  {
-    id: 4,
-    status: "Completed",
-    task_name: "Fix Login Bug",
-    assigned_to: "David Wilson",
-    assigned_by: "Sophia Martinez",
-    assign_time: "09:00 AM",
-    assign_date: "2024-01-28",
-  },
-  {
-    id: 5,
-    status: "Pending",
-    task_name: "Update User Dashboard",
-    assigned_to: "Olivia Taylor",
-    assigned_by: "William Anderson",
-    assign_time: "03:30 PM",
-    assign_date: "2024-01-27",
-  },
-];
+import { UserContext } from "@/store/context/UserContext";
+import axios from "axios";
+import { CustomerSearch } from "@/components/customer-search";
+import { UserSearch } from "@/components/user-search";
 
 const columns = [
   {
@@ -206,7 +162,7 @@ const columns = [
   },
 
   {
-    accessorKey: "assigned_to",
+    accessorKey: "assigned_to_name",
     header: ({ column }) => {
       return (
         <Button
@@ -218,27 +174,11 @@ const columns = [
         </Button>
       );
     },
-    cell: ({ row }) => <div>{row.getValue("assigned_to")}</div>,
+    cell: ({ row }) => <div>{row.getValue("assigned_to_name")}</div>,
   },
 
   {
-    accessorKey: "assigned_by",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Assigned By
-          <ArrowUpDown />
-        </Button>
-      );
-    },
-    cell: ({ row }) => <div>{row.getValue("assigned_by")}</div>,
-  },
-
-  {
-    accessorKey: "assign_time",
+    accessorKey: "created_at_time",
     header: ({ column }) => {
       return (
         <Button
@@ -250,11 +190,18 @@ const columns = [
         </Button>
       );
     },
-    cell: ({ row }) => <div>{row.getValue("assign_time")}</div>,
+    cell: ({ row }) => (
+      <div>
+        {new Date(row.getValue("created_at_time")).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}
+      </div>
+    ),
   },
 
   {
-    accessorKey: "assign_date",
+    accessorKey: "created_at",
     header: ({ column }) => {
       return (
         <Button
@@ -266,16 +213,18 @@ const columns = [
         </Button>
       );
     },
-    cell: ({ row }) => <div>{row.getValue("assign_date")}</div>,
+    cell: ({ row }) => (
+      <div>
+        {new Date(row.getValue("created_at")).toLocaleDateString("en-GB")}
+      </div>
+    ),
   },
 
   {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const payment = row.original;
-
-      return <TaskDetail />;
+      return <TaskDetail detail={row.original || {}} />;
     },
   },
 ];
@@ -284,10 +233,10 @@ const getSchema = (isClientSelected) =>
   z.object({
     radio: z.enum(["office", "client"]),
     task: z.string().min(5, { message: "Task must be at least 5 characters." }),
-    team: z.string().min(1, { message: "Team member is required" }),
+    team: z.number({ required_error: "User is required." }),
     client: isClientSelected
-      ? z.string().min(1, { message: "Client is required" }) // Required when client is selected
-      : z.string().optional(), // Optional when office is selected
+      ? z.number({ required_error: "Client is required." }) // Required when client is selected
+      : z.number().optional(), // Optional when office is selected
   });
 
 const teamMembers = [
@@ -303,61 +252,47 @@ const clients = [
 ];
 
 export default function Page() {
-  const [openDesignation, setOpenDesignation] = useState(false);
-  const [selectedDesignation, setSelectedDesignation] = useState("");
-  const [openTeamMemberSelection, setOpenTeamMemberSelection] = useState(false);
-  const [selectedTeamMember, setSelectedTeamMember] = useState("");
-  const [openClientSelection, setOpenClientSelection] = useState(false);
-  const [selectedClient, setSelectedClient] = useState("");
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState("");
+  const { state: UserState } = useContext(UserContext);
+  const [data, setData] = useState([]);
 
-  const [selectedRadio, setSelectedRadio] = useState("office");
 
-  const form = useForm({
-    resolver: zodResolver(getSchema(selectedRadio === "client")),
-    defaultValues: {
-      radio: "office",
-      task: "",
-      team: "",
-      client: "",
-    },
-  });
-
-  // Effect to update schema dynamically
   useEffect(() => {
-    form.reset(
-      {
-        ...form.getValues(),
-        client: selectedRadio === "client" ? form.getValues().client : "", // Reset client if office is selected
-      },
-      {
-        resolver: zodResolver(getSchema(selectedRadio === "client")),
-      }
-    );
-  }, [selectedRadio, form]);
+    async function fetchData() {
+      axios
+        .get("/api/task")
+        .then((response) => {
+          const apiData = response.data.map((item) => {
+            return { ...item, created_at_time: item.created_at };
+          });
 
-  const onSubmit = (values) => {
-    console.log("Form Data:", values);
-  };
+          setData(apiData);
+        })
+        .catch((e) => {
+          console.log(e);
+        });
+
+    }
+    if (UserState?.value?.data?.id) {
+      fetchData();
+    }
+  }, [UserState?.value?.data]);
+
 
   return (
-     <div className="flex flex-1 flex-col space-y-4">
-           <div className="flex items-center justify-between">
-             <Heading title="Task Management" description="Manage team tasks" />
-             <AddTask />
-           </div>
-      
+    <div className="flex flex-1 flex-col space-y-4">
+      <div className="flex items-center justify-between">
+        <Heading title="Task Management" description="Manage team tasks" />
+        <AddTask />
+      </div>
+
       <PageTable
         columns={columns}
         data={data}
         totalItems={data.length}
         searchItem={"task_name"}
         searchName={"Search task..."}
-      >
-       
-      </PageTable>
-      </div>
+      ></PageTable>
+    </div>
   );
 }
 
@@ -381,15 +316,6 @@ const TaskRadio = ({ onSelection, value }) => {
 };
 
 const TaskDetail = ({ detail }) => {
-  const data = {
-    status: "Completed",
-    assign_date: "2024-02-01",
-    assigned_to: "John Doe",
-    assignee_email: "john.doe@example.com",
-    assigned_task:
-      "Develop login API asjkdhaskdh askj dh as kjdhaskjd haskj dh",
-  };
-
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -423,19 +349,19 @@ const TaskDetail = ({ detail }) => {
 
             <div className="flex flex-col gap-4">
               <Label htmlFor="status" className="text-sm text-gray-800">
-                {data.status}
+                {detail?.status}
               </Label>
               <Label htmlFor="assign_date" className="text-sm text-gray-800">
-                {data.assign_date}
+                {detail?.created_at}
               </Label>
               <Label htmlFor="assigned_to" className="text-sm text-gray-800">
-                {data.assigned_to}
+                {detail?.assigned_to_name}
               </Label>
               <Label htmlFor="assignee_email" className="text-sm text-gray-800">
-                {data.assignee_email}
+                {detail?.assigned_to_email}
               </Label>
               <Label htmlFor="assigned_task" className="text-sm text-gray-800">
-                {data.assigned_task}
+                {detail?.task_name}
               </Label>
             </div>
           </div>
@@ -444,7 +370,7 @@ const TaskDetail = ({ detail }) => {
         <SheetFooter className={"mt-4"}>
           <SheetClose asChild>
             <Button>
-              {data.status === "Completed"
+              {detail?.status === "Completed"
                 ? "Mark as Pending"
                 : "Mark as Completed"}
             </Button>
@@ -463,8 +389,8 @@ const AddTask = () => {
     defaultValues: {
       radio: "office",
       task: "",
-      team: "",
-      client: "",
+      team: null,
+      client: null,
     },
   });
 
@@ -493,11 +419,10 @@ const AddTask = () => {
             form.reset({
               radio: "office",
               task: "",
-              team: "",
-              client: "",
+              team: null,
+              client: null,
             });
           }}
-          
         >
           Add Task
         </Button>
@@ -553,26 +478,10 @@ const AddTask = () => {
                   <FormItem>
                     <FormLabel>Team Member</FormLabel>
                     <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
+                      <UserSearch
                         value={field.value}
-                      >
-                        <SelectTrigger className="w-full justify-between">
-                          <SelectValue placeholder="Select team member..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            {teamMembers.map((member) => (
-                              <SelectItem
-                                key={member.value}
-                                value={member.value}
-                              >
-                                {member.label}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
+                        onReturn={(val) => field.onChange(val)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -581,33 +490,22 @@ const AddTask = () => {
 
               {/* Client Selection (Only When "Client" is Selected) */}
               {selectedRadio === "client" && (
-              <FormField
-              control={form.control}
-              name="client"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Client</FormLabel>
-                  <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="w-full justify-between">
-                        <SelectValue placeholder="Select client..." />
-                      </SelectTrigger>
-                      <SelectContent className="w-[200px]">
-                        <SelectGroup>
-                          {clients.map((client) => (
-                            <SelectItem key={client.value} value={client.value}>
-                              {client.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
+                <FormField
+                  control={form.control}
+                  name="client"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Client</FormLabel>
+                      <FormControl>
+                        <CustomerSearch
+                          value={field.value}
+                          onReturn={(val) => field.onChange(val)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               )}
 
               <Button className="w-full" type="submit">

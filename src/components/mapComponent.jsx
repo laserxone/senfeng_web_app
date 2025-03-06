@@ -1,14 +1,32 @@
 "use client";
 
+import { UserContext } from "@/store/context/UserContext";
 //Map component Component from library
-import { GoogleMap, Marker } from "@react-google-maps/api";
+import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
+import axios from "axios";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 
 //Map's styling
 
 const MapComponent = () => {
+  const { state: UserState } = useContext(UserContext);
+  const [data, setData] = useState([]);
   const { theme } = useTheme();
+
+  useEffect(() => {
+    async function fetchData() {
+      axios.get("/api/map").then((response) => {
+        console.log(response.data);
+        setData(response.data);
+      });
+    }
+
+    if (UserState.value.data?.id) {
+      fetchData();
+    }
+  }, [UserState?.value?.data]);
+
   const defaultMapContainerStyle = {
     width: "100%",
     height: "80vh",
@@ -16,10 +34,10 @@ const MapComponent = () => {
   };
 
   const defaultMapCenter = {
-    lat: 35.8799866,
-    lng: 76.5048004,
+    lat: 31.4868877,
+  lng: 74.3129694
   };
-  const defaultMapZoom = 10;
+  const defaultMapZoom = 11.65;
 
   const [defaultMapOptions, setDefaultMapOptions] = useState({
     zoomControl: true,
@@ -30,7 +48,7 @@ const MapComponent = () => {
   });
 
   useEffect(() => {
-    console.log(theme);
+  
     if (theme === "dark") {
       setDefaultMapOptions((prevState) => ({
         ...prevState,
@@ -44,22 +62,62 @@ const MapComponent = () => {
     }
   }, [theme]);
 
-  const RenderMap = useCallback(() => {
-    return (
-      <GoogleMap
-        mapContainerStyle={defaultMapContainerStyle}
-        center={defaultMapCenter}
-        zoom={defaultMapZoom}
-        options={defaultMapOptions}
-      >
-        <Marker />
-      </GoogleMap>
-    );
-  }, [defaultMapOptions]);
+  const RenderMap = useCallback(
+    ({ list }) => {
+      const [selectedMarker, setSelectedMarker] = useState(null);
+      return (
+        <GoogleMap
+          mapContainerStyle={defaultMapContainerStyle}
+          center={defaultMapCenter}
+          zoom={defaultMapZoom}
+          options={defaultMapOptions}
+        >
+          {list?.map((item, index) => {
+            return (
+              <Marker
+                key={index}
+                onClick={() => setSelectedMarker(item?.id == selectedMarker?.id ? null : item)}
+                position={{
+                  lat: parseFloat(item.location[0]),
+                  lng: parseFloat(item.location[1]),
+                }}
+              >
+                {selectedMarker && selectedMarker.id === item.id && (
+                  <InfoWindow
+                  
+                    options={{
+                      headerDisabled : true
+                    }}
+                    onCloseClick={() => console.log("ub")}
+                    position={{
+                      lat: parseFloat(selectedMarker.location[0]),
+                      lng: parseFloat(selectedMarker.location[1]),
+                    }}
+                  >
+                    <div
+                      style={{
+                        backgroundColor: `white`,
+                        padding: `5px`,
+                        borderRadius: 5,
+                      }}
+                    >
+                      <div>{selectedMarker?.user_name}</div>
+                    </div>
+                  </InfoWindow>
+                )}
+              </Marker>
+            );
+          })}
+        </GoogleMap>
+      );
+    },
+    [defaultMapOptions]
+  );
+
 
   return (
     <div className="w-full">
-      <RenderMap />
+      <RenderMap list={data}/>
     </div>
   );
 };

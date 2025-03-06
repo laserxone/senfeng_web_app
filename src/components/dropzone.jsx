@@ -12,14 +12,14 @@ const Dropzone = ({
   description,
   drag,
   borderColor,
+  noImage=false,
+  value,
 }) => {
-  const [selectedImage, setSelectedImage] = useState(null);
   const updateRef = useRef();
 
   const onDropAccepted = useCallback(
     (acceptedFiles) => {
       const file = acceptedFiles[0];
-      setSelectedImage(URL.createObjectURL(file));
       onDrop(URL.createObjectURL(file));
     },
     [onDrop]
@@ -29,19 +29,8 @@ const Dropzone = ({
     onDropAccepted,
     accept: "image/*",
   });
-
-  const RenderUpdateText = useCallback(() => {
-    return (
-      <button
-        onClick={() => {
-          if (updateRef.current) updateRef.current.click();
-        }}
-        className="text-sm"
-      >
-        Update
-      </button>
-    );
-  }, []);
+ 
+ 
 
   useEffect(() => {
     const handlePaste = (event) => {
@@ -50,7 +39,7 @@ const Dropzone = ({
         if (item.type.startsWith("image/")) {
           const file = item.getAsFile();
           const imageUrl = URL.createObjectURL(file);
-          setSelectedImage(imageUrl); 
+        
           onDrop(imageUrl);
         }
       }
@@ -60,10 +49,14 @@ const Dropzone = ({
     return () => document.removeEventListener("paste", handlePaste);
   }, []);
 
+  async function handleDelete(){
+    onDrop("");
+  }
+
   return (
     <div
       {...getRootProps()}
-      className="w-[300px] flex flex-col items-center justify-center py-8 border rounded-sm"
+      className="w-[300px] flex flex-col items-center justify-center py-2 border rounded-sm"
       style={{ borderColor }}
     >
       <div
@@ -77,37 +70,26 @@ const Dropzone = ({
       >
         {isDragActive ? (
           <Label>{drag}</Label>
-        ) : selectedImage ? (
+        ) : value ? (
           <>
+          {!noImage &&
             <img
-              src={selectedImage}
+              src={value}
               alt="Selected"
               className="cursor-pointer w-20 h-20 object-cover"
             />
+          }
             <div className="mt-2 flex space-x-2 ml-2">
               <button
                 onClick={() => {
-                  setSelectedImage(null);
-                  onDrop("");
+                  handleDelete()
+                 
                 }}
                 className="text-red-500 text-sm"
               >
                 Delete
               </button>
-              <RenderUpdateText />
 
-              <input
-                style={{ display: "none" }}
-                ref={updateRef}
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    onDrop(URL.createObjectURL(e.target.files[0]));
-                    setSelectedImage(URL.createObjectURL(e.target.files[0]));
-                  }
-                }}
-              />
             </div>
           </>
         ) : (

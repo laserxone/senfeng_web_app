@@ -1,6 +1,6 @@
 "use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { AreaStats } from "@/components/charts/area_stats/page";
 import { BarStats } from "@/components/charts/bar_stats/page";
 import { Stats } from "@/components/charts/pie_stats/page";
@@ -11,25 +11,31 @@ import axios from "axios";
 import { PakCities } from "@/constants/data";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { UserContext } from "@/store/context/UserContext";
 
 export default function Page() {
   const [customers, setCustomers] = useState([]);
   const [data, setData] = useState();
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true);
+  const { state: UserState } = useContext(UserContext);
 
   useEffect(() => {
-    fetchCustomerList();
-    fetchDashboardData();
-  }, []);
+    if (UserState?.value?.data?.id) {
+      fetchCustomerList();
+      fetchDashboardData();
+    }
+  }, [UserState?.value?.data]);
 
   async function fetchDashboardData() {
-    axios.get("/api/dashboard").then((response) => {
-      setData(response.data);
-    }).catch((e)=>
-    console.log(e))
-    .finally(()=>{
-      setLoading(false)
-    })
+    axios
+      .get("/api/dashboard")
+      .then((response) => {
+        setData(response.data);
+      })
+      .catch((e) => console.log(e))
+      .finally(() => {
+        setLoading(false);
+      });
   }
 
   async function fetchCustomerList() {
@@ -111,7 +117,7 @@ export default function Page() {
             )}
           </CardContent>
         </Card>
-  
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -148,7 +154,7 @@ export default function Page() {
             )}
           </CardContent>
         </Card>
-  
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -186,7 +192,7 @@ export default function Page() {
             )}
           </CardContent>
         </Card>
-  
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -218,7 +224,7 @@ export default function Page() {
           </CardContent>
         </Card>
       </div>
-  
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
         <div className="col-span-4">
           {loading ? (
@@ -249,7 +255,7 @@ export default function Page() {
           )}
         </div>
       </div>
-  
+
       <div className="mb-5">
         {loading ? (
           <Skeleton className="h-96" />
@@ -264,3 +270,5 @@ export default function Page() {
     </div>
   );
 }
+
+
