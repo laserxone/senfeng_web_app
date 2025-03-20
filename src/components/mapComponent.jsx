@@ -6,7 +6,7 @@ import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
 import axios from "axios";
 import { useTheme } from "next-themes";
 import { useCallback, useContext, useEffect, useState } from "react";
-
+import { BASE_URL } from "@/constants/data";
 //Map's styling
 
 const MapComponent = () => {
@@ -16,7 +16,7 @@ const MapComponent = () => {
 
   useEffect(() => {
     async function fetchData() {
-      axios.get("/api/map").then((response) => {
+      axios.get(`${BASE_URL}/map`).then((response) => {
         console.log(response.data);
         setData(response.data);
       });

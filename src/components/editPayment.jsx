@@ -31,6 +31,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { BASE_URL } from "@/constants/data";
 
 const EditPayment = ({
   visible,
@@ -69,22 +70,22 @@ const EditPayment = ({
   useEffect(() => {
     if (data) {
       form.reset({
-        note: data.note,
+        note: data?.note || "",
         amount: Number(data.amount),
-        mode: data.mode,
-        received_by: data.received_by,
+        mode: data.mode || "",
+        received_by: data.received_by || "",
         transaction_date: new Date(data.transaction_date),
         clearance_date: data?.clearance_date
           ? new Date(data.clearance_date)
           : null,
-        remarks: data.remarks,
+        remarks: data?.remarks || "",
       });
     }
   }, [data]);
   async function onSubmit(values) {
     setLoading(true);
     try {
-      const response = await axios.put(`/api/payment`, {
+      const response = await axios.put(`${BASE_URL}/payment`, {
         ...values,
         machine_id: machine_id,
         id : data.id

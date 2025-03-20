@@ -123,7 +123,9 @@ const PageTable = ({
   searchName,
   ref,
   tableHeader,
-  disableInput = false
+  disableInput = false,
+  totalCustomerText,
+  totalCustomer
 }) => {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
@@ -131,7 +133,7 @@ const PageTable = ({
   const [rowSelection, setRowSelection] = useState({});
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
   const inputRef = useRef();
 
   const paginationState = {
@@ -315,10 +317,10 @@ const PageTable = ({
           </div>
         </div>
         <div className="flex w-full items-center justify-between gap-2 sm:justify-end">
-          <div className="flex w-[150px] items-center justify-center text-sm font-medium">
+          <div className="flex w-[250px] items-center justify-center text-sm font-medium">
             {totalItems > 0 ? (
               <>
-                Page {paginationState.pageIndex + 1} of {table.getPageCount()}
+               {totalCustomerText &&  `${totalCustomerText} ${totalCustomer}`} Page {paginationState.pageIndex + 1} of {table.getPageCount()}
               </>
             ) : (
               "No pages"

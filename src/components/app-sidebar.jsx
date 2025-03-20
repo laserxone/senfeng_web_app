@@ -47,11 +47,20 @@ import { Icons } from "@/components/icons";
 import { ownerNavItems } from "@/constants/data";
 import Image from "next/image";
 import { signOut } from "firebase/auth";
-import { auth } from "@/config/firebase";
+import { auth, db } from "@/config/firebase";
 import useCheckSession from "@/lib/checkSession";
 import { UserContext } from "@/store/context/UserContext";
 import { GetProfileImage } from "@/lib/getProfileImage";
 import { useProfileImage } from "@/hooks/use-profile-image";
+import { NotificationContext } from "@/store/context/NotificationContext";
+import {
+  collection,
+  onSnapshot,
+  orderBy,
+  query,
+  where,
+} from "firebase/firestore";
+import NotificationBadge from "./NotificationBadge";
 
 export const company = {
   name: "SENFENG",
@@ -63,9 +72,8 @@ export default function AppSidebar() {
   const pathname = usePathname();
   const checkSession = useCheckSession();
   const { state: UserState, setUser } = React.useContext(UserContext);
-  const profileImage = useProfileImage()
-  
-  const router = useRouter();
+  const { state: NotificationState, setNotification } = React.useContext(NotificationContext);
+  const profileImage = useProfileImage();
 
   React.useEffect(() => {
     checkSession().then((val) => {
@@ -74,6 +82,24 @@ export default function AppSidebar() {
       }
     });
   }, []);
+
+  React.useEffect(() => {
+    if (UserState?.value?.data?.email) {
+      const q = query(
+        collection(db, "Notification"),
+        where("sendTo", "==", UserState.value.data.email), where("read", "==", false),
+        orderBy("TimeStamp", "desc")
+      );
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        let list = [];
+        querySnapshot.forEach((doc) => {
+          list.push({ ...doc.data(), id: doc.id });
+        });
+        setNotification(list);
+      });
+      return () => unsubscribe();
+    }
+  }, [UserState]);
 
   return (
     <Sidebar collapsible="icon">
@@ -88,7 +114,7 @@ export default function AppSidebar() {
       </SidebarHeader>
       <SidebarContent className="overflow-x-hidden">
         <SidebarGroup>
-          <SidebarGroupLabel>Overview</SidebarGroupLabel>
+          {/* <SidebarGroupLabel>Overview</SidebarGroupLabel> */}
           <SidebarMenu>
             {UserState.value.data?.nav_items &&
               UserState.value.data?.nav_items.map((item) => {
@@ -122,7 +148,9 @@ export default function AppSidebar() {
                                 <Link
                                   href={`/${UserState.value.data?.base_route}${subItem.url}`}
                                 >
-                                  <span className="text-[12px]">{subItem.title}</span>
+                                  <span className="text-[12px]">
+                                    {subItem.title}
+                                  </span>
                                 </Link>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
@@ -161,10 +189,7 @@ export default function AppSidebar() {
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage
-                      src={profileImage}
-                      alt={"User-dp"}
-                    />
+                    <AvatarImage src={profileImage} alt={"User-dp"} />
                     <AvatarFallback className="rounded-lg">
                       {UserState?.value?.data?.name.substring(0, 2)}
                     </AvatarFallback>
@@ -189,10 +214,7 @@ export default function AppSidebar() {
                 <DropdownMenuLabel className="p-0 font-normal">
                   <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                     <Avatar className="h-8 w-8 rounded-lg">
-                      <AvatarImage
-                        src={profileImage}
-                        alt={"User-dp"}
-                      />
+                      <AvatarImage src={profileImage} alt={"User-dp"} />
                       <AvatarFallback className="rounded-lg">
                         {UserState?.value?.data?.name.substring(0, 2)}
                       </AvatarFallback>
@@ -235,6 +257,7 @@ export default function AppSidebar() {
                     <DropdownMenuItem>
                       <Bell />
                       Notifications
+                      <NotificationBadge count={NotificationState?.value?.data.length}/>
                     </DropdownMenuItem>
                   </Link>
                 </DropdownMenuGroup>

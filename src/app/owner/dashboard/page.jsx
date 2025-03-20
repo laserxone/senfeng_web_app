@@ -8,7 +8,7 @@ import { Sale } from "@/components/charts/sales/page";
 import { MapProvider } from "@/providers/map-provider";
 import { CustomerMapComponent } from "@/components/customerMapComponent";
 import axios from "axios";
-import { PakCities } from "@/constants/data";
+import { BASE_URL, PakCities } from "@/constants/data";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserContext } from "@/store/context/UserContext";
@@ -28,7 +28,7 @@ export default function Page() {
 
   async function fetchDashboardData() {
     axios
-      .get("/api/dashboard")
+      .get(`${BASE_URL}/dashboard`)
       .then((response) => {
         setData(response.data);
       })
@@ -41,9 +41,10 @@ export default function Page() {
   async function fetchCustomerList() {
     try {
       let list1 = [];
-      axios.get("/api/customer").then((response) => {
+      axios.get(`${BASE_URL}/customer`).then((response) => {
         const customerList = response.data;
         const newArray = mergeArrays(customerList, PakCities);
+    
         setCustomers(newArray);
       });
     } catch (error) {
@@ -251,7 +252,11 @@ export default function Page() {
           {loading ? (
             <Skeleton className="h-64" />
           ) : (
-            <Stats industryData={data?.industry_count || []} />
+            <Stats
+              industryData={
+                data?.industry_count?.filter((item) => item.industry) || []
+              }
+            />
           )}
         </div>
       </div>
@@ -270,5 +275,3 @@ export default function Page() {
     </div>
   );
 }
-
-

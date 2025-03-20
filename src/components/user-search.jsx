@@ -19,6 +19,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import axios from "axios";
+import { BASE_URL } from "@/constants/data";
 
 export function UserSearch({ value, onReturn }) {
   const [open, setOpen] = React.useState(false);
@@ -27,7 +28,7 @@ export function UserSearch({ value, onReturn }) {
 
   React.useEffect(() => {
     async function fetchData() {
-      axios.get("/api/user").then((response) => {
+      axios.get(`${BASE_URL}/user`).then((response) => {
         if (response.data.length > 0) {
           const finalData = response.data.map((item) => {
             return { value: item.id, label: item?.name || item.email };

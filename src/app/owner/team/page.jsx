@@ -105,6 +105,7 @@ import { Heading } from "@/components/ui/heading";
 import { Textarea } from "@/components/ui/textarea";
 import axios from "axios";
 import Link from "next/link";
+import { BASE_URL } from "@/constants/data";
 
 
 
@@ -194,7 +195,7 @@ export default function Page() {
 
   useEffect(()=>{
     async function fetchData(){
-      axios.get("/api/user")
+      axios.get(`${BASE_URL}/user`)
       .then((response)=>{
         setData(response.data)
       })
@@ -473,6 +474,10 @@ const AddUserDialog = () => {
     {
       label: "Customer Relationship Manager",
       value: "Customer Relationship Manager",
+    },
+    {
+      label: "Customer Relationship Manager (After Sales)",
+      value: "Customer Relationship Manager (After Sales)",
     },
     { label: "Office Boy", value: "Office Boy" },
   ];

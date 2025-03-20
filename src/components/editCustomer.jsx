@@ -31,6 +31,7 @@ import moment from "moment";
 import { UploadImage } from "@/lib/uploadFunction";
 import { toast } from "@/hooks/use-toast";
 import { Checkbox } from "./ui/checkbox";
+import { BASE_URL } from "@/constants/data";
 
 const EditCustomerDialog = ({ onRefresh, visible, onClose, data }) => {
   const [numbers, setNumbers] = useState([""]);
@@ -141,21 +142,21 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data }) => {
 
       if (data.image && !values.image) {
         const deleteRef = await DeleteFromStorage(data.image);
-        const response = await axios.put(`/api/customer/${data.id}`, {
+        const response = await axios.put(`${BASE_URL}/customer/${data.id}`, {
           ...apiData,
           image: "",
         });
       } else if (values.image && !data.image) {
-        const name = `${customer_id}/profile/${moment()
+        const name = `customer/${customer_id}/profile/${moment()
           .valueOf()
           .toString()}.png`;
         const uploadRef = await UploadImage(values.image, name);
-        const response = await axios.put(`/api/customer/${data.id}`, {
+        const response = await axios.put(`${BASE_URL}/customer/${data.id}`, {
           ...apiData,
           image: name,
         });
       } else {
-        const response = await axios.put(`/api/customer/${data.id}`, apiData);
+        const response = await axios.put(`${BASE_URL}/customer/${data.id}`, apiData);
       }
 
       toast({ title: "Customer Edited successfully" });

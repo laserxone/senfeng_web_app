@@ -20,6 +20,7 @@ import ReimbursementEmployee from "@/components/employee/reimbursement";
 import { Heading } from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import CustomerEmployee from "@/components/employee/customer";
+import { BASE_URL } from "@/constants/data";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -32,7 +33,7 @@ export default function Page() {
 
   useEffect(() => {
     const id = search.get("id");
-    axios.get(`/api/user/${id}`).then((response) => {
+    axios.get(`${BASE_URL}/user/${id}`).then((response) => {
       console.log(response.data);
       setData(response.data);
       if (response.data.customers && response.data.customers.length > 0) {
@@ -48,7 +49,7 @@ export default function Page() {
       }
     });
 
-    axios.get(`/api/customer`).then((response) => {
+    axios.get(`${BASE_URL}/customer`).then((response) => {
       setCustomers(response.data);
     });
   }, []);

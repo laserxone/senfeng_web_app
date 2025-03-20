@@ -82,6 +82,7 @@ import { MapProvider } from "@/providers/map-provider";
 import { useTheme } from "next-themes";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import { UserSearch } from "@/components/user-search";
+import { BASE_URL } from "@/constants/data";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -94,7 +95,7 @@ export default function Page() {
   useEffect(() => {
     async function fetchData() {
       axios
-        .get("/api/attendance")
+        .get(`${BASE_URL}/attendance`)
         .then((response) => {
           if (response.data.length > 0) {
             const apiData = response.data.map((item) => {

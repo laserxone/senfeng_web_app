@@ -26,6 +26,7 @@ import { Checkbox } from "./ui/checkbox";
 import { Button } from "./ui/button";
 import { Loader2 } from "lucide-react";
 import { Textarea } from "./ui/textarea";
+import { BASE_URL } from "@/constants/data";
 
 const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
@@ -62,11 +63,11 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
   useEffect(() => {
     if (data) {
       form.reset({
-        machineModel: data?.serial_no,
-        power: data?.power,
-        source: data?.source,
-        orderNo: data?.order_no,
-        contractDate: new Date(data.contract_date),
+        machineModel: data?.serial_no || "",
+        power: data?.power || "",
+        source: data?.source || "",
+        orderNo: data?.order_no || "",
+        contractDate: data?.contract_date ? new Date(data.contract_date) : null,
         isSpeedMoney: data?.speed_money,
         speedMoney: data?.speed_money_amount || "",
         speedMoneyNote: data?.speed_money_note || "",
@@ -80,7 +81,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
     // console.log("Form Data:", values);
     setLoading(true);
     axios
-      .put(`/api/machine/${machine_id}`, {
+      .put(`${BASE_URL}/machine/${machine_id}`, {
         id: machine_id,
         speed_money_note: values.speedMoneyNote,
         speed_money: values.isSpeedMoney,

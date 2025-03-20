@@ -20,13 +20,14 @@ import {
 } from "@/components/ui/popover";
 import axios from "axios";
 import { PakCities } from "@/constants/data";
+import { BASE_URL } from "@/constants/data";
 
 export function IndustrySearch({ value, onReturn }) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState([]);
 
   React.useEffect(() => {
-    axios.get("/api/settings").then((response) => {
+    axios.get(`${BASE_URL}/settings`).then((response) => {
       const list = response.data.industry_list.map((item) => {
         return { value: item, label: item };
       });

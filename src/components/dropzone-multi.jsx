@@ -44,12 +44,6 @@ const DropzoneMulti = ({ onDrop, title, subheading, description, drag, borderCol
     return () => document.removeEventListener("paste", handlePaste);
   }, [handlePaste]);
 
-  const handleUpdate = (index) => {
-    if (updateRefs.current[index]) {
-      updateRefs.current[index].click();
-    }
-  };
-
   const handleFileChange = (event, index) => {
     if (event.target.files && event.target.files[0]) {
       const newFile = event.target.files[0];
@@ -97,12 +91,6 @@ const DropzoneMulti = ({ onDrop, title, subheading, description, drag, borderCol
                     className="text-red-500 text-sm"
                   >
                     Delete
-                  </button>
-                  <button
-                    onClick={() => handleUpdate(index)}
-                    className="text-blue-500 text-sm"
-                  >
-                    Update
                   </button>
                   <input
                     type="file"

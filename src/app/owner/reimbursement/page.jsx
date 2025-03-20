@@ -80,6 +80,7 @@ import { Title } from "@radix-ui/react-dialog";
 import { UserSearch } from "@/components/user-search";
 import moment from "moment";
 import { Card, CardContent } from "@/components/ui/card";
+import { BASE_URL } from "@/constants/data";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -93,7 +94,7 @@ export default function Page() {
   useEffect(() => {
     async function fetchData() {
       axios
-        .get("/api/reimbursement")
+        .get(`${BASE_URL}/reimbursement`)
         .then((response) => {
           setData(response.data);
         })

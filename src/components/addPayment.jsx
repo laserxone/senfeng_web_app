@@ -31,6 +31,7 @@ import axios from "axios";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { BASE_URL } from "@/constants/data";
 
 const AddPayment = ({
   visible,
@@ -70,11 +71,11 @@ const AddPayment = ({
     setLoading(true);
     try {
       if (values.image) {
-        const name = `${customer_id}/machine/${machine_id}/payment/${moment()
+        const name = `customer/${customer_id}/machine/${machine_id}/payment/${moment()
           .valueOf()
           .toString()}.png`;
         const imgRef = await UploadImage(values.image, name);
-        const response = await axios.post(`/api/payment`, {
+        const response = await axios.post(`${BASE_URL}/payment`, {
           ...values,
           machine_id: machine_id,
           image: name,

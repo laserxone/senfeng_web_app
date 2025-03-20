@@ -13,15 +13,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { auth } from "@/config/firebase";
 import { useProfileImage } from "@/hooks/use-profile-image";
+import { NotificationContext } from "@/store/context/NotificationContext";
 import { UserContext } from "@/store/context/UserContext";
 import { signOut } from "firebase/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useContext } from "react";
+import NotificationBadge from "./NotificationBadge";
 export function UserNav() {
   const { state: UserState } = useContext(UserContext);
   const router = useRouter();
   const profileImage = useProfileImage()
+  const {state : NotificationState} = useContext(NotificationContext)
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -55,7 +58,7 @@ export function UserNav() {
           </DropdownMenuItem>
           </Link>
           <Link href={`/${UserState?.value?.data?.base_route}/notification`}>
-          <DropdownMenuItem>Notifications</DropdownMenuItem>
+          <DropdownMenuItem>Notifications <NotificationBadge count={NotificationState?.value?.data.length}/></DropdownMenuItem>
           </Link>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

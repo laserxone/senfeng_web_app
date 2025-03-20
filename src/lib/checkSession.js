@@ -3,6 +3,7 @@ import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useContext, useRef, useState, useEffect } from "react";
 import axios from "axios";
+import { BASE_URL } from "@/constants/data";
 
 export default function useCheckSession() {
     const router = useRouter();
@@ -19,7 +20,7 @@ export default function useCheckSession() {
 
     async function checkData(user) {
         try {
-            const response = await axios.get(`/api/userdetail/${user.email}`);
+            const response = await axios.get(`${BASE_URL}/userdetail/${user.email}`);
             const userData = response.data;
 
             if (userData?.designation) {
@@ -29,7 +30,7 @@ export default function useCheckSession() {
                     }
                 }
 
-                else if (userData.designation === 'Sales' || userData.designation === 'Engineer') {
+                else if (userData.designation === 'Sales') {
                     if (!pathname.includes("sales")) {
                         router.push("/sales/dashboard")
                     }
@@ -40,6 +41,20 @@ export default function useCheckSession() {
                         router.push("/engineer/dashboard")
                     }
                 }
+
+                else if (userData.designation === 'Customer Relationship Manager') {
+                    if (!pathname.includes("crm")) {
+                        router.push("/crm/dashboard")
+                    }
+                }
+
+                else if (userData.designation === 'Customer Relationship Manager (After Sales)') {
+                    if (!pathname.includes("aftersales")) {
+                        router.push("/aftersales/dashboard")
+                    }
+                }
+
+               
 
                 else {
                     signOut(auth);
@@ -67,7 +82,7 @@ export default function useCheckSession() {
                     const result = await debouncedData(user);
                     resolve(result);
                 } else {
-                    if (pathname.includes('owner') || pathname.includes('sales') || pathname.includes('engineer')) {
+                    if (!pathname.includes('login') && !pathname.includes('signup') && !pathname.includes('forgetpassword')) {
                         router.push('/login');
                     }
                     resolve({ status: false });

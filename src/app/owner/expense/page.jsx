@@ -79,6 +79,7 @@ import exportToExcel from "@/lib/exportToExcel";
 import { Title } from "@radix-ui/react-dialog";
 import { UserContext } from "@/store/context/UserContext";
 import { UserSearch } from "@/components/user-search";
+import { BASE_URL } from "@/constants/data";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -92,7 +93,7 @@ export default function Page() {
   useEffect(() => {
     async function fetchData() {
       axios
-        .get("/api/expenses")
+        .get(`${BASE_URL}/expenses`)
         .then((response) => {
           setData(response.data);
         })

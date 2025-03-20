@@ -14,7 +14,7 @@ import {
   Loader2,
   MoreHorizontal,
 } from "lucide-react";
-
+import { BASE_URL } from "@/constants/data";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -32,7 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 
 import {
@@ -89,8 +89,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UploadImage } from "@/lib/uploadFunction";
 import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "@/config/firebase";
+import FilterSheet from "./filterSheet";
 
-export default function Reimbursement({ id }) {
+export default function Reimbursement({
+  id,
+  passingData,
+  onAddRefresh,
+  onFilterReturn,
+}) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
@@ -101,25 +107,9 @@ export default function Reimbursement({ id }) {
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    if (id) {
-      const startDate = moment().startOf("month").toISOString();
-      const endDate = moment().endOf("month").toISOString();
-      fetchData(id, startDate, endDate);
-    }
-  }, [id]);
+      setData([...passingData]);
+  }, [passingData]);
 
-  async function fetchData(id, startDate, endDate) {
-    axios
-      .get(
-        `/api/user/${id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
-      )
-      .then((response) => {
-        setData(response.data);
-      })
-      .catch((e) => {
-        console.log(e);
-      });
-  }
 
   const columns = [
     {
@@ -293,16 +283,7 @@ export default function Reimbursement({ id }) {
           >
             <Filter />
           </Button>
-          {filterValues && (
-            <Button
-              variant="destructive"
-              onClick={() => {
-                setFilterValues(null);
-              }}
-            >
-              Clear
-            </Button>
-          )}
+
           <Button onClick={() => setReimbursementVisible(true)}>
             Add Reimbursement
           </Button>
@@ -310,45 +291,43 @@ export default function Reimbursement({ id }) {
           <div className="flex flex-1 justify-between items-center">
             <Button onClick={handleDownload}>Download</Button>
             <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Amount
-            </CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-           
-              <div className="text-2xl font-bold">
-                {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "PKR",
-                    }).format(total)
-                 }
-              </div>
-            
-
-          </CardContent>
-        </Card>
-         
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Total Amount
+                </CardTitle>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  className="h-4 w-4 text-muted-foreground"
+                >
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "PKR",
+                  }).format(total)}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </PageTable>
       </div>
       <FilterSheet
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
-        onReturn={(val) => {
-          fetchData(id, val.start.toISOString(), val.end.toISOString());
+        onReturn={async (val) => {
+          await onFilterReturn(
+            val.start.toISOString(),
+            val.end.toISOString()
+          );
         }}
       />
       <ImageSheet
@@ -369,7 +348,7 @@ export default function Reimbursement({ id }) {
             temp.sort(
               (a, b) => moment(b.date).valueOf() - moment(a.date).valueOf()
             );
-            setData(temp);
+            onAddRefresh(temp);
           }
           setReimbursementVisible(false);
         }}
@@ -377,35 +356,49 @@ export default function Reimbursement({ id }) {
     </div>
   );
 }
-
 const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
   const [imageOpen, setImageOpen] = useState(false);
   const [localImage, setLocalImage] = useState(null);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const isMountedRef = useRef(true);
 
-  useEffect(() => {
-    if (img) {
-      if (img?.includes("http")) {
-        setLocalImage(img);
-      } else {
+  // Memoized function to fetch image URL (prevents unnecessary re-fetching)
+  const fetchImage = useCallback(async () => {
+    if (!img) return;
+
+    if (img.includes("http")) {
+      if (isMountedRef.current) setLocalImage(img);
+    } else {
+      try {
         const storageRef = ref(storage, img);
-        getDownloadURL(storageRef).then((url) => {
-          setLocalImage(url);
-        });
+        const url = await getDownloadURL(storageRef);
+        console.log(url)
+        if (isMountedRef.current) setLocalImage(url);
+      } catch (error) {
+        console.error("Error fetching image URL:", error);
       }
     }
-    return () => {
-      setLocalImage(null);
-    };
   }, [img]);
 
-  function handleClose() {
+  // Use Effect to fetch image on mount or when img changes
+  useEffect(() => {
+    isMountedRef.current = true;
+    fetchImage();
+
+    return () => {
+      isMountedRef.current = false;
+      setLocalImage(null)
+    };
+  }, [fetchImage]);
+
+  // Memoized function for closing modal
+  const handleClose = useCallback(() => {
     if (!imageOpen) {
       onClose();
     }
-  }
+  }, [imageOpen, onClose]);
 
-  const [isZoomed, setIsZoomed] = useState(false);
-
+  // Memoized function for zoom change
   const handleZoomChange = useCallback((shouldZoom) => {
     setIsZoomed(shouldZoom);
     if (!shouldZoom) {
@@ -413,108 +406,40 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
     }
   }, []);
 
+  // Memoized local image URL to prevent unnecessary re-renders
+  const memoizedImage = useMemo(() => localImage, [localImage]);
+
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
       <SheetContent>
         <SheetHeader className="mb-4">
-          <SheetTitle>Bill detail</SheetTitle>
+          <SheetTitle>Bill Detail</SheetTitle>
 
           <strong>Submitted by</strong>
-          <Label>{submittedBy}</Label>
+          <p>{submittedBy || "N/A"}</p>
 
           <strong>Description</strong>
-          <Label>{description}</Label>
+          <p>{description || "No description available"}</p>
 
-          <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
-            <img
-              onClick={() => setImageOpen(true)}
-              className="hover:cursor-pointer"
-              src={localImage}
-              alt="reimbursement-img"
-              style={{ flex: 1 }}
-            />
-          </ControlledZoom>
+          {memoizedImage ? (
+            <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
+              <img
+                onClick={() => setImageOpen(true)}
+                className="hover:cursor-pointer"
+                src={memoizedImage}
+                alt="reimbursement-img"
+                style={{ flex: 1, maxWidth: "100%", maxHeight: "400px", objectFit: "contain" }}
+              />
+            </ControlledZoom>
+          ) : (
+            <p>Loading image...</p>
+          )}
         </SheetHeader>
       </SheetContent>
     </Sheet>
   );
 };
 
-const FilterSheet = ({ visible, onClose, onReturn }) => {
-  const formSchema = z.object({
-    start: z.date({ required_error: "Start date is required." }),
-    end: z.date({ required_error: "End date is required." }),
-  });
-
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      start: undefined,
-      end: undefined,
-    },
-  });
-
-  function onSubmit(values) {
-    onReturn(values);
-    onClose();
-  }
-
-  return (
-    <Sheet open={visible} onOpenChange={onClose}>
-      <SheetContent>
-        <SheetHeader className="mb-4">
-          <SheetTitle>Filter</SheetTitle>
-          <SheetDescription>Filter remibursement data</SheetDescription>
-        </SheetHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="start"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start date</FormLabel>
-                  <FormControl>
-                    <AppCalendar
-                      date={field.value}
-                      onChange={(date) => field.onChange(date)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="end"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>End date</FormLabel>
-                  <FormControl>
-                    <AppCalendar
-                      date={field.value}
-                      onChange={(date) => {
-                        console.log(date);
-                        field.onChange(date);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button className="w-full" type="submit">
-              Filter
-            </Button>
-          </form>
-        </Form>
-      </SheetContent>
-    </Sheet>
-  );
-};
 
 const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
   const [loading, setLoading] = useState(false);
@@ -546,17 +471,17 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
     try {
       const name = `${id}/reimbursement/${moment().valueOf().toString()}.png`;
       const imgRef = await UploadImage(values.image, name);
-      const response = await axios.post(`/api/reimbursement`, {
+      const response = await axios.post(`${BASE_URL}/reimbursement`, {
         amount: values.amount,
         title: values.title,
         description: values.description,
         city: values.city,
         image: name,
         date: values.date,
-        submitted_by : id
+        submitted_by: id,
       });
       onRefresh(response.data.reimbursement);
-      form.reset()
+      form.reset();
     } catch (error) {
       console.log(error);
     } finally {

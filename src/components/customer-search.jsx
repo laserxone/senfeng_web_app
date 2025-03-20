@@ -19,6 +19,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import axios from "axios";
+import { BASE_URL } from "@/constants/data";
 
 export function CustomerSearch({ value, onReturn }) {
   const [open, setOpen] = React.useState(false);
@@ -27,7 +28,7 @@ export function CustomerSearch({ value, onReturn }) {
 
   React.useEffect(() => {
     async function fetchData() {
-      axios.get("/api/customer?withoutsale=true").then((response) => {
+      axios.get(`${BASE_URL}/customer?withoutsale=true`).then((response) => {
         if (response.data.length > 0) {
           const apiData = response.data.sort((a, b) =>
             a?.name.localeCompare(b?.name || "")

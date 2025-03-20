@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
@@ -24,11 +24,22 @@ import { IndustrySearch } from "./industry-search";
 import StarRating from "./startRating";
 import { Checkbox } from "./ui/checkbox";
 import { RequiredStar } from "./RequiredStar";
+import { UserSearch } from "./user-search";
+import { toast } from "@/hooks/use-toast";
+import { BASE_URL } from "@/constants/data";
+import { UserContext } from "@/store/context/UserContext";
 
-const AddCustomerDialog = ({ onRefresh, visible, onClose }) => {
+const AddCustomerDialog = ({
+  onRefresh,
+  visible,
+  onClose,
+  user_id,
+  ownership,
+}) => {
   const [numbers, setNumbers] = useState([""]);
   const [numberError, setNumberError] = useState("");
   const [loading, setLoading] = useState(false);
+  const {state : UserState} = useContext(UserContext)
 
   const formSchema = z.object({
     company: z.string().optional(), // Optional field without min(1)
@@ -41,6 +52,7 @@ const AddCustomerDialog = ({ onRefresh, visible, onClose }) => {
     group: z.string().optional(), // Optional field
     rating: z.number().optional(),
     member: z.boolean().optional(),
+    ownership: z.number().nullable().optional(),
   });
 
   const form = useForm({
@@ -56,19 +68,21 @@ const AddCustomerDialog = ({ onRefresh, visible, onClose }) => {
       group: "",
       rating: 0,
       member: false,
+      ownership: null,
     },
   });
 
   const { control, setValue, getValues } = form;
 
   function handleClose(val) {
-    setNumberError("")
-    setNumbers([""])
+    setNumberError("");
+    setNumbers([""]);
     form.reset();
     onClose(val);
   }
 
   async function onSubmit(values) {
+   
     setLoading(true);
 
     try {
@@ -80,7 +94,7 @@ const AddCustomerDialog = ({ onRefresh, visible, onClose }) => {
         return;
       }
 
-      const response = await axios.post(`/api/customer`, {
+      const response = await axios.post(`${BASE_URL}/customer`, {
         name: values.company,
         email: values.email,
         customer_group: values.group,
@@ -93,9 +107,10 @@ const AddCustomerDialog = ({ onRefresh, visible, onClose }) => {
         image: "",
         remarks: values.remarks,
         member: values.member,
+        ownership: UserState.value.data?.designation == 'Sales' ? UserState.value.data?.id : ownership ? values.ownership : undefined,
       });
       toast({ title: "Customer Addedd successfully" });
-      onRefresh();
+     await onRefresh();
       handleClose(false);
     } catch (error) {
       toast({
@@ -116,8 +131,8 @@ const AddCustomerDialog = ({ onRefresh, visible, onClose }) => {
   };
 
   const handleNumberChange = (index, value) => {
-    if(numberError){
-      setNumberError("")
+    if (numberError) {
+      setNumberError("");
     }
     setNumbers((prevState) => {
       const newState = [...prevState];
@@ -132,8 +147,7 @@ const AddCustomerDialog = ({ onRefresh, visible, onClose }) => {
         <DialogHeader>
           <DialogTitle>Add new customer</DialogTitle>
         </DialogHeader>
-        <div>
-          <ScrollArea className="h-[75vh] px-2">
+          <ScrollArea className="max-h-[75vh] px-2">
             <div className="px-2">
               <Form {...form}>
                 <form
@@ -144,7 +158,11 @@ const AddCustomerDialog = ({ onRefresh, visible, onClose }) => {
                     <div className="flex flex-1 flex-col space-y-4">
                       <div>
                         <FormItem>
-                          <FormLabel style={{color : numberError ? "red" : "black"}}>Phone Number <RequiredStar /></FormLabel>
+                          <FormLabel
+                            style={{ color: numberError ? "red" : "black" }}
+                          >
+                            Phone Number <RequiredStar />
+                          </FormLabel>
                           {numbers.map((num, index) => (
                             <div
                               key={index}
@@ -186,7 +204,9 @@ const AddCustomerDialog = ({ onRefresh, visible, onClose }) => {
                         name="owner"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Customer <RequiredStar /></FormLabel>
+                            <FormLabel>
+                              Customer <RequiredStar />
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Enter customer name"
@@ -237,7 +257,9 @@ const AddCustomerDialog = ({ onRefresh, visible, onClose }) => {
                         name="city"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>City <RequiredStar /></FormLabel>
+                            <FormLabel>
+                              City <RequiredStar />
+                            </FormLabel>
                             <FormControl>
                               <CitiesSearch
                                 value={field.value}
@@ -248,6 +270,27 @@ const AddCustomerDialog = ({ onRefresh, visible, onClose }) => {
                           </FormItem>
                         )}
                       />
+
+                      {ownership && (
+                        <FormField
+                          control={control}
+                          name="ownership"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>
+                                Ownership <RequiredStar />
+                              </FormLabel>
+                              <FormControl>
+                                <UserSearch
+                                  value={field.value}
+                                  onReturn={(val) => field.onChange(val)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
                     </div>
 
                     <div className="flex flex-1 flex-col space-y-4">
@@ -356,7 +399,7 @@ const AddCustomerDialog = ({ onRefresh, visible, onClose }) => {
               </Form>
             </div>
           </ScrollArea>
-        </div>
+        
       </DialogContent>
     </Dialog>
   );

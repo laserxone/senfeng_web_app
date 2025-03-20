@@ -1,5 +1,8 @@
-import { redirect } from "next/navigation";
+"use client"
+import { redirect, useRouter } from "next/navigation";
 
 export default function Page (){
-    redirect("/owner/dashboard")
+    const router = useRouter()
+    router.push("/sales/dashboard")
 }
+

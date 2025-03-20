@@ -117,6 +117,7 @@ import { UserContext } from "@/store/context/UserContext";
 import axios from "axios";
 import { CustomerSearch } from "@/components/customer-search";
 import { UserSearch } from "@/components/user-search";
+import { BASE_URL } from "@/constants/data";
 
 const columns = [
   {
@@ -259,7 +260,7 @@ export default function Page() {
   useEffect(() => {
     async function fetchData() {
       axios
-        .get("/api/task")
+        .get(`${BASE_URL}/task`)
         .then((response) => {
           const apiData = response.data.map((item) => {
             return { ...item, created_at_time: item.created_at };

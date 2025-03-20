@@ -1,10 +1,9 @@
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
-const exportToExcel = (headers, data, fileName="data.xlsx") => {
+const exportToExcel = (headers, data, fileName = "data.xlsx") => {
     if (!data || data.length === 0) {
-        console.error("No data available to export");
-        return;
+        throw new Error("No data available to export");
     }
 
     const worksheetData = [headers, ...data];
@@ -15,5 +14,6 @@ const exportToExcel = (headers, data, fileName="data.xlsx") => {
     const excelBlob = new Blob([excelBuffer], { type: "application/octet-stream" });
     saveAs(excelBlob, fileName);
 };
+
 
 export default exportToExcel;

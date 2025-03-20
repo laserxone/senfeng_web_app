@@ -112,6 +112,7 @@ import { Heading } from "@/components/ui/heading";
 import axios from "axios";
 import Link from "next/link";
 import { CustomerSearch } from "@/components/customer-search";
+import { BASE_URL } from "@/constants/data";
 
 const tableHeader = [
   {
@@ -144,7 +145,7 @@ export default function Page() {
 
   useEffect(() => {
     async function fetchData() {
-      axios.get("/api/feedback").then((response) => {
+      axios.get(`${BASE_URL}/feedback`).then((response) => {
         setData(response.data);
       });
     }

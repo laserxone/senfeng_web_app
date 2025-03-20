@@ -83,8 +83,10 @@ import { useTheme } from "next-themes";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import { UserSearch } from "@/components/user-search";
 import moment from "moment";
+import FilterSheet from "./filterSheet";
+import { BASE_URL } from "@/constants/data";
 
-export default function Attendance({ id }) {
+export default function Attendance({ passingData, onFilterReturn }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [value, setValue] = useState("");
@@ -93,32 +95,33 @@ export default function Attendance({ id }) {
   const [filterValues, setFilterValues] = useState(null);
 
   useEffect(() => {
-    if (id) {
-      const startDate = moment().startOf("month").toISOString();
-      const endDate = moment().endOf("month").toISOString();
-      fetchData(id, startDate, endDate);
-    }
-  }, [id]);
+    setData(passingData);
+  }, [passingData]);
 
   async function fetchData(id, startDate, endDate) {
-    axios
-      .get(`/api/user/${id}/attendance?start_date=${startDate}&end_date=${endDate}`)
-      .then((response) => {
-        console.log(response.data);
-        if (response.data.length > 0) {
-          const apiData = response.data.map((item) => {
-            return {
-              ...item,
-              date: item?.time_in,
-              status: item?.time_in ? "Present" : "Absent",
-            };
-          });
-          setData(apiData);
-        }
-      })
-      .catch((e) => {
-        console.log(e);
-      });
+    return new Promise((res, rej) => {
+      axios
+        .get(
+          `${BASE_URL}/user/${id}/attendance?start_date=${startDate}&end_date=${endDate}`
+        )
+        .then((response) => {
+          if (response.data.length > 0) {
+            const apiData = response.data.map((item) => {
+              return {
+                ...item,
+                date: item?.time_in,
+                status: item?.time_in ? "Present" : "Absent",
+              };
+            });
+            setData(apiData);
+          }
+          res(true);
+        })
+        .catch((e) => {
+          console.log(e);
+          rej(null);
+        });
+    });
   }
 
   const columns = [
@@ -270,13 +273,6 @@ export default function Attendance({ id }) {
     },
   ];
 
-  function handleClear() {
-    if (pageTableRef.current) {
-      pageTableRef.current.handleClear();
-      setValue("");
-    }
-  }
-
   return (
     <div className="flex flex-1 flex-col space-y-4 mt-4">
       <ConfimationDialog
@@ -290,12 +286,8 @@ export default function Attendance({ id }) {
         <PageTable
           ref={pageTableRef}
           columns={columns}
-          data={
-           data
-          }
-          totalItems={
-           data.length
-          }
+          data={data}
+          totalItems={data.length}
           searchItem={value.toLowerCase()}
           searchName={value ? `Search ${value}...` : "Select filter first..."}
           tableHeader={tableHeader}
@@ -331,14 +323,6 @@ export default function Attendance({ id }) {
               </Select>
 
               <Button
-                onClick={() => {
-                  handleClear();
-                }}
-              >
-                Clear
-              </Button>
-
-              <Button
                 onClick={() => setFilterVisible(true)}
                 variant="ghost"
                 className="h-8 w-8 p-0"
@@ -353,136 +337,13 @@ export default function Attendance({ id }) {
       <FilterSheet
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
-        onReturn={(val) => {
-          fetchData(id, val.start.toISOString(), val.end.toISOString())
+        onReturn={async (val) => {
+          await onFilterReturn(val.start.toISOString(), val.end.toISOString());
         }}
       />
     </div>
   );
 }
-
-const FilterSheet = ({ visible, onClose, onReturn }) => {
-  const formSchema = z.object({
-    start: z.date({ required_error: "Start date is required." }),
-    end: z.date({ required_error: "End date is required." }),
-  });
-
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      start: null,
-      end: null,
-    },
-  });
-
-  function onSubmit(values) {
-    onReturn(values);
-    onClose();
-  }
-
-  return (
-    <Sheet open={visible} onOpenChange={onClose}>
-      <SheetContent>
-        <SheetHeader className="mb-4">
-          <SheetTitle>Filter</SheetTitle>
-          <SheetDescription>Filter data</SheetDescription>
-        </SheetHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="start"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start date</FormLabel>
-                  <FormControl>
-                    <AppCalendar
-                      date={field.value}
-                      onChange={(date) => field.onChange(date)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="end"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>End date</FormLabel>
-                  <FormControl>
-                    <AppCalendar
-                      date={field.value}
-                      onChange={(date) => {
-                        field.onChange(date);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button className="w-full" type="submit">
-              Submit
-            </Button>
-          </form>
-        </Form>
-
-        {/* <div className="flex flex-col gap-4 py-4 w-full">
-          <div className="grid grid-cols-4 items-center gap-4 w-full">
-            <Label htmlFor="monthlysalary" className="text-left">
-              Select User
-            </Label>
-            <Select onValueChange={setUser} value={user}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select user..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {users.map((eachUser) => (
-                    <SelectItem
-                      key={eachUser.value}
-                      value={eachUser.value}
-                      onClick={() => {
-                        setValue(
-                          eachUser.value === value ? "" : framework.value
-                        );
-                      }}
-                    >
-                      {eachUser.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="totalsalary" className="text-left">
-              Start Date
-            </Label>
-            <AppCalendar date={startDate} onChange={setStartDate} />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="monthlysalary" className="text-left">
-              End Date
-            </Label>
-            <AppCalendar date={endDate} onChange={setEndDate} />
-          </div>
-        </div> */}
-        {/* <SheetFooter>
-          <SheetClose disabled={!startDate || !endDate} asChild>
-            <Button onClick={() => console.log("press")}>Filter</Button>
-          </SheetClose>
-        </SheetFooter> */}
-      </SheetContent>
-    </Sheet>
-  );
-};
 
 const AttendanceDetail = ({ detail }) => {
   return (

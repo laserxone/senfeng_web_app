@@ -120,6 +120,7 @@ import { UploadImage } from "@/lib/uploadFunction";
 import { useToast } from "@/hooks/use-toast";
 import { UserContext } from "@/store/context/UserContext";
 import AddCustomerDialog from "../addCustomer";
+import { BASE_URL } from "@/constants/data";
 
 const tableHeader = [
   {
@@ -148,19 +149,10 @@ const tableHeader = [
   },
 ];
 
-export default function CustomerEmployee({ id, customer_data, onRefresh }) {
-  const [sorting, setSorting] = useState([]);
-  const [columnFilters, setColumnFilters] = useState([]);
-  const [columnVisibility, setColumnVisibility] = useState({});
-  const [rowSelection, setRowSelection] = useState({});
-  const [openDesignation, setOpenDesignation] = useState(false);
-  const [selectedDesignation, setSelectedDesignation] = useState("");
-  const [open, setOpen] = useState(false);
+export default function CustomerEmployee({ id, customer_data, onRefresh, user_id, ownership, disableAdd = false,  totalCustomerText }) {
   const [value, setValue] = useState("");
   const pageTableRef = useRef();
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [filterVisible, setFilterVisible] = useState(false);
-  const router = useRouter();
   const [data, setData] = useState([]);
   const [addCustomer, setAddCustomer] = useState(false);
   const { state: UserState } = useContext(UserContext);
@@ -170,16 +162,13 @@ export default function CustomerEmployee({ id, customer_data, onRefresh }) {
       fetchData();
     } else {
       if (customer_data && customer_data.length > 0) {
-        const filteredCustomers = customer_data.filter(
-          (customer) => !customer.member
-        );
-        setData(filteredCustomers);
+        setData(customer_data);
       }
     }
   }, [id, customer_data]);
 
   async function fetchData() {
-    axios.get(`/api/user/${id}/customer`).then((response) => {
+    axios.get(`${BASE_URL}/user/${id}/customer`).then((response) => {
       const filteredCustomers = response.data.filter(
         (customer) => !customer.member
       );
@@ -335,6 +324,8 @@ export default function CustomerEmployee({ id, customer_data, onRefresh }) {
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex flex-1 min-h-[600px]">
         <PageTable
+        totalCustomerText={totalCustomerText}
+        totalCustomer={data.length}
           ref={pageTableRef}
           columns={columns}
           data={data}
@@ -377,13 +368,15 @@ export default function CustomerEmployee({ id, customer_data, onRefresh }) {
               >
                 Clear
               </Button>
-              <Button onClick={() => setAddCustomer(true)}>Add Customer</Button>
+            {!disableAdd &&  <Button onClick={() => setAddCustomer(true)}>Add Customer</Button>}
             </div>
           </div>
         </PageTable>
       </div>
 
       <AddCustomerDialog
+      user_id={user_id}
+      ownership={ownership}
         visible={addCustomer}
         onClose={setAddCustomer}
         onRefresh={() => {
@@ -406,38 +399,3 @@ export default function CustomerEmployee({ id, customer_data, onRefresh }) {
     </div>
   );
 }
-
-const FilterSheet = ({ visible, onClose }) => {
-  const [startDate, setStartDate] = useState();
-  const [endDate, setEndDate] = useState();
-
-  return (
-    <Sheet open={visible} onOpenChange={onClose}>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle>Filter</SheetTitle>
-          <SheetDescription>Select Dates and press filter.</SheetDescription>
-        </SheetHeader>
-        <div className="flex flex-col gap-4 py-4 w-full">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="totalsalary" className="text-left">
-              Start Date
-            </Label>
-            <AppCalendar date={startDate} onChange={setStartDate} />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="monthlysalary" className="text-left">
-              End Date
-            </Label>
-            <AppCalendar date={endDate} onChange={setEndDate} />
-          </div>
-        </div>
-        <SheetFooter>
-          <SheetClose disabled={!startDate || !endDate} asChild>
-            <Button onClick={() => console.log("press")}>Filter</Button>
-          </SheetClose>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
-  );
-};
