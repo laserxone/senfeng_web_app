@@ -149,7 +149,8 @@ export default function CustomerDetail() {
             <div className="flex flex-col">
               <h1 className="text-3xl font-bold">{data?.name}</h1>
               <h1 className="text-md font-medium">
-                Rating: {data?.rating || "Nil" + " out of " + 5}
+                Rating:{" "}
+                {data?.rating ? `${data.rating} out of 5` : "Not rated yet"}
               </h1>
             </div>
           </div>
@@ -160,13 +161,14 @@ export default function CustomerDetail() {
           />
         </div>
 
-        <Tabs defaultValue="feedback" className="w-full">
+        <Tabs defaultValue="about" className="w-full">
           <TabsList>
-            {data && data?.member ? (
-              <TabsTrigger value="aftersales">After Sales</TabsTrigger>
-            ) : (
-              <TabsTrigger value="feedback">Feedback</TabsTrigger>
-            )}
+            {data &&
+              (data?.member ? (
+                <TabsTrigger value="aftersales">After Sales</TabsTrigger>
+              ) : (
+                <TabsTrigger value="feedback">Feedback</TabsTrigger>
+              ))}
 
             <TabsTrigger value="customers">Machines</TabsTrigger>
             {/* <TabsTrigger value="documents">Documents</TabsTrigger> */}
@@ -367,7 +369,7 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
           <AccordionTrigger className="px-4 py-2 hover:no-underline">
             <div className="flex justify-between items-center w-full">
               <Link
-                href={`${UserState.value.data?.base_route}/customer/machine?id=${machine.id}`}
+                href={`/${UserState.value.data?.base_route}/customer/machine?id=${machine.id}`}
               >
                 <h3 className="font-semibold text-lg hover:underline">
                   {machine.serial_no}
