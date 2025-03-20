@@ -366,6 +366,8 @@ export default function CustomerMainPage() {
         </div>
 
         <PageTable
+          totalCustomerText={"Total Customers"}
+          totalCustomer={data.length}
           ref={pageTableRef}
           columns={columns}
           data={data}

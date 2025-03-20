@@ -15,7 +15,15 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import PageContainer from "@/components/page-container";
 import { Heading } from "@/components/ui/heading";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { promise, z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -88,6 +96,7 @@ import { storage } from "@/config/firebase";
 import EditPayment from "@/components/editPayment";
 import { UploadImage } from "@/lib/uploadFunction";
 import { BASE_URL } from "@/constants/data";
+import { UserContext } from "@/store/context/UserContext";
 
 export default function Machine() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -107,12 +116,13 @@ export default function Machine() {
   const [addPayment, setAddPayment] = useState(false);
   const [editPayment, setEditPayment] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState({});
+  const { state: UserState } = useContext(UserContext);
 
   useEffect(() => {
-    if (id) {
+    if (id && UserState?.value?.data?.id) {
       debouncedFetchData(id);
     }
-  }, [search]);
+  }, [search, UserState]);
 
   const debouncedFetchData = useCallback(
     debounce((id) => {
@@ -122,38 +132,44 @@ export default function Machine() {
   );
 
   async function fetchData(id) {
-    return new Promise((resolve, reject) => {
-      axios
-        .get(`${BASE_URL}/machine/${id}`)
-        .then((response) => {
-          console.log(response.data);
-          setData(response.data);
-          if (response.data?.machine) {
-            setTotal(Number(response.data.machine.price || 0));
-            if (response.data.machine?.payments) {
-              setPayments(response.data.machine?.payments);
-              if (response.data.machine?.payments.length > 0) {
-                let temp = 0;
-                response.data.machine?.payments.map((eachPayment) => {
-                  temp = temp + Number(eachPayment?.amount || 0);
-                });
-                setReceived(temp);
-              }
-            }
-          }
-          resolve(true);
-        })
-        .catch((e) => {
-          reject(null);
-          toast({
-            variant: "destructive",
-            title: "Something went wrong.",
-            description:
-              e.response.data?.message ||
-              "There was a problem with your request.",
-          });
+    try {
+      const response = await axios.get(`${BASE_URL}/machine/${id}`);
+      const machine = response.data?.machine;
+      const user = UserState?.value?.data;
+
+      if (
+        (user?.designation === "Sales" || user?.designation === "Engineer") &&
+        machine?.sell_by !== user?.id
+      ) {
+        toast({
+          variant: "destructive",
+          title: "Error.",
+          description: "Machine was not sold by you",
         });
-    });
+        return false;
+      }
+
+      setData(response.data);
+      if (machine) {
+        setTotal(Number(machine.price || 0));
+
+        const payments = machine?.payments || [];
+        setPayments(payments);
+        setReceived(
+          payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
+        );
+      }
+
+      return true;
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Something went wrong.",
+        description:
+          e.response?.data?.message || "There was a problem with your request.",
+      });
+      return null;
+    }
   }
 
   const columns = [
@@ -493,10 +509,7 @@ const ClientCard = memo(({ data, payment, machine }) => {
       </div>
     </Card>
   );
-})
-
-
-
+});
 
 const ImageSheet = ({ visible, onClose, img, note, remarks }) => {
   const [imageOpen, setImageOpen] = useState(false);
@@ -555,7 +568,13 @@ const ImageSheet = ({ visible, onClose, img, note, remarks }) => {
   );
 };
 
-const ViewImagesSheet = ({ visible, onClose, data, onRefresh, customer_id }) => {
+const ViewImagesSheet = ({
+  visible,
+  onClose,
+  data,
+  onRefresh,
+  customer_id,
+}) => {
   const [imageOpen, setImageOpen] = useState(false);
   const [contractPdfImages, setContractPdfImages] = useState([]);
   const [otherPdfImages, setOtherPdfImages] = useState([]);
@@ -632,20 +651,34 @@ const ViewImagesSheet = ({ visible, onClose, data, onRefresh, customer_id }) => 
           />
           <ScrollArea className="h-[85vh] px-4">
             <div className="flex flex-1 flex-col gap-2">
-              <Label className="font-semibold text-[18px]">Contract Images</Label>
+              <Label className="font-semibold text-[18px]">
+                Contract Images
+              </Label>
               {contractImages.map((item, ind) => (
-                <RenderImage key={ind} img={item} setImageOpen={setImageOpen}/>
+                <RenderImage key={ind} img={item} setImageOpen={setImageOpen} />
               ))}
               {contractPdfImages.map((item, ind) => (
-                <RenderImage key={ind} img={item} type="pdf" setImageOpen={setImageOpen}/>
+                <RenderImage
+                  key={ind}
+                  img={item}
+                  type="pdf"
+                  setImageOpen={setImageOpen}
+                />
               ))}
 
-              <Label className="font-semibold text-[18px]">Additional Images</Label>
+              <Label className="font-semibold text-[18px]">
+                Additional Images
+              </Label>
               {otherImages.map((item, ind) => (
-                <RenderImage key={ind} img={item} setImageOpen={setImageOpen}/>
+                <RenderImage key={ind} img={item} setImageOpen={setImageOpen} />
               ))}
               {otherPdfImages.map((item, ind) => (
-                <RenderImage key={ind} img={item} type="pdf" setImageOpen={setImageOpen}/>
+                <RenderImage
+                  key={ind}
+                  img={item}
+                  type="pdf"
+                  setImageOpen={setImageOpen}
+                />
               ))}
             </div>
           </ScrollArea>
@@ -654,7 +687,6 @@ const ViewImagesSheet = ({ visible, onClose, data, onRefresh, customer_id }) => 
     </Sheet>
   );
 };
-
 
 const RenderImage = memo(({ img, type, setImageOpen }) => {
   const [localImage, setLocalImage] = useState(null);
@@ -678,7 +710,9 @@ const RenderImage = memo(({ img, type, setImageOpen }) => {
         });
       }
     }
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [img, type]);
 
   return (
@@ -687,8 +721,6 @@ const RenderImage = memo(({ img, type, setImageOpen }) => {
     </ControlledZoom>
   );
 });
-
-
 
 const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
   const [loading, setLoading] = useState(false);
