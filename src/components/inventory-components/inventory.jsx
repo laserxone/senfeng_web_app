@@ -154,7 +154,8 @@ const RenderInventory = () => {
   const columns = [
     {
       accessorKey: "shipment",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"

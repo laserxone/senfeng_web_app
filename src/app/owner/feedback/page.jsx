@@ -113,6 +113,7 @@ import axios from "axios";
 import Link from "next/link";
 import { CustomerSearch } from "@/components/customer-search";
 import { BASE_URL } from "@/constants/data";
+import moment from "moment";
 
 const tableHeader = [
   {
@@ -155,7 +156,8 @@ export default function Page() {
   const columns = [
     {
       accessorKey: "customer_name",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -180,7 +182,8 @@ export default function Page() {
     },
     {
       accessorKey: "note",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -196,7 +199,8 @@ export default function Page() {
 
     {
       accessorKey: "status",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -224,7 +228,8 @@ export default function Page() {
 
     {
       accessorKey: "created_at",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -238,7 +243,7 @@ export default function Page() {
       cell: ({ row }) => (
         <div>
           {row.getValue("created_at")
-            ? new Date(row.getValue("created_at")).toLocaleDateString("en-GB")
+            ? moment(new Date(row.getValue("created_at"))).format("YYYY-MM-DD")
             : ""}
         </div>
       ),

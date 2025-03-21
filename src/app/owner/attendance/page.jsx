@@ -83,6 +83,7 @@ import { useTheme } from "next-themes";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import { UserSearch } from "@/components/user-search";
 import { BASE_URL } from "@/constants/data";
+import moment from "moment";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -120,6 +121,7 @@ export default function Page() {
   const columns = [
     {
       accessorKey: "date",
+      filterFn: "includesString",
       header: ({ column }) => {
         return (
           <Button
@@ -134,13 +136,14 @@ export default function Page() {
       cell: ({ row }) => (
         <div>
           {row.getValue("date")
-            ? new Date(row.getValue("date")).toLocaleDateString("en-GB")
+            ? moment(new Date(row.getValue("date"))).format("YYYY-MM-DD")
             : ""}
         </div>
       ),
     },
     {
       accessorKey: "user_name",
+      filterFn: "includesString",
       header: ({ column }) => {
         return (
           <Button
@@ -156,6 +159,7 @@ export default function Page() {
     },
     {
       accessorKey: "time_in",
+      filterFn: "includesString",
       header: ({ column }) => {
         return (
           <Button
@@ -170,7 +174,9 @@ export default function Page() {
       cell: ({ row }) => (
         <div className="ml-2">
           {row.getValue("time_in")
-            ? new Date(new Date(row.getValue("time_in")).toISOString()).toLocaleTimeString([], {
+            ? new Date(
+                new Date(row.getValue("time_in")).toISOString()
+              ).toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
               })
@@ -180,6 +186,7 @@ export default function Page() {
     },
     {
       accessorKey: "time_out",
+      filterFn: "includesString",
       header: ({ column }) => {
         return (
           <Button
@@ -205,6 +212,7 @@ export default function Page() {
 
     {
       accessorKey: "note_time_in",
+      filterFn: "includesString",
       header: ({ column }) => {
         return (
           <Button
@@ -221,6 +229,7 @@ export default function Page() {
 
     {
       accessorKey: "note_time_out",
+      filterFn: "includesString",
       header: ({ column }) => {
         return (
           <Button
@@ -237,6 +246,7 @@ export default function Page() {
 
     {
       accessorKey: "status",
+      filterFn: "includesString",
       header: ({ column }) => {
         return (
           <Button

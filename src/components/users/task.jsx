@@ -152,7 +152,8 @@ export default function TaskEmployee({ id }) {
   const columns = [
     {
       accessorKey: "status",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -178,7 +179,8 @@ export default function TaskEmployee({ id }) {
     },
     {
       accessorKey: "task_name",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -194,7 +196,8 @@ export default function TaskEmployee({ id }) {
 
     {
       accessorKey: "assigned_to_name",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -210,7 +213,8 @@ export default function TaskEmployee({ id }) {
 
     {
       accessorKey: "created_at_time",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -233,7 +237,8 @@ export default function TaskEmployee({ id }) {
 
     {
       accessorKey: "created_at",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -246,7 +251,7 @@ export default function TaskEmployee({ id }) {
       },
       cell: ({ row }) => (
         <div>
-          {new Date(row.getValue("created_at")).toLocaleDateString("en-GB")}
+          {moment(new Date(row.getValue("created_at"))).format("YYYY-MM-DD")}
         </div>
       ),
     },

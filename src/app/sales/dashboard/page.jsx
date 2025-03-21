@@ -135,7 +135,7 @@ export default function Page() {
 
   async function fetchExtraCustomerOptions() {
     axios
-      .get(`${BASE_URL}/user/${UserState.value.data?.id}/extra`)
+      .get(`${BASE_URL}/user/${UserState.value.data?.id}/extra?employee=sales`)
       .then((response) => {
         setExtraData(response.data);
       });

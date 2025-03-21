@@ -143,10 +143,7 @@ const tableHeader = [
     value: "Location",
     label: "Location",
   },
-  {
-    value: "created_at",
-    label: "Added",
-  },
+  
 ];
 
 export default function CustomerEmployee({ id, customer_data, onRefresh, user_id, ownership, disableAdd = false,  totalCustomerText }) {
@@ -177,24 +174,11 @@ export default function CustomerEmployee({ id, customer_data, onRefresh, user_id
   }
 
   const columns = [
-    {
-      accessorKey: "name",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Company
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div className="ml-2">{row.getValue("name")}</div>,
-    },
+   
     {
       accessorKey: "owner",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -205,12 +189,28 @@ export default function CustomerEmployee({ id, customer_data, onRefresh, user_id
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("owner")}</div>,
+      cell: ({ row }) => <div className="ml-2">{row.getValue("owner")}</div>,
     },
-
+    {
+      accessorKey: "name",
+      filterFn: "includesString",
+header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Company
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div >{row.getValue("name")}</div>,
+    },
     {
       accessorKey: "industry",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -226,7 +226,8 @@ export default function CustomerEmployee({ id, customer_data, onRefresh, user_id
 
     {
       accessorKey: "group",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -242,7 +243,8 @@ export default function CustomerEmployee({ id, customer_data, onRefresh, user_id
 
     {
       accessorKey: "location",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -258,7 +260,8 @@ export default function CustomerEmployee({ id, customer_data, onRefresh, user_id
 
     {
       accessorKey: "created_at",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -271,7 +274,7 @@ export default function CustomerEmployee({ id, customer_data, onRefresh, user_id
       },
       cell: ({ row }) => (
         <div>
-          {new Date(row.getValue("created_at")).toLocaleDateString("en-GB")}
+          {moment(new Date(row.getValue("created_at"))).format("YYYY-MM-DD")}
         </div>
       ),
     },

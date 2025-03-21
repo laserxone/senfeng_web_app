@@ -42,6 +42,12 @@ export default function useCheckSession() {
                     }
                 }
 
+                else if (userData.designation === 'Manager') {
+                    if (!pathname.includes("manager")) {
+                        router.push("/manager/dashboard")
+                    }
+                }
+
                 else if (userData.designation === 'Customer Relationship Manager') {
                     if (!pathname.includes("crm")) {
                         router.push("/crm/dashboard")

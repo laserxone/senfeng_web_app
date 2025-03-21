@@ -298,7 +298,7 @@ const CustomerExtraData = ({ data, option, onSelect }) => {
             <h1 className="text-lg font-medium">{label}</h1>
             {data?.[dataKey]?.length > 0 && (
               <div
-                className={`h-8 w-8 flex items-center justify-center font-semibold rounded-full shadow-md ml-2
+                className={`h-8 w-8 flex items-center justify-center font-semibold rounded-full shadow-md ml-2 text-[12px]
               ${
                 option === dataKey
                   ? "bg-white text-[hsl(180,85%,30%)]"

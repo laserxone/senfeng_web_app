@@ -110,7 +110,8 @@ export default function ReimbursementEmployee({id}) {
   const columns = [
     {
       accessorKey: "date",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -132,7 +133,8 @@ export default function ReimbursementEmployee({id}) {
 
     {
       accessorKey: "title",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -147,7 +149,8 @@ export default function ReimbursementEmployee({id}) {
     },
     {
       accessorKey: "city",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -162,7 +165,8 @@ export default function ReimbursementEmployee({id}) {
     },
     {
       accessorKey: "amount",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -178,7 +182,8 @@ export default function ReimbursementEmployee({id}) {
 
     {
       accessorKey: "description",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"

@@ -33,7 +33,7 @@ import { toast } from "@/hooks/use-toast";
 import { Checkbox } from "./ui/checkbox";
 import { BASE_URL } from "@/constants/data";
 
-const EditCustomerDialog = ({ onRefresh, visible, onClose, data }) => {
+const EditCustomerDialog = ({ onRefresh, visible, onClose, data, ownership }) => {
   const [numbers, setNumbers] = useState([""]);
   const [numberError, setNumberError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -50,6 +50,7 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data }) => {
     rating: z.number().optional(),
     image: z.string().optional(),
     member: z.boolean().optional(),
+    ownership: z.number().nullable().optional(), 
   });
 
   const form = useForm({
@@ -66,6 +67,7 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data }) => {
       rating: 0,
       image: "",
       member: false,
+      ownership: null,
     },
   });
 
@@ -88,6 +90,7 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data }) => {
             rating: data?.rating || 0,
             image: url || "",
             member: data?.member || false,
+            ownership : data?.ownership || null
           });
         });
       } else {
@@ -103,6 +106,7 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data }) => {
           rating: data?.rating || 0,
           image: data?.image || "",
           member: data?.member || false,
+          ownership : data?.ownership || null
         });
       }
     }
@@ -132,6 +136,7 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data }) => {
       image: values.image,
       remarks: values.remarks,
       member: values.member,
+      ownership : values.ownership
     };
 
     try {
@@ -330,6 +335,28 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data }) => {
                           </FormItem>
                         )}
                       />
+
+                        {ownership && (
+                                              <FormField
+                                                control={control}
+                                                name="ownership"
+                                                render={({ field }) => (
+                                                  <FormItem>
+                                                    <FormLabel>
+                                                      Ownership
+                                                    </FormLabel>
+                                                    <FormControl>
+                                                      <UserSearch
+                                                        value={field.value}
+                                                        onReturn={(val) => field.onChange(val)}
+                                                      />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}
+                                              />
+                                            )}
+
                     </div>
 
                     <div className="flex flex-1 flex-col space-y-4">

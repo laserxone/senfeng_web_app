@@ -118,11 +118,13 @@ import axios from "axios";
 import { CustomerSearch } from "@/components/customer-search";
 import { UserSearch } from "@/components/user-search";
 import { BASE_URL } from "@/constants/data";
+import moment from "moment";
 
 const columns = [
   {
     accessorKey: "status",
-    header: ({ column }) => {
+    filterFn: "includesString",
+header: ({ column }) => {
       return (
         <Button
           variant="ghost"
@@ -148,7 +150,8 @@ const columns = [
   },
   {
     accessorKey: "task_name",
-    header: ({ column }) => {
+    filterFn: "includesString",
+header: ({ column }) => {
       return (
         <Button
           variant="ghost"
@@ -164,7 +167,8 @@ const columns = [
 
   {
     accessorKey: "assigned_to_name",
-    header: ({ column }) => {
+    filterFn: "includesString",
+header: ({ column }) => {
       return (
         <Button
           variant="ghost"
@@ -180,7 +184,8 @@ const columns = [
 
   {
     accessorKey: "created_at_time",
-    header: ({ column }) => {
+    filterFn: "includesString",
+header: ({ column }) => {
       return (
         <Button
           variant="ghost"
@@ -203,7 +208,8 @@ const columns = [
 
   {
     accessorKey: "created_at",
-    header: ({ column }) => {
+    filterFn: "includesString",
+header: ({ column }) => {
       return (
         <Button
           variant="ghost"
@@ -216,7 +222,7 @@ const columns = [
     },
     cell: ({ row }) => (
       <div>
-        {new Date(row.getValue("created_at")).toLocaleDateString("en-GB")}
+        {moment(new Date(row.getValue("created_at"))).format("YYYY-MM-DD")}
       </div>
     ),
   },

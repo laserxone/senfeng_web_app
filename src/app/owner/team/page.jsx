@@ -112,7 +112,8 @@ import { BASE_URL } from "@/constants/data";
 const columns = [
   {
     accessorKey: "name",
-    header: ({ column }) => {
+    filterFn: "includesString",
+header: ({ column }) => {
       return (
         <Button
           variant="ghost"
@@ -127,7 +128,8 @@ const columns = [
   },
   {
     accessorKey: "designation",
-    header: ({ column }) => {
+    filterFn: "includesString",
+header: ({ column }) => {
       return (
         <Button
           variant="ghost"
@@ -143,7 +145,8 @@ const columns = [
 
   {
     accessorKey: "email",
-    header: ({ column }) => {
+    filterFn: "includesString",
+header: ({ column }) => {
       return (
         <Button
           variant="ghost"

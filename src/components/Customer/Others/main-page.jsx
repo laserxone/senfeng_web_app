@@ -18,6 +18,7 @@ import {
   ChevronsRight,
   ChevronsUpDown,
   CircleArrowRight,
+  Loader2,
   MoreHorizontal,
   Star,
 } from "lucide-react";
@@ -114,6 +115,7 @@ import { CitiesSearch } from "@/components/cities-search";
 import { IndustrySearch } from "@/components/industry-search";
 import { UserContext } from "@/store/context/UserContext";
 import { BASE_URL } from "@/constants/data";
+import moment from "moment";
 
 const tableHeader = [
   {
@@ -140,10 +142,7 @@ const tableHeader = [
     value: "Machines",
     label: "Machines",
   },
-  {
-    value: "created_at",
-    label: "Added",
-  },
+ 
 ];
 
 export default function CustomerPageOthers() {
@@ -171,23 +170,9 @@ export default function CustomerPageOthers() {
 
   const columns = [
     {
-      accessorKey: "name",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Company
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div className="ml-2">{row.getValue("name")}</div>,
-    },
-    {
       accessorKey: "owner",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -198,12 +183,30 @@ export default function CustomerPageOthers() {
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("owner")}</div>,
+      cell: ({ row }) => <div className="ml-2">{row.getValue("owner")}</div>,
     },
+    {
+      accessorKey: "name",
+      filterFn: "includesString",
+header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Company
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div >{row.getValue("name")}</div>,
+    },
+    
 
     {
       accessorKey: "industry",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -219,7 +222,8 @@ export default function CustomerPageOthers() {
 
     {
       accessorKey: "customer_group",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -235,7 +239,8 @@ export default function CustomerPageOthers() {
 
     {
       accessorKey: "location",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -251,7 +256,8 @@ export default function CustomerPageOthers() {
 
     {
       accessorKey: "machines",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -267,7 +273,8 @@ export default function CustomerPageOthers() {
 
     {
       accessorKey: "created_at",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -280,7 +287,7 @@ export default function CustomerPageOthers() {
       },
       cell: ({ row }) => (
         <div>
-          {new Date(row.getValue("created_at")).toLocaleDateString("en-GB")}
+          {moment(new Date(row.getValue("created_at"))).format("YYYY-MM-DD")}
         </div>
       ),
     },

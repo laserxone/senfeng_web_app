@@ -3,6 +3,6 @@ import CustomerDetail from '@/components/customer-components/detail/customer-det
 
 export default function page() {
   return (
-    <CustomerDetail />
+    <CustomerDetail ownership={true}/>
   )
 }

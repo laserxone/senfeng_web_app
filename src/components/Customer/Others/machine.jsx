@@ -159,7 +159,8 @@ export default function MachinePageOthers() {
   const columns = [
     {
       accessorKey: "track",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -175,7 +176,8 @@ export default function MachinePageOthers() {
 
     {
       accessorKey: "transaction_date",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -199,7 +201,8 @@ export default function MachinePageOthers() {
 
     {
       accessorKey: "clearance_date",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -224,7 +227,8 @@ export default function MachinePageOthers() {
     },
     {
       accessorKey: "amount",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -239,7 +243,8 @@ export default function MachinePageOthers() {
     },
     {
       accessorKey: "note",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -255,7 +260,8 @@ export default function MachinePageOthers() {
 
     {
       accessorKey: "mode",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"

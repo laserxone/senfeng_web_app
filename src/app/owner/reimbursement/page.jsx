@@ -109,7 +109,8 @@ export default function Page() {
   const columns = [
     {
       accessorKey: "date",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -131,7 +132,8 @@ export default function Page() {
 
     {
       accessorKey: "title",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -146,7 +148,8 @@ export default function Page() {
     },
     {
       accessorKey: "city",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -161,7 +164,8 @@ export default function Page() {
     },
     {
       accessorKey: "amount",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -177,7 +181,8 @@ export default function Page() {
 
     {
       accessorKey: "description",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"

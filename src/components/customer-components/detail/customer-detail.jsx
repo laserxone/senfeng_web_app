@@ -72,7 +72,7 @@ import EditCustomerDialog from "@/components/editCustomer";
 import AddMachine from "@/components/addMachine";
 import { BASE_URL } from "@/constants/data";
 
-export default function CustomerDetail() {
+export default function CustomerDetail({ ownership = false }) {
   const search = useSearchParams();
   const [data, setData] = useState({});
   const [allUsers, setAllUsers] = useState([]);
@@ -161,7 +161,7 @@ export default function CustomerDetail() {
           />
         </div>
 
-        <Tabs defaultValue="about" className="w-full">
+        <Tabs defaultValue={data?.member ? "aftersales" : "feedback"} className="w-full">
           <TabsList>
             {data &&
               (data?.member ? (
@@ -212,6 +212,7 @@ export default function CustomerDetail() {
         </Tabs>
 
         <EditCustomerDialog
+          ownership={ownership}
           data={data}
           visible={editVisible}
           onClose={setEditVisible}

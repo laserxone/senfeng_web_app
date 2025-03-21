@@ -115,16 +115,18 @@ import { IndustrySearch } from "@/components/industry-search";
 import { UserContext } from "@/store/context/UserContext";
 import { BASE_URL } from "@/constants/data";
 import AddCustomerDialog from "@/components/addCustomer";
+import moment from "moment";
 
 const tableHeader = [
-  {
-    value: "Name",
-    label: "Name",
-  },
   {
     value: "Owner",
     label: "Owner",
   },
+  {
+    value: "Name",
+    label: "Name",
+  },
+
   {
     value: "Industry",
     label: "Industry",
@@ -141,13 +143,9 @@ const tableHeader = [
     value: "Machines",
     label: "Machines",
   },
-  {
-    value: "created_at",
-    label: "Added",
-  },
 ];
 
-export default function CustomerMainPage() {
+export default function CustomerMainPage({ disableAdd = false }) {
   const [value, setValue] = useState("");
   const pageTableRef = useRef();
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -179,22 +177,8 @@ export default function CustomerMainPage() {
 
   const columns = [
     {
-      accessorKey: "name",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Company
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div className="ml-2">{row.getValue("name")}</div>,
-    },
-    {
       accessorKey: "owner",
+      filterFn: "includesString",
       header: ({ column }) => {
         return (
           <Button
@@ -206,11 +190,27 @@ export default function CustomerMainPage() {
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("owner")}</div>,
+      cell: ({ row }) => <div className="ml-2">{row.getValue("owner")}</div>,
     },
-
+    {
+      accessorKey: "name",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Company
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("name")}</div>,
+    },
     {
       accessorKey: "industry",
+      filterFn: "includesString",
       header: ({ column }) => {
         return (
           <Button
@@ -227,6 +227,8 @@ export default function CustomerMainPage() {
 
     {
       accessorKey: "customer_group",
+
+      filterFn: "includesString",
       header: ({ column }) => {
         return (
           <Button
@@ -243,6 +245,8 @@ export default function CustomerMainPage() {
 
     {
       accessorKey: "location",
+
+      filterFn: "includesString",
       header: ({ column }) => {
         return (
           <Button
@@ -259,6 +263,7 @@ export default function CustomerMainPage() {
 
     {
       accessorKey: "machines",
+      filterFn: "includesString",
       header: ({ column }) => {
         return (
           <Button
@@ -275,6 +280,7 @@ export default function CustomerMainPage() {
 
     {
       accessorKey: "created_at",
+      filterFn: "includesString",
       header: ({ column }) => {
         return (
           <Button
@@ -288,7 +294,7 @@ export default function CustomerMainPage() {
       },
       cell: ({ row }) => (
         <div>
-          {new Date(row.getValue("created_at")).toLocaleDateString("en-GB")}
+          {moment(new Date(row.getValue("created_at"))).format("YYYY-MM-DD")}
         </div>
       ),
     },
@@ -345,16 +351,20 @@ export default function CustomerMainPage() {
     <PageContainer scrollable={false}>
       <div className="flex flex-1 flex-col space-y-4">
         <div className="flex items-center justify-between">
-          <Heading title="Members" description="Manage your members" />
-          <Button onClick={() => setAddCustomer(true)}>Add new customer</Button>
+          <Heading title="All Customers" description="Manage your custoners" />
+          {!disableAdd && (
+            <Button onClick={() => setAddCustomer(true)}>
+              Add new customer
+            </Button>
+          )}
           <AddCustomerDialog
             user_id={UserState.value.data?.id}
             ownership={
               UserState.value.data?.designation === "Owner" ||
               UserState.value.data?.designation ===
-                "Customer Relationship Manager"
-                ? true
-                : false
+                "Customer Relationship Manager" ||
+              UserState.value.data?.designation ===
+                "Customer Relationship Manager (After Sales)"
             }
             visible={addCustomer}
             onClose={setAddCustomer}

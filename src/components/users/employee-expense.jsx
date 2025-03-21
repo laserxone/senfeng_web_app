@@ -138,7 +138,8 @@ export default function EmployeeBranchExpenses() {
   const columns = [
     {
       accessorKey: "note",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -153,7 +154,8 @@ export default function EmployeeBranchExpenses() {
     },
     {
       accessorKey: "amount",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -169,7 +171,8 @@ export default function EmployeeBranchExpenses() {
 
     {
       accessorKey: "date",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -183,7 +186,7 @@ export default function EmployeeBranchExpenses() {
       cell: ({ row }) => (
         <div>
           {row.getValue("date")
-            ? new Date(row.getValue("date")).toLocaleDateString("en-GB")
+            ? moment(new Date(row.getValue("date"))).format("YYYY-MM-DD")
             : ""}
         </div>
       ),

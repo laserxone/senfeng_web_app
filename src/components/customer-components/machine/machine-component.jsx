@@ -175,7 +175,8 @@ export default function Machine() {
   const columns = [
     {
       accessorKey: "track",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -191,7 +192,8 @@ export default function Machine() {
 
     {
       accessorKey: "transaction_date",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -215,7 +217,8 @@ export default function Machine() {
 
     {
       accessorKey: "clearance_date",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -240,7 +243,8 @@ export default function Machine() {
     },
     {
       accessorKey: "amount",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -255,7 +259,8 @@ export default function Machine() {
     },
     {
       accessorKey: "note",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -271,7 +276,8 @@ export default function Machine() {
 
     {
       accessorKey: "mode",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"

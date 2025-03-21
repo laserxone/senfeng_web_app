@@ -53,7 +53,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 import {
   Command,
@@ -112,6 +112,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { debounce } from "@/lib/debounce";
 
 const PageTable = ({
   children,
@@ -153,6 +154,8 @@ const PageTable = ({
     setPageSize(pagination.pageSize);
   };
 
+
+
   const table = useReactTable({
     data,
     columns,
@@ -177,7 +180,7 @@ const PageTable = ({
     // manualFiltering: true
   });
 
-  // Expose the handleClear method to parent using useImperativeHandle
+ 
   useImperativeHandle(
     ref,
     () => {
@@ -205,13 +208,13 @@ const PageTable = ({
             placeholder={`${searchName}`}
             value={
               searchItem
-                ? table.getColumn(searchItem)?.getFilterValue() ?? ""
+                ? table.getColumn(searchItem).getFilterValue() ?? ""
                 : ""
             }
-            onChange={(event) =>
+            onChange={(event)=>{
               searchItem &&
-              table.getColumn(searchItem)?.setFilterValue(event.target.value)
-            }
+              table.getColumn(searchItem).setFilterValue(event.target.value);
+            }}
             className="w-[60vw] max-w-sm"
           />
         }

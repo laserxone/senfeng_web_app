@@ -127,7 +127,8 @@ export default function Attendance({ passingData, onFilterReturn }) {
   const columns = [
     {
       accessorKey: "date",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -141,14 +142,15 @@ export default function Attendance({ passingData, onFilterReturn }) {
       cell: ({ row }) => (
         <div>
           {row.getValue("date")
-            ? new Date(row.getValue("date")).toLocaleDateString("en-GB")
+            ? moment(new Date(row.getValue("date"))).format("YYYY-MM-DD")
             : ""}
         </div>
       ),
     },
     {
       accessorKey: "time_in",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -174,7 +176,8 @@ export default function Attendance({ passingData, onFilterReturn }) {
     },
     {
       accessorKey: "time_out",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -199,7 +202,8 @@ export default function Attendance({ passingData, onFilterReturn }) {
 
     {
       accessorKey: "note_time_in",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -215,7 +219,8 @@ export default function Attendance({ passingData, onFilterReturn }) {
 
     {
       accessorKey: "note_time_out",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -231,7 +236,8 @@ export default function Attendance({ passingData, onFilterReturn }) {
 
     {
       accessorKey: "status",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"

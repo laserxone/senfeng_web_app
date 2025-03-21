@@ -80,6 +80,7 @@ import { Title } from "@radix-ui/react-dialog";
 import { UserContext } from "@/store/context/UserContext";
 import { UserSearch } from "@/components/user-search";
 import { BASE_URL } from "@/constants/data";
+import moment from "moment";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -110,7 +111,8 @@ export default function Page() {
   const columns = [
     {
       accessorKey: "note",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -125,7 +127,8 @@ export default function Page() {
     },
     {
       accessorKey: "amount",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -141,7 +144,8 @@ export default function Page() {
 
     {
       accessorKey: "date",
-      header: ({ column }) => {
+      filterFn: "includesString",
+header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -155,7 +159,7 @@ export default function Page() {
       cell: ({ row }) => (
         <div>
           {row.getValue("date")
-            ? new Date(row.getValue("date")).toLocaleDateString("en-GB")
+            ? moment(new Date(row.getValue("date"))).format("YYYY-MM-DD")
             : ""}
         </div>
       ),

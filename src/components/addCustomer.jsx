@@ -17,7 +17,7 @@ import {
 } from "./ui/form";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Star, Trash } from "lucide-react";
+import { Loader2, Star, Trash } from "lucide-react";
 import { Label } from "./ui/label";
 import { CitiesSearch } from "./cities-search";
 import { IndustrySearch } from "./industry-search";
@@ -52,7 +52,7 @@ const AddCustomerDialog = ({
     group: z.string().optional(), // Optional field
     rating: z.number().optional(),
     member: z.boolean().optional(),
-    ownership: z.number().nullable().optional(),
+    ownership: z.number().nullable().optional(), 
   });
 
   const form = useForm({
@@ -278,7 +278,7 @@ const AddCustomerDialog = ({
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>
-                                Ownership <RequiredStar />
+                                Ownership
                               </FormLabel>
                               <FormControl>
                                 <UserSearch
