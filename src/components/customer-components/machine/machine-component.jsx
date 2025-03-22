@@ -97,6 +97,8 @@ import EditPayment from "@/components/editPayment";
 import { UploadImage } from "@/lib/uploadFunction";
 import { BASE_URL } from "@/constants/data";
 import { UserContext } from "@/store/context/UserContext";
+import InvoicePDF from "@/components/invoicepdf";
+import { pdf } from "@react-pdf/renderer";
 
 export default function Machine() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -176,7 +178,7 @@ export default function Machine() {
     {
       accessorKey: "track",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -193,7 +195,7 @@ header: ({ column }) => {
     {
       accessorKey: "transaction_date",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -218,7 +220,7 @@ header: ({ column }) => {
     {
       accessorKey: "clearance_date",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -244,7 +246,7 @@ header: ({ column }) => {
     {
       accessorKey: "amount",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -260,7 +262,7 @@ header: ({ column }) => {
     {
       accessorKey: "note",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -277,7 +279,7 @@ header: ({ column }) => {
     {
       accessorKey: "mode",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -337,6 +339,32 @@ header: ({ column }) => {
     },
   ];
 
+  async function handleDownloadLedger() {
+    let runningBalance = total;
+
+    const convertedPayment = payments.map((payment) => {
+      runningBalance -= payment.amount;
+      return { ...payment, balance: runningBalance };
+    });
+
+    const finalData = {
+      customer: data?.customer?.name,
+      name: data?.customer?.owner,
+      contact: data?.customer.number?.join(", "),
+      model: data?.machine?.serial_no,
+      serial: data?.machine?.order_no,
+      manager: data?.machine?.sell_by_name || "NA",
+      payments: convertedPayment,
+      received: received || 0,
+      total: total || 0,
+    };
+
+    const blob = await pdf(<InvoicePDF data={finalData} />).toBlob();
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 600000);
+  }
+
   return (
     <PageContainer scrollable={false}>
       <div className="flex flex-1 flex-col space-y-4">
@@ -366,6 +394,15 @@ header: ({ column }) => {
               onRefresh={async () => await fetchData(id)}
             />
             <Button onClick={() => setEditMachine(true)}>Edit Machine</Button>
+            {payments.length > 0 && (
+              <Button
+                onClick={() => {
+                  handleDownloadLedger();
+                }}
+              >
+                Download Ledger
+              </Button>
+            )}
           </div>
         )}
         <PageTable
@@ -478,15 +515,15 @@ const ClientCard = memo(({ data, payment, machine }) => {
             </h3>
             <div className="grid grid-cols-3 gap-4 text-sm text-gray-700 dark:text-gray-300">
               <p>
-                <DollarSign className="inline h-4 w-4 mr-1 text-gray-500 dark:text-gray-400" />
+                {/* <DollarSign className="inline h-4 w-4 mr-1 text-gray-500 dark:text-gray-400" /> */}
                 Bill:
               </p>
               <p>
-                <DollarSign className="inline h-4 w-4 mr-1 text-gray-500 dark:text-gray-400" />
+                {/* <DollarSign className="inline h-4 w-4 mr-1 text-gray-500 dark:text-gray-400" /> */}
                 Received:
               </p>
               <p>
-                <DollarSign className="inline h-4 w-4 mr-1 text-gray-500 dark:text-gray-400" />
+                {/* <DollarSign className="inline h-4 w-4 mr-1 text-gray-500 dark:text-gray-400" /> */}
                 Balance:
               </p>
             </div>
