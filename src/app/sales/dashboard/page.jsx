@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/accordion";
 import { CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { UserContext } from "@/store/context/UserContext";
 import Link from "next/link";
@@ -36,6 +36,7 @@ import {
 } from "@/components/dashboardCards";
 import { BASE_URL } from "@/constants/data";
 import AutoScrollMembers from "@/components/autoScroll";
+import { startHolyLoader } from "holy-loader";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -47,6 +48,7 @@ export default function Page() {
   const [selectedOption, setSelectedOption] = useState("");
   const [reimbursementData, setReimbursementData] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     if (UserState.value.data?.id) {
@@ -105,20 +107,22 @@ export default function Page() {
   }
 
   async function fetchData() {
-    axios.get(`${BASE_URL}/user/${UserState.value.data?.id}`).then((response) => {
-      setData(response.data);
-      if (response.data.customers && response.data.customers.length > 0) {
-        let total = 0;
-        response.data.customers.map((eachCustomer) => {
-          if (eachCustomer.sales && eachCustomer.sales.length > 0) {
-            eachCustomer.sales.map((eachSale) => {
-              total = total + Number(eachSale.price);
-            });
-          }
-        });
-        setTotalSales(total);
-      }
-    });
+    axios
+      .get(`${BASE_URL}/user/${UserState.value.data?.id}`)
+      .then((response) => {
+        setData(response.data);
+        if (response.data.customers && response.data.customers.length > 0) {
+          let total = 0;
+          response.data.customers.map((eachCustomer) => {
+            if (eachCustomer.sales && eachCustomer.sales.length > 0) {
+              eachCustomer.sales.map((eachSale) => {
+                total = total + Number(eachSale.price);
+              });
+            }
+          });
+          setTotalSales(total);
+        }
+      });
   }
 
   async function fetchAllCustomers() {
@@ -128,9 +132,11 @@ export default function Page() {
   }
 
   async function fetchVisitData() {
-    axios.get(`${BASE_URL}/user/${UserState.value.data.id}/visit`).then((response) => {
-      setVisitData(response.data);
-    });
+    axios
+      .get(`${BASE_URL}/user/${UserState.value.data.id}/visit`)
+      .then((response) => {
+        setVisitData(response.data);
+      });
   }
 
   async function fetchExtraCustomerOptions() {
@@ -147,7 +153,6 @@ export default function Page() {
         id={UserState.value.data?.id}
         data={visitData}
         onRefresh={(newData) => {
-       
           setVisitData([newData, ...visitData]);
         }}
       />
@@ -230,13 +235,23 @@ export default function Page() {
     <div className="flex flex-1 gap-5">
       <div className="flex flex-1 flex-col">
         <div className="flex flex-1 justify-between mb-8 flex-wrap">
-          <div className="flex items-center ">
-            <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
-            <div>
-              <h1 className="text-3xl font-bold">{data?.user?.name}</h1>
-              <p className="text-muted-foreground">{data?.user?.designation}</p>
+          <Link
+            href={
+              UserState.value.data?.base_route
+                ? `/${UserState.value.data?.base_route}/profile`
+                : "#"
+            }
+          >
+            <div className="flex items-center">
+              <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
+              <div>
+                <h1 className="text-3xl font-bold">{data?.user?.name}</h1>
+                <p className="text-muted-foreground">
+                  {data?.user?.designation}
+                </p>
+              </div>
             </div>
-          </div>
+          </Link>
 
           <MachinesSoldCard
             value={data?.machinesSoldThisMonth || 0}
@@ -313,7 +328,6 @@ const ProfilePicture = ({ img, name }) => {
     </Avatar>
   );
 };
-
 
 const CustomerExtraData = ({ data, option, onSelect }) => {
   const menuItems = [
@@ -415,71 +429,73 @@ function CustomersTab({ data }) {
   };
 
   return (
-    <ScrollArea className="h-[calc(70dvh-52px)] p-5">
-      <Accordion type="single" collapsible className="w-full space-y-4">
-        {data.length == 0 ? (
-          <Label>No Data found</Label>
-        ) : (
-          data.map((customer) => (
-            <div className="flex gap-5" key={customer.id}>
-              <div className="flex flex-1">
-                <AccordionItem
-                  className="w-full"
-                  value={`customer-${customer.id}`}
-                >
-                  <Card>
-                    <AccordionTrigger className="px-4 py-2 hover:no-underline">
-                      <div className="flex justify-between items-center w-full">
-                        <Link
-                          href={`/${UserState.value.data?.base_route}/customer/detail?id=${customer.id}`}
-                        >
-                          <h3 className="font-semibold text-lg hover:underline">
-                            {customer.name}
-                          </h3>
-                        </Link>
-                        <Badge
-                          className={"mr-2"}
-                          variant={
-                            customer.sales.length === 0
-                              ? "secondary"
-                              : "default"
-                          }
-                        >
-                          {customer.sales.length === 0
-                            ? "Assigned"
-                            : "Purchased"}
-                        </Badge>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <CardContent className="pt-0">
-                        {customer.sales.length > 0 ? (
-                          <div className="space-y-2">
-                            {customer.sales.map((machine) => (
-                              <RenderEachMachine
-                                key={machine.id}
-                                machine={machine}
-                              />
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="flex items-center text-muted-foreground">
-                            <AlertCircle className="w-5 h-5 mr-2" />
-                            No machines purchased yet
-                          </div>
-                        )}
-                      </CardContent>
-                    </AccordionContent>
-                  </Card>
-                </AccordionItem>
-              </div>
-              {/* <Button variant="outline" className="mt-1">
+    <div className="h-[650px]">
+      <ScrollArea className="h-[650px] p-5">
+        <Accordion type="single" collapsible className="w-full space-y-4">
+          {data.length == 0 ? (
+            <Label>No Data found</Label>
+          ) : (
+            data.map((customer) => (
+              <div className="flex gap-5" key={customer.id}>
+                <div className="flex flex-1">
+                  <AccordionItem
+                    className="w-full"
+                    value={`customer-${customer.id}`}
+                  >
+                    <Card>
+                      <AccordionTrigger className="px-4 py-2 hover:no-underline">
+                        <div className="flex justify-between items-center w-full">
+                          <Link
+                            href={`/${UserState.value.data?.base_route}/customer/detail?id=${customer.id}`}
+                          >
+                            <h3 className="font-semibold text-lg hover:underline">
+                              {customer.name}
+                            </h3>
+                          </Link>
+                          <Badge
+                            className={"mr-2"}
+                            variant={
+                              customer.sales.length === 0
+                                ? "secondary"
+                                : "default"
+                            }
+                          >
+                            {customer.sales.length === 0
+                              ? "Assigned"
+                              : "Purchased"}
+                          </Badge>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <CardContent className="pt-0">
+                          {customer.sales.length > 0 ? (
+                            <div className="space-y-2">
+                              {customer.sales.map((machine) => (
+                                <RenderEachMachine
+                                  key={machine.id}
+                                  machine={machine}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="flex items-center text-muted-foreground">
+                              <AlertCircle className="w-5 h-5 mr-2" />
+                              No machines purchased yet
+                            </div>
+                          )}
+                        </CardContent>
+                      </AccordionContent>
+                    </Card>
+                  </AccordionItem>
+                </div>
+                {/* <Button variant="outline" className="mt-1">
                 Satisfaction
               </Button> */}
-            </div>
-          ))
-        )}
-      </Accordion>
-    </ScrollArea>
+              </div>
+            ))
+          )}
+        </Accordion>
+      </ScrollArea>
+    </div>
   );
 }

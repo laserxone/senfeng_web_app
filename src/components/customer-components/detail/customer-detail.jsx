@@ -71,27 +71,32 @@ import { IndustrySearch } from "@/components/industry-search";
 import EditCustomerDialog from "@/components/editCustomer";
 import AddMachine from "@/components/addMachine";
 import { BASE_URL } from "@/constants/data";
+import { debounce } from "@/lib/debounce";
+import ConfimationDialog from "@/components/alert-dialog";
+import { startHolyLoader } from "holy-loader";
 
 export default function CustomerDetail({ ownership = false }) {
   const search = useSearchParams();
   const [data, setData] = useState({});
-  const [allUsers, setAllUsers] = useState([]);
   const customer_id = search.get("id");
   const { state: UserState } = useContext(UserContext);
   const [feedback, setFeedback] = useState([]);
   const [editVisible, setEditVisible] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     if (customer_id && UserState?.value?.data?.id) {
-      fetchCustomerDetail();
-      fetchCustomerFeedback();
-
-      axios.get(`${BASE_URL}/user`).then((response) => {
-        setAllUsers(response.data);
-      });
+      debouncedFetchCustomerData();
     }
   }, [customer_id, UserState]);
+
+  const debouncedFetchCustomerData = debounce(() => {
+    fetchCustomerDetail();
+    fetchCustomerFeedback();
+  }, 500);
 
   async function fetchCustomerDetail() {
     axios
@@ -134,6 +139,26 @@ export default function CustomerDetail({ ownership = false }) {
       });
   }
 
+  async function handleDelete(id) {
+    if (!id) return;
+    setDeleteLoading(true);
+    try {
+      const response = await axios.delete(`${BASE_URL}/customer/${id}`);
+      toast({ title: "Customer Deleted" });
+      startHolyLoader();
+      router.push(`/${UserState.value.data?.base_route}/customer`);
+    } catch (error) {
+      toast({
+        title: error?.response?.data?.message || "Netwrok error",
+        variant: "desctructive",
+      });
+    } finally {
+      setDeleteLoading(false);
+      setShowConfirmation(false);
+      setData({});
+    }
+  }
+
   return (
     <PageContainer>
       <div className="w-full pb-8">
@@ -143,7 +168,7 @@ export default function CustomerDetail({ ownership = false }) {
               img={data?.image}
               name={data?.name}
               onClick={() => {
-                if (data) setEditVisible(true);
+                if (data?.id) setEditVisible(true);
               }}
             />
             <div className="flex flex-col">
@@ -161,7 +186,10 @@ export default function CustomerDetail({ ownership = false }) {
           />
         </div>
 
-        <Tabs defaultValue={data?.member ? "aftersales" : "feedback"} className="w-full">
+        <Tabs
+          defaultValue={data?.member ? "aftersales" : "feedback"}
+          className="w-full"
+        >
           <TabsList>
             {data &&
               (data?.member ? (
@@ -196,7 +224,7 @@ export default function CustomerDetail({ ownership = false }) {
           </TabsContent>
 
           <TabsContent value="about">
-            <AboutTab data={data} allUsers={allUsers} />
+            <AboutTab data={data} />
           </TabsContent>
           <TabsContent value="customers">
             <CustomersTab
@@ -218,6 +246,16 @@ export default function CustomerDetail({ ownership = false }) {
           onClose={setEditVisible}
           onRefresh={() => fetchCustomerDetail()}
           customer_id={customer_id}
+          onClickDelete={() => setShowConfirmation(true)}
+        />
+
+        <ConfimationDialog
+          loading={deleteLoading}
+          open={showConfirmation}
+          title={"Are you sure you want to delete?"}
+          description={"Your action will remove customer from the system"}
+          onPressYes={() => handleDelete(data?.id)}
+          onPressCancel={() => setShowConfirmation(false)}
         />
       </div>
     </PageContainer>
@@ -254,7 +292,6 @@ const ProfilePicture = ({ img, name, onClick }) => {
         <AvatarFallback>{name?.substring(0, 2)}</AvatarFallback>
       </Avatar>
 
-      {/* Overlay and Wrench Icon */}
       <div
         onClick={onClick}
         className={`absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 rounded-full cursor-pointer ${
@@ -370,7 +407,7 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
           <AccordionTrigger className="px-4 py-2 hover:no-underline">
             <div className="flex justify-between items-center w-full">
               <Link
-                href={`/${UserState.value.data?.base_route}/customer/machine?id=${machine.id}`}
+                href={`/${UserState.value.data?.base_route}/customer/machine?id=${machine.id}&previous=${customer_id}`}
               >
                 <h3 className="font-semibold text-lg hover:underline">
                   {machine.serial_no}

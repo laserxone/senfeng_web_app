@@ -121,6 +121,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UserContext } from "@/store/context/UserContext";
 import AddCustomerDialog from "../addCustomer";
 import { BASE_URL } from "@/constants/data";
+import { startHolyLoader } from "holy-loader";
 
 const tableHeader = [
   {
@@ -143,16 +144,23 @@ const tableHeader = [
     value: "Location",
     label: "Location",
   },
-  
 ];
 
-export default function CustomerEmployee({ id, customer_data, onRefresh, user_id, ownership, disableAdd = false,  totalCustomerText }) {
+export default function CustomerEmployee({
+  id,
+  customer_data,
+  onRefresh,
+  user_id,
+  ownership,
+  totalCustomerText,
+}) {
   const [value, setValue] = useState("");
   const pageTableRef = useRef();
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState([]);
   const [addCustomer, setAddCustomer] = useState(false);
   const { state: UserState } = useContext(UserContext);
+  const router = useRouter();
 
   useEffect(() => {
     if (id) {
@@ -174,11 +182,10 @@ export default function CustomerEmployee({ id, customer_data, onRefresh, user_id
   }
 
   const columns = [
-   
     {
       accessorKey: "owner",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -194,7 +201,7 @@ header: ({ column }) => {
     {
       accessorKey: "name",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -205,12 +212,12 @@ header: ({ column }) => {
           </Button>
         );
       },
-      cell: ({ row }) => <div >{row.getValue("name")}</div>,
+      cell: ({ row }) => <div>{row.getValue("name")}</div>,
     },
     {
       accessorKey: "industry",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -227,7 +234,7 @@ header: ({ column }) => {
     {
       accessorKey: "group",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -244,7 +251,7 @@ header: ({ column }) => {
     {
       accessorKey: "location",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -261,7 +268,7 @@ header: ({ column }) => {
     {
       accessorKey: "created_at",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -279,41 +286,41 @@ header: ({ column }) => {
       ),
     },
 
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const currentItem = row.original;
+    // {
+    //   id: "actions",
+    //   cell: ({ row }) => {
+    //     const currentItem = row.original;
 
-        return (
-          <Link
-            href={`/${UserState?.value?.data?.base_route}/customer/detail?id=${currentItem.id}`}
-          >
-            <ChevronsRight />
-          </Link>
-          // <DropdownMenu>
-          //   <DropdownMenuTrigger asChild>
-          //     <Button variant="ghost" className="h-8 w-8 p-0">
-          //       <MoreHorizontal className="h-4 w-4" />
-          //     </Button>
-          //   </DropdownMenuTrigger>
-          //   <DropdownMenuContent align="end">
-          //     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          //     <Link href={`customer/detail?id=${currentItem.id}`}>
-          //       <DropdownMenuItem className="hover:cursor-pointer">
-          //         View
-          //       </DropdownMenuItem>
-          //     </Link>
-          //     <DropdownMenuItem
-          //       className="hover:cursor-pointer"
-          //       onClick={() => setShowConfirmation(true)}
-          //     >
-          //       Delete
-          //     </DropdownMenuItem>
-          //   </DropdownMenuContent>
-          // </DropdownMenu>
-        );
-      },
-    },
+    //     return (
+    //       <Link
+    //         href={`/${UserState?.value?.data?.base_route}/customer/detail?id=${currentItem.id}`}
+    //       >
+    //         <ChevronsRight />
+    //       </Link>
+    //       // <DropdownMenu>
+    //       //   <DropdownMenuTrigger asChild>
+    //       //     <Button variant="ghost" className="h-8 w-8 p-0">
+    //       //       <MoreHorizontal className="h-4 w-4" />
+    //       //     </Button>
+    //       //   </DropdownMenuTrigger>
+    //       //   <DropdownMenuContent align="end">
+    //       //     <DropdownMenuLabel>Actions</DropdownMenuLabel>
+    //       //     <Link href={`customer/detail?id=${currentItem.id}`}>
+    //       //       <DropdownMenuItem className="hover:cursor-pointer">
+    //       //         View
+    //       //       </DropdownMenuItem>
+    //       //     </Link>
+    //       //     <DropdownMenuItem
+    //       //       className="hover:cursor-pointer"
+    //       //       onClick={() => setShowConfirmation(true)}
+    //       //     >
+    //       //       Delete
+    //       //     </DropdownMenuItem>
+    //       //   </DropdownMenuContent>
+    //       // </DropdownMenu>
+    //     );
+    //   },
+    // },
   ];
 
   function handleClear() {
@@ -327,8 +334,8 @@ header: ({ column }) => {
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex flex-1 min-h-[600px]">
         <PageTable
-        totalCustomerText={totalCustomerText}
-        totalCustomer={data.length}
+          totalCustomerText={totalCustomerText}
+          totalCustomer={data.length}
           ref={pageTableRef}
           columns={columns}
           data={data}
@@ -336,6 +343,14 @@ header: ({ column }) => {
           searchItem={value.toLowerCase()}
           searchName={value ? `Search ${value}...` : "Select filter first..."}
           tableHeader={tableHeader}
+          onRowClick={(val) => {
+            if (val?.id) {
+              startHolyLoader();
+              router.push(
+                `/${UserState?.value?.data?.base_route}/customer/detail?id=${val.id}`
+              );
+            }
+          }}
           // filter={true}
           // onFilterClick={() => setFilterVisible(true)}
         >
@@ -371,15 +386,20 @@ header: ({ column }) => {
               >
                 Clear
               </Button>
-            {!disableAdd &&  <Button onClick={() => setAddCustomer(true)}>Add Customer</Button>}
+              {UserState.value.data &&
+                UserState.value.data.customer_add_access && (
+                  <Button onClick={() => setAddCustomer(true)}>
+                    Add Customer
+                  </Button>
+                )}
             </div>
           </div>
         </PageTable>
       </div>
 
       <AddCustomerDialog
-      user_id={user_id}
-      ownership={ownership}
+        user_id={user_id}
+        ownership={ownership}
         visible={addCustomer}
         onClose={setAddCustomer}
         onRefresh={() => {

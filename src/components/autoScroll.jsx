@@ -13,17 +13,16 @@ import Link from "next/link";
 
 const AutoScrollMembers = ({ customers }) => {
   const { state: UserState } = useContext(UserContext);
-  const [localData, setLocalData] = useState(
-    customers.map((item) => ({ ...item, name: item.name || item.owner }))
-  );
+  const [localData, setLocalData] = useState([]);
   const scrollRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     if (customers.length > 0) {
-      const temp = customers.map((item) => {
-        return { ...item, name: item.name || item.owner };
-      });
+      const temp = [...customers]
+        .map((item) => ({ ...item, name: item.name?.trim() || item.owner?.trim() }))
+        .filter((item) => item.name)
+        .sort((a, b) => a.name.localeCompare(b.name));
       setLocalData(temp);
     }
   }, [customers]);
@@ -37,7 +36,7 @@ const AutoScrollMembers = ({ customers }) => {
     let interval;
 
     const scroll = () => {
-      if (!isHovered) { // Only scroll if not hovered
+      if (!isHovered) {
         if (
           scrollContainer.scrollTop + scrollContainer.clientHeight >=
           scrollContainer.scrollHeight

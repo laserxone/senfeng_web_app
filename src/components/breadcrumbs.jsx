@@ -9,10 +9,13 @@ import {
 } from '@/components/ui/breadcrumb';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 import { Slash } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { Fragment } from 'react';
 
 export function Breadcrumbs() {
   const items = useBreadcrumbs();
+   const search = useSearchParams();
+    const previous = search.get("previous");
   if (items.length === 0) return null;
 
   return (
@@ -22,7 +25,7 @@ export function Breadcrumbs() {
           <Fragment key={item.title}>
             {index !== items.length - 1 && (
               <BreadcrumbItem className='hidden md:block'>
-                <BreadcrumbLink href={item.link}>{item.title}</BreadcrumbLink>
+                <BreadcrumbLink href={`${item.link}${item?.title === "Customer" && previous ? `/detail/?id=${previous}` : ""}`}>{item.title}</BreadcrumbLink>
               </BreadcrumbItem>
             )}
             {index < items.length - 1 && (

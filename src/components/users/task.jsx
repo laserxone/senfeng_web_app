@@ -153,7 +153,7 @@ export default function TaskEmployee({ id }) {
     {
       accessorKey: "status",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -180,7 +180,7 @@ header: ({ column }) => {
     {
       accessorKey: "task_name",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -197,7 +197,7 @@ header: ({ column }) => {
     {
       accessorKey: "assigned_to_name",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -214,7 +214,7 @@ header: ({ column }) => {
     {
       accessorKey: "created_at_time",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -238,7 +238,7 @@ header: ({ column }) => {
     {
       accessorKey: "created_at",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -256,42 +256,42 @@ header: ({ column }) => {
       ),
     },
 
-    {
-      id: "actions",
-      enableHiding: false,
-      cell: ({ row }) => {
-        return (
-          <ChevronsRight
-            onClick={() => {
-              setSelectedTask(row.original);
-              setVisible(true);
-            }}
-            className="cursor-pointer"
-          />
-        );
-      },
-    },
+    // {
+    //   id: "actions",
+    //   enableHiding: false,
+    //   cell: ({ row }) => {
+    //     return (
+    //       <ChevronsRight
+    //         onClick={() => {
+    //           setSelectedTask(row.original);
+    //           setVisible(true);
+    //         }}
+    //         className="cursor-pointer"
+    //       />
+    //     );
+    //   },
+    // },
   ];
 
   async function fetchData(id, start_date, end_date) {
-
-    return new Promise ((resolve, reject)=>{
+    return new Promise((resolve, reject) => {
       axios
-      .get(`${BASE_URL}/user/${id}/task?start_date=${start_date}&end_date=${end_date}`)
-      .then((response) => {
-        const apiData = response.data.map((item) => {
-          return { ...item, created_at_time: item.created_at };
-        });
+        .get(
+          `${BASE_URL}/user/${id}/task?start_date=${start_date}&end_date=${end_date}`
+        )
+        .then((response) => {
+          const apiData = response.data.map((item) => {
+            return { ...item, created_at_time: item.created_at };
+          });
 
-        setData(apiData);
-        resolve(true)
-      })
-      .catch((e) => {
-        console.log(e);
-        reject(null)
-      });
-    })
-   
+          setData(apiData);
+          resolve(true);
+        })
+        .catch((e) => {
+          console.log(e);
+          reject(null);
+        });
+    });
   }
 
   async function handleUpdateMark() {
@@ -335,6 +335,10 @@ header: ({ column }) => {
         totalItems={data.length}
         searchItem={"task_name"}
         searchName={"Search task..."}
+        onRowClick={(val) => {
+          setSelectedTask(val);
+          setVisible(true);
+        }}
       >
         <Button
           onClick={() => setFilterVisible(true)}
@@ -360,8 +364,8 @@ header: ({ column }) => {
       <FilterSheet
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
-        onReturn={async(val) => {
-         await fetchData(id, val.start.toISOString(), val.end.toISOString());
+        onReturn={async (val) => {
+          await fetchData(id, val.start.toISOString(), val.end.toISOString());
         }}
       />
     </div>

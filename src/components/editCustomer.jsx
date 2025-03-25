@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
@@ -32,11 +32,24 @@ import { UploadImage } from "@/lib/uploadFunction";
 import { toast } from "@/hooks/use-toast";
 import { Checkbox } from "./ui/checkbox";
 import { BASE_URL } from "@/constants/data";
+import { UserContext } from "@/store/context/UserContext";
+import { debounce } from "@/lib/debounce";
+import Link from "next/link";
 
-const EditCustomerDialog = ({ onRefresh, visible, onClose, data, ownership }) => {
+const EditCustomerDialog = ({
+  onRefresh,
+  visible,
+  onClose,
+  data,
+  ownership,
+  onClickDelete,
+}) => {
   const [numbers, setNumbers] = useState([""]);
   const [numberError, setNumberError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { state: UserState } = useContext(UserContext);
+  const [checking, setChecking] = useState(false);
+  const [customerInfo, setCustomerInfo] = useState([]);
 
   const formSchema = z.object({
     company: z.string().optional(), // Optional field without min(1)
@@ -50,7 +63,7 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data, ownership }) =>
     rating: z.number().optional(),
     image: z.string().optional(),
     member: z.boolean().optional(),
-    ownership: z.number().nullable().optional(), 
+    ownership: z.number().nullable().optional(),
   });
 
   const form = useForm({
@@ -90,7 +103,7 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data, ownership }) =>
             rating: data?.rating || 0,
             image: url || "",
             member: data?.member || false,
-            ownership : data?.ownership || null
+            ownership: data?.ownership || null,
           });
         });
       } else {
@@ -106,7 +119,7 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data, ownership }) =>
           rating: data?.rating || 0,
           image: data?.image || "",
           member: data?.member || false,
-          ownership : data?.ownership || null
+          ownership: data?.ownership || null,
         });
       }
     }
@@ -136,7 +149,7 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data, ownership }) =>
       image: values.image,
       remarks: values.remarks,
       member: values.member,
-      ownership : values.ownership
+      ownership: values.ownership,
     };
 
     try {
@@ -161,7 +174,10 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data, ownership }) =>
           image: name,
         });
       } else {
-        const response = await axios.put(`${BASE_URL}/customer/${data.id}`, apiData);
+        const response = await axios.put(
+          `${BASE_URL}/customer/${data.id}`,
+          apiData
+        );
       }
 
       toast({ title: "Customer Edited successfully" });
@@ -186,12 +202,39 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data, ownership }) =>
   };
 
   const handleNumberChange = (index, value) => {
+    if (numberError) {
+      setNumberError("");
+    }
     setNumbers((prevState) => {
       const newState = [...prevState];
       newState[index] = value;
       return newState;
     });
+    debouncedCheckNumber(value);
   };
+
+  const checkNumberInDatabase = async (number) => {
+    setCustomerInfo([]);
+    setChecking(true);
+    try {
+      const response = await axios.post(`${BASE_URL}/check-number`, { number });
+      if(response.data && response.data.length > 0){
+        const apiData = response.data
+        const filteredData = [...apiData.filter((item)=>item.id !== data.id)]
+        setCustomerInfo(filteredData);
+      }
+      
+    } catch (error) {
+      console.log("Error checking number:", error);
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const debouncedCheckNumber = useCallback(
+    debounce(checkNumberInDatabase, 1000),
+    []
+  );
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -230,14 +273,21 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data, ownership }) =>
                                 <Button
                                   variant="destructive"
                                   size="icon"
-                                  onClick={() => removeNumberField(index)}
+                                  onClick={() => {
+                                    removeNumberField(index);
+                                    setCustomerInfo([]);
+                                  }}
                                 >
                                   <Trash size={16} />
                                 </Button>
                               )}
+                              {checking && (
+                                <Loader2 className="animate-spin ml-2" />
+                              )}
                             </div>
                           ))}
                           <Button
+                            disabled={customerInfo.length > 0 || checking}
                             type="button"
                             onClick={addNumberField}
                             className="mt-2"
@@ -245,6 +295,27 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data, ownership }) =>
                             + Add Number
                           </Button>
                         </FormItem>
+                        {customerInfo.length > 0 && (
+                          <div className="mt-2 p-3 bg-red-100 dark:bg-red-900 rounded-lg border border-red-400">
+                            <Label className="text-red-700 dark:text-red-300 font-medium text-sm">
+                              ⚠️ Number exists with the following:
+                            </Label>
+                            <div className="mt-1 space-y-1">
+                              {customerInfo.map((item, index) => (
+                                <Link
+                                  key={index}
+                                  target="_blank"
+                                  href={`/${UserState.value.data?.base_route}/customer/detail?id=${item?.id}`}
+                                  className="block text-red-600 dark:text-red-400 text-sm font-medium hover:underline"
+                                >
+                                  {item?.name || item?.owner} -{" "}
+                                  {item?.number.join(", ")}
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         <Label style={{ color: "red" }}>{numberError}</Label>
                       </div>
 
@@ -336,27 +407,24 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data, ownership }) =>
                         )}
                       />
 
-                        {ownership && (
-                                              <FormField
-                                                control={control}
-                                                name="ownership"
-                                                render={({ field }) => (
-                                                  <FormItem>
-                                                    <FormLabel>
-                                                      Ownership
-                                                    </FormLabel>
-                                                    <FormControl>
-                                                      <UserSearch
-                                                        value={field.value}
-                                                        onReturn={(val) => field.onChange(val)}
-                                                      />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                  </FormItem>
-                                                )}
-                                              />
-                                            )}
-
+                      {ownership && (
+                        <FormField
+                          control={control}
+                          name="ownership"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Ownership</FormLabel>
+                              <FormControl>
+                                <UserSearch
+                                  value={field.value}
+                                  onReturn={(val) => field.onChange(val)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
                     </div>
 
                     <div className="flex flex-1 flex-col space-y-4">
@@ -464,11 +532,28 @@ const EditCustomerDialog = ({ onRefresh, visible, onClose, data, ownership }) =>
                     </div>
                   </div>
 
-                  <Button className="w-full mt-10" type="submit">
+                  <Button
+                    disabled={customerInfo.length > 0 || checking}
+                    className="w-full mt-10"
+                    type="submit"
+                  >
                     {loading && <Loader2 className="animate-spin" />} Submit
                   </Button>
                 </form>
               </Form>
+              {UserState.value.data &&
+                UserState.value.data?.customer_delete_access && (
+                  <Button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onClickDelete();
+                    }}
+                    variant="destructive"
+                    className="mt-2 w-full"
+                  >
+                    Delete
+                  </Button>
+                )}
             </div>
           </ScrollArea>
         </div>

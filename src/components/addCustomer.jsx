@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
@@ -28,6 +28,9 @@ import { UserSearch } from "./user-search";
 import { toast } from "@/hooks/use-toast";
 import { BASE_URL } from "@/constants/data";
 import { UserContext } from "@/store/context/UserContext";
+import { debounce } from "@/lib/debounce";
+import Link from "next/link";
+import { useDebounce } from "@/hooks/use-debounce";
 
 const AddCustomerDialog = ({
   onRefresh,
@@ -39,7 +42,9 @@ const AddCustomerDialog = ({
   const [numbers, setNumbers] = useState([""]);
   const [numberError, setNumberError] = useState("");
   const [loading, setLoading] = useState(false);
-  const {state : UserState} = useContext(UserContext)
+  const { state: UserState } = useContext(UserContext);
+  const [checking, setChecking] = useState(false);
+  const [customerInfo, setCustomerInfo] = useState([]);
 
   const formSchema = z.object({
     company: z.string().optional(), // Optional field without min(1)
@@ -52,7 +57,7 @@ const AddCustomerDialog = ({
     group: z.string().optional(), // Optional field
     rating: z.number().optional(),
     member: z.boolean().optional(),
-    ownership: z.number().nullable().optional(), 
+    ownership: z.number().nullable().optional(),
   });
 
   const form = useForm({
@@ -82,7 +87,6 @@ const AddCustomerDialog = ({
   }
 
   async function onSubmit(values) {
-   
     setLoading(true);
 
     try {
@@ -93,6 +97,16 @@ const AddCustomerDialog = ({
         setNumberError("Atleas one number is required");
         return;
       }
+      let i = 0;
+      temp.forEach((num) => {
+        if (num && num.charAt(0) !== "+") {
+          i++;
+          setNumberError("Follow correct number format");
+          return;
+        }
+      });
+
+      if (i > 0) return;
 
       const response = await axios.post(`${BASE_URL}/customer`, {
         name: values.company,
@@ -107,10 +121,15 @@ const AddCustomerDialog = ({
         image: "",
         remarks: values.remarks,
         member: values.member,
-        ownership: UserState.value.data?.designation == 'Sales' ? UserState.value.data?.id : ownership ? values.ownership : undefined,
+        ownership:
+          UserState.value.data?.designation == "Sales"
+            ? UserState.value.data?.id
+            : ownership
+            ? values.ownership
+            : undefined,
       });
       toast({ title: "Customer Addedd successfully" });
-     await onRefresh();
+      await onRefresh();
       handleClose(false);
     } catch (error) {
       toast({
@@ -139,7 +158,24 @@ const AddCustomerDialog = ({
       newState[index] = value;
       return newState;
     });
+    debouncedCheckNumber(value);
   };
+
+  const checkNumberInDatabase = async (number) => {
+    setCustomerInfo([]);
+    setChecking(true);
+    try {
+      const response = await axios.post(`${BASE_URL}/check-number`, { number });
+
+      setCustomerInfo(response.data);
+    } catch (error) {
+      console.log("Error checking number:", error);
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const debouncedCheckNumber = useCallback(debounce(checkNumberInDatabase, 1000), []);
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -147,259 +183,282 @@ const AddCustomerDialog = ({
         <DialogHeader>
           <DialogTitle>Add new customer</DialogTitle>
         </DialogHeader>
-          <ScrollArea className="max-h-[75vh] px-2">
-            <div className="px-2">
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
-                >
-                  <div className="flex flex-1 gap-10 flex-wrap">
-                    <div className="flex flex-1 flex-col space-y-4">
-                      <div>
-                        <FormItem>
-                          <FormLabel
-                            style={{ color: numberError ? "red" : "black" }}
-                          >
-                            Phone Number <RequiredStar />
-                          </FormLabel>
-                          {numbers.map((num, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center gap-2"
-                            >
-                              <FormControl className="flex-1">
-                                <Input
-                                  placeholder="Enter number"
-                                  value={num}
-                                  onChange={(e) =>
-                                    handleNumberChange(index, e.target.value)
-                                  }
-                                />
-                              </FormControl>
-                              {index > 0 && (
-                                <Button
-                                  variant="destructive"
-                                  size="icon"
-                                  onClick={() => removeNumberField(index)}
-                                >
-                                  <Trash size={16} />
-                                </Button>
-                              )}
-                            </div>
-                          ))}
-                          <Button
-                            type="button"
-                            onClick={addNumberField}
-                            className="mt-2"
-                          >
-                            + Add Number
-                          </Button>
-                        </FormItem>
-                        {/* <Label style={{ color: "red" }}>{numberError}</Label> */}
-                      </div>
-
-                      <FormField
-                        control={control}
-                        name="owner"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              Customer <RequiredStar />
-                            </FormLabel>
-                            <FormControl>
+        <ScrollArea className="max-h-[75vh] px-2">
+          <div className="px-2">
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
+                <div className="flex flex-1 gap-10 flex-wrap">
+                  <div className="flex flex-1 flex-col space-y-4">
+                    <div>
+                      <FormItem>
+                        <FormLabel
+                          style={{ color: numberError ? "red" : "black" }}
+                        >
+                          Phone Number <RequiredStar />
+                        </FormLabel>
+                        {numbers.map((num, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <FormControl className="flex-1">
                               <Input
-                                placeholder="Enter customer name"
-                                {...field}
+                                placeholder="+92xxxxxxxxxx"
+                                value={num}
+                                onChange={(e) =>
+                                  handleNumberChange(index, e.target.value)
+                                }
                               />
                             </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="company"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Company</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter company name"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="group"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Group</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter group name"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="city"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              City <RequiredStar />
-                            </FormLabel>
-                            <FormControl>
-                              <CitiesSearch
-                                value={field.value}
-                                onReturn={(val) => field.onChange(val)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {ownership && (
-                        <FormField
-                          control={control}
-                          name="ownership"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>
-                                Ownership
-                              </FormLabel>
-                              <FormControl>
-                                <UserSearch
-                                  value={field.value}
-                                  onReturn={(val) => field.onChange(val)}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-                    </div>
-
-                    <div className="flex flex-1 flex-col space-y-4">
-                      <FormField
-                        control={control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter email" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="address"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Address</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter address" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="industry"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Industry</FormLabel>
-                            <FormControl>
-                              <IndustrySearch
-                                value={field.value}
-                                onReturn={(val) => field.onChange(val)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="remarks"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Remarks</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter remarks" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="rating"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Rating</FormLabel>
-                            <FormControl>
-                              <StarRating
-                                value={field.value}
-                                onChange={field.onChange}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="member"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="pr-2">Member?</FormLabel>
-                            <FormControl>
-                              <Checkbox
-                                className="mt-5"
-                                checked={field.value}
-                                onCheckedChange={(checked) => {
-                                  field.onChange(checked);
+                            {index > 0 && (
+                              <Button
+                                variant="destructive"
+                                size="icon"
+                                onClick={() => {
+                                  removeNumberField(index);
+                                  setCustomerInfo([]);
                                 }}
+                              >
+                                <Trash size={16} />
+                              </Button>
+                            )}
+                            {checking && (
+                              <Loader2 className="animate-spin ml-2" />
+                            )}
+                          </div>
+                        ))}
+                        <Button
+                          disabled={customerInfo.length > 0 || checking}
+                          type="button"
+                          onClick={addNumberField}
+                          className="mt-2"
+                        >
+                          + Add Number
+                        </Button>
+                      </FormItem>
+                      {customerInfo.length > 0 && (
+                        <div className="mt-2 p-3 bg-red-100 dark:bg-red-900 rounded-lg border border-red-400">
+                          <Label className="text-red-700 dark:text-red-300 font-medium text-sm">
+                            ⚠️ Number exists with the following:
+                          </Label>
+                          <div className="mt-1 space-y-1">
+                            {customerInfo.map((item, index) => (
+                              <Link
+                                key={index}
+                                target="_blank"
+                                href={`/${UserState.value.data?.base_route}/customer/detail?id=${item?.id}`}
+                                className="block text-red-600 dark:text-red-400 text-sm font-medium hover:underline"
+                              >
+                                {item?.name || item?.owner} -{" "}
+                                {item?.number.join(", ")}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <Label style={{ color: "red" }}>{numberError}</Label>
+                    </div>
+
+                    <FormField
+                      control={control}
+                      name="owner"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Customer <RequiredStar />
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter customer name"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={control}
+                      name="company"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter company name"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={control}
+                      name="group"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Group</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter group name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            City <RequiredStar />
+                          </FormLabel>
+                          <FormControl>
+                            <CitiesSearch
+                              value={field.value}
+                              onReturn={(val) => field.onChange(val)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {ownership && (
+                      <FormField
+                        control={control}
+                        name="ownership"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Ownership</FormLabel>
+                            <FormControl>
+                              <UserSearch
+                                value={field.value}
+                                onReturn={(val) => field.onChange(val)}
                               />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    </div>
+                    )}
                   </div>
 
-                  <Button className="w-full mt-10" type="submit">
-                    {loading && <Loader2 className="animate-spin" />} Submit
-                  </Button>
-                </form>
-              </Form>
-            </div>
-          </ScrollArea>
-        
+                  <div className="flex flex-1 flex-col space-y-4">
+                    <FormField
+                      control={control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Address</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter address" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={control}
+                      name="industry"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Industry</FormLabel>
+                          <FormControl>
+                            <IndustrySearch
+                              value={field.value}
+                              onReturn={(val) => field.onChange(val)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={control}
+                      name="remarks"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Remarks</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter remarks" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={control}
+                      name="rating"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Rating</FormLabel>
+                          <FormControl>
+                            <StarRating
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={control}
+                      name="member"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="pr-2">Member?</FormLabel>
+                          <FormControl>
+                            <Checkbox
+                              className="mt-5"
+                              checked={field.value}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  disabled={customerInfo.length > 0 || checking}
+                  className="w-full mt-10"
+                  type="submit"
+                >
+                  {loading && <Loader2 className="animate-spin" />} Submit
+                </Button>
+              </form>
+            </Form>
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

@@ -91,7 +91,7 @@ import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "@/config/firebase";
 import { redirect, useRouter } from "next/navigation";
 import FilterSheet from "@/components/users/filterSheet";
-import { useToast } from "@/hooks/use-toast";
+import { toast, useToast } from "@/hooks/use-toast";
 import { BASE_URL } from "@/constants/data";
 
 export default function EmployeeBranchExpenses() {
@@ -104,7 +104,8 @@ export default function EmployeeBranchExpenses() {
   const { state: UserState } = useContext(UserContext);
   const [visibleAdd, setVisibleAdd] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   useEffect(() => {
     if (UserState?.value?.data?.id) {
@@ -139,7 +140,7 @@ export default function EmployeeBranchExpenses() {
     {
       accessorKey: "note",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -155,7 +156,7 @@ header: ({ column }) => {
     {
       accessorKey: "amount",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -172,7 +173,7 @@ header: ({ column }) => {
     {
       accessorKey: "date",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -192,45 +193,7 @@ header: ({ column }) => {
       ),
     },
 
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const currentItem = row.original;
-
-        return (
-          <ChevronsRight
-            className="cursor-pointer"
-            onClick={() => {
-              setImageURL(currentItem);
-              setVisible(true);
-            }}
-          />
-          // <DropdownMenu>
-          //   <DropdownMenuTrigger asChild>
-          //     <Button variant="ghost" className="h-8 w-8 p-0">
-          //       <MoreHorizontal className="h-4 w-4" />
-          //     </Button>
-          //   </DropdownMenuTrigger>
-          //   <DropdownMenuContent align="end">
-          //     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          //     <DropdownMenuItem
-          //       className="hover:cursor-pointer"
-          //       onClick={() => {
-          //         setImageURL(currentItem);
-          //         setVisible(true);
-          //       }}
-          //     >
-          //       View
-          //     </DropdownMenuItem>
-
-          //     {/* <DropdownMenuItem onClick={() => setShowConfirmation(true)}>
-          //       Delete
-          //     </DropdownMenuItem> */}
-          //   </DropdownMenuContent>
-          // </DropdownMenu>
-        );
-      },
-    },
+    
   ];
 
   function handleDownload() {
@@ -253,23 +216,47 @@ header: ({ column }) => {
     }
   }
 
+  async function handleDelete(id) {
+    if (!id) return;
+    setDeleteLoading(true);
+    try {
+      const response = await axios.delete(`${BASE_URL}/user/${UserState.value.data?.id}/expense/${id}`);
+      toast({ title: "Branch Expense Deleted" });
+      const startDate = moment().startOf("month").toISOString();
+      const endDate = moment().endOf("month").toISOString();
+      fetchData(UserState?.value?.data?.id, startDate, endDate);
+    } catch (error) {
+      toast({
+        title: error?.response?.data?.message || "Netwrok error",
+        variant: "desctructive",
+      });
+    } finally {
+      setDeleteLoading(false);
+      setShowConfirmation(false);
+      setVisible(false)
+      setImageURL(null);
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-center justify-between">
         <Heading title="Office Expenses" description="Manage office expenses" />
-        {UserState.value.data?.id && (
-          <Button onClick={() => setVisibleAdd(true)}>
-            Add Office Expenses
-          </Button>
-        )}
+        {UserState.value.data &&
+          UserState.value.data?.branch_expenses_write_access && (
+            <Button onClick={() => setVisibleAdd(true)}>
+              Add Office Expenses
+            </Button>
+          )}
       </div>
 
       <ConfimationDialog
         open={showConfirmation}
         title={"Are you sure you want to delete?"}
         description={"Your action will remove branch expense from the system"}
-        onPressYes={() => console.log("press yes")}
+        onPressYes={() => handleDelete(imageURL.id)}
         onPressCancel={() => setShowConfirmation(false)}
+        loading={deleteLoading}
       />
       <PageTable
         columns={columns}
@@ -277,6 +264,10 @@ header: ({ column }) => {
         totalItems={data.length}
         searchItem={"note"}
         searchName={"Search bill..."}
+        onRowClick={(val) => {
+          setImageURL(val);
+          setVisible(true);
+        }}
         // filter={true}
         // onFilterClick={() => setFilterVisible(true)}
       >
@@ -333,12 +324,22 @@ header: ({ column }) => {
         img={imageURL?.image || null}
         description={imageURL?.description || null}
         submittedBy={imageURL?.submitted_by_name || null}
+        onDelete={() => setShowConfirmation(true)}
+      
       />
     </div>
   );
 }
 
-const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
+const ImageSheet = ({
+  visible,
+  onClose,
+  img,
+  submittedBy,
+  description,
+  onDelete,
+  loading,
+}) => {
   const [imageOpen, setImageOpen] = useState(false);
   const [localImage, setLocalImage] = useState(null);
 
@@ -390,6 +391,9 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
               style={{ flex: 1 }}
             />
           </ControlledZoom>
+          <Button variant="destructive" onClick={onDelete}>
+            {loading && <Loader2 className="animate-spin" />} Delete
+          </Button>
         </SheetHeader>
       </SheetContent>
     </Sheet>

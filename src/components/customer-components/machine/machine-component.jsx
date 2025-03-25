@@ -3,6 +3,7 @@ import {
   ArrowUpDown,
   ClipboardList,
   DollarSign,
+  EditIcon,
   Mail,
   MapPin,
   MoreHorizontal,
@@ -95,7 +96,7 @@ import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "@/config/firebase";
 import EditPayment from "@/components/editPayment";
 import { UploadImage } from "@/lib/uploadFunction";
-import { BASE_URL } from "@/constants/data";
+import { BASE_URL, Colors } from "@/constants/data";
 import { UserContext } from "@/store/context/UserContext";
 import InvoicePDF from "@/components/invoicepdf";
 import { pdf } from "@react-pdf/renderer";
@@ -173,6 +174,7 @@ export default function Machine() {
       return null;
     }
   }
+
 
   const columns = [
     {
@@ -299,45 +301,55 @@ export default function Machine() {
         const currentItem = row.original;
 
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                className="hover:cursor-pointer"
-                onClick={() => {
-                  setImageURL(currentItem);
-                  setVisible(true);
-                }}
-              >
-                View
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="hover:cursor-pointer"
-                onClick={() => {
-                  setSelectedPayment(currentItem);
-                  setEditPayment(true);
-                }}
-              >
-                Edit
-              </DropdownMenuItem>
+          <EditIcon style={{color:Colors.button}}
+            className="cursor-pointer h-5 w-5"
+            onClick={(e) => {
+              e.stopPropagation()
+              setSelectedPayment(currentItem);
+              setEditPayment(true);
+            }}
+          />
+          // <DropdownMenu>
+          //   <DropdownMenuTrigger asChild>
+          //     <Button variant="ghost" className="h-8 w-8 p-0">
+          //       <MoreHorizontal className="h-4 w-4" />
+          //     </Button>
+          //   </DropdownMenuTrigger>
+          //   <DropdownMenuContent align="end">
+          //     <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          //     <DropdownMenuItem
+          //       className="hover:cursor-pointer"
+          //       onClick={() => {
+          //         setImageURL(currentItem);
+          //         setVisible(true);
+          //       }}
+          //     >
+          //       View
+          //     </DropdownMenuItem>
+          //     <DropdownMenuItem
+          //       className="hover:cursor-pointer"
+          //       onClick={() => {
+          //         setSelectedPayment(currentItem);
+          //         setEditPayment(true);
+          //       }}
+          //     >
+          //       Edit
+          //     </DropdownMenuItem>
 
-              {/* <DropdownMenuItem
-                className="hover:cursor-pointer"
-                onClick={() => setShowConfirmation(true)}
-              >
-                Delete
-              </DropdownMenuItem> */}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          //     {/* <DropdownMenuItem
+          //       className="hover:cursor-pointer"
+          //       onClick={() => setShowConfirmation(true)}
+          //     >
+          //       Delete
+          //     </DropdownMenuItem> */}
+          //   </DropdownMenuContent>
+          // </DropdownMenu>
         );
       },
     },
   ];
+
+ 
 
   async function handleDownloadLedger() {
     let runningBalance = total;
@@ -411,6 +423,12 @@ export default function Machine() {
           data={payments}
           totalItems={payments.length}
           disableInput={true}
+          onRowClick={(val) => {
+            if (val.id) {
+              setImageURL(val);
+              setVisible(true);
+            }
+          }}
         />
         <EditMachine
           visible={editMachine}

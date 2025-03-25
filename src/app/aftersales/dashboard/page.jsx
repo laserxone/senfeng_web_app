@@ -149,7 +149,6 @@ export default function Page() {
             /> */}
             <CustomerEmployee
              totalCustomerText={"Total Members"}
-             disableAdd={true}
             user_id={null}
             ownership={true}
               customer_data={

@@ -107,15 +107,14 @@ export default function Reimbursement({
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
-      setData([...passingData]);
+    setData([...passingData]);
   }, [passingData]);
-
 
   const columns = [
     {
       accessorKey: "date",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -138,7 +137,7 @@ header: ({ column }) => {
     {
       accessorKey: "title",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -154,7 +153,7 @@ header: ({ column }) => {
     {
       accessorKey: "city",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -170,7 +169,7 @@ header: ({ column }) => {
     {
       accessorKey: "amount",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -187,7 +186,7 @@ header: ({ column }) => {
     {
       accessorKey: "description",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -201,22 +200,22 @@ header: ({ column }) => {
       cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
 
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const currentItem = row.original;
+    // {
+    //   id: "actions",
+    //   cell: ({ row }) => {
+    //     const currentItem = row.original;
 
-        return (
-          <ChevronsRight
-            className="hover:cursor-pointer"
-            onClick={() => {
-              setImageURL(currentItem);
-              setVisible(true);
-            }}
-          />
-        );
-      },
-    },
+    //     return (
+    //       <ChevronsRight
+    //         className="hover:cursor-pointer"
+    //         onClick={() => {
+    //           setImageURL(currentItem);
+    //           setVisible(true);
+    //         }}
+    //       />
+    //     );
+    //   },
+    // },
   ];
 
   function handleDownload() {
@@ -278,6 +277,10 @@ header: ({ column }) => {
           totalItems={data.length}
           searchItem={"title"}
           searchName={"Search bill..."}
+          onRowClick={(val) => {
+            setImageURL(val);
+            setVisible(true);
+          }}
           // filter={true}
           // onFilterClick={() => setFilterVisible(true)}
         >
@@ -329,10 +332,7 @@ header: ({ column }) => {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await onFilterReturn(
-            val.start.toISOString(),
-            val.end.toISOString()
-          );
+          await onFilterReturn(val.start.toISOString(), val.end.toISOString());
         }}
       />
       <ImageSheet
@@ -377,7 +377,7 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
       try {
         const storageRef = ref(storage, img);
         const url = await getDownloadURL(storageRef);
-        console.log(url)
+        console.log(url);
         if (isMountedRef.current) setLocalImage(url);
       } catch (error) {
         console.error("Error fetching image URL:", error);
@@ -392,7 +392,7 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
 
     return () => {
       isMountedRef.current = false;
-      setLocalImage(null)
+      setLocalImage(null);
     };
   }, [fetchImage]);
 
@@ -433,7 +433,12 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
                 className="hover:cursor-pointer"
                 src={memoizedImage}
                 alt="reimbursement-img"
-                style={{ flex: 1, maxWidth: "100%", maxHeight: "400px", objectFit: "contain" }}
+                style={{
+                  flex: 1,
+                  maxWidth: "100%",
+                  maxHeight: "400px",
+                  objectFit: "contain",
+                }}
               />
             </ControlledZoom>
           ) : (
@@ -444,7 +449,6 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
     </Sheet>
   );
 };
-
 
 const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
   const [loading, setLoading] = useState(false);

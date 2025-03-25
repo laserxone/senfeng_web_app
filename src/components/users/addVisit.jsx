@@ -48,8 +48,9 @@ export default function VisitTab({ id, data, onRefresh }) {
   };
 
   return (
-    <ScrollArea>
-      <div className="flex flex-1 max-h-[600px] pr-5">
+  <div className="h-[650px]">
+    <ScrollArea className="h-[650px] pr-5">
+   
         <div className="space-y-4 w-full">
           <Card>
             <CardContent className="p-4 space-y-4">
@@ -59,6 +60,7 @@ export default function VisitTab({ id, data, onRefresh }) {
                   onSubmit={form.handleSubmit(onSubmit)}
                   className="space-y-3"
                 >
+                  <div className="flex flex-1 gap-5">
                   <FormField
                     control={form.control}
                     name="name"
@@ -98,6 +100,8 @@ export default function VisitTab({ id, data, onRefresh }) {
                       </div>
                     )}
                   />
+                  </div>
+                 
                   <FormField
                     control={form.control}
                     name="note"
@@ -154,7 +158,8 @@ export default function VisitTab({ id, data, onRefresh }) {
             </div>
           )}
         </div>
-      </div>
+   
     </ScrollArea>
+    </div>
   );
 }

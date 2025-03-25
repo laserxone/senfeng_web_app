@@ -53,7 +53,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 
 import {
   Command,
@@ -126,7 +132,8 @@ const PageTable = ({
   tableHeader,
   disableInput = false,
   totalCustomerText,
-  totalCustomer
+  totalCustomer,
+  onRowClick,
 }) => {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
@@ -154,8 +161,6 @@ const PageTable = ({
     setPageSize(pagination.pageSize);
   };
 
-
-
   const table = useReactTable({
     data,
     columns,
@@ -180,7 +185,6 @@ const PageTable = ({
     // manualFiltering: true
   });
 
- 
   useImperativeHandle(
     ref,
     () => {
@@ -191,7 +195,7 @@ const PageTable = ({
           });
         },
         handleLocalInput() {
-          table.getColumn('qty')?.setFilterValue("00");
+          table.getColumn("qty")?.setFilterValue("00");
         },
       };
     },
@@ -201,8 +205,7 @@ const PageTable = ({
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex w-full flex-wrap gap-4 items-center ">
-        {
-          !disableInput &&
+        {!disableInput && (
           <Input
             ref={inputRef}
             placeholder={`${searchName}`}
@@ -211,13 +214,13 @@ const PageTable = ({
                 ? table.getColumn(searchItem).getFilterValue() ?? ""
                 : ""
             }
-            onChange={(event)=>{
+            onChange={(event) => {
               searchItem &&
-              table.getColumn(searchItem).setFilterValue(event.target.value);
+                table.getColumn(searchItem).setFilterValue(event.target.value);
             }}
             className="w-[60vw] max-w-sm"
           />
-        }
+        )}
 
         {children}
       </div>
@@ -246,16 +249,17 @@ const PageTable = ({
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
                     <TableRow
-                  className="even:bg-gray-100 dark:even:bg-gray-800 dark:text-white text-black"
+                      onClick={() => onRowClick(row.original)}
+                      className="even:bg-gray-100 dark:even:bg-gray-800 dark:text-white text-black cursor-pointer"
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell className="text-[13px]" key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
+                          {flexRender(cell.column.columnDef.cell, {
+                            ...cell.getContext(),
+                            stopRowClick: (e) => e.stopPropagation(),
+                          })}
                         </TableCell>
                       ))}
                     </TableRow>
@@ -323,7 +327,8 @@ const PageTable = ({
           <div className="flex w-[250px] items-center justify-center text-sm font-medium">
             {totalItems > 0 ? (
               <>
-               {totalCustomerText &&  `${totalCustomerText} ${totalCustomer}`} Page {paginationState.pageIndex + 1} of {table.getPageCount()}
+                {totalCustomerText && `${totalCustomerText} ${totalCustomer}`}{" "}
+                Page {paginationState.pageIndex + 1} of {table.getPageCount()}
               </>
             ) : (
               "No pages"

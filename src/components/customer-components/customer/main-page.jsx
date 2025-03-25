@@ -18,8 +18,11 @@ import {
   ChevronsRight,
   ChevronsUpDown,
   CircleArrowRight,
+  DeleteIcon,
   MoreHorizontal,
   Star,
+  Trash,
+  Trash2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -116,6 +119,7 @@ import { UserContext } from "@/store/context/UserContext";
 import { BASE_URL } from "@/constants/data";
 import AddCustomerDialog from "@/components/addCustomer";
 import moment from "moment";
+import { startHolyLoader } from "holy-loader";
 
 const tableHeader = [
   {
@@ -124,9 +128,12 @@ const tableHeader = [
   },
   {
     value: "Name",
-    label: "Name",
+    label: "Company Name",
   },
-
+  {
+    value: "Number",
+    label: "Number",
+  },
   {
     value: "Industry",
     label: "Industry",
@@ -145,7 +152,7 @@ const tableHeader = [
   },
 ];
 
-export default function CustomerMainPage({ disableAdd = false }) {
+export default function CustomerMainPage() {
   const [value, setValue] = useState("");
   const pageTableRef = useRef();
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -153,6 +160,9 @@ export default function CustomerMainPage({ disableAdd = false }) {
   const [data, setData] = useState([]);
   const [addCustomer, setAddCustomer] = useState(false);
   const { state: UserState } = useContext(UserContext);
+  const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (UserState.value.data?.id) fetchData();
@@ -165,7 +175,11 @@ export default function CustomerMainPage({ disableAdd = false }) {
         .then((response) => {
           const apiData = response.data;
           const temp = apiData.map((item) => {
-            return { ...item, machines: item.machines.join(", ") };
+            return {
+              ...item,
+              machines: item.machines.join(", "),
+              number: item.number.join(", "),
+            };
           });
           setData([...temp]);
         })
@@ -207,6 +221,22 @@ export default function CustomerMainPage({ disableAdd = false }) {
         );
       },
       cell: ({ row }) => <div>{row.getValue("name")}</div>,
+    },
+    {
+      accessorKey: "number",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Number
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("number")}</div>,
     },
     {
       accessorKey: "industry",
@@ -305,11 +335,20 @@ export default function CustomerMainPage({ disableAdd = false }) {
         const currentItem = row.original;
 
         return (
-          <Link
-            href={`/${UserState?.value?.data?.base_route}/customer/detail?id=${currentItem.id}`}
-          >
-            <ChevronsRight className="cursor-pointer" />
-          </Link>
+          UserState.value.data &&
+          UserState.value.data.customer_delete_access && (
+            <Button
+              variant="destructive"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation()
+                setSelectedCustomerId(currentItem?.id);
+                setShowConfirmation(true);
+              }}
+            >
+              <Trash size={16} />
+            </Button>
+          )
           // <DropdownMenu>
           //   <DropdownMenuTrigger asChild>
           //     <Button variant="ghost" className="h-8 w-8 p-0">
@@ -347,12 +386,31 @@ export default function CustomerMainPage({ disableAdd = false }) {
     }
   }
 
+  async function handleDelete(id) {
+    if (!id) return;
+    setDeleteLoading(true);
+    try {
+      const response = await axios.delete(`${BASE_URL}/customer/${id}`);
+      toast({ title: "Customer Deleted" });
+      await fetchData();
+    } catch (error) {
+      toast({
+        title: error?.response?.data?.message || "Netwrok error",
+        variant: "desctructive",
+      });
+    } finally {
+      setDeleteLoading(false);
+      setShowConfirmation(false);
+      setSelectedCustomerId(null);
+    }
+  }
+
   return (
     <PageContainer scrollable={false}>
       <div className="flex flex-1 flex-col space-y-4">
         <div className="flex items-center justify-between">
           <Heading title="All Customers" description="Manage your custoners" />
-          {!disableAdd && (
+          {UserState.value.data && UserState.value.data.customer_add_access && (
             <Button onClick={() => setAddCustomer(true)}>
               Add new customer
             </Button>
@@ -385,6 +443,14 @@ export default function CustomerMainPage({ disableAdd = false }) {
           searchItem={value.toLowerCase()}
           searchName={value ? `Search ${value}...` : "Select filter first..."}
           tableHeader={tableHeader}
+          onRowClick={(val) => {
+            if (val.id) {
+              startHolyLoader();
+              router.push(
+                `/${UserState?.value?.data?.base_route}/customer/detail?id=${val.id}`
+              );
+            }
+          }}
           // filter={true}
           // onFilterClick={() => setFilterVisible(true)}
         >
@@ -429,6 +495,15 @@ export default function CustomerMainPage({ disableAdd = false }) {
           onClose={() => setFilterVisible(false)}
         />
       </div>
+
+      <ConfimationDialog
+        loading={deleteLoading}
+        open={showConfirmation}
+        title={"Are you sure you want to delete?"}
+        description={"Your action will remove customer from the system"}
+        onPressYes={() => handleDelete(selectedCustomerId)}
+        onPressCancel={() => setShowConfirmation(false)}
+      /> 
     </PageContainer>
   );
 }

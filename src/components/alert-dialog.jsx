@@ -9,8 +9,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Loader2 } from "lucide-react";
 
-const ConfimationDialog = ({ children, title, description, onPressYes,onPressCancel, open }) => {
+const ConfimationDialog = ({ children, title, description, onPressYes,onPressCancel, open, loading }) => {
   return (
     <AlertDialog open={open}>
       {/* <AlertDialogTrigger >{children}</AlertDialogTrigger> */}
@@ -24,7 +25,7 @@ const ConfimationDialog = ({ children, title, description, onPressYes,onPressCan
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onPressCancel}>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={() => onPressYes()}>
-            Yes
+           {loading && <Loader2 className="animate-spin"/>} Yes
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

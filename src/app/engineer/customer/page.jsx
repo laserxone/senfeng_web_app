@@ -4,6 +4,6 @@ import CustomerMainPage from "@/components/customer-components/customer/main-pag
 export default function Page(){
 
   return (
-    <CustomerMainPage disableAdd={true}/>
+    <CustomerMainPage />
   )
 }

@@ -5,6 +5,7 @@ import "./globals.css";
 import Providers from "@/components/providers";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
+import HolyLoader from "holy-loader";
 
 export const metadata = {
   title: "SENFENG",
@@ -21,7 +22,8 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en" className={`${lato.className}`} suppressHydrationWarning>
       <body className={"overflow-hidden"}>
-        <NextTopLoader showSpinner={false} />
+        {/* <NextTopLoader showSpinner={false} /> */}
+        <HolyLoader />
         <Suspense
           fallback={
             <div className="flex flex-1 justify-center items-center min-h-screen">
