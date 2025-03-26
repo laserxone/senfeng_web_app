@@ -7,8 +7,15 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Filter, MoreHorizontal } from "lucide-react";
-
+import {
+  ArrowUpDown,
+  ChevronsRight,
+  Filter,
+  Loader2,
+  MoreHorizontal,
+  Trash,
+} from "lucide-react";
+import { BASE_URL } from "@/constants/data";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -26,7 +33,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Label } from "@/components/ui/label";
 
 import {
@@ -79,8 +93,14 @@ import exportToExcel from "@/lib/exportToExcel";
 import { Title } from "@radix-ui/react-dialog";
 import { UserSearch } from "@/components/user-search";
 import moment from "moment";
-import { Card, CardContent } from "@/components/ui/card";
-import { BASE_URL } from "@/constants/data";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UploadImage } from "@/lib/uploadFunction";
+import { getDownloadURL, ref } from "firebase/storage";
+import { storage } from "@/config/firebase";
+import { UserContext } from "@/store/context/UserContext";
+import FilterSheet from "@/components/users/filterSheet";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
+import Spinner from "@/components/ui/spinner";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -89,28 +109,47 @@ export default function Page() {
   const [filterValues, setFilterValues] = useState(null);
   const [imageURL, setImageURL] = useState(null);
   const [visible, setVisible] = useState(false);
+  const [reimbursementVisible, setReimbursementVisible] = useState(false);
   const [total, setTotal] = useState(0);
+  const { state: UserState } = useContext(UserContext);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchData() {
+    if (UserState.value.data?.id) {
+      const startDate = moment().startOf("month").toISOString();
+      const endDate = moment().endOf("month").toISOString();
+      fetchData(startDate, endDate);
+    }
+  }, [UserState]);
+
+  async function fetchData(startDate, endDate, user = null) {
+    return new Promise((resolve, reject) => {
       axios
-        .get(`${BASE_URL}/reimbursement`)
+        .get(
+          `${BASE_URL}/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${
+            user || ""
+          }`
+        )
         .then((response) => {
           setData(response.data);
+          resolve(true);
         })
         .catch((e) => {
           console.log(e);
+          reject(null);
+        })
+        .finally(() => {
+          setLoading(false);
         });
-    }
-
-    fetchData();
-  }, []);
+    });
+  }
 
   const columns = [
     {
       accessorKey: "date",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -133,7 +172,7 @@ header: ({ column }) => {
     {
       accessorKey: "title",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -146,10 +185,30 @@ header: ({ column }) => {
       },
       cell: ({ row }) => <div className="ml-2">{row.getValue("title")}</div>,
     },
+
+    {
+      accessorKey: "submitted_by_name",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Submitted By
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="ml-2">{row.getValue("submitted_by_name")}</div>
+      ),
+    },
+
     {
       accessorKey: "city",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -165,7 +224,7 @@ header: ({ column }) => {
     {
       accessorKey: "amount",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -182,7 +241,7 @@ header: ({ column }) => {
     {
       accessorKey: "description",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -196,124 +255,55 @@ header: ({ column }) => {
       cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
 
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const currentItem = row.original;
+    // {
+    //   id: "actions",
+    //   cell: ({ row }) => {
+    //     const currentItem = row.original;
 
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                className="hover:cursor-pointer"
-                onClick={() => {
-                  setImageURL(currentItem);
-                  setVisible(true);
-                }}
-              >
-                View
-              </DropdownMenuItem>
-
-              <DropdownMenuItem onClick={() => setShowConfirmation(true)}>
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
-    },
+    //     return (
+    //       <ChevronsRight
+    //         className="hover:cursor-pointer"
+    //         onClick={() => {
+    //           setImageURL(currentItem);
+    //           setVisible(true);
+    //         }}
+    //       />
+    //     );
+    //   },
+    // },
   ];
 
   function handleDownload() {
     const headers = [
-      "Customer",
-      "City",
-      "Description",
-      "Amount",
       "Date",
+      "Customer",
       "Submitted By",
+      "City",
+      "Amount",
+      "Description",
     ];
-    let finalData = [];
-    if (filterValues) {
-      data.filter((item) => {
-        const itemDate = new Date(item.date);
-        if (
-          item.submitted_by == filterValues.user &&
-          itemDate >= filterValues.start &&
-          itemDate <= filterValues.end
-        ) {
-          finalData.push(item);
-        }
-      });
-    } else {
-      finalData = [...data];
-    }
-    const formattedData = finalData.map((item) => [
-      item.title,
-      item?.city,
-      item.description,
-      item.amount,
-      new Date(item.date).toLocaleDateString("en-GB"),
+
+    const formattedData = data.map((item) => [
+      moment(item.date).format("YYYY-MM-DD"),
+      item?.title,
       item.submitted_by_name,
+      item.city,
+      item.amount,
+      item.description,
     ]);
     exportToExcel(headers, formattedData, "Reimbursement.xlsx");
   }
 
   useEffect(() => {
-    let finalData = [];
-    if (filterValues) {
-      data.filter((item) => {
-        const itemDate = new Date(item.date);
-        if (
-          item.submitted_by == filterValues.user &&
-          itemDate >= filterValues.start &&
-          itemDate <= filterValues.end
-        ) {
-          finalData.push(item);
-        }
-      });
-    } else {
-      finalData = [...data];
-    }
-
-    if (filterValues) {
-      const finalData = data.filter((item) => {
-        const itemDate = new Date(item.date);
-        if (
-          item.submitted_by == filterValues.user &&
-          itemDate >= filterValues.start &&
-          itemDate <= filterValues.end
-        ) {
-          return item;
-        }
-      });
-      let localTotal = 0;
-      finalData.forEach((item) => {
-        localTotal = localTotal + Number(item.amount);
-      });
-      setTotal(localTotal);
-    } else {
-      let localTotal = 0;
-      data.forEach((item) => {
-        localTotal = localTotal + Number(item.amount);
-      });
-      setTotal(localTotal);
-    }
-  }, [filterValues, data]);
+    let localTotal = 0;
+    data.forEach((item) => {
+      localTotal = localTotal + Number(item.amount);
+    });
+    setTotal(localTotal);
+  }, [data]);
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-center justify-between">
-        <Heading title="Reimbursement" description="Manage reimbursements" />
-        <AddReimbursementDialog />
-      </div>
-
       <ConfimationDialog
         open={showConfirmation}
         title={"Are you sure you want to delete?"}
@@ -321,77 +311,75 @@ header: ({ column }) => {
         onPressYes={() => console.log("press yes")}
         onPressCancel={() => setShowConfirmation(false)}
       />
-      <PageTable
-        columns={columns}
-        data={
-          filterValues
-            ? data.filter((item) => {
-                const itemDate = new Date(item.date);
-                if (
-                  item.submitted_by == filterValues.user &&
-                  itemDate >= filterValues.start &&
-                  itemDate <= filterValues.end
-                ) {
-                  return item;
-                }
-              })
-            : data
-        }
-        totalItems={
-          filterValues
-            ? data.filter((item) => {
-                const itemDate = new Date(item.date);
-                if (
-                  item.submitted_by == filterValues.user &&
-                  itemDate >= filterValues.start &&
-                  itemDate <= filterValues.end
-                ) {
-                  return item;
-                }
-              }).length
-            : data.length
-        }
-        searchItem={"title"}
-        searchName={"Search bill..."}
-        // filter={true}
-        // onFilterClick={() => setFilterVisible(true)}
-      >
-        <Button
-          onClick={() => setFilterVisible(true)}
-          variant="ghost"
-          className="h-8 w-8 p-0"
+      <div className="flex flex-1 min-h-[600px]">
+        <PageTable
+          loading={loading}
+          columns={columns}
+          data={data}
+          totalItems={data.length}
+          searchItem={"title"}
+          searchName={"Search bill..."}
+          onRowClick={(val) => {
+            setImageURL(val);
+            setVisible(true);
+          }}
+          // filter={true}
+          // onFilterClick={() => setFilterVisible(true)}
         >
-          <Filter />
-        </Button>
-        {filterValues && (
+          <Button
+            onClick={() => setFilterVisible(true)}
+            variant="ghost"
+            className="h-8 w-8 p-0"
+          >
+            <Filter />
+          </Button>
+
           <Button
             variant="destructive"
-            onClick={() => {
-              setFilterValues(null);
+            onClick={async () => {
+              setResetLoading(true);
+              const startDate = moment().startOf("month").toISOString();
+              const endDate = moment().endOf("month").toISOString();
+              await fetchData(startDate, endDate);
+              setResetLoading(false);
             }}
           >
-            Clear
+            {resetLoading && <Spinner />} Reset
           </Button>
-        )}
-        <div className="flex flex-1 justify-between items-center">
-          <Button onClick={handleDownload}>Download</Button>
-          <Card className="p-4 shadow-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 w-[160px]">
-            <CardContent className="flex flex-col justify-between items-center p-0">
-              <Label className="text-md font-semibold text-gray-700 dark:text-gray-300">
-                Total
-              </Label>
-              <Label className="text-lg font-bold text-gray-900 dark:text-white">
-              {new Intl.NumberFormat("en-US", { style: "decimal" }).format(total)}
-              </Label>
-            </CardContent>
-          </Card>
-        </div>
-      </PageTable>
+
+          <Button onClick={() => setReimbursementVisible(true)}>
+            Add Reimbursement
+          </Button>
+
+          <div className="flex flex-1 justify-between items-center">
+            <Button onClick={handleDownload}>Download</Button>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Total Amount
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "PKR",
+                  }).format(total)}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </PageTable>
+      </div>
       <FilterSheet
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
-        onReturn={(val) => {
-          setFilterValues(val);
+        onReturn={async (val) => {
+          await fetchData(
+            val.start.toISOString(),
+            val.end.toISOString(),
+            val.user
+          );
         }}
       />
       <ImageSheet
@@ -400,21 +388,78 @@ header: ({ column }) => {
         img={imageURL?.image || null}
         description={imageURL?.description || null}
         submittedBy={imageURL?.submitted_by_name || null}
+        id={imageURL?.id || null}
+        onRefresh={async (id) => {
+          const tempData = [...data.filter((item) => item.id !== id)];
+          setData([...tempData]);
+          return true;
+        }}
+      />
+
+      <AddReimbursementDialog
+        id={0}
+        visible={reimbursementVisible}
+        onClose={setReimbursementVisible}
+        onRefresh={(val) => {
+          if (val) {
+            let temp = [...data, val];
+            temp.sort(
+              (a, b) => moment(b.date).valueOf() - moment(a.date).valueOf()
+            );
+            setData([...temp]);
+          }
+          setReimbursementVisible(false);
+        }}
       />
     </div>
   );
 }
-
-const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
+const ImageSheet = ({
+  visible,
+  onClose,
+  img,
+  submittedBy,
+  description,
+  id,
+  onRefresh,
+}) => {
   const [imageOpen, setImageOpen] = useState(false);
+  const [localImage, setLocalImage] = useState(null);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const isMountedRef = useRef(true);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-  function handleClose() {
+  const fetchImage = useCallback(async () => {
+    if (!img) return;
+
+    if (img.includes("http")) {
+      if (isMountedRef.current) setLocalImage(img);
+    } else {
+      try {
+        const storageRef = ref(storage, img);
+        const url = await getDownloadURL(storageRef);
+        if (isMountedRef.current) setLocalImage(url);
+      } catch (error) {
+        console.error("Error fetching image URL:", error);
+      }
+    }
+  }, [img]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    fetchImage();
+
+    return () => {
+      isMountedRef.current = false;
+      setLocalImage(null);
+    };
+  }, [fetchImage]);
+
+  const handleClose = useCallback(() => {
     if (!imageOpen) {
       onClose();
     }
-  }
-
-  const [isZoomed, setIsZoomed] = useState(false);
+  }, [imageOpen, onClose]);
 
   const handleZoomChange = useCallback((shouldZoom) => {
     setIsZoomed(shouldZoom);
@@ -423,129 +468,83 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
     }
   }, []);
 
+  const memoizedImage = useMemo(() => localImage, [localImage]);
+
+  async function handleDelete() {
+    if (img && !img.includes("http")) {
+      const deleteRef = await DeleteFromStorage(img);
+    }
+    axios.delete(`${BASE_URL}/reimbursement/${id}`).then(async () => {
+      await onRefresh(id);
+      setDeleteLoading(false);
+      handleClose(false);
+    });
+  }
+
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
       <SheetContent>
         <SheetHeader className="mb-4">
-          <SheetTitle>Bill detail</SheetTitle>
-
-          <strong>Submitted by</strong>
-          <Label>{submittedBy}</Label>
-
-          <strong>Description</strong>
-          <Label>{description}</Label>
-
-          <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
-            <img
-              onClick={() => setImageOpen(true)}
-              className="hover:cursor-pointer"
-              src={img}
-              alt="reimbursement-img"
-              style={{ flex: 1 }}
-            />
-          </ControlledZoom>
+          <SheetTitle>Bill Detail</SheetTitle>
         </SheetHeader>
-      </SheetContent>
-    </Sheet>
-  );
-};
-
-const FilterSheet = ({ visible, onClose, onReturn }) => {
-  const formSchema = z.object({
-    start: z.date({ required_error: "Start date is required." }),
-    end: z.date({ required_error: "End date is required." }),
-    user: z.number({ required_error: "User is required." }),
-  });
-
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      start: undefined,
-      end: undefined,
-      user: null,
-    },
-  });
-
-  function onSubmit(values) {
-    onReturn(values);
-    onClose();
-  }
-
-  return (
-    <Sheet open={visible} onOpenChange={onClose}>
-      <SheetContent>
-        <SheetHeader className="mb-4">
-          <SheetTitle>Filter</SheetTitle>
-          <SheetDescription>Filter remibursement data</SheetDescription>
-        </SheetHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="user"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Select User</FormLabel>
-                  <FormControl>
-                    <UserSearch
-                      value={field.value}
-                      onReturn={(val) => field.onChange(val)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+        <ScrollArea className="flex flex-1 h-[90vh]">
+          <div className="flex flex-col">
+            <Button
+              className="mb-2"
+              variant="destructive"
+              size="icon"
+              onClick={(e) => {
+                // e.stopPropagation()
+                // setSelectedCustomerId(currentItem?.id);
+                // setShowConfirmation(true);
+                if (!id) return;
+                setDeleteLoading(true);
+                handleDelete(id);
+              }}
+            >
+              {deleteLoading ? (
+                <Loader2 className="animate-spin" size={16} />
+              ) : (
+                <Trash size={16} />
               )}
-            />
-
-            <FormField
-              control={form.control}
-              name="start"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start date</FormLabel>
-                  <FormControl>
-                    <AppCalendar
-                      date={field.value}
-                      onChange={(date) => field.onChange(date)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="end"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>End date</FormLabel>
-                  <FormControl>
-                    <AppCalendar
-                      date={field.value}
-                      onChange={(date) => {
-                        console.log(date);
-                        field.onChange(date);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button className="w-full" type="submit">
-              Filter
             </Button>
-          </form>
-        </Form>
+
+            <strong>Submitted by</strong>
+            <p>{submittedBy || "N/A"}</p>
+
+            <strong>Description</strong>
+            <p>{description || "No description available"}</p>
+
+            {memoizedImage ? (
+              <ControlledZoom
+                isZoomed={isZoomed}
+                onZoomChange={handleZoomChange}
+              >
+                <img
+                  onClick={() => setImageOpen(true)}
+                  className="hover:cursor-pointer"
+                  src={memoizedImage}
+                  alt="reimbursement-img"
+                  style={{
+                    flex: 1,
+                    maxWidth: "100%",
+                    maxHeight: "400px",
+                    objectFit: "contain",
+                  }}
+                />
+              </ControlledZoom>
+            ) : (
+              <p>Loading image...</p>
+            )}
+          </div>
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );
 };
 
-const AddReimbursementDialog = () => {
+const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
+  const [loading, setLoading] = useState(false);
   const formSchema = z.object({
     title: z.string().min(1, { message: "Title is required." }),
     description: z.string().min(1, { message: "Description is required." }),
@@ -553,9 +552,9 @@ const AddReimbursementDialog = () => {
       .number()
       .min(0.01, { message: "Amount must be greater than zero." }),
     date: z.date({ required_error: "Date is required." }),
-    user: z.number({ required_error: "User is required." }),
     image: z.string().min(1, { message: "Image is required." }),
     city: z.string().min(1, { message: "City is required." }),
+    submitted_by: z.number().min(1, { message: "User is required" }),
   });
 
   const form = useForm({
@@ -565,21 +564,45 @@ const AddReimbursementDialog = () => {
       description: "",
       amount: "",
       date: "",
-      user: null,
       image: "",
       city: "",
+      submittedBy: null,
     },
   });
 
-  function onSubmit(values) {
-    console.log("Form Data:", values);
+  async function onSubmit(values) {
+    setLoading(true);
+    try {
+      const name = `${id}/reimbursement/${moment().valueOf().toString()}.png`;
+      const imgRef = await UploadImage(values.image, name);
+      const response = await axios.post(`${BASE_URL}/reimbursement`, {
+        amount: values.amount,
+        title: values.title,
+        description: values.description,
+        city: values.city,
+        image: name,
+        date: values.date,
+        submitted_by: values.submitted_by,
+      });
+      onRefresh(response.data.reimbursement);
+      form.reset();
+      onClose(false);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button onClick={() => form.reset()}>Add Reimbursement</Button>
-      </DialogTrigger>
+    <Dialog
+      open={visible}
+      onOpenChange={(val) => {
+        form.reset();
+        setLoading(false);
+        onClose(val);
+      }}
+    >
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New Reimbursement</DialogTitle>
@@ -644,7 +667,7 @@ const AddReimbursementDialog = () => {
                         <Input
                           type="number"
                           placeholder="Enter amount"
-                          value={field.value}
+                          value={field?.value ? field.value : ""}
                           onChange={(e) => {
                             if (!isNaN(e.target.value)) {
                               field.onChange(Number(e.target.value));
@@ -676,14 +699,14 @@ const AddReimbursementDialog = () => {
 
                 <FormField
                   control={form.control}
-                  name="user"
+                  name="submitted_by"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>User</FormLabel>
+                      <FormLabel>Select User</FormLabel>
                       <FormControl>
                         <UserSearch
                           value={field.value}
-                          onReturn={(val) => field.onChange(val)}
+                          onReturn={field.onChange}
                         />
                       </FormControl>
                       <FormMessage />
@@ -717,7 +740,7 @@ const AddReimbursementDialog = () => {
                 />
 
                 <Button className="w-full" type="submit">
-                  Submit
+                  {loading && <Loader2 className="animate-spin" />} Submit
                 </Button>
               </form>
             </Form>

@@ -119,6 +119,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { debounce } from "@/lib/debounce";
+import Spinner from "./ui/spinner";
 
 const PageTable = ({
   children,
@@ -134,6 +135,7 @@ const PageTable = ({
   totalCustomerText,
   totalCustomer,
   onRowClick,
+  loading = false,
 }) => {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
@@ -270,7 +272,7 @@ const PageTable = ({
                       colSpan={columns.length}
                       className="h-24 text-center"
                     >
-                      No results.
+                      {loading ? <div className="flex flex-1 justify-center"><Spinner /></div> : "No results."}
                     </TableCell>
                   </TableRow>
                 )}

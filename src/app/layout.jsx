@@ -6,6 +6,7 @@ import Providers from "@/components/providers";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import HolyLoader from "holy-loader";
+import MobileScreenWrapper from "@/components/MobileScreenWrapper";
 
 export const metadata = {
   title: "SENFENG",
@@ -31,7 +32,9 @@ export default async function RootLayout({ children }) {
             </div>
           }
         >
-          <Providers>{children}</Providers>
+          <Providers>
+            <MobileScreenWrapper>{children}</MobileScreenWrapper>
+          </Providers>
         </Suspense>
         <Toaster />
       </body>

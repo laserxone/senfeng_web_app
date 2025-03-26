@@ -90,12 +90,14 @@ import { UploadImage } from "@/lib/uploadFunction";
 import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "@/config/firebase";
 import FilterSheet from "./filterSheet";
+import Spinner from "../ui/spinner";
 
 export default function Reimbursement({
   id,
   passingData,
   onAddRefresh,
   onFilterReturn,
+  onReset
 }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
@@ -105,6 +107,7 @@ export default function Reimbursement({
   const [visible, setVisible] = useState(false);
   const [reimbursementVisible, setReimbursementVisible] = useState(false);
   const [total, setTotal] = useState(0);
+  const [resetLoading, setResetLoading] = useState(false)
 
   useEffect(() => {
     setData([...passingData]);
@@ -126,7 +129,7 @@ export default function Reimbursement({
         );
       },
       cell: ({ row }) => (
-        <div>
+        <div className="ml-2">
           {row.getValue("date")
             ? moment(new Date(row.getValue("date"))).format("YYYY-MM-DD")
             : ""}
@@ -148,7 +151,7 @@ export default function Reimbursement({
           </Button>
         );
       },
-      cell: ({ row }) => <div className="ml-2">{row.getValue("title")}</div>,
+      cell: ({ row }) => <div >{row.getValue("title")}</div>,
     },
     {
       accessorKey: "city",
@@ -220,34 +223,20 @@ export default function Reimbursement({
 
   function handleDownload() {
     const headers = [
+      "Date",
       "Customer",
       "City",
-      "Description",
       "Amount",
-      "Date",
+      "Description",
       "Submitted By",
     ];
-    let finalData = [];
-    if (filterValues) {
-      data.filter((item) => {
-        const itemDate = new Date(item.date);
-        if (
-          item.submitted_by == filterValues.user &&
-          itemDate >= filterValues.start &&
-          itemDate <= filterValues.end
-        ) {
-          finalData.push(item);
-        }
-      });
-    } else {
-      finalData = [...data];
-    }
-    const formattedData = finalData.map((item) => [
+   
+    const formattedData = [...data].map((item) => [
+      moment(item.date).format("YYYY-MM-DD"),
       item.title,
       item?.city,
-      item.description,
       item.amount,
-      new Date(item.date).toLocaleDateString("en-GB"),
+      item.description,
       item.submitted_by_name,
     ]);
     exportToExcel(headers, formattedData, "Reimbursement.xlsx");
@@ -292,6 +281,19 @@ export default function Reimbursement({
             <Filter />
           </Button>
 
+          <Button
+            variant="destructive"
+            onClick={async() => {
+              setResetLoading(true)
+              const startDate = moment().startOf("month").toISOString();
+              const endDate = moment().endOf("month").toISOString();
+             await onReset(startDate, endDate);
+             setResetLoading(false)
+            }}
+          >
+          {resetLoading && <Spinner />}  Reset
+          </Button>
+
           <Button onClick={() => setReimbursementVisible(true)}>
             Add Reimbursement
           </Button>
@@ -303,18 +305,6 @@ export default function Reimbursement({
                 <CardTitle className="text-sm font-medium">
                   Total Amount
                 </CardTitle>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="h-4 w-4 text-muted-foreground"
-                >
-                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -349,7 +339,8 @@ export default function Reimbursement({
         onClose={setReimbursementVisible}
         onRefresh={(val) => {
           if (val) {
-            let temp = [...data, val];
+            let temp = [...data];
+            temp.push(val)
             temp.sort(
               (a, b) => moment(b.date).valueOf() - moment(a.date).valueOf()
             );

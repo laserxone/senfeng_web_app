@@ -93,6 +93,8 @@ import { redirect, useRouter } from "next/navigation";
 import FilterSheet from "@/components/users/filterSheet";
 import { toast, useToast } from "@/hooks/use-toast";
 import { BASE_URL } from "@/constants/data";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
+import Spinner from "../ui/spinner";
 
 export default function EmployeeBranchExpenses() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -105,7 +107,9 @@ export default function EmployeeBranchExpenses() {
   const [visibleAdd, setVisibleAdd] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
   const router = useRouter();
-  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (UserState?.value?.data?.id) {
@@ -114,16 +118,14 @@ export default function EmployeeBranchExpenses() {
       }
       const startDate = moment().startOf("month").toISOString();
       const endDate = moment().endOf("month").toISOString();
-      fetchData(UserState?.value?.data?.id, startDate, endDate);
+      fetchData(startDate, endDate);
     }
   }, [UserState?.value?.data]);
 
-  async function fetchData(id, startDate, endDate) {
+  async function fetchData(startDate, endDate) {
     return new Promise((resolve, reject) => {
       axios
-        .get(
-          `${BASE_URL}/user/${id}/expense?start_date=${startDate}&end_date=${endDate}`
-        )
+        .get(`${BASE_URL}/expenses?start_date=${startDate}&end_date=${endDate}`)
         .then((response) => {
           setData(response.data);
         })
@@ -131,12 +133,37 @@ export default function EmployeeBranchExpenses() {
           console.log(e);
         })
         .finally(() => {
+          setLoading(false)
           resolve(true);
+
         });
     });
   }
 
   const columns = [
+    {
+      accessorKey: "date",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Date
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="ml-2">
+          {row.getValue("date")
+            ? moment(new Date(row.getValue("date"))).format("YYYY-MM-DD")
+            : ""}
+        </div>
+      ),
+    },
+
     {
       accessorKey: "note",
       filterFn: "includesString",
@@ -151,7 +178,7 @@ export default function EmployeeBranchExpenses() {
           </Button>
         );
       },
-      cell: ({ row }) => <div className="ml-2">{row.getValue("note")}</div>,
+      cell: ({ row }) => <div>{row.getValue("note")}</div>,
     },
     {
       accessorKey: "amount",
@@ -171,7 +198,7 @@ export default function EmployeeBranchExpenses() {
     },
 
     {
-      accessorKey: "date",
+      accessorKey: "submitted_by_name",
       filterFn: "includesString",
       header: ({ column }) => {
         return (
@@ -179,33 +206,25 @@ export default function EmployeeBranchExpenses() {
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Date
+            Submitted By
             <ArrowUpDown />
           </Button>
         );
       },
-      cell: ({ row }) => (
-        <div>
-          {row.getValue("date")
-            ? moment(new Date(row.getValue("date"))).format("YYYY-MM-DD")
-            : ""}
-        </div>
-      ),
+      cell: ({ row }) => <div>{row.getValue("submitted_by_name")}</div>,
     },
-
-    
   ];
 
   function handleDownload() {
     setDownloadLoading(true);
     try {
-      const headers = ["Note", "Amount", "Date", "Submitted By"];
+      const headers = ["Date","Note", "Amount", "Submitted By"];
       let finalData = [];
       finalData = [...data];
       const formattedData = finalData.map((item) => [
+        moment(item.date).format("YYYY-MM-DD"),
         item.note,
         item.amount,
-        new Date(item.date).toLocaleDateString("en-GB"),
         item.submitted_by_name,
       ]);
       exportToExcel(headers, formattedData, "Branch-Expenses.xlsx");
@@ -220,11 +239,16 @@ export default function EmployeeBranchExpenses() {
     if (!id) return;
     setDeleteLoading(true);
     try {
-      const response = await axios.delete(`${BASE_URL}/user/${UserState.value.data?.id}/expense/${id}`);
+      if (imageURL && imageURL?.image && !imageURL.image.includes("http")) {
+        const res = await DeleteFromStorage(imageURL.image);
+      }
+      const response = await axios.delete(
+        `${BASE_URL}/expenses/${id}`
+      );
       toast({ title: "Branch Expense Deleted" });
       const startDate = moment().startOf("month").toISOString();
       const endDate = moment().endOf("month").toISOString();
-      fetchData(UserState?.value?.data?.id, startDate, endDate);
+      await fetchData(startDate, endDate);
     } catch (error) {
       toast({
         title: error?.response?.data?.message || "Netwrok error",
@@ -233,7 +257,7 @@ export default function EmployeeBranchExpenses() {
     } finally {
       setDeleteLoading(false);
       setShowConfirmation(false);
-      setVisible(false)
+      setVisible(false);
       setImageURL(null);
     }
   }
@@ -254,11 +278,12 @@ export default function EmployeeBranchExpenses() {
         open={showConfirmation}
         title={"Are you sure you want to delete?"}
         description={"Your action will remove branch expense from the system"}
-        onPressYes={() => handleDelete(imageURL.id)}
+        onPressYes={async () => await handleDelete(imageURL.id)}
         onPressCancel={() => setShowConfirmation(false)}
         loading={deleteLoading}
       />
       <PageTable
+      loading={loading}
         columns={columns}
         data={data}
         totalItems={data.length}
@@ -278,16 +303,18 @@ export default function EmployeeBranchExpenses() {
         >
           <Filter />
         </Button>
-        {filterValues && (
-          <Button
-            variant="destructive"
-            onClick={() => {
-              setFilterValues(null);
-            }}
-          >
-            Clear
-          </Button>
-        )}
+        <Button
+          variant="destructive"
+          onClick={async () => {
+            setResetLoading(true);
+            const startDate = moment().startOf("month").toISOString();
+            const endDate = moment().endOf("month").toISOString();
+            await fetchData(startDate, endDate);
+            setResetLoading(false);
+          }}
+        >
+          {resetLoading && <Spinner />} Reset
+        </Button>
         <Button onClick={handleDownload}>
           {downloadLoading && <Loader2 className="animate-spin" />} Download
         </Button>
@@ -297,11 +324,7 @@ export default function EmployeeBranchExpenses() {
         visible={filterVisible}
         onClose={setFilterVisible}
         onReturn={async (val) => {
-          await fetchData(
-            UserState.value.data?.id,
-            val.start.toISOString(),
-            val.end.toISOString()
-          );
+          await fetchData(val.start.toISOString(), val.end.toISOString());
         }}
       />
 
@@ -325,7 +348,6 @@ export default function EmployeeBranchExpenses() {
         description={imageURL?.description || null}
         submittedBy={imageURL?.submitted_by_name || null}
         onDelete={() => setShowConfirmation(true)}
-      
       />
     </div>
   );
@@ -342,6 +364,7 @@ const ImageSheet = ({
 }) => {
   const [imageOpen, setImageOpen] = useState(false);
   const [localImage, setLocalImage] = useState(null);
+  const { state: UserState } = useContext(UserContext);
 
   useEffect(() => {
     if (img) {
@@ -391,9 +414,11 @@ const ImageSheet = ({
               style={{ flex: 1 }}
             />
           </ControlledZoom>
-          <Button variant="destructive" onClick={onDelete}>
-            {loading && <Loader2 className="animate-spin" />} Delete
-          </Button>
+          {UserState.value.data?.branch_expenses_delete_access && (
+            <Button variant="destructive" onClick={onDelete}>
+              {loading && <Loader2 className="animate-spin" />} Delete
+            </Button>
+          )}
         </SheetHeader>
       </SheetContent>
     </Sheet>

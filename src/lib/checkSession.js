@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useContext, useRef, useState, useEffect } from "react";
 import axios from "axios";
 import { BASE_URL } from "@/constants/data";
+import { startHolyLoader } from "holy-loader";
 
 export default function useCheckSession() {
     const router = useRouter();
@@ -14,7 +15,7 @@ export default function useCheckSession() {
     const debouncedData = useCallback(
         debounce(async (user) => {
             return await checkData(user);
-        }, 1500),
+        }, 500),
         []
     );
 
@@ -26,36 +27,42 @@ export default function useCheckSession() {
             if (userData?.designation) {
                 if (userData.designation === 'Owner') {
                     if (!pathname.includes("owner")) {
+                        startHolyLoader()
                         router.push("/owner/dashboard")
                     }
                 }
 
                 else if (userData.designation === 'Sales') {
                     if (!pathname.includes("sales")) {
+                        startHolyLoader()
                         router.push("/sales/dashboard")
                     }
                 }
 
                 else if (userData.designation === 'Engineer') {
                     if (!pathname.includes("engineer")) {
+                        startHolyLoader()
                         router.push("/engineer/dashboard")
                     }
                 }
 
                 else if (userData.designation === 'Manager') {
                     if (!pathname.includes("manager")) {
+                        startHolyLoader()
                         router.push("/manager/dashboard")
                     }
                 }
 
                 else if (userData.designation === 'Customer Relationship Manager') {
                     if (!pathname.includes("crm")) {
+                        startHolyLoader()
                         router.push("/crm/dashboard")
                     }
                 }
 
                 else if (userData.designation === 'Customer Relationship Manager (After Sales)') {
                     if (!pathname.includes("aftersales")) {
+                        startHolyLoader()
                         router.push("/aftersales/dashboard")
                     }
                 }

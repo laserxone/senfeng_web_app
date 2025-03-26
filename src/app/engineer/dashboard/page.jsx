@@ -88,7 +88,6 @@ export default function Page() {
       setCustomers(response.data);
     });
   }
- 
 
   const RenderReimbursement = useCallback(() => {
     return (
@@ -101,6 +100,9 @@ export default function Page() {
             onFilterReturn={async (start, end) =>
               await fetchReimbursementData(start, end)
             }
+            onReset={async (start, end) => {
+              await fetchReimbursementData(start, end);
+            }}
           />
         </CardContent>
       </Card>
@@ -138,7 +140,7 @@ export default function Page() {
         <Tabs defaultValue="attendance" className="w-full flex flex-1 flex-col">
           <TabsList className="justify-start">
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>  
+            <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>
           </TabsList>
 
           <TabsContent value="attendance">
