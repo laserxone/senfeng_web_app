@@ -349,7 +349,7 @@ const PageTable = ({
             <Button
               aria-label="Go to previous page"
               variant="outline"
-              className="h-8 w-8 p-0"
+              className="p-0 w-8"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
@@ -358,7 +358,7 @@ const PageTable = ({
             <Button
               aria-label="Go to next page"
               variant="outline"
-              className="h-8 w-8 p-0"
+              className="p-0 w-8"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >

@@ -205,7 +205,7 @@ header: ({ column }) => {
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
+              <Button variant="ghost" className="p-0 w-8">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -357,7 +357,7 @@ header: ({ column }) => {
         <Button
           onClick={() => setFilterVisible(true)}
           variant="ghost"
-          className="h-8 w-8 p-0"
+          className="p-0 w-8"
         >
           <Filter />
         </Button>
@@ -459,8 +459,8 @@ const FilterSheet = ({ visible, onClose, onReturn }) => {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      start: undefined,
-      end: undefined,
+        start: moment().startOf("month").toDate(),
+            end: moment().endOf("month").toDate(),
       user: null,
     },
   });

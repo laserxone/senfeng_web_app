@@ -22,6 +22,7 @@ import { useContext, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { UserContext } from "@/store/context/UserContext";
 import { UserSearch } from "../user-search";
+import moment from "moment";
 
 const FilterSheet = ({ visible, onClose, onReturn }) => {
   const [loading, setLoading] = useState(false);
@@ -35,15 +36,18 @@ const FilterSheet = ({ visible, onClose, onReturn }) => {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      start: undefined,
-      end: undefined,
+      start: moment().startOf("month").toDate(),
+      end: moment().endOf("month").toDate(),
       user: null,
     },
   });
 
   async function onSubmit(values) {
     setLoading(true);
-    await onReturn(values);
+    let start = values.start
+    let end = values.end
+
+    await onReturn({start : moment(start).startOf("day"), end : moment(end).endOf("day"), user : values.user});
     setLoading(false);
     onClose();
     handleClear()
@@ -57,8 +61,8 @@ const FilterSheet = ({ visible, onClose, onReturn }) => {
 
   function handleClear(){
     form.reset({
-      start: undefined,
-      end: undefined,
+      start: moment().startOf("month").toDate(),
+      end: moment().endOf("month").toDate(),
       user: null,
     }); 
   }
@@ -101,7 +105,8 @@ const FilterSheet = ({ visible, onClose, onReturn }) => {
                   <FormControl>
                     <AppCalendar
                       date={field.value}
-                      onChange={(date) => field.onChange(date)}
+                      onChange={(date) => {
+                        field.onChange(date)}}
                     />
                   </FormControl>
                   <FormMessage />
@@ -119,7 +124,6 @@ const FilterSheet = ({ visible, onClose, onReturn }) => {
                     <AppCalendar
                       date={field.value}
                       onChange={(date) => {
-                        console.log(date);
                         field.onChange(date);
                       }}
                     />

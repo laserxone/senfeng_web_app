@@ -84,6 +84,8 @@ import { GoogleMap, Marker } from "@react-google-maps/api";
 import { UserSearch } from "@/components/user-search";
 import { BASE_URL } from "@/constants/data";
 import moment from "moment";
+import FilterSheet from "@/components/users/filterSheet";
+import Spinner from "@/components/ui/spinner";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -92,11 +94,26 @@ export default function Page() {
   const pageTableRef = useRef();
   const { state: UserState } = useContext(UserContext);
   const [data, setData] = useState([]);
+  const [visible, setVisible] = useState(false);
+  const [selectedAttendance, setSelectedAttendance] = useState(null);
+  const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
-    async function fetchData() {
+    if (UserState?.value?.data?.id) {
+      const start_date = moment().startOf("month").toISOString();
+      const end_date = moment().endOf("month").toISOString();
+      fetchData(start_date, end_date);
+    }
+  }, [UserState?.value?.data]);
+
+  async function fetchData(start, end, user = null) {
+    return new Promise((res, rej) => {
       axios
-        .get(`${BASE_URL}/attendance`)
+        .get(
+          `${BASE_URL}/attendance?start_date=${start}&end_date=${end}&user=${
+            user || ""
+          }`
+        )
         .then((response) => {
           if (response.data.length > 0) {
             const apiData = response.data.map((item) => {
@@ -107,16 +124,18 @@ export default function Page() {
               };
             });
             setData(apiData);
+          } else {
+            setData([]);
           }
         })
         .catch((e) => {
           console.log(e);
+        })
+        .finally(() => {
+          res(true);
         });
-    }
-    if (UserState?.value?.data?.id) {
-      fetchData();
-    }
-  }, [UserState?.value?.data]);
+    });
+  }
 
   const columns = [
     {
@@ -174,12 +193,7 @@ export default function Page() {
       cell: ({ row }) => (
         <div className="ml-2">
           {row.getValue("time_in")
-            ? new Date(
-                new Date(row.getValue("time_in")).toISOString()
-              ).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })
+            ? moment(new Date(row.getValue("time_in"))).format("hh:mm A")
             : ""}
         </div>
       ),
@@ -268,14 +282,6 @@ export default function Page() {
         </div>
       ),
     },
-
-    {
-      id: "actions",
-      enableHiding: false,
-      cell: ({ row }) => {
-        return <AttendanceDetail detail={row.original} />;
-      },
-    },
   ];
 
   const tableHeader = [
@@ -321,6 +327,10 @@ export default function Page() {
         searchItem={value.toLowerCase()}
         searchName={value ? `Search ${value}...` : "Select filter first..."}
         tableHeader={tableHeader}
+        onRowClick={(val) => {
+          setSelectedAttendance(val);
+          setVisible(true);
+        }}
       >
         <div className=" flex justify-between">
           <div className="flex gap-4">
@@ -363,175 +373,50 @@ export default function Page() {
             <Button
               onClick={() => setFilterVisible(true)}
               variant="ghost"
-              className="h-8 w-8 p-0"
+              className="p-0 w-8"
             >
               <Filter />
             </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                setResetLoading(true);
+                const startDate = moment().startOf("month").toISOString();
+                const endDate = moment().endOf("month").toISOString();
+                await fetchData(startDate, endDate);
+                setResetLoading(false);
+              }}
+            >
+              {resetLoading && <Spinner />} Reset
+            </Button>
           </div>
         </div>
-        <Button>Download</Button>
+        {/* <Button onClick={handleDownload}>Download</Button> */}
       </PageTable>
       <FilterSheet
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
+        onReturn={async (val) => {
+          await fetchData(
+            val.start.toISOString(),
+            val.end.toISOString(),
+            val.user
+          );
+        }}
+      />
+
+      <AttendanceDetail
+        detail={selectedAttendance}
+        visible={visible}
+        onClose={setVisible}
       />
     </div>
   );
 }
 
-const FilterSheet = ({ visible, onClose }) => {
-  const [startDate, setStartDate] = useState();
-  const [endDate, setEndDate] = useState();
-  const [user, setUser] = useState();
-
-  const formSchema = z.object({
-    start: z.date({ required_error: "Start date is required." }),
-    end: z.date({ required_error: "End date is required." }),
-    user: z.number({ required_error: "User is required" }),
-  });
-
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      start: null,
-      end: null,
-      user: null,
-    },
-  });
-
-  function onSubmit(values) {
-    console.log("Form Data:", values);
-  }
-
+export const AttendanceDetail = ({ detail, visible, onClose }) => {
   return (
-    <Sheet open={visible} onOpenChange={onClose}>
-      <SheetContent>
-        <SheetHeader className="mb-4">
-          <SheetTitle>Filter</SheetTitle>
-          <SheetDescription>Filter remibursement data</SheetDescription>
-        </SheetHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="user"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Select User</FormLabel>
-                  <FormControl>
-                    <UserSearch
-                      value={field.value}
-                      onReturn={(val) => field.onChange(val)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="start"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start date</FormLabel>
-                  <FormControl>
-                    <AppCalendar
-                      date={field.value}
-                      onChange={(date) => field.onChange(date)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="end"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>End date</FormLabel>
-                  <FormControl>
-                    <AppCalendar
-                      date={field.value}
-                      onChange={(date) => {
-                        field.onChange(date);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button className="w-full" type="submit">
-              Submit
-            </Button>
-          </form>
-        </Form>
-
-        {/* <div className="flex flex-col gap-4 py-4 w-full">
-          <div className="grid grid-cols-4 items-center gap-4 w-full">
-            <Label htmlFor="monthlysalary" className="text-left">
-              Select User
-            </Label>
-            <Select onValueChange={setUser} value={user}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select user..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {users.map((eachUser) => (
-                    <SelectItem
-                      key={eachUser.value}
-                      value={eachUser.value}
-                      onClick={() => {
-                        setValue(
-                          eachUser.value === value ? "" : framework.value
-                        );
-                      }}
-                    >
-                      {eachUser.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="totalsalary" className="text-left">
-              Start Date
-            </Label>
-            <AppCalendar date={startDate} onChange={setStartDate} />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="monthlysalary" className="text-left">
-              End Date
-            </Label>
-            <AppCalendar date={endDate} onChange={setEndDate} />
-          </div>
-        </div> */}
-        {/* <SheetFooter>
-          <SheetClose disabled={!startDate || !endDate} asChild>
-            <Button onClick={() => console.log("press")}>Filter</Button>
-          </SheetClose>
-        </SheetFooter> */}
-      </SheetContent>
-    </Sheet>
-  );
-};
-
-const AttendanceDetail = ({ detail }) => {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
-          <ChevronRight />
-        </Button>
-      </DialogTrigger>
+    <Dialog open={visible} onOpenChange={onClose}>
       <DialogContent
         className={`${
           detail?.time_out
@@ -547,6 +432,7 @@ const AttendanceDetail = ({ detail }) => {
             <div className="px-2 flex flex-col gap-4 sm:flex-row">
               {detail?.time_in && (
                 <div className="flex-1 flex flex-col gap-4">
+                  <Label>Time In</Label>
                   <img
                     src={detail.image_time_in}
                     alt="timein-img"
@@ -560,6 +446,7 @@ const AttendanceDetail = ({ detail }) => {
 
               {detail?.time_out && (
                 <div className="flex-1 flex flex-col gap-4 sm:ml-4">
+                  <Label>Time Out</Label>
                   <img
                     src={detail.image_time_out}
                     alt="timeout-img"

@@ -157,7 +157,7 @@ export default function Page() {
     {
       accessorKey: "customer_name",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -183,7 +183,7 @@ header: ({ column }) => {
     {
       accessorKey: "note",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -200,7 +200,7 @@ header: ({ column }) => {
     {
       accessorKey: "status",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -229,7 +229,7 @@ header: ({ column }) => {
     {
       accessorKey: "created_at",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -322,8 +322,6 @@ header: ({ column }) => {
         onPressYes={() => console.log("press yes")}
         onPressCancel={() => setShowConfirmation(false)}
       />
-
-     
     </div>
   );
 }
@@ -333,7 +331,7 @@ const FeedbackDialog = () => {
     feedback: z
       .string()
       .min(6, { message: "Feedback must be at least 6 characters." }),
-    client: z.number({required_error : "Client is required"}),
+    client: z.number({ required_error: "Client is required" }),
     status: z.string().min(1, { message: "Status is required." }),
   });
 

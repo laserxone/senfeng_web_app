@@ -30,6 +30,7 @@ export default function Page() {
     axios
       .get(`${BASE_URL}/dashboard`)
       .then((response) => {
+        console.log(response.data)
         setData(response.data);
       })
       .catch((e) => console.log(e))

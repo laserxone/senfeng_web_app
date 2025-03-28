@@ -68,13 +68,13 @@ const styles = StyleSheet.create({
     },
     summaryContainer: {
         flexDirection: "row",
-        justifyContent: "space-between",
+        justifyContent: "center",
         marginTop: 20,
         marginBottom: 20,
         padding: "0 10px",
     },
     summaryBox: {
-        width: "30%",
+        width: "50%",
         padding: 10,
         borderRadius: 10,
         justifyContent: 'space-between'
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
 })
 
 
-const InvoicePDF = ({ data }) => {
+const SalaryPdf = ({ data }) => {
 
     return (
         <Document>
@@ -167,11 +167,11 @@ const InvoicePDF = ({ data }) => {
                             <CompanyDetails />
                             <View style={styles.summaryContainer}>
                                 <View style={[styles.summaryBox, styles.totalAmount]}>
-                                    <Text style={styles.summaryLabel}>Total</Text>
-                                    <Text style={styles.summaryValue}>Rs. {formatCurrency(data?.total || 0)}</Text>
+                                    <Text style={styles.summaryLabel}>Payable Salary</Text>
+                                    <Text style={styles.summaryValue}>Rs. {formatCurrency(Number(data?.payable || 0) )}</Text>
                                 </View>
 
-                                <View style={[styles.summaryBox, styles.received]}>
+                                {/* <View style={[styles.summaryBox, styles.received]}>
                                     <Text style={styles.summaryLabel}>Received</Text>
                                     <Text style={styles.summaryValue}>Rs. {formatCurrency(data?.received || 0)}</Text>
                                 </View>
@@ -179,7 +179,7 @@ const InvoicePDF = ({ data }) => {
                                 <View style={[styles.summaryBox, styles.balance]}>
                                     <Text style={styles.summaryLabel}>Balance</Text>
                                     <Text style={styles.summaryValue}>Rs. {formatCurrency((data?.total || 0) - (data?.received || 0))}</Text>
-                                </View>
+                                </View> */}
                             </View>
                         </View>
 
@@ -187,13 +187,13 @@ const InvoicePDF = ({ data }) => {
 
                     {/* Invoice Table */}
                     <View style={{ width: '100%' }}>
-                        <View style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: '#0072BC', border: '1px solid #D1D5DB', }}>
+                        {/* <View style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: '#0072BC', border: '1px solid #D1D5DB', }}>
                             {['DATE', 'TID', 'BANK', 'MODE', 'PAYMENT', 'BALANCE'].map((header, index) => (
                                 <View key={index} style={[{ textAlign: 'center', display: 'flex', justifyContent: 'center', height: 25, paddingLeft: 5, width: 100, borderLeftWidth: index !== 0 && 1, borderLeftColor: "#D1D5DB" }]}>
                                     <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 11, color: 'white' }}>{header}</Text>
                                 </View>
                             ))}
-                        </View>
+                        </View> */}
 
                         {data?.payments && data?.payments.map((item, index) => (
                             <View key={index} style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: index % 2 === 0 ? "#f1f1f1" : "white", border: '1px solid #D1D5DB', borderTopWidth: index !== 0 && 0 }}>
@@ -251,19 +251,63 @@ const InvoicePDF = ({ data }) => {
 
 const FormField = ({ data }) => {
     return (
-        <View style={{ marginBottom: 5, flex: 0.5 }}>
-            {['Company', 'Name', 'Contact', 'Model', 'Serial No', 'Manager'].map((label, index) => (
-                <View key={label} style={{ display: 'flex', flexDirection: 'column', marginBottom: 5 }}>
-                    <Text style={{ color: '#7F7F7FFF', marginLeft: 10, fontFamily: 'Helvetica-Bold', fontSize: 11 }}>{label}:</Text>
-                    <View style={{ backgroundColor: '#dce4f1', paddingLeft: 10, border: '1px solid #E5E7EB', maxWidth: '360px', height: 20, fontSize: 9, display: 'flex', justifyContent: 'center', }}>
-                        <Text >
-                            {index == 0 ? data?.customer : index == 1 ? data?.name : index == 2 ? data?.contact : index == 3 ? data?.model : index == 4 ? data?.serial : index == 5 ? data?.manager : ""}
-                        </Text>
-                    </View>
-
-                </View>
-            ))}
-        </View>
+        <View style={{ marginBottom: 5, flex: 1 }}>
+        {[
+          'Name',
+          'Salary Month',
+          'Reimbursement',
+          'Commission',
+          'Target Achieved',
+          'Miscellaneous',
+          'Additional Fine',
+          'Late Fine/Day',
+          'Absents',
+          'Late',
+        ].map((label, index) => (
+          <View key={label} style={{ display: 'flex', flexDirection: 'column', marginBottom: 5 }}>
+            <Text style={{ color: '#7F7F7FFF', marginLeft: 10, fontFamily: 'Helvetica-Bold', fontSize: 11 }}>
+              {label}:
+            </Text>
+            <View
+              style={{
+                backgroundColor: '#dce4f1',
+                paddingLeft: 10,
+                border: '1px solid #E5E7EB',
+                maxWidth: '360px',
+                height: 20,
+                fontSize: 9,
+                display: 'flex',
+                justifyContent: 'center',
+              }}
+            >
+              <Text>
+                {index === 0
+                  ? data?.user_name
+                  : index === 1
+                  ? moment(data?.salary_month).format("MMMM YYYY")
+                  : index === 2
+                  ? data?.reimbursement
+                  : index === 3
+                  ? data?.commission
+                  : index === 4
+                  ? data?.target_achieved
+                  : index === 5
+                  ? data?.miscellaneous
+                  : index === 6
+                  ? data?.additional_fine
+                  : index === 7
+                  ? data?.late_fine_per_day
+                  : index === 8
+                  ? data?.absents
+                  : index === 9
+                  ? data?.late
+                  : ''}
+              </Text>
+            </View>
+          </View>
+        ))}
+      </View>
+      
     )
 }
 
@@ -291,7 +335,7 @@ const Header = () => {
             <Image src={"/logo.png"} alt="My Local Image" style={{ height: '40px', width: '200px' }} />
             <div style={{ backgroundColor: '#0072BC', borderTopLeftRadius: 20, borderTopRightRadius: 20, marginRight: 70, width: '150px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} >
                 <Text style={{ fontSize: '12px', fontFamily: 'Helvetica-Bold', color: 'white', }}>
-                    ACCOUNT STATEMENT
+                    SALARY SLIP
                 </Text>
             </div>
         </View>
@@ -301,7 +345,7 @@ const Header = () => {
 const Disclaimer = () => {
     return (
         <View style={{ color: '#0072BC', fontWeight: '600', fontSize: 10, width: '100%', alignItems: 'center', justifyContent: 'center', marginTop: 10 }}>
-            <Text style={{ textAlign: 'center' }}>DISCLAIMER: This is an auto generated Statement and does not require a signature.</Text>
+            <Text style={{ textAlign: 'center' }}>DISCLAIMER: This is an auto generated salary slip and does not require a signature.</Text>
         </View>
     )
 }
@@ -337,4 +381,4 @@ function formatCurrency(number) {
     }).format(number);
 }
 
-export default InvoicePDF;
+export default SalaryPdf;

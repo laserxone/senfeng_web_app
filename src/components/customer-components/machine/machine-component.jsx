@@ -2,20 +2,13 @@
 import {
   ArrowUpDown,
   ClipboardList,
-  DollarSign,
   EditIcon,
-  Mail,
-  MapPin,
-  MoreHorizontal,
-  Phone,
-  User,
   Wrench,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import PageContainer from "@/components/page-container";
-import { Heading } from "@/components/ui/heading";
 import {
   memo,
   useCallback,
@@ -44,26 +37,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import AppCalendar from "@/components/appCalendar";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import Dropzone from "@/components/dropzone";
-import Image from "next/image";
+
 import ConfimationDialog from "@/components/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import PageTable from "@/components/app-table";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
@@ -76,18 +51,11 @@ import {
 import "react-medium-image-zoom/dist/styles.css";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import { Separator } from "@/components/ui/separator";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import "pdfjs-dist/build/pdf.worker";
-import html2canvas from "html2canvas";
 import { debounce } from "@/lib/debounce";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import DropzoneMulti from "@/components/dropzone-multi";
-import { Textarea } from "@/components/ui/textarea";
 import moment from "moment";
 import EditMachine from "@/components/editMachine";
 import { Card, CardContent } from "@/components/ui/card";
@@ -311,7 +279,7 @@ export default function Machine() {
           />
           // <DropdownMenu>
           //   <DropdownMenuTrigger asChild>
-          //     <Button variant="ghost" className="h-8 w-8 p-0">
+          //     <Button variant="ghost" className="p-0 w-8">
           //       <MoreHorizontal className="h-4 w-4" />
           //     </Button>
           //   </DropdownMenuTrigger>

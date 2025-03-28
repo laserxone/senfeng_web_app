@@ -299,7 +299,7 @@ export default function EmployeeBranchExpenses() {
         <Button
           onClick={() => setFilterVisible(true)}
           variant="ghost"
-          className="h-8 w-8 p-0"
+          className="p-0 w-8"
         >
           <Filter />
         </Button>

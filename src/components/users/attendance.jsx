@@ -85,50 +85,28 @@ import { UserSearch } from "@/components/user-search";
 import moment from "moment";
 import FilterSheet from "./filterSheet";
 import { BASE_URL } from "@/constants/data";
+import { AttendanceDetail } from "@/app/owner/attendance/page";
+import Spinner from "../ui/spinner";
 
-export default function Attendance({ passingData, onFilterReturn }) {
+export default function Attendance({ passingData, onFilterReturn, onRefresh }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [value, setValue] = useState("");
   const pageTableRef = useRef();
   const [data, setData] = useState([]);
-  const [filterValues, setFilterValues] = useState(null);
+  const [visible, setVisible] = useState(false);
+  const [selectedAttendance, setSelectedAttendance] = useState(null);
+  const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
     setData(passingData);
   }, [passingData]);
 
-  async function fetchData(id, startDate, endDate) {
-    return new Promise((res, rej) => {
-      axios
-        .get(
-          `${BASE_URL}/user/${id}/attendance?start_date=${startDate}&end_date=${endDate}`
-        )
-        .then((response) => {
-          if (response.data.length > 0) {
-            const apiData = response.data.map((item) => {
-              return {
-                ...item,
-                date: item?.time_in,
-                status: item?.time_in ? "Present" : "Absent",
-              };
-            });
-            setData(apiData);
-          }
-          res(true);
-        })
-        .catch((e) => {
-          console.log(e);
-          rej(null);
-        });
-    });
-  }
-
   const columns = [
     {
       accessorKey: "date",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -140,7 +118,7 @@ header: ({ column }) => {
         );
       },
       cell: ({ row }) => (
-        <div>
+        <div className="ml-2">
           {row.getValue("date")
             ? moment(new Date(row.getValue("date"))).format("YYYY-MM-DD")
             : ""}
@@ -150,7 +128,7 @@ header: ({ column }) => {
     {
       accessorKey: "time_in",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -162,7 +140,7 @@ header: ({ column }) => {
         );
       },
       cell: ({ row }) => (
-        <div className="ml-2">
+        <div>
           {row.getValue("time_in")
             ? new Date(
                 new Date(row.getValue("time_in")).toISOString()
@@ -177,7 +155,7 @@ header: ({ column }) => {
     {
       accessorKey: "time_out",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -203,7 +181,7 @@ header: ({ column }) => {
     {
       accessorKey: "note_time_in",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -220,7 +198,7 @@ header: ({ column }) => {
     {
       accessorKey: "note_time_out",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -237,7 +215,7 @@ header: ({ column }) => {
     {
       accessorKey: "status",
       filterFn: "includesString",
-header: ({ column }) => {
+      header: ({ column }) => {
         return (
           <Button
             variant="ghost"
@@ -257,14 +235,6 @@ header: ({ column }) => {
           {row.getValue("status")}
         </div>
       ),
-    },
-
-    {
-      id: "actions",
-      enableHiding: false,
-      cell: ({ row }) => {
-        return <AttendanceDetail detail={row.original} />;
-      },
     },
   ];
 
@@ -297,6 +267,10 @@ header: ({ column }) => {
           searchItem={value.toLowerCase()}
           searchName={value ? `Search ${value}...` : "Select filter first..."}
           tableHeader={tableHeader}
+          onRowClick={(val) => {
+            setSelectedAttendance(val);
+            setVisible(true);
+          }}
         >
           <div className=" flex justify-between">
             <div className="flex gap-4">
@@ -331,10 +305,23 @@ header: ({ column }) => {
               <Button
                 onClick={() => setFilterVisible(true)}
                 variant="ghost"
-                className="h-8 w-8 p-0"
+                className="p-0 w-8"
               >
                 <Filter />
               </Button>
+
+              <Button
+              variant="destructive"
+              onClick={async () => {
+                setResetLoading(true);
+                const startDate = moment().startOf("month").toISOString();
+                const endDate = moment().endOf("month").toISOString();
+                await onRefresh(startDate, endDate);
+                setResetLoading(false);
+              }}
+            >
+              {resetLoading && <Spinner />} Reset
+            </Button>
             </div>
           </div>
           {/* <Button>Download</Button> */}
@@ -347,125 +334,12 @@ header: ({ column }) => {
           await onFilterReturn(val.start.toISOString(), val.end.toISOString());
         }}
       />
+
+      <AttendanceDetail
+        detail={selectedAttendance}
+        visible={visible}
+        onClose={setVisible}
+      />
     </div>
   );
 }
-
-const AttendanceDetail = ({ detail }) => {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
-          <ChevronRight />
-        </Button>
-      </DialogTrigger>
-      <DialogContent
-        className={`${
-          detail?.time_out
-            ? " sm:max-w-4xl lg:max-w-5xl"
-            : "sm:max-w-2xl lg:max-w-xl"
-        } `}
-      >
-        <DialogHeader>
-          <DialogTitle>Attendance detail</DialogTitle>
-        </DialogHeader>
-        <div>
-          <ScrollArea className="h-[80vh] px-2">
-            <div className="px-2 flex flex-col gap-4 sm:flex-row">
-              {detail?.time_in && (
-                <div className="flex-1 flex flex-col gap-4">
-                  <img
-                    src={detail.image_time_in}
-                    alt="timein-img"
-                    className="w-full object-cover rounded-lg"
-                  />
-                  <MapProvider>
-                    <LocationMap position={detail.location_time_in} />
-                  </MapProvider>
-                </div>
-              )}
-
-              {detail?.time_out && (
-                <div className="flex-1 flex flex-col gap-4 sm:ml-4">
-                  <img
-                    src={detail.image_time_out}
-                    alt="timeout-img"
-                    className="w-full object-cover rounded-lg"
-                  />
-                  <MapProvider>
-                    <LocationMap position={detail.location_time_out} />
-                  </MapProvider>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-const LocationMap = ({ position }) => {
-  const { theme } = useTheme();
-
-  const defaultMapContainerStyle = {
-    width: "100%",
-    height: "80vh",
-    borderRadius: "15px 0px 0px 15px",
-  };
-
-  const defaultMapCenter = {
-    lat: position[0],
-    lng: position[1],
-  };
-  const defaultMapZoom = 16;
-
-  const [defaultMapOptions, setDefaultMapOptions] = useState({
-    zoomControl: true,
-    tilt: 0,
-    gestureHandling: "auto",
-    mapTypeId: "roadmap",
-    colorScheme: "DARK",
-  });
-
-  useEffect(() => {
-    if (theme === "dark") {
-      setDefaultMapOptions((prevState) => ({
-        ...prevState,
-        colorScheme: "DARK",
-      }));
-    } else {
-      setDefaultMapOptions((prevState) => ({
-        ...prevState,
-        colorScheme: "LIGHT",
-      }));
-    }
-  }, [theme]);
-
-  const RenderMap = useCallback(
-    ({ position }) => {
-      return (
-        <GoogleMap
-          mapContainerStyle={defaultMapContainerStyle}
-          center={defaultMapCenter}
-          zoom={defaultMapZoom}
-          options={defaultMapOptions}
-        >
-          <Marker
-            position={{
-              lat: parseFloat(position[0]),
-              lng: parseFloat(position[1]),
-            }}
-          />
-        </GoogleMap>
-      );
-    },
-    [defaultMapOptions]
-  );
-
-  return (
-    <div className="w-full">
-      <RenderMap position={position} />
-    </div>
-  );
-};

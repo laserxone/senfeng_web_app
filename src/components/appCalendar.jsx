@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Calendar } from "./ui/calendar";
 
-const AppCalendar = ({ date, onChange }) => {
+const AppCalendar = ({ date, onChange, min = new Date("1900-01-01") }) => {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -25,7 +25,7 @@ const AppCalendar = ({ date, onChange }) => {
           mode="single"
           selected={date}
           onSelect={onChange}
-          disabled={(date) => date < new Date("1900-01-01")}
+          disabled={(date) => date < min}
           initialFocus
         />
       </PopoverContent>

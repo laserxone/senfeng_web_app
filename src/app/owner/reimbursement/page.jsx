@@ -329,7 +329,7 @@ export default function Page() {
           <Button
             onClick={() => setFilterVisible(true)}
             variant="ghost"
-            className="h-8 w-8 p-0"
+            className="p-0 w-8"
           >
             <Filter />
           </Button>
@@ -573,7 +573,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
   async function onSubmit(values) {
     setLoading(true);
     try {
-      const name = `${id}/reimbursement/${moment().valueOf().toString()}.png`;
+      const name = `${values.submitted_by}/reimbursement/${moment().valueOf().toString()}.png`;
       const imgRef = await UploadImage(values.image, name);
       const response = await axios.post(`${BASE_URL}/reimbursement`, {
         amount: values.amount,

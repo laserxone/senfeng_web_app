@@ -6,8 +6,15 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { UserContext } from "@/store/context/UserContext";
+import moment from "moment";
+import Link from "next/link";
+import { useContext } from "react";
 
 export function Sale({ data }) {
+
+  const {state : UserState} = useContext(UserContext)
+
   return (
     <Card>
       <CardHeader>
@@ -16,7 +23,10 @@ export function Sale({ data }) {
       <CardContent>
         <div className="space-y-8">
           {data.map((item, ind) => (
-            <div key={ind} className="flex flex-col sm:flex-row items-center justify-between sm:space-x-4">
+            <div
+              key={ind}
+              className="flex flex-col sm:flex-row items-center justify-between sm:space-x-4"
+            >
               <div className="flex items-center">
                 <Avatar className="h-9 w-9">
                   <AvatarImage src={item.seller_dp} alt="Avatar" />
@@ -28,12 +38,21 @@ export function Sale({ data }) {
                   <p className="text-sm font-medium leading-none">
                     {item.seller_name}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    {item.seller_email}
-                  </p>
+                  <Link
+                    target="blank"
+                    href={
+                      item?.customer_id
+                        ? `/${UserState.value.data?.base_route}/customer/detail?id=${item?.customer_id}`
+                        : "#"
+                    }
+                  >
+                    <p className="text-sm text-muted-foreground">
+                      {item?.customer_name || item?.customer_owner}
+                    </p>
+                  </Link>
                 </div>
               </div>
-              <div >
+              <div className="d-flex flex-col items-start">
                 <div className="font-medium">
                   {new Intl.NumberFormat("en-US", {
                     style: "currency",
@@ -41,7 +60,7 @@ export function Sale({ data }) {
                   }).format(item.price || 0)}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {new Date(item.created_at).toLocaleDateString("en-GB")}
+                  {moment(item.created_at).format("YYYY-MM-DD")}
                 </p>
               </div>
             </div>
@@ -51,4 +70,3 @@ export function Sale({ data }) {
     </Card>
   );
 }
-

@@ -126,7 +126,6 @@ export default function MachinePageOthers() {
       axios
         .get(`${BASE_URL}/machine/${id}`)
         .then((response) => {
-          console.log(response.data);
           setData(response.data);
           if (response.data?.machine) {
             setTotal(Number(response.data.machine.price || 0));
@@ -283,7 +282,7 @@ header: ({ column }) => {
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
+              <Button variant="ghost" className="p-0 w-8">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>

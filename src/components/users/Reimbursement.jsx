@@ -276,7 +276,7 @@ export default function Reimbursement({
           <Button
             onClick={() => setFilterVisible(true)}
             variant="ghost"
-            className="h-8 w-8 p-0"
+            className="p-0 w-8"
           >
             <Filter />
           </Button>
@@ -585,6 +585,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                         <AppCalendar
                           date={field.value}
                           onChange={field.onChange}
+                          min = {new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
                         />
                       </FormControl>
                       <FormMessage />

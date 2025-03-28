@@ -65,6 +65,8 @@ export default function Page() {
               };
             });
             setAttendanceData(apiData);
+          } else {
+            setAttendanceData([]);
           }
           res(true);
         })
@@ -115,7 +117,11 @@ export default function Page() {
         <CardContent className="pt-2">
           <Attendance
             passingData={attendanceData}
-            onFilterReturn={async (start, end) =>
+            onFilterReturn={async (start, end) => {
+              console.log(start, end)
+              await fetchAttendanceData(start, end);
+            }}
+            onRefresh={async (start, end) =>
               await fetchAttendanceData(start, end)
             }
           />

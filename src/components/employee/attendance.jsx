@@ -98,7 +98,6 @@ export default function Attendance() {
       axios
         .get(`${BASE_URL}/user/${id}/attendance`)
         .then((response) => {
-          console.log(response.data)
           if (response.data.length > 0) {
             const apiData = response.data.map((item) => {
               return {
@@ -108,6 +107,8 @@ export default function Attendance() {
               };
             });
             setData(apiData);
+          } else {
+            setData([])
           }
         })
         .catch((e) => {
@@ -362,7 +363,7 @@ header: ({ column }) => {
             <Button
               onClick={() => setFilterVisible(true)}
               variant="ghost"
-              className="h-8 w-8 p-0"
+              className="p-0 w-8"
             >
               <Filter />
             </Button>
@@ -392,8 +393,8 @@ const FilterSheet = ({ visible, onClose }) => {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      start: null,
-      end: null,
+        start: moment().startOf("month").toDate(),
+            end: moment().endOf("month").toDate(),
       user: null,
     },
   });
@@ -527,7 +528,7 @@ const AttendanceDetail = ({ detail }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
+        <Button variant="ghost" className="p-0 w-8">
           <ChevronRight />
         </Button>
       </DialogTrigger>

@@ -326,7 +326,7 @@ const TaskDetail = ({ detail }) => {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
+        <Button variant="ghost" className="p-0 w-8">
           <ChevronsRight />
         </Button>
       </SheetTrigger>
