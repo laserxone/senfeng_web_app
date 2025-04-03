@@ -223,7 +223,6 @@ const DocumentManagement = () => {
             // onFilterClick={() => setFilterVisible(true)}
             >
             </PageTable>
-            <h5 className="text-xl mb-4">Files in the Document Folder</h5>
 
         </div>
     );
