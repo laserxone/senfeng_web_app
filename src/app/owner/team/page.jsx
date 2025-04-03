@@ -41,7 +41,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 
 import {
   Command,
@@ -106,14 +106,20 @@ import { Textarea } from "@/components/ui/textarea";
 import axios from "axios";
 import Link from "next/link";
 import { BASE_URL } from "@/constants/data";
-
-
+import { startHolyLoader } from "holy-loader";
+import { useRouter } from "next/navigation";
+import AppCalendar from "@/components/appCalendar";
+import Spinner from "@/components/ui/spinner";
+import { useToast } from "@/hooks/use-toast";
+import { RequiredStar } from "@/components/RequiredStar";
+import moment from "moment";
+import { UserContext } from "@/store/context/UserContext";
 
 const columns = [
   {
     accessorKey: "name",
     filterFn: "includesString",
-header: ({ column }) => {
+    header: ({ column }) => {
       return (
         <Button
           variant="ghost"
@@ -129,7 +135,7 @@ header: ({ column }) => {
   {
     accessorKey: "designation",
     filterFn: "includesString",
-header: ({ column }) => {
+    header: ({ column }) => {
       return (
         <Button
           variant="ghost"
@@ -144,9 +150,32 @@ header: ({ column }) => {
   },
 
   {
+    accessorKey: "joining_date",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Joining Date
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => (
+      <div>
+        {row.getValue("joining_date")
+          ? moment(row.getValue("joining_date")).format("YYYY-MM-DD")
+          : null}
+      </div>
+    ),
+  },
+
+  {
     accessorKey: "email",
     filterFn: "includesString",
-header: ({ column }) => {
+    header: ({ column }) => {
       return (
         <Button
           variant="ghost"
@@ -158,14 +187,6 @@ header: ({ column }) => {
       );
     },
     cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
-  },
-
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      return <Link href={`/owner/team/detail?id=${row.original.id}`}><ChevronsRight /></Link>;
-    },
   },
 ];
 
@@ -185,28 +206,32 @@ const tableHeader = [
 ];
 
 export default function Page() {
-  const [sorting, setSorting] = useState([]);
-  const [columnFilters, setColumnFilters] = useState([]);
-  const [columnVisibility, setColumnVisibility] = useState({});
-  const [rowSelection, setRowSelection] = useState({});
-  const [openDesignation, setOpenDesignation] = useState(false);
-  const [selectedDesignation, setSelectedDesignation] = useState("");
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const pageTableRef = useRef();
-  const [data, setData] = useState([])
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { state: UserState } = useContext(UserContext);
+  const { toast } = useToast();
 
-  useEffect(()=>{
-    async function fetchData(){
-      axios.get(`${BASE_URL}/user`)
-      .then((response)=>{
-        setData(response.data)
-      })
-    }
-    fetchData()
-  },[])
+  useEffect(() => {
+    if (UserState.value.data?.id) fetchData();
+  }, [UserState]);
 
-  
+  async function fetchData() {
+    return new Promise((resolve, reject) => {
+      axios
+        .get(`${BASE_URL}/user`)
+        .then((response) => {
+          setData(response.data);
+        })
+        .finally(() => {
+          resolve(true);
+          setLoading(false);
+        });
+    });
+  }
 
   function handleClear() {
     if (pageTableRef.current) {
@@ -219,9 +244,16 @@ export default function Page() {
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-center justify-between">
         <Heading title="Team" description="Manage team members" />
-        <AddUserDialog />
+        <Button
+          onClick={() => {
+            setOpen(true);
+          }}
+        >
+          Add User
+        </Button>
       </div>
       <PageTable
+        loading={loading}
         ref={pageTableRef}
         columns={columns}
         data={data}
@@ -229,6 +261,12 @@ export default function Page() {
         searchItem={value.toLowerCase()}
         searchName={value ? `Search ${value}...` : "Select filter first..."}
         tableHeader={tableHeader}
+        onRowClick={(val) => {
+          if (val.id) {
+            startHolyLoader();
+            router.push(`/owner/team/detail?id=${val.id}`);
+          }
+        }}
       >
         <div className=" flex flex-wrap gap-4 justify-between">
           <div className="flex flex-wrap gap-4">
@@ -268,192 +306,40 @@ export default function Page() {
           </div>
         </div>
       </PageTable>
+
+      <AddUserDialog
+        visible={open}
+        onClose={setOpen}
+        onReturn={(newUser) => {
+          let temp = [...data];
+          temp.push(newUser);
+          temp.sort((a, b) => {
+            const nameA = a.name ? a.name.toLowerCase() : "";
+            const nameB = b.name ? b.name.toLowerCase() : "";
+
+            if (!nameA && nameB) return 1;
+            if (nameA && !nameB) return -1;
+
+            return nameA.localeCompare(nameB);
+          });
+          setData([...temp]);
+          toast({ title: "New user added" });
+        }}
+      />
     </div>
   );
 }
 
-const TeamDetail = ({ detail }) => {
-  const [totalSalary, setTotalSalary] = useState(detail?.total_salary ? Number(detail?.total_salary) : null);
-  const [basicSalary, setBasicSalary] = useState(detail?.basic_salary ? Number(detail?.basic_salary) : null);
-  const [monthlyTarget, setMonthlyTarget] = useState(detail?.monthly_target ? Number(detail?.monthly_target) :  null);
-  const [note, setNote] = useState(detail?.note || '');
-  const [inventory, setInventory] = useState(detail?.inventory_assigned || false)
-  const [branch, setBranch] = useState(detail?.branch_expenses_assigned || false);
-  const [writeAccess, setWriteAccess] = useState(detail?.branch_expenses_write_access || false);
-  const [deleteAccess, setDeleteAccess] = useState(detail?.branch_expenses_delete_access || false);
 
+const AddUserDialog = ({ visible, onClose, onReturn }) => {
+  const [dataLoading, setDataLoading] = useState(false);
 
-  function handleChange(e) {
-    const { value, id } = e.target;
-    if (id === "basicsalary") {
-      setBasicSalary(Number(value));
-    }
-    if (id === "totalsalary") {
-      setTotalSalary(Number(value));
-    }
-    if (id === "monthlytarget") {
-      setMonthlyTarget(Number(value));
-    }
-    if (id == "note") {
-      setNote(value);
-    }
-  }
-
-  function checkStatus() {
-    return (
-      totalSalary !== Number(detail?.total_salary) ||
-      basicSalary !== Number(detail?.basic_salary) ||
-      monthlyTarget !== Number(detail?.monthly_target) ||
-      note !== detail?.note ||
-      inventory !== detail?.inventory_assigned ||
-      branch !== detail?.branch_expenses_assigned ||
-      writeAccess !== detail?.branch_expenses_write_access ||
-      deleteAccess !== detail?.branch_expenses_delete_access
-    );
-  }
-  
-
-  return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="ghost" className="p-0 w-8">
-          
-        </Button>
-      </SheetTrigger>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle>User Detail</SheetTitle>
-          <SheetDescription>
-            Make changes to user profile here. Click save when you're done.
-          </SheetDescription>
-        </SheetHeader>
-        <div className="flex flex-col gap-4 py-4 w-full">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="totalsalary" className="text-left">
-              Total Salary
-            </Label>
-            <Input
-            placeholder="Enter total salary.."
-              type="number"
-              id="totalsalary"
-              value={totalSalary || ""}
-              onChange={handleChange}
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="monthlysalary" className="text-left">
-              Basic Salary
-            </Label>
-            <Input
-            placeholder="Enter basic salary.."
-              type="number"
-              id="basicsalary"
-              value={basicSalary || ""}
-              onChange={handleChange}
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label
-              htmlFor="monthlytarget"
-              className="text-left"
-              style={{ flexWrap: " nowrap" }}
-            >
-              Monthly Target
-            </Label>
-            <Input
-            placeholder="Enter monthly target.."
-              type="number"
-              id="monthlytarget"
-              value={monthlyTarget || ""}
-              onChange={handleChange}
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="note" className="text-left">
-              Note
-            </Label>
-            <Textarea 
-              placeholder="Enter additional note.."
-              type="text"
-              id="note"
-              value={note}
-              onChange={handleChange}
-              className="col-span-3"/>
-           
-          </div>
-          <div className="flex items-center space-x-2">
-            <label
-              htmlFor="inventory"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              Assign Inventory
-            </label>
-            <Checkbox id="inventory" 
-             checked={inventory}
-             onCheckedChange={(e) => setInventory(e)}/>
-          </div>
-
-          <div className="flex flex-1 gap-4">
-            <div className="flex items-center space-x-2">
-              <label
-                htmlFor="branch"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Assign Branch Expenses
-              </label>
-              <Checkbox
-                id="branch"
-                checked={branch}
-                onCheckedChange={(e) => setBranch(e)}
-              />
-            </div>
-            {branch && (
-              <>
-                {" "}
-                <div className="flex items-center space-x-2">
-                  <label
-                    htmlFor="write"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Write
-                  </label>
-                  <Checkbox id="write" 
-                   checked={writeAccess}
-                   onCheckedChange={(e) => setWriteAccess(e)}/>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <label
-                    htmlFor="delete"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Delete
-                  </label>
-                  <Checkbox id="delete" 
-                   checked={deleteAccess}
-                   onCheckedChange={(e) => setDeleteAccess(e)}/>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-        <SheetFooter>
-          <SheetClose asChild>
-            <Button onClick={()=>{}} disabled={!checkStatus()}>Save changes</Button>
-          </SheetClose>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
-  );
-};
-
-const AddUserDialog = () => {
   const formSchema = z.object({
     name: z.string().min(2, { message: "Name must be at least 2 characters." }),
     email: z.string().email({ message: "Invalid email address." }),
     designation: z.string().min(1, { message: "Designation missing" }),
+    joining_date: z.date({ required_error: "Joining date is required." }),
+    note: z.string().optional(),
   });
 
   const form = useForm({
@@ -462,11 +348,23 @@ const AddUserDialog = () => {
       name: "",
       email: "",
       designation: "",
+      joining_date: "",
+      note: "",
     },
   });
 
   function onSubmit(values) {
-    console.log("Form Data:", values);
+    setDataLoading(true);
+
+    axios
+      .post(`${BASE_URL}/user`, { ...values, name: values.name.toUpperCase() })
+      .then((response) => {
+        onReturn(response.data);
+        handleClose(false);
+      })
+      .finally(() => {
+        setDataLoading(false);
+      });
   }
 
   const designations = [
@@ -485,18 +383,13 @@ const AddUserDialog = () => {
     { label: "Office Boy", value: "Office Boy" },
   ];
 
+  async function handleClose(val) {
+    onClose(val);
+    form.reset();
+  }
+
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          onClick={() => {
-            form.reset();
-          }}
-          
-        >
-          Add User
-        </Button>
-      </DialogTrigger>
+    <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add new user</DialogTitle>
@@ -509,7 +402,9 @@ const AddUserDialog = () => {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>
+                      Name <RequiredStar />
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Enter name" {...field} />
                     </FormControl>
@@ -523,7 +418,9 @@ const AddUserDialog = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>
+                      Email <RequiredStar />
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Enter email" {...field} />
                     </FormControl>
@@ -537,7 +434,9 @@ const AddUserDialog = () => {
                 name="designation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Designation</FormLabel>
+                    <FormLabel>
+                      Designation <RequiredStar />
+                    </FormLabel>
                     <FormControl>
                       <Select
                         onValueChange={(e) => {
@@ -554,7 +453,7 @@ const AddUserDialog = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
-                            {tableHeader.map((framework) => (
+                            {designations.map((framework) => (
                               <SelectItem
                                 key={framework.value}
                                 value={framework.value}
@@ -571,7 +470,37 @@ const AddUserDialog = () => {
                 )}
               />
 
-              <Button type="submit">Submit</Button>
+              <FormField
+                control={form.control}
+                name="note"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Additional Note</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Enter personal note" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="joining_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Joining Date <RequiredStar />
+                    </FormLabel>
+                    <AppCalendar date={field.value} onChange={field.onChange} />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button className="w-full" type="submit">
+                {dataLoading && <Spinner />} Save
+              </Button>
             </form>
           </Form>
         </div>

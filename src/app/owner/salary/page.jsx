@@ -15,6 +15,7 @@ import {
   Loader2,
   MoreHorizontal,
   Trash,
+  Trash2,
 } from "lucide-react";
 import { BASE_URL } from "@/constants/data";
 import { Button } from "@/components/ui/button";
@@ -111,10 +112,9 @@ import { FaRegFilePdf } from "react-icons/fa";
 import SalaryPdf from "@/components/salaryPdf";
 
 import { pdf } from "@react-pdf/renderer";
+import AccountsPdf from "@/components/accountsPdf";
 
 export default function Page() {
- 
-
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <Tabs defaultValue="salary" className="w-full flex flex-1 flex-col">
@@ -162,6 +162,7 @@ const SalaryComponent = () => {
   const [absentsFine, setAbsentsFine] = useState(0);
   const [payable, setPayable] = useState(0);
   const [attendanceData, setAttendanceData] = useState([]);
+  const [accountsLoading, setAccountsLoading] = useState(false)
   const { toast } = useToast();
   const years = Array.from(
     { length: 20 },
@@ -205,7 +206,9 @@ const SalaryComponent = () => {
     clearForm();
     setLoading(true);
     axios
-      .get(`${BASE_URL}/salary?user=${user}&start=${startDate}&end=${endDate}`)
+      .get(
+        `${BASE_URL}/salary?user=${user}&start=${startDate}&end=${endDate}&month=${selectedMonth}&year=${selectedYear}`
+      )
       .then((response) => {
         setData(response.data);
         if (response.data?.salary) {
@@ -380,7 +383,7 @@ const SalaryComponent = () => {
         additional_fine: form.additional_fine,
         issued: checked,
         salary_month: startDate,
-        payable : payable
+        payable: payable,
       })
       .then(() => {
         toast({ title: "Salary saved" });
@@ -388,6 +391,25 @@ const SalaryComponent = () => {
       .finally(() => {
         setSaveLoading(false);
       });
+  }
+
+  async function handleAccounts() {
+    setAccountsLoading(true)
+    axios.get(`${BASE_URL}/accounts?month=${selectedMonth}&year=${selectedYear}`)
+    .then(async(response)=>{
+      const apiData = response.data
+      const totalPayments = apiData.reduce(
+        (sum, payment) => sum + Number(payment.payable),
+        0
+      );
+      const blob = await pdf(<AccountsPdf data={apiData} total={totalPayments} headings={apiData.length > 0 ? apiData[0].salary_month :{}}/>).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 600000);
+    }).finally(()=>{
+      setAccountsLoading(false)
+    })
+    
   }
 
   return (
@@ -447,6 +469,7 @@ const SalaryComponent = () => {
           </Select>
         </div>
         {UserState.value.data?.id && (
+          <>
           <Button
             disabled={!user}
             onClick={() => handleGenerate()}
@@ -454,7 +477,15 @@ const SalaryComponent = () => {
           >
             {loading && <Spinner />} Generate
           </Button>
+            <Button
+            onClick={() => handleAccounts()}
+            className="mt-6"
+          >
+            {accountsLoading && <Spinner />} To Accounts
+          </Button>
+          </>
         )}
+       
         {data?.user && (
           <>
             <Button onClick={() => handleGenerate()} className="mt-6">
@@ -476,6 +507,8 @@ const SalaryComponent = () => {
                 }}
               />
             </div>
+
+           
           </>
         )}
       </div>
@@ -797,7 +830,6 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
       try {
         const storageRef = ref(storage, img);
         const url = await getDownloadURL(storageRef);
-        console.log(url);
         if (isMountedRef.current) setLocalImage(url);
       } catch (error) {
         console.error("Error fetching image URL:", error);
@@ -988,8 +1020,7 @@ const RecordComponent = () => {
     axios
       .get(`${BASE_URL}/record`)
       .then((response) => {
-        console.log(response.data);
-        setData(response.data)
+        setData(response.data);
       })
       .finally(() => {
         setLoading(false);
@@ -1043,14 +1074,30 @@ const RecordComponent = () => {
         const payment = row.original;
 
         return (
-        
-           
-            <FaRegFilePdf onClick={()=> handleDownload(row.original)} className="h-7 w-7 text-red-500" />
-        
+          <div className="flex gap-4">
+          <FaRegFilePdf
+            onClick={() => handleDownload(row.original)}
+            className="h-7 w-7 text-red-500"
+          />
+          <Trash2 
+          onClick={() => handleDelete(row.original.id)}
+          className="h-7 w-7 text-red-500"/>
+          </div>
         );
       },
     },
   ];
+
+  async function handleDelete(id){
+    if(!id) return 
+    setLoading(true)
+    axios.delete(`${BASE_URL}/record/${id}`)
+    .then(async()=>{
+      await fetchData()
+    }).finally(()=>{
+      setLoading(false)
+    })
+  }
 
   async function handleDownload(item) {
     const blob = await pdf(<SalaryPdf data={item} />).toBlob();

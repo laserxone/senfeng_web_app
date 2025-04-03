@@ -5,12 +5,14 @@ import { useCallback, useContext, useRef, useState, useEffect } from "react";
 import axios from "axios";
 import { BASE_URL } from "@/constants/data";
 import { startHolyLoader } from "holy-loader";
+import { useToast } from "@/hooks/use-toast";
 
 export default function useCheckSession() {
     const router = useRouter();
     const pathname = usePathname();
     const [isCheckingSession, setIsCheckingSession] = useState(false);
     const unsubscribeRef = useRef(null);
+    const { toast } = useToast()
 
     const debouncedData = useCallback(
         debounce(async (user) => {
@@ -66,15 +68,13 @@ export default function useCheckSession() {
                         router.push("/aftersales/dashboard")
                     }
                 }
-
-               
-
                 else {
                     signOut(auth);
                 }
 
                 return { user: { ...userData, ...user } };
             } else {
+                toast({ title: "User does not exist in the system", variant: "destructive" })
                 signOut(auth);
                 return { error: "User not found" };
             }

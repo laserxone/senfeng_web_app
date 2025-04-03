@@ -78,6 +78,7 @@ export const Icons = {
   team: Briefcase, // Team Management
   office: Home, // Office Overview
   stock : Container,
+  dms : FileText,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden='true'

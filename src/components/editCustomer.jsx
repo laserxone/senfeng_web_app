@@ -35,6 +35,7 @@ import { BASE_URL } from "@/constants/data";
 import { UserContext } from "@/store/context/UserContext";
 import { debounce } from "@/lib/debounce";
 import Link from "next/link";
+import { UserSearch } from "./user-search";
 
 const EditCustomerDialog = ({
   onRefresh,

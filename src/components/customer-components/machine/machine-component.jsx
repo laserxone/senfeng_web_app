@@ -3,6 +3,7 @@ import {
   ArrowUpDown,
   ClipboardList,
   EditIcon,
+  Trash,
   Wrench,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
@@ -68,6 +69,8 @@ import { BASE_URL, Colors } from "@/constants/data";
 import { UserContext } from "@/store/context/UserContext";
 import InvoicePDF from "@/components/invoicepdf";
 import { pdf } from "@react-pdf/renderer";
+import Spinner from "@/components/ui/spinner";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
 
 export default function Machine() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -142,7 +145,6 @@ export default function Machine() {
       return null;
     }
   }
-
 
   const columns = [
     {
@@ -269,10 +271,11 @@ export default function Machine() {
         const currentItem = row.original;
 
         return (
-          <EditIcon style={{color:Colors.button}}
+          <EditIcon
+            style={{ color: Colors.button }}
             className="cursor-pointer h-5 w-5"
             onClick={(e) => {
-              e.stopPropagation()
+              e.stopPropagation();
               setSelectedPayment(currentItem);
               setEditPayment(true);
             }}
@@ -316,8 +319,6 @@ export default function Machine() {
       },
     },
   ];
-
- 
 
   async function handleDownloadLedger() {
     let runningBalance = total;
@@ -418,6 +419,11 @@ export default function Machine() {
           img={imageURL?.image || null}
           note={imageURL?.note || null}
           remarks={imageURL?.remarks || null}
+          id={imageURL?.id}
+          onRefresh={async () => {
+            await fetchData(id);
+            return true;
+          }}
         />
         <ViewImagesSheet
           visible={imagesVisible}
@@ -540,9 +546,20 @@ const ClientCard = memo(({ data, payment, machine }) => {
   );
 });
 
-const ImageSheet = ({ visible, onClose, img, note, remarks }) => {
+const ImageSheet = ({
+  visible,
+  onClose,
+  img,
+  note,
+  remarks,
+  id,
+  onRefresh,
+}) => {
   const [imageOpen, setImageOpen] = useState(false);
   const [localImage, setLocalImage] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const { state: UserState } = useContext(UserContext);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (img) {
@@ -571,12 +588,45 @@ const ImageSheet = ({ visible, onClose, img, note, remarks }) => {
     }
   }, []);
 
+  async function handleDelete() {
+    if (img && !img.includes("http")) {
+      const deleteRef = await DeleteFromStorage(img);
+    }
+    axios
+      .delete(`${BASE_URL}/payment/${id}`)
+      .then(async () => {
+        await onRefresh(id);
+        setDeleteLoading(false);
+        handleClose(false);
+        toast({ title: "Payment Deleted" });
+      })
+      .catch(() => {
+        toast({ title: "Error occured", variant: "destructive" });
+      });
+  }
+
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
       <SheetContent>
         <SheetHeader className="mb-4">
           <SheetTitle>Payment Image</SheetTitle>
-
+          {UserState.value.data?.designation === "Owner" && (
+            <Button
+              className="mb-2"
+              variant="destructive"
+              size="icon"
+              onClick={(e) => {
+                // e.stopPropagation()
+                // setSelectedCustomerId(currentItem?.id);
+                // setShowConfirmation(true);
+                if (!id) return;
+                setDeleteLoading(true);
+                handleDelete(id);
+              }}
+            >
+              {deleteLoading ? <Spinner /> : <Trash size={16} />}
+            </Button>
+          )}
           <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
             <img
               onClick={() => setImageOpen(true)}

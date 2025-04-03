@@ -1,9 +1,9 @@
 const { Loader2 } = require("lucide-react")
 
 
-const Spinner = () => {
+const Spinner = ({className}) => {
     return (
-        <Loader2 className="animate-spin"/>
+        <Loader2 className={`animate-spin ${className}`}/>
     )
 }
 

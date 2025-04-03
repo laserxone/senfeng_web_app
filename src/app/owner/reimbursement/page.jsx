@@ -507,7 +507,7 @@ const ImageSheet = ({
               ) : (
                 <Trash size={16} />
               )}
-            </Button>
+            </Button> 
 
             <strong>Submitted by</strong>
             <p>{submittedBy || "N/A"}</p>

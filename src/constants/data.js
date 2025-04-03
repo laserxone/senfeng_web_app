@@ -153,8 +153,6 @@ export const InventoryNavItem = {
   items: []
 }
 
-
-
 export const PakCities = [
   {
     "country": "PK",

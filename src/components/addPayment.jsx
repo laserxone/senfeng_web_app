@@ -28,10 +28,15 @@ import Image from "next/image";
 import moment from "moment";
 import { UploadImage } from "@/lib/uploadFunction";
 import axios from "axios";
-import { useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { BASE_URL } from "@/constants/data";
+import { debounce } from "@/lib/debounce";
+import Spinner from "./ui/spinner";
+import { Label } from "./ui/label";
+import Link from "next/link";
+import { UserContext } from "@/store/context/UserContext";
 
 const AddPayment = ({
   visible,
@@ -41,6 +46,9 @@ const AddPayment = ({
   customer_id,
 }) => {
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const { state: UserState } = useContext(UserContext);
+  const [error, setError] = useState({});
   const formSchema = z.object({
     note: z.string().min(1, { message: "Note is required." }),
     amount: z.number().min(1, { message: "Amount must be greater than 1." }),
@@ -91,7 +99,7 @@ const AddPayment = ({
         title: e?.response?.data?.message || e?.message,
         variant: "destructive",
       });
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -102,6 +110,36 @@ const AddPayment = ({
   }
 
   const imageFile = form.watch("image");
+
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === "note") {
+        debouncedCheckNumber(value.note);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
+
+  const checkNumberInDatabase = async (number) => {
+    setChecking(true);
+    setError({});
+    try {
+      const response = await axios.post(`${BASE_URL}/check-note`, { number });
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        setError(response.data[0]);
+      }
+    } catch (error) {
+      console.log("Error checking number:", error);
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const debouncedCheckNumber = useCallback(
+    debounce(checkNumberInDatabase, 1000),
+    []
+  );
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -159,12 +197,28 @@ const AddPayment = ({
                             TID <RequiredStar />
                           </FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter TID" {...field} />
+                            <div className="flex">
+                              <Input placeholder="Enter TID" {...field} />
+                              {checking && <Spinner className={"ml-2"} />}
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+
+                    {error?.errorMessage && (
+                      <Link
+                        target="blank"
+                        className="text-red-500 text-sm"
+                        href={
+                          `/${UserState?.value?.data?.base_route}/customer/machine?id=${error?.machine_id}` ||
+                          "#"
+                        }
+                      >
+                        {error?.errorMessage}
+                      </Link>
+                    )}
 
                     {/* Payment Mode */}
                     <FormField
@@ -309,7 +363,11 @@ const AddPayment = ({
                     />
 
                     {/* Submit Button */}
-                    <Button className="w-full" type="submit">
+                    <Button
+                      disabled={error?.errorMessage}
+                      className="w-full"
+                      type="submit"
+                    >
                       {loading && <Loader2 className="animate-spin" />} Submit
                     </Button>
                   </form>

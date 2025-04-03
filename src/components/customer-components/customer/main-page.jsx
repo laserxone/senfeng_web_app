@@ -165,6 +165,7 @@ export default function CustomerMainPage() {
   const router = useRouter();
 
   useEffect(() => {
+    console.log(UserState.value.data)
     if (UserState.value.data?.id) fetchData();
   }, [UserState.value.data]);
 
