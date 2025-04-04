@@ -120,6 +120,7 @@ import { BASE_URL } from "@/constants/data";
 import AddCustomerDialog from "@/components/addCustomer";
 import moment from "moment";
 import { startHolyLoader } from "holy-loader";
+import AddQuickAction from "@/components/addQuickAction";
 
 const tableHeader = [
   {
@@ -154,6 +155,7 @@ const tableHeader = [
 
 export default function CustomerMainPage() {
   const [value, setValue] = useState("");
+  const [additionalFilter, setAdditionalFilter] = useState("");
   const pageTableRef = useRef();
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
@@ -162,10 +164,11 @@ export default function CustomerMainPage() {
   const { state: UserState } = useContext(UserContext);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [member, setMember] = useState(false);
   const router = useRouter();
+  const [quickAction, setQuickAction] = useState(false);
 
   useEffect(() => {
-    console.log(UserState.value.data)
     if (UserState.value.data?.id) fetchData();
   }, [UserState.value.data]);
 
@@ -342,7 +345,7 @@ export default function CustomerMainPage() {
               variant="destructive"
               size="icon"
               onClick={(e) => {
-                e.stopPropagation()
+                e.stopPropagation();
                 setSelectedCustomerId(currentItem?.id);
                 setShowConfirmation(true);
               }}
@@ -381,6 +384,7 @@ export default function CustomerMainPage() {
   ];
 
   function handleClear() {
+    setAdditionalFilter("");
     if (pageTableRef.current) {
       pageTableRef.current.handleClear();
       setValue("");
@@ -406,16 +410,35 @@ export default function CustomerMainPage() {
     }
   }
 
+  const filteredData = data.filter((item) =>
+    additionalFilter == "member"
+      ? item.member === true
+      : additionalFilter == "unassigned"
+      ? !item.member === true
+      : true
+  );
+
   return (
     <PageContainer scrollable={false}>
       <div className="flex flex-1 flex-col space-y-4">
         <div className="flex items-center justify-between">
           <Heading title="All Customers" description="Manage your custoners" />
-          {UserState.value.data && UserState.value.data.customer_add_access && (
-            <Button onClick={() => setAddCustomer(true)}>
-              Add new customer
-            </Button>
-          )}
+
+          <div className="flex gap-2">
+            {UserState.value.data &&
+              UserState.value.data?.designation == "Owner" && (
+                <Button onClick={() => setQuickAction(true)}>
+                  Quick Action
+                </Button>
+              )}
+            {UserState.value.data &&
+              UserState.value.data.customer_add_access && (
+                <Button onClick={() => setAddCustomer(true)}>
+                  Add new customer
+                </Button>
+              )}
+          </div>
+
           <AddCustomerDialog
             user_id={UserState.value.data?.id}
             ownership={
@@ -432,15 +455,32 @@ export default function CustomerMainPage() {
               await fetchData();
             }}
           />
+
+          <AddQuickAction
+            data={data.filter((item)=> !item.ownership)}
+            visible={quickAction}
+            onClose={setQuickAction}
+            onRefresh={(id, ownership)=>{
+              setData((prev) => {
+                const updatedData = prev.map((item) => {
+                  if (item.id === id) {
+                    return { ...item, ownership: ownership };
+                  }
+                  return item;
+                });
+                return updatedData;
+              });
+            }}
+          />
         </div>
 
         <PageTable
           totalCustomerText={"Total Customers"}
-          totalCustomer={data.length}
+          totalCustomer={filteredData.length}
           ref={pageTableRef}
           columns={columns}
-          data={data}
-          totalItems={data.length}
+          data={filteredData}
+          totalItems={filteredData.length}
           searchItem={value.toLowerCase()}
           searchName={value ? `Search ${value}...` : "Select filter first..."}
           tableHeader={tableHeader}
@@ -480,6 +520,48 @@ export default function CustomerMainPage() {
                 </SelectContent>
               </Select>
 
+              {/* <div className="flex items-center gap-2">
+
+              <Label>Members?</Label>
+              <Checkbox
+                checked={member}
+                onCheckedChange={(checked) => setMember(checked)}
+              />
+              </div> */}
+
+              <Select
+                onValueChange={setAdditionalFilter}
+                value={additionalFilter}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Additional filter..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {[
+                      { value: "member", label: "Member" },
+                      {
+                        value: "unassigned",
+                        label: "Unassigned",
+                      },
+                    ].map((framework) => (
+                      <SelectItem
+                        key={framework.value}
+                        value={framework.value}
+                        onClick={() => {
+                          if (framework.value === additionalFilter) {
+                            setAdditionalFilter("");
+                          } else {
+                            setAdditionalFilter(framework.value);
+                          }
+                        }}
+                      >
+                        {framework.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
               <Button
                 onClick={() => {
                   handleClear();
@@ -504,7 +586,7 @@ export default function CustomerMainPage() {
         description={"Your action will remove customer from the system"}
         onPressYes={() => handleDelete(selectedCustomerId)}
         onPressCancel={() => setShowConfirmation(false)}
-      /> 
+      />
     </PageContainer>
   );
 }
@@ -541,30 +623,5 @@ const FilterSheet = ({ visible, onClose }) => {
         </SheetFooter>
       </SheetContent>
     </Sheet>
-  );
-};
-
-const StarRating = ({ value = 0, onChange }) => {
-  const [rating, setRating] = useState(value);
-
-  const handleRating = (newRating) => {
-    setRating(newRating);
-    onChange?.(newRating);
-  };
-
-  return (
-    <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((num) => (
-        <Star
-          key={num}
-          size={24}
-          className={cn(
-            "cursor-pointer transition-all",
-            num <= rating ? "text-yellow-500 fill-yellow-500" : "text-gray-400"
-          )}
-          onClick={() => handleRating(num)}
-        />
-      ))}
-    </div>
   );
 };

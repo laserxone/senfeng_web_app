@@ -111,17 +111,17 @@ export default function Machine() {
       const machine = response.data?.machine;
       const user = UserState?.value?.data;
 
-      if (
-        (user?.designation === "Sales" || user?.designation === "Engineer") &&
-        machine?.sell_by !== user?.id
-      ) {
-        toast({
-          variant: "destructive",
-          title: "Error.",
-          description: "Machine was not sold by you",
-        });
-        return false;
-      }
+      // if (
+      //   (user?.designation === "Sales" || user?.designation === "Engineer") &&
+      //   machine?.sell_by !== user?.id
+      // ) {
+      //   toast({
+      //     variant: "destructive",
+      //     title: "Error.",
+      //     description: "Machine was not sold by you",
+      //   });
+      //   return false;
+      // }
 
       setData(response.data);
       if (machine) {
@@ -269,55 +269,28 @@ export default function Machine() {
       id: "actions",
       cell: ({ row }) => {
         const currentItem = row.original;
-
-        return (
-          <EditIcon
-            style={{ color: Colors.button }}
-            className="cursor-pointer h-5 w-5"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedPayment(currentItem);
-              setEditPayment(true);
-            }}
-          />
-          // <DropdownMenu>
-          //   <DropdownMenuTrigger asChild>
-          //     <Button variant="ghost" className="p-0 w-8">
-          //       <MoreHorizontal className="h-4 w-4" />
-          //     </Button>
-          //   </DropdownMenuTrigger>
-          //   <DropdownMenuContent align="end">
-          //     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          //     <DropdownMenuItem
-          //       className="hover:cursor-pointer"
-          //       onClick={() => {
-          //         setImageURL(currentItem);
-          //         setVisible(true);
-          //       }}
-          //     >
-          //       View
-          //     </DropdownMenuItem>
-          //     <DropdownMenuItem
-          //       className="hover:cursor-pointer"
-          //       onClick={() => {
-          //         setSelectedPayment(currentItem);
-          //         setEditPayment(true);
-          //       }}
-          //     >
-          //       Edit
-          //     </DropdownMenuItem>
-
-          //     {/* <DropdownMenuItem
-          //       className="hover:cursor-pointer"
-          //       onClick={() => setShowConfirmation(true)}
-          //     >
-          //       Delete
-          //     </DropdownMenuItem> */}
-          //   </DropdownMenuContent>
-          // </DropdownMenu>
-        );
+        const userData = UserState?.value?.data;
+        const isSalesOrEngineer =
+          userData?.designation === "Sales" || userData?.designation === "Engineer";
+        const isOwner = data?.machine?.sell_by === userData?.id;
+    
+        if (!isSalesOrEngineer || isOwner) {
+          return (
+            <EditIcon
+              style={{ color: Colors.button }}
+              className="cursor-pointer h-5 w-5"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedPayment(currentItem);
+                setEditPayment(true);
+              }}
+            />
+          );
+        }
+    
+        return null; // Explicitly return null if no conditions match
       },
-    },
+    }
   ];
 
   async function handleDownloadLedger() {
@@ -357,7 +330,26 @@ export default function Machine() {
         {data && (
           <div className="flex gap-2">
             <Button onClick={() => setImagesVisible(true)}>View Images</Button>
-            <Button onClick={() => setAddPayment(true)}>Add Payment</Button>
+            <Button
+              onClick={() => {
+                if (
+                  UserState?.value?.data?.designation === "Sales" ||
+                  UserState?.value?.data?.designation === "Engineer"
+                ) {
+                  if (data?.machine?.sell_by === UserState?.value?.data?.id) {
+                    setAddPayment(true);
+                  } else {
+                    toast({ title: "You are not allowed to add payment" ,   variant: "destructive", });
+                  }
+
+                  return;
+                } else {
+                  setAddPayment(true);
+                }
+              }}
+            >
+              Add Payment
+            </Button>
             <AddPayment
               customer_id={data?.customer?.id}
               visible={addPayment}
@@ -374,7 +366,26 @@ export default function Machine() {
               data={selectedPayment}
               onRefresh={async () => await fetchData(id)}
             />
-            <Button onClick={() => setEditMachine(true)}>Edit Machine</Button>
+            <Button
+              onClick={() => {
+                if (
+                  UserState?.value?.data?.designation === "Sales" ||
+                  UserState?.value?.data?.designation === "Engineer"
+                ) {
+                  if (data?.machine?.sell_by === UserState?.value?.data?.id) {
+                    setEditMachine(true);
+                  } else {
+                    toast({ title: "You are not allowed to edit machine",   variant: "destructive", });
+                  }
+
+                  return;
+                } else {
+                  setEditMachine(true);
+                }
+              }}
+            >
+              Edit Machine
+            </Button>
             {payments.length > 0 && (
               <Button
                 onClick={() => {
@@ -437,16 +448,21 @@ export default function Machine() {
   );
 }
 
-const ClientCard = memo(({ data, payment, machine }) => {
+const ClientCard = memo(({ data, payment, machine, manager }) => {
   return (
     <Card className="bg-gray-100 dark:bg-gray-900 rounded-lg shadow-md p-4 w-full">
       {/* Company Name */}
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center justify-center">
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center justify-center">
         {data?.name || "Customer Name"}{" "}
         <span className="text-gray-500 text-sm">
           {data?.owner && ` (${data.owner})`}
         </span>
+      
       </h2>
+      <h2 className="text-md font-bold text-primary dark:text-white mb-4 flex items-center justify-center">
+      Manager {machine?.sell_by_name  || "NA"}
+      </h2>
+     
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Machine Info */}

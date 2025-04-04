@@ -11,11 +11,12 @@ import {
   Factory,
   Edit2,
   Wrench,
+  Trash2,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import PageContainer from "@/components/page-container";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -74,6 +75,7 @@ import { BASE_URL } from "@/constants/data";
 import { debounce } from "@/lib/debounce";
 import ConfimationDialog from "@/components/alert-dialog";
 import { startHolyLoader } from "holy-loader";
+import Spinner from "@/components/ui/spinner";
 
 export default function CustomerDetail({ ownership = false }) {
   const search = useSearchParams();
@@ -159,6 +161,63 @@ export default function CustomerDetail({ ownership = false }) {
     }
   }
 
+  const RenderTabs = useCallback(() => {
+    return (
+      <Tabs
+        defaultValue={data?.member ? "aftersales" : "feedback"}
+        className="w-full"
+      >
+        <TabsList>
+          {data &&
+            (data?.member ? (
+              <TabsTrigger value="aftersales">After Sales</TabsTrigger>
+            ) : (
+              <TabsTrigger value="feedback">Feedback</TabsTrigger>
+            ))}
+
+          <TabsTrigger value="customers">Machines</TabsTrigger>
+          {/* <TabsTrigger value="documents">Documents</TabsTrigger> */}
+          <TabsTrigger value="about">About</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="feedback">
+          <FeedbackTab
+            type="feedback"
+            userID={UserState?.value?.data?.id}
+            customerID={customer_id}
+            data={feedback || []}
+            onRefresh={() => fetchCustomerFeedback()}
+          />
+        </TabsContent>
+
+        <TabsContent value="aftersales">
+          <FeedbackTab
+            type="aftersales"
+            userID={UserState?.value?.data?.id}
+            customerID={customer_id}
+            data={feedback || []}
+            onRefresh={() => fetchCustomerFeedback()}
+          />
+        </TabsContent>
+
+        <TabsContent value="about">
+          <AboutTab data={data} />
+        </TabsContent>
+        <TabsContent value="customers">
+          <CustomersTab
+            data={data?.machines || []}
+            user_id={UserState?.value?.data?.id}
+            customer_id={customer_id}
+            onRefresh={() => fetchCustomerDetail()}
+          />
+        </TabsContent>
+        {/* <TabsContent value="documents">
+        <DocumentsTab />
+      </TabsContent> */}
+      </Tabs>
+    );
+  }, [data, feedback]);
+
   return (
     <PageContainer>
       <div className="w-full pb-8">
@@ -168,14 +227,30 @@ export default function CustomerDetail({ ownership = false }) {
               img={data?.image}
               name={data?.name}
               onClick={() => {
-                if (data?.id) setEditVisible(true);
+                if (data?.id) {
+                  if (UserState?.value?.data?.designation === "Sales" || UserState?.value?.data?.designation === "Engineer") {
+                    if (data?.ownership === UserState?.value?.data?.id) {
+                      setEditVisible(true);
+                    } else {
+                      toast({
+                        title: "You are not authorized to edit this customer",
+                        variant: "destructive",
+                      });
+                    }
+                  } else {
+                    setEditVisible(true);
+                  }
+                }
               }}
             />
             <div className="flex flex-col">
               <h1 className="text-3xl font-bold">{data?.name}</h1>
-              <h1 className="text-md font-medium">
+              <h1 className="text-sm font-medium">
                 Rating:{" "}
                 {data?.rating ? `${data.rating} out of 5` : "Not rated yet"}
+              </h1>
+              <h1 className="text-md font-bold text-primary">
+                Manager {data?.ownership_name || "NA"}
               </h1>
             </div>
           </div>
@@ -186,58 +261,7 @@ export default function CustomerDetail({ ownership = false }) {
           />
         </div>
 
-        <Tabs
-          defaultValue={data?.member ? "aftersales" : "feedback"}
-          className="w-full"
-        >
-          <TabsList>
-            {data &&
-              (data?.member ? (
-                <TabsTrigger value="aftersales">After Sales</TabsTrigger>
-              ) : (
-                <TabsTrigger value="feedback">Feedback</TabsTrigger>
-              ))}
-
-            <TabsTrigger value="customers">Machines</TabsTrigger>
-            {/* <TabsTrigger value="documents">Documents</TabsTrigger> */}
-            <TabsTrigger value="about">About</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="feedback">
-            <FeedbackTab
-              type="feedback"
-              userID={UserState?.value?.data?.id}
-              customerID={customer_id}
-              data={feedback || []}
-              onRefresh={() => fetchCustomerFeedback()}
-            />
-          </TabsContent>
-
-          <TabsContent value="aftersales">
-            <FeedbackTab
-              type="aftersales"
-              userID={UserState?.value?.data?.id}
-              customerID={customer_id}
-              data={feedback || []}
-              onRefresh={() => fetchCustomerFeedback()}
-            />
-          </TabsContent>
-
-          <TabsContent value="about">
-            <AboutTab data={data} />
-          </TabsContent>
-          <TabsContent value="customers">
-            <CustomersTab
-              data={data?.machines || []}
-              user_id={UserState?.value?.data?.id}
-              customer_id={customer_id}
-              onRefresh={() => fetchCustomerDetail()}
-            />
-          </TabsContent>
-          {/* <TabsContent value="documents">
-            <DocumentsTab />
-          </TabsContent> */}
-        </Tabs>
+        <RenderTabs />
 
         <EditCustomerDialog
           ownership={ownership}
@@ -488,6 +512,27 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
   const [writeFeedback, setWriteFeedback] = useState("");
   const [date, setDate] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [selectedDelete, setSelectedDelete] = useState(null);
+  const [localData, setLocalData] = useState(
+    data
+      .filter((item) => item?.type === type)
+      .sort(
+        (a, b) =>
+          moment(b?.created_at).valueOf() - moment(a?.created_at).valueOf()
+      )
+  );
+
+  async function handleDelete(id) {
+    setSelectedDelete(id);
+    axios
+      .delete(`${BASE_URL}/feedback/${id}`)
+      .then(async () => {
+        await onRefresh();
+      })
+      .finally(() => {
+        setSelectedDelete(null);
+      });
+  }
 
   async function handleSavePost() {
     setLoading(true);
@@ -534,6 +579,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
           ></textarea>
           <div className="flex gap-5 items-center mt-2">
             <Button
+              disabled={!writeFeedback}
               onClick={() => {
                 handleSavePost();
               }}
@@ -555,37 +601,43 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
           </div>
         </CardContent>
       </Card>
-      {data
-        ?.filter((item) => item.type === type)
-        .sort(
-          (a, b) =>
-            moment(b.created_at).valueOf() - moment(a.created_at).valueOf()
-        )
-        .map((item, index) => (
-          <Card key={index}>
-            <CardHeader className="p-0 flex overflow-hidden">
-              <div
-                className="flex flex-1 justify-between items-center bg-gray-200 py-2 px-4"
-                style={{ borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
-              >
-                <div className="flex gap-5">
-                  <Label style={{ fontWeight: 600, fontSize: "16px" }}>
-                    Quick Record
-                  </Label>
-                  <Label>Operated by: {item?.user_name}</Label>
-                </div>
+      {localData.map((item, index) => (
+        <Card key={index}>
+          <CardHeader className="p-0 flex overflow-hidden">
+            <div
+              className="flex flex-1 justify-between items-center bg-gray-200 py-2 px-4"
+              style={{ borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
+            >
+              <div className="flex gap-5">
+                <Label style={{ fontWeight: 600, fontSize: "16px" }}>
+                  Quick Record
+                </Label>
+                <Label>Operated by: {item?.user_name}</Label>
+              </div>
+              <div className="flex gap-5">
                 <Label>
                   {moment(new Date(item.created_at)).format(
                     "YYYY-MM-DD hh:mm A"
                   )}
                 </Label>
+                {selectedDelete === item.id ? (
+                  <Spinner size={16} />
+                ) : (
+                  <Trash2
+                    size={16}
+                    color="red"
+                    className="hover:opacity-70 cursor-pointer"
+                    onClick={() => handleDelete(item.id)}
+                  />
+                )}
               </div>
-            </CardHeader>
-            <CardContent className="p-4">
-              <p>{item.feedback}</p>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+          </CardHeader>
+          <CardContent className="p-4">
+            <p>{item.feedback}</p>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }
