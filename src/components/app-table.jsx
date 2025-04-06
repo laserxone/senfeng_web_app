@@ -1,31 +1,16 @@
 "use client";
 
 import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-  PaginationState,
 } from "@tanstack/react-table";
 import {
-  ArrowUpDown,
-  BadgeCheck,
-  Check,
-  ChevronDown,
   ChevronLeftIcon,
   ChevronRightIcon,
-  ChevronsRight,
-  ChevronsUpDown,
-  CircleArrowRight,
-  CircleDashed,
-  Filter,
-  MoreHorizontal,
 } from "lucide-react";
 
 import {
@@ -34,16 +19,7 @@ import {
 } from "@radix-ui/react-icons";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -54,62 +30,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  useCallback,
-  useEffect,
-  useImperativeHandle,
   useRef,
   useState,
 } from "react";
 
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { z } from "zod";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -118,7 +42,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { debounce } from "@/lib/debounce";
 import Spinner from "./ui/spinner";
 
 const PageTable = ({
@@ -127,10 +50,6 @@ const PageTable = ({
   data,
   totalItems,
   pageSizeOptions = [10, 20, 30, 40, 50],
-  searchItem,
-  searchName,
-  ref,
-  tableHeader,
   disableInput = false,
   totalCustomerText,
   totalCustomer,
@@ -145,7 +64,7 @@ const PageTable = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const inputRef = useRef();
-
+  const [search, setSearch] = useState("");
   const paginationState = {
     pageIndex: currentPage - 1,
     pageSize: pageSize,
@@ -174,6 +93,8 @@ const PageTable = ({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+
+    globalFilterFn: customGlobalFilter,
     pageCount: pageCount,
     state: {
       sorting,
@@ -181,47 +102,41 @@ const PageTable = ({
       columnVisibility,
       rowSelection,
       pagination: paginationState,
+      globalFilter: search,
     },
     onPaginationChange: handlePaginationChange,
     // manualPagination: true,
     // manualFiltering: true
   });
 
-  useImperativeHandle(
-    ref,
-    () => {
-      return {
-        handleClear() {
-          tableHeader.map((item) => {
-            table.getColumn(item.value?.toLowerCase())?.setFilterValue("");
-          });
-        },
-        handleLocalInput() {
-          table.getColumn("qty")?.setFilterValue("00");
-        },
-      };
-    },
-    []
-  );
+ 
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex w-full flex-wrap gap-4 items-center ">
         {!disableInput && (
           <Input
-            ref={inputRef}
-            placeholder={`${searchName}`}
-            value={
-              searchItem
-                ? table.getColumn(searchItem).getFilterValue() ?? ""
-                : ""
-            }
+            value={search}
+            placeholder={`Search...`}
             onChange={(event) => {
-              searchItem &&
-                table.getColumn(searchItem).setFilterValue(event.target.value);
+              setSearch(event.target.value);
             }}
             className="w-[60vw] max-w-sm"
           />
+          // <Input
+          //   ref={inputRef}
+          //   placeholder={`${searchName}`}
+          //   value={
+          //     searchItem
+          //       ? table.getColumn(searchItem).getFilterValue() ?? ""
+          //       : ""
+          //   }
+          //   onChange={(event) => {
+          //     searchItem &&
+          //       table.getColumn(searchItem).setFilterValue(event.target.value);
+          //   }}
+          //   className="w-[60vw] max-w-sm"
+          // />
         )}
 
         {children}
@@ -272,7 +187,13 @@ const PageTable = ({
                       colSpan={columns.length}
                       className="h-24 text-center"
                     >
-                      {loading ? <div className="flex flex-1 justify-center"><Spinner /></div> : "No results."}
+                      {loading ? (
+                        <div className="flex flex-1 justify-center">
+                          <Spinner />
+                        </div>
+                      ) : (
+                        "No results."
+                      )}
                     </TableCell>
                   </TableRow>
                 )}
@@ -379,5 +300,15 @@ const PageTable = ({
     </div>
   );
 };
+
+function customGlobalFilter(row, columnId, filterValue) {
+  // Convert the filter value to lowercase for case-insensitive comparison
+  const search = filterValue.toLowerCase();
+
+  // Check if any of the row's values (visible columns) match the search term
+  return row
+    .getAllCells()
+    .some((cell) => String(cell.getValue()).toLowerCase().includes(search));
+}
 
 export default PageTable;

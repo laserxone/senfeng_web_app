@@ -1,87 +1,27 @@
 "use client";
 import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
   ArrowUpDown,
   ChevronsRight,
-  CircleDollarSign,
-  Filter,
-  Loader2,
-  MoreHorizontal,
-  PackageMinus,
-  PackageSearch,
-  Plus,
-  PlusCircle,
+  Loader2
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  useCallback,
   useContext,
   useEffect,
-  useMemo,
   useRef,
-  useState,
+  useState
 } from "react";
-import { Label } from "@/components/ui/label";
 
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import ConfimationDialog from "@/components/alert-dialog";
-import AppCalendar from "@/components/appCalendar";
 import PageTable from "@/components/app-table";
-import { Heading } from "@/components/ui/heading";
-import axios from "axios";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import PageContainer from "@/components/page-container";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  DialogTitle
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Form,
   FormControl,
@@ -90,24 +30,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
-import Dropzone from "@/components/dropzone";
-import { UploadImage } from "@/lib/uploadFunction";
-import moment from "moment";
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@/config/firebase";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
-import { UserContext } from "@/store/context/UserContext";
-import { useDebounce } from "@/hooks/use-debounce";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
-import Link from "next/link";
-import PageContainer from "@/components/page-container";
+import { Heading } from "@/components/ui/heading";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { BASE_URL } from "@/constants/data";
+import { UserContext } from "@/store/context/UserContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 export default function Inventory() {
   return <RenderInventory />;
@@ -183,18 +114,7 @@ header: ({ column }) => {
     },
   ];
 
-  function handleClear() {
-    if (pageTableRef.current) {
-      pageTableRef.current.handleClear();
-      setValue("");
-    }
-  }
-
-  function handleOutOfStock() {
-    if (pageTableRef.current) {
-      pageTableRef.current.handleLocalInput();
-    }
-  }
+ 
 
   const totalStockValue = stock.reduce(
     (total, item) => total + item.qty * Number(item.price),
@@ -284,7 +204,7 @@ header: ({ column }) => {
 
       <div className="flex flex-1">
         <PageTable
-          ref={pageTableRef}
+          
           columns={columns}
           data={stock}
           totalItems={stock.length}

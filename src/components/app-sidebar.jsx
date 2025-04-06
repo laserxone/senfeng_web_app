@@ -95,7 +95,7 @@ export default function AppSidebar() {
         querySnapshot.forEach((doc) => {
           list.push({ ...doc.data(), id: doc.id });
         });
-        setNotification(list);
+        setNotification(list); 
       });
       return () => unsubscribe();
     }

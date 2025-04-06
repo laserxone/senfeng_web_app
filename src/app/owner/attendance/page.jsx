@@ -1,91 +1,32 @@
 "use client";
 import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
   ArrowUpDown,
-  ChevronRight,
-  Filter,
-  MoreHorizontal,
+  Filter
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import ConfimationDialog from "@/components/alert-dialog";
-import AppCalendar from "@/components/appCalendar";
 import PageTable from "@/components/app-table";
-import { Heading } from "@/components/ui/heading";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  DialogTitle
 } from "@/components/ui/dialog";
+import { Heading } from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { UserContext } from "@/store/context/UserContext";
-import axios from "axios";
-import Image from "next/image";
-import { MapProvider } from "@/providers/map-provider";
-import { useTheme } from "next-themes";
-import { GoogleMap, Marker } from "@react-google-maps/api";
-import { UserSearch } from "@/components/user-search";
-import { BASE_URL } from "@/constants/data";
-import moment from "moment";
-import FilterSheet from "@/components/users/filterSheet";
 import Spinner from "@/components/ui/spinner";
+import FilterSheet from "@/components/users/filterSheet";
+import { BASE_URL } from "@/constants/data";
+import { MapProvider } from "@/providers/map-provider";
+import { UserContext } from "@/store/context/UserContext";
+import { GoogleMap, Marker } from "@react-google-maps/api";
+import axios from "axios";
+import moment from "moment";
+import { useTheme } from "next-themes";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -299,12 +240,6 @@ export default function Page() {
     },
   ];
 
-  function handleClear() {
-    if (pageTableRef.current) {
-      pageTableRef.current.handleClear();
-      setValue("");
-    }
-  }
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -320,12 +255,10 @@ export default function Page() {
         onPressCancel={() => setShowConfirmation(false)}
       />
       <PageTable
-        ref={pageTableRef}
+        
         columns={columns}
         data={data}
         totalItems={data.length}
-        searchItem={value.toLowerCase()}
-        searchName={value ? `Search ${value}...` : "Select filter first..."}
         tableHeader={tableHeader}
         onRowClick={(val) => {
           setSelectedAttendance(val);
@@ -334,41 +267,6 @@ export default function Page() {
       >
         <div className=" flex justify-between">
           <div className="flex gap-4">
-            <Select
-              onValueChange={(val) => {
-                setValue(val);
-              }}
-              value={value}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select filter..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {tableHeader.map((framework) => (
-                    <SelectItem
-                      key={framework.value}
-                      value={framework.value}
-                      onClick={() => {
-                        setValue(
-                          framework.value === value ? "" : framework.value
-                        );
-                      }}
-                    >
-                      {framework.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-
-            <Button
-              onClick={() => {
-                handleClear();
-              }}
-            >
-              Clear
-            </Button>
 
             <Button
               onClick={() => setFilterVisible(true)}

@@ -36,7 +36,9 @@ import {
   Users,
   UserX2Icon,
   X,
-  Container
+  Container,
+  BookText,
+  BadgeDollarSign
 } from 'lucide-react';
 
 
@@ -78,7 +80,8 @@ export const Icons = {
   team: Briefcase, // Team Management
   office: Home, // Office Overview
   stock : Container,
-  dms : FileText,
+  dms : BookText,
+  commission : BadgeDollarSign,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden='true'

@@ -1,18 +1,17 @@
 "use client";
+import AutoScrollMembers from "@/components/autoScroll";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import axios from "axios";
-import { UserContext } from "@/store/context/UserContext";
 import Attendance from "@/components/users/attendance";
 import Reimbursement from "@/components/users/Reimbursement";
-import "./styles.css";
-import { GetProfileImage } from "@/lib/getProfileImage";
-import moment from "moment";
 import { BASE_URL } from "@/constants/data";
-import AutoScrollMembers from "@/components/autoScroll";
+import { GetProfileImage } from "@/lib/getProfileImage";
+import { UserContext } from "@/store/context/UserContext";
+import axios from "axios";
+import moment from "moment";
+import { useCallback, useContext, useEffect, useState } from "react";
+import "./styles.css";
 
 export default function Page() {
   const [data, setData] = useState();

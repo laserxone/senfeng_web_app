@@ -293,12 +293,7 @@ header: ({ column }) => {
     },
   ];
 
-  function handleClear() {
-    if (pageTableRef.current) {
-      pageTableRef.current.handleClear();
-      setValue("");
-    }
-  }
+
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -314,51 +309,15 @@ header: ({ column }) => {
         onPressCancel={() => setShowConfirmation(false)}
       />
       <PageTable
-        ref={pageTableRef}
+        
         columns={columns}
         data={data}
         totalItems={data.length}
-        searchItem={value.toLowerCase()}
-        searchName={value ? `Search ${value}...` : "Select filter first..."}
+      
         tableHeader={tableHeader}
       >
         <div className=" flex justify-between">
           <div className="flex gap-4">
-            <Select
-              onValueChange={(val) => {
-                setValue(val);
-              }}
-              value={value}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select filter..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {tableHeader.map((framework) => (
-                    <SelectItem
-                      key={framework.value}
-                      value={framework.value}
-                      onClick={() => {
-                        setValue(
-                          framework.value === value ? "" : framework.value
-                        );
-                      }}
-                    >
-                      {framework.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-
-            <Button
-              onClick={() => {
-                handleClear();
-              }}
-            >
-              Clear
-            </Button>
 
             <Button
               onClick={() => setFilterVisible(true)}

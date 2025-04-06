@@ -1,40 +1,9 @@
 "use client";
-import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
-  ArrowBigDownDash,
-  ArrowUpDown,
-  ChevronsRight,
-  Filter,
-  Loader2,
-  MoreHorizontal,
-  Trash,
-  Trash2,
-} from "lucide-react";
-import { BASE_URL } from "@/constants/data";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Label } from "@/components/ui/label";
+import { BASE_URL } from "@/constants/data";
+import { ArrowUpDown, Trash2 } from "lucide-react";
 import {
   useCallback,
   useContext,
@@ -43,76 +12,41 @@ import {
   useRef,
   useState,
 } from "react";
-import { Label } from "@/components/ui/label";
 
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import ConfimationDialog from "@/components/alert-dialog";
-import AppCalendar from "@/components/appCalendar";
 import PageTable from "@/components/app-table";
+import SalaryPdf from "@/components/salaryPdf";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Heading } from "@/components/ui/heading";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Textarea } from "@/components/ui/textarea";
-import Dropzone from "@/components/dropzone";
-import axios from "axios";
-import { Controlled as ControlledZoom } from "react-medium-image-zoom";
-import "react-medium-image-zoom/dist/styles.css";
-import exportToExcel from "@/lib/exportToExcel";
-import { Title } from "@radix-ui/react-dialog";
-import { UserSearch } from "@/components/user-search";
-import moment from "moment";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UploadImage } from "@/lib/uploadFunction";
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@/config/firebase";
-import { UserContext } from "@/store/context/UserContext";
-import FilterSheet from "@/components/users/filterSheet";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import Spinner from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { addYears, format, setMonth, setYear, startOfMonth } from "date-fns";
-import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
+import { UserSearch } from "@/components/user-search";
+import { storage } from "@/config/firebase";
 import { useToast } from "@/hooks/use-toast";
+import { UserContext } from "@/store/context/UserContext";
+import axios from "axios";
+import { format, setMonth } from "date-fns";
+import { getDownloadURL, ref } from "firebase/storage";
+import moment from "moment";
 import { FaRegFilePdf } from "react-icons/fa";
-import SalaryPdf from "@/components/salaryPdf";
+import { Controlled as ControlledZoom } from "react-medium-image-zoom";
+import "react-medium-image-zoom/dist/styles.css";
 
-import { pdf } from "@react-pdf/renderer";
 import AccountsPdf from "@/components/accountsPdf";
+import { pdf } from "@react-pdf/renderer";
 
 export default function Page() {
   return (
@@ -162,7 +96,7 @@ const SalaryComponent = () => {
   const [absentsFine, setAbsentsFine] = useState(0);
   const [payable, setPayable] = useState(0);
   const [attendanceData, setAttendanceData] = useState([]);
-  const [accountsLoading, setAccountsLoading] = useState(false)
+  const [accountsLoading, setAccountsLoading] = useState(false);
   const { toast } = useToast();
   const years = Array.from(
     { length: 20 },
@@ -246,6 +180,16 @@ const SalaryComponent = () => {
             setForm((prevState) => ({
               ...prevState,
               reimbursement: totalAmount,
+            }));
+          }
+          if (response.data?.commission) {
+            const totalCommission = response.data?.commission.reduce(
+              (sum, item) => sum + Number(item.commission_amount),
+              0
+            );
+            setForm((prevState) => ({
+              ...prevState,
+              commission: totalCommission,
             }));
           }
         }
@@ -394,22 +338,29 @@ const SalaryComponent = () => {
   }
 
   async function handleAccounts() {
-    setAccountsLoading(true)
-    axios.get(`${BASE_URL}/accounts?month=${selectedMonth}&year=${selectedYear}`)
-    .then(async(response)=>{
-      const apiData = response.data
-      const totalPayments = apiData.reduce(
-        (sum, payment) => sum + Number(payment.payable),
-        0
-      );
-      const blob = await pdf(<AccountsPdf data={apiData} total={totalPayments} headings={apiData.length > 0 ? apiData[0].salary_month :{}}/>).toBlob();
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
-      setTimeout(() => URL.revokeObjectURL(url), 600000);
-    }).finally(()=>{
-      setAccountsLoading(false)
-    })
-    
+    setAccountsLoading(true);
+    axios
+      .get(`${BASE_URL}/accounts?month=${selectedMonth}&year=${selectedYear}`)
+      .then(async (response) => {
+        const apiData = response.data;
+        const totalPayments = apiData.reduce(
+          (sum, payment) => sum + Number(payment.payable),
+          0
+        );
+        const blob = await pdf(
+          <AccountsPdf
+            data={apiData}
+            total={totalPayments}
+            headings={apiData.length > 0 ? apiData[0].salary_month : {}}
+          />
+        ).toBlob();
+        const url = URL.createObjectURL(blob);
+        window.open(url, "_blank");
+        setTimeout(() => URL.revokeObjectURL(url), 600000);
+      })
+      .finally(() => {
+        setAccountsLoading(false);
+      });
   }
 
   return (
@@ -470,22 +421,19 @@ const SalaryComponent = () => {
         </div>
         {UserState.value.data?.id && (
           <>
-          <Button
-            disabled={!user}
-            onClick={() => handleGenerate()}
-            className="mt-6"
-          >
-            {loading && <Spinner />} Generate
-          </Button>
             <Button
-            onClick={() => handleAccounts()}
-            className="mt-6"
-          >
-            {accountsLoading && <Spinner />} To Accounts
-          </Button>
+              disabled={!user}
+              onClick={() => handleGenerate()}
+              className="mt-6"
+            >
+              {loading && <Spinner />} Generate
+            </Button>
+            <Button onClick={() => handleAccounts()} className="mt-6">
+              {accountsLoading && <Spinner />} To Accounts
+            </Button>
           </>
         )}
-       
+
         {data?.user && (
           <>
             <Button onClick={() => handleGenerate()} className="mt-6">
@@ -507,8 +455,6 @@ const SalaryComponent = () => {
                 }}
               />
             </div>
-
-           
           </>
         )}
       </div>
@@ -1075,28 +1021,31 @@ const RecordComponent = () => {
 
         return (
           <div className="flex gap-4">
-          <FaRegFilePdf
-            onClick={() => handleDownload(row.original)}
-            className="h-7 w-7 text-red-500"
-          />
-          <Trash2 
-          onClick={() => handleDelete(row.original.id)}
-          className="h-7 w-7 text-red-500"/>
+            <FaRegFilePdf
+              onClick={() => handleDownload(row.original)}
+              className="h-7 w-7 text-red-500"
+            />
+            <Trash2
+              onClick={() => handleDelete(row.original.id)}
+              className="h-7 w-7 text-red-500"
+            />
           </div>
         );
       },
     },
   ];
 
-  async function handleDelete(id){
-    if(!id) return 
-    setLoading(true)
-    axios.delete(`${BASE_URL}/record/${id}`)
-    .then(async()=>{
-      await fetchData()
-    }).finally(()=>{
-      setLoading(false)
-    })
+  async function handleDelete(id) {
+    if (!id) return;
+    setLoading(true);
+    axios
+      .delete(`${BASE_URL}/record/${id}`)
+      .then(async () => {
+        await fetchData();
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }
 
   async function handleDownload(item) {

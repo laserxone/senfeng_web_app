@@ -1,119 +1,52 @@
 "use client";
 import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
-  ArrowUpDown,
-  Check,
-  ChevronDown,
-  ChevronsRight,
-  ChevronsUpDown,
-  CircleArrowRight,
-  MoreHorizontal,
+  ArrowUpDown
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useContext, useEffect, useRef, useState } from "react";
 
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  DialogTitle
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { z } from "zod";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
+  FormMessage
 } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import PageTable from "@/components/app-table";
+import AppCalendar from "@/components/appCalendar";
+import { RequiredStar } from "@/components/RequiredStar";
+import { Heading } from "@/components/ui/heading";
 import {
   Select,
-  SelectTrigger,
   SelectContent,
   SelectGroup,
-  SelectValue,
   SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import PageContainer from "@/components/page-container";
-import { Heading } from "@/components/ui/heading";
-import { Textarea } from "@/components/ui/textarea";
-import axios from "axios";
-import Link from "next/link";
-import { BASE_URL } from "@/constants/data";
-import { startHolyLoader } from "holy-loader";
-import { useRouter } from "next/navigation";
-import AppCalendar from "@/components/appCalendar";
 import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import { BASE_URL } from "@/constants/data";
 import { useToast } from "@/hooks/use-toast";
-import { RequiredStar } from "@/components/RequiredStar";
-import moment from "moment";
 import { UserContext } from "@/store/context/UserContext";
+import axios from "axios";
+import { startHolyLoader } from "holy-loader";
+import moment from "moment";
+import { useRouter } from "next/navigation";
 
 const columns = [
   {
@@ -233,13 +166,7 @@ export default function Page() {
     });
   }
 
-  function handleClear() {
-    if (pageTableRef.current) {
-      pageTableRef.current.handleClear();
-      setValue("");
-    }
-  }
-
+ 
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-center justify-between">
@@ -254,12 +181,11 @@ export default function Page() {
       </div>
       <PageTable
         loading={loading}
-        ref={pageTableRef}
+        
         columns={columns}
         data={data}
         totalItems={data.length}
-        searchItem={value.toLowerCase()}
-        searchName={value ? `Search ${value}...` : "Select filter first..."}
+       
         tableHeader={tableHeader}
         onRowClick={(val) => {
           if (val.id) {
@@ -268,43 +194,7 @@ export default function Page() {
           }
         }}
       >
-        <div className=" flex flex-wrap gap-4 justify-between">
-          <div className="flex flex-wrap gap-4">
-            <Select onValueChange={setValue} value={value}>
-              <SelectTrigger className="w-[200px] justify-between">
-                {value
-                  ? tableHeader.find((framework) => framework.value === value)
-                      ?.label
-                  : "Select filter..."}
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {tableHeader.map((framework) => (
-                    <SelectItem
-                      key={framework.value}
-                      value={framework.value}
-                      onClick={() => {
-                        setValue(
-                          framework.value === value ? "" : framework.value
-                        );
-                      }}
-                    >
-                      {framework.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-
-            <Button
-              onClick={() => {
-                handleClear();
-              }}
-            >
-              Clear
-            </Button>
-          </div>
-        </div>
+       
       </PageTable>
 
       <AddUserDialog

@@ -1,103 +1,22 @@
 "use client";
 import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
   ArrowUpDown,
-  Check,
-  ChevronDown,
-  ChevronsRight,
-  ChevronsUpDown,
-  CircleArrowRight,
-  DeleteIcon,
-  MoreHorizontal,
-  Star,
-  Trash,
-  Trash2,
+  Trash
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useContext, useEffect, useRef, useState } from "react";
 
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { z } from "zod";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import PageTable from "@/components/app-table";
+import AddCustomerDialog from "@/components/addCustomer";
+import AddQuickAction from "@/components/addQuickAction";
 import ConfimationDialog from "@/components/alert-dialog";
+import PageTable from "@/components/app-table";
 import AppCalendar from "@/components/appCalendar";
+import PageContainer from "@/components/page-container";
+import { Heading } from "@/components/ui/heading";
 import {
   Select,
   SelectContent,
@@ -106,21 +25,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heading } from "@/components/ui/heading";
-import { useRouter } from "next/navigation";
-import PageContainer from "@/components/page-container";
-import axios from "axios";
-import Link from "next/link";
-import { toast } from "@/hooks/use-toast";
-import { CitiesSearch } from "@/components/cities-search";
-import { IndustrySearch } from "@/components/industry-search";
-import { UserContext } from "@/store/context/UserContext";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle
+} from "@/components/ui/sheet";
 import { BASE_URL } from "@/constants/data";
-import AddCustomerDialog from "@/components/addCustomer";
-import moment from "moment";
+import { toast } from "@/hooks/use-toast";
+import { UserContext } from "@/store/context/UserContext";
+import axios from "axios";
 import { startHolyLoader } from "holy-loader";
-import AddQuickAction from "@/components/addQuickAction";
+import moment from "moment";
+import { useRouter } from "next/navigation";
 
 const tableHeader = [
   {
@@ -210,6 +130,7 @@ export default function CustomerMainPage() {
       },
       cell: ({ row }) => <div className="ml-2">{row.getValue("owner")}</div>,
     },
+ 
     {
       accessorKey: "name",
       filterFn: "includesString",
@@ -245,6 +166,7 @@ export default function CustomerMainPage() {
     {
       accessorKey: "industry",
       filterFn: "includesString",
+      enableGlobalFilter: true,
       header: ({ column }) => {
         return (
           <Button
@@ -259,9 +181,28 @@ export default function CustomerMainPage() {
       cell: ({ row }) => <div>{row.getValue("industry")}</div>,
     },
 
+  
+
+    {
+      accessorKey: "location",
+      filterFn: "includesString",
+      enableGlobalFilter: true,
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Location
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("location")}</div>,
+    },
     {
       accessorKey: "customer_group",
-
+      enableGlobalFilter: true,
       filterFn: "includesString",
       header: ({ column }) => {
         return (
@@ -276,25 +217,6 @@ export default function CustomerMainPage() {
       },
       cell: ({ row }) => <div>{row.getValue("customer_group")}</div>,
     },
-
-    {
-      accessorKey: "location",
-
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Location
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div>{row.getValue("location")}</div>,
-    },
-
     {
       accessorKey: "machines",
       filterFn: "includesString",
@@ -353,31 +275,7 @@ export default function CustomerMainPage() {
               <Trash size={16} />
             </Button>
           )
-          // <DropdownMenu>
-          //   <DropdownMenuTrigger asChild>
-          //     <Button variant="ghost" className="p-0 w-8">
-          //       <MoreHorizontal className="h-4 w-4" />
-          //     </Button>
-          //   </DropdownMenuTrigger>
-          //   <DropdownMenuContent align="end">
-          //     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          //     <Link   href={`customer/detail?id=${currentItem.id}`}>
-          //     <DropdownMenuItem
-
-          //       className="hover:cursor-pointer"
-
-          //     >
-          //       View
-          //     </DropdownMenuItem>
-          //     </Link>
-          //     <DropdownMenuItem
-          //       className="hover:cursor-pointer"
-          //       onClick={() => setShowConfirmation(true)}
-          //     >
-          //       Delete
-          //     </DropdownMenuItem>
-          //   </DropdownMenuContent>
-          // </DropdownMenu>
+     
         );
       },
     },
@@ -385,10 +283,7 @@ export default function CustomerMainPage() {
 
   function handleClear() {
     setAdditionalFilter("");
-    if (pageTableRef.current) {
-      pageTableRef.current.handleClear();
-      setValue("");
-    }
+   
   }
 
   async function handleDelete(id) {
@@ -415,6 +310,8 @@ export default function CustomerMainPage() {
       ? item.member === true
       : additionalFilter == "unassigned"
       ? !item.member === true
+      : additionalFilter == "unsold"
+      ? !item.machines
       : true
   );
 
@@ -457,10 +354,10 @@ export default function CustomerMainPage() {
           />
 
           <AddQuickAction
-            data={data.filter((item)=> !item.ownership)}
+            data={data.filter((item) => !item.ownership)}
             visible={quickAction}
             onClose={setQuickAction}
-            onRefresh={(id, ownership)=>{
+            onRefresh={(id, ownership) => {
               setData((prev) => {
                 const updatedData = prev.map((item) => {
                   if (item.id === id) {
@@ -477,12 +374,11 @@ export default function CustomerMainPage() {
         <PageTable
           totalCustomerText={"Total Customers"}
           totalCustomer={filteredData.length}
-          ref={pageTableRef}
+          
           columns={columns}
           data={filteredData}
           totalItems={filteredData.length}
-          searchItem={value.toLowerCase()}
-          searchName={value ? `Search ${value}...` : "Select filter first..."}
+        
           tableHeader={tableHeader}
           onRowClick={(val) => {
             if (val.id) {
@@ -497,28 +393,7 @@ export default function CustomerMainPage() {
         >
           <div className=" flex justify-between">
             <div className="flex gap-4">
-              <Select onValueChange={setValue} value={value}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Select filter..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {tableHeader.map((framework) => (
-                      <SelectItem
-                        key={framework.value}
-                        value={framework.value}
-                        onClick={() => {
-                          setValue(
-                            framework.value === value ? "" : framework.value
-                          );
-                        }}
-                      >
-                        {framework.label}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+            
 
               {/* <div className="flex items-center gap-2">
 
@@ -543,6 +418,10 @@ export default function CustomerMainPage() {
                       {
                         value: "unassigned",
                         label: "Unassigned",
+                      },
+                      {
+                        value: "unsold",
+                        label: "Unsold Customers",
                       },
                     ].map((framework) => (
                       <SelectItem

@@ -4,12 +4,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
 import { db } from "@/config/firebase";
 import { NotificationContext } from "@/store/context/NotificationContext";
+import { UserContext } from "@/store/context/UserContext";
 import { doc, updateDoc } from "firebase/firestore";
 import { Bell, CheckCircle } from "lucide-react";
+import Link from "next/link";
 import { useContext } from "react";
 
 export default function Notification() {
   const { state: NotificationState } = useContext(NotificationContext);
+  const {state : UserState} = useContext(UserContext)
 
   const markAsRead = async (id) => {
     await updateDoc(doc(db, "Notification", id), {
@@ -46,15 +49,17 @@ export default function Notification() {
                 key={notification.id}
                 className="border p-3 flex items-center justify-between"
               >
-                <CardContent className="flex items-center space-x-3">
+                <CardContent className="flex items-center space-x-3 p-0">
                   <Bell className="w-5 h-5 text-blue-500" />
+                  <Link href={`/${UserState.value.data?.base_route}/${notification.page}`}>
                   <span
                     className={
                       notification.read ? "text-gray-500" : "text-black font-medium"
                     }
                   >
-                    {notification.message}
+                    {notification.title}
                   </span>
+                  </Link>
                 </CardContent>
                 {!notification.read && (
                   <Button

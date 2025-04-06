@@ -1,6 +1,4 @@
-import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Image, Svg, Path } from '@react-pdf/renderer';
-import { FaPhone, FaGlobe } from 'react-icons/fa';
+import { Document, Image, Page, Path, StyleSheet, Svg, Text, View } from '@react-pdf/renderer';
 import moment from 'moment';
 
 const styles = StyleSheet.create({

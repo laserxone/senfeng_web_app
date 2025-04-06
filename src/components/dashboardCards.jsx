@@ -1,4 +1,3 @@
-import { Card, CardHeader, CardContent, CardTitle } from "./ui/card";
 
 export const MachinesSoldCard = ({ value, percentage }) => {
   return (

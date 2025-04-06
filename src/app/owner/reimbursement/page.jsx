@@ -1,38 +1,13 @@
 "use client";
-import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { BASE_URL } from "@/constants/data";
 import {
   ArrowUpDown,
-  ChevronsRight,
   Filter,
   Loader2,
-  MoreHorizontal,
-  Trash,
+  Trash
 } from "lucide-react";
-import { BASE_URL } from "@/constants/data";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   useCallback,
   useContext,
@@ -41,33 +16,18 @@ import {
   useRef,
   useState,
 } from "react";
-import { Label } from "@/components/ui/label";
 
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import ConfimationDialog from "@/components/alert-dialog";
-import AppCalendar from "@/components/appCalendar";
 import PageTable from "@/components/app-table";
-import { Heading } from "@/components/ui/heading";
+import AppCalendar from "@/components/appCalendar";
+import Dropzone from "@/components/dropzone";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -76,31 +36,31 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Heading } from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle
+} from "@/components/ui/sheet";
+import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
-import Dropzone from "@/components/dropzone";
+import { UserSearch } from "@/components/user-search";
+import FilterSheet from "@/components/users/filterSheet";
+import { storage } from "@/config/firebase";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
+import exportToExcel from "@/lib/exportToExcel";
+import { UploadImage } from "@/lib/uploadFunction";
+import { UserContext } from "@/store/context/UserContext";
+import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
+import { getDownloadURL, ref } from "firebase/storage";
+import moment from "moment";
+import { useForm } from "react-hook-form";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
-import exportToExcel from "@/lib/exportToExcel";
-import { Title } from "@radix-ui/react-dialog";
-import { UserSearch } from "@/components/user-search";
-import moment from "moment";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UploadImage } from "@/lib/uploadFunction";
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@/config/firebase";
-import { UserContext } from "@/store/context/UserContext";
-import FilterSheet from "@/components/users/filterSheet";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
-import Spinner from "@/components/ui/spinner";
+import { z } from "zod";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -304,6 +264,22 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
+      <div className="flex justify-between">
+        <Heading title="Reimbursement" description="Manage reimbursements" />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency: "PKR",
+              }).format(total)}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
       <ConfimationDialog
         open={showConfirmation}
         title={"Are you sure you want to delete?"}
@@ -353,21 +329,6 @@ export default function Page() {
 
           <div className="flex flex-1 justify-between items-center">
             <Button onClick={handleDownload}>Download</Button>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Amount
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "PKR",
-                  }).format(total)}
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </PageTable>
       </div>
@@ -507,7 +468,7 @@ const ImageSheet = ({
               ) : (
                 <Trash size={16} />
               )}
-            </Button> 
+            </Button>
 
             <strong>Submitted by</strong>
             <p>{submittedBy || "N/A"}</p>
@@ -573,7 +534,9 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
   async function onSubmit(values) {
     setLoading(true);
     try {
-      const name = `${values.submitted_by}/reimbursement/${moment().valueOf().toString()}.png`;
+      const name = `${values.submitted_by}/reimbursement/${moment()
+        .valueOf()
+        .toString()}.png`;
       const imgRef = await UploadImage(values.image, name);
       const response = await axios.post(`${BASE_URL}/reimbursement`, {
         amount: values.amount,

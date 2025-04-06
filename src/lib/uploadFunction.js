@@ -1,14 +1,14 @@
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { storage } from "../config/firebase";
 
-export function UploadImage(image, name) {
+export function UploadImage(image, name, contentType = "image/png") {
   return new Promise(async (resolve, reject) => {
     try {
       const response = await fetch(image);
       const blob = await response.blob();
 
       const metadata = {
-        contentType: "image/png",
+        contentType: contentType,
       };
 
       const storageRef = ref(storage, name);

@@ -1,4 +1,24 @@
 "use client";
+import PageContainer from "@/components/page-container";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowUpDown,
   ClipboardList,
@@ -7,9 +27,6 @@ import {
   Wrench,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import PageContainer from "@/components/page-container";
 import {
   memo,
   useCallback,
@@ -19,58 +36,41 @@ import {
   useRef,
   useState,
 } from "react";
-import { promise, z } from "zod";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { z } from "zod";
 
+import AddPayment from "@/components/addPayment";
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
-import { useToast } from "@/hooks/use-toast";
-import axios from "axios";
+import DropzoneMulti from "@/components/dropzone-multi";
+import EditMachine from "@/components/editMachine";
+import EditPayment from "@/components/editPayment";
+import InvoicePDF from "@/components/invoicepdf";
+import { Card, CardContent } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import "react-medium-image-zoom/dist/styles.css";
-import { Controlled as ControlledZoom } from "react-medium-image-zoom";
-import { Separator } from "@/components/ui/separator";
+import Spinner from "@/components/ui/spinner";
+import { storage } from "@/config/firebase";
+import { BASE_URL, Colors } from "@/constants/data";
+import { useToast } from "@/hooks/use-toast";
+import { debounce } from "@/lib/debounce";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
+import { UploadImage } from "@/lib/uploadFunction";
+import { UserContext } from "@/store/context/UserContext";
+import { pdf } from "@react-pdf/renderer";
+import axios from "axios";
+import { getDownloadURL, ref } from "firebase/storage";
+import moment from "moment";
 import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import "pdfjs-dist/build/pdf.worker";
-import { debounce } from "@/lib/debounce";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import DropzoneMulti from "@/components/dropzone-multi";
-import moment from "moment";
-import EditMachine from "@/components/editMachine";
-import { Card, CardContent } from "@/components/ui/card";
-import AddPayment from "@/components/addPayment";
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@/config/firebase";
-import EditPayment from "@/components/editPayment";
-import { UploadImage } from "@/lib/uploadFunction";
-import { BASE_URL, Colors } from "@/constants/data";
-import { UserContext } from "@/store/context/UserContext";
-import InvoicePDF from "@/components/invoicepdf";
-import { pdf } from "@react-pdf/renderer";
-import Spinner from "@/components/ui/spinner";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
+import { Controlled as ControlledZoom } from "react-medium-image-zoom";
+import "react-medium-image-zoom/dist/styles.css";
 
 export default function Machine() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -350,22 +350,7 @@ export default function Machine() {
             >
               Add Payment
             </Button>
-            <AddPayment
-              customer_id={data?.customer?.id}
-              visible={addPayment}
-              onClose={setAddPayment}
-              machine_id={id}
-              onRefresh={async () => await fetchData(id)}
-            />
-
-            <EditPayment
-              customer_id={data?.customer?.id}
-              visible={editPayment}
-              onClose={setEditPayment}
-              machine_id={id}
-              data={selectedPayment}
-              onRefresh={async () => await fetchData(id)}
-            />
+            
             <Button
               onClick={() => {
                 if (
@@ -395,10 +380,27 @@ export default function Machine() {
                 Download Ledger
               </Button>
             )}
+
+            <AddPayment
+              customer_id={data?.customer?.id}
+              visible={addPayment}
+              onClose={setAddPayment}
+              machine_id={id}
+              onRefresh={async () => await fetchData(id)}
+            />
+
+            <EditPayment
+              customer_id={data?.customer?.id}
+              visible={editPayment}
+              onClose={setEditPayment}
+              machine_id={id}
+              data={selectedPayment}
+              onRefresh={async () => await fetchData(id)}
+            />
           </div>
         )}
         <PageTable
-          ref={pageTableRef}
+          
           columns={columns}
           data={payments}
           totalItems={payments.length}

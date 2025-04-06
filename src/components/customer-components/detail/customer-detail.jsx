@@ -1,81 +1,46 @@
 "use client";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { FaWhatsapp } from "react-icons/fa";
+import AppCalendar from "@/components/appCalendar";
+import PageContainer from "@/components/page-container";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
 import {
-  Mail,
-  Phone,
-  MapPin,
-  MessageCircle,
-  Pencil,
-  Loader2,
   Factory,
-  Edit2,
-  Wrench,
+  Loader2,
+  Mail,
+  MapPin,
+  Phone,
   Trash2,
+  Wrench
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Label } from "@/components/ui/label";
-import PageContainer from "@/components/page-container";
 import { useCallback, useEffect, useState } from "react";
-import axios from "axios";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Input } from "@/components/ui/input";
-import { UserSearch } from "@/components/user-search";
-import AppCalendar from "@/components/appCalendar";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+import { FaWhatsapp } from "react-icons/fa";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import AddMachine from "@/components/addMachine";
+import ConfimationDialog from "@/components/alert-dialog";
+import EditCustomerDialog from "@/components/editCustomer";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { CheckCircle, Clock, AlertCircle } from "lucide-react";
-import { useContext } from "react";
-import { UserContext } from "@/store/context/UserContext";
-import Link from "next/link";
-import moment from "moment";
-import { Separator } from "@/components/ui/separator";
-import { CitiesSearch } from "@/components/cities-search";
-import { IndustrySearch } from "@/components/industry-search";
-import EditCustomerDialog from "@/components/editCustomer";
-import AddMachine from "@/components/addMachine";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import Spinner from "@/components/ui/spinner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BASE_URL } from "@/constants/data";
 import { debounce } from "@/lib/debounce";
-import ConfimationDialog from "@/components/alert-dialog";
+import { UserContext } from "@/store/context/UserContext";
 import { startHolyLoader } from "holy-loader";
-import Spinner from "@/components/ui/spinner";
+import { CheckCircle, Clock } from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useContext } from "react";
 
 export default function CustomerDetail({ ownership = false }) {
   const search = useSearchParams();

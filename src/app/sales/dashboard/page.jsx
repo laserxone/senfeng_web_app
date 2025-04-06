@@ -1,42 +1,35 @@
 "use client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import AutoScrollMembers from "@/components/autoScroll";
+import {
+  FeedbackTakenCard,
+  MachinesSoldCard,
+} from "@/components/dashboardCards";
+import CustomerEmployee from "@/components/users/customer";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { CheckCircle, Clock, AlertCircle } from "lucide-react";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import axios from "axios";
-import { UserContext } from "@/store/context/UserContext";
-import Link from "next/link";
-import ReimbursementEmployee from "@/components/employee/reimbursement";
-import { Heading } from "@/components/ui/heading";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import CustomerEmployee from "@/components/employee/customer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import VisitTab from "@/components/users/addVisit";
 import Attendance from "@/components/users/attendance";
 import Reimbursement from "@/components/users/Reimbursement";
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@/config/firebase";
-import "./styles.css";
-import { Label } from "@/components/ui/label";
-import { GetProfileImage } from "@/lib/getProfileImage";
-import moment from "moment";
-import { Input } from "@/components/ui/input";
-import VisitTab from "@/components/users/addVisit";
-import {
-  FeedbackTakenCard,
-  MachinesSoldCard,
-} from "@/components/dashboardCards";
 import { BASE_URL } from "@/constants/data";
-import AutoScrollMembers from "@/components/autoScroll";
-import { startHolyLoader } from "holy-loader";
+import { GetProfileImage } from "@/lib/getProfileImage";
+import { UserContext } from "@/store/context/UserContext";
+import axios from "axios";
+import { AlertCircle, CheckCircle, Clock } from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useContext, useEffect, useState } from "react";
+import "./styles.css";
 
 export default function Page() {
   const [data, setData] = useState();

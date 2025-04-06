@@ -1,12 +1,28 @@
 "use client";
 
+import { storage } from "@/config/firebase";
+import { BASE_URL } from "@/constants/data";
+import { toast } from "@/hooks/use-toast";
+import { debounce } from "@/lib/debounce";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
+import { UploadImage } from "@/lib/uploadFunction";
+import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
+import { getDownloadURL, ref } from "firebase/storage";
+import { Loader2, Trash } from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { CitiesSearch } from "./cities-search";
+import Dropzone from "./dropzone";
+import { IndustrySearch } from "./industry-search";
+import StarRating from "./startRating";
+import { Button } from "./ui/button";
+import { Checkbox } from "./ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { ScrollArea } from "./ui/scroll-area";
 import {
   Form,
   FormControl,
@@ -16,25 +32,8 @@ import {
   FormMessage,
 } from "./ui/form";
 import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { Loader2, Star, Trash } from "lucide-react";
 import { Label } from "./ui/label";
-import { CitiesSearch } from "./cities-search";
-import { IndustrySearch } from "./industry-search";
-import { cn } from "@/lib/utils";
-import StarRating from "./startRating";
-import Dropzone from "./dropzone";
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@/config/firebase";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
-import moment from "moment";
-import { UploadImage } from "@/lib/uploadFunction";
-import { toast } from "@/hooks/use-toast";
-import { Checkbox } from "./ui/checkbox";
-import { BASE_URL } from "@/constants/data";
-import { UserContext } from "@/store/context/UserContext";
-import { debounce } from "@/lib/debounce";
-import Link from "next/link";
+import { ScrollArea } from "./ui/scroll-area";
 import { UserSearch } from "./user-search";
 
 const EditCustomerDialog = ({

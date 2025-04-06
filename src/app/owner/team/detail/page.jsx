@@ -1,25 +1,23 @@
 "use client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import AppCalendar from "@/components/appCalendar";
+import ProfilePicture from "@/components/ProfilePicture";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import axios from "axios";
-import { UserContext } from "@/store/context/UserContext";
-import { BASE_URL } from "@/constants/data";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import ProfilePicture from "@/components/ProfilePicture";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
-import AppCalendar from "@/components/appCalendar";
-import Spinner from "@/components/ui/spinner";
-import { useToast } from "@/hooks/use-toast";
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@/config/firebase";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import Zoom from 'react-medium-image-zoom'
-import 'react-medium-image-zoom/dist/styles.css'
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import { storage } from "@/config/firebase";
+import { BASE_URL } from "@/constants/data";
+import { useToast } from "@/hooks/use-toast";
+import { UserContext } from "@/store/context/UserContext";
+import axios from "axios";
+import { getDownloadURL, ref } from "firebase/storage";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import 'react-medium-image-zoom/dist/styles.css';
 
 export default function Page() {
   const [data, setData] = useState();
@@ -41,6 +39,9 @@ export default function Page() {
     cnic: "",
     police: "",
     education: "",
+    resume : "",
+    number : "",
+    kin : ""
   });
   const [form, setForm] = useState({
     basic_salary: "",
@@ -74,6 +75,9 @@ export default function Page() {
             email: apiData?.email,
             name: apiData?.name,
             police: apiData?.police,
+            resume : apiData?.resume,
+            number : apiData?.number || "",
+            kin : apiData?.kin_number || ""
           });
           setChecks({
             branch_expenses_assigned: apiData?.branch_expenses_assigned,
@@ -145,18 +149,26 @@ export default function Page() {
       const [localImage, setLocalImage] = useState(null);
       const [loading, setLoading] = useState(false); // Track loading state
       const localRef = useRef();
+      const [fileUrl, setFileUrl] = useState(null);
+      const [fileName, setFileName] = useState("");
+
+    
 
       useEffect(() => {
-        if (fixedData?.[type]) {
+      
+        if (fixedData[type]) {
           setLoading(true);
-          if (fixedData?.[type].includes("http")) {
-            setLocalImage(fixedData?.[type]);
+          const filePath = fixedData[type];
+          if (filePath.includes("http")) {
+            setFileUrl(filePath);
+            setFileName(filePath.split("/").pop());
             setLoading(false);
           } else {
-            const storageRef = ref(storage, fixedData?.[type]);
+            const storageRef = ref(storage, filePath);
             getDownloadURL(storageRef)
               .then((url) => {
-                setLocalImage(url);
+                setFileUrl(url);
+                setFileName(filePath.split("/").pop());
               })
               .catch((error) => console.error("Error loading image:", error))
               .finally(() => setLoading(false));
@@ -168,20 +180,37 @@ export default function Page() {
         <>
           <Label className="text-bold text-[20px]">{type?.toUpperCase()}</Label>
           {loading ? (
-            <Skeleton className="h-[200px] w-[200px]" />
-          ) : localImage ? (
-            <Zoom>
-              <img src={localImage} className="h-[200px] w-[200px]" />
-            </Zoom>
+            <Skeleton className="h-[50px] w-full" />
           ) : (
-            <div
-              className="h-[200px] w-[200px] flex items-center justify-center 
-                       bg-blue-100 border border-blue-300 rounded-lg 
-                       shadow-md"
-            >
-              <Label className="text-blue-600 text-sm font-medium text-center hover:cursor-pointer">
-                Nil
-              </Label>
+            <div className="flex items-center space-x-4">
+              {!fileUrl ? (
+                <>
+                 <Button variant="outline" asChild>
+                    <a
+                      href={"#"} 
+                      rel="noopener noreferrer"
+                      className="w-full"
+                    >
+                      Nil
+                    </a>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" asChild>
+                    <a
+                      href={fileUrl}
+                      download={fileName}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full"
+                    >
+                      Download {fileName}
+                    </a>
+                  </Button>
+               
+                </>
+              )}
             </div>
           )}
         </>
@@ -260,6 +289,15 @@ export default function Page() {
                 <CardTitle>Additional</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+              <div className="flex flex-col gap-1">
+                  <Label>PHONE NUMBER</Label>
+                 <Input value={fixedData?.number} onChange={()=>{}} disabled/>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <Label>KINSHIP NUMBER</Label>
+                  <Input value={fixedData?.kin} onChange={()=>{}} disabled/>
+                </div>
                 <div className="flex flex-col gap-1">
                   <Label>NOTE</Label>
                   <Textarea
@@ -275,6 +313,8 @@ export default function Page() {
                     onChange={(date) => setJoiningDate(date)}
                   />
                 </div>
+
+              
               </CardContent>
             </Card>
 
@@ -294,10 +334,11 @@ export default function Page() {
             <CardTitle>Documents</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-1 flex-wrap gap-10">
+            <div className="flex flex-1 flex-col space-y-4 ">
               <DocumentCard type={"cnic"} />
               <DocumentCard type={"police"} />
               <DocumentCard type={"education"} />
+              <DocumentCard type={"resume"} />
             </div>
           </CardContent>
         </Card>

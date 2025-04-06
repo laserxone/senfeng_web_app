@@ -1,17 +1,17 @@
 "use client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import React, { useContext, useEffect, useState } from "react";
 import { AreaStats } from "@/components/charts/area_stats/page";
 import { BarStats } from "@/components/charts/bar_stats/page";
 import { Stats } from "@/components/charts/pie_stats/page";
 import { Sale } from "@/components/charts/sales/page";
-import { MapProvider } from "@/providers/map-provider";
 import { CustomerMapComponent } from "@/components/customerMapComponent";
-import axios from "axios";
-import { BASE_URL, PakCities } from "@/constants/data";
-import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BASE_URL, PakCities } from "@/constants/data";
+import { MapProvider } from "@/providers/map-provider";
 import { UserContext } from "@/store/context/UserContext";
+import axios from "axios";
+import Link from "next/link";
+import { useContext, useEffect, useState } from "react";
 
 export default function Page() {
   const [customers, setCustomers] = useState([]);

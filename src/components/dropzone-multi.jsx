@@ -1,9 +1,9 @@
 "use client";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useDropzone } from "react-dropzone";
-import { Label } from "./ui/label";
 import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 
 const DropzoneMulti = ({ onDrop, title, subheading, description, drag, borderColor, value }) => {
   const updateRefs = useRef({});

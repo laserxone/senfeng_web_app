@@ -1,7 +1,15 @@
+import { BASE_URL } from "@/constants/data";
+import { toast } from "@/hooks/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
+import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import AppCalendar from "./appCalendar";
+import { RequiredStar } from "./RequiredStar";
+import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { ScrollArea } from "./ui/scroll-area";
 import {
   Form,
   FormControl,
@@ -11,9 +19,7 @@ import {
   FormMessage,
 } from "./ui/form";
 import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { RequiredStar } from "./RequiredStar";
+import { ScrollArea } from "./ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -21,17 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import AppCalendar from "./appCalendar";
 import { Textarea } from "./ui/textarea";
-import Dropzone from "@/components/dropzone";
-import Image from "next/image";
-import moment from "moment";
-import { UploadImage } from "@/lib/uploadFunction";
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import { BASE_URL } from "@/constants/data";
 
 const EditPayment = ({
   visible,

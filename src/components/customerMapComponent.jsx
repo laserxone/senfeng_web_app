@@ -1,7 +1,7 @@
 "use client";
 
 //Map component Component from library
-import { GoogleMap, InfoBox, InfoWindow, InfoWindowF, Marker } from "@react-google-maps/api";
+import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useState } from "react";
 

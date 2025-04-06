@@ -1,104 +1,39 @@
 "use client";
 import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
   ArrowUpDown,
-  Check,
-  ChevronDown,
-  ChevronsRight,
-  ChevronsUpDown,
-  CircleArrowRight,
-  DeleteIcon,
   Frown,
-  MoreHorizontal,
   Smile,
-  Trash,
-  Trash2,
+  Trash2
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useEffect, useRef, useState } from "react";
 
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogTrigger
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { z } from "zod";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
+  FormMessage
 } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import PageTable from "@/components/app-table";
 import ConfimationDialog from "@/components/alert-dialog";
-import AppCalendar from "@/components/appCalendar";
+import PageTable from "@/components/app-table";
+import { CustomerSearch } from "@/components/customer-search";
+import { Heading } from "@/components/ui/heading";
 import {
   Select,
   SelectContent,
@@ -108,12 +43,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Heading } from "@/components/ui/heading";
-import axios from "axios";
-import Link from "next/link";
-import { CustomerSearch } from "@/components/customer-search";
 import { BASE_URL } from "@/constants/data";
+import axios from "axios";
 import moment from "moment";
+import Link from "next/link";
 
 const tableHeader = [
   {
@@ -263,12 +196,7 @@ export default function Page() {
     },
   ];
 
-  function handleClear() {
-    if (pageTableRef.current) {
-      pageTableRef.current.handleClear();
-      setValue("");
-    }
-  }
+  
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -278,41 +206,15 @@ export default function Page() {
       </div>
 
       <PageTable
-        ref={pageTableRef}
+        
         columns={columns}
         data={data}
         totalItems={data.length}
-        searchItem={value.toLowerCase()}
-        searchName={value ? `Search ${value}...` : "Select filter first..."}
+      
         tableHeader={tableHeader}
-        // filter={true}
-        // onFilterClick={() => setFilterVisible(true)}
+       
       >
-        <div className="flex justify-between">
-          <div className="flex gap-4">
-            <Select onValueChange={setValue} value={value}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select filter..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {tableHeader.map((framework) => (
-                    <SelectItem key={framework.value} value={framework.value}>
-                      {framework.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <Button
-              onClick={() => {
-                handleClear();
-              }}
-            >
-              Clear
-            </Button>
-          </div>
-        </div>
+      
       </PageTable>
 
       <ConfimationDialog

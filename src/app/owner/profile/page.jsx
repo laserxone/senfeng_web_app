@@ -1,32 +1,31 @@
 "use client";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardHeader,
-  CardTitle,
   CardContent,
   CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import { UserContext } from "@/store/context/UserContext";
-import { useContext, useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
-import {
-  getAuth,
-  updatePassword,
-  EmailAuthProvider,
-  reauthenticateWithCredential,
-} from "firebase/auth";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { UserContext } from "@/store/context/UserContext";
+import {
+  EmailAuthProvider,
+  getAuth,
+  reauthenticateWithCredential,
+  updatePassword,
+} from "firebase/auth";
+import { Loader2 } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
 
 export default function Page() {
   const { state: UserState } = useContext(UserContext);

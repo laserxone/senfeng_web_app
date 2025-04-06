@@ -260,12 +260,11 @@ export default function Attendance({ passingData, onFilterReturn, onRefresh }) {
       />
       <div className="flex flex-1 min-h-[600px]">
         <PageTable
-          ref={pageTableRef}
+          
           columns={columns}
           data={data}
           totalItems={data.length}
-          searchItem={value.toLowerCase()}
-          searchName={value ? `Search ${value}...` : "Select filter first..."}
+         
           tableHeader={tableHeader}
           onRowClick={(val) => {
             setSelectedAttendance(val);
@@ -274,33 +273,7 @@ export default function Attendance({ passingData, onFilterReturn, onRefresh }) {
         >
           <div className=" flex justify-between">
             <div className="flex gap-4">
-              <Select
-                onValueChange={(val) => {
-                  setValue(val);
-                }}
-                value={value}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Select filter..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {tableHeader.map((framework) => (
-                      <SelectItem
-                        key={framework.value}
-                        value={framework.value}
-                        onClick={() => {
-                          setValue(
-                            framework.value === value ? "" : framework.value
-                          );
-                        }}
-                      >
-                        {framework.label}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+            
 
               <Button
                 onClick={() => setFilterVisible(true)}
