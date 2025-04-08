@@ -12,6 +12,7 @@ import axios from "axios";
 import moment from "moment";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
+import SalaryRecord from "@/components/users/SalaryRecord";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -138,6 +139,7 @@ export default function Page() {
           <TabsList className="justify-start">
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>  
+            <TabsTrigger value="salary">Salary</TabsTrigger>
           </TabsList>
 
           <TabsContent value="attendance">
@@ -146,10 +148,17 @@ export default function Page() {
           <TabsContent value="reimbursement">
             <RenderReimbursement />
           </TabsContent>
+          <TabsContent value="salary">
+            <Card>
+              <CardContent className="pt-2">
+                <SalaryRecord />
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
 
-      <AutoScrollMembers customers={customers} />
+     {customers.length > 0 && <AutoScrollMembers customers={customers} />}
     </div>
   );
 }

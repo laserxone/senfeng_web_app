@@ -199,6 +199,7 @@ header: ({ column }) => {
 
     {
       id: "actions",
+      header : "Action",
       cell: ({ row }) => {
         const currentItem = row.original;
 

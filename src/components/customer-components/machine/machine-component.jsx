@@ -271,9 +271,10 @@ export default function Machine() {
         const currentItem = row.original;
         const userData = UserState?.value?.data;
         const isSalesOrEngineer =
-          userData?.designation === "Sales" || userData?.designation === "Engineer";
+          userData?.designation === "Sales" ||
+          userData?.designation === "Engineer";
         const isOwner = data?.machine?.sell_by === userData?.id;
-    
+
         if (!isSalesOrEngineer || isOwner) {
           return (
             <EditIcon
@@ -287,10 +288,10 @@ export default function Machine() {
             />
           );
         }
-    
+
         return null; // Explicitly return null if no conditions match
       },
-    }
+    },
   ];
 
   async function handleDownloadLedger() {
@@ -339,7 +340,10 @@ export default function Machine() {
                   if (data?.machine?.sell_by === UserState?.value?.data?.id) {
                     setAddPayment(true);
                   } else {
-                    toast({ title: "You are not allowed to add payment" ,   variant: "destructive", });
+                    toast({
+                      title: "You are not allowed to add payment",
+                      variant: "destructive",
+                    });
                   }
 
                   return;
@@ -350,7 +354,7 @@ export default function Machine() {
             >
               Add Payment
             </Button>
-            
+
             <Button
               onClick={() => {
                 if (
@@ -360,7 +364,10 @@ export default function Machine() {
                   if (data?.machine?.sell_by === UserState?.value?.data?.id) {
                     setEditMachine(true);
                   } else {
-                    toast({ title: "You are not allowed to edit machine",   variant: "destructive", });
+                    toast({
+                      title: "You are not allowed to edit machine",
+                      variant: "destructive",
+                    });
                   }
 
                   return;
@@ -400,7 +407,6 @@ export default function Machine() {
           </div>
         )}
         <PageTable
-          
           columns={columns}
           data={payments}
           totalItems={payments.length}
@@ -459,12 +465,10 @@ const ClientCard = memo(({ data, payment, machine, manager }) => {
         <span className="text-gray-500 text-sm">
           {data?.owner && ` (${data.owner})`}
         </span>
-      
       </h2>
       <h2 className="text-md font-bold text-primary dark:text-white mb-4 flex items-center justify-center">
-      Manager {machine?.sell_by_name  || "NA"}
+        Manager {machine?.sell_by_name || "NA"}
       </h2>
-     
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Machine Info */}
@@ -588,12 +592,15 @@ const ImageSheet = ({
           setLocalImage(url);
         });
       }
+    } else {
+      setLocalImage(null)
     }
   }, [img]);
 
   function handleClose() {
     if (!imageOpen) {
       onClose();
+      setLocalImage(null)
     }
   }
 
@@ -628,7 +635,8 @@ const ImageSheet = ({
       <SheetContent>
         <SheetHeader className="mb-4">
           <SheetTitle>Payment Image</SheetTitle>
-          {UserState.value.data?.designation === "Owner" && (
+          {(UserState.value.data?.designation === "Owner" ||
+            UserState.value.data?.full_access) && (
             <Button
               className="mb-2"
               variant="destructive"
@@ -645,6 +653,7 @@ const ImageSheet = ({
               {deleteLoading ? <Spinner /> : <Trash size={16} />}
             </Button>
           )}
+          {localImage ?
           <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
             <img
               onClick={() => setImageOpen(true)}
@@ -653,6 +662,9 @@ const ImageSheet = ({
               alt="payment-img"
             />
           </ControlledZoom>
+          :
+            <Label>No Image found</Label>
+}
 
           <strong>Note</strong>
           <Label>{note}</Label>

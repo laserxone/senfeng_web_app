@@ -38,7 +38,8 @@ import {
   X,
   Container,
   BookText,
-  BadgeDollarSign
+  BadgeDollarSign,
+  ShieldXIcon,
 } from 'lucide-react';
 
 
@@ -81,6 +82,7 @@ export const Icons = {
   office: Home, // Office Overview
   stock : Container,
   dms : BookText,
+  member : ShieldXIcon,
   commission : BadgeDollarSign,
   gitHub: ({ ...props }) => (
     <svg

@@ -233,18 +233,7 @@ export default function AppSidebar() {
                 <DropdownMenuSeparator />
 
                 <DropdownMenuGroup>
-                  {/* <DropdownMenuItem
-                    onClick={() => {
-                      if (UserState?.value?.data?.designation == "Owner") {
-                        router.push("/owner/account");
-                      } else {
-                        router.push("/employee/account");
-                      }
-                    }}
-                  >
-                    <BadgeCheck />
-                    Account
-                  </DropdownMenuItem> */}
+                 
                   <Link href={`/${UserState?.value?.data?.base_route}/profile`}>
                     <DropdownMenuItem>
                       <CreditCard />

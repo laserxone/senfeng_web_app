@@ -1,22 +1,16 @@
 "use client";
-import {
-  ArrowUpDown,
-  Frown,
-  Smile,
-  Trash2
-} from "lucide-react";
+import { ArrowUpDown, Frown, Smile, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useEffect, useRef, useState } from "react";
-
+import { useContext, useEffect, useState } from "react";
 
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -24,7 +18,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
+  FormMessage,
 } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -44,6 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BASE_URL } from "@/constants/data";
+import { UserContext } from "@/store/context/UserContext";
 import axios from "axios";
 import moment from "moment";
 import Link from "next/link";
@@ -64,27 +59,24 @@ const tableHeader = [
 ];
 
 export default function Page() {
-  const [sorting, setSorting] = useState([]);
-  const [columnFilters, setColumnFilters] = useState([]);
-  const [columnVisibility, setColumnVisibility] = useState({});
-  const [rowSelection, setRowSelection] = useState({});
-  const [openDesignation, setOpenDesignation] = useState(false);
-  const [selectedDesignation, setSelectedDesignation] = useState("");
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState("");
-  const pageTableRef = useRef();
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
+  const { state: UserState } = useContext(UserContext);
 
   useEffect(() => {
     async function fetchData() {
       axios.get(`${BASE_URL}/feedback`).then((response) => {
-        setData(response.data);
+        const temp = response.data.map((item) => {
+          return {
+            ...item,
+            customer_name: item.customer_name || item.customer_owner,
+          };
+        });
+        setData([...temp]);
       });
     }
-    fetchData();
-  }, []);
+    if (UserState.value.data?.id) fetchData();
+  }, [UserState.value.data]);
 
   const columns = [
     {
@@ -101,12 +93,13 @@ export default function Page() {
           </Button>
         );
       },
+
       cell: ({ row }) => {
         const item = row.original;
         return (
           <Link
             className="hover:underline"
-            href={`/owner/customer/detail?id=${item.id}`}
+            href={`/${UserState.value.data?.base_route}/customer/detail?id=${item.id}`}
           >
             <div className="ml-2">{row.getValue("customer_name")}</div>
           </Link>
@@ -114,7 +107,7 @@ export default function Page() {
       },
     },
     {
-      accessorKey: "note",
+      accessorKey: "feedback",
       filterFn: "includesString",
       header: ({ column }) => {
         return (
@@ -127,7 +120,7 @@ export default function Page() {
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("note")}</div>,
+      cell: ({ row }) => <div>{row.getValue("feedback")}</div>,
     },
 
     {
@@ -160,6 +153,23 @@ export default function Page() {
     },
 
     {
+      accessorKey: "user_name",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Taken By
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("user_name")}</div>,
+    },
+
+    {
       accessorKey: "created_at",
       filterFn: "includesString",
       header: ({ column }) => {
@@ -182,40 +192,33 @@ export default function Page() {
       ),
     },
 
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const payment = row.original;
-
-        return (
-          <Button variant="ghost" onClick={() => setShowConfirmation(true)}>
-            <Trash2 className="h-5 w-5 text-red-500" />
-          </Button>
-        );
-      },
-    },
+    // {
+    //   id: "actions",
+    //   header: "Action",
+    //   size: 50,
+    //   cell: ({ row }) => {
+    //     return (
+    //       <Button variant="ghost" onClick={() => setShowConfirmation(true)}>
+    //         <Trash2 className="h-5 w-5 text-red-500" />
+    //       </Button>
+    //     );
+    //   },
+    // },
   ];
-
-  
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-center justify-between">
         <Heading title="Feedback" description="Manage Feedback from clients" />
-        <FeedbackDialog />
+        {/* <FeedbackDialog /> */}
       </div>
 
       <PageTable
-        
         columns={columns}
         data={data}
         totalItems={data.length}
-      
         tableHeader={tableHeader}
-       
-      >
-      
-      </PageTable>
+      ></PageTable>
 
       <ConfimationDialog
         open={showConfirmation}

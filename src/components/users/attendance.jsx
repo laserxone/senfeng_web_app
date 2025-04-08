@@ -1,92 +1,18 @@
 "use client";
 import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
   ArrowUpDown,
-  ChevronRight,
-  Filter,
-  MoreHorizontal,
+  Filter
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { Label } from "@/components/ui/label";
+import { useEffect, useRef, useState } from "react";
 
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { AttendanceDetail } from "@/app/superadmin/attendance/page";
 import ConfimationDialog from "@/components/alert-dialog";
-import AppCalendar from "@/components/appCalendar";
 import PageTable from "@/components/app-table";
-import { Heading } from "@/components/ui/heading";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { UserContext } from "@/store/context/UserContext";
-import axios from "axios";
-import Image from "next/image";
-import { MapProvider } from "@/providers/map-provider";
-import { useTheme } from "next-themes";
-import { GoogleMap, Marker } from "@react-google-maps/api";
-import { UserSearch } from "@/components/user-search";
 import moment from "moment";
-import FilterSheet from "./filterSheet";
-import { BASE_URL } from "@/constants/data";
-import { AttendanceDetail } from "@/app/owner/attendance/page";
 import Spinner from "../ui/spinner";
+import FilterSheet from "./filterSheet";
 
 export default function Attendance({ passingData, onFilterReturn, onRefresh }) {
   const [showConfirmation, setShowConfirmation] = useState(false);

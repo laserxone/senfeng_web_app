@@ -30,6 +30,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
+import SalaryRecord from "@/components/users/SalaryRecord";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -269,6 +270,7 @@ export default function Page() {
             <TabsTrigger value="salary">Salary</TabsTrigger> */}
             <TabsTrigger value="visit">Visit</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
+            <TabsTrigger value="salary">Salary</TabsTrigger>
           </TabsList>
 
           <TabsContent value="newCustomers">
@@ -288,10 +290,17 @@ export default function Page() {
           <TabsContent value="visit">
             <RenderVisitTab />
           </TabsContent>
+          <TabsContent value="salary">
+            <Card>
+              <CardContent className="pt-2">
+                <SalaryRecord />
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
 
-      <AutoScrollMembers customers={customers} />
+      {customers.length > 0 && <AutoScrollMembers customers={customers} />}
     </div>
   );
 }

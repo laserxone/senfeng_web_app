@@ -127,6 +127,7 @@ const AddCustomerDialog = ({
             : ownership
             ? values.ownership
             : undefined,
+        created_by: UserState.value.data?.id,
       });
       toast({ title: "Customer Addedd successfully" });
       await onRefresh();
@@ -175,7 +176,10 @@ const AddCustomerDialog = ({
     }
   };
 
-  const debouncedCheckNumber = useCallback(debounce(checkNumberInDatabase, 1000), []);
+  const debouncedCheckNumber = useCallback(
+    debounce(checkNumberInDatabase, 1000),
+    []
+  );
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>

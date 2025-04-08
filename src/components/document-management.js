@@ -139,6 +139,7 @@ const DocumentManagement = () => {
 
         {
             id: "actions",
+            header : "Action",
             cell: ({ row }) => {
                 const file = row.original;
                 const [deleteLoading, setDeleteLoading] = useState(false)
@@ -167,11 +168,24 @@ const DocumentManagement = () => {
                         } />
 
 
-                        {UserState?.value?.data && UserState?.value?.data?.designation == 'Owner' &&  deleteLoading ? <Spinner className="h-5 w-5" /> : <Trash2 className="h-5 w-5 text-red-500 hover:opacity-50" onClick={async () => {
-                            setDeleteLoading(true)
-                            await handleDelete(file)
-                            setDeleteLoading(false)
-                        }} />}
+                        {
+                            UserState?.value?.data &&
+                            (UserState.value.data.designation === 'Owner' || UserState.value.data.full_access) &&
+                            (
+                                deleteLoading ? (
+                                    <Spinner className="h-5 w-5" />
+                                ) : (
+                                    <Trash2
+                                        className="h-5 w-5 text-red-500 hover:opacity-50"
+                                        onClick={async () => {
+                                            setDeleteLoading(true);
+                                            await handleDelete(file);
+                                            setDeleteLoading(false);
+                                        }}
+                                    />
+                                )
+                            )
+                        }
 
                     </div>
                 );
@@ -186,7 +200,7 @@ const DocumentManagement = () => {
             <div className="flex flex-col space-y-4">
                 <Heading title="Documents Management" description="Manage office documents" />
                 {UserState.value.data &&
-                    UserState.value.data?.designation == 'Owner' && (
+                    UserState.value.data?.dms_write_access && (
                         <div className="flex justify-between mb-6">
                             <input
                                 type="file"

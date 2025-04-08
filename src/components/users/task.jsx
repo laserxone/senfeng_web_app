@@ -121,7 +121,7 @@ import axios from "axios";
 import { CustomerSearch } from "@/components/customer-search";
 import { UserSearch } from "@/components/user-search";
 import moment from "moment";
-import { toast } from "@/hooks/use-toast";
+import { toast, useToast } from "@/hooks/use-toast";
 import FilterSheet from "./filterSheet";
 
 const getSchema = (isClientSelected) =>
@@ -140,6 +140,7 @@ export default function TaskEmployee({ id }) {
   const [selectedTask, setSelectedTask] = useState({});
   const [addTaskVisible, setAddTaskVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -274,6 +275,7 @@ export default function TaskEmployee({ id }) {
   ];
 
   async function fetchData(id, start_date, end_date) {
+    setLoading(true)
     return new Promise((resolve, reject) => {
       axios
         .get(
@@ -285,12 +287,15 @@ export default function TaskEmployee({ id }) {
           });
 
           setData(apiData);
-          resolve(true);
+         
         })
         .catch((e) => {
           console.log(e);
-          reject(null);
-        });
+         
+        }).finally(()=>{
+          setLoading(false)
+          resolve(true)
+        })
     });
   }
 
@@ -401,6 +406,7 @@ const TaskDetail = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const {toast} = useToast()
 
   async function handleUpdateStatus(values) {
     setLoading(true);
@@ -458,12 +464,12 @@ const TaskDetail = ({
           <SheetDescription>Check task details</SheetDescription>
           <div className="w-full flex justify-end">
             <Button onClick={handleDelete}>
-              {" "}
+              
               {deleteLoading && <Loader2 className="animate-spin" />} Delete
             </Button>
           </div>
         </SheetHeader>
-        <div className="w-full py-6 px-4 bg-white rounded-lg shadow-lg">
+        <div className="w-full py-6 px-4 bg-white rounded-lg shadow-lg mt-2">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="flex flex-col gap-4">
               <h3 className="text-sm font-medium text-gray-600">Status</h3>
@@ -525,6 +531,7 @@ const TaskDetail = ({
 const AddTask = ({ visible, onClose, onRefresh, user_id }) => {
   const [selectedRadio, setSelectedRadio] = useState("office");
   const [loading, setLoading] = useState(false);
+  const {toast} = useToast()
 
   const form = useForm({
     resolver: zodResolver(getSchema(selectedRadio === "client")),

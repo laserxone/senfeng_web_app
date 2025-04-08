@@ -56,6 +56,9 @@ export default function Page() {
     inventory_assigned: false,
     customer_add_access: false,
     customer_delete_access: false,
+    dms_write_access : false,
+    limited_access : false,
+    full_access : false
   });
   const { toast } = useToast();
   useEffect(() => {
@@ -85,6 +88,9 @@ export default function Page() {
             customer_add_access: apiData?.customer_add_access,
             customer_delete_access: apiData?.customer_delete_access,
             inventory_assigned: apiData?.inventory_assigned,
+            dms_write_access : apiData?.dms_write_access,
+            limited_access : apiData?.limited_access,
+            full_access : apiData?.full_access
           });
           setForm({
             basic_salary: apiData?.basic_salary || 0,
@@ -118,6 +124,12 @@ export default function Page() {
       ...prev,
       [field]: value,
     }));
+    if(field == 'full_access' && value == true){
+      setChecks((prev) => ({
+        ...prev,
+        ["limited_access"]: false,
+      }));
+    }
   };
 
   async function handleSave() {
@@ -134,6 +146,9 @@ export default function Page() {
         customer_add_access: checks?.customer_add_access,
         customer_delete_access: checks?.customer_delete_access,
         inventory_assigned: checks?.inventory_assigned,
+        dms_write_access: checks?.dms_write_access,
+        limited_access : checks?.limited_access,
+        full_access : checks?.full_access,
         joining_date: joiningDate,
       })
       .then(() => {
@@ -146,9 +161,7 @@ export default function Page() {
 
   const DocumentCard = useCallback(
     ({ type }) => {
-      const [localImage, setLocalImage] = useState(null);
       const [loading, setLoading] = useState(false); // Track loading state
-      const localRef = useRef();
       const [fileUrl, setFileUrl] = useState(null);
       const [fileName, setFileName] = useState("");
 

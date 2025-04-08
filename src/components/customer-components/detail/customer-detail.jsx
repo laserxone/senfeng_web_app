@@ -478,6 +478,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
   const [date, setDate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedDelete, setSelectedDelete] = useState(null);
+  const [satisfactory, setSatisfactory] = useState(false)
   const [localData, setLocalData] = useState(
     data
       .filter((item) => item?.type === type)
@@ -509,6 +510,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
         type: type,
         customer_id: customerID,
         user_id: userID,
+        status : satisfactory ? "Satisfactory" : "Unsatisfactory"
       })
       .then(() => {
         onRefresh();
@@ -561,6 +563,13 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
               checked={topFollow}
               onCheckedChange={(checked) => {
                 setTopFollow(checked);
+              }}
+            />
+             <h1>Satisfactory?</h1>
+            <Checkbox
+              checked={satisfactory}
+              onCheckedChange={(checked) => {
+                setSatisfactory(checked);
               }}
             />
           </div>

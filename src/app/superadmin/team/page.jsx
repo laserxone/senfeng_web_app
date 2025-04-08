@@ -190,7 +190,7 @@ export default function Page() {
         onRowClick={(val) => {
           if (val.id) {
             startHolyLoader();
-            router.push(`/owner/team/detail?id=${val.id}`);
+            router.push(`/${UserState.value.data?.base_route}/team/detail?id=${val.id}`);
           }
         }}
       >

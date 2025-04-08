@@ -1016,6 +1016,7 @@ const RecordComponent = () => {
 
     {
       id: "actions",
+      header : "Action",
       cell: ({ row }) => {
         const payment = row.original;
 

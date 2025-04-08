@@ -3,6 +3,6 @@ import { redirect, useRouter } from "next/navigation";
 
 export default function Page (){
     const router = useRouter()
-    router.push("/owner/dashboard")
+    router.push("/superadmin/dashboard")
 }
 

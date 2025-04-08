@@ -24,6 +24,7 @@ import moment from "moment";
 import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
+import SalaryRecord from "@/components/users/SalaryRecord";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -40,7 +41,7 @@ export default function Page() {
       const startDate = moment().startOf("month").toISOString();
       const endDate = moment().endOf("month").toISOString();
       fetchData();
-     
+
       fetchAllCustomers();
       fetchExtraCustomerOptions();
       fetchReimbursementData(startDate, endDate);
@@ -92,20 +93,22 @@ export default function Page() {
   }
 
   async function fetchData() {
-    axios.get(`${BASE_URL}/user/${UserState.value.data?.id}`).then((response) => {
-      setData(response.data);
-      if (response.data.customers && response.data.customers.length > 0) {
-        let total = 0;
-        response.data.customers.map((eachCustomer) => {
-          if (eachCustomer.sales && eachCustomer.sales.length > 0) {
-            eachCustomer.sales.map((eachSale) => {
-              total = total + Number(eachSale.price);
-            });
-          }
-        });
-        setTotalSales(total);
-      }
-    });
+    axios
+      .get(`${BASE_URL}/user/${UserState.value.data?.id}`)
+      .then((response) => {
+        setData(response.data);
+        if (response.data.customers && response.data.customers.length > 0) {
+          let total = 0;
+          response.data.customers.map((eachCustomer) => {
+            if (eachCustomer.sales && eachCustomer.sales.length > 0) {
+              eachCustomer.sales.map((eachSale) => {
+                total = total + Number(eachSale.price);
+              });
+            }
+          });
+          setTotalSales(total);
+        }
+      });
   }
 
   async function fetchAllCustomers() {
@@ -121,8 +124,6 @@ export default function Page() {
       });
   }
 
- 
-
   const RenderNewCustomer = useCallback(() => {
     return (
       <Card>
@@ -136,12 +137,10 @@ export default function Page() {
               }}
             /> */}
             <CustomerEmployee
-             totalCustomerText={"Total Members"}
-            user_id={null}
-            ownership={true}
-              customer_data={
-                customers.filter((customer) => customer.member)
-              }
+              totalCustomerText={"Total Members"}
+              user_id={null}
+              ownership={true}
+              customer_data={customers.filter((customer) => customer.member)}
               onRefresh={() => fetchData()}
             />
           </div>
@@ -149,8 +148,6 @@ export default function Page() {
       </Card>
     );
   }, [UserState.value.data, customers]);
-
-
 
   const RenderReimbursement = useCallback(() => {
     return (
@@ -217,6 +214,7 @@ export default function Page() {
             {/* <TabsTrigger value="commission">Commission</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger> */}
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
+            <TabsTrigger value="salary">Salary</TabsTrigger>
           </TabsList>
 
           <TabsContent value="newCustomers">
@@ -229,11 +227,17 @@ export default function Page() {
           <TabsContent value="attendance">
             <RenderAttendance />
           </TabsContent>
-         
+          <TabsContent value="salary">
+            <Card>
+              <CardContent className="pt-2">
+                <SalaryRecord />
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
 
-      <AutoScrollMembers customers={customers} />
+      {customers.length > 0 && <AutoScrollMembers customers={customers} />}
     </div>
   );
 }
@@ -263,8 +267,6 @@ const ProfilePicture = ({ img, name }) => {
     </Avatar>
   );
 };
-
-
 
 const CustomerExtraData = ({ data, option, onSelect }) => {
   const menuItems = [

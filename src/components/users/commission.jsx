@@ -18,6 +18,13 @@ import Spinner from "../ui/spinner";
 import { Button } from "../ui/button";
 import Link from "next/link";
 import moment from "moment";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 export default function Commission({ owner }) {
   return owner ? <OwnerView /> : <OtherView />;
@@ -27,6 +34,7 @@ const OwnerView = () => {
   const { state: UserState } = useContext(UserContext);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPercentage, setSelectedPercentage] = useState(null);
 
   useEffect(() => {
     if (UserState.value.data?.id) {
@@ -39,7 +47,6 @@ const OwnerView = () => {
       try {
         const route = `${BASE_URL}/commission`;
         const response = await axios.get(route);
-        console.log(response.data);
         setData(response.data);
       } catch (error) {
       } finally {
@@ -53,43 +60,46 @@ const OwnerView = () => {
     const [loading, setLoading] = useState(false);
     const { state: UserState } = useContext(UserContext);
 
-   
-
     async function handleUpdate(id) {
-
-        if (!id) return;
-        setLoading(true);
-        try {
-          await axios
-            .put(`${BASE_URL}/commission/${id}`, {
-              is_approved: true,
-              approval_date: new Date(),
-            })
-            .then(async () => {
-              await onRefresh();
-            });
-        } catch (error) {
-        } finally {
-          setLoading(false);
-        }
-        
-        
+      if (!id) return;
+      setLoading(true);
+      try {
+        await axios
+          .put(`${BASE_URL}/commission/${id}`, {
+            is_approved: true,
+            approval_date: new Date(),
+            commission_amount: (item.total_amount * selectedPercentage) / 100,
+          })
+          .then(async () => {
+            await onRefresh();
+          });
+      } catch (error) {
+      } finally {
+        setLoading(false);
+      }
     }
 
     return (
       <Card>
         <CardContent className="p-4 space-y-2">
-            <Link target="blank" href={`/${UserState.value.data?.base_route}/customer/machine?id=${item.sale_id}`}>
-          <h2 className="font-semibold text-lg hover:underline">
-            Customer: {item.customer_name || item.customer_owner || "NIL"}
-          </h2>
+          <Link
+            target="blank"
+            href={`/${UserState.value.data?.base_route}/customer/machine?id=${item.sale_id}`}
+          >
+            <h2 className="font-semibold text-lg hover:underline">
+              Customer: {item.customer_name || item.customer_owner || "NIL"}
+            </h2>
           </Link>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Employee</TableHead>
                 <TableHead>Machine</TableHead>
-                <TableHead>Commission Amount</TableHead>
+                <TableHead>
+                  {item.is_approved
+                    ? "Commission Amount"
+                    : "Commission Percentage"}
+                </TableHead>
                 <TableHead>Commission Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -97,15 +107,46 @@ const OwnerView = () => {
               <TableRow>
                 <TableCell>{item.user_name}</TableCell>
                 <TableCell>{item.machine_name}</TableCell>
-
-                <TableCell>{item.commission_amount}</TableCell>
+                <TableCell>
+                  {item.is_approved ? (
+                    item.commission_amount
+                  ) : (
+                    <Select
+                      onValueChange={(val) => {
+                        setSelectedPercentage(val);
+                      }}
+                      value={selectedPercentage ? selectedPercentage : ""}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select commission percentage" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array(9)
+                          .fill(0)
+                          .map((_, i) => {
+                            const value = (i + 1).toString();
+                            return (
+                              <SelectItem key={value} value={value}>
+                                {value}%
+                              </SelectItem>
+                            );
+                          })}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </TableCell>
+                {/* <TableCell>{}</TableCell> */}
                 <TableCell>
                   {loading ? (
                     <Spinner />
                   ) : item.is_approved === null ? (
                     <div>
                       <Button
-                        onClick={() => handleUpdate(item.id, true)} // Handle approve
+                        disabled={!selectedPercentage}
+                        onClick={() => {
+                          if (!selectedPercentage) return;
+                          handleUpdate(item.id, true);
+                        }}
                         className="mr-2"
                       >
                         Approve
@@ -194,7 +235,7 @@ const OtherView = () => {
             sale_id: id,
             user_id: UserState.value.data?.id,
             is_requested: true,
-            commission_amount: amount * 0.025,
+            total_amount: item.price,
           })
           .then(async () => {
             await onRefresh();

@@ -24,6 +24,7 @@ import moment from "moment";
 import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
+import SalaryRecord from "@/components/users/SalaryRecord";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -40,7 +41,7 @@ export default function Page() {
       const endDate = moment().endOf("month").toISOString();
       fetchData();
       fetchAllCustomers();
-      fetchExtraCustomerOptions();
+      fetchExtraCustomerOptions(UserState.value.data?.limited_access);
       fetchReimbursementData(startDate, endDate);
       fetchAttendanceData(startDate, endDate);
     }
@@ -90,20 +91,28 @@ export default function Page() {
   }
 
   async function fetchData() {
-    axios.get(`${BASE_URL}/user/${UserState.value.data?.id}`).then((response) => {
-      setData(response.data);
-    });
+    axios
+      .get(`${BASE_URL}/user/${UserState.value.data?.id}`)
+      .then((response) => {
+        setData(response.data);
+      });
   }
 
   async function fetchAllCustomers() {
     axios.get(`${BASE_URL}/customer`).then((response) => {
-    
-      setCustomers(response.data);
+      const apiData = response.data;
+      if (!UserState.value.data?.limited_access) {
+        setCustomers(apiData);
+      } else {
+        const temp = apiData.filter((item)=> item?.created_by === UserState.value.data?.id)
+        setCustomers([...temp])
+      }
     });
   }
-  async function fetchExtraCustomerOptions() {
+  async function fetchExtraCustomerOptions(val) {
+    let access = `access=${val}`
     axios
-      .get(`${BASE_URL}/user/${UserState.value.data?.id}/extra`)
+      .get(`${BASE_URL}/user/${UserState.value.data?.id}/extra?${access}`)
       .then((response) => {
         setExtraData(response.data);
       });
@@ -128,7 +137,7 @@ export default function Page() {
               customer_data={
                 selectedOption
                   ? extraData[selectedOption]
-                  : customers.filter((customer) => !customer.member) || []
+                  : customers.filter((customer) => !customer?.member) || []
               }
               onRefresh={() => fetchAllCustomers()}
             />
@@ -203,6 +212,7 @@ export default function Page() {
             {/* <TabsTrigger value="commission">Commission</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger> */}
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
+            <TabsTrigger value="salary">Salary</TabsTrigger>
           </TabsList>
 
           <TabsContent value="newCustomers">
@@ -215,10 +225,18 @@ export default function Page() {
           <TabsContent value="attendance">
             <RenderAttendance />
           </TabsContent>
+          <TabsContent value="salary">
+            <Card>
+              <CardContent className="pt-2">
+                <SalaryRecord />
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
-
-      <AutoScrollMembers customers={customers} />
+      {customers.length > 0 && !UserState.value.data?.limited_access && (
+        <AutoScrollMembers customers={customers} />
+      )}
     </div>
   );
 }
@@ -248,8 +266,6 @@ const ProfilePicture = ({ img, name }) => {
     </Avatar>
   );
 };
-
-
 
 const CustomerExtraData = ({ data, option, onSelect }) => {
   const menuItems = [

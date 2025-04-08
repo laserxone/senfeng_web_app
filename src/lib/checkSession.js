@@ -27,10 +27,18 @@ export default function useCheckSession() {
             const userData = response.data;
 
             if (userData?.designation) {
-                if (userData.designation === 'Owner') {
-                    if (!pathname.includes("owner")) {
+
+                if (userData.full_access) {
+                    if (!pathname.includes("superadmin")) {
                         startHolyLoader()
-                        router.push("/owner/dashboard")
+                        router.push("/superadmin/dashboard")
+                    }
+                }
+
+                else if (userData.designation === 'Owner') {
+                    if (!pathname.includes("superadmin")) {
+                        startHolyLoader()
+                        router.push("/superadmin/dashboard")
                     }
                 }
 

@@ -271,7 +271,6 @@ header: ({ column }) => {
 
     {
       id: "actions",
-      enableHiding: false,
       cell: ({ row }) => {
         return <AttendanceDetail detail={row.original} />;
       },

@@ -102,6 +102,7 @@ header: ({ column }) => {
 
     {
       id: "actions",
+      header : "Action",
       cell: ({ row }) => {
         const payment = row.original;
 

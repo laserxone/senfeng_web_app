@@ -30,6 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -70,7 +71,30 @@ const PageTable = ({
     pageSize: pageSize,
   };
 
-  const pageCount = Math.ceil(totalItems / pageSize);
+  const filteredData = useMemo(() => {
+    let filtered = data;
+
+    // Apply column filters
+    columnFilters.forEach((filter) => {
+      filtered = filtered.filter(row => {
+        const cellValue = row[filter.id];
+        return cellValue.toString().toLowerCase().includes(filter.value.toLowerCase());
+      });
+    });
+
+    // Apply global search filter
+    if (search) {
+      filtered = filtered.filter(row => {
+        return Object.values(row).some(value =>
+          String(value).toLowerCase().includes(search.toLowerCase())
+        );
+      });
+    }
+
+    return filtered;
+  }, [data, columnFilters, search]);
+
+  const pageCount = Math.ceil(filteredData.length / pageSize);
 
   const handlePaginationChange = (updaterOrValue) => {
     const pagination =
@@ -83,7 +107,7 @@ const PageTable = ({
   };
 
   const table = useReactTable({
-    data,
+    data : filteredData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -93,7 +117,6 @@ const PageTable = ({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-
     globalFilterFn: customGlobalFilter,
     pageCount: pageCount,
     state: {
@@ -105,11 +128,19 @@ const PageTable = ({
       globalFilter: search,
     },
     onPaginationChange: handlePaginationChange,
+    defaultColumn : {
+      size : 200
+    }
     // manualPagination: true,
     // manualFiltering: true
   });
 
- 
+  const startIndex = paginationState.pageIndex * paginationState.pageSize + 1;
+  const endIndex = Math.min(
+    (paginationState.pageIndex + 1) * paginationState.pageSize,
+    filteredData.length
+  );
+
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -123,40 +154,22 @@ const PageTable = ({
             }}
             className="w-[60vw] max-w-sm"
           />
-          // <Input
-          //   ref={inputRef}
-          //   placeholder={`${searchName}`}
-          //   value={
-          //     searchItem
-          //       ? table.getColumn(searchItem).getFilterValue() ?? ""
-          //       : ""
-          //   }
-          //   onChange={(event) => {
-          //     searchItem &&
-          //       table.getColumn(searchItem).setFilterValue(event.target.value);
-          //   }}
-          //   className="w-[60vw] max-w-sm"
-          // />
         )}
-
         {children}
       </div>
 
-      <div className="relative flex flex-1 flex-col ">
-        <div className="absolute bottom-0 left-0 right-0 top-0 flex overflow-scroll rounded-md border md:overflow-auto ">
+      <div className="relative flex flex-1 flex-col">
+        <div className="absolute bottom-0 left-0 right-0 top-0 flex overflow-scroll rounded-md border md:overflow-auto">
           <ScrollArea className="flex-1">
             <Table className="relative">
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
+                      <TableHead style={{ width: header.getSize() }} key={header.id}>
                         {header.isPlaceholder
                           ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
+                          : flexRender(header.column.columnDef.header, header.getContext())}
                       </TableHead>
                     ))}
                   </TableRow>
@@ -183,10 +196,7 @@ const PageTable = ({
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
+                    <TableCell colSpan={columns.length} className="h-24 text-center">
                       {loading ? (
                         <div className="flex flex-1 justify-center">
                           <Spinner />
@@ -207,15 +217,9 @@ const PageTable = ({
       <div className="flex flex-col items-center justify-end gap-2 space-x-2 py-2 sm:flex-row">
         <div className="flex w-full items-center justify-between">
           <div className="flex-1 text-sm text-muted-foreground">
-            {totalItems > 0 ? (
+            {filteredData.length > 0 ? (
               <>
-                Showing{" "}
-                {paginationState.pageIndex * paginationState.pageSize + 1} to{" "}
-                {Math.min(
-                  (paginationState.pageIndex + 1) * paginationState.pageSize,
-                  totalItems
-                )}{" "}
-                of {totalItems} entries
+                Showing {startIndex} to {endIndex} of {filteredData.length} entries
               </>
             ) : (
               "No entries found"
@@ -248,10 +252,10 @@ const PageTable = ({
         </div>
         <div className="flex w-full items-center justify-between gap-2 sm:justify-end">
           <div className="flex w-[250px] items-center justify-center text-sm font-medium">
-            {totalItems > 0 ? (
+            {filteredData.length > 0 ? (
               <>
-                {totalCustomerText && `${totalCustomerText} ${totalCustomer}`}{" "}
-                Page {paginationState.pageIndex + 1} of {table.getPageCount()}
+                {totalCustomerText && `${totalCustomerText} ${filteredData.length}`} Page{" "}
+                {paginationState.pageIndex + 1} of {pageCount}
               </>
             ) : (
               "No pages"
@@ -302,11 +306,8 @@ const PageTable = ({
 };
 
 function customGlobalFilter(row, columnId, filterValue) {
-  // Convert the filter value to lowercase for case-insensitive comparison
   const search = filterValue.toLowerCase();
-
-  // Check if any of the row's values (visible columns) match the search term
-  return row
+ return row
     .getAllCells()
     .some((cell) => String(cell.getValue()).toLowerCase().includes(search));
 }

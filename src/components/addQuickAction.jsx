@@ -25,16 +25,22 @@ import { Input } from "./ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
+import { Checkbox } from "./ui/checkbox";
+import { UserSearch } from "./user-search";
 
 const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [localData, setLocalData] = useState(data);
   const [loadMore, setLoadMore] = useState(50);
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState("");
+  const [checkedAll, setCheckedAll] = useState(false);
+  const [batchId, setBatchId] = useState(null);
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [batchData, setBatchData] = useState([]);
 
   useEffect(() => {
-    setLocalData(data);
+    setLocalData(data.map((item) => ({ ...item, checked: false })));
   }, [data]);
 
   useEffect(() => {
@@ -70,7 +76,6 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
         ownership: ownership,
       });
       onRefresh(id, ownership);
-      setLocalData((prevData) => prevData.filter((item) => item.id !== id));
     } catch (error) {
       console.error("Error updating ownership:", error);
     } finally {
@@ -84,50 +89,127 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
     onClose(val);
   }
 
+  const filteredData = localData
+    .filter(
+      (item) =>
+        item.name.toLowerCase().includes(search.toLowerCase()) ||
+        item.owner.toLowerCase().includes(search.toLowerCase()) ||
+        item.location.toLowerCase().includes(search.toLowerCase())
+    )
+    .slice(0, loadMore);
 
-  const filteredData = localData.filter(item =>
-    item.name.toLowerCase().includes(search.toLowerCase()) ||
-    item.owner.toLowerCase().includes(search.toLowerCase())
-  );
+  function handleSingleChecked(val, id) {
+    setLocalData((prevState) => {
+      const temp = prevState.map((item) =>
+        item.id === id ? { ...item, checked: val } : item
+      );
+
+      const updatedBatch = temp.filter((item) => item.checked);
+      setBatchData(updatedBatch);
+
+      return temp;
+    });
+  }
+
+  function handleCheckVisible(val) {
+    setCheckedAll(val);
+
+    const updatedData = localData.map((item) => {
+      const isVisible = filteredData.some((f) => f.id === item.id);
+      return isVisible ? { ...item, checked: val } : item;
+    });
+
+    const updatedBatch = updatedData.filter((item) => item.checked);
+
+    setLocalData(updatedData);
+    setBatchData(updatedBatch);
+  }
+
+  async function handleBatchUpdate() {
+    if (!checkedAll || batchData.length == 0) return;
+    setBatchLoading(true);
+
+    try {
+      const promises = batchData.map((item) =>
+        axios
+          .put(`${BASE_URL}/customer/${item.id}`, {
+            ownership: batchId,
+          })
+          .then(() => {
+            onRefresh(item.id, batchId);
+          })
+      );
+
+      await Promise.all(promises);
+    } catch (error) {
+      console.log("Batch update failed:", error);
+    } finally {
+      setBatchLoading(false);
+    }
+  }
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent className="max-w-[80vw] h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Quick Action</DialogTitle>
-  
-          <div className="flex items-center gap-4 border p-2 rounded-md mx-4 mt-2">
-            <div className="w-1/6 pl-2 text-sm font-bold">Name</div>
+          <DialogTitle className={"mb-2"}>Quick Action</DialogTitle>
+
+          <div className="flex items-center gap-4 border p-2 rounded-md mx-4">
+            <Checkbox
+              checked={checkedAll}
+              onCheckedChange={(checked) => {
+                handleCheckVisible(checked);
+              }}
+            />
+            <div className="w-1/5 pl-2 text-sm font-bold">Name</div>
             <div className="w-1/5 pl-2 text-sm font-bold">Owner</div>
-            <div className="flex-1 text-sm font-bold">Ownership</div>
-            <div className="px-5 text-sm font-bold">Action</div>
+            <div className="w-1/5 pl-2 text-sm font-bold">Location</div>
+            <div className="w-1/5 text-sm font-bold">Ownership</div>
+            <div className="w-1/5 text-sm font-bold">Action</div>
           </div>
-  
-          <div className="px-4 py-2">
+
+          <div className="flex px-4 py-2 gap-2">
             <Input
               placeholder="Search customer"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+            {batchData.length > 0 && (
+              <>
+                <CustomUserSearch
+                  data={users}
+                  value={batchId}
+                  onReturn={setBatchId}
+                />
+                <Button onClick={handleBatchUpdate}>
+                  {batchLoading && <Spinner />}Update All
+                </Button>
+              </>
+            )}
           </div>
         </DialogHeader>
-  
+
         <ScrollArea className="flex-1 overflow-y-auto px-2">
           <div className="px-2 space-y-4">
-            {filteredData.slice(0, loadMore).map(({ id, name, owner, ownership }) => (
-              <RenderEachRow
-                key={id}
-                id={id}
-                name={name}
-                owner={owner}
-                ownership={ownership}
-                users={users}
-                handleUpdate={handleUpdate}
-              />
-            ))}
+            {filteredData.map(
+              ({ id, name, owner, location, ownership, checked }) => (
+                <RenderEachRow
+                  key={id}
+                  id={id}
+                  name={name}
+                  owner={owner}
+                  ownership={ownership}
+                  location={location}
+                  users={users}
+                  handleUpdate={handleUpdate}
+                  checked={checked}
+                  setChecked={handleSingleChecked}
+                />
+              )
+            )}
           </div>
         </ScrollArea>
-  
+
         <DialogFooter className="pt-4">
           {filteredData.length > 0 && loadMore <= filteredData.length && (
             <Button
@@ -145,38 +227,59 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
       </DialogContent>
     </Dialog>
   );
-  
 };
 
-const RenderEachRow = ({ id, name, owner, ownership, handleUpdate, users }) => {
+const RenderEachRow = ({
+  id,
+  name,
+  owner,
+  ownership,
+  handleUpdate,
+  users,
+  location,
+  checked,
+  setChecked,
+}) => {
   const [selectedOwnership, setSelectedOwnership] = useState(ownership);
   const [loading, setLoading] = useState(false);
 
   return (
     <div className="flex items-center gap-4 border p-2 rounded-md">
-      <div className="w-1/3 text-sm">{name}</div>
-      <div className="w-1/3 text-sm">{owner}</div>
-      <CustomUserSearch
-        data={users}
-        value={selectedOwnership}
-        onReturn={(val) => setSelectedOwnership(val)}
-      />
-
-      <Button
-        onClick={async () => {
-          setLoading(true);
-          await handleUpdate(id, selectedOwnership);
-          setLoading(false);
-        }}
-        disabled={loading}
-      >
-        {loading ? <Spinner /> : "Update"}
-      </Button>
+      <div>
+        <Checkbox
+          checked={checked}
+          onCheckedChange={(checked) => {
+            setChecked(checked, id);
+          }}
+        />
+      </div>
+      <div className="w-1/5 text-sm">{name}</div>
+      <div className="w-1/5 text-sm">{owner}</div>
+      <div className="w-1/5 text-sm">{location}</div>
+      <div className="w-1/5 text-sm">
+        <CustomUserSearch
+          data={users}
+          value={selectedOwnership}
+          onReturn={(val) => setSelectedOwnership(val)}
+        />
+      </div>
+      <div className="w-1/5 text-sm">
+        <Button
+          onClick={async () => {
+            setLoading(true);
+            await handleUpdate(id, selectedOwnership);
+            setLoading(false);
+          }}
+          disabled={loading}
+        >
+          {loading ? <Spinner /> : "Update"}
+        </Button>
+      </div>
     </div>
   );
 };
 
-function CustomUserSearch({ value, onReturn, data }) {
+export function CustomUserSearch({ value, onReturn, data }) {
   const [open, setOpen] = useState(false);
 
   return (

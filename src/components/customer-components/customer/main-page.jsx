@@ -1,12 +1,8 @@
 "use client";
-import {
-  ArrowUpDown,
-  Trash
-} from "lucide-react";
+import { ArrowUpDown, Trash, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useContext, useEffect, useRef, useState } from "react";
-
 
 import { Label } from "@/components/ui/label";
 
@@ -32,7 +28,7 @@ import {
   SheetDescription,
   SheetFooter,
   SheetHeader,
-  SheetTitle
+  SheetTitle,
 } from "@/components/ui/sheet";
 import { BASE_URL } from "@/constants/data";
 import { toast } from "@/hooks/use-toast";
@@ -41,6 +37,7 @@ import axios from "axios";
 import { startHolyLoader } from "holy-loader";
 import moment from "moment";
 import { useRouter } from "next/navigation";
+import { UserSearch } from "@/components/user-search";
 
 const tableHeader = [
   {
@@ -74,11 +71,8 @@ const tableHeader = [
 ];
 
 export default function CustomerMainPage() {
-  const [value, setValue] = useState("");
   const [additionalFilter, setAdditionalFilter] = useState("");
-  const pageTableRef = useRef();
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
   const [addCustomer, setAddCustomer] = useState(false);
   const { state: UserState } = useContext(UserContext);
@@ -87,6 +81,7 @@ export default function CustomerMainPage() {
   const [member, setMember] = useState(false);
   const router = useRouter();
   const [quickAction, setQuickAction] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     if (UserState.value.data?.id) fetchData();
@@ -98,14 +93,24 @@ export default function CustomerMainPage() {
         .get(`${BASE_URL}/customer/machines`)
         .then((response) => {
           const apiData = response.data;
-          const temp = apiData.map((item) => {
-            return {
-              ...item,
-              machines: item.machines.join(", "),
-              number: item.number.join(", "),
-            };
-          });
-          setData([...temp]);
+          const temp = apiData
+            .map((item) => {
+              return {
+                ...item,
+                machines: item.machines.join(", "),
+                number: item.number.join(", "),
+              };
+            })
+            .filter((item) => !item.member);
+
+          const isLimited = UserState.value.data?.limited_access;
+          const filteredData = isLimited
+            ? temp.filter(
+                (item) => item.created_by === UserState.value.data?.id
+              )
+            : temp;
+
+          setData([...filteredData]);
         })
         .finally(() => {
           resolve(true);
@@ -130,7 +135,7 @@ export default function CustomerMainPage() {
       },
       cell: ({ row }) => <div className="ml-2">{row.getValue("owner")}</div>,
     },
- 
+
     {
       accessorKey: "name",
       filterFn: "includesString",
@@ -146,6 +151,22 @@ export default function CustomerMainPage() {
         );
       },
       cell: ({ row }) => <div>{row.getValue("name")}</div>,
+    },
+    {
+      accessorKey: "ownership_name",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Assigned To
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("ownership_name")}</div>,
     },
     {
       accessorKey: "number",
@@ -180,8 +201,6 @@ export default function CustomerMainPage() {
       },
       cell: ({ row }) => <div>{row.getValue("industry")}</div>,
     },
-
-  
 
     {
       accessorKey: "location",
@@ -257,6 +276,7 @@ export default function CustomerMainPage() {
 
     {
       id: "actions",
+      header: "Action",
       cell: ({ row }) => {
         const currentItem = row.original;
 
@@ -264,18 +284,16 @@ export default function CustomerMainPage() {
           UserState.value.data &&
           UserState.value.data.customer_delete_access && (
             <Button
-              variant="destructive"
-              size="icon"
+              variant="ghost"
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedCustomerId(currentItem?.id);
                 setShowConfirmation(true);
               }}
             >
-              <Trash size={16} />
+              <Trash2 className="h-5 w-5 text-red-500" size={16} />
             </Button>
           )
-     
         );
       },
     },
@@ -283,7 +301,7 @@ export default function CustomerMainPage() {
 
   function handleClear() {
     setAdditionalFilter("");
-   
+    setSelectedUser(null);
   }
 
   async function handleDelete(id) {
@@ -305,15 +323,15 @@ export default function CustomerMainPage() {
     }
   }
 
-  const filteredData = data.filter((item) =>
-    additionalFilter == "member"
-      ? item.member === true
-      : additionalFilter == "unassigned"
-      ? !item.member === true
-      : additionalFilter == "unsold"
-      ? !item.machines
-      : true
-  );
+  const filteredData = data
+    .filter((item) =>
+      additionalFilter == "unassigned"
+        ? !item.ownership === true
+        : additionalFilter == "unsold"
+        ? !item.machines
+        : true
+    )
+    .filter((item) => (selectedUser ? item?.ownership === selectedUser : true));
 
   return (
     <PageContainer scrollable={false}>
@@ -323,7 +341,8 @@ export default function CustomerMainPage() {
 
           <div className="flex gap-2">
             {UserState.value.data &&
-              UserState.value.data?.designation == "Owner" && (
+              (UserState.value.data?.designation == "Owner" ||
+                UserState.value.data?.full_access) && (
                 <Button onClick={() => setQuickAction(true)}>
                   Quick Action
                 </Button>
@@ -374,11 +393,9 @@ export default function CustomerMainPage() {
         <PageTable
           totalCustomerText={"Total Customers"}
           totalCustomer={filteredData.length}
-          
           columns={columns}
           data={filteredData}
           totalItems={filteredData.length}
-        
           tableHeader={tableHeader}
           onRowClick={(val) => {
             if (val.id) {
@@ -388,13 +405,9 @@ export default function CustomerMainPage() {
               );
             }
           }}
-          // filter={true}
-          // onFilterClick={() => setFilterVisible(true)}
         >
           <div className=" flex justify-between">
             <div className="flex gap-4">
-            
-
               {/* <div className="flex items-center gap-2">
 
               <Label>Members?</Label>
@@ -403,6 +416,17 @@ export default function CustomerMainPage() {
                 onCheckedChange={(checked) => setMember(checked)}
               />
               </div> */}
+
+              {(UserState.value.data?.designation === "Owner" ||
+                UserState.value.data?.full_access) && (
+                <div className="w-[300px]">
+                  <UserSearch
+                    placeholder="Filter user..."
+                    value={selectedUser}
+                    onReturn={setSelectedUser}
+                  />
+                </div>
+              )}
 
               <Select
                 onValueChange={setAdditionalFilter}
@@ -414,7 +438,6 @@ export default function CustomerMainPage() {
                 <SelectContent>
                   <SelectGroup>
                     {[
-                      { value: "member", label: "Member" },
                       {
                         value: "unassigned",
                         label: "Unassigned",
@@ -451,11 +474,6 @@ export default function CustomerMainPage() {
             </div>
           </div>
         </PageTable>
-
-        <FilterSheet
-          visible={filterVisible}
-          onClose={() => setFilterVisible(false)}
-        />
       </div>
 
       <ConfimationDialog
@@ -469,38 +487,3 @@ export default function CustomerMainPage() {
     </PageContainer>
   );
 }
-
-const FilterSheet = ({ visible, onClose }) => {
-  const [startDate, setStartDate] = useState();
-  const [endDate, setEndDate] = useState();
-
-  return (
-    <Sheet open={visible} onOpenChange={onClose}>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle>Filter</SheetTitle>
-          <SheetDescription>Select Dates and press filter.</SheetDescription>
-        </SheetHeader>
-        <div className="flex flex-col gap-4 py-4 w-full">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="totalsalary" className="text-left">
-              Start Date
-            </Label>
-            <AppCalendar date={startDate} onChange={setStartDate} />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="monthlysalary" className="text-left">
-              End Date
-            </Label>
-            <AppCalendar date={endDate} onChange={setEndDate} />
-          </div>
-        </div>
-        <SheetFooter>
-          <SheetClose disabled={!startDate || !endDate} asChild>
-            <Button onClick={() => console.log("press")}>Filter</Button>
-          </SheetClose>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
-  );
-};

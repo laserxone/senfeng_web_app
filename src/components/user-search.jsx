@@ -21,7 +21,7 @@ import { BASE_URL } from "@/constants/data";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 
-export function UserSearch({ value, onReturn }) {
+export function UserSearch({ value, onReturn, placeholder = "Select user..." }) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState([]);
  
@@ -51,7 +51,7 @@ export function UserSearch({ value, onReturn }) {
         >
           {value
             ? data.find((item) => item.value === value)?.label
-            : "Select user..."}
+            : placeholder}
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>

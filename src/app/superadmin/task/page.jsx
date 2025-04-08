@@ -1,23 +1,16 @@
 "use client";
-import {
-  ArrowUpDown,
-  BadgeCheck,
-  ChevronsRight,
-  CircleDashed
-} from "lucide-react";
-
+import { ArrowUpDown, BadgeCheck, CircleDashed, Filter, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useContext, useEffect, useState } from "react";
-
 
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -25,7 +18,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
+  FormMessage,
 } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,25 +31,25 @@ import { Heading } from "@/components/ui/heading";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { UserSearch } from "@/components/user-search";
 import { BASE_URL } from "@/constants/data";
 import { UserContext } from "@/store/context/UserContext";
 import axios from "axios";
 import moment from "moment";
+import FilterSheet from "@/components/users/filterSheet";
+import { useToast } from "@/hooks/use-toast";
 
 const columns = [
   {
     accessorKey: "status",
     filterFn: "includesString",
-header: ({ column }) => {
+    header: ({ column }) => {
       return (
         <Button
           variant="ghost"
@@ -83,7 +76,7 @@ header: ({ column }) => {
   {
     accessorKey: "task_name",
     filterFn: "includesString",
-header: ({ column }) => {
+    header: ({ column }) => {
       return (
         <Button
           variant="ghost"
@@ -100,7 +93,7 @@ header: ({ column }) => {
   {
     accessorKey: "assigned_to_name",
     filterFn: "includesString",
-header: ({ column }) => {
+    header: ({ column }) => {
       return (
         <Button
           variant="ghost"
@@ -117,7 +110,7 @@ header: ({ column }) => {
   {
     accessorKey: "created_at_time",
     filterFn: "includesString",
-header: ({ column }) => {
+    header: ({ column }) => {
       return (
         <Button
           variant="ghost"
@@ -141,7 +134,7 @@ header: ({ column }) => {
   {
     accessorKey: "created_at",
     filterFn: "includesString",
-header: ({ column }) => {
+    header: ({ column }) => {
       return (
         <Button
           variant="ghost"
@@ -158,47 +151,42 @@ header: ({ column }) => {
       </div>
     ),
   },
-
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      return <TaskDetail detail={row.original || {}} />;
-    },
-  },
 ];
 
 const getSchema = (isClientSelected) =>
   z.object({
     radio: z.enum(["office", "client"]),
     task: z.string().min(5, { message: "Task must be at least 5 characters." }),
-    team: z.number({ required_error: "User is required." }),
+    user: z.number({ required_error: "User is required." }),
     client: isClientSelected
       ? z.number({ required_error: "Client is required." }) // Required when client is selected
       : z.number().optional(), // Optional when office is selected
   });
 
-const teamMembers = [
-  { label: "Haseeb", value: "Haseeb" },
-  { label: "Mujeeb", value: "Mujeeb" },
-  { label: "Ahmad", value: "Ahmad" },
-];
-
-const clients = [
-  { label: "ABC", value: "ABC" },
-  { label: "NEL", value: "NEL" },
-  { label: "OCTA", value: "OCTA" },
-];
-
 export default function Page() {
   const { state: UserState } = useContext(UserContext);
   const [data, setData] = useState([]);
-
+  const [visible, setVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState({});
+  const [addTaskVisible, setAddTaskVisible] = useState(false);
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [dataLoading, setDataLoading] = useState(false)
 
   useEffect(() => {
-    async function fetchData() {
+    if (UserState?.value?.data?.id) {
+      const startDate = moment().startOf("month").toISOString();
+      const endDate = moment().endOf("month").toISOString();
+      fetchData("", startDate, endDate);
+    }
+  }, [UserState?.value?.data]);
+
+  async function fetchData(user, start_date, end_date) {
+    setDataLoading(true)
+    return new Promise((resolve, reject) => {
       axios
-        .get(`${BASE_URL}/task`)
+        .get(
+          `${BASE_URL}/task?start_date=${start_date}&end_date=${end_date}&user=${user}`
+        )
         .then((response) => {
           const apiData = response.data.map((item) => {
             return { ...item, created_at_time: item.created_at };
@@ -208,29 +196,93 @@ export default function Page() {
         })
         .catch((e) => {
           console.log(e);
+        })
+        .finally(() => {
+          setDataLoading(false)
+          resolve(true);
         });
+    });
+  }
 
-    }
-    if (UserState?.value?.data?.id) {
-      fetchData();
-    }
-  }, [UserState?.value?.data]);
-
+  async function handleUpdateMark() {
+    const startDate = moment().startOf("month").toISOString();
+    const endDate = moment().endOf("month").toISOString();
+    fetchData("", startDate, endDate);
+  }
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-center justify-between">
         <Heading title="Task Management" description="Manage team tasks" />
-        <AddTask />
+
+        <Button
+          onClick={() => {
+            setAddTaskVisible(true);
+          }}
+        >
+          Add Task
+        </Button>
+
+        <AddTask
+          onRefresh={() => {
+            const startDate = moment()
+              .subtract(2, "months")
+              .startOf("month")
+              .toISOString();
+            const endDate = moment().endOf("month").toISOString();
+            fetchData("", startDate, endDate);
+          }}
+          defaultRadio={"office"}
+          visible={addTaskVisible}
+          onClose={setAddTaskVisible}
+        />
       </div>
 
       <PageTable
+      loading={dataLoading}
         columns={columns}
         data={data}
         totalItems={data.length}
         searchItem={"task_name"}
         searchName={"Search task..."}
-      ></PageTable>
+        onRowClick={(val) => {
+          setSelectedTask(val);
+          setVisible(true);
+        }}
+      >
+        <Button
+          onClick={() => setFilterVisible(true)}
+          variant="ghost"
+          className="p-0 w-8"
+        >
+          <Filter />
+        </Button>
+      </PageTable>
+
+      <TaskDetail
+        user_id={UserState?.value?.data?.id}
+        detail={selectedTask}
+        visible={visible}
+        onClose={setVisible}
+        onDelete={(val) => {
+          const temp = [...data.filter((item) => item.id !== val.id)];
+          setData([...temp]);
+        }}
+        onMark={() => handleUpdateMark()}
+      />
+
+      <FilterSheet
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        onReturn={async (val) => {
+          console.log(val);
+          await fetchData(
+            val.user || "",
+            val.start.toISOString(),
+            val.end.toISOString()
+          );
+        }}
+      />
     </div>
   );
 }
@@ -254,33 +306,89 @@ const TaskRadio = ({ onSelection, value }) => {
   );
 };
 
-const TaskDetail = ({ detail }) => {
+const TaskDetail = ({
+  detail,
+  visible,
+  onClose,
+  onDelete,
+  onMark,
+  user_id,
+}) => {
+  const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const {toast} = useToast()
+
+  async function handleUpdateStatus(values) {
+    setLoading(true);
+    axios
+      .put(`${BASE_URL}/user/${user_id}/task/${detail.id}`, {
+        id: values.id,
+        status: values.status,
+      })
+      .then(() => {
+        toast({ title: "Status updated" });
+        onClose(false);
+      })
+      .catch((e) => {
+        toast({
+          title: "Error",
+          description: e?.response?.data?.message || e?.message,
+        });
+      })
+      .finally(() => {
+        setLoading(false);
+        onMark();
+      });
+  }
+
+  async function handleDelete() {
+    setDeleteLoading(true);
+    axios
+      .delete(`${BASE_URL}/user/${user_id}/task/${detail.id}`)
+      .then(() => {
+        onClose(false);
+        toast({ title: "Task deleted" });
+      })
+      .catch((e) => {
+        toast({
+          title: "Error",
+          description: e?.response?.data?.message || e?.message,
+        });
+      })
+      .finally(() => {
+        setDeleteLoading(false);
+        onDelete({ id: detail.id });
+      });
+  }
+
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="ghost" className="p-0 w-8">
-          <ChevronsRight />
-        </Button>
-      </SheetTrigger>
+    <Sheet
+      open={visible}
+      onOpenChange={onClose}
+      onDelete={onDelete}
+      onMark={onMark}
+    >
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Task Detail</SheetTitle>
           <SheetDescription>Check task details</SheetDescription>
           <div className="w-full flex justify-end">
-            <Button>Delete</Button>
+            <Button onClick={handleDelete}>
+              {deleteLoading && <Loader2 className="animate-spin" />} Delete
+            </Button>
           </div>
         </SheetHeader>
-        <div className="w-full py-6 px-4 bg-white rounded-lg shadow-lg">
+        <div className="w-full py-6 px-4 bg-white rounded-lg shadow-lg mt-2">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="flex flex-col gap-4">
               <h3 className="text-sm font-medium text-gray-600">Status</h3>
               <h3 className="text-sm font-medium text-gray-600">
                 Assigned Date
               </h3>
-              <h3 className="text-sm font-medium text-gray-600">Assigned To</h3>
+              {/* <h3 className="text-sm font-medium text-gray-600">Assigned To</h3>
               <h3 className="text-sm font-medium text-gray-600">
                 Assignee Email
-              </h3>
+              </h3> */}
               <h3 className="text-sm font-medium text-gray-600">
                 Assigned Task
               </h3>
@@ -291,14 +399,16 @@ const TaskDetail = ({ detail }) => {
                 {detail?.status}
               </Label>
               <Label htmlFor="assign_date" className="text-sm text-gray-800">
-                {detail?.created_at}
+                {detail?.created_at
+                  ? moment(detail?.created_at).format("DD/MM/YYYY")
+                  : ""}
               </Label>
-              <Label htmlFor="assigned_to" className="text-sm text-gray-800">
+              {/* <Label htmlFor="assigned_to" className="text-sm text-gray-800">
                 {detail?.assigned_to_name}
               </Label>
               <Label htmlFor="assignee_email" className="text-sm text-gray-800">
                 {detail?.assigned_to_email}
-              </Label>
+              </Label> */}
               <Label htmlFor="assigned_task" className="text-sm text-gray-800">
                 {detail?.task_name}
               </Label>
@@ -307,75 +417,102 @@ const TaskDetail = ({ detail }) => {
         </div>
 
         <SheetFooter className={"mt-4"}>
-          <SheetClose asChild>
-            <Button>
-              {detail?.status === "Completed"
-                ? "Mark as Pending"
-                : "Mark as Completed"}
-            </Button>
-          </SheetClose>
+          <Button
+            onClick={() => {
+              handleUpdateStatus({
+                ...detail,
+                status:
+                  detail?.status === "Completed" ? "Pending" : "Completed",
+              });
+            }}
+          >
+            {loading && <Loader2 className="animate-spin" />}
+            {detail?.status === "Completed"
+              ? "Mark as Pending"
+              : "Mark as Completed"}
+          </Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
   );
 };
 
-const AddTask = () => {
+const AddTask = ({ visible, onClose, onRefresh }) => {
   const [selectedRadio, setSelectedRadio] = useState("office");
+  const [loading, setLoading] = useState(false);
+  const {toast} = useToast()
 
   const form = useForm({
     resolver: zodResolver(getSchema(selectedRadio === "client")),
     defaultValues: {
       radio: "office",
       task: "",
-      team: null,
       client: null,
+      user: null,
     },
   });
 
+  const { watch, reset, handleSubmit, control, getValues } = form;
+
   useEffect(() => {
-    form.reset(
+    reset(
       {
-        ...form.getValues(),
-        client: selectedRadio === "client" ? form.getValues().client : "",
+        ...getValues(),
+        client: selectedRadio === "client" ? getValues().client : null, // Ensure null
       },
       {
         resolver: zodResolver(getSchema(selectedRadio === "client")),
       }
     );
-  }, [selectedRadio, form]);
+  }, [selectedRadio, reset, getValues]);
 
   const onSubmit = (values) => {
-    console.log("Form Data:", values);
+    setLoading(true);
+    axios
+      .post(`${BASE_URL}/task`, {
+        task_name: values.task,
+        type: values.radio == "office" ? "Office Task" : "Client Visit",
+        client: values.client,
+        status: "Pending",
+        assigned_to: values.user,
+      })
+      .then(() => {
+        onRefresh();
+        handleClose(false);
+        toast({ title: "Task created successfully" });
+      })
+      .catch((e) => {
+        toast({
+          title: "Error",
+          description: e?.response?.data?.message || e?.message,
+        });
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
+  function handleClose(val) {
+    reset({
+      radio: "office",
+      task: "",
+      client: null,
+      user : null
+    });
+    onClose(val);
+  }
+
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          onClick={() => {
-            setSelectedRadio("office");
-            form.reset({
-              radio: "office",
-              task: "",
-              team: null,
-              client: null,
-            });
-          }}
-        >
-          Add Task
-        </Button>
-      </DialogTrigger>
+    <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add new task</DialogTitle>
         </DialogHeader>
         <div className="py-4">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* Radio Selection */}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <FormField
-                control={form.control}
+                control={control}
                 name="radio"
                 render={({ field }) => (
                   <FormItem>
@@ -396,7 +533,7 @@ const AddTask = () => {
 
               {/* Task Input */}
               <FormField
-                control={form.control}
+                control={control}
                 name="task"
                 render={({ field }) => (
                   <FormItem>
@@ -409,17 +546,16 @@ const AddTask = () => {
                 )}
               />
 
-              {/* Team Member Selection */}
               <FormField
-                control={form.control}
-                name="team"
+                control={control}
+                name="user"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Team Member</FormLabel>
+                    <FormLabel>Select Employee</FormLabel>
                     <FormControl>
                       <UserSearch
                         value={field.value}
-                        onReturn={(val) => field.onChange(val)}
+                        onReturn={field.onChange}
                       />
                     </FormControl>
                     <FormMessage />
@@ -430,7 +566,7 @@ const AddTask = () => {
               {/* Client Selection (Only When "Client" is Selected) */}
               {selectedRadio === "client" && (
                 <FormField
-                  control={form.control}
+                  control={control}
                   name="client"
                   render={({ field }) => (
                     <FormItem>
@@ -448,14 +584,11 @@ const AddTask = () => {
               )}
 
               <Button className="w-full" type="submit">
-                Submit
+                {loading && <Loader2 className="animate-spin" />} Submit
               </Button>
             </form>
           </Form>
         </div>
-        {/* <DialogFooter>
-      <Button type="submit">Save changes</Button>
-    </DialogFooter> */}
       </DialogContent>
     </Dialog>
   );

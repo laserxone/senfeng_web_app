@@ -217,7 +217,7 @@ export default function Page() {
             {loading ? (
               <Skeleton className="h-6 w-24" />
             ) : (
-              <Link href={"/owner/inventory"}>
+              <Link href={`/${UserState.value.data?.base_route}/inventory`}>
                 <div className="text-2xl font-bold hover:underline cursor-pointer">
                   {data?.total_low_stock}
                 </div>

@@ -77,7 +77,7 @@ const FilterSheet = ({ visible, onClose, onReturn }) => {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {UserState.value.data?.designation === 'Owner' && (
+            {(UserState.value.data?.designation === 'Owner' || UserState.value.data?.full_access) && (
               <FormField
                 control={form.control}
                 name="user"
