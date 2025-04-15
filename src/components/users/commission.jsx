@@ -3,7 +3,7 @@
 import { UserContext } from "@/store/context/UserContext";
 import { useContext, useEffect, useState } from "react";
 import { Heading } from "../ui/heading";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { BASE_URL } from "@/constants/data";
 import { Card, CardContent } from "../ui/card";
 import {
@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { Input } from "../ui/input";
 
 export default function Commission({ owner }) {
   return owner ? <OwnerView /> : <OtherView />;
@@ -45,7 +46,7 @@ const OwnerView = () => {
   async function fetchData() {
     return new Promise(async (resolve, reject) => {
       try {
-        const route = `${BASE_URL}/commission`;
+        const route = `/commission`;
         const response = await axios.get(route);
         setData(response.data);
       } catch (error) {
@@ -65,7 +66,7 @@ const OwnerView = () => {
       setLoading(true);
       try {
         await axios
-          .put(`${BASE_URL}/commission/${id}`, {
+          .put(`/commission/${id}`, {
             is_approved: true,
             approval_date: new Date(),
             commission_amount: (item.total_amount * selectedPercentage) / 100,
@@ -100,6 +101,7 @@ const OwnerView = () => {
                     ? "Commission Amount"
                     : "Commission Percentage"}
                 </TableHead>
+                <TableHead>Note</TableHead>
                 <TableHead>Commission Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -135,6 +137,7 @@ const OwnerView = () => {
                     </Select>
                   )}
                 </TableCell>
+                <TableCell>{item.note}</TableCell>
                 {/* <TableCell>{}</TableCell> */}
                 <TableCell>
                   {loading ? (
@@ -211,7 +214,7 @@ const OtherView = () => {
   async function fetchData(id) {
     return new Promise(async (resolve, reject) => {
       try {
-        const route = `${BASE_URL}/user/${id}/commission`;
+        const route = `/user/${id}/commission`;
         const response = await axios.get(route);
         setData(response.data);
       } catch (error) {
@@ -225,20 +228,28 @@ const OtherView = () => {
   const RenderEachRow = ({ item, onRefresh }) => {
     const [loading, setLoading] = useState(false);
     const { state: UserState } = useContext(UserContext);
+    const [note, setNote] = useState(item?.note || "");
 
     async function handleApplyCommission(id, amount) {
       if (!id) return;
       setLoading(true);
       try {
         await axios
-          .post(`${BASE_URL}/commission`, {
+          .post(`/commission`, {
             sale_id: id,
             user_id: UserState.value.data?.id,
             is_requested: true,
             total_amount: item.price,
+            note: note,
           })
           .then(async () => {
-            await onRefresh();
+            await axios
+              .put(`/machine/${id}`, {
+                payment_lock: true,
+              })
+              .then(async () => {
+                await onRefresh();
+              });
           });
       } catch (error) {
       } finally {
@@ -259,6 +270,7 @@ const OtherView = () => {
                 <TableHead>Price</TableHead>
                 <TableHead>Paid</TableHead>
                 <TableHead>Balance</TableHead>
+                <TableHead>Note</TableHead>
                 <TableHead>Commission Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -268,6 +280,18 @@ const OtherView = () => {
                 <TableCell>{item.created_amount}</TableCell>
                 <TableCell>{item.paid_amount}</TableCell>
                 <TableCell>{item.balance}</TableCell>
+                <TableCell>
+                  {item.balance !== 0 ? null : item.commission?.id ? (
+                    <span>{item.commission?.note}</span>
+                  ) : (
+                    <div className="flex flex-row gap-2">
+                      <Input
+                        value={note || ""}
+                        onChange={(e) => setNote(e.target.value)}
+                      />
+                    </div>
+                  )}
+                </TableCell>
                 <TableCell>
                   {item.balance !== 0 ? (
                     <span className="text-red-600">

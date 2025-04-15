@@ -7,7 +7,7 @@ import {
   ref,
   uploadBytesResumable,
 } from "firebase/storage";
-import { storage } from "@/config/firebase";
+import { auth, storage } from "@/config/firebase";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +17,7 @@ import { UserContext } from "@/store/context/UserContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UploadImage } from "@/lib/uploadFunction";
 import moment from "moment";
-import axios from "axios";
+import axios from "@/lib/axios";
 import {
   updatePassword,
   getAuth,
@@ -26,62 +26,77 @@ import {
 } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { BASE_URL } from "@/constants/data";
+import { Textarea } from "../ui/textarea";
+import Spinner from "../ui/spinner";
 
 export default function ProfilePage() {
   const { state: UserState, setUser } = useContext(UserContext);
-  const [nameLoading, setNameLoading] = useState(true);
+
   const [isPasswordResetVisible, setIsPasswordResetVisible] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
+    father: "",
+    number: "",
+    official_number: "",
+    kin_number: "",
+    address: "",
+    pin: "",
     password: "",
     confirmPassword: "",
     currentPassword: "",
     dp: "",
-    cnic: "",
-    education: "",
-    police: "",
-    resume: "",
     basic_salary: "",
     monthly_target: "",
     total_salary: "",
     designation: "",
     email: "",
   });
+  const [docsData, setDocsData] = useState({
+    cnic: "",
+    education: "",
+    police: "",
+    resume: "",
+    appointment_letter: "",
+    father_cnic: "",
+  });
   const inputRef = useRef();
   const { toast } = useToast();
-  const [newName, setNewName] = useState("");
-  const [newNumber, setNewNumber] = useState("");
-  const [newKin, setNewKin] = useState("");
-  const [numberLoading, setNumberLoading] = useState(true);
-  const [kinLoading, setKinLoading] = useState(true);
+
+  const [dp, setDp] = useState("");
+  const [formLoading, setFormLoading] = useState(false);
 
   useEffect(() => {
-    if (UserState?.value?.data?.id) {
+    if (UserState.value.data?.id) {
+      const u = UserState.value.data;
       setFormData({
-        name: UserState.value.data?.name || "",
-        designation: UserState.value.data?.designation,
-        number: UserState.value.data?.number || "",
-        kin: UserState.value.data?.kin_number || "",
+        name: u.name || "",
+        father: u.father || "",
+        number: u.number || "",
+        official_number: u.official_number || "",
+        kin_number: u.kin_number || "",
+        address: u.address || "",
+        pin: u.pin || "",
         password: "",
         confirmPassword: "",
         currentPassword: "",
-        dp: UserState.value.data?.dp || "",
-        cnic: UserState.value.data?.cnic || "",
-        education: UserState.value.data?.education || "",
-        police: UserState.value.data?.police || "",
-        resume: UserState.value.data?.resume || "",
-        basic_salary: UserState.value.data?.basic_salary || "",
-        monthly_target: UserState.value.data?.monthly_target || "",
-        total_salary: UserState.value.data?.total_salary || "",
-        email: UserState.value.data?.email || "",
+
+        basic_salary: u.basic_salary || "",
+        monthly_target: u.monthly_target || "",
+        total_salary: u.total_salary || "",
+        designation: u.designation || "",
+        email: u.email || "",
       });
-      setNewName(UserState.value.data?.name || "");
-      setNewNumber(UserState.value.data?.number || "");
-      setNewKin(UserState.value.data?.kin_number || "");
+      setDp(u.dp || "");
+      setDocsData({
+        cnic: u.cnic || "",
+        education: u.education || "",
+        police: u.police || "",
+        resume: u.resume || "",
+        appointment_letter: u.appointment_letter || "",
+        father_cnic: u.father_cnic || "",
+      });
     }
-    setNameLoading(false);
-    setNumberLoading(false);
-    setKinLoading(false);
   }, [UserState]);
 
   const RenderProfilePicture = useCallback(() => {
@@ -89,13 +104,13 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-      if (formData?.dp) {
+      if (dp) {
         setLoading(true);
         try {
-          if (formData?.dp?.includes("http")) {
-            setLocalImage(formData?.dp);
+          if (dp?.includes("http")) {
+            setLocalImage(dp);
           } else {
-            const storageRef = ref(storage, formData?.dp);
+            const storageRef = ref(storage, dp);
             getDownloadURL(storageRef).then((url) => {
               setLocalImage(url);
             });
@@ -114,23 +129,23 @@ export default function ProfilePage() {
         const fileList = Array.from(event.target.files);
         const name = `${UserState?.value?.data?.id}/profile/${UserState?.value?.data?.email}-dp.png`;
         const img = await UploadImage(URL.createObjectURL(fileList[0]), name);
-        const response = await axios.post(
-          `${BASE_URL}/user/${UserState.value.data.id}/profile`,
+        const response = await axios.put(
+          `/user/${UserState.value.data.id}`,
           {
+            ...formData,
             dp: name,
-            cnic: formData.cnic,
-            police: formData.police,
-            education: formData.education,
-            name: formData.name,
+            password: undefined,
+            confirmPassword: undefined,
+            currentPassword: undefined,
           }
         );
         setUser({
           ...UserState.value.data,
+          ...formData,
           dp: name,
-          cnic: formData.cnic,
-          police: formData.police,
-          education: formData.education,
-          name: formData.name,
+          password: undefined,
+          confirmPassword: undefined,
+          currentPassword: undefined,
         });
         toast({ title: "Profile Updated" });
       } catch (error) {
@@ -167,7 +182,7 @@ export default function ProfilePage() {
         ></input>
       </>
     );
-  }, [formData]);
+  }, [dp]);
 
   const DocumentCard = useCallback(
     ({ type }) => {
@@ -180,9 +195,9 @@ export default function ProfilePage() {
       const userEmail = UserState?.value?.data?.email;
 
       useEffect(() => {
-        if (formData?.[type]) {
+        if (docsData?.[type]) {
           setLoading(true);
-          const filePath = formData[type];
+          const filePath = docsData[type];
           if (filePath.includes("http")) {
             setFileUrl(filePath);
             setFileName(filePath.split("/").pop());
@@ -210,10 +225,10 @@ export default function ProfilePage() {
           const newFilePath = `${userId}/profile/${type}.${extension}`;
 
           // Step 1: Delete old file if exists
-          if (formData?.[type] && !formData[type].includes("http")) {
-            const oldFileRef = ref(storage, formData[type]);
+          if (docsData?.[type] && !docsData[type].includes("http")) {
+            const oldFileRef = ref(storage, docsData[type]);
             await deleteObject(oldFileRef).catch((err) =>
-              console.warn("Old file could not be deleted:", err)
+              console.log("Old file could not be deleted:", err)
             );
           }
 
@@ -224,8 +239,14 @@ export default function ProfilePage() {
             file.type || "application/octet-stream"
           );
 
-          const updatedData = { ...formData, [type]: newFilePath };
-          await axios.post(`${BASE_URL}/user/${userId}/profile`, updatedData);
+          const updatedData = {
+            ...docsData,
+            password: undefined,
+            confirmPassword: undefined,
+            currentPassword: undefined,
+            [type]: newFilePath,
+          };
+          await axios.put(`/user/${userId}`, updatedData);
 
           setUser({
             ...UserState.value.data,
@@ -244,19 +265,25 @@ export default function ProfilePage() {
       };
 
       const handleFileDelete = async () => {
-        if (!formData?.[type]) return;
+        if (!docsData?.[type]) return;
 
         setLoading(true);
         try {
           // Step 1: Delete from storage if it's not a URL
-          if (!formData[type].includes("http")) {
-            const fileRef = ref(storage, formData[type]);
+          if (!docsData[type].includes("http")) {
+            const fileRef = ref(storage, docsData[type]);
             await deleteObject(fileRef);
           }
 
           // Step 2: Update backend with empty string
-          const updatedData = { ...formData, [type]: "" };
-          await axios.post(`${BASE_URL}/user/${userId}/profile`, updatedData);
+          const updatedData = {
+            ...docsData,
+            password: undefined,
+            confirmPassword: undefined,
+            currentPassword: undefined,
+            [type]: "",
+          };
+          await axios.put(`/user/${userId}`, updatedData);
 
           // Step 3: Update local state
           setUser({
@@ -279,7 +306,9 @@ export default function ProfilePage() {
 
       return (
         <div className="space-y-2">
-          <Label className="font-semibold text-lg">{type?.toUpperCase()}</Label>
+          <Label className="font-semibold text-lg">
+            {type?.replace("_", " ").toUpperCase()}
+          </Label>
 
           {loading ? (
             <Skeleton className="h-[50px] w-full" />
@@ -294,8 +323,11 @@ export default function ProfilePage() {
                     ref={fileInputRef}
                     onChange={handleFileUpload}
                   />
-                  <Button onClick={() => fileInputRef.current?.click()} className="w-full">
-                    Upload {type}
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full"
+                  >
+                    Upload {type.replace("_", " ")}
                   </Button>
                 </>
               ) : (
@@ -318,7 +350,7 @@ export default function ProfilePage() {
                     ref={fileInputRef}
                     onChange={handleFileUpload}
                   />
-                  <Button
+                  {/* <Button
                     onClick={() => fileInputRef.current?.click()}
                     className="w-[180px]"
                   >
@@ -330,7 +362,7 @@ export default function ProfilePage() {
                     className="w-[180px]"
                   >
                     Delete {type}
-                  </Button>
+                  </Button> */}
                 </>
               )}
             </div>
@@ -338,7 +370,7 @@ export default function ProfilePage() {
         </div>
       );
     },
-    [formData, UserState]
+    [docsData]
   );
 
   const handleChange = (e) => {
@@ -346,44 +378,30 @@ export default function ProfilePage() {
     setFormData({ ...formData, [name]: value });
   };
 
-  async function handleSaveName() {
-    if (UserState.value.data?.name !== newName) {
-      setNameLoading(true);
-    }
-
-    if (UserState.value.data?.number !== newNumber) {
-      setNumberLoading(true);
-    }
-    if (UserState.value.data?.kin_number !== newKin) {
-      setKinLoading(true);
-    }
+  async function handleSave() {
+    setFormLoading(true);
 
     try {
-      const response = await axios.post(
-        `${BASE_URL}/user/${UserState.value.data.id}/profile`,
+      const response = await axios.put(
+        `/user/${UserState.value.data.id}`,
         {
-          dp: formData.dp,
-          cnic: formData.cnic,
-          police: formData.police,
-          education: formData.education,
-          resume: formData.resume,
-          name: newName,
-          number: newNumber,
-          kin_number: newKin,
+          ...formData,
+          password: undefined,
+          confirmPassword: undefined,
+          currentPassword: undefined,
         }
       );
       setUser({
         ...UserState.value.data,
-        name: newName,
-        number: newNumber,
-        kin_number: newKin,
+        ...formData,
+        password: undefined,
+        confirmPassword: undefined,
+        currentPassword: undefined,
       });
       toast({ title: "Profile Updated" });
     } catch (error) {
     } finally {
-      setNameLoading(false);
-      setKinLoading(false);
-      setNumberLoading(false);
+      setFormLoading(false);
     }
   }
 
@@ -404,6 +422,7 @@ export default function ProfilePage() {
 
     const user = auth.currentUser;
     if (user) {
+      setPasswordLoading(true);
       const credential = EmailAuthProvider.credential(
         user.email,
         formData.currentPassword
@@ -411,14 +430,23 @@ export default function ProfilePage() {
 
       reauthenticateWithCredential(user, credential)
         .then(() => {
-          updatePassword(user, formData.password)
-            .then(() => {
-              handlePasswordResetToggle();
-            })
-            .catch((error) => {});
+          updatePassword(user, formData.password).then(() => {
+            handlePasswordResetToggle();
+            toast({ title: "Password changed" });
+            setFormData({
+              ...formData,
+              currentPassword: "",
+              password: "",
+              confirmPassword: "",
+            });
+          });
         })
         .catch((error) => {
+          toast({ title: error?.message || "Error", variant: "destructive" });
           console.log(error);
+        })
+        .finally(() => {
+          setPasswordLoading(false);
         });
     }
   };
@@ -464,7 +492,9 @@ export default function ProfilePage() {
                     placeholder="Confirm new password"
                   />
                 </div>
-                <Button onClick={handlePasswordUpdate}>Update Password</Button>
+                <Button onClick={handlePasswordUpdate}>
+                  {passwordLoading && <Spinner />}Update Password
+                </Button>
               </div>
             ) : (
               <Button
@@ -479,83 +509,122 @@ export default function ProfilePage() {
         <Card className="flex flex-1 flex-col py-5">
           <CardContent>
             <div className="flex flex-col gap-3">
-              <Label>Display name</Label>
-              {nameLoading ? (
-                <Skeleton className={"w-full h-[50px]"} />
-              ) : (
-                <Input
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Enter your name"
-                />
-              )}
+              <div className="flex flex-row w-full gap-5">
+                <div className="flex flex-1 flex-col space-y-2">
+                  <Label>Display name</Label>
+                  <Input
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Enter your name"
+                  />
+                </div>
+                <div className="flex flex-1 flex-col space-y-2">
+                  <Label>Father's name</Label>
+                  <Input
+                    name="father"
+                    value={formData.father}
+                    onChange={handleChange}
+                    placeholder="Enter your father's name"
+                  />
+                </div>
+              </div>
 
               <Label>Designation</Label>
               <Input
+                name="designation"
                 value={formData.designation}
                 onChange={handleChange}
-                disabled={true}
+                disabled
               />
 
-              <Label>Phone Number</Label>
-              {numberLoading ? (
-                <Skeleton className={"w-full h-[50px]"} />
-              ) : (
-                <Input
-                  value={newNumber}
-                  onChange={(e) => setNewNumber(e.target.value)}
-                  placeholder="Enter your number"
-                />
-              )}
+              <div className="flex flex-row w-full gap-5">
+                <div className="flex flex-1 flex-col space-y-2">
+                  <Label>Phone Number</Label>
+                  <Input
+                    name="number"
+                    value={formData.number}
+                    onChange={handleChange}
+                    placeholder="Enter your number"
+                  />
+                </div>
+                <div className="flex flex-1 flex-col space-y-2">
+                  <Label>Official Number</Label>
+                  <Input
+                    name="official_number"
+                    value={formData.official_number}
+                    onChange={handleChange}
+                    placeholder="Enter your official number"
+                  />
+                </div>
+                <div className="flex flex-1 flex-col space-y-2">
+                  <Label>Kinship Number</Label>
+                  <Input
+                    name="kin_number"
+                    value={formData.kin_number}
+                    onChange={handleChange}
+                    placeholder="Enter your kinship number"
+                  />
+                </div>
+              </div>
 
-              <Label>Kinship Number</Label>
-              {kinLoading ? (
-                <Skeleton className={"w-full h-[50px]"} />
-              ) : (
-                <Input
-                  value={newKin}
-                  onChange={(e) => setNewKin(e.target.value)}
-                  placeholder="Enter your kinship number"
-                />
-              )}
               <Label>Email</Label>
               <Input
+                name="email"
                 value={formData.email}
                 onChange={handleChange}
-                disabled={true}
+                disabled
               />
+
               <div className="w-full flex gap-2">
                 <div className="flex flex-col flex-1 gap-3">
                   <Label>Basic salary</Label>
                   <Input
+                    name="basic_salary"
                     value={formData.basic_salary}
                     onChange={handleChange}
-                    disabled={true}
+                    disabled
                   />
                 </div>
                 <div className="flex flex-col flex-1 gap-3">
                   <Label>Monthly target</Label>
                   <Input
+                    name="monthly_target"
                     value={formData.monthly_target}
                     onChange={handleChange}
-                    disabled={true}
+                    disabled
                   />
                 </div>
                 <div className="flex flex-col flex-1 gap-3">
                   <Label>Total salary</Label>
                   <Input
+                    name="total_salary"
                     value={formData.total_salary}
                     onChange={handleChange}
-                    disabled={true}
+                    disabled
                   />
                 </div>
               </div>
 
-              {(UserState.value.data?.name !== newName ||
-                UserState.value.data?.number !== newNumber ||
-                UserState.value.data?.kin_number !== newKin) && (
-                <Button onClick={handleSaveName}>Save</Button>
-              )}
+              <Label>Address</Label>
+              <Textarea
+                placeholder="Enter your address"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+              />
+
+              <Label>Home google pin location</Label>
+              <Input
+                name="pin"
+                placeholder="Enter your google pin location"
+                value={formData.pin}
+                onChange={handleChange}
+              />
+
+              <Button onClick={handleSave}>
+                {formLoading && <Spinner />}Save
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -567,9 +636,11 @@ export default function ProfilePage() {
         <CardContent>
           <div className="flex flex-1 flex-col space-y-4">
             <DocumentCard type={"cnic"} />
+            <DocumentCard type={"father_cnic"} />
             <DocumentCard type={"police"} />
             <DocumentCard type={"education"} />
             <DocumentCard type={"resume"} />
+            <DocumentCard type={"appointment_letter"} />
           </div>
         </CardContent>
       </Card>

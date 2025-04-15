@@ -1,65 +1,25 @@
 "use client";
-import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { BASE_URL } from "@/constants/data";
 import {
   ArrowUpDown,
-  ChevronsRight,
   Filter,
-  Loader2,
-  MoreHorizontal,
+  Loader2
 } from "lucide-react";
-import { BASE_URL } from "@/constants/data";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Label } from "@/components/ui/label";
 
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import ConfimationDialog from "@/components/alert-dialog";
-import AppCalendar from "@/components/appCalendar";
 import PageTable from "@/components/app-table";
-import { Heading } from "@/components/ui/heading";
+import AppCalendar from "@/components/appCalendar";
+import Dropzone from "@/components/dropzone";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -68,29 +28,27 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle
+} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import Dropzone from "@/components/dropzone";
-import axios from "axios";
+import { storage } from "@/config/firebase";
+import exportToExcel from "@/lib/exportToExcel";
+import { UploadImage } from "@/lib/uploadFunction";
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "@/lib/axios";
+import { getDownloadURL, ref } from "firebase/storage";
+import moment from "moment";
+import { useForm } from "react-hook-form";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
-import exportToExcel from "@/lib/exportToExcel";
-import { Title } from "@radix-ui/react-dialog";
-import { UserSearch } from "@/components/user-search";
-import moment from "moment";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UploadImage } from "@/lib/uploadFunction";
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@/config/firebase";
-import FilterSheet from "./filterSheet";
+import { z } from "zod";
 import Spinner from "../ui/spinner";
+import FilterSheet from "./filterSheet";
 
 export default function Reimbursement({
   id,
@@ -203,22 +161,6 @@ export default function Reimbursement({
       cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
 
-    // {
-    //   id: "actions",
-    //   cell: ({ row }) => {
-    //     const currentItem = row.original;
-
-    //     return (
-    //       <ChevronsRight
-    //         className="hover:cursor-pointer"
-    //         onClick={() => {
-    //           setImageURL(currentItem);
-    //           setVisible(true);
-    //         }}
-    //       />
-    //     );
-    //   },
-    // },
   ];
 
   function handleDownload() {
@@ -471,7 +413,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
     try {
       const name = `${id}/reimbursement/${moment().valueOf().toString()}.png`;
       const imgRef = await UploadImage(values.image, name);
-      const response = await axios.post(`${BASE_URL}/reimbursement`, {
+      const response = await axios.post(`/reimbursement`, {
         amount: values.amount,
         title: values.title,
         description: values.description,

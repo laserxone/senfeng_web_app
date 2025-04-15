@@ -72,7 +72,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import Dropzone from "@/components/dropzone";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import exportToExcel from "@/lib/exportToExcel";
@@ -94,7 +94,7 @@ export default function ReimbursementEmployee({id}) {
   useEffect(() => {
     async function fetchData() {
       axios
-        .get(`${BASE_URL}/reimbursement`)
+        .get(`/reimbursement`)
         .then((response) => {
           const localData = response.data.filter((item)=> item.submitted_by === id)
           setData(localData);

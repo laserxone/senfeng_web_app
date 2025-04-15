@@ -12,7 +12,7 @@ import PageTable from "@/components/app-table";
 import SalaryPdf from "@/components/salaryPdf";
 import { Heading } from "@/components/ui/heading";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "axios";
+import axios from "@/lib/axios";
 import moment from "moment";
 import { FaRegFilePdf } from "react-icons/fa";
 import "react-medium-image-zoom/dist/styles.css";
@@ -32,7 +32,7 @@ const SalaryRecord = () => {
 
   async function fetchData(id) {
     axios
-      .get(`${BASE_URL}/user/${id}/record`)
+      .get(`/user/${id}/record`)
       .then((response) => {
         setData(response.data);
       })
@@ -104,7 +104,7 @@ const SalaryRecord = () => {
     if (!id) return;
     setLoading(true);
     axios
-      .delete(`${BASE_URL}/record/${id}`)
+      .delete(`/record/${id}`)
       .then(async () => {
         await fetchData();
       })

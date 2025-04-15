@@ -78,7 +78,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import Dropzone from "@/components/dropzone";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import exportToExcel from "@/lib/exportToExcel";
@@ -125,7 +125,7 @@ export default function EmployeeBranchExpenses() {
   async function fetchData(startDate, endDate) {
     return new Promise((resolve, reject) => {
       axios
-        .get(`${BASE_URL}/expenses?start_date=${startDate}&end_date=${endDate}`)
+        .get(`/expenses?start_date=${startDate}&end_date=${endDate}`)
         .then((response) => {
           setData(response.data);
         })
@@ -243,18 +243,13 @@ export default function EmployeeBranchExpenses() {
         const res = await DeleteFromStorage(imageURL.image);
       }
       const response = await axios.delete(
-        `${BASE_URL}/expenses/${id}`
+        `/expenses/${id}`
       );
       toast({ title: "Branch Expense Deleted" });
       const startDate = moment().startOf("month").toISOString();
       const endDate = moment().endOf("month").toISOString();
       await fetchData(startDate, endDate);
-    } catch (error) {
-      toast({
-        title: error?.response?.data?.message || "Netwrok error",
-        variant: "desctructive",
-      });
-    } finally {
+    }  finally {
       setDeleteLoading(false);
       setShowConfirmation(false);
       setVisible(false);
@@ -452,7 +447,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
       if (values.image) {
         const name = `Expenses/${moment().valueOf().toString()}.png`;
         const imgRes = await UploadImage(values.image, name);
-        const response = await axios.post(`${BASE_URL}/expenses`, {
+        const response = await axios.post(`/expenses`, {
           ...values,
           submitted_by: user_id,
           image: name,
@@ -460,7 +455,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
         await onRefresh();
         handleClose(false);
       } else {
-        const response = await axios.post(`${BASE_URL}/expenses`, {
+        const response = await axios.post(`/expenses`, {
           ...values,
           submitted_by: user_id,
         });

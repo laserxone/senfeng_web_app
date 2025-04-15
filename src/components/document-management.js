@@ -9,6 +9,9 @@ import PageTable from './app-table';
 import { Button } from './ui/button';
 import { Heading } from './ui/heading';
 import Spinner from './ui/spinner';
+import axios from 'axios';
+import { BASE_URL } from '@/constants/data';
+import moment from 'moment';
 
 const DocumentManagement = () => {
     const [files, setFiles] = useState([]);
@@ -17,47 +20,61 @@ const DocumentManagement = () => {
     const [loading, setLoading] = useState(true)
     const { state: UserState } = useContext(UserContext)
     const { toast } = useToast()
-    const [uploadLoading, setUploadLoading] = useState(true)
+    const [uploadLoading, setUploadLoading] = useState(false)
     const fileInputRef = useRef(null);
 
-    // Fetch files from the public storage bucket when the component mounts
     useEffect(() => {
         if (UserState.value.data?.id)
             fetchFiles();
     }, [UserState]);
 
-    // Fetch files function
     const fetchFiles = async () => {
 
-
-        const { data, error } = await supabase.storage.from('documents').list('')
-
-        if (error) {
-            setError('Error fetching files.');
-            toast({ title: 'Error fetching files.', variant: "destructive" })
-            setUploadLoading(false)
+        try {
+            const response = await axios.get(`/dms`)
+            const finalData = response.data.map((item, index)=>{
+                return {...item, sr : index + 1}
+            })
+            setFiles([...finalData]);
             setLoading(false)
-            return;
+            setUploadLoading(false)
+        } catch (error) {
+            console.log(error)
+            setLoading(false)
+            setUploadLoading(false)
         }
-        let temp = [...data]
-        temp.sort((a, b) => {
-            const nameA = a.name ? a.name.toLowerCase() : "";
-            const nameB = b.name ? b.name.toLowerCase() : "";
 
-            if (!nameA && nameB) return 1;
-            if (nameA && !nameB) return -1;
 
-            return nameA.localeCompare(nameB);
-        });
-        const finalData = temp.map((item, index) => {
-            return ({ ...item, id: index + 1 })
-        })
-        setFiles([...finalData]);
-        setLoading(false)
-        setUploadLoading(false)
+
+
+
+        // const { data, error } = await supabase.storage.from('documents').list('')
+
+        // if (error) {
+        //     setError('Error fetching files.');
+        //     toast({ title: 'Error fetching files.', variant: "destructive" })
+        //     setUploadLoading(false)
+        //     setLoading(false)
+        //     return;
+        // }
+        // let temp = [...data]
+        // temp.sort((a, b) => {
+        //     const nameA = a.name ? a.name.toLowerCase() : "";
+        //     const nameB = b.name ? b.name.toLowerCase() : "";
+
+        //     if (!nameA && nameB) return 1;
+        //     if (nameA && !nameB) return -1;
+
+        //     return nameA.localeCompare(nameB);
+        // });
+        // const finalData = temp.map((item, index) => {
+        //     return ({ ...item, id: index + 1 })
+        // })
+        // setFiles([...finalData]);
+        // setLoading(false)
+        // setUploadLoading(false)
     };
 
-    // Handle file upload
     const uploadFile = async () => {
         if (!selectedFile) {
             toast({ title: 'Please select a file to upload.', variant: "destructive" })
@@ -69,12 +86,15 @@ const DocumentManagement = () => {
     };
 
     async function handleDelete(file) {
-        const { data, error } = await supabase
-            .storage
-            .from('documents')
-            .remove([file.name]).finally(() => {
-                fetchFiles()
-            })
+        const id = file.id
+        await axios.delete(`/dms/${id}`).then(async () => {
+            await supabase
+                .storage
+                .from('documents')
+                .remove([file.path])
+        }).finally(() => {
+            fetchFiles()
+        })
     }
 
     async function handleUpload() {
@@ -88,6 +108,10 @@ const DocumentManagement = () => {
             setUploadLoading(false)
             return;
         }
+        const response = await axios.post(`/dms`, {
+            added_by: UserState.value.data?.name || UserState.value.data?.email,
+            path: filePath
+        })
         setSelectedFile(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
@@ -97,7 +121,7 @@ const DocumentManagement = () => {
 
     const columns = [
         {
-            accessorKey: "id",
+            accessorKey: "sr",
             filterFn: "includesString",
             header: ({ column }) => {
                 return (
@@ -112,12 +136,12 @@ const DocumentManagement = () => {
             },
             cell: ({ row }) => (
                 <div className="ml-2">
-                    {row.getValue("id")}
+                    {row.getValue("sr")}
                 </div>
             ),
         },
         {
-            accessorKey: "name",
+            accessorKey: "path",
             filterFn: "includesString",
             header: ({ column }) => {
                 return (
@@ -125,48 +149,95 @@ const DocumentManagement = () => {
                         variant="ghost"
                         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                     >
-                        Name
+                        File Name
                         <ArrowUpDown />
                     </Button>
                 );
             },
             cell: ({ row }) => (
                 <div className="ml-2">
-                    {row.getValue("name")}
+                    {row.getValue("path")}
+                </div>
+            ),
+        },
+
+        {
+            accessorKey: "added_by",
+            filterFn: "includesString",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Added By
+                        <ArrowUpDown />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => (
+                <div className="ml-2">
+                    {row.getValue("added_by")}
+                </div>
+            ),
+        },
+
+        {
+            accessorKey: "created_at",
+            filterFn: "includesString",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Date
+                        <ArrowUpDown />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => (
+                <div className="ml-2">
+                    {moment(row.getValue("created_at")).format("YYYY-MM-DD")}
                 </div>
             ),
         },
 
         {
             id: "actions",
-            header : "Action",
+            header: "Action",
             cell: ({ row }) => {
                 const file = row.original;
                 const [deleteLoading, setDeleteLoading] = useState(false)
+                const [downloadLoading, setDownloadLoading] = useState(false)
                 return (
                     <div className='flex gap-4'>
+                        {downloadLoading ? (
+                            <Spinner className="h-5 w-5" />
+                        ) :
+                            <Download className="h-5 w-5 hover:opacity-50" onClick={
+                                async () => {
+                                    setDownloadLoading(true)
+                                    const { data, error } = await supabase
+                                        .storage
+                                        .from('documents')
+                                        .download(file.path)
+                                    if (error) {
+                                        console.error("Error downloading file", error);
+                                        return;
+                                    }
+                                    const url = URL.createObjectURL(data);
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    link.download = file.path;  // Optional: Specify the download file name
+                                    link.click();
 
-                        <Download className="h-5 w-5 hover:opacity-50" onClick={
-                            async () => {
-                                const { data, error } = await supabase
-                                    .storage
-                                    .from('documents')
-                                    .download(file.name)
-                                if (error) {
-                                    console.error("Error downloading file", error);
-                                    return;
+                                    // Clean up the Blob URL after the download is triggered
+                                    URL.revokeObjectURL(url);
+                                    setDownloadLoading(false)
                                 }
-                                const url = URL.createObjectURL(data);
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.download = file.name;  // Optional: Specify the download file name
-                                link.click();
-
-                                // Clean up the Blob URL after the download is triggered
-                                URL.revokeObjectURL(url);
-                            }
-                        } />
-
+                            } />
+                        }
 
                         {
                             UserState?.value?.data &&

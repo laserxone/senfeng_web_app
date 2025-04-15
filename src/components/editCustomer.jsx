@@ -1,14 +1,14 @@
 "use client";
 
 import { storage } from "@/config/firebase";
-import { BASE_URL } from "@/constants/data";
+import { BASE_URL, CountriesList } from "@/constants/data";
 import { toast } from "@/hooks/use-toast";
 import { debounce } from "@/lib/debounce";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { UploadImage } from "@/lib/uploadFunction";
 import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { getDownloadURL, ref } from "firebase/storage";
 import { Loader2, Trash } from "lucide-react";
 import moment from "moment";
@@ -35,6 +35,16 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
 import { UserSearch } from "./user-search";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { RequiredStar } from "./RequiredStar";
+import { NumberSearch } from "./number-search";
 
 const EditCustomerDialog = ({
   onRefresh,
@@ -50,16 +60,21 @@ const EditCustomerDialog = ({
   const { state: UserState } = useContext(UserContext);
   const [checking, setChecking] = useState(false);
   const [customerInfo, setCustomerInfo] = useState([]);
+  const [selectedNumber, setSelectedNumber] = useState(["+92"]);
 
   const formSchema = z.object({
     company: z.string().optional(), // Optional field without min(1)
-    owner: z.string().min(1, { message: "Owner is required." }), // Required field
+    owner: z.string().min(1, { message: "" }), // Required field
     email: z.string().optional(), // Optional but must be a valid email if provided
-    city: z.string().min(1, { message: "City is required." }), // Required field
+    city: z.string().min(1, { message: "" }), // Required field
     industry: z.string().optional(), // Optional field
     remarks: z.string().optional(), // Optional field
     address: z.string().optional(), // Optional field
     group: z.string().optional(), // Optional field
+    other: z.string().optional(),
+    lead: z.number().nullable().optional(),
+    platform: z.string().optional(),
+    pin: z.string().optional(),
     rating: z.number().optional(),
     image: z.string().optional(),
     member: z.boolean().optional(),
@@ -77,6 +92,10 @@ const EditCustomerDialog = ({
       remarks: "",
       address: "",
       group: "",
+      lead: null,
+      other: "",
+      pin: "",
+      platform: "",
       rating: 0,
       image: "",
       member: false,
@@ -88,9 +107,30 @@ const EditCustomerDialog = ({
 
   useEffect(() => {
     if (data) {
-      setNumbers(data?.number);
+      let tempNumbers = [];
+      let tempSelectedNumber = [];
+
+      data.number.forEach((num) => {
+        let found = false;
+        for (let country of CountriesList) {
+          if (num.startsWith(country.num)) {
+            tempSelectedNumber.push(country.num);
+            tempNumbers.push(num.slice(country.num.length));
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          tempSelectedNumber.push("");
+          tempNumbers.push(num);
+        }
+      });
+
+      setSelectedNumber([...tempSelectedNumber]);
+      setNumbers([...tempNumbers]);
+
       if (data.image) {
-        getDownloadURL(ref(storage, image)).then((url) => {
+        getDownloadURL(ref(storage, data.image)).then((url) => {
           form.reset({
             company: data?.name || "",
             owner: data?.owner || "",
@@ -104,6 +144,10 @@ const EditCustomerDialog = ({
             image: url || "",
             member: data?.member || false,
             ownership: data?.ownership || null,
+            lead: data?.lead || null,
+            other: data?.other || "",
+            pin: data?.pin || "",
+            platform: data?.platform || "",
           });
         });
       } else {
@@ -120,6 +164,10 @@ const EditCustomerDialog = ({
           image: data?.image || "",
           member: data?.member || false,
           ownership: data?.ownership || null,
+          lead: data?.lead || null,
+          other: data?.other || "",
+          pin: data?.pin || "",
+          platform: data?.platform || "",
         });
       }
     }
@@ -150,6 +198,10 @@ const EditCustomerDialog = ({
       remarks: values.remarks,
       member: values.member,
       ownership: values.ownership,
+      lead: values.lead,
+      other: values.other,
+      platform: values.platform,
+      pin: values.pin,
     };
 
     try {
@@ -160,22 +212,22 @@ const EditCustomerDialog = ({
 
       if (data.image && !values.image) {
         const deleteRef = await DeleteFromStorage(data.image);
-        const response = await axios.put(`${BASE_URL}/customer/${data.id}`, {
+        const response = await axios.put(`/customer/${data.id}`, {
           ...apiData,
           image: "",
         });
       } else if (values.image && !data.image) {
-        const name = `customer/${customer_id}/profile/${moment()
+        const name = `customer/${data.id}/profile/${moment()
           .valueOf()
           .toString()}.png`;
         const uploadRef = await UploadImage(values.image, name);
-        const response = await axios.put(`${BASE_URL}/customer/${data.id}`, {
+        const response = await axios.put(`/customer/${data.id}`, {
           ...apiData,
           image: name,
         });
       } else {
         const response = await axios.put(
-          `${BASE_URL}/customer/${data.id}`,
+          `/customer/${data.id}`,
           apiData
         );
       }
@@ -183,11 +235,6 @@ const EditCustomerDialog = ({
       toast({ title: "Customer Edited successfully" });
       onRefresh();
       handleClose(false);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: error?.response?.data?.message || error?.message,
-      });
     } finally {
       setLoading(false);
     }
@@ -195,10 +242,14 @@ const EditCustomerDialog = ({
 
   const addNumberField = () => {
     setNumbers((prevState) => [...prevState, ""]);
+    setSelectedNumber((prevState) => [...prevState, "+92"]);
   };
 
   const removeNumberField = (index) => {
     setNumbers((prevState) => prevState.filter((_, ind) => ind !== index));
+    setSelectedNumber((prevState) =>
+      prevState.filter((_, ind) => ind !== index)
+    );
   };
 
   const handleNumberChange = (index, value) => {
@@ -210,20 +261,24 @@ const EditCustomerDialog = ({
       newState[index] = value;
       return newState;
     });
-    debouncedCheckNumber(value);
+    if (value) debouncedCheckNumber(selectedNumber[index] + value);
+  };
+
+  const handlePrefixChange = (index, value) => {
+    setSelectedNumber((prevState) => {
+      const newState = [...prevState];
+      newState[index] = value;
+      return newState;
+    });
   };
 
   const checkNumberInDatabase = async (number) => {
     setCustomerInfo([]);
     setChecking(true);
     try {
-      const response = await axios.post(`${BASE_URL}/check-number`, { number });
-      if(response.data && response.data.length > 0){
-        const apiData = response.data
-        const filteredData = [...apiData.filter((item)=>item.id !== data.id)]
-        setCustomerInfo(filteredData);
-      }
-      
+      const response = await axios.post(`/check-number`, { number });
+      const finalData = response.data.filter((item)=> !item.id === data.id)
+      setCustomerInfo(finalData);
     } catch (error) {
       console.log("Error checking number:", error);
     } finally {
@@ -240,10 +295,10 @@ const EditCustomerDialog = ({
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent className="max-w-[80vw]">
         <DialogHeader>
-          <DialogTitle>Add new customer</DialogTitle>
+          <DialogTitle>Edit customer</DialogTitle>
         </DialogHeader>
         <div>
-          <ScrollArea className="h-[75vh] px-2">
+          <ScrollArea className="h-[85vh] px-2">
             <div className="px-2">
               <Form {...form}>
                 <form
@@ -254,15 +309,29 @@ const EditCustomerDialog = ({
                     <div className="flex flex-1 flex-col space-y-4">
                       <div>
                         <FormItem>
-                          <FormLabel>Numbers</FormLabel>
-                          {numbers?.map((num, index) => (
+                          <FormLabel
+                            style={{ color: numberError ? "red" : "black" }}
+                          >
+                            Phone Number <RequiredStar />
+                          </FormLabel>
+                          {numbers.map((num, index) => (
                             <div
                               key={index}
                               className="flex items-center gap-2"
                             >
+                              <div className="w-[200px]">
+                                <NumberSearch
+                                  value={selectedNumber[index]}
+                                  onReturn={(val) =>
+                                    handlePrefixChange(index, val)
+                                  }
+                                />
+                              </div>
                               <FormControl className="flex-1">
                                 <Input
-                                  placeholder="Enter number"
+                                type="number"
+                                  disabled={!selectedNumber[index]}
+                                  placeholder="xxxxxxxxx"
                                   value={num}
                                   onChange={(e) =>
                                     handleNumberChange(index, e.target.value)
@@ -305,7 +374,9 @@ const EditCustomerDialog = ({
                                 <Link
                                   key={index}
                                   target="_blank"
-                                  href={`/${UserState.value.data?.base_route}/customer/detail?id=${item?.id}`}
+                                  href={`/${UserState.value.data?.base_route}/${
+                                    item.member ? "member" : "customer"
+                                  }/detail?id=${item?.id}`}
                                   className="block text-red-600 dark:text-red-400 text-sm font-medium hover:underline"
                                 >
                                   {item?.name || item?.owner} -{" "}
@@ -387,26 +458,6 @@ const EditCustomerDialog = ({
                         )}
                       />
 
-                      <FormField
-                        control={control}
-                        name="member"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="pr-2">Member?</FormLabel>
-                            <FormControl>
-                              <Checkbox
-                                className="mt-5"
-                                checked={field.value}
-                                onCheckedChange={(checked) => {
-                                  field.onChange(checked);
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
                       {ownership && (
                         <FormField
                           control={control}
@@ -425,6 +476,61 @@ const EditCustomerDialog = ({
                           )}
                         />
                       )}
+
+                      <FormField
+                        control={control}
+                        name="lead"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Lead Generated By</FormLabel>
+                            <FormControl>
+                              <UserSearch
+                                lead={true}
+                                value={field.value}
+                                onReturn={(val) => field.onChange(val)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="flex flex-row gap-10">
+                        <FormField
+                          control={control}
+                          name="rating"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Rating</FormLabel>
+                              <FormControl>
+                                <StarRating
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={control}
+                          name="member"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="pr-2">Member?</FormLabel>
+                              <FormControl>
+                                <Checkbox
+                                  className="mt-5"
+                                  checked={field.value}
+                                  onCheckedChange={(checked) => {
+                                    field.onChange(checked);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </div>
 
                     <div className="flex flex-1 flex-col space-y-4">
@@ -462,6 +568,23 @@ const EditCustomerDialog = ({
                             <FormLabel>Email</FormLabel>
                             <FormControl>
                               <Input placeholder="Enter email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={control}
+                        name="other"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Other IDs</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="wechat / qq / facebook / twitter"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -515,14 +638,47 @@ const EditCustomerDialog = ({
 
                       <FormField
                         control={control}
-                        name="rating"
+                        name="platform"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Rating</FormLabel>
+                            <FormLabel>Platform</FormLabel>
                             <FormControl>
-                              <StarRating
+                              <Select
+                                onValueChange={field.onChange}
                                 value={field.value}
-                                onChange={field.onChange}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select platform" />
+                                </SelectTrigger>
+
+                                <SelectContent>
+                                  <SelectGroup>
+                                    {["SOCIAL MEDIA", "SENFENG", "DIRECT"].map(
+                                      (item) => (
+                                        <SelectItem key={item} value={item}>
+                                          {item}
+                                        </SelectItem>
+                                      )
+                                    )}
+                                  </SelectGroup>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={control}
+                        name="pin"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Google Location Pin</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter pin location"
+                                {...field}
                               />
                             </FormControl>
                             <FormMessage />

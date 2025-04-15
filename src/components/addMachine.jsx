@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -42,7 +42,6 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
     speedMoney: z.string().optional(),
     speedMoneyNote: z.string().optional(),
     totalPrice: z.number().min(1, { message: "Total price is required." }),
-    usdRate: z.number().min(1, { message: "USD TT rate is required." }),
     cnic: z.string().optional(),
   });
 
@@ -66,7 +65,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
     // console.log("Form Data:", values);
     setLoading(true);
     axios
-      .post(`${BASE_URL}/machine`, {
+      .post(`/machine`, {
         customer_id: customer_id,
         type: "Machine",
         speed_money_note: values.speedMoneyNote,
@@ -79,7 +78,6 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
         sell_by: user_id,
         commission: true,
         price: values.totalPrice,
-        USD_TT_rate: values.usdRate,
         contract_date: values.contractDate,
         cnic: values.cnic,
       })
@@ -221,34 +219,6 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name="usdRate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>USD TT rate <RequiredStar /></FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="Enter USD TT rate"
-                            value={field.value ? field.value : ""}
-                            onChange={(e) => {
-                              if (!isNaN(e.target.value)) {
-                                field.onChange(Number(e.target.value));
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* <div>
-                        {Number(form.getValues("totalPrice")) *
-                          Number(form.getValues("usdRate"))}
-                      </div> */}
 
                   <FormField
                     control={form.control}

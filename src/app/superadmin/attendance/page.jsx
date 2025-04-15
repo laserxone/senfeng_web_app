@@ -24,7 +24,7 @@ import { BASE_URL } from "@/constants/data";
 import { MapProvider } from "@/providers/map-provider";
 import { UserContext } from "@/store/context/UserContext";
 import { GoogleMap, Marker } from "@react-google-maps/api";
-import axios from "axios";
+import axios from "@/lib/axios";
 import moment from "moment";
 import { useTheme } from "next-themes";
 
@@ -51,7 +51,7 @@ export default function Page() {
     return new Promise((res, rej) => {
       axios
         .get(
-          `${BASE_URL}/attendance?start_date=${start}&end_date=${end}&user=${
+          `/attendance?start_date=${start}&end_date=${end}&user=${
             user || ""
           }`
         )

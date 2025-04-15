@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
-import { useCallback, useContext, useState } from "react";
+import axios from "@/lib/axios";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
@@ -31,6 +31,16 @@ import { UserContext } from "@/store/context/UserContext";
 import { debounce } from "@/lib/debounce";
 import Link from "next/link";
 import { useDebounce } from "@/hooks/use-debounce";
+import { NumberSearch } from "./number-search";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 const AddCustomerDialog = ({
   onRefresh,
@@ -45,6 +55,7 @@ const AddCustomerDialog = ({
   const { state: UserState } = useContext(UserContext);
   const [checking, setChecking] = useState(false);
   const [customerInfo, setCustomerInfo] = useState([]);
+  const [selectedNumber, setSelectedNumber] = useState(["+92"]);
 
   const formSchema = z.object({
     company: z.string().optional(), // Optional field without min(1)
@@ -55,6 +66,10 @@ const AddCustomerDialog = ({
     remarks: z.string().optional(), // Optional field
     address: z.string().optional(), // Optional field
     group: z.string().optional(), // Optional field
+    other: z.string().optional(),
+    lead: z.number().nullable().optional(),
+    platform: z.string().optional(),
+    pin: z.string().optional(),
     rating: z.number().optional(),
     member: z.boolean().optional(),
     ownership: z.number().nullable().optional(),
@@ -71,6 +86,10 @@ const AddCustomerDialog = ({
       remarks: "",
       address: "",
       group: "",
+      lead: null,
+      other: "",
+      pin: "",
+      platform: "",
       rating: 0,
       member: false,
       ownership: null,
@@ -90,37 +109,45 @@ const AddCustomerDialog = ({
     setLoading(true);
 
     try {
-      const temp = numbers.filter((item) => {
-        if (item) return item;
-      });
-      if (temp.length === 0) {
-        setNumberError("Atleas one number is required");
-        return;
-      }
-      let i = 0;
-      temp.forEach((num) => {
-        if (num && num.charAt(0) !== "+") {
-          i++;
-          setNumberError("Follow correct number format");
-          return;
-        }
+      const finalData = numbers.map((item, index) => {
+        return selectedNumber[index] + item;
       });
 
-      if (i > 0) return;
+      // const temp = finalData.filter((item) => {
+      //   if (item) return item;
+      // });
+      // if (temp.length === 0) {
+      //   setNumberError("Atleas one number is required");
+      //   return;
+      // }
+      // let i = 0;
+      // temp.forEach((num) => {
+      //   if (num && num.charAt(0) !== "+") {
+      //     i++;
+      //     setNumberError("Follow correct number format");
+      //     return;
+      //   } 
+      // });
 
-      const response = await axios.post(`${BASE_URL}/customer`, {
+      // if (i > 0) return;
+
+      const response = await axios.post(`/customer`, {
         name: values.company,
         email: values.email,
         customer_group: values.group,
         industry: values.industry,
         location: values.city,
-        number: temp,
+        number: finalData,
         owner: values.owner,
         address: values.address,
         rating: values.rating,
         image: "",
         remarks: values.remarks,
         member: values.member,
+        lead: values.lead || undefined,
+        other: values.other,
+        platform: values.platform,
+        pin: values.pin,
         ownership:
           UserState.value.data?.designation == "Sales"
             ? UserState.value.data?.id
@@ -130,24 +157,23 @@ const AddCustomerDialog = ({
         created_by: UserState.value.data?.id,
       });
       toast({ title: "Customer Addedd successfully" });
-      await onRefresh();
+      await onRefresh(response.data.data);
       handleClose(false);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: error?.response?.data?.message || error?.message,
-      });
-    } finally {
+    }  finally {
       setLoading(false);
     }
   }
 
   const addNumberField = () => {
     setNumbers((prevState) => [...prevState, ""]);
+    setSelectedNumber((prevState) => [...prevState, "+92"]);
   };
 
   const removeNumberField = (index) => {
     setNumbers((prevState) => prevState.filter((_, ind) => ind !== index));
+    setSelectedNumber((prevState) =>
+      prevState.filter((_, ind) => ind !== index)
+    );
   };
 
   const handleNumberChange = (index, value) => {
@@ -159,14 +185,22 @@ const AddCustomerDialog = ({
       newState[index] = value;
       return newState;
     });
-    debouncedCheckNumber(value);
+    if (value) debouncedCheckNumber(selectedNumber[index] + value);
+  };
+
+  const handlePrefixChange = (index, value) => {
+    setSelectedNumber((prevState) => {
+      const newState = [...prevState];
+      newState[index] = value;
+      return newState;
+    });
   };
 
   const checkNumberInDatabase = async (number) => {
     setCustomerInfo([]);
     setChecking(true);
     try {
-      const response = await axios.post(`${BASE_URL}/check-number`, { number });
+      const response = await axios.post(`/check-number`, { number });
 
       setCustomerInfo(response.data);
     } catch (error) {
@@ -187,7 +221,7 @@ const AddCustomerDialog = ({
         <DialogHeader>
           <DialogTitle>Add new customer</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="max-h-[75vh] px-2">
+        <ScrollArea className="max-h-[85vh] px-2">
           <div className="px-2">
             <Form {...form}>
               <form
@@ -205,9 +239,18 @@ const AddCustomerDialog = ({
                         </FormLabel>
                         {numbers.map((num, index) => (
                           <div key={index} className="flex items-center gap-2">
+                            <div className="w-[200px]">
+                              <NumberSearch
+                                value={selectedNumber[index]}
+                                onReturn={(val) =>
+                                  handlePrefixChange(index, val)
+                                }
+                              />
+                            </div>
                             <FormControl className="flex-1">
                               <Input
-                                placeholder="+92xxxxxxxxxx"
+                                disabled={!selectedNumber[index]}
+                                placeholder="xxxxxxxxx"
                                 value={num}
                                 onChange={(e) =>
                                   handleNumberChange(index, e.target.value)
@@ -351,6 +394,24 @@ const AddCustomerDialog = ({
                         )}
                       />
                     )}
+
+                    <FormField
+                      control={control}
+                      name="lead"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Lead Generated By</FormLabel>
+                          <FormControl>
+                            <UserSearch
+                            lead={true}
+                              value={field.value}
+                              onReturn={(val) => field.onChange(val)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
 
                   <div className="flex flex-1 flex-col space-y-4">
@@ -362,6 +423,23 @@ const AddCustomerDialog = ({
                           <FormLabel>Email</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={control}
+                      name="other"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Other IDs</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="wechat / qq / facebook / twitter"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -415,15 +493,32 @@ const AddCustomerDialog = ({
 
                     <FormField
                       control={control}
-                      name="rating"
+                      name="platform"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Rating</FormLabel>
+                          <FormLabel>Platform</FormLabel>
                           <FormControl>
-                            <StarRating
+                            <Select
+                              onValueChange={field.onChange}
                               value={field.value}
-                              onChange={field.onChange}
-                            />
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select platform" />
+                              </SelectTrigger>
+
+                              <SelectContent>
+                                <SelectGroup>
+                                  {["SOCIAL MEDIA", "SENFENG", "DIRECT"].map((item) => (
+                                    <SelectItem
+                                      key={item}
+                                      value={item}
+                                    >
+                                      {item}
+                                    </SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -432,28 +527,69 @@ const AddCustomerDialog = ({
 
                     <FormField
                       control={control}
-                      name="member"
+                      name="pin"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="pr-2">Member?</FormLabel>
+                          <FormLabel>Google Location Pin</FormLabel>
                           <FormControl>
-                            <Checkbox
-                              className="mt-5"
-                              checked={field.value}
-                              onCheckedChange={(checked) => {
-                                field.onChange(checked);
-                              }}
+                            <Input
+                              placeholder="Enter pin location"
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                    <div className="flex flex-row gap-10">
+                      <FormField
+                        control={control}
+                        name="rating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Rating</FormLabel>
+                            <FormControl>
+                              <StarRating
+                                value={field.value}
+                                onChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={control}
+                        name="member"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="pr-2">Member?</FormLabel>
+                            <FormControl>
+                              <Checkbox
+                                className="mt-5"
+                                checked={field.value}
+                                onCheckedChange={(checked) => {
+                                  field.onChange(checked);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <Button
-                  disabled={customerInfo.length > 0 || checking}
+                  disabled={
+                    customerInfo.length > 0 ||
+                    checking ||
+                    numbers.filter((item) => {
+                      if (item) return item;
+                    }).length === 0
+                  }
                   className="w-full mt-10"
                   type="submit"
                 >

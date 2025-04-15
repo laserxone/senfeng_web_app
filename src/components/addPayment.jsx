@@ -27,7 +27,7 @@ import Dropzone from "@/components/dropzone";
 import Image from "next/image";
 import moment from "moment";
 import { UploadImage } from "@/lib/uploadFunction";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -83,7 +83,7 @@ const AddPayment = ({
           .valueOf()
           .toString()}.png`;
         const imgRef = await UploadImage(values.image, name);
-        const response = await axios.post(`${BASE_URL}/payment`, {
+        const response = await axios.post(`/payment`, {
           ...values,
           machine_id: machine_id,
           image: name,
@@ -95,10 +95,6 @@ const AddPayment = ({
         setLoading(false);
       }
     } catch (e) {
-      toast({
-        title: e?.response?.data?.message || e?.message,
-        variant: "destructive",
-      });
       setLoading(false);
     }
   }
@@ -125,7 +121,7 @@ const AddPayment = ({
     setChecking(true);
     setError({});
     try {
-      const response = await axios.post(`${BASE_URL}/check-note`, { number });
+      const response = await axios.post(`/check-note`, { number });
       if (Array.isArray(response.data) && response.data.length > 0) {
         setError(response.data[0]);
       }
@@ -200,7 +196,7 @@ const AddPayment = ({
                             <div className="flex">
                               <Input placeholder="Enter TID" {...field} />
                               {checking && <Spinner className={"ml-2"} />}
-                            </div>
+                            </div> 
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -212,7 +208,7 @@ const AddPayment = ({
                         target="blank"
                         className="text-red-500 text-sm"
                         href={
-                          `/${UserState?.value?.data?.base_route}/customer/machine?id=${error?.machine_id}` ||
+                          `/${UserState?.value?.data?.base_route}/member/machine?id=${error?.machine_id}` ||
                           "#"
                         }
                       >
@@ -364,7 +360,7 @@ const AddPayment = ({
 
                     {/* Submit Button */}
                     <Button
-                      disabled={error?.errorMessage}
+                      disabled={error?.errorMessage || checking}
                       className="w-full"
                       type="submit"
                     >

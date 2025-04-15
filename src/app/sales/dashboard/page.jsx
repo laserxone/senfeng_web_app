@@ -23,7 +23,7 @@ import Reimbursement from "@/components/users/Reimbursement";
 import { BASE_URL } from "@/constants/data";
 import { GetProfileImage } from "@/lib/getProfileImage";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "axios";
+
 import { AlertCircle, CheckCircle, Clock } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
@@ -31,6 +31,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
 import SalaryRecord from "@/components/users/SalaryRecord";
+import axios from "@/lib/axios";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -49,7 +50,7 @@ export default function Page() {
       const startDate = moment().startOf("month").toISOString();
       const endDate = moment().endOf("month").toISOString();
       fetchData();
-      fetchVisitData();
+      fetchVisitData(startDate, endDate);
       fetchAllCustomers();
       fetchExtraCustomerOptions();
       fetchReimbursementData(startDate, endDate);
@@ -61,7 +62,7 @@ export default function Page() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `${BASE_URL}/user/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+          `/user/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           setReimbursementData(response.data);
@@ -78,7 +79,7 @@ export default function Page() {
     return new Promise((res, rej) => {
       axios
         .get(
-          `${BASE_URL}/user/${UserState.value.data.id}/attendance?start_date=${startDate}&end_date=${endDate}`
+          `/user/${UserState.value.data.id}/attendance?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           if (response.data.length > 0) {
@@ -102,7 +103,7 @@ export default function Page() {
 
   async function fetchData() {
     axios
-      .get(`${BASE_URL}/user/${UserState.value.data?.id}`)
+      .get(`/user/${UserState.value.data?.id}`)
       .then((response) => {
         setData(response.data);
         if (response.data.customers && response.data.customers.length > 0) {
@@ -120,22 +121,27 @@ export default function Page() {
   }
 
   async function fetchAllCustomers() {
-    axios.get(`${BASE_URL}/customer`).then((response) => {
+    axios.get(`/customer`).then((response) => {
       setCustomers(response.data);
     });
   }
 
-  async function fetchVisitData() {
-    axios
-      .get(`${BASE_URL}/user/${UserState.value.data.id}/visit`)
+  async function fetchVisitData(start, end) {
+    return new Promise((res, rej)=>{
+      axios
+      .get(`/user/${UserState.value.data.id}/visit?start_date=${start}&end_date=${end}`)
       .then((response) => {
         setVisitData(response.data);
-      });
+      }).finally(()=>{
+        res(true)
+      })
+    })
+   
   }
 
   async function fetchExtraCustomerOptions() {
     axios
-      .get(`${BASE_URL}/user/${UserState.value.data?.id}/extra?employee=sales`)
+      .get(`/user/${UserState.value.data?.id}/extra?employee=sales`)
       .then((response) => {
         setExtraData(response.data);
       });
@@ -144,10 +150,16 @@ export default function Page() {
   const RenderVisitTab = useCallback(() => {
     return (
       <VisitTab
+      height="h-[calc(100dvh-260px)]"
         id={UserState.value.data?.id}
         data={visitData}
-        onRefresh={(newData) => {
-          setVisitData([newData, ...visitData]);
+        onRefresh={async() => {
+          const startDate = moment().startOf("month").toISOString();
+          const endDate = moment().endOf("month").toISOString();
+          await fetchVisitData(startDate, endDate)
+        }}
+        onFetchData={async (start, end, userId)=>{
+         await fetchVisitData(start, end)
         }}
       />
     );
@@ -271,6 +283,8 @@ export default function Page() {
             <TabsTrigger value="visit">Visit</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
+            <TabsTrigger value="location">Location</TabsTrigger>
+            <TabsTrigger value="calls">Calls</TabsTrigger>
           </TabsList>
 
           <TabsContent value="newCustomers">

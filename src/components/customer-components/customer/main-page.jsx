@@ -33,7 +33,7 @@ import {
 import { BASE_URL } from "@/constants/data";
 import { toast } from "@/hooks/use-toast";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { startHolyLoader } from "holy-loader";
 import moment from "moment";
 import { useRouter } from "next/navigation";
@@ -82,6 +82,7 @@ export default function CustomerMainPage() {
   const router = useRouter();
   const [quickAction, setQuickAction] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [numCount, setNumCount] = useState({});
 
   useEffect(() => {
     if (UserState.value.data?.id) fetchData();
@@ -90,7 +91,7 @@ export default function CustomerMainPage() {
   async function fetchData() {
     return new Promise((resolve, reject) => {
       axios
-        .get(`${BASE_URL}/customer/machines`)
+        .get(`/customer/machines`)
         .then((response) => {
           const apiData = response.data;
           const temp = apiData
@@ -98,16 +99,16 @@ export default function CustomerMainPage() {
               return {
                 ...item,
                 machines: item.machines.join(", "),
+                orignalNumber: item.number,
                 number: item.number.join(", "),
+                sorting: item.owner || item.name,
               };
             })
             .filter((item) => !item.member);
 
           const isLimited = UserState.value.data?.limited_access;
           const filteredData = isLimited
-            ? temp.filter(
-                (item) => item.created_by === UserState.value.data?.id
-              )
+            ? temp.filter((item) => item.lead === UserState.value.data?.id)
             : temp;
 
           setData([...filteredData]);
@@ -279,21 +280,25 @@ export default function CustomerMainPage() {
       header: "Action",
       cell: ({ row }) => {
         const currentItem = row.original;
+        const user = UserState.value.data;
 
+        const canDelete =
+          user?.designation === "Owner" ||
+          user?.full_access === true ||
+          user?.customer_delete_access === true;
+
+        if (!canDelete) return null;
         return (
-          UserState.value.data &&
-          UserState.value.data.customer_delete_access && (
-            <Button
-              variant="ghost"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedCustomerId(currentItem?.id);
-                setShowConfirmation(true);
-              }}
-            >
-              <Trash2 className="h-5 w-5 text-red-500" size={16} />
-            </Button>
-          )
+          <Button
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedCustomerId(currentItem?.id);
+              setShowConfirmation(true);
+            }}
+          >
+            <Trash2 className="h-5 w-5 text-red-500" size={16} />
+          </Button>
         );
       },
     },
@@ -308,14 +313,9 @@ export default function CustomerMainPage() {
     if (!id) return;
     setDeleteLoading(true);
     try {
-      const response = await axios.delete(`${BASE_URL}/customer/${id}`);
+      const response = await axios.delete(`/customer/${id}`);
       toast({ title: "Customer Deleted" });
       await fetchData();
-    } catch (error) {
-      toast({
-        title: error?.response?.data?.message || "Netwrok error",
-        variant: "desctructive",
-      });
     } finally {
       setDeleteLoading(false);
       setShowConfirmation(false);
@@ -329,9 +329,24 @@ export default function CustomerMainPage() {
         ? !item.ownership === true
         : additionalFilter == "unsold"
         ? !item.machines
+        : additionalFilter == "duplicate"
+        ? item.orignalNumber?.some((num) => numCount[num] > 1)
         : true
     )
     .filter((item) => (selectedUser ? item?.ownership === selectedUser : true));
+
+  useEffect(() => {
+    if (data.length > 0) {
+      const numberCount = {};
+
+      data.forEach((item) => {
+        item.orignalNumber.forEach((num) => {
+          numberCount[num] = (numberCount[num] || 0) + 1;
+        });
+      });
+      setNumCount(numberCount);
+    }
+  }, [data]);
 
   return (
     <PageContainer scrollable={false}>
@@ -394,7 +409,15 @@ export default function CustomerMainPage() {
           totalCustomerText={"Total Customers"}
           totalCustomer={filteredData.length}
           columns={columns}
-          data={filteredData}
+          data={
+            additionalFilter === "duplicate"
+              ? filteredData.sort((a, b) =>
+                  a?.sorting
+                    ?.toLowerCase()
+                    ?.localeCompare(b?.sorting?.toLowerCase() || "")
+                )
+              : filteredData
+          }
           totalItems={filteredData.length}
           tableHeader={tableHeader}
           onRowClick={(val) => {
@@ -438,32 +461,34 @@ export default function CustomerMainPage() {
                 <SelectContent>
                   <SelectGroup>
                     {[
-                      {
-                        value: "unassigned",
-                        label: "Unassigned",
+                      { value: "unassigned", label: "Unassigned" },
+                      { value: "unsold", label: "Unsold Customers" },
+                      (UserState.value.data?.designation === "Owner" ||
+                        UserState.value.data?.full_access) && {
+                        value: "duplicate",
+                        label: "Duplicate",
                       },
-                      {
-                        value: "unsold",
-                        label: "Unsold Customers",
-                      },
-                    ].map((framework) => (
-                      <SelectItem
-                        key={framework.value}
-                        value={framework.value}
-                        onClick={() => {
-                          if (framework.value === additionalFilter) {
-                            setAdditionalFilter("");
-                          } else {
-                            setAdditionalFilter(framework.value);
-                          }
-                        }}
-                      >
-                        {framework.label}
-                      </SelectItem>
-                    ))}
+                    ]
+                      .filter(Boolean)
+                      .map((framework) => (
+                        <SelectItem
+                          key={framework.value}
+                          value={framework.value}
+                          onClick={() => {
+                            if (framework.value === additionalFilter) {
+                              setAdditionalFilter("");
+                            } else {
+                              setAdditionalFilter(framework.value);
+                            }
+                          }}
+                        >
+                          {framework.label}
+                        </SelectItem>
+                      ))}
                   </SelectGroup>
                 </SelectContent>
               </Select>
+
               <Button
                 onClick={() => {
                   handleClear();

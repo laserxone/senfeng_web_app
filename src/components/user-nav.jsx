@@ -20,6 +20,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useContext } from "react";
 import NotificationBadge from "./NotificationBadge";
+import NotificationBadgeWithoutCount from "./NotificationBadgeWithoutCount";
 export function UserNav() {
   const { state: UserState } = useContext(UserContext);
   const router = useRouter();
@@ -35,6 +36,9 @@ export function UserNav() {
               {UserState?.value?.data?.name.substring(0, 2)}
             </AvatarFallback>
           </Avatar>
+          <div style={{position:'absolute', top:'0px', right:'0px'}}>
+          <NotificationBadgeWithoutCount count={NotificationState?.value?.data?.length} />
+          </div>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>

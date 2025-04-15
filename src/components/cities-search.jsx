@@ -18,7 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { PakCities } from "@/constants/data";
 
 export function CitiesSearch({ value, onReturn }) {

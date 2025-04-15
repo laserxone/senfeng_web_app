@@ -1,9 +1,9 @@
 import { BASE_URL } from "@/constants/data";
 import { toast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import AppCalendar from "./appCalendar";
@@ -28,6 +28,10 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Textarea } from "./ui/textarea";
+import { debounce } from "@/lib/debounce";
+import Spinner from "./ui/spinner";
+import { UserContext } from "@/store/context/UserContext";
+import Link from "next/link";
 
 const EditPayment = ({
   visible,
@@ -38,6 +42,8 @@ const EditPayment = ({
   data,
 }) => {
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [error, setError] = useState({});
   const formSchema = z.object({
     note: z.string().min(1, { message: "Note is required." }),
     amount: z.number().min(1, { message: "Amount must be greater than 1." }),
@@ -49,7 +55,7 @@ const EditPayment = ({
     clearance_date: z.date().optional(),
     remarks: z.string().optional(),
   });
-
+  const { state: UserState } = useContext(UserContext);
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -78,22 +84,20 @@ const EditPayment = ({
       });
     }
   }, [data]);
+
   async function onSubmit(values) {
     setLoading(true);
     try {
-      const response = await axios.put(`${BASE_URL}/payment`, {
+      const response = await axios.put(`/payment`, {
         ...values,
         machine_id: machine_id,
-        id : data.id
+        id: data.id,
       });
       toast({ title: "Payment updated successfully" });
       onRefresh();
       handleClose(false);
     } catch (e) {
-      toast({
-        title: e?.response?.data?.message || e?.message,
-        variant: "destructive",
-      });
+     
       setLoading(false);
     }
   }
@@ -103,6 +107,39 @@ const EditPayment = ({
     setLoading(false);
     onClose(val);
   }
+
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === "note") {
+        debouncedCheckNumber(value.note);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
+
+  const checkNumberInDatabase = async (number) => {
+    setChecking(true);
+    setError({});
+    try {
+      const response = await axios.post(`/check-note`, { number });
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        const apiData = response.data[0];
+        if (apiData.note !== data.note) {
+          setError(apiData);
+        }
+      }
+    } catch (error) {
+      console.log("Error checking number:", error);
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const debouncedCheckNumber = useCallback(
+    debounce(checkNumberInDatabase, 1000),
+    []
+  );
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -153,12 +190,28 @@ const EditPayment = ({
                           TID <RequiredStar />
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter TID" {...field} />
+                          <div className="flex">
+                            <Input placeholder="Enter TID" {...field} />
+                            {checking && <Spinner className={"ml-2"} />}
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  {error?.errorMessage && (
+                    <Link
+                      target="blank"
+                      className="text-red-500 text-sm"
+                      href={
+                        `/${UserState?.value?.data?.base_route}/member/machine?id=${error?.machine_id}` ||
+                        "#"
+                      }
+                    >
+                      {error?.errorMessage}
+                    </Link>
+                  )}
 
                   {/* Payment Mode */}
                   <FormField
@@ -274,7 +327,11 @@ const EditPayment = ({
                   />
 
                   {/* Submit Button */}
-                  <Button className="w-full" type="submit">
+                  <Button
+                    disabled={error?.errorMessage}
+                    className="w-full"
+                    type="submit"
+                  >
                     {loading && <Loader2 className="animate-spin" />} Submit
                   </Button>
                 </form>

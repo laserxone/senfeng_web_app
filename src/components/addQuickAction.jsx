@@ -2,7 +2,7 @@
 
 import { BASE_URL } from "@/constants/data";
 import { cn } from "@/lib/utils";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
@@ -46,7 +46,7 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await axios.get(`${BASE_URL}/user`);
+        const response = await axios.get(`/user`);
         if (response.data.length > 0) {
           const finalData = response.data
             .filter((item) => {
@@ -72,7 +72,7 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
   const handleUpdate = async (id, ownership) => {
     setLoading(true);
     try {
-      const response = await axios.put(`${BASE_URL}/customer/${id}`, {
+      const response = await axios.put(`/customer/${id}`, {
         ownership: ownership,
       });
       onRefresh(id, ownership);
@@ -92,9 +92,9 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
   const filteredData = localData
     .filter(
       (item) =>
-        item.name.toLowerCase().includes(search.toLowerCase()) ||
-        item.owner.toLowerCase().includes(search.toLowerCase()) ||
-        item.location.toLowerCase().includes(search.toLowerCase())
+        item?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        item?.owner?.toLowerCase().includes(search.toLowerCase()) ||
+        item?.location?.toLowerCase().includes(search.toLowerCase())
     )
     .slice(0, loadMore);
 
@@ -132,7 +132,7 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
     try {
       const promises = batchData.map((item) =>
         axios
-          .put(`${BASE_URL}/customer/${item.id}`, {
+          .put(`/customer/${item.id}`, {
             ownership: batchId,
           })
           .then(() => {

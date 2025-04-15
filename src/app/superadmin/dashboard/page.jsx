@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { BASE_URL, PakCities } from "@/constants/data";
 import { MapProvider } from "@/providers/map-provider";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "axios";
+import axios from "@/lib/axios";
 import Link from "next/link";
 import { useContext, useEffect, useState } from "react";
 
@@ -28,7 +28,7 @@ export default function Page() {
 
   async function fetchDashboardData() {
     axios
-      .get(`${BASE_URL}/dashboard`)
+      .get(`/dashboard`)
       .then((response) => {
         console.log(response.data)
         setData(response.data);
@@ -42,7 +42,7 @@ export default function Page() {
   async function fetchCustomerList() {
     try {
       let list1 = [];
-      axios.get(`${BASE_URL}/customer`).then((response) => {
+      axios.get(`/customer`).then((response) => {
         const customerList = response.data;
         const newArray = mergeArrays(customerList, PakCities);
     
@@ -195,7 +195,7 @@ export default function Page() {
           </CardContent>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Low Stock Items
@@ -224,7 +224,7 @@ export default function Page() {
               </Link>
             )}
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">

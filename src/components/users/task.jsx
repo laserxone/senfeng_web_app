@@ -117,7 +117,7 @@ import {
 import PageTable from "@/components/app-table";
 import { Heading } from "@/components/ui/heading";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { CustomerSearch } from "@/components/customer-search";
 import { UserSearch } from "@/components/user-search";
 import moment from "moment";
@@ -279,7 +279,7 @@ export default function TaskEmployee({ id }) {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `${BASE_URL}/user/${id}/task?start_date=${start_date}&end_date=${end_date}`
+          `/user/${id}/task?start_date=${start_date}&end_date=${end_date}`
         )
         .then((response) => {
           const apiData = response.data.map((item) => {
@@ -411,7 +411,7 @@ const TaskDetail = ({
   async function handleUpdateStatus(values) {
     setLoading(true);
     axios
-      .put(`${BASE_URL}/user/${user_id}/task/${detail.id}`, {
+      .put(`/user/${user_id}/task/${detail.id}`, {
         id: values.id,
         status: values.status,
       })
@@ -419,12 +419,7 @@ const TaskDetail = ({
         toast({ title: "Status updated" });
         onClose(false);
       })
-      .catch((e) => {
-        toast({
-          title: "Error",
-          description: e?.response?.data?.message || e?.message,
-        });
-      })
+     
       .finally(() => {
         setLoading(false);
         onMark();
@@ -434,17 +429,12 @@ const TaskDetail = ({
   async function handleDelete() {
     setDeleteLoading(true);
     axios
-      .delete(`${BASE_URL}/user/${user_id}/task/${detail.id}`)
+      .delete(`/user/${user_id}/task/${detail.id}`)
       .then(() => {
         onClose(false);
         toast({ title: "Task deleted" });
       })
-      .catch((e) => {
-        toast({
-          title: "Error",
-          description: e?.response?.data?.message || e?.message,
-        });
-      })
+     
       .finally(() => {
         setDeleteLoading(false);
         onDelete({ id: detail.id });
@@ -559,7 +549,7 @@ const AddTask = ({ visible, onClose, onRefresh, user_id }) => {
   const onSubmit = (values) => {
     setLoading(true);
     axios
-      .post(`${BASE_URL}/task`, {
+      .post(`/task`, {
         task_name: values.task,
         type: values.radio == "office" ? "Office Task" : "Client Visit",
         client: values.client,
@@ -571,12 +561,7 @@ const AddTask = ({ visible, onClose, onRefresh, user_id }) => {
         handleClose(false);
         toast({ title: "Task created successfully" });
       })
-      .catch((e) => {
-        toast({
-          title: "Error",
-          description: e?.response?.data?.message || e?.message,
-        });
-      })
+     
       .finally(() => {
         setLoading(false);
       });

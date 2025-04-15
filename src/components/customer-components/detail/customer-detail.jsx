@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import axios from "axios";
+import axios from "@/lib/axios";
 import {
   Factory,
   Loader2,
@@ -13,7 +13,7 @@ import {
   MapPin,
   Phone,
   Trash2,
-  Wrench
+  Wrench,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -41,10 +41,12 @@ import { CheckCircle, Clock } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useContext } from "react";
+import VisitTab from "@/components/users/addVisit";
+import { GetProfileImage } from "@/lib/getProfileImage";
 
 export default function CustomerDetail({ ownership = false }) {
   const search = useSearchParams();
-  const [data, setData] = useState({});
+  const [data, setData] = useState(null);
   const customer_id = search.get("id");
   const { state: UserState } = useContext(UserContext);
   const [feedback, setFeedback] = useState([]);
@@ -53,6 +55,7 @@ export default function CustomerDetail({ ownership = false }) {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const [visitData, setVisitData] = useState([]);
 
   useEffect(() => {
     if (customer_id && UserState?.value?.data?.id) {
@@ -63,62 +66,46 @@ export default function CustomerDetail({ ownership = false }) {
   const debouncedFetchCustomerData = debounce(() => {
     fetchCustomerDetail();
     fetchCustomerFeedback();
+    const startDate = moment().startOf("month").toISOString();
+    const endDate = moment().endOf("month").toISOString();
+    fetchVisitData(startDate, endDate);
   }, 500);
 
-  async function fetchCustomerDetail() {
+  async function fetchVisitData(start, end) {
     axios
-      .get(`${BASE_URL}/customer/${customer_id}`)
+      .get(`/customer/${customer_id}/visit?start_date=${start}&end_date=${end}`)
       .then((response) => {
-        setData(response.data);
-        if (response.data?.machines?.length === 0) {
-          toast({
-            variant: "destructive",
-            title: "Ops",
-            description: "No machine sold",
-          });
-        }
-      })
-      .catch((e) => {
-        toast({
-          variant: "destructive",
-          title: "Something went wrong.",
-          description:
-            e?.reponse?.data?.message ||
-            "There was a problem with your request.",
-        });
+        setVisitData(response.data);
       });
   }
 
-  async function fetchCustomerFeedback() {
-    axios
-      .get(`${BASE_URL}/customer/${customer_id}/feedback`)
-      .then((response) => {
-        setFeedback(response.data);
-      })
-      .catch((e) => {
+  async function fetchCustomerDetail() {
+    axios.get(`/customer/${customer_id}`).then((response) => {
+      setData(response.data);
+      if (response.data?.machines?.length === 0) {
         toast({
           variant: "destructive",
-          title: "Something went wrong.",
-          description:
-            e?.reponse?.data?.message ||
-            "There was a problem with your request.",
+          title: "Ops",
+          description: "No machine sold",
         });
-      });
+      }
+    });
+  }
+
+  async function fetchCustomerFeedback() {
+    axios.get(`/customer/${customer_id}/feedback`).then((response) => {
+      setFeedback(response.data);
+    });
   }
 
   async function handleDelete(id) {
     if (!id) return;
     setDeleteLoading(true);
     try {
-      const response = await axios.delete(`${BASE_URL}/customer/${id}`);
+      const response = await axios.delete(`/customer/${id}`);
       toast({ title: "Customer Deleted" });
       startHolyLoader();
       router.push(`/${UserState.value.data?.base_route}/customer`);
-    } catch (error) {
-      toast({
-        title: error?.response?.data?.message || "Netwrok error",
-        variant: "desctructive",
-      });
     } finally {
       setDeleteLoading(false);
       setShowConfirmation(false);
@@ -126,9 +113,70 @@ export default function CustomerDetail({ ownership = false }) {
     }
   }
 
-  const RenderTabs = useCallback(() => {
+  const RenderVisitTab = useCallback(() => {
     return (
-      <Tabs
+      <VisitTab
+           customer_data={customer_id || null}
+           disable={true}
+           id={UserState.value.data?.id}
+           data={visitData}
+           onRefresh={async () => {
+             await fetchVisitData();
+           }}
+           onFetchData={async (start, end, userId) => {
+             fetchVisitData(start, end);
+           }}
+         />
+    );
+  }, [visitData]);
+
+  return (
+    <PageContainer>
+      <div className="w-full pb-8">
+        <div className="flex flex-1 items-center mb-8 justify-between flex-wrap">
+          <div className="flex gap-2 items-center">
+            <ProfilePicture
+              img={data?.image}
+              name={data?.name}
+              onClick={() => {
+                if (data?.id) {
+                  if (
+                    UserState?.value?.data?.designation === "Sales" ||
+                    UserState?.value?.data?.designation === "Engineer"
+                  ) {
+                    if (data?.ownership === UserState?.value?.data?.id) {
+                      setEditVisible(true);
+                    } else {
+                      toast({
+                        title: "You are not authorized to edit this customer",
+                        variant: "destructive",
+                      });
+                    }
+                  } else {
+                    setEditVisible(true);
+                  }
+                }
+              }}
+            />
+            <div className="flex flex-col">
+              <h1 className="text-3xl font-bold">{data?.name}</h1>
+              <h1 className="text-sm font-medium">
+                Rating:{" "}
+                {data?.rating ? `${data.rating} out of 5` : "Not rated yet"}
+              </h1>
+              <h1 className="text-md font-bold text-primary">
+                Manager {data?.ownership_name || "NA"}
+              </h1>
+            </div>
+          </div>
+          <BillingInformation
+            total={data?.bill_total}
+            received={data?.bill_received}
+            balance={data?.bill_total - data?.bill_received}
+          />
+        </div>
+
+        <Tabs
         defaultValue={data?.member ? "aftersales" : "feedback"}
         className="w-full"
       >
@@ -142,6 +190,8 @@ export default function CustomerDetail({ ownership = false }) {
 
           <TabsTrigger value="customers">Machines</TabsTrigger>
           {/* <TabsTrigger value="documents">Documents</TabsTrigger> */}
+
+          <TabsTrigger value="visit">Visit</TabsTrigger>
           <TabsTrigger value="about">About</TabsTrigger>
         </TabsList>
 
@@ -176,67 +226,23 @@ export default function CustomerDetail({ ownership = false }) {
             onRefresh={() => fetchCustomerDetail()}
           />
         </TabsContent>
+        <TabsContent value="visit">
+          <RenderVisitTab />
+        </TabsContent>
         {/* <TabsContent value="documents">
         <DocumentsTab />
       </TabsContent> */}
       </Tabs>
-    );
-  }, [data, feedback]);
-
-  return (
-    <PageContainer>
-      <div className="w-full pb-8">
-        <div className="flex flex-1 items-center mb-8 justify-between flex-wrap">
-          <div className="flex gap-2 items-center">
-            <ProfilePicture
-              img={data?.image}
-              name={data?.name}
-              onClick={() => {
-                if (data?.id) {
-                  if (UserState?.value?.data?.designation === "Sales" || UserState?.value?.data?.designation === "Engineer") {
-                    if (data?.ownership === UserState?.value?.data?.id) {
-                      setEditVisible(true);
-                    } else {
-                      toast({
-                        title: "You are not authorized to edit this customer",
-                        variant: "destructive",
-                      });
-                    }
-                  } else {
-                    setEditVisible(true);
-                  }
-                }
-              }}
-            />
-            <div className="flex flex-col">
-              <h1 className="text-3xl font-bold">{data?.name}</h1>
-              <h1 className="text-sm font-medium">
-                Rating:{" "}
-                {data?.rating ? `${data.rating} out of 5` : "Not rated yet"}
-              </h1>
-              <h1 className="text-md font-bold text-primary">
-                Manager {data?.ownership_name || "NA"}
-              </h1>
-            </div>
-          </div>
-          <BillingInformation
-            total={data?.bill_total}
-            received={data?.bill_received}
-            balance={data?.bill_total - data?.bill_received}
+        {data && (
+          <EditCustomerDialog
+            ownership={ownership}
+            data={data}
+            visible={editVisible}
+            onClose={setEditVisible}
+            onRefresh={() => fetchCustomerDetail()}
+            onClickDelete={() => setShowConfirmation(true)}
           />
-        </div>
-
-        <RenderTabs />
-
-        <EditCustomerDialog
-          ownership={ownership}
-          data={data}
-          visible={editVisible}
-          onClose={setEditVisible}
-          onRefresh={() => fetchCustomerDetail()}
-          customer_id={customer_id}
-          onClickDelete={() => setShowConfirmation(true)}
-        />
+        )}
 
         <ConfimationDialog
           loading={deleteLoading}
@@ -304,6 +310,9 @@ const ClientCard = ({ data }) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        <span className="font-semibold text-green-700">
+          Lead generated by: {data?.lead_name || "NIL"}
+        </span>
         <div className="flex items-center gap-2">
           <Mail className="h-5 w-5 text-gray-500" />
           <span>{data?.email}</span>
@@ -396,7 +405,7 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
           <AccordionTrigger className="px-4 py-2 hover:no-underline">
             <div className="flex justify-between items-center w-full">
               <Link
-                href={`/${UserState.value.data?.base_route}/customer/machine?id=${machine.id}&previous=${customer_id}`}
+                href={`/${UserState.value.data?.base_route}/member/machine?id=${machine.id}&previous=${customer_id}`}
               >
                 <h3 className="font-semibold text-lg hover:underline">
                   {machine.serial_no}
@@ -478,7 +487,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
   const [date, setDate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedDelete, setSelectedDelete] = useState(null);
-  const [satisfactory, setSatisfactory] = useState(false)
+  const [satisfactory, setSatisfactory] = useState(false);
   const [localData, setLocalData] = useState(
     data
       .filter((item) => item?.type === type)
@@ -491,7 +500,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
   async function handleDelete(id) {
     setSelectedDelete(id);
     axios
-      .delete(`${BASE_URL}/feedback/${id}`)
+      .delete(`/feedback/${id}`)
       .then(async () => {
         await onRefresh();
       })
@@ -503,14 +512,14 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
   async function handleSavePost() {
     setLoading(true);
     axios
-      .post(`${BASE_URL}/feedback`, {
+      .post(`/feedback`, {
         feedback: writeFeedback,
         next_followup: date,
         top_follow: topFollow,
         type: type,
         customer_id: customerID,
         user_id: userID,
-        status : satisfactory ? "Satisfactory" : "Unsatisfactory"
+        status: satisfactory ? "Satisfactory" : "Unsatisfactory",
       })
       .then(() => {
         onRefresh();
@@ -565,7 +574,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
                 setTopFollow(checked);
               }}
             />
-             <h1>Satisfactory?</h1>
+            <h1>Satisfactory?</h1>
             <Checkbox
               checked={satisfactory}
               onCheckedChange={(checked) => {

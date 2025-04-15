@@ -111,7 +111,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Heading } from "@/components/ui/heading";
 import { useRouter } from "next/navigation";
 import PageContainer from "@/components/page-container";
-import axios from "axios";
+import axios from "@/lib/axios";
 import Link from "next/link";
 import { CitiesSearch } from "../cities-search";
 import { IndustrySearch } from "../industry-search";
@@ -173,7 +173,7 @@ export default function CustomerEmployee({
   }, [id, customer_data]);
 
   async function fetchData() {
-    axios.get(`${BASE_URL}/user/${id}/customer`).then((response) => {
+    axios.get(`/user/${id}/customer`).then((response) => {
       const filteredCustomers = response.data.filter(
         (customer) => !customer.member
       );
@@ -341,7 +341,7 @@ export default function CustomerEmployee({
             if (val?.id) {
               startHolyLoader();
               router.push(
-                `/${UserState?.value?.data?.base_route}/customer/detail?id=${val.id}`
+                `/${UserState?.value?.data?.base_route}/${val.member ? "member" : "customer"}/detail?id=${val.id}`
               );
             }
           }}

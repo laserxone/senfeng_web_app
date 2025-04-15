@@ -4,7 +4,7 @@ import { UserContext } from "@/store/context/UserContext";
 //Map component Component from library
 import { BASE_URL } from "@/constants/data";
 import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { useTheme } from "next-themes";
 import { useCallback, useContext, useEffect, useState } from "react";
 //Map's styling
@@ -16,7 +16,7 @@ const MapComponent = () => {
 
   useEffect(() => {
     async function fetchData() {
-      axios.get(`${BASE_URL}/map`).then((response) => {
+      axios.get(`/map`).then((response) => {
         console.log(response.data);
         setData(response.data);
       });

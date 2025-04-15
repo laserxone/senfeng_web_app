@@ -43,7 +43,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BASE_URL } from "@/constants/data";
 import { useToast } from "@/hooks/use-toast";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { startHolyLoader } from "holy-loader";
 import moment from "moment";
 import { useRouter } from "next/navigation";
@@ -155,7 +155,7 @@ export default function Page() {
   async function fetchData() {
     return new Promise((resolve, reject) => {
       axios
-        .get(`${BASE_URL}/user`)
+        .get(`/user`)
         .then((response) => {
           setData(response.data);
         })
@@ -247,7 +247,7 @@ const AddUserDialog = ({ visible, onClose, onReturn }) => {
     setDataLoading(true);
 
     axios
-      .post(`${BASE_URL}/user`, { ...values, name: values.name.toUpperCase() })
+      .post(`/user`, { ...values, name: values.name.toUpperCase() })
       .then((response) => {
         onReturn(response.data);
         handleClose(false);

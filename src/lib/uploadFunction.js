@@ -1,5 +1,6 @@
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { storage } from "../config/firebase";
+import { toast } from "@/hooks/use-toast";
 
 export function UploadImage(image, name, contentType = "image/png") {
   return new Promise(async (resolve, reject) => {
@@ -38,6 +39,11 @@ export function UploadImage(image, name, contentType = "image/png") {
         }
       );
     } catch (error) {
+      toast({
+        variant : "destructive",
+        title : "Error",
+        description : error?.message || "Unabe to upload image"
+      })
       reject(error);
     }
   });

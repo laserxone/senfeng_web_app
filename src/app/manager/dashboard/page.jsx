@@ -8,7 +8,7 @@ import Reimbursement from "@/components/users/Reimbursement";
 import { BASE_URL } from "@/constants/data";
 import { GetProfileImage } from "@/lib/getProfileImage";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "axios";
+import axios from "@/lib/axios";
 import moment from "moment";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
@@ -36,7 +36,7 @@ export default function Page() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `${BASE_URL}/user/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+          `/user/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           setReimbursementData(response.data);
@@ -53,7 +53,7 @@ export default function Page() {
     return new Promise((res, rej) => {
       axios
         .get(
-          `${BASE_URL}/user/${UserState.value.data.id}/attendance?start_date=${startDate}&end_date=${endDate}`
+          `/user/${UserState.value.data.id}/attendance?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           if (response.data.length > 0) {
@@ -77,14 +77,14 @@ export default function Page() {
 
   async function fetchData() {
     axios
-      .get(`${BASE_URL}/user/${UserState.value.data?.id}`)
+      .get(`/user/${UserState.value.data?.id}`)
       .then((response) => {
         setData(response.data);
       });
   }
 
   async function fetchAllCustomers() {
-    axios.get(`${BASE_URL}/customer`).then((response) => {
+    axios.get(`/customer`).then((response) => {
       setCustomers(response.data);
     });
   }

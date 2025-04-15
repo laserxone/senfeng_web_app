@@ -1,6 +1,6 @@
 import { BASE_URL } from "@/constants/data";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -41,7 +41,6 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
     speedMoney: z.number().optional(),
     speedMoneyNote: z.string().optional(),
     totalPrice: z.number().min(1, { message: "Total price is required." }),
-    usdRate: z.number().min(1, { message: "USD TT rate is required." }),
   });
 
   const form = useForm({
@@ -56,7 +55,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
       speedMoney: "",
       speedMoneyNote: "",
       totalPrice: 0,
-      usdRate: 0,
+  
     },
   });
 
@@ -72,7 +71,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
         speedMoney: data?.speed_money_amount || "",
         speedMoneyNote: data?.speed_money_note || "",
         totalPrice: Number(data?.price || 0),
-        usdRate: Number(data?.usd_tt_rate || 0),
+    
       });
     }
   }, [data, form]);
@@ -81,7 +80,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
     // console.log("Form Data:", values);
     setLoading(true);
     axios
-      .put(`${BASE_URL}/machine/${machine_id}`, {
+      .put(`/machine/${machine_id}`, {
         id: machine_id,
         speed_money_note: values.speedMoneyNote,
         speed_money: values.isSpeedMoney,
@@ -91,7 +90,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
         source: values.source,
         order_no: values.orderNo,
         price: values.totalPrice,
-        USD_TT_rate: values.usdRate,
+      
         contract_date: values.contractDate,
       })
       .then(() => {
@@ -235,36 +234,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
                       </FormItem>
                     )}
                   />
-                  <div className="flex flex-1">
-                    <FormField
-                      control={form.control}
-                      name="usdRate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>USD TT rate</FormLabel>
-                          <FormControl>
-                            <Input
-                              className="flex flex-1"
-                              type="number"
-                              placeholder="Enter USD TT rate"
-                              value={field.value ? field.value : ""}
-                              onChange={(e) => {
-                                if (!isNaN(e.target.value)) {
-                                  field.onChange(Number(e.target.value));
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* <div>
-                        {Number(form.getValues("totalPrice")) *
-                          Number(form.getValues("usdRate"))}
-                      </div> */}
-                  </div>
+               
 
                   <FormField
                     control={form.control}

@@ -13,7 +13,7 @@ import { storage } from "@/config/firebase";
 import { BASE_URL } from "@/constants/data";
 import { useToast } from "@/hooks/use-toast";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { getDownloadURL, ref } from "firebase/storage";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
@@ -64,7 +64,7 @@ export default function Page() {
   useEffect(() => {
     const id = search.get("id");
     axios
-      .get(`${BASE_URL}/user?user=${id}`)
+      .get(`/user?user=${id}`)
       .then((response) => {
         if (response.data.length > 0) {
           const apiData = response.data.length > 0 ? response.data[0] : {};
@@ -136,7 +136,7 @@ export default function Page() {
     if (!employeeId) return;
     setDataLoading(true);
     axios
-      .put(`${BASE_URL}/user/${employeeId}`, {
+      .put(`/user/${employeeId}`, {
         basic_salary: form?.basic_salary || 0,
         monthly_target: form?.monthly_target || 0,
         note: form?.note || "",

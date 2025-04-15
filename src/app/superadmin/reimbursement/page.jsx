@@ -54,7 +54,7 @@ import exportToExcel from "@/lib/exportToExcel";
 import { UploadImage } from "@/lib/uploadFunction";
 import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import { useForm } from "react-hook-form";
@@ -87,7 +87,7 @@ export default function Page() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `${BASE_URL}/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${
+          `/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${
             user || ""
           }`
         )
@@ -435,7 +435,7 @@ const ImageSheet = ({
     if (img && !img.includes("http")) {
       const deleteRef = await DeleteFromStorage(img);
     }
-    axios.delete(`${BASE_URL}/reimbursement/${id}`).then(async () => {
+    axios.delete(`/reimbursement/${id}`).then(async () => {
       await onRefresh(id);
       setDeleteLoading(false);
       handleClose(false);
@@ -538,7 +538,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
         .valueOf()
         .toString()}.png`;
       const imgRef = await UploadImage(values.image, name);
-      const response = await axios.post(`${BASE_URL}/reimbursement`, {
+      const response = await axios.post(`/reimbursement`, {
         amount: values.amount,
         title: values.title,
         description: values.description,

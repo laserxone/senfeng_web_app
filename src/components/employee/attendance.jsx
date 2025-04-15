@@ -76,7 +76,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "axios";
+import axios from "@/lib/axios";
 import Image from "next/image";
 import { MapProvider } from "@/providers/map-provider";
 import { useTheme } from "next-themes";
@@ -96,7 +96,7 @@ export default function Attendance() {
   useEffect(() => {
     async function fetchData(id) {
       axios
-        .get(`${BASE_URL}/user/${id}/attendance`)
+        .get(`/user/${id}/attendance`)
         .then((response) => {
           if (response.data.length > 0) {
             const apiData = response.data.map((item) => {

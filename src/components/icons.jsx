@@ -40,6 +40,8 @@ import {
   BookText,
   BadgeDollarSign,
   ShieldXIcon,
+  Scroll,
+  Signature,
 } from 'lucide-react';
 
 
@@ -83,6 +85,8 @@ export const Icons = {
   stock : Container,
   dms : BookText,
   member : ShieldXIcon,
+  quotation : Scroll,
+  contract : Signature,
   commission : BadgeDollarSign,
   gitHub: ({ ...props }) => (
     <svg

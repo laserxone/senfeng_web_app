@@ -61,6 +61,7 @@ import {
   where,
 } from "firebase/firestore";
 import NotificationBadge from "./NotificationBadge";
+import NotificationBadgeWithoutCount from "./NotificationBadgeWithoutCount";
 
 export const company = {
   name: "SENFENG",
@@ -72,7 +73,8 @@ export default function AppSidebar() {
   const pathname = usePathname();
   const checkSession = useCheckSession();
   const { state: UserState, setUser } = React.useContext(UserContext);
-  const { state: NotificationState, setNotification } = React.useContext(NotificationContext);
+  const { state: NotificationState, setNotification } =
+    React.useContext(NotificationContext);
   const profileImage = useProfileImage();
 
   React.useEffect(() => {
@@ -87,7 +89,8 @@ export default function AppSidebar() {
     if (UserState?.value?.data?.email) {
       const q = query(
         collection(db, "Notification"),
-        where("sendTo", "==", UserState.value.data.email), where("read", "==", false),
+        where("sendTo", "==", UserState.value.data.id),
+        where("read", "==", false),
         orderBy("TimeStamp", "desc")
       );
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -95,7 +98,7 @@ export default function AppSidebar() {
         querySnapshot.forEach((doc) => {
           list.push({ ...doc.data(), id: doc.id });
         });
-        setNotification(list); 
+        setNotification(list);
       });
       return () => unsubscribe();
     }
@@ -195,13 +198,18 @@ export default function AppSidebar() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
-                      {UserState?.value?.data?.name}
-                    </span>
+                    <div className="flex flex-row gap-2 items-center">
+                      <span className="truncate font-semibold">
+                        {UserState?.value?.data?.name}
+                      </span>
+                      <NotificationBadgeWithoutCount count={NotificationState?.value?.data?.length} />
+                    </div>
+
                     <span className="truncate text-xs">
                       {UserState?.value?.data?.email}
                     </span>
                   </div>
+
                   <ChevronsUpDown className="ml-auto size-4" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
@@ -233,7 +241,6 @@ export default function AppSidebar() {
                 <DropdownMenuSeparator />
 
                 <DropdownMenuGroup>
-                 
                   <Link href={`/${UserState?.value?.data?.base_route}/profile`}>
                     <DropdownMenuItem>
                       <CreditCard />
@@ -246,7 +253,9 @@ export default function AppSidebar() {
                     <DropdownMenuItem>
                       <Bell />
                       Notifications
-                      <NotificationBadge count={NotificationState?.value?.data.length}/>
+                      <NotificationBadge
+                        count={NotificationState?.value?.data.length}
+                      />
                     </DropdownMenuItem>
                   </Link>
                 </DropdownMenuGroup>

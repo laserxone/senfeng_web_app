@@ -19,21 +19,37 @@ import {
 } from "@/components/ui/popover";
 import { BASE_URL } from "@/constants/data";
 import { cn } from "@/lib/utils";
-import axios from "axios";
+import axios from "@/lib/axios";
 
-export function UserSearch({ value, onReturn, placeholder = "Select user..." }) {
+export function UserSearch({
+  value,
+  onReturn,
+  placeholder = "Select user...",
+  lead = false,
+}) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState([]);
- 
 
   React.useEffect(() => {
     async function fetchData() {
-      axios.get(`${BASE_URL}/user`).then((response) => {
+      axios.get(`/user`).then((response) => {
         if (response.data.length > 0) {
-          const finalData = response.data.map((item) => {
-            return { value: item.id, label: item?.name || item.email };
-          });
-          setData(finalData);
+          if (lead) {
+            const finalData = response.data
+              .filter((item) => {
+                if (item.id === 28 || item.id === 12 || item.id === 15)
+                  return item;
+              })
+              .map((item) => {
+                return { value: item.id, label: item?.name || item.email };
+              });
+            setData(finalData);
+          } else {
+            const finalData = response.data.map((item) => {
+              return { value: item.id, label: item?.name || item.email };
+            });
+            setData(finalData);
+          }
         }
       });
     }
@@ -57,8 +73,8 @@ export function UserSearch({ value, onReturn, placeholder = "Select user..." }) 
       </PopoverTrigger>
       <PopoverContent className="py-2 px-0">
         <Command>
-          <CommandInput  placeholder="Search user..." className="h-9" />
-          <CommandList >
+          <CommandInput placeholder="Search user..." className="h-9" />
+          <CommandList>
             <CommandEmpty>No user found.</CommandEmpty>
             <CommandGroup>
               {data.map((item) => (

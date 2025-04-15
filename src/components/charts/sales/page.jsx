@@ -25,7 +25,7 @@ export function Sale({ data }) {
           {data.map((item, ind) => (
             <div
               key={ind}
-              className="flex flex-col sm:flex-row items-center justify-between sm:space-x-4"
+              className="grid grid-cols-2 sm:flex-row items-center sm:space-x-4"
             >
               <div className="flex items-center">
                 <Avatar className="h-9 w-9">
@@ -42,7 +42,7 @@ export function Sale({ data }) {
                     target="blank"
                     href={
                       item?.customer_id
-                        ? `/${UserState.value.data?.base_route}/customer/detail?id=${item?.customer_id}`
+                        ? `/${UserState.value.data?.base_route}/member/detail?id=${item?.customer_id}`
                         : "#"
                     }
                   >

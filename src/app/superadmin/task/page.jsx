@@ -40,7 +40,7 @@ import {
 import { UserSearch } from "@/components/user-search";
 import { BASE_URL } from "@/constants/data";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "axios";
+import axios from "@/lib/axios";
 import moment from "moment";
 import FilterSheet from "@/components/users/filterSheet";
 import { useToast } from "@/hooks/use-toast";
@@ -185,7 +185,7 @@ export default function Page() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `${BASE_URL}/task?start_date=${start_date}&end_date=${end_date}&user=${user}`
+          `/task?start_date=${start_date}&end_date=${end_date}&user=${user}`
         )
         .then((response) => {
           const apiData = response.data.map((item) => {
@@ -321,19 +321,13 @@ const TaskDetail = ({
   async function handleUpdateStatus(values) {
     setLoading(true);
     axios
-      .put(`${BASE_URL}/user/${user_id}/task/${detail.id}`, {
+      .put(`/user/${user_id}/task/${detail.id}`, {
         id: values.id,
         status: values.status,
       })
       .then(() => {
         toast({ title: "Status updated" });
         onClose(false);
-      })
-      .catch((e) => {
-        toast({
-          title: "Error",
-          description: e?.response?.data?.message || e?.message,
-        });
       })
       .finally(() => {
         setLoading(false);
@@ -344,17 +338,12 @@ const TaskDetail = ({
   async function handleDelete() {
     setDeleteLoading(true);
     axios
-      .delete(`${BASE_URL}/user/${user_id}/task/${detail.id}`)
+      .delete(`/user/${user_id}/task/${detail.id}`)
       .then(() => {
         onClose(false);
         toast({ title: "Task deleted" });
       })
-      .catch((e) => {
-        toast({
-          title: "Error",
-          description: e?.response?.data?.message || e?.message,
-        });
-      })
+      
       .finally(() => {
         setDeleteLoading(false);
         onDelete({ id: detail.id });
@@ -469,7 +458,7 @@ const AddTask = ({ visible, onClose, onRefresh }) => {
   const onSubmit = (values) => {
     setLoading(true);
     axios
-      .post(`${BASE_URL}/task`, {
+      .post(`/task`, {
         task_name: values.task,
         type: values.radio == "office" ? "Office Task" : "Client Visit",
         client: values.client,
@@ -481,12 +470,7 @@ const AddTask = ({ visible, onClose, onRefresh }) => {
         handleClose(false);
         toast({ title: "Task created successfully" });
       })
-      .catch((e) => {
-        toast({
-          title: "Error",
-          description: e?.response?.data?.message || e?.message,
-        });
-      })
+     
       .finally(() => {
         setLoading(false);
       });

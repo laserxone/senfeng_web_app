@@ -37,7 +37,7 @@ import { UserSearch } from "@/components/user-search";
 import { storage } from "@/config/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { format, setMonth } from "date-fns";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
@@ -141,7 +141,7 @@ const SalaryComponent = () => {
     setLoading(true);
     axios
       .get(
-        `${BASE_URL}/salary?user=${user}&start=${startDate}&end=${endDate}&month=${selectedMonth}&year=${selectedYear}`
+        `/salary?user=${user}&start=${startDate}&end=${endDate}&month=${selectedMonth}&year=${selectedYear}`
       )
       .then((response) => {
         setData(response.data);
@@ -313,7 +313,7 @@ const SalaryComponent = () => {
     setSaveLoading(true);
 
     axios
-      .post(`${BASE_URL}/salary`, {
+      .post(`/salary`, {
         user_id: user,
         year: selectedYear,
         month: selectedMonth,
@@ -340,7 +340,7 @@ const SalaryComponent = () => {
   async function handleAccounts() {
     setAccountsLoading(true);
     axios
-      .get(`${BASE_URL}/accounts?month=${selectedMonth}&year=${selectedYear}`)
+      .get(`/accounts?month=${selectedMonth}&year=${selectedYear}`)
       .then(async (response) => {
         const apiData = response.data;
         const totalPayments = apiData.reduce(
@@ -964,7 +964,7 @@ const RecordComponent = () => {
 
   async function fetchData() {
     axios
-      .get(`${BASE_URL}/record`)
+      .get(`/record`)
       .then((response) => {
         setData(response.data);
       })
@@ -1040,7 +1040,7 @@ const RecordComponent = () => {
     if (!id) return;
     setLoading(true);
     axios
-      .delete(`${BASE_URL}/record/${id}`)
+      .delete(`/record/${id}`)
       .then(async () => {
         await fetchData();
       })

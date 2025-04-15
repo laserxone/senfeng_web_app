@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/select";
 import { BASE_URL } from "@/constants/data";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "axios";
+import axios from "@/lib/axios";
 import moment from "moment";
 import Link from "next/link";
 
@@ -65,7 +65,7 @@ export default function Page() {
 
   useEffect(() => {
     async function fetchData() {
-      axios.get(`${BASE_URL}/feedback`).then((response) => {
+      axios.get(`/feedback`).then((response) => {
         const temp = response.data.map((item) => {
           return {
             ...item,
@@ -99,7 +99,7 @@ export default function Page() {
         return (
           <Link
             className="hover:underline"
-            href={`/${UserState.value.data?.base_route}/customer/detail?id=${item.id}`}
+            href={`/${UserState.value.data?.base_route}/customer/detail?id=${item.customer_id}`}
           >
             <div className="ml-2">{row.getValue("customer_name")}</div>
           </Link>
@@ -218,6 +218,7 @@ export default function Page() {
         data={data}
         totalItems={data.length}
         tableHeader={tableHeader}
+        onRowClick={() => {}}
       ></PageTable>
 
       <ConfimationDialog

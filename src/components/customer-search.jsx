@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/popover";
 import { BASE_URL } from "@/constants/data";
 import { cn } from "@/lib/utils";
-import axios from "axios";
+import axios from "@/lib/axios";
 
 export function CustomerSearch({ value, onReturn }) {
   const [open, setOpen] = React.useState(false);
@@ -28,13 +28,13 @@ export function CustomerSearch({ value, onReturn }) {
 
   React.useEffect(() => {
     async function fetchData() {
-      axios.get(`${BASE_URL}/customer?withoutsale=true`).then((response) => {
+      axios.get(`/customer?withoutsale=true`).then((response) => {
         if (response.data.length > 0) {
           const apiData = response.data.sort((a, b) =>
             a?.name.localeCompare(b?.name || "")
           );
           const finalData = apiData.map((item) => {
-            return { value: item.id, label: item.name };
+            return { value: item.id, label: item.name || item.owner };
           });
           setCustomers(finalData);
         }

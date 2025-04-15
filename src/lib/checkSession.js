@@ -2,7 +2,7 @@ import { app, auth, db } from "@/config/firebase";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useContext, useRef, useState, useEffect } from "react";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { BASE_URL } from "@/constants/data";
 import { startHolyLoader } from "holy-loader";
 import { useToast } from "@/hooks/use-toast";
@@ -23,7 +23,7 @@ export default function useCheckSession() {
 
     async function checkData(user) {
         try {
-            const response = await axios.get(`${BASE_URL}/userdetail/${user.email}`);
+            const response = await axios.get(`/userdetail/${user.email}`);
             const userData = response.data;
 
             if (userData?.designation) {
@@ -39,6 +39,12 @@ export default function useCheckSession() {
                     if (!pathname.includes("superadmin")) {
                         startHolyLoader()
                         router.push("/superadmin/dashboard")
+                    }
+                }
+                else if (userData.designation === 'Social Media Manager') {
+                    if (!pathname.includes("smm")) {
+                        startHolyLoader()
+                        router.push("/smm/dashboard")
                     }
                 }
 

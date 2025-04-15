@@ -20,9 +20,11 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  AlertCircleIcon,
   ArrowUpDown,
   ClipboardList,
   EditIcon,
+  Siren,
   Trash,
   Wrench,
 } from "lucide-react";
@@ -33,7 +35,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import { useForm } from "react-hook-form";
@@ -64,17 +65,22 @@ import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { UploadImage } from "@/lib/uploadFunction";
 import { UserContext } from "@/store/context/UserContext";
 import { pdf } from "@react-pdf/renderer";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import "pdfjs-dist/build/pdf.worker";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function Machine() {
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const pageTableRef = useRef();
   const search = useSearchParams();
   const [data, setData] = useState();
   const [total, setTotal] = useState(0);
@@ -84,13 +90,13 @@ export default function Machine() {
   const [imageURL, setImageURL] = useState(null);
   const [visible, setVisible] = useState(false);
   const [imagesVisible, setImagesVisible] = useState(false);
-
   const [editMachine, setEditMachine] = useState(false);
   const id = search.get("id");
   const [addPayment, setAddPayment] = useState(false);
   const [editPayment, setEditPayment] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState({});
+  const [selectedPayment, setSelectedPayment] = useState(null);
   const { state: UserState } = useContext(UserContext);
+  const [editAllowed, setEditAllowed] = useState(false);
 
   useEffect(() => {
     if (id && UserState?.value?.data?.id) {
@@ -107,21 +113,25 @@ export default function Machine() {
 
   async function fetchData(id) {
     try {
-      const response = await axios.get(`${BASE_URL}/machine/${id}`);
+      const response = await axios.get(`/machine/${id}`);
       const machine = response.data?.machine;
-      const user = UserState?.value?.data;
+      const userData = UserState.value.data;
 
-      // if (
-      //   (user?.designation === "Sales" || user?.designation === "Engineer") &&
-      //   machine?.sell_by !== user?.id
-      // ) {
-      //   toast({
-      //     variant: "destructive",
-      //     title: "Error.",
-      //     description: "Machine was not sold by you",
-      //   });
-      //   return false;
-      // }
+      if (
+        response.data?.customer &&
+        response.data?.customer?.ownership === userData?.id
+      ) {
+        setEditAllowed(true);
+      } else if (
+        response.data?.machine &&
+        response.data?.machine?.sell_by === userData?.id
+      ) {
+        setEditAllowed(true);
+      } else if (userData?.designation === "Owner" || userData?.full_access) {
+        setEditAllowed(true);
+      } else {
+        setEditAllowed(false);
+      }
 
       setData(response.data);
       if (machine) {
@@ -136,12 +146,7 @@ export default function Machine() {
 
       return true;
     } catch (e) {
-      toast({
-        variant: "destructive",
-        title: "Something went wrong.",
-        description:
-          e.response?.data?.message || "There was a problem with your request.",
-      });
+      
       return null;
     }
   }
@@ -269,14 +274,11 @@ export default function Machine() {
       id: "actions",
       cell: ({ row }) => {
         const currentItem = row.original;
-        const userData = UserState?.value?.data;
-        const isSalesOrEngineer =
-          userData?.designation === "Sales" ||
-          userData?.designation === "Engineer";
-        const isOwner = data?.machine?.sell_by === userData?.id;
 
-        if (!isSalesOrEngineer || isOwner) {
-          return (
+        return (
+          data?.machine &&
+          !data?.machine?.payment_lock &&
+          editAllowed && (
             <EditIcon
               style={{ color: Colors.button }}
               className="cursor-pointer h-5 w-5"
@@ -286,10 +288,8 @@ export default function Machine() {
                 setEditPayment(true);
               }}
             />
-          );
-        }
-
-        return null; // Explicitly return null if no conditions match
+          )
+        );
       },
     },
   ];
@@ -331,45 +331,32 @@ export default function Machine() {
         {data && (
           <div className="flex gap-2">
             <Button onClick={() => setImagesVisible(true)}>View Images</Button>
-            <Button
-              onClick={() => {
-                if (
-                  UserState?.value?.data?.designation === "Sales" ||
-                  UserState?.value?.data?.designation === "Engineer"
-                ) {
-                  if (data?.machine?.sell_by === UserState?.value?.data?.id) {
-                    setAddPayment(true);
-                  } else {
+
+            {data?.machine && !data?.machine?.payment_lock && (
+              <Button
+                onClick={() => {
+                  if (!editAllowed) {
                     toast({
                       title: "You are not allowed to add payment",
                       variant: "destructive",
                     });
+                    return;
+                  } else {
+                    setAddPayment(true);
                   }
-
-                  return;
-                } else {
-                  setAddPayment(true);
-                }
-              }}
-            >
-              Add Payment
-            </Button>
+                }}
+              >
+                Add Payment
+              </Button>
+            )}
 
             <Button
               onClick={() => {
-                if (
-                  UserState?.value?.data?.designation === "Sales" ||
-                  UserState?.value?.data?.designation === "Engineer"
-                ) {
-                  if (data?.machine?.sell_by === UserState?.value?.data?.id) {
-                    setEditMachine(true);
-                  } else {
-                    toast({
-                      title: "You are not allowed to edit machine",
-                      variant: "destructive",
-                    });
-                  }
-
+                if (!editAllowed) {
+                  toast({
+                    title: "You are not allowed to edit machine",
+                    variant: "destructive",
+                  });
                   return;
                 } else {
                   setEditMachine(true);
@@ -395,15 +382,19 @@ export default function Machine() {
               machine_id={id}
               onRefresh={async () => await fetchData(id)}
             />
-
-            <EditPayment
-              customer_id={data?.customer?.id}
-              visible={editPayment}
-              onClose={setEditPayment}
-              machine_id={id}
-              data={selectedPayment}
-              onRefresh={async () => await fetchData(id)}
-            />
+            {selectedPayment && (
+              <EditPayment
+                customer_id={data?.customer?.id}
+                visible={editPayment}
+                onClose={(val) => {
+                  setEditPayment(val);
+                  setSelectedPayment(null);
+                }}
+                machine_id={id}
+                data={selectedPayment}
+                onRefresh={async () => await fetchData(id)}
+              />
+            )}
           </div>
         )}
         <PageTable
@@ -433,6 +424,7 @@ export default function Machine() {
           onPressCancel={() => setShowConfirmation(false)}
         />
         <ImageSheet
+          editAllowed={editAllowed}
           visible={visible}
           onClose={() => setVisible(false)}
           img={imageURL?.image || null}
@@ -445,6 +437,7 @@ export default function Machine() {
           }}
         />
         <ViewImagesSheet
+          editAllowed={editAllowed}
           visible={imagesVisible}
           data={data?.machine || {}}
           customer_id={data?.customer?.id}
@@ -457,14 +450,61 @@ export default function Machine() {
 }
 
 const ClientCard = memo(({ data, payment, machine, manager }) => {
+  const [showAlert, setShowAlert] = useState(false);
+  useEffect(() => {
+    if (machine) {
+      const payments = machine.payments;
+      const result = findDuplicateNotes(payments);
+      if (result.length > 0) {
+        setShowAlert(true);
+      } else {
+        setShowAlert(false);
+      }
+    }
+  }, [machine]);
+
+  function findDuplicateNotes(array) {
+    const noteMap = new Map();
+    const duplicates = [];
+
+    for (const item of array) {
+      if (noteMap.has(item.note)) {
+        duplicates.push(item.note);
+      } else {
+        noteMap.set(item.note, true);
+      }
+    }
+
+    return [...new Set(duplicates)];
+  }
+
   return (
     <Card className="bg-gray-100 dark:bg-gray-900 rounded-lg shadow-md p-4 w-full">
       {/* Company Name */}
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center justify-center">
-        {data?.name || "Customer Name"}{" "}
-        <span className="text-gray-500 text-sm">
-          {data?.owner && ` (${data.owner})`}
-        </span>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center justify-between">
+        <div />
+        <div className="flex flex-row gap-2 items-center">
+          {data?.name || "Customer Name"}
+          <span className="text-gray-500 text-sm">
+            {data?.owner && `(${data.owner})`}
+          </span>
+        </div>
+        {showAlert ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <div>
+                  <Siren className="text-red-600 h-8 w-8 animate-pulse-opacity" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="bg-red-600 mr-2">
+                <p className="text-white">Duplicate TID found</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <div />
+        )}
       </h2>
       <h2 className="text-md font-bold text-primary dark:text-white mb-4 flex items-center justify-center">
         Manager {machine?.sell_by_name || "NA"}
@@ -576,6 +616,7 @@ const ImageSheet = ({
   remarks,
   id,
   onRefresh,
+  editAllowed,
 }) => {
   const [imageOpen, setImageOpen] = useState(false);
   const [localImage, setLocalImage] = useState(null);
@@ -593,14 +634,14 @@ const ImageSheet = ({
         });
       }
     } else {
-      setLocalImage(null)
+      setLocalImage(null);
     }
   }, [img]);
 
   function handleClose() {
     if (!imageOpen) {
       onClose();
-      setLocalImage(null)
+      setLocalImage(null);
     }
   }
 
@@ -618,16 +659,14 @@ const ImageSheet = ({
       const deleteRef = await DeleteFromStorage(img);
     }
     axios
-      .delete(`${BASE_URL}/payment/${id}`)
+      .delete(`/payment/${id}`)
       .then(async () => {
         await onRefresh(id);
         setDeleteLoading(false);
         handleClose(false);
         toast({ title: "Payment Deleted" });
       })
-      .catch(() => {
-        toast({ title: "Error occured", variant: "destructive" });
-      });
+    
   }
 
   return (
@@ -635,8 +674,7 @@ const ImageSheet = ({
       <SheetContent>
         <SheetHeader className="mb-4">
           <SheetTitle>Payment Image</SheetTitle>
-          {(UserState.value.data?.designation === "Owner" ||
-            UserState.value.data?.full_access) && (
+          {editAllowed && (
             <Button
               className="mb-2"
               variant="destructive"
@@ -653,18 +691,18 @@ const ImageSheet = ({
               {deleteLoading ? <Spinner /> : <Trash size={16} />}
             </Button>
           )}
-          {localImage ?
-          <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
-            <img
-              onClick={() => setImageOpen(true)}
-              className="hover:cursor-pointer"
-              src={localImage}
-              alt="payment-img"
-            />
-          </ControlledZoom>
-          :
+          {localImage ? (
+            <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
+              <img
+                onClick={() => setImageOpen(true)}
+                className="hover:cursor-pointer"
+                src={localImage}
+                alt="payment-img"
+              />
+            </ControlledZoom>
+          ) : (
             <Label>No Image found</Label>
-}
+          )}
 
           <strong>Note</strong>
           <Label>{note}</Label>
@@ -678,6 +716,7 @@ const ImageSheet = ({
 };
 
 const ViewImagesSheet = ({
+  editAllowed,
   visible,
   onClose,
   data,
@@ -688,6 +727,7 @@ const ViewImagesSheet = ({
   const [contractPdfImages, setContractPdfImages] = useState([]);
   const [otherPdfImages, setOtherPdfImages] = useState([]);
   const [addImageVisible, setAddImageVisible] = useState(false);
+  const { toast } = useToast();
 
   const contractImages = useMemo(() => data?.contract_images_png || [], [data]);
   const otherImages = useMemo(() => data?.other_images_png || [], [data]);
@@ -750,7 +790,20 @@ const ViewImagesSheet = ({
       <SheetContent>
         <SheetHeader className="mb-4">
           <SheetTitle className="text-2xl">View Images</SheetTitle>
-          <Button onClick={() => setAddImageVisible(true)}>Add Image</Button>
+          <Button
+            onClick={() => {
+              if (editAllowed) {
+                setAddImageVisible(true);
+              } else {
+                toast({
+                  title: "You are not allowed to perform this action ",
+                  variant: "destructive",
+                });
+              }
+            }}
+          >
+            Add Image
+          </Button>
           <AddImages
             customer_id={customer_id}
             machine={data}
@@ -874,7 +927,7 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
       ];
     }
     await axios
-      .put(`${BASE_URL}/machine/${machine.id}`, formData)
+      .put(`/machine/${machine.id}`, formData)
       .then(async (response) => {
         await onRefresh();
         handleClose(false);
@@ -1004,7 +1057,7 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
                 />
 
                 <Button className="w-full" type="submit">
-                  Submit
+                  {loading && <Spinner />} Submit
                 </Button>
               </form>
             </Form>

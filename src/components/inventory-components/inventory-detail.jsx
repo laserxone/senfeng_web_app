@@ -9,17 +9,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { useDebounce } from "@/hooks/use-debounce";
 import { UserContext } from "@/store/context/UserContext";
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState
-} from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { BASE_URL } from "@/constants/data";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
@@ -38,14 +32,32 @@ export default function InventoryDetail() {
   const debouncedData = useDebounce(data, 1000);
   const search = useSearchParams();
   const booking_id = search.get("id");
+  const tableContainerRef = useRef(null);
+  const [tableMaxHeight, setTableMaxHeight] = useState("auto");
+  const [availableWidth, setAvailableWidth] = useState("full");
+
+  useEffect(() => {
+    const updateWidth = () => {
+      const windowWidth = window.innerWidth;
+      const width = windowWidth - (16 * 16 + 50);
+      console.log(width)
+      setAvailableWidth(`${width}px`);
+    };
+
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => {
+      window.removeEventListener("resize", updateWidth);
+    };
+  }, []);
 
   useEffect(() => {
     if (!prefetching)
       if (debouncedData) {
-        setLoadingMessage("Autosaving");
+        setLoadingMessage("Autosaving...");
         setLoading(true);
         axios
-          .put(`${BASE_URL}/bookings`, { id: apiData.id, data: debouncedData })
+          .put(`/bookings`, { id: apiData.id, data: debouncedData })
           .catch((error) => console.error("Failed to update backend", error))
           .finally(() => {
             const temp = debouncedData;
@@ -61,6 +73,21 @@ export default function InventoryDetail() {
     }
   }, [UserState.value.data]);
 
+  useEffect(() => {
+    const updateHeight = () => {
+      if (tableContainerRef.current) {
+        const rect = tableContainerRef.current.getBoundingClientRect();
+        const availableHeight = window.innerHeight - rect.top - 50;
+        setTableMaxHeight(`${availableHeight}px`);
+      }
+    };
+
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+
+    return () => window.removeEventListener("resize", updateHeight);
+  }, []);
+
   const colors = [
     "bg-blue-100 dark:bg-blue-900",
     "bg-green-100 dark:bg-green-900",
@@ -74,7 +101,7 @@ export default function InventoryDetail() {
 
   async function fetchData() {
     axios
-      .get(`${BASE_URL}/bookings/${booking_id}`)
+      .get(`/bookings/${booking_id}`)
       .then((response) => {
         setApiData(response.data);
         if (response.data?.data?.length > 0) {
@@ -211,7 +238,7 @@ export default function InventoryDetail() {
     setLoading(true);
     setLoadingMessage("Autosaving");
     await axios
-      .put(`${BASE_URL}/bookings`, {
+      .put(`/bookings`, {
         id: apiData.id,
         shipment: apiData.shipment,
       })
@@ -250,21 +277,24 @@ export default function InventoryDetail() {
       ref={tableRef}
       onFocus={() => setFocusedBoard(true)}
     >
-      <div className="flex w-full justify-end gap-5">
-        <Button
-          onClick={() => {
-            setLoading(true)
-            setTimeout(() => {
-              setLoading(false);
-            }, [1000]);
-          }}
-        >
-          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-          Submit
-        </Button>
-      
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex gap-5 items-center">
+          <Label>{loadingMessage}</Label>
+        </div>
+        <div className="flex w-full justify-end">
+          <Button
+            onClick={() => {
+              setLoading(true);
+              setTimeout(() => {
+                setLoading(false);
+              }, [1000]);
+            }}
+          >
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            Submit
+          </Button>
 
-        {/* <Button
+          {/* <Button
           onClick={() => {
             let filledData = fillData();
             setData(filledData);
@@ -272,18 +302,17 @@ export default function InventoryDetail() {
         >
           Auto Fill
         </Button> */}
+        </div>
       </div>
-      <div className="flex gap-5 items-center mb-5 h-10">
-        <Label>{loadingMessage}</Label>
-        {loading && <Loader2 className="animate-spin h-4 w-4" />}
-      </div>
-      <table className="border-collapse border border-gray-400 w-full">
-        <thead className="bg-red-600 text-white">
-          <tr style={{ backgroundColor: "#44546A" }}>
-            <th
-              colSpan={11}
-              className={`border border-gray-600 p-2 text-center font-semibold w-full`}
-            >
+
+      <div
+        style={{ maxHeight: tableMaxHeight, maxWidth:availableWidth }}
+        ref={tableContainerRef}
+        className={`overflow-y-auto flex-1  overflow-x-auto`}
+      >
+        <div className="min-w-full inline-block align-middle">
+          <div className="sticky top-0 z-30  bg-[#44546A]">
+            <div className="border border-gray-600 p-2 text-center font-semibold w-full">
               <input
                 className="bg-transparent text-black dark:text-white dark:placeholder-gray-300"
                 style={{
@@ -291,21 +320,19 @@ export default function InventoryDetail() {
                   height: 35,
                   width: "100%",
                   fontWeight: 600,
-                  fontSize: "14px",
-                  borderRadius: 0,
-                  textAlign: "center",
                   fontSize: "19px",
                   color: "white",
+                  textAlign: "center",
                 }}
                 onBlur={() => handleSaveShipment()}
                 value={apiData?.shipment || ""}
-                onChange={(e) => {
-                  setApiData({ ...apiData, shipment: e.target.value });
-                }}
+                onChange={(e) =>
+                  setApiData({ ...apiData, shipment: e.target.value })
+                }
               />
-            </th>
-          </tr>
-          <tr>
+            </div>
+          </div>
+          <div className=" sticky top-[53px] z-20 flex flex-row bg-red-600">
             {[
               "QTY",
               "SERIAL",
@@ -313,33 +340,31 @@ export default function InventoryDetail() {
               "POWER",
               "SOURCE",
               "CUSTOMER",
+              "NUMBER",
               "CITY",
               "MANAGER",
               "PRICE",
               "DELIVERY",
               "REMARKS",
             ].map((item, index) => (
-              <th
+              <div
                 key={index}
-                className={`border border-gray-600 p-2 text-center font-semibold ${
+                className={` p-2 text-center text-white font-semibold ${
                   item === "REMARKS" ? "w-[300px]" : "w-[130px]"
                 }`}
               >
                 {item}
-              </th>
+              </div>
             ))}
-          </tr>
-        </thead>
-
-        <tbody>
+          </div>
           {data &&
             data.length > 0 &&
             data.map((item, ind) => (
-              <tr key={ind} className={`${item.color}`}>
+              <div key={ind} className={`flex flex-row ${item.color}`}>
                 {fieldOrder.map((key, index1) => (
-                  <td
+                  <div
                     key={`${ind}-${index1}`}
-                    className={`border border-gray-600 dark:border-gray-400 ${
+                    className={`border border-gray-400 dark:border-gray-400 ${
                       key === "REMARKS" ? "w-[300px]" : "w-[130px]"
                     } text-black dark:text-white`}
                   >
@@ -366,8 +391,7 @@ export default function InventoryDetail() {
                             borderRadius: 0,
                             paddingInline: 5,
                           }}
-                        //   placeholder={key}
-                          value={item[key]}
+                          value={item[key] || ""}
                           onChange={(e) => {
                             const inputValue = e.target.value;
                             const parsedValue =
@@ -401,12 +425,12 @@ export default function InventoryDetail() {
                         </ContextMenuItem>
                       </ContextMenuContent>
                     </ContextMenu>
-                  </td>
+                  </div>
                 ))}
-              </tr>
+              </div>
             ))}
-        </tbody>
-      </table>
+        </div>
+      </div>
     </div>
   );
 }
@@ -432,6 +456,7 @@ const fieldOrder = [
   "POWER",
   "SOURCE",
   "CUSTOMER",
+  "NUMBER",
   "CITY",
   "MANAGER",
   "PRICE",
