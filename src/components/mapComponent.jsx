@@ -7,6 +7,7 @@ import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
 import axios from "@/lib/axios";
 import { useTheme } from "next-themes";
 import { useCallback, useContext, useEffect, useState } from "react";
+import moment from "moment";
 //Map's styling
 
 const MapComponent = () => {
@@ -16,8 +17,8 @@ const MapComponent = () => {
 
   useEffect(() => {
     async function fetchData() {
-      axios.get(`/map`).then((response) => {
-        console.log(response.data);
+      axios.get(`/locations`).then((response) => {
+        // console.log(response.data);
         setData(response.data);
       });
     }
@@ -29,7 +30,7 @@ const MapComponent = () => {
 
   const defaultMapContainerStyle = {
     width: "100%",
-    height: "80vh",
+    height: "100%",
     borderRadius: "15px 0px 0px 15px",
   };
 
@@ -102,6 +103,7 @@ const MapComponent = () => {
                       }}
                     >
                       <div>{selectedMarker?.user_name}</div>
+                      <div>Last update: {moment(selectedMarker?.created_at).format("YYYY-MM-DD hh:mm A") }</div>
                     </div>
                   </InfoWindow>
                 )}

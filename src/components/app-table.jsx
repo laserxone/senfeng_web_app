@@ -251,7 +251,7 @@ const PageTable = ({
           </div>
         </div>
         <div className="flex w-full items-center justify-between gap-2 sm:justify-end">
-          <div className="flex w-[250px] items-center justify-center text-sm font-medium">
+          <div className="flex sm:w-[250px] items-center justify-center text-sm font-medium">
             {filteredData.length > 0 ? (
               <>
                 {totalCustomerText && `${totalCustomerText} ${filteredData.length}`} Page{" "}

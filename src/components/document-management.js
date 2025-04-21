@@ -9,7 +9,7 @@ import PageTable from './app-table';
 import { Button } from './ui/button';
 import { Heading } from './ui/heading';
 import Spinner from './ui/spinner';
-import axios from 'axios';
+import axios from '@/lib/axios';
 import { BASE_URL } from '@/constants/data';
 import moment from 'moment';
 
@@ -272,7 +272,7 @@ const DocumentManagement = () => {
                 <Heading title="Documents Management" description="Manage office documents" />
                 {UserState.value.data &&
                     UserState.value.data?.dms_write_access && (
-                        <div className="flex justify-between mb-6">
+                        <div className="flex justify-between mb-6 gap-4 flex-wrap">
                             <input
                                 type="file"
                                 ref={fileInputRef}

@@ -1,14 +1,14 @@
 "use client";
 
 import { storage } from "@/config/firebase";
-import { BASE_URL, CountriesList } from "@/constants/data";
+import { CountriesList } from "@/constants/data";
 import { toast } from "@/hooks/use-toast";
+import axios from "@/lib/axios";
 import { debounce } from "@/lib/debounce";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { UploadImage } from "@/lib/uploadFunction";
 import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "@/lib/axios";
 import { getDownloadURL, ref } from "firebase/storage";
 import { Loader2, Trash } from "lucide-react";
 import moment from "moment";
@@ -16,9 +16,11 @@ import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { RequiredStar } from "./RequiredStar";
 import { CitiesSearch } from "./cities-search";
 import Dropzone from "./dropzone";
 import { IndustrySearch } from "./industry-search";
+import { NumberSearch } from "./number-search";
 import StarRating from "./startRating";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
@@ -34,7 +36,6 @@ import {
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
-import { UserSearch } from "./user-search";
 import {
   Select,
   SelectContent,
@@ -43,8 +44,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { RequiredStar } from "./RequiredStar";
-import { NumberSearch } from "./number-search";
+import { UserSearch } from "./user-search";
+import AppCalendar from "./appCalendar";
 
 const EditCustomerDialog = ({
   onRefresh,
@@ -79,6 +80,7 @@ const EditCustomerDialog = ({
     image: z.string().optional(),
     member: z.boolean().optional(),
     ownership: z.number().nullable().optional(),
+    created_at: z.date().nullable().optional(),
   });
 
   const form = useForm({
@@ -100,6 +102,7 @@ const EditCustomerDialog = ({
       image: "",
       member: false,
       ownership: null,
+      created_at: null,
     },
   });
 
@@ -148,6 +151,7 @@ const EditCustomerDialog = ({
             other: data?.other || "",
             pin: data?.pin || "",
             platform: data?.platform || "",
+            created_at: data?.created_at || null,
           });
         });
       } else {
@@ -168,6 +172,7 @@ const EditCustomerDialog = ({
           other: data?.other || "",
           pin: data?.pin || "",
           platform: data?.platform || "",
+          created_at: data?.created_at || null,
         });
       }
     }
@@ -181,16 +186,18 @@ const EditCustomerDialog = ({
 
   async function onSubmit(values) {
     setLoading(true);
-    const temp = numbers.filter((item) => {
-      if (item) return item;
+
+    const finalData = numbers.map((item, index) => {
+      return selectedNumber[index] + item;
     });
+
     const apiData = {
       name: values.company,
       email: values.email,
       customer_group: values.group,
       industry: values.industry,
       location: values.city,
-      number: temp,
+      number: finalData,
       owner: values.owner,
       address: values.address,
       rating: values.rating,
@@ -202,16 +209,12 @@ const EditCustomerDialog = ({
       other: values.other,
       platform: values.platform,
       pin: values.pin,
+      created_at: values.created_at,
     };
 
     try {
-      if (temp.length === 0) {
-        setNumberError("Atleas one number is required");
-        return;
-      }
-
       if (data.image && !values.image) {
-        const deleteRef = await DeleteFromStorage(data.image);
+        DeleteFromStorage(data.image);
         const response = await axios.put(`/customer/${data.id}`, {
           ...apiData,
           image: "",
@@ -226,10 +229,7 @@ const EditCustomerDialog = ({
           image: name,
         });
       } else {
-        const response = await axios.put(
-          `/customer/${data.id}`,
-          apiData
-        );
+        const response = await axios.put(`/customer/${data.id}`, apiData);
       }
 
       toast({ title: "Customer Edited successfully" });
@@ -277,7 +277,7 @@ const EditCustomerDialog = ({
     setChecking(true);
     try {
       const response = await axios.post(`/check-number`, { number });
-      const finalData = response.data.filter((item)=> !item.id === data.id)
+      const finalData = response.data.filter((item) => !item.id === data.id);
       setCustomerInfo(finalData);
     } catch (error) {
       console.log("Error checking number:", error);
@@ -293,7 +293,7 @@ const EditCustomerDialog = ({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="max-w-[80vw]">
+      <DialogContent className="w-full sm:max-w-[80vw]">
         <DialogHeader>
           <DialogTitle>Edit customer</DialogTitle>
         </DialogHeader>
@@ -329,7 +329,7 @@ const EditCustomerDialog = ({
                               </div>
                               <FormControl className="flex-1">
                                 <Input
-                                type="number"
+                                  type="number"
                                   disabled={!selectedNumber[index]}
                                   placeholder="xxxxxxxxx"
                                   value={num}
@@ -530,6 +530,22 @@ const EditCustomerDialog = ({
                             </FormItem>
                           )}
                         />
+                         <FormField
+                        control={form.control}
+                        name="created_at"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date</FormLabel>
+                            <FormControl>
+                              <AppCalendar
+                                date={field.value}
+                                onChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       </div>
                     </div>
 
@@ -685,11 +701,19 @@ const EditCustomerDialog = ({
                           </FormItem>
                         )}
                       />
+
+                     
                     </div>
                   </div>
 
                   <Button
-                    disabled={customerInfo.length > 0 || checking}
+                    disabled={
+                      customerInfo.length > 0 ||
+                      checking ||
+                      numbers.filter((item) => {
+                        if (item) return item;
+                      }).length === 0
+                    }
                     className="w-full mt-10"
                     type="submit"
                   >

@@ -51,17 +51,17 @@ import { pdf } from "@react-pdf/renderer";
 export default function Page() {
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <Tabs defaultValue="salary" className="w-full flex flex-1 flex-col">
+      <Tabs defaultValue="salary" className="flex flex-1 flex-col">
         <TabsList className="grid grid-cols-4">
           <TabsTrigger value="salary">Salary</TabsTrigger>
           <TabsTrigger value="record">Record</TabsTrigger>
         </TabsList>
-        <TabsContent value="salary">
+         <TabsContent value="salary">
           <SalaryComponent />
         </TabsContent>
-        <TabsContent value="record">
+     {/*   <TabsContent value="record">
           <RecordComponent />
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   );
@@ -370,8 +370,8 @@ const SalaryComponent = () => {
         title={"Generate Salary"}
         description={"Manage employee salaries"}
       />
-      <div className="flex items-center gap-4">
-        <div className="flex w-[300px] flex-col gap-2">
+      <div className="flex items-end gap-4 flex-wrap ">
+        <div className="flex w-full sm:w-[300px] flex-col gap-2">
           <Label>Select User</Label>
           <UserSearch value={user} onReturn={setUser} />
         </div>
@@ -424,11 +424,11 @@ const SalaryComponent = () => {
             <Button
               disabled={!user}
               onClick={() => handleGenerate()}
-              className="mt-6"
+              
             >
               {loading && <Spinner />} Generate
             </Button>
-            <Button onClick={() => handleAccounts()} className="mt-6">
+            <Button onClick={() => handleAccounts()} >
               {accountsLoading && <Spinner />} To Accounts
             </Button>
           </>
@@ -459,7 +459,7 @@ const SalaryComponent = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+       <div className="flex flex-row flex-wrap gap-4">
         <Card>
           <CardHeader>
             <CardTitle>Configurable</CardTitle>
@@ -621,14 +621,14 @@ const SalaryComponent = () => {
         </CardContent>
       </Card>
 
-      <Card>
+     <Card>
         <CardHeader>
           <CardTitle>Attendance Record</CardTitle>
         </CardHeader>
         <CardContent className="pt-5">
           <AttendanceRecord passingData={attendanceData} />
         </CardContent>
-      </Card>
+      </Card> 
     </div>
   );
 };

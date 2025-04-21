@@ -445,8 +445,6 @@ const TaskDetail = ({
     <Sheet
       open={visible}
       onOpenChange={onClose}
-      onDelete={onDelete}
-      onMark={onMark}
     >
       <SheetContent>
         <SheetHeader>
@@ -481,7 +479,7 @@ const TaskDetail = ({
               </Label>
               <Label htmlFor="assign_date" className="text-sm text-gray-800">
                 {detail?.created_at
-                  ? moment(detail?.created_at).format("DD/MM/YYYY")
+                  ? moment(detail?.created_at).format("YYYY-MM-DD")
                   : ""}
               </Label>
               {/* <Label htmlFor="assigned_to" className="text-sm text-gray-800">

@@ -20,13 +20,12 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  AlertCircleIcon,
   ArrowUpDown,
   ClipboardList,
   EditIcon,
   Siren,
   Trash,
-  Wrench,
+  Wrench
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import {
@@ -57,27 +56,27 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import Spinner from "@/components/ui/spinner";
-import { storage } from "@/config/firebase";
-import { BASE_URL, Colors } from "@/constants/data";
-import { useToast } from "@/hooks/use-toast";
-import { debounce } from "@/lib/debounce";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
-import { UploadImage } from "@/lib/uploadFunction";
-import { UserContext } from "@/store/context/UserContext";
-import { pdf } from "@react-pdf/renderer";
-import axios from "@/lib/axios";
-import { getDownloadURL, ref } from "firebase/storage";
-import moment from "moment";
-import * as pdfjsLib from "pdfjs-dist/build/pdf";
-import "pdfjs-dist/build/pdf.worker";
-import { Controlled as ControlledZoom } from "react-medium-image-zoom";
-import "react-medium-image-zoom/dist/styles.css";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { storage } from "@/config/firebase";
+import { Colors } from "@/constants/data";
+import { useToast } from "@/hooks/use-toast";
+import axios from "@/lib/axios";
+import { debounce } from "@/lib/debounce";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
+import { UploadImage } from "@/lib/uploadFunction";
+import { UserContext } from "@/store/context/UserContext";
+import { pdf } from "@react-pdf/renderer";
+import { getDownloadURL, ref } from "firebase/storage";
+import moment from "moment";
+import * as pdfjsLib from "pdfjs-dist/build/pdf";
+import "pdfjs-dist/build/pdf.worker";
+import { Controlled as ControlledZoom } from "react-medium-image-zoom";
+import "react-medium-image-zoom/dist/styles.css";
 
 export default function Machine() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -137,7 +136,7 @@ export default function Machine() {
       if (machine) {
         setTotal(Number(machine.price || 0));
 
-        const payments = machine?.payments || [];
+        const payments = machine?.payments?.filter(p => p.clearance_date !== null) || [];
         setPayments(payments);
         setReceived(
           payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
@@ -656,7 +655,7 @@ const ImageSheet = ({
 
   async function handleDelete() {
     if (img && !img.includes("http")) {
-      const deleteRef = await DeleteFromStorage(img);
+      DeleteFromStorage(img);
     }
     axios
       .delete(`/payment/${id}`)

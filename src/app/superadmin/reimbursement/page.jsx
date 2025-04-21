@@ -1,7 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { BASE_URL } from "@/constants/data";
 import {
   ArrowUpDown,
   Filter,
@@ -49,12 +48,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserSearch } from "@/components/user-search";
 import FilterSheet from "@/components/users/filterSheet";
 import { storage } from "@/config/firebase";
+import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import exportToExcel from "@/lib/exportToExcel";
 import { UploadImage } from "@/lib/uploadFunction";
 import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "@/lib/axios";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import { useForm } from "react-hook-form";
@@ -264,7 +263,7 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex justify-between">
+      <div className="flex justify-between flex-wrap">
         <Heading title="Reimbursement" description="Manage reimbursements" />
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -433,7 +432,7 @@ const ImageSheet = ({
 
   async function handleDelete() {
     if (img && !img.includes("http")) {
-      const deleteRef = await DeleteFromStorage(img);
+      DeleteFromStorage(img);
     }
     axios.delete(`/reimbursement/${id}`).then(async () => {
       await onRefresh(id);

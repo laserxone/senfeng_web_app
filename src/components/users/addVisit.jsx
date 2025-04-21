@@ -8,17 +8,17 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { storage } from "@/config/firebase";
-import { BASE_URL } from "@/constants/data";
+import axios from "@/lib/axios";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { UploadImage } from "@/lib/uploadFunction";
 import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "@/lib/axios";
 import { getDownloadURL, ref } from "firebase/storage";
 import { Filter, Loader2, MapPin, MapPinOff, Trash2 } from "lucide-react";
 import moment from "moment";
+import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Zoom from "react-medium-image-zoom";
@@ -29,10 +29,8 @@ import AppCalendar from "../appCalendar";
 import { CustomerSearchWithData } from "../customer-search-with-data";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
-import FilterSheet from "./filterSheet";
-import Link from "next/link";
 import Spinner from "../ui/spinner";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
+import FilterSheet from "./filterSheet";
 
 const formSchema = z.object({
   note: z.string().min(1, "Note cannot be empty"),
@@ -75,7 +73,7 @@ export default function VisitTab({
     setLoading(true);
     try {
       if (values.image) {
-        const name = `${id}/visit/${moment().valueOf().toString()}.png`;
+        const name = `${selectedCustomer?.id}/visit/${moment().valueOf().toString()}.png`;
         const uploadRef = await UploadImage(values.image, name);
         const response = await axios.post(`/user/${id}/visit`, {
           ...values,
@@ -122,7 +120,7 @@ export default function VisitTab({
   async function handleDelete(item) {
     try {
       setSelectedDelete(item.id);
-      const response = await DeleteFromStorage(item.image);
+      DeleteFromStorage(item.image);
       axios
         .delete(`/visit/${item.id}`)
         .then(async () => {
@@ -137,7 +135,7 @@ export default function VisitTab({
   }
 
   return (
-    <ScrollArea className={`${height} pr-5`}>
+    <ScrollArea className={`${height}`}>
       <div className="space-y-4 w-full">
         <Card>
           <CardContent className="p-4 space-y-4">
@@ -150,7 +148,7 @@ export default function VisitTab({
                 className="space-y-3"
               >
                 {!disable && (
-                  <div className="flex flex-row gap-2 items-end">
+                  <div className="flex flex-row gap-2 items-end flex-wrap">
                     <div>
                       <FormLabel>Select Customer</FormLabel>
                       <RenderCustomerSearch />
@@ -214,7 +212,7 @@ export default function VisitTab({
                     />
                   </div>
                 )}
-                <div className="flex flex-1 gap-5">
+                <div className="flex flex-1 gap-5 flex-wrap">
                   <FormField
                     control={form.control}
                     name="image"

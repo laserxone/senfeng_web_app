@@ -5,7 +5,7 @@ import { Heading } from "@/components/ui/heading";
 import { db } from "@/config/firebase";
 import { NotificationContext } from "@/store/context/NotificationContext";
 import { UserContext } from "@/store/context/UserContext";
-import { doc, updateDoc } from "firebase/firestore";
+import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { Bell, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useContext } from "react";
@@ -15,17 +15,14 @@ export default function Notification() {
   const {state : UserState} = useContext(UserContext)
 
   const markAsRead = async (id) => {
-    await updateDoc(doc(db, "Notification", id), {
-      read: true,
-    });
+    await deleteDoc(doc(db, "Notification",  id))
   };
 
   const markAllAsRead = async () => {
     await Promise.all(
-      NotificationState.value.data.map((eachNotification) =>
-        updateDoc(doc(db, "Notification", eachNotification.id), {
-          read: true,
-        })
+      NotificationState.value.data.map(async(eachNotification) =>
+        await deleteDoc(doc(db, "Notification",  eachNotification.id))
+        
       )
     );
   };

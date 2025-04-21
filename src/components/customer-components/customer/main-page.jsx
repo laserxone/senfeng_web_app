@@ -1,16 +1,11 @@
 "use client";
-import { ArrowUpDown, Trash, Trash2 } from "lucide-react";
-
+import { ArrowUpDown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useContext, useEffect, useRef, useState } from "react";
-
-import { Label } from "@/components/ui/label";
-
+import { useContext, useEffect, useState } from "react";
 import AddCustomerDialog from "@/components/addCustomer";
 import AddQuickAction from "@/components/addQuickAction";
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
-import AppCalendar from "@/components/appCalendar";
 import PageContainer from "@/components/page-container";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -21,23 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { BASE_URL } from "@/constants/data";
+import { UserSearch } from "@/components/user-search";
 import { toast } from "@/hooks/use-toast";
-import { UserContext } from "@/store/context/UserContext";
 import axios from "@/lib/axios";
+import { UserContext } from "@/store/context/UserContext";
 import { startHolyLoader } from "holy-loader";
 import moment from "moment";
 import { useRouter } from "next/navigation";
-import { UserSearch } from "@/components/user-search";
 
 const tableHeader = [
   {
@@ -351,7 +336,7 @@ export default function CustomerMainPage() {
   return (
     <PageContainer scrollable={false}>
       <div className="flex flex-1 flex-col space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <Heading title="All Customers" description="Manage your custoners" />
 
           <div className="flex gap-2">
@@ -429,16 +414,8 @@ export default function CustomerMainPage() {
             }
           }}
         >
-          <div className=" flex justify-between">
-            <div className="flex gap-4">
-              {/* <div className="flex items-center gap-2">
-
-              <Label>Members?</Label>
-              <Checkbox
-                checked={member}
-                onCheckedChange={(checked) => setMember(checked)}
-              />
-              </div> */}
+          <div className=" flex justify-between flex-wrap gap-2">
+            <div className="flex gap-4 flex-wrap">
 
               {(UserState.value.data?.designation === "Owner" ||
                 UserState.value.data?.full_access) && (

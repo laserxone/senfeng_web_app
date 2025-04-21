@@ -1,65 +1,25 @@
 "use client";
 import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
   ArrowUpDown,
-  ChevronsRight,
   Filter,
-  Loader2,
-  MoreHorizontal,
+  Loader2
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useCallback, useContext, useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
+import { useCallback, useContext, useEffect, useState } from "react";
 
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import ConfimationDialog from "@/components/alert-dialog";
-import AppCalendar from "@/components/appCalendar";
 import PageTable from "@/components/app-table";
-import { Heading } from "@/components/ui/heading";
+import AppCalendar from "@/components/appCalendar";
+import Dropzone from "@/components/dropzone";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -68,32 +28,31 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Heading } from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle
+} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import Dropzone from "@/components/dropzone";
+import FilterSheet from "@/components/users/filterSheet";
+import { storage } from "@/config/firebase";
+import { toast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
+import exportToExcel from "@/lib/exportToExcel";
+import { UploadImage } from "@/lib/uploadFunction";
+import { UserContext } from "@/store/context/UserContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { getDownloadURL, ref } from "firebase/storage";
+import moment from "moment";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
-import exportToExcel from "@/lib/exportToExcel";
-import { Title } from "@radix-ui/react-dialog";
-import { UserContext } from "@/store/context/UserContext";
-import { UserSearch } from "@/components/user-search";
-import moment from "moment";
-import { UploadImage } from "@/lib/uploadFunction";
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@/config/firebase";
-import { redirect, useRouter } from "next/navigation";
-import FilterSheet from "@/components/users/filterSheet";
-import { toast, useToast } from "@/hooks/use-toast";
-import { BASE_URL } from "@/constants/data";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
+import { z } from "zod";
 import Spinner from "../ui/spinner";
 
 export default function EmployeeBranchExpenses() {
@@ -240,7 +199,7 @@ export default function EmployeeBranchExpenses() {
     setDeleteLoading(true);
     try {
       if (imageURL && imageURL?.image && !imageURL.image.includes("http")) {
-        const res = await DeleteFromStorage(imageURL.image);
+        DeleteFromStorage(imageURL.image);
       }
       const response = await axios.delete(
         `/expenses/${id}`
@@ -259,7 +218,7 @@ export default function EmployeeBranchExpenses() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <Heading title="Office Expenses" description="Manage office expenses" />
         {UserState.value.data &&
           UserState.value.data?.branch_expenses_write_access && (

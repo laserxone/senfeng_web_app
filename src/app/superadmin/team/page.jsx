@@ -169,7 +169,7 @@ export default function Page() {
  
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <Heading title="Team" description="Manage team members" />
         <Button
           onClick={() => {

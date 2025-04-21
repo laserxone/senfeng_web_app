@@ -347,7 +347,7 @@ export default function MemberMainPage() {
   return (
     <PageContainer scrollable={false}>
       <div className="flex flex-1 flex-col space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap">
           <Heading title="All Members" description="Manage your members" />
         </div>
 
@@ -377,8 +377,8 @@ export default function MemberMainPage() {
           // filter={true}
           // onFilterClick={() => setFilterVisible(true)}
         >
-          <div className=" flex justify-between">
-            <div className="flex gap-4">
+          <div className=" flex justify-between flex-wrap">
+            <div className="flex gap-4 flex-wrap">
               {/* <div className="flex items-center gap-2">
 
               <Label>Members?</Label>

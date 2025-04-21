@@ -33,7 +33,9 @@ export default async function RootLayout({ children }) {
           }
         >
           <Providers>
-            <MobileScreenWrapper>{children}</MobileScreenWrapper>
+            {/* <MobileScreenWrapper> */}
+              {children}
+              {/* </MobileScreenWrapper> */}
           </Providers>
         </Suspense>
         <Toaster />

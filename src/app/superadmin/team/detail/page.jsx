@@ -234,7 +234,8 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 justify-center items-center p-6">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2"
+      >
         <Card>
           <CardContent>
             <div className="flex items-center gap-4 border-b pb-4 mb-6 mt-2">

@@ -33,18 +33,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Spinner from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BASE_URL } from "@/constants/data";
+import VisitTab from "@/components/users/addVisit";
 import { debounce } from "@/lib/debounce";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
+import { GetProfileImage } from "@/lib/getProfileImage";
 import { UserContext } from "@/store/context/UserContext";
 import { startHolyLoader } from "holy-loader";
 import { CheckCircle, Clock } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useContext } from "react";
-import VisitTab from "@/components/users/addVisit";
-import { GetProfileImage } from "@/lib/getProfileImage";
 
-export default function MemberDetail({ ownership = false }) {
+export default function MemberDetail({ ownership = false, from }) {
   const search = useSearchParams();
   const [data, setData] = useState(null);
   const customer_id = search.get("id");
@@ -98,10 +98,13 @@ export default function MemberDetail({ ownership = false }) {
     if (!id) return;
     setDeleteLoading(true);
     try {
+      if (data.image) {
+        DeleteFromStorage(data.image);
+      }
       const response = await axios.delete(`/customer/${id}`);
       toast({ title: "Customer Deleted" });
       startHolyLoader();
-      router.push(`/${UserState.value.data?.base_route}/member`);
+      router.push(`/${UserState.value.data?.base_route}/${from}`);
     } finally {
       setDeleteLoading(false);
       setShowConfirmation(false);
@@ -125,6 +128,18 @@ export default function MemberDetail({ ownership = false }) {
       />
     );
   }, [visitData, customer_id]);
+
+  const RenderFeedbackTabs = useCallback(() => {
+    return (
+      <FeedbackTab
+        type={data?.member ? "aftersales" : "feedback"}
+        userID={UserState?.value?.data?.id}
+        customerID={customer_id}
+        data={feedback || []}
+        onRefresh={() => fetchCustomerFeedback()}
+      />
+    );
+  }, [data, feedback]);
 
   return (
     <PageContainer>
@@ -155,7 +170,10 @@ export default function MemberDetail({ ownership = false }) {
               }}
             />
             <div className="flex flex-col">
-              <h1 className="text-3xl font-bold">{data?.name}</h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">
+                {data?.name}
+              </h1>
+
               <h1 className="text-sm font-medium">
                 Rating:{" "}
                 {data?.rating ? `${data.rating} out of 5` : "Not rated yet"}
@@ -173,61 +191,38 @@ export default function MemberDetail({ ownership = false }) {
         </div>
 
         <Tabs
-        defaultValue={data?.member ? "aftersales" : "feedback"}
-        className="w-full"
-      >
-        <TabsList>
-          {data &&
-            (data?.member ? (
-              <TabsTrigger value="aftersales">After Sales</TabsTrigger>
-            ) : (
-              <TabsTrigger value="feedback">Feedback</TabsTrigger>
-            ))}
+          defaultValue={data?.member ? "aftersales" : "feedback"}
+          className="w-full"
+        >
+          <TabsList>
+            <TabsTrigger value="feedback">
+              {data?.member ? "After Sales" : "Feedback"}
+            </TabsTrigger>
 
-          <TabsTrigger value="customers">Machines</TabsTrigger>
-          {/* <TabsTrigger value="documents">Documents</TabsTrigger> */}
-          <TabsTrigger value="visit">Visit</TabsTrigger>
-          <TabsTrigger value="about">About</TabsTrigger>
-        </TabsList>
+            <TabsTrigger value="customers">Machines</TabsTrigger>
 
-        <TabsContent value="feedback">
-          <FeedbackTab
-            type="feedback"
-            userID={UserState?.value?.data?.id}
-            customerID={customer_id}
-            data={feedback || []}
-            onRefresh={() => fetchCustomerFeedback()}
-          />
-        </TabsContent>
+            <TabsTrigger value="visit">Visit</TabsTrigger>
+            <TabsTrigger value="about">About</TabsTrigger>
+          </TabsList>
+          <TabsContent value="feedback">
+            <RenderFeedbackTabs />
+          </TabsContent>
 
-        <TabsContent value="aftersales">
-          <FeedbackTab
-            type="aftersales"
-            userID={UserState?.value?.data?.id}
-            customerID={customer_id}
-            data={feedback || []}
-            onRefresh={() => fetchCustomerFeedback()}
-          />
-        </TabsContent>
-
-        <TabsContent value="about">
-          <AboutTab data={data} />
-        </TabsContent>
-        <TabsContent value="customers">
-          <CustomersTab
-            data={data?.machines || []}
-            user_id={UserState?.value?.data?.id}
-            customer_id={customer_id}
-            onRefresh={() => fetchCustomerDetail()}
-          />
-        </TabsContent>
-        <TabsContent value="visit">
-          <RenderVisitTab />
-        </TabsContent>
-        {/* <TabsContent value="documents">
-        <DocumentsTab />
-      </TabsContent> */}
-      </Tabs>
+          <TabsContent value="about">
+            <AboutTab data={data} />
+          </TabsContent>
+          <TabsContent value="customers">
+            <CustomersTab
+              data={data?.machines || []}
+              user_id={UserState?.value?.data?.id}
+              customer_id={customer_id}
+              onRefresh={() => fetchCustomerDetail()}
+            />
+          </TabsContent>
+          <TabsContent value="visit">
+            <RenderVisitTab />
+          </TabsContent>
+        </Tabs>
         {data && (
           <EditCustomerDialog
             ownership={ownership}
@@ -352,12 +347,14 @@ const BillingInformation = ({ total, received, balance }) => {
     style: "currency",
     currency: "PKR",
   }).format(balance || 0);
+
   return (
     <div className="p-4 mt-4 bg-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:text-white">
-      <h3 className="text-lg font-semibold text-black dark:text-white">
+      <h3 className="text-base sm:text-lg font-semibold text-black dark:text-white">
         Billing Summary
       </h3>
-      <div className="grid grid-cols-3 gap-4 text-sm text-gray-700 dark:text-gray-300 mt-2">
+
+      <div className="grid grid-cols-3 gap-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300 mt-2">
         <p>
           <strong>Bill:</strong>
         </p>
@@ -368,13 +365,11 @@ const BillingInformation = ({ total, received, balance }) => {
           <strong>Balance:</strong>
         </p>
       </div>
-      <div
-        className="grid grid-cols-3 gap-4 text-sm text-gray-700 dark:text-gray-300 mt-2"
-        style={{ fontWeight: 700 }}
-      >
+
+      <div className="grid grid-cols-3 gap-4 text-xs sm:text-sm mt-2 font-bold">
         <p>{formattedTotal}</p>
-        <p style={{ color: "green", fontWeight: 700 }}>{formattedReceived}</p>
-        <p style={{ color: "red", fontWeight: 700 }}>{formattedBalance}</p>
+        <p className="text-green-600">{formattedReceived}</p>
+        <p className="text-red-600">{formattedBalance}</p>
       </div>
     </div>
   );
@@ -548,15 +543,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
             rows={3}
             placeholder="Write something..."
           ></textarea>
-          <div className="flex gap-5 items-center mt-2">
-            <Button
-              disabled={!writeFeedback}
-              onClick={() => {
-                handleSavePost();
-              }}
-            >
-              {loading && <Loader2 className="animate-spin" />} Post
-            </Button>
+          <div className="flex gap-5 items-center mt-2 flex-wrap">
             <h1>Next Follow Up</h1>
             <div className="w-[250px]">
               <AppCalendar date={date} onChange={setDate} />
@@ -577,6 +564,15 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
               }}
             />
           </div>
+          <Button
+            className="w-full mt-4"
+            disabled={!writeFeedback}
+            onClick={() => {
+              handleSavePost();
+            }}
+          >
+            {loading && <Loader2 className="animate-spin" />} Post
+          </Button>
         </CardContent>
       </Card>
       {localData.map((item, index) => (
@@ -632,31 +628,33 @@ const BillingInformationMachine = ({ payment }) => {
   const formattedBalance = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "PKR",
-  }).format(payment[0] - payment[1] || 0);
+  }).format((payment[0] || 0) - (payment[1] || 0));
 
   return (
     <div className="p-4 mt-4 bg-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:text-white">
-      <h3 className="text-lg font-semibold text-black dark:text-white">
+      <h3 className="text-base sm:text-lg font-semibold text-black dark:text-white">
         Billing Summary
       </h3>
-      <div className="grid grid-cols-3 gap-4 text-sm text-gray-700 dark:text-gray-300 mt-2">
-        <p>
-          <strong>Bill:</strong>
-        </p>
-        <p>
-          <strong>Received:</strong>
-        </p>
-        <p>
-          <strong>Balance:</strong>
-        </p>
-      </div>
-      <div
-        className="grid grid-cols-3 gap-4 text-sm text-gray-700 dark:text-gray-300 mt-2"
-        style={{ fontWeight: 700 }}
-      >
-        <p>{formattedTotal}</p>
-        <p style={{ color: "green", fontWeight: 700 }}>{formattedReceived}</p>
-        <p style={{ color: "red", fontWeight: 700 }}>{formattedBalance}</p>
+
+      <div className="flex-row gap-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300 mt-2 justify-between flex-wrap">
+        <div className="flex flex-col gap-2">
+          <p>
+            <strong>Bill:</strong>
+          </p>
+          <p className="font-bold">{formattedTotal}</p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <p>
+            <strong>Received:</strong>
+          </p>
+          <p className="text-green-600 font-bold">{formattedReceived}</p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <p>
+            <strong>Balance:</strong>
+          </p>
+          <p className="text-red-600 font-bold">{formattedBalance}</p>
+        </div>
       </div>
     </div>
   );

@@ -93,7 +93,7 @@ const RenderInventory = () => {
   return (
     <PageContainer scrollable={false}>
       <div className="flex flex-1 flex-col space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <Heading
             title="Machine Inventory"
             description="Manage machine inventory"
