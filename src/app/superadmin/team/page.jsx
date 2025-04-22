@@ -1,18 +1,15 @@
 "use client";
-import {
-  ArrowUpDown
-} from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useContext, useEffect, useRef, useState } from "react";
 
-
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -20,7 +17,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
+  FormMessage,
 } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -47,6 +44,8 @@ import axios from "@/lib/axios";
 import { startHolyLoader } from "holy-loader";
 import moment from "moment";
 import { useRouter } from "next/navigation";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "@/config/firebase";
 
 const columns = [
   {
@@ -166,7 +165,6 @@ export default function Page() {
     });
   }
 
- 
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -181,21 +179,19 @@ export default function Page() {
       </div>
       <PageTable
         loading={loading}
-        
         columns={columns}
         data={data}
         totalItems={data.length}
-       
         tableHeader={tableHeader}
         onRowClick={(val) => {
           if (val.id) {
             startHolyLoader();
-            router.push(`/${UserState.value.data?.base_route}/team/detail?id=${val.id}`);
+            router.push(
+              `/${UserState.value.data?.base_route}/team/detail?id=${val.id}`
+            );
           }
         }}
-      >
-       
-      </PageTable>
+      ></PageTable>
 
       <AddUserDialog
         visible={open}
@@ -219,7 +215,6 @@ export default function Page() {
     </div>
   );
 }
-
 
 const AddUserDialog = ({ visible, onClose, onReturn }) => {
   const [dataLoading, setDataLoading] = useState(false);
@@ -248,7 +243,7 @@ const AddUserDialog = ({ visible, onClose, onReturn }) => {
 
     axios
       .post(`/user`, { ...values, name: values.name.toUpperCase() })
-      .then((response) => {
+      .then(async (response) => {
         onReturn(response.data);
         handleClose(false);
       })
@@ -269,6 +264,10 @@ const AddUserDialog = ({ visible, onClose, onReturn }) => {
     {
       label: "Customer Relationship Manager (After Sales)",
       value: "Customer Relationship Manager (After Sales)",
+    },
+    {
+      label: "Social Media Manager",
+      value: "Social Media Manager",
     },
     { label: "Office Boy", value: "Office Boy" },
   ];

@@ -1,33 +1,28 @@
 "use client";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import { auth, storage } from "@/config/firebase";
+import { useToast } from "@/hooks/use-toast";
+import axios from "@/lib/axios";
+import { UploadImage } from "@/lib/uploadFunction";
+import { UserContext } from "@/store/context/UserContext";
+import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword
+} from "firebase/auth";
 import {
   deleteObject,
   getDownloadURL,
-  ref,
-  uploadBytesResumable,
+  ref
 } from "firebase/storage";
-import { auth, storage } from "@/config/firebase";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { UserContext } from "@/store/context/UserContext";
-import { Skeleton } from "@/components/ui/skeleton";
-import { UploadImage } from "@/lib/uploadFunction";
-import moment from "moment";
-import axios from "@/lib/axios";
-import {
-  updatePassword,
-  getAuth,
-  reauthenticateWithCredential,
-  EmailAuthProvider,
-} from "firebase/auth";
-import { useToast } from "@/hooks/use-toast";
-import { BASE_URL } from "@/constants/data";
-import { Textarea } from "../ui/textarea";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import Spinner from "../ui/spinner";
+import { Textarea } from "../ui/textarea";
 
 export default function ProfilePage() {
   const { state: UserState, setUser } = useContext(UserContext);

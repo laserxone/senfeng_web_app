@@ -151,7 +151,7 @@ const AddCustomerDialog = ({
             ? values.ownership
             : undefined,
         created_by: UserState.value.data?.id,
-        created_at: values.created_at,
+        created_at: values.created_at || undefined,
       });
       toast({ title: "Customer Addedd successfully" });
       await onRefresh(response.data.data);
@@ -556,6 +556,23 @@ const AddCustomerDialog = ({
                       />
 
                       <FormField
+                        control={form.control}
+                        name="created_at"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date</FormLabel>
+                            <FormControl>
+                              <AppCalendar
+                                date={field.value}
+                                onChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
                         control={control}
                         name="member"
                         render={({ field }) => (
@@ -568,23 +585,6 @@ const AddCustomerDialog = ({
                                 onCheckedChange={(checked) => {
                                   field.onChange(checked);
                                 }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="created_at"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Date</FormLabel>
-                            <FormControl>
-                              <AppCalendar
-                                date={field.value}
-                                onChange={field.onChange}
                               />
                             </FormControl>
                             <FormMessage />

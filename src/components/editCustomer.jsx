@@ -131,7 +131,6 @@ const EditCustomerDialog = ({
 
       setSelectedNumber([...tempSelectedNumber]);
       setNumbers([...tempNumbers]);
-
       if (data.image) {
         getDownloadURL(ref(storage, data.image)).then((url) => {
           form.reset({
@@ -151,7 +150,7 @@ const EditCustomerDialog = ({
             other: data?.other || "",
             pin: data?.pin || "",
             platform: data?.platform || "",
-            created_at: data?.created_at || null,
+            created_at: data?.created_at ? new Date(data.created_at) : null,
           });
         });
       } else {
@@ -172,7 +171,7 @@ const EditCustomerDialog = ({
           other: data?.other || "",
           pin: data?.pin || "",
           platform: data?.platform || "",
-          created_at: data?.created_at || null,
+          created_at: data?.created_at ? new Date(data.created_at) : null,
         });
       }
     }
@@ -511,6 +510,22 @@ const EditCustomerDialog = ({
                             </FormItem>
                           )}
                         />
+                          <FormField
+                        control={form.control}
+                        name="created_at"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date</FormLabel>
+                            <FormControl>
+                              <AppCalendar
+                                date={field.value}
+                                onChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                         <FormField
                           control={control}
                           name="member"
@@ -530,22 +545,7 @@ const EditCustomerDialog = ({
                             </FormItem>
                           )}
                         />
-                         <FormField
-                        control={form.control}
-                        name="created_at"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Date</FormLabel>
-                            <FormControl>
-                              <AppCalendar
-                                date={field.value}
-                                onChange={field.onChange}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                       
                       </div>
                     </div>
 
