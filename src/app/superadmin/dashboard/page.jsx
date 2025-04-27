@@ -6,11 +6,10 @@ import { Sale } from "@/components/charts/sales/page";
 import { CustomerMapComponent } from "@/components/customerMapComponent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BASE_URL, PakCities } from "@/constants/data";
+import { PakCities } from "@/constants/data";
+import axios from "@/lib/axios";
 import { MapProvider } from "@/providers/map-provider";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "@/lib/axios";
-import Link from "next/link";
 import { useContext, useEffect, useState } from "react";
 
 export default function Page() {
@@ -30,7 +29,6 @@ export default function Page() {
     axios
       .get(`/dashboard`)
       .then((response) => {
-        console.log(response.data)
         setData(response.data);
       })
       .catch((e) => console.log(e))
@@ -78,8 +76,8 @@ export default function Page() {
           Hi, Welcome back 👋
         </h2>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+      <div className="flex flex-row justify-between flex-wrap gap-2">
+        <Card className="w-full sm:w-auto sm:min-w-[350px]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Total Payments This Month
@@ -120,7 +118,7 @@ export default function Page() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="w-full sm:w-auto sm:min-w-[350px]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Machines Sold This Month
@@ -157,7 +155,7 @@ export default function Page() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="w-full sm:w-auto sm:min-w-[350px]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               New Customers This Month

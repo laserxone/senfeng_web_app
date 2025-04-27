@@ -362,7 +362,7 @@ export default function InventoryDetail() {
             data.map((item, ind) => (
               <div key={ind} className={`flex flex-row ${item.color}`}>
                 {fieldOrder.map((key, index1) => (
-                  <div
+                  <div 
                     key={`${ind}-${index1}`}
                     className={`border border-gray-400 dark:border-gray-400 ${
                       key === "REMARKS" ? "w-[300px]" : "w-[130px]"

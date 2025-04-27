@@ -1,14 +1,12 @@
 "use client";
 
 import { UserContext } from "@/store/context/UserContext";
-//Map component Component from library
-import { BASE_URL } from "@/constants/data";
-import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
 import axios from "@/lib/axios";
+import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
+import moment from "moment";
 import { useTheme } from "next-themes";
 import { useCallback, useContext, useEffect, useState } from "react";
-import moment from "moment";
-//Map's styling
+
 
 const MapComponent = () => {
   const { state: UserState } = useContext(UserContext);
@@ -18,7 +16,6 @@ const MapComponent = () => {
   useEffect(() => {
     async function fetchData() {
       axios.get(`/locations`).then((response) => {
-        // console.log(response.data);
         setData(response.data);
       });
     }

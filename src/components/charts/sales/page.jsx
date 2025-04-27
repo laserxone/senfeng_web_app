@@ -25,9 +25,9 @@ export function Sale({ data }) {
           {data.map((item, ind) => (
             <div
               key={ind}
-              className="grid grid-cols-2 sm:flex-row items-center sm:space-x-4"
+              className="flex flex-row items-center justify-between gap-4"
             >
-              <div className="flex items-center">
+              <div className="flex  items-center">
                 <Avatar className="h-9 w-9">
                   <AvatarImage src={item.seller_dp} alt="Avatar" />
                   <AvatarFallback>
@@ -52,7 +52,7 @@ export function Sale({ data }) {
                   </Link>
                 </div>
               </div>
-              <div className="d-flex flex-col items-start">
+              <div className="flex  flex-col items-start">
                 <div className="font-medium">
                   {new Intl.NumberFormat("en-US", {
                     style: "currency",

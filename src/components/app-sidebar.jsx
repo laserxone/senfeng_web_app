@@ -19,7 +19,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -31,28 +30,13 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-import {
-  BadgeCheck,
-  Bell,
-  ChevronRight,
-  ChevronsUpDown,
-  CreditCard,
-  GalleryVerticalEnd,
-  LogOut,
-} from "lucide-react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import * as React from "react";
 import { Icons } from "@/components/icons";
-import { ownerNavItems } from "@/constants/data";
-import Image from "next/image";
-import { signOut } from "firebase/auth";
 import { auth, db } from "@/config/firebase";
-import useCheckSession from "@/lib/checkSession";
-import { UserContext } from "@/store/context/UserContext";
-import { GetProfileImage } from "@/lib/getProfileImage";
 import { useProfileImage } from "@/hooks/use-profile-image";
+import useCheckSession from "@/lib/checkSession";
 import { NotificationContext } from "@/store/context/NotificationContext";
+import { UserContext } from "@/store/context/UserContext";
+import { signOut } from "firebase/auth";
 import {
   collection,
   onSnapshot,
@@ -60,8 +44,19 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import {
+  Bell,
+  ChevronRight,
+  ChevronsUpDown,
+  CreditCard,
+  LogOut,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import * as React from "react";
 import NotificationBadge from "./NotificationBadge";
 import NotificationBadgeWithoutCount from "./NotificationBadgeWithoutCount";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const company = {
   name: "SENFENG",
@@ -76,6 +71,8 @@ export default function AppSidebar() {
   const { state: NotificationState, setNotification } =
     React.useContext(NotificationContext);
   const profileImage = useProfileImage();
+  const { toggleSidebar } = useSidebar();
+  const isMobile = useIsMobile();
 
   React.useEffect(() => {
     checkSession().then((val) => {
@@ -149,6 +146,9 @@ export default function AppSidebar() {
                                 isActive={pathname.includes(subItem.url)}
                               >
                                 <Link
+                                  onClick={() => {
+                                    if (isMobile) toggleSidebar();
+                                  }}
                                   href={`/${UserState.value.data?.base_route}${subItem.url}`}
                                 >
                                   <span className="text-[12px]">
@@ -170,6 +170,9 @@ export default function AppSidebar() {
                       isActive={pathname.includes(item.url)}
                     >
                       <Link
+                        onClick={() => {
+                          if (isMobile) toggleSidebar();
+                            }}
                         href={`/${UserState.value.data?.base_route}${item.url}`}
                       >
                         <Icon />
@@ -202,7 +205,9 @@ export default function AppSidebar() {
                       <span className="truncate font-semibold">
                         {UserState?.value?.data?.name}
                       </span>
-                      <NotificationBadgeWithoutCount count={NotificationState?.value?.data?.length} />
+                      <NotificationBadgeWithoutCount
+                        count={NotificationState?.value?.data?.length}
+                      />
                     </div>
 
                     <span className="truncate text-xs">

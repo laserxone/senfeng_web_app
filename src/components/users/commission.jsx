@@ -81,16 +81,17 @@ const OwnerView = () => {
     }
 
     return (
-      <Card>
+      <Card className="max-w-[calc(100vw-34px)]">
         <CardContent className="p-4 space-y-2">
           <Link
             target="blank"
-            href={`/${UserState.value.data?.base_route}/customer/machine?id=${item.sale_id}`}
+            href={`/${UserState.value.data?.base_route}/member/machine?id=${item.sale_id}`}
           >
             <h2 className="font-semibold text-lg hover:underline">
               Customer: {item.customer_name || item.customer_owner || "NIL"}
             </h2>
           </Link>
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -164,6 +165,7 @@ const OwnerView = () => {
               </TableRow>
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
     );
@@ -258,69 +260,78 @@ const OtherView = () => {
     }
 
     return (
-      <Card>
+      <Card className="max-w-[calc(100vw-34px)]">
         <CardContent className="p-4 space-y-2">
-          <h2 className="font-semibold text-lg">
-            Customer: {item.customer?.name || item.customer?.owner || "NIL"}
-          </h2>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Machine</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Paid</TableHead>
-                <TableHead>Balance</TableHead>
-                <TableHead>Note</TableHead>
-                <TableHead>Commission Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell>{item.serial_no}</TableCell>
-                <TableCell>{item.created_amount}</TableCell>
-                <TableCell>{item.paid_amount}</TableCell>
-                <TableCell>{item.balance}</TableCell>
-                <TableCell>
-                  {item.balance !== 0 ? null : item.commission?.id ? (
-                    <span>{item.commission?.note}</span>
-                  ) : (
-                    <div className="flex flex-row gap-2">
-                      <Input
-                        value={note || ""}
-                        onChange={(e) => setNote(e.target.value)}
-                      />
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {item.balance !== 0 ? (
-                    <span className="text-red-600">
-                      Payment not cleared yet
-                    </span>
-                  ) : item.commission?.id ? (
-                    item.commission.is_approved ? (
-                      <span className="text-green-600">Approved</span>
+          <Link
+            target="blank"
+            href={`/${UserState.value.data?.base_route}/member/machine?id=${item.id}`}
+          >
+            <h2 className="font-semibold text-lg hover:underline">
+              Customer: {item.customer?.name || item.customer?.owner || "NIL"}
+            </h2>
+          </Link>
+    
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Machine</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Paid</TableHead>
+                  <TableHead>Balance</TableHead>
+                  <TableHead>Note</TableHead>
+                  <TableHead>Commission Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>{item.serial_no}</TableCell>
+                  <TableCell>{item.created_amount}</TableCell>
+                  <TableCell>{item.paid_amount}</TableCell>
+                  <TableCell>{item.balance}</TableCell>
+                  <TableCell>
+                    {item.balance !== 0 ? null : item.commission?.id ? (
+                      <span>{item.commission?.note}</span>
                     ) : (
-                      <span className="text-yellow-600">Pending</span>
-                    )
-                  ) : loading ? (
-                    <Spinner />
-                  ) : (
-                    <Button
-                      onClick={() =>
-                        handleApplyCommission(item.id, item.paid_amount)
-                      }
-                    >
-                      Apply for Commission
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+                      <div className="flex flex-row gap-2">
+                        <Input
+                          value={note || ""}
+                          onChange={(e) => setNote(e.target.value)}
+                        />
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {item.commission_issued ? (
+                      <span className="text-green-600">Approved</span>
+                    ) : item.balance !== 0 ? (
+                      <span className="text-red-600">Payment not cleared yet</span>
+                    ) : item.commission?.id ? (
+                      item.commission.is_approved ? (
+                        <span className="text-green-600">Approved</span>
+                      ) : (
+                        <span className="text-yellow-600">Pending</span>
+                      )
+                    ) : loading ? (
+                      <Spinner />
+                    ) : (
+                      <Button
+                        onClick={() =>
+                          handleApplyCommission(item.id, item.paid_amount)
+                        }
+                      >
+                        Apply for Commission
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+            </div>
         </CardContent>
       </Card>
     );
+    
   };
 
   return (
