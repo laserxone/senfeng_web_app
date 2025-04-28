@@ -1,12 +1,10 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Lato } from "next/font/google";
-import NextTopLoader from "nextjs-toploader";
-import "./globals.css";
 import Providers from "@/components/providers";
-import { Suspense } from "react";
-import { Loader2 } from "lucide-react";
+import { Toaster } from "@/components/ui/toaster";
 import HolyLoader from "holy-loader";
-import MobileScreenWrapper from "@/components/MobileScreenWrapper";
+import { Loader2 } from "lucide-react";
+import { Lato } from "next/font/google";
+import { Suspense } from "react";
+import "./globals.css";
 
 export const metadata = {
   title: "SENFENG",
