@@ -290,7 +290,7 @@ const AddCustomerDialog = ({
                               <Link
                                 key={index}
                                 target="_blank"
-                                href={`/${UserState.value.data?.base_route}/customer/detail?id=${item?.id}`}
+                                href={`/${UserState.value.data?.base_route}/customer${item?.id}`}
                                 className="block text-red-600 dark:text-red-400 text-sm font-medium hover:underline"
                               >
                                 {item?.name || item?.owner} -{" "}

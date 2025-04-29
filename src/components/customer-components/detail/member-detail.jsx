@@ -15,7 +15,7 @@ import {
   Trash2,
   Wrench,
 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { FaWhatsapp } from "react-icons/fa";
 
@@ -44,10 +44,9 @@ import moment from "moment";
 import Link from "next/link";
 import { useContext } from "react";
 
-export default function MemberDetail({ ownership = false, from }) {
-  const search = useSearchParams();
+export default function MemberDetail({ ownership = false, from, customer_id }) {
+
   const [data, setData] = useState(null);
-  const customer_id = search.get("id");
   const { state: UserState } = useContext(UserContext);
   const [feedback, setFeedback] = useState([]);
   const [editVisible, setEditVisible] = useState(false);
@@ -61,7 +60,7 @@ export default function MemberDetail({ ownership = false, from }) {
     if (customer_id && UserState?.value?.data?.id) {
       debouncedFetchCustomerData();
     }
-  }, [customer_id, UserState]);
+  }, [UserState, customer_id]);
 
   const debouncedFetchCustomerData = debounce(() => {
     fetchCustomerDetail();
@@ -349,7 +348,7 @@ const BillingInformation = ({ total, received, balance }) => {
   }).format(balance || 0);
 
   return (
-    <div className="p-4 mt-4 bg-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:text-white">
+    <div className="w-full sm:w-auto p-4 mt-4 bg-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:text-white">
       <h3 className="text-base sm:text-lg font-semibold text-black dark:text-white">
         Billing Summary
       </h3>
@@ -395,7 +394,7 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
           <AccordionTrigger className="px-4 py-2 hover:no-underline">
             <div className="flex justify-between items-center w-full">
               <Link
-                href={`/${UserState.value.data?.base_route}/member/machine?id=${machine.id}&previous=${customer_id}`}
+                href={`/${UserState.value.data?.base_route}/member/${customer_id}/${machine.id}`}
               >
                 <h3 className="font-semibold text-lg hover:underline">
                   {machine.serial_no}
@@ -636,20 +635,20 @@ const BillingInformationMachine = ({ payment }) => {
         Billing Summary
       </h3>
 
-      <div className="flex-row gap-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300 mt-2 justify-between flex-wrap">
-        <div className="flex flex-col gap-2">
+      <div className="flex flex-col  sm:flex-row gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 mt-2 justify-between flex-wrap">
+        <div className="flex flex-col">
           <p>
             <strong>Bill:</strong>
           </p>
           <p className="font-bold">{formattedTotal}</p>
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col">
           <p>
             <strong>Received:</strong>
           </p>
           <p className="text-green-600 font-bold">{formattedReceived}</p>
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col">
           <p>
             <strong>Balance:</strong>
           </p>

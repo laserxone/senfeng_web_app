@@ -1,8 +1,5 @@
 "use client";
-import {
-  ArrowUpDown,
-  Filter
-} from "lucide-react";
+import { ArrowUpDown, Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -14,7 +11,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Heading } from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -27,12 +24,11 @@ import { GoogleMap, Marker } from "@react-google-maps/api";
 import axios from "@/lib/axios";
 import moment from "moment";
 import { useTheme } from "next-themes";
+import { GetProfileImage } from "@/lib/getProfileImage";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
-  const [value, setValue] = useState("");
-  const pageTableRef = useRef();
   const { state: UserState } = useContext(UserContext);
   const [data, setData] = useState([]);
   const [visible, setVisible] = useState(false);
@@ -51,19 +47,33 @@ export default function Page() {
     return new Promise((res, rej) => {
       axios
         .get(
-          `/attendance?start_date=${start}&end_date=${end}&user=${
-            user || ""
-          }`
+          `/attendance?start_date=${start}&end_date=${end}&user=${user || ""}`
         )
         .then((response) => {
           if (response.data.length > 0) {
+            console.log(response.data);
             const apiData = response.data.map((item) => {
+              let status = "Absent";
+
+              if (item?.time_in) {
+                const checkInTime = new Date(item.time_in);
+                const threshold = new Date(item.time_in);
+                threshold.setHours(10, 10, 0, 0);
+
+                if (checkInTime > threshold) {
+                  status = "Late";
+                } else {
+                  status = "Present";
+                }
+              }
+
               return {
                 ...item,
                 date: item?.time_in,
-                status: item?.time_in ? "Present" : "Absent",
+                status,
               };
             });
+            console.log(apiData);
             setData(apiData);
           } else {
             setData([]);
@@ -240,7 +250,6 @@ export default function Page() {
     },
   ];
 
-
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-start justify-between">
@@ -255,7 +264,6 @@ export default function Page() {
         onPressCancel={() => setShowConfirmation(false)}
       />
       <PageTable
-        
         columns={columns}
         data={data}
         totalItems={data.length}
@@ -267,7 +275,6 @@ export default function Page() {
       >
         <div className=" flex justify-between">
           <div className="flex gap-4">
-
             <Button
               onClick={() => setFilterVisible(true)}
               variant="ghost"
@@ -331,11 +338,12 @@ export const AttendanceDetail = ({ detail, visible, onClose }) => {
               {detail?.time_in && (
                 <div className="flex-1 flex flex-col gap-4">
                   <Label>Time In</Label>
-                  <img
-                    src={detail.image_time_in}
-                    alt="timein-img"
-                    className="w-full object-cover rounded-lg"
-                  />
+                  {detail?.image_time_in ? (
+                    <RenderImage img={detail?.image_time_in} />
+                  ) : (
+                    <div>N/A</div>
+                  )}
+
                   <MapProvider>
                     <LocationMap position={detail.location_time_in} />
                   </MapProvider>
@@ -345,11 +353,11 @@ export const AttendanceDetail = ({ detail, visible, onClose }) => {
               {detail?.time_out && (
                 <div className="flex-1 flex flex-col gap-4 sm:ml-4">
                   <Label>Time Out</Label>
-                  <img
-                    src={detail.image_time_out}
-                    alt="timeout-img"
-                    className="w-full object-cover rounded-lg"
-                  />
+                  {detail?.image_time_out ? (
+                    <RenderImage img={detail?.image_time_out} />
+                  ) : (
+                    <div>N/A</div>
+                  )}
                   <MapProvider>
                     <LocationMap position={detail.location_time_out} />
                   </MapProvider>
@@ -360,6 +368,33 @@ export const AttendanceDetail = ({ detail, visible, onClose }) => {
         </div>
       </DialogContent>
     </Dialog>
+  );
+};
+
+const RenderImage = ({ img }) => {
+  const [localImage, setLocalImage] = useState(null);
+
+  useEffect(() => {
+    async function fetchImage() {
+      if (img?.includes("http")) {
+        setLocalImage(img);
+      } else {
+        const imgResult = await GetProfileImage(img);
+        setLocalImage(imgResult);
+      }
+    }
+
+    if (img) {
+      fetchImage();
+    }
+  }, [img]);
+
+  return (
+    <img
+      src={localImage}
+      alt="timein-img"
+      className="w-full object-cover rounded-lg"
+    />
   );
 };
 

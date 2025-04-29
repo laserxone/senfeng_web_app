@@ -1,16 +1,9 @@
 "use client";
-import { ArrowUpDown, Trash, Trash2 } from "lucide-react";
-
+import { ArrowUpDown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useContext, useEffect, useRef, useState } from "react";
-
-import { Label } from "@/components/ui/label";
-
-import AddCustomerDialog from "@/components/addCustomer";
-import AddQuickAction from "@/components/addQuickAction";
+import { useContext, useEffect, useState } from "react";
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
-import AppCalendar from "@/components/appCalendar";
 import PageContainer from "@/components/page-container";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -21,23 +14,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { BASE_URL } from "@/constants/data";
+import { UserSearch } from "@/components/user-search";
 import { toast } from "@/hooks/use-toast";
-import { UserContext } from "@/store/context/UserContext";
 import axios from "@/lib/axios";
+import { UserContext } from "@/store/context/UserContext";
 import { startHolyLoader } from "holy-loader";
 import moment from "moment";
 import { useRouter } from "next/navigation";
-import { UserSearch } from "@/components/user-search";
 
 const tableHeader = [
   {
@@ -71,24 +54,22 @@ const tableHeader = [
 ];
 
 export default function MemberMainPage() {
-  const [value, setValue] = useState("");
   const [additionalFilter, setAdditionalFilter] = useState("");
-  const pageTableRef = useRef();
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
-  const [addCustomer, setAddCustomer] = useState(false);
   const { state: UserState } = useContext(UserContext);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [member, setMember] = useState(false);
   const router = useRouter();
-  const [quickAction, setQuickAction] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [numCount, setNumCount] = useState({});
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (UserState.value.data?.id) fetchData();
+
+    if (UserState.value.data?.id) fetchData().then(()=>{
+      setLoading(false)
+    })
   }, [UserState.value.data]);
 
   async function fetchData() {
@@ -355,6 +336,7 @@ export default function MemberMainPage() {
           totalCustomerText={"Total Members"}
           totalCustomer={filteredData.length}
           columns={columns}
+          loading={loading}
           data={
             additionalFilter === "duplicate"
               ? filteredData.sort((a, b) =>
@@ -370,7 +352,7 @@ export default function MemberMainPage() {
             if (val.id) {
               startHolyLoader();
               router.push(
-                `/${UserState?.value?.data?.base_route}/member/detail?id=${val.id}`
+                `/${UserState?.value?.data?.base_route}/member/${val.id}`
               );
             }
           }}

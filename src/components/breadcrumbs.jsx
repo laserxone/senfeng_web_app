@@ -26,11 +26,7 @@ export function Breadcrumbs() {
             {index !== items.length - 1 && (
               <BreadcrumbItem className="hidden md:block">
                 <BreadcrumbLink
-                  href={`${item.link}${
-                    (item?.title === "Customer" || item?.title === 'Member') && previous
-                      ? `/detail/?id=${previous}`
-                      : ""
-                  }`}
+                  href={`${item.link}`}
                 >
                   {item.title}
                 </BreadcrumbLink>

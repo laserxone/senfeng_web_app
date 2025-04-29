@@ -383,7 +383,7 @@ function CustomersTab({ data }) {
                     <AccordionTrigger className="px-4 py-2 hover:no-underline">
                       <div className="flex justify-between items-center w-full">
                         <Link
-                          href={`/${UserState.value.data?.base_route}/customer/detail?id=${customer.id}`}
+                          href={`/${UserState.value.data?.base_route}/customer${customer.id}`}
                         >
                           <h3 className="font-semibold text-lg hover:underline">
                             {customer.name}

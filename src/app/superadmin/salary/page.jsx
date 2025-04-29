@@ -47,6 +47,15 @@ import "react-medium-image-zoom/dist/styles.css";
 
 import AccountsPdf from "@/components/accountsPdf";
 import { pdf } from "@react-pdf/renderer";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Page() {
   return (
@@ -56,12 +65,12 @@ export default function Page() {
           <TabsTrigger value="salary">Salary</TabsTrigger>
           <TabsTrigger value="record">Record</TabsTrigger>
         </TabsList>
-         <TabsContent value="salary">
+        <TabsContent value="salary">
           <SalaryComponent />
         </TabsContent>
-     {/*   <TabsContent value="record">
+          <TabsContent value="record">
           <RecordComponent />
-        </TabsContent> */}
+        </TabsContent>
       </Tabs>
     </div>
   );
@@ -84,7 +93,7 @@ const SalaryComponent = () => {
     target_achieved: 0,
     absents: 0,
     late: 0,
-    late_fine_per_day: -500,
+    late_fine_per_day: 0,
     reimbursement: 0,
     commission: 0,
     miscellaneous: 0,
@@ -97,6 +106,11 @@ const SalaryComponent = () => {
   const [payable, setPayable] = useState(0);
   const [attendanceData, setAttendanceData] = useState([]);
   const [accountsLoading, setAccountsLoading] = useState(false);
+  const [excludeAbsent, setExcludeAbsent] = useState(false);
+  const [excludeLate, setExcludeLate] = useState(false);
+  const [excludeAbsentFine, setExcludeAbsentFine] = useState(false);
+  const [excludeLateFine, setExcludeLateFine] = useState(false);
+  const [modal, setModal] = useState(false);
   const { toast } = useToast();
   const years = Array.from(
     { length: 20 },
@@ -124,7 +138,7 @@ const SalaryComponent = () => {
       target_achieved: 0,
       absents: 0,
       late: 0,
-      late_fine_per_day: -500,
+      late_fine_per_day: 0,
       reimbursement: 0,
       commission: 0,
       miscellaneous: 0,
@@ -137,8 +151,9 @@ const SalaryComponent = () => {
   }
 
   async function handleGenerate() {
-    clearForm();
     setLoading(true);
+    const response = await axios.get("/settings");
+    setForm({ ...form, late_fine_per_day: response.data.late_fine * -1 });
     axios
       .get(
         `/salary?user=${user}&start=${startDate}&end=${endDate}&month=${selectedMonth}&year=${selectedYear}`
@@ -192,6 +207,18 @@ const SalaryComponent = () => {
               commission: totalCommission,
             }));
           }
+          if (excludeAbsent) {
+            setForm((prev) => ({ ...prev, absents: 0 }));
+          }
+          if (excludeLate) {
+            setForm((prev) => ({ ...prev, late: 0 }));
+          }
+          if (excludeAbsentFine) {
+            setAbsentsFine(0);
+          }
+          if (excludeLateFine) {
+            setLateComingFine(0);
+          }
         }
       })
       .finally(() => {
@@ -205,10 +232,25 @@ const SalaryComponent = () => {
         (form.target_achieved / data.user.monthly_target || 0) *
           (data.user.total_salary - data.user.basic_salary)
       );
-      setLateComingFine(data?.user ? form.late_fine_per_day * form.late : 0);
-      setAbsentsFine(
-        data?.user ? (data.user.total_salary / 30) * form.absents * -1 : 0
-      );
+      if (!excludeLateFine) {
+        setLateComingFine(
+          data?.user ? (form.late_fine_per_day || 0) * (form.late || 0) : 0
+        );
+      }
+
+      if (!excludeAbsentFine) {
+        setAbsentsFine(
+          data?.user
+            ? Number(
+                (
+                  (data.user.total_salary / 30) *
+                  (form.absents || 0) *
+                  -1
+                ).toFixed(0)
+              )
+            : 0
+        );
+      }
     }
   }, [data, form]);
 
@@ -282,8 +324,8 @@ const SalaryComponent = () => {
 
         return {
           ...day,
-          time_in: checkIn.format("HH:mm"),
-          time_out: checkOut ? checkOut.format("HH:mm") : null,
+          time_in: checkIn.format("hh:mm A"),
+          time_out: checkOut ? checkOut.format("h:mm A") : null,
           status: isLate ? "Late" : "Present",
         };
       }
@@ -423,12 +465,14 @@ const SalaryComponent = () => {
           <>
             <Button
               disabled={!user}
-              onClick={() => handleGenerate()}
-              
+              onClick={() => {
+                clearForm();
+                setModal(true);
+              }}
             >
               {loading && <Spinner />} Generate
             </Button>
-            <Button onClick={() => handleAccounts()} >
+            <Button onClick={() => handleAccounts()}>
               {accountsLoading && <Spinner />} To Accounts
             </Button>
           </>
@@ -436,7 +480,13 @@ const SalaryComponent = () => {
 
         {data?.user && (
           <>
-            <Button onClick={() => handleGenerate()} className="mt-6">
+            <Button
+              onClick={() => {
+                clearForm();
+                setModal(true);
+              }}
+              className="mt-6"
+            >
               Refresh
             </Button>
             <Button
@@ -459,7 +509,7 @@ const SalaryComponent = () => {
         )}
       </div>
 
-       <div className="flex flex-row flex-wrap gap-4">
+      <div className="flex flex-row flex-wrap gap-4">
         <Card>
           <CardHeader>
             <CardTitle>Configurable</CardTitle>
@@ -469,10 +519,14 @@ const SalaryComponent = () => {
               {Object.keys(form).map((key) => (
                 <div key={key} className="flex flex-col gap-1">
                   <Label>{key.replace(/_/g, " ").toUpperCase()}</Label>
-                  <Input
-                    value={form[key]}
-                    onChange={(e) => handleInputChange(key, e.target.value)}
-                  />
+                  {loading ? (
+                    <Skeleton className={"h-[40px] w-[150px]"} />
+                  ) : (
+                    <Input
+                      value={form[key]}
+                      onChange={(e) => handleInputChange(key, e.target.value)}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -565,49 +619,69 @@ const SalaryComponent = () => {
         <CardContent className="flex flex-col gap-2">
           <div className="grid grid-cols-3 items-center">
             <Label>Reimbursements</Label>
-            <Input
-              value={form.reimbursement}
-              disabled
-              onChange={(e) => {}}
-              readOnly
-            />
+            {loading ? (
+              <Skeleton className={"h-[40px] w-[300px]"} />
+            ) : (
+              <Input
+                value={form.reimbursement}
+                disabled
+                onChange={(e) => {}}
+                readOnly
+              />
+            )}
           </div>
 
           <div className="grid grid-cols-3 items-center">
             <Label>Commission</Label>
-            <Input
-              value={form.commission}
-              disabled
-              onChange={(e) => {}}
-              readOnly
-            />
+            {loading ? (
+              <Skeleton className={"h-[40px] w-[300px]"} />
+            ) : (
+              <Input
+                value={form.commission}
+                disabled
+                onChange={(e) => {}}
+                readOnly
+              />
+            )}
           </div>
 
           <div className="grid grid-cols-3 items-center">
             <Label>Miscellaneous</Label>
-            <Input
-              value={form.miscellaneous}
-              disabled
-              onChange={(e) => {}}
-              readOnly
-            />
+            {loading ? (
+              <Skeleton className={"h-[40px] w-[300px]"} />
+            ) : (
+              <Input
+                value={form.miscellaneous}
+                disabled
+                onChange={(e) => {}}
+                readOnly
+              />
+            )}
           </div>
 
           <div className="grid grid-cols-3 items-center">
             <Label>ADDITIONAL FINE</Label>
-            <Input
-              value={form.additional_fine}
-              disabled
-              onChange={(e) => {}}
-              readOnly
-            />
+            {loading ? (
+              <Skeleton className={"h-[40px] w-[300px]"} />
+            ) : (
+              <Input
+                value={form.additional_fine}
+                disabled
+                onChange={(e) => {}}
+                readOnly
+              />
+            )}
           </div>
 
           <div className="grid grid-cols-3 items-center">
             <Label className="text-lg font-semibold text-green-600 tracking-wide">
               PAYABLE SALARY
             </Label>
-            <Input value={payable} disabled onChange={(e) => {}} readOnly />
+            {loading ? (
+              <Skeleton className={"h-[40px] w-[300px]"} />
+            ) : (
+              <Input value={payable} disabled onChange={(e) => {}} readOnly />
+            )}
           </div>
         </CardContent>
       </Card>
@@ -617,18 +691,89 @@ const SalaryComponent = () => {
           <CardTitle>Reimbursement Record</CardTitle>
         </CardHeader>
         <CardContent className="pt-5">
-          <Reimbursement passingData={data?.reimbursement || []} />
+          {loading ? (
+            <div className="flex flex-1 items-center justify-center">
+              <Spinner />
+            </div>
+          ) : (
+            <Reimbursement passingData={data?.reimbursement || []} />
+          )}
         </CardContent>
       </Card>
 
-     <Card>
+      <Card>
         <CardHeader>
           <CardTitle>Attendance Record</CardTitle>
         </CardHeader>
         <CardContent className="pt-5">
-          <AttendanceRecord passingData={attendanceData} />
+          {loading ? (
+            <div className="flex flex-1 items-center justify-center">
+              <Spinner />
+            </div>
+          ) : (
+            <AttendanceRecord passingData={attendanceData} />
+          )}
         </CardContent>
-      </Card> 
+      </Card>
+
+      <Dialog open={modal} onOpenChange={setModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Additional Settings</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col space-y-2">
+            <div className="flex flex-row gap-2 items-center">
+              <Label className="text-lg">Exclude absents?</Label>
+              <Checkbox
+                checked={excludeAbsent}
+                onCheckedChange={(checked) => {
+                  setExcludeAbsent(checked);
+                }}
+              />
+            </div>
+            <div className="flex flex-row gap-2 items-center">
+              <Label className="text-lg">Exclude absents fine?</Label>
+              <Checkbox
+                checked={excludeAbsentFine}
+                onCheckedChange={(checked) => {
+                  setExcludeAbsentFine(checked);
+                }}
+              />
+            </div>
+            <div className="flex flex-row gap-2 items-center">
+              <Label className="text-lg">Exclude late?</Label>
+              <Checkbox
+                checked={excludeLate}
+                onCheckedChange={(checked) => {
+                  setExcludeLate(checked);
+                }}
+              />
+            </div>
+            <div className="flex flex-row gap-2 items-center">
+              <Label className="text-lg">Exclude late fine?</Label>
+              <Checkbox
+                checked={excludeLateFine}
+                onCheckedChange={(checked) => {
+                  setExcludeLateFine(checked);
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter className="justify-start sm:justify-end gap-2">
+            <DialogClose asChild>
+              <Button variant="secondary">Close</Button>
+            </DialogClose>
+            <Button
+              onClick={() => {
+                setModal(false);
+                handleGenerate();
+              }}
+            >
+              Proceed
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -932,7 +1077,15 @@ const AttendanceRecord = ({ passingData = [] }) => {
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("status")}</div>,
+      cell: ({ row }) => (
+        <div
+          style={{
+            color: row.getValue("status") === "Present" ? "green" : "red",
+          }}
+        >
+          {row.getValue("status")}
+        </div>
+      ),
     },
   ];
 
@@ -1016,7 +1169,7 @@ const RecordComponent = () => {
 
     {
       id: "actions",
-      header : "Action",
+      header: "Action",
       cell: ({ row }) => {
         const payment = row.original;
 

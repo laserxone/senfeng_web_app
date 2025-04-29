@@ -1,42 +1,5 @@
 // pages/document-management.js
 "use client";
-import { useToast } from "@/hooks/use-toast";
-import axios from "@/lib/axios";
-import { supabase } from "@/lib/supabaseClient";
-import { UserContext } from "@/store/context/UserContext";
-import {
-  ArrowRight,
-  ArrowUpDown,
-  ChevronRight,
-  Download,
-  Folder,
-  Slash,
-  Trash2,
-} from "lucide-react";
-import moment from "moment";
-import {
-  Fragment,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import PageTable from "@/components/app-table";
-import { Button } from "@/components/ui/button";
-import { Heading } from "@/components/ui/heading";
-import Spinner from "@/components/ui/spinner";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import Image from "next/image";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -45,11 +8,35 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Heading } from "@/components/ui/heading";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Spinner from "@/components/ui/spinner";
+import { useToast } from "@/hooks/use-toast";
+import axios from "@/lib/axios";
+import { supabase } from "@/lib/supabaseClient";
+import { UserContext } from "@/store/context/UserContext";
+import {
+  ChevronRight
+} from "lucide-react";
+import moment from "moment";
+import Image from "next/image";
+import {
+  Fragment,
+  useContext,
+  useEffect,
+  useRef,
+  useState
+} from "react";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "./ui/context-menu";
 
 const DocumentManagement = () => {
@@ -398,7 +385,7 @@ const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
         {folderBread.map((crumb, index) => (
           <Fragment key={crumb.name + index}>
             {index !== folderBread.length - 1 && (
-              <BreadcrumbItem className="hidden md:block">
+              <BreadcrumbItem className="block">
                 <BreadcrumbLink
                  
                   href="#"
@@ -418,7 +405,7 @@ const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
             )}
 
             {index < folderBread.length - 1 && (
-              <BreadcrumbSeparator className="hidden md:block">
+              <BreadcrumbSeparator className="block">
                 <ChevronRight />
               </BreadcrumbSeparator>
             )}

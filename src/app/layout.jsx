@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { Lato } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
+import SenfengLogoLoader from "@/components/senfengLogoLoader";
 
 export const metadata = {
   title: "SENFENG",
@@ -25,9 +26,7 @@ export default async function RootLayout({ children }) {
         <HolyLoader />
         <Suspense
           fallback={
-            <div className="flex flex-1 justify-center items-center min-h-screen">
-              <Loader2 className="animate-spin" />
-            </div>
+          <SenfengLogoLoader />
           }
         >
           <Providers>

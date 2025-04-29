@@ -187,7 +187,7 @@ export default function Page() {
           if (val.id) {
             startHolyLoader();
             router.push(
-              `/${UserState.value.data?.base_route}/team/detail?id=${val.id}`
+              `/${UserState.value.data?.base_route}/team/${val.id}`
             );
           }
         }}

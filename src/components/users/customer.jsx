@@ -154,8 +154,6 @@ export default function CustomerEmployee({
   ownership,
   totalCustomerText,
 }) {
-  const [value, setValue] = useState("");
-  const pageTableRef = useRef();
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState([]);
   const [addCustomer, setAddCustomer] = useState(false);
@@ -293,7 +291,7 @@ export default function CustomerEmployee({
 
     //     return (
     //       <Link
-    //         href={`/${UserState?.value?.data?.base_route}/customer/detail?id=${currentItem.id}`}
+    //         href={`/${UserState?.value?.data?.base_route}/customer${currentItem.id}`}
     //       >
     //         <ChevronsRight />
     //       </Link>
@@ -305,7 +303,7 @@ export default function CustomerEmployee({
     //       //   </DropdownMenuTrigger>
     //       //   <DropdownMenuContent align="end">
     //       //     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-    //       //     <Link href={`customer/detail?id=${currentItem.id}`}>
+    //       //     <Link href={`customer${currentItem.id}`}>
     //       //       <DropdownMenuItem className="hover:cursor-pointer">
     //       //         View
     //       //       </DropdownMenuItem>
@@ -341,7 +339,7 @@ export default function CustomerEmployee({
             if (val?.id) {
               startHolyLoader();
               router.push(
-                `/${UserState?.value?.data?.base_route}/${val.member ? "member" : "customer"}/detail?id=${val.id}`
+                `/${UserState?.value?.data?.base_route}/${val.member ? "member" : "customer"}${val.id}`
               );
             }
           }}

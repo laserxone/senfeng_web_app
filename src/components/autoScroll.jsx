@@ -102,7 +102,7 @@ const AutoScrollMembers = ({ customers }) => {
                 <Link
                   key={index}
                   className="flex items-center m-2 cursor-pointer"
-                  href={`/${UserState.value.data?.base_route}/customer/detail?id=${item.id}`}
+                  href={`/${UserState.value.data?.base_route}/customer${item.id}`}
                 >
                   <Avatar className="w-12 h-12 mr-4 ">
                     <AvatarImage src="/" alt="Customer Picture" />

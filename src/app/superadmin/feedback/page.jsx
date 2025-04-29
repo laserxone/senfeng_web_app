@@ -99,7 +99,7 @@ export default function Page() {
         return (
           <Link
             className="hover:underline"
-            href={`/${UserState.value.data?.base_route}/customer/detail?id=${item.customer_id}`}
+            href={`/${UserState.value.data?.base_route}/customer${item.customer_id}`}
           >
             <div className="ml-2">{row.getValue("customer_name")}</div>
           </Link>

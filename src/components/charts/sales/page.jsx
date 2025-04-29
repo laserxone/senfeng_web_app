@@ -42,7 +42,7 @@ export function Sale({ data }) {
                     target="blank"
                     href={
                       item?.customer_id
-                        ? `/${UserState.value.data?.base_route}/member/detail?id=${item?.customer_id}`
+                        ? `/${UserState.value.data?.base_route}/member${item?.customer_id}`
                         : "#"
                     }
                   >

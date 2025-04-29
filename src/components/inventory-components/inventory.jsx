@@ -124,7 +124,7 @@ const RenderInventory = () => {
             onRowClick={(val)=>{
             if(val?.id){
               startHolyLoader()
-              router.push(`/${UserState.value.data?.base_route}/inventory/detail?id=${val.id}`)
+              router.push(`/${UserState.value.data?.base_route}/inventory/${val.id}`)
             }
             }}
           ></PageTable>

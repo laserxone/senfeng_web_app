@@ -49,11 +49,9 @@ const PageTable = ({
   children,
   columns,
   data,
-  totalItems,
   pageSizeOptions = [10, 20, 30, 40, 50],
   disableInput = false,
   totalCustomerText,
-  totalCustomer,
   onRowClick,
   loading = false,
 }) => {
@@ -61,10 +59,8 @@ const PageTable = ({
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
-
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const inputRef = useRef();
   const [search, setSearch] = useState("");
   const paginationState = {
     pageIndex: currentPage - 1,

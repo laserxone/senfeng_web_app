@@ -17,7 +17,7 @@ import axios from "@/lib/axios";
 import { Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
-export default function InventoryDetail() {
+export default function InventoryDetail({booking_id}) {
   const { state: UserState } = useContext(UserContext);
   const [focusedRow, setFocusedRow] = useState(null);
   const [focusedBoard, setFocusedBoard] = useState(false);
@@ -25,13 +25,9 @@ export default function InventoryDetail() {
   const [loadingMessage, setLoadingMessage] = useState("");
   const tableRef = useRef(null);
   const [prefetching, setPrefetching] = useState(true);
-
   const [data, setData] = useState([]);
   const [apiData, setApiData] = useState({});
-
   const debouncedData = useDebounce(data, 1000);
-  const search = useSearchParams();
-  const booking_id = search.get("id");
   const tableContainerRef = useRef(null);
   const [tableMaxHeight, setTableMaxHeight] = useState("auto");
   const [availableWidth, setAvailableWidth] = useState("full");
@@ -40,7 +36,6 @@ export default function InventoryDetail() {
     const updateWidth = () => {
       const windowWidth = window.innerWidth;
       const width = windowWidth - (16 * 16 + 50);
-      console.log(width)
       setAvailableWidth(`${width}px`);
     };
 

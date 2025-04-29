@@ -375,7 +375,7 @@ const EditCustomerDialog = ({
                                   target="_blank"
                                   href={`/${UserState.value.data?.base_route}/${
                                     item.member ? "member" : "customer"
-                                  }/detail?id=${item?.id}`}
+                                  }${item?.id}`}
                                   className="block text-red-600 dark:text-red-400 text-sm font-medium hover:underline"
                                 >
                                   {item?.name || item?.owner} -{" "}

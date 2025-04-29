@@ -53,6 +53,12 @@ export const ownerNavItems = [
         shortcut: ['l', 'l'],
         url: '/reimbursement',
         icon: 'login'
+      },
+      {
+        title: 'Commission',
+        shortcut: ['l', 'l'],
+        url: '/commission',
+        icon: 'commission'
       }
     ]
   },
@@ -64,9 +70,15 @@ export const ownerNavItems = [
 
     items: [
       {
-        title: 'Customer List',
+        title: 'Customer',
         url: '/customer',
         icon: 'userPen',
+        shortcut: ['m', 'm']
+      },
+      {
+        title: 'Member',
+        url: '/member',
+        icon: 'member',
         shortcut: ['m', 'm']
       },
       {
@@ -101,9 +113,106 @@ export const ownerNavItems = [
     isActive: false,
     items: [] // No child items
   },
- 
+  {
+    title: 'DMS',
+    url: '/dms',
+    icon: 'dms',
+    shortcut: ['z', 'z'],
+    isActive: false,
+    items: [] // No child items
+  },
+
+  {
+    title: 'Quotation',
+    url: '/quotation',
+    icon: 'quotation',
+    shortcut: ['m', 'm'],
+    isActive: false,
+    items: [] // No child items
+  },
+
+  {
+    title: 'Contract',
+    url: '/contract',
+    icon: 'contract',
+    shortcut: ['m', 'm'],
+    isActive: false,
+    items: [] // No child items
+  },
+  
 ];
 
+export const employeeNavItems = [
+  {
+    title: 'Dashboard',
+    url: '/dashboard',
+    icon: 'dashboard',
+    isActive: true,
+    shortcut: ['d', 'd'],
+    items: [] 
+  },
+  {
+    title: 'Task Management',
+    url: '/task',
+    icon: 'task',
+    isActive: false,
+    shortcut: ['t', 't'],
+    items: []
+  },
+ 
+  {
+    title: 'Customers',
+    url: '/customer',
+    icon: 'customer',
+    isActive: false,
+    icon: 'userPen',
+    shortcut: ['m', 'm'],
+    items: []
+  },
+  {
+    title: 'Members',
+    url: '/member',
+    isActive: false,
+    icon: 'member',
+    shortcut: ['m', 'm'],
+    items: []
+  },
+  {
+    title: 'DMS',
+    url: '/dms',
+    icon: 'dms',
+    shortcut: ['z', 'z'],
+    isActive: false,
+    items: [] // No child items
+  },
+  {
+    title: 'Commission',
+    url: '/commission',
+    icon: 'commission',
+    shortcut: ['s', 's'],
+    isActive: false,
+    items: [] // No child items
+  },
+  
+];
+
+export const branchNavItem =  {
+  title: 'Office Expense',
+  url: '/expense',
+  icon: 'expense',
+  shortcut: ['p', 'p'],
+  isActive: false,
+  items: [] // No child items
+}
+
+export const InventoryNavItem = {
+  title: 'Inventory',
+  url: '/inventory',
+  icon: 'inventory',
+  shortcut: ['p', 'p'],
+  isActive: false,
+  items: []
+}
 
 export const PakCities = [
   {
@@ -4245,8 +4354,9 @@ export const CountriesList = [
   }
 ]
 
-export const BASE_URL = "https://senfeng-web.vercel.app/api"
+// export const BASE_URL = "https://senfeng-web.vercel.app/api"
 // export const BASE_URL = "http://localhost:3001/api"
+export const BASE_URL = "/api"
 
 export const Colors = {
   button : '#0E997D'

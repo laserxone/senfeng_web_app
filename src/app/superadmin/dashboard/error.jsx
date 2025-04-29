@@ -9,7 +9,7 @@ export default function OverviewError({ error }) {
       <AlertCircle className='h-4 w-4' />
       <AlertTitle>Error</AlertTitle>
       <AlertDescription>
-        Failed to load statistics: {error.message}
+        Failed to load data: {error.message}
       </AlertDescription>
     </Alert>
   );

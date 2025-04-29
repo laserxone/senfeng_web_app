@@ -1,6 +1,5 @@
 "use client";
 import AutoScrollMembers from "@/components/autoScroll";
-import CustomerEmployee from "@/components/users/customer";
 import {
   Accordion,
   AccordionContent,
@@ -14,17 +13,17 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Attendance from "@/components/users/attendance";
+import CustomerEmployee from "@/components/users/customer";
 import Reimbursement from "@/components/users/Reimbursement";
-import { BASE_URL } from "@/constants/data";
+import SalaryRecord from "@/components/users/SalaryRecord";
+import axios from "@/lib/axios";
 import { GetProfileImage } from "@/lib/getProfileImage";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "@/lib/axios";
 import { AlertCircle, CheckCircle, Clock } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
-import SalaryRecord from "@/components/users/SalaryRecord";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -383,7 +382,7 @@ function CustomersTab({ data }) {
                     <AccordionTrigger className="px-4 py-2 hover:no-underline">
                       <div className="flex justify-between items-center w-full">
                         <Link
-                          href={`/${UserState.value.data?.base_route}/customer/detail?id=${customer.id}`}
+                          href={`/${UserState.value.data?.base_route}/customer${customer.id}`}
                         >
                           <h3 className="font-semibold text-lg hover:underline">
                             {customer.name}

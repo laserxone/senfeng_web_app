@@ -324,7 +324,7 @@ export default function VisitTab({
                     target="blank"
                     href={`/${UserState.value.data?.base_route}/${
                       feedback.customer_member ? "member" : "customer"
-                    }/detail?id=${feedback.customer_id}`}
+                    }${feedback.customer_id}`}
                   >
                     <p className="text-sm text-gray-500">
                       {feedback?.customer_name || feedback?.customer_owner} -{" "}

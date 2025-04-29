@@ -1,5 +1,5 @@
 import { storage } from "@/config/firebase";
-import { deleteObject, getDownloadURL, ref } from "firebase/storage";
+import { getDownloadURL, ref } from "firebase/storage";
 
 
 export async function GetProfileImage(imgLink) {

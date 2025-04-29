@@ -25,7 +25,7 @@ import {
   EditIcon,
   Siren,
   Trash,
-  Wrench
+  Wrench,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import {
@@ -77,10 +77,10 @@ import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import "pdfjs-dist/build/pdf.worker";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-export default function Machine() {
+export default function Machine({ id }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const search = useSearchParams();
   const [data, setData] = useState();
   const [total, setTotal] = useState(0);
   const [received, setReceived] = useState(0);
@@ -90,18 +90,18 @@ export default function Machine() {
   const [visible, setVisible] = useState(false);
   const [imagesVisible, setImagesVisible] = useState(false);
   const [editMachine, setEditMachine] = useState(false);
-  const id = search.get("id");
   const [addPayment, setAddPayment] = useState(false);
   const [editPayment, setEditPayment] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const { state: UserState } = useContext(UserContext);
   const [editAllowed, setEditAllowed] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (id && UserState?.value?.data?.id) {
       debouncedFetchData(id);
     }
-  }, [search, UserState]);
+  }, [id, UserState]);
 
   const debouncedFetchData = useCallback(
     debounce((id) => {
@@ -136,7 +136,8 @@ export default function Machine() {
       if (machine) {
         setTotal(Number(machine.price || 0));
 
-        const payments = machine?.payments?.filter(p => p.clearance_date !== null) || [];
+        const payments =
+          machine?.payments?.filter((p) => p.clearance_date !== null) || [];
         setPayments(payments);
         setReceived(
           payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
@@ -145,7 +146,6 @@ export default function Machine() {
 
       return true;
     } catch (e) {
-      
       return null;
     }
   }
@@ -320,7 +320,7 @@ export default function Machine() {
   }
 
   return (
-    <PageContainer scrollable={false}>
+    <PageContainer scrollable={isMobile}>
       <div className="flex flex-1 flex-col space-y-4">
         <ClientCard
           data={data?.customer || null}
@@ -328,7 +328,7 @@ export default function Machine() {
           payment={[total, received]}
         />
         {data && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button onClick={() => setImagesVisible(true)}>View Images</Button>
 
             {data?.machine && !data?.machine?.payment_lock && (
@@ -396,18 +396,22 @@ export default function Machine() {
             )}
           </div>
         )}
-        <PageTable
-          columns={columns}
-          data={payments}
-          totalItems={payments.length}
-          disableInput={true}
-          onRowClick={(val) => {
-            if (val.id) {
-              setImageURL(val);
-              setVisible(true);
-            }
-          }}
-        />
+        <div
+          className={`flex flex-1 ${isMobile ? "min-h-[600px]" : "min-h-auto"}`}
+        >
+          <PageTable
+            columns={columns}
+            data={payments}
+            totalItems={payments.length}
+            disableInput={true}
+            onRowClick={(val) => {
+              if (val.id) {
+                setImageURL(val);
+                setVisible(true);
+              }
+            }}
+          />
+        </div>
         <EditMachine
           visible={editMachine}
           onClose={setEditMachine}
@@ -481,8 +485,8 @@ const ClientCard = memo(({ data, payment, machine, manager }) => {
     <Card className="bg-gray-100 dark:bg-gray-900 rounded-lg shadow-md p-4 w-full">
       {/* Company Name */}
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center justify-between">
-        <div />
-        <div className="flex flex-row gap-2 items-center">
+        <div className="hidden md:block" />
+        <div className="flex flex-row flex-wrap gap-2 items-center">
           {data?.name || "Customer Name"}
           <span className="text-gray-500 text-sm">
             {data?.owner && `(${data.owner})`}
@@ -563,42 +567,46 @@ const ClientCard = memo(({ data, payment, machine, manager }) => {
         {/* Billing Information */}
         <Card className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
           <CardContent>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3">
               Billing Summary
             </h3>
-            <div className="grid grid-cols-3 gap-4 text-sm text-gray-700 dark:text-gray-300">
-              <p>
-                {/* <DollarSign className="inline h-4 w-4 mr-1 text-gray-500 dark:text-gray-400" /> */}
-                Bill:
-              </p>
-              <p>
-                {/* <DollarSign className="inline h-4 w-4 mr-1 text-gray-500 dark:text-gray-400" /> */}
-                Received:
-              </p>
-              <p>
-                {/* <DollarSign className="inline h-4 w-4 mr-1 text-gray-500 dark:text-gray-400" /> */}
-                Balance:
-              </p>
-            </div>
-            <div className="grid grid-cols-3 gap-4 text-sm mt-2 font-semibold">
-              <p>
-                {new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: "PKR",
-                }).format(payment[0] || 0)}
-              </p>
-              <p className="text-green-600">
-                {new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: "PKR",
-                }).format(payment[1] || 0)}
-              </p>
-              <p className="text-red-600">
-                {new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: "PKR",
-                }).format(payment[0] - payment[1] || 0)}
-              </p>
+
+            <div className="flex flex-col  sm:flex-row gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 mt-2 justify-between flex-wrap">
+              <div className="flex flex-col">
+                <p>
+                  <strong>Bill:</strong>
+                </p>
+                <p className="font-bold">
+                  {" "}
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "PKR",
+                  }).format(payment[0] || 0)}
+                </p>
+              </div>
+              <div className="flex flex-col">
+                <p>
+                  <strong>Received:</strong>
+                </p>
+                <p className="text-green-600 font-bold">
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "PKR",
+                  }).format(payment[1] || 0)}
+                </p>
+              </div>
+              <div className="flex flex-col">
+                <p>
+                  <strong>Balance:</strong>
+                </p>
+                <p className="text-red-600 font-bold">
+                  {" "}
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "PKR",
+                  }).format(payment[0] - payment[1] || 0)}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -657,15 +665,12 @@ const ImageSheet = ({
     if (img && !img.includes("http")) {
       DeleteFromStorage(img);
     }
-    axios
-      .delete(`/payment/${id}`)
-      .then(async () => {
-        await onRefresh(id);
-        setDeleteLoading(false);
-        handleClose(false);
-        toast({ title: "Payment Deleted" });
-      })
-    
+    axios.delete(`/payment/${id}`).then(async () => {
+      await onRefresh(id);
+      setDeleteLoading(false);
+      handleClose(false);
+      toast({ title: "Payment Deleted" });
+    });
   }
 
   return (
