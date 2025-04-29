@@ -160,7 +160,7 @@ const PageTable = ({
             <Table className="relative">
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id} className="sticky top-0 z-10 bg-background">
+                  <TableRow key={headerGroup.id} className="bg-background">
                     {headerGroup.headers.map((header) => (
                       <TableHead style={{ width: header.getSize() }} key={header.id}>
                         {header.isPlaceholder
