@@ -345,7 +345,7 @@ function CustomersTab({ data }) {
     return (
       <div className="flex justify-between items-center border-b pb-2">
         <Link
-          href={`/${UserState?.value?.data?.base_route}/customer/${customer_id}/${machine.id}`}
+          href={`/${UserState?.value?.data?.base_route}/member/${customer_id}/${machine.id}`}
         >
           <span className="hover:underline">{machine.serial_no}</span>
         </Link>
@@ -384,7 +384,9 @@ function CustomersTab({ data }) {
                     <AccordionTrigger className="px-4 py-2 hover:no-underline">
                       <div className="flex justify-between items-center w-full">
                         <Link
-                          href={`/${UserState.value.data?.base_route}/customer/${customer.id}`}
+                             href={`/${UserState.value.data?.base_route}/${
+                              customer.member ? "member" : "customer"
+                            }/${customer.id}`}
                         >
                           <h3 className="font-semibold text-lg hover:underline">
                             {customer.name}

@@ -102,22 +102,20 @@ export default function Page() {
   }
 
   async function fetchData() {
-    axios
-      .get(`/user/${UserState.value.data?.id}`)
-      .then((response) => {
-        setData(response.data);
-        if (response.data.customers && response.data.customers.length > 0) {
-          let total = 0;
-          response.data.customers.map((eachCustomer) => {
-            if (eachCustomer.sales && eachCustomer.sales.length > 0) {
-              eachCustomer.sales.map((eachSale) => {
-                total = total + Number(eachSale.price);
-              });
-            }
-          });
-          setTotalSales(total);
-        }
-      });
+    axios.get(`/user/${UserState.value.data?.id}`).then((response) => {
+      setData(response.data);
+      if (response.data.customers && response.data.customers.length > 0) {
+        let total = 0;
+        response.data.customers.map((eachCustomer) => {
+          if (eachCustomer.sales && eachCustomer.sales.length > 0) {
+            eachCustomer.sales.map((eachSale) => {
+              total = total + Number(eachSale.price);
+            });
+          }
+        });
+        setTotalSales(total);
+      }
+    });
   }
 
   async function fetchAllCustomers() {
@@ -127,16 +125,18 @@ export default function Page() {
   }
 
   async function fetchVisitData(start, end) {
-    return new Promise((res, rej)=>{
+    return new Promise((res, rej) => {
       axios
-      .get(`/user/${UserState.value.data.id}/visit?start_date=${start}&end_date=${end}`)
-      .then((response) => {
-        setVisitData(response.data);
-      }).finally(()=>{
-        res(true)
-      })
-    })
-   
+        .get(
+          `/user/${UserState.value.data.id}/visit?start_date=${start}&end_date=${end}`
+        )
+        .then((response) => {
+          setVisitData(response.data);
+        })
+        .finally(() => {
+          res(true);
+        });
+    });
   }
 
   async function fetchExtraCustomerOptions() {
@@ -150,16 +150,16 @@ export default function Page() {
   const RenderVisitTab = useCallback(() => {
     return (
       <VisitTab
-      height="h-[calc(100dvh-260px)]"
+        height="h-[calc(100dvh-260px)]"
         id={UserState.value.data?.id}
         data={visitData}
-        onRefresh={async() => {
+        onRefresh={async () => {
           const startDate = moment().startOf("month").toISOString();
           const endDate = moment().endOf("month").toISOString();
-          await fetchVisitData(startDate, endDate)
+          await fetchVisitData(startDate, endDate);
         }}
-        onFetchData={async (start, end, userId)=>{
-         await fetchVisitData(start, end)
+        onFetchData={async (start, end, userId) => {
+          await fetchVisitData(start, end);
         }}
       />
     );
@@ -422,7 +422,7 @@ function CustomersTab({ data }) {
     return (
       <div className="flex justify-between items-center border-b pb-2">
         <Link
-          href={`/${UserState?.value?.data?.base_route}/customer/${customer_id}/${machine.id}`}
+          href={`/${UserState?.value?.data?.base_route}/member/${customer_id}/${machine.id}`}
         >
           <span className="hover:underline">{machine.serial_no}</span>
         </Link>
@@ -462,7 +462,9 @@ function CustomersTab({ data }) {
                       <AccordionTrigger className="px-4 py-2 hover:no-underline">
                         <div className="flex justify-between items-center w-full">
                           <Link
-                            href={`/${UserState.value.data?.base_route}/customer/${customer.id}`}
+                            href={`/${UserState.value.data?.base_route}/${
+                              customer.member ? "member" : "customer"
+                            }/${customer.id}`}
                           >
                             <h3 className="font-semibold text-lg hover:underline">
                               {customer.name}
