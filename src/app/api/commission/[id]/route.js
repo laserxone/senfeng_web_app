@@ -1,7 +1,5 @@
 import pool from "@/config/db";
-import admin from "@/lib/firebaseAdmin";
 import { sendNotification } from "@/lib/sendNotification";
-import moment from "moment";
 import { NextResponse } from "next/server";
 
 
@@ -18,7 +16,7 @@ export async function DELETE(req, { params }) {
 
     return NextResponse.json({ message: "Customer Deleted" }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ message: error.message || "Internal Server Error" }, { status: 500 });
   }
 }
 
@@ -62,7 +60,7 @@ export async function PUT(req, { params }) {
 
     return NextResponse.json({ message: "Updated successfully" }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ message: error.message || "Internal Server Error" }, { status: 500 });
   }
 }
 

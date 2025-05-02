@@ -7,8 +7,8 @@ import NotificationContextProvider from "@/store/context/NotificationContext";
 
 export default async function CommonLayout({ children }) {
   return (
-    <KBar>
-      <UserContextProvider>
+    <UserContextProvider>
+      <KBar>
         <NotificationContextProvider>
           <SidebarProvider>
             <AppSidebar />
@@ -18,7 +18,7 @@ export default async function CommonLayout({ children }) {
             </SidebarInset>
           </SidebarProvider>
         </NotificationContextProvider>
-      </UserContextProvider>
-    </KBar>
+      </KBar>
+    </UserContextProvider>
   );
 }

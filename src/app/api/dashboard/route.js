@@ -1,7 +1,7 @@
 import pool from "@/config/db";
 import { NextResponse } from "next/server";
 
-export async function GET(req) {
+export async function GET() {
     try {
         // Get the current and last month's date range
         const currentDate = new Date();

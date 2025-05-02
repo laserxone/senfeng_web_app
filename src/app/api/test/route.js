@@ -1,7 +1,7 @@
 import pool from "@/config/db";
 import { NextResponse } from "next/server";
 
-export async function GET(req, { params }) {
+export async function GET() {
 
 
 
@@ -36,7 +36,7 @@ export async function POST(req) {
             ];
 
             // Execute the query to insert the data into the database
-            const result = await pool.query(query, values);
+            await pool.query(query, values);
             console.log("Data entered for ", item.owner);
         }
         console.log("all data added")

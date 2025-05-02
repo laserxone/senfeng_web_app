@@ -53,10 +53,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import * as React from "react";
 import NotificationBadge from "./NotificationBadge";
 import NotificationBadgeWithoutCount from "./NotificationBadgeWithoutCount";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useContext, useEffect } from "react";
 
 export const company = {
   name: "SENFENG",
@@ -67,14 +67,14 @@ export const company = {
 export default function AppSidebar() {
   const pathname = usePathname();
   const checkSession = useCheckSession();
-  const { state: UserState, setUser } = React.useContext(UserContext);
+  const { state: UserState, setUser } = useContext(UserContext);
   const { state: NotificationState, setNotification } =
-    React.useContext(NotificationContext);
+    useContext(NotificationContext);
   const profileImage = useProfileImage();
   const { toggleSidebar } = useSidebar();
   const isMobile = useIsMobile();
 
-  React.useEffect(() => {
+  useEffect(() => {
     checkSession().then((val) => {
       if (val?.user) {
         setUser(val.user);
@@ -82,7 +82,7 @@ export default function AppSidebar() {
     });
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (UserState?.value?.data?.email) {
       const q = query(
         collection(db, "Notification"),
@@ -113,8 +113,7 @@ export default function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent className="overflow-x-hidden">
-        <SidebarGroup>
-          {/* <SidebarGroupLabel>Overview</SidebarGroupLabel> */}
+        <SidebarGroup> 
           <SidebarMenu>
             {UserState.value.data?.nav_items &&
               UserState.value.data?.nav_items.map((item) => {

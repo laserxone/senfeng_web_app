@@ -1,11 +1,10 @@
-import { app, auth, db } from "@/config/firebase";
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
-import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useContext, useRef, useState, useEffect } from "react";
-import axios from "@/lib/axios";
-import { BASE_URL } from "@/constants/data";
-import { startHolyLoader } from "holy-loader";
+import { auth } from "@/config/firebase";
 import { useToast } from "@/hooks/use-toast";
+import axios from "@/lib/axios";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { startHolyLoader } from "holy-loader";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function useCheckSession() {
     const router = useRouter();

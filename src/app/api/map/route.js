@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 
 
 
-export async function GET(req) {
+export async function GET() {
 
     try {
      // Step 1: Get all users from the users table

@@ -15,11 +15,11 @@ export async function DELETE(req, {params}) {
     }
 }
 
-export async function PUT(req, {params}) {
+export async function PUT(req) {
     try {
         const data = await req.json();
         const { id, ...updates } = data;
-        const {tid} = await params
+        
 
         if (!id) {
             return NextResponse.json({ message: "ID is required" }, { status: 400 });

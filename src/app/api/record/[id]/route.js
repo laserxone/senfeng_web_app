@@ -15,7 +15,7 @@ export async function DELETE(req, { params }) {
 
     return NextResponse.json({ message: "Salary Deleted" }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ message: error.message || "Internal Server Error" }, { status: 500 });
   }
 }
 

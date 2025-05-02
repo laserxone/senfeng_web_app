@@ -51,7 +51,7 @@ export default function Page() {
         )
         .then((response) => {
           if (response.data.length > 0) {
-            console.log(response.data);
+          
             const apiData = response.data.map((item) => {
               let status = "Absent";
 

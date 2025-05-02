@@ -1,6 +1,5 @@
 import pool from "@/config/db";
 import admin from "@/lib/firebaseAdmin";
-import { storage } from "firebase-admin";
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {

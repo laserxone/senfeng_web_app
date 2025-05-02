@@ -2,7 +2,7 @@
 import pool from "@/config/db";
 import { storage } from "@/config/firebase";
 import admin from "@/lib/firebaseAdmin";
-import { getDownloadURL, ref, uploadString } from "firebase/storage";
+import { ref, uploadString } from "firebase/storage";
 import moment from "moment";
 import { NextResponse } from "next/server";
 
@@ -105,7 +105,7 @@ WHERE u.id = $1
 export async function POST(req, { params }) {
     try {
         const { id } = await params
-        const { note, location, image, type, task, reason } = await req.json();
+        const { note, location, image, task, reason } = await req.json();
 
         if (!note || !location || !image) {
             return NextResponse.json({ message: "Missing required fields" }, { status: 400 });

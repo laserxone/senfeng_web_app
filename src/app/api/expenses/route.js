@@ -78,7 +78,7 @@ export async function POST(req) {
 }
 
 
-export async function GET(req, { params }) {
+export async function GET(req) {
 
   
     const searchParams = req.nextUrl.searchParams

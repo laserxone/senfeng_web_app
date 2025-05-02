@@ -50,7 +50,7 @@ import { NextResponse } from "next/server"
 
 export async function GET(req, {params}) {
 
-    const {id, cid} = await params
+    const {cid} = await params
 
 
     try {

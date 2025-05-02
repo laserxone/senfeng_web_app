@@ -24,7 +24,7 @@ export async function POST(req) {
         RETURNING *
     `;
 
-        const { rows } = await pool.query(query, values);
+        await pool.query(query, values);
 
         // Step 2: Get applicant user info
         const userResult = await pool.query("SELECT name FROM users WHERE id = $1", [data.user_id]);
@@ -69,7 +69,7 @@ export async function POST(req) {
 }
 
 
-export async function GET(req, { params }) {
+export async function GET() {
 
     try {
         const query = `

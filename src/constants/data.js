@@ -5,7 +5,7 @@ export const ownerNavItems = [
     url: '/dashboard',
     icon: 'dashboard',
     isActive: false,
-    shortcut: ['d', 'd'],
+    shortcut: ['d', 'a', 's', 'h'],
     items: [] 
   },
   {
@@ -19,11 +19,11 @@ export const ownerNavItems = [
         title: 'Assign Task',
         url: '/task',
         icon: 'userPen',
-        shortcut: ['m', 'm']
+        shortcut: ['a', 's', 's']
       },
       {
         title: 'Map View',
-        shortcut: ['l', 'l'],
+        shortcut: ['m', 'a', 'p'],
         url: '/map',
         icon: 'login'
       }
@@ -40,23 +40,23 @@ export const ownerNavItems = [
         title: 'Attendance',
         url: '/attendance',
         icon: 'userPen',
-        shortcut: ['m', 'm']
+        shortcut: ['a', 't', 't']
       },
       {
         title: 'Salary',
-        shortcut: ['l', 'l'],
+        shortcut: ['s', 'a', 'l'],
         url: '/salary',
         icon: 'login'
       },
       {
         title: 'Reimbursement',
-        shortcut: ['l', 'l'],
+        shortcut: ['r', 'e', 'i'],
         url: '/reimbursement',
         icon: 'login'
       },
       {
         title: 'Commission',
-        shortcut: ['l', 'l'],
+        shortcut: ['c', 'o', 'm'],
         url: '/commission',
         icon: 'commission'
       }
@@ -73,17 +73,17 @@ export const ownerNavItems = [
         title: 'Customer',
         url: '/customer',
         icon: 'userPen',
-        shortcut: ['m', 'm']
+        shortcut: ['c', 'u', 's']
       },
       {
         title: 'Member',
         url: '/member',
         icon: 'member',
-        shortcut: ['m', 'm']
+        shortcut: ['m', 'e', 'm']
       },
       {
         title: 'Feedback',
-        shortcut: ['l', 'l'],
+        shortcut: ['f', 'e', 'e'],
         url: '/feedback',
         icon: 'login'
       },
@@ -93,7 +93,7 @@ export const ownerNavItems = [
     title: 'Office Expense',
     url: '/expense',
     icon: 'expense',
-    shortcut: ['p', 'p'],
+    shortcut: ['o', 'f', 'f'],
     isActive: false,
     items: [] // No child items
   },
@@ -101,7 +101,7 @@ export const ownerNavItems = [
     title: 'Inventory',
     url: '/inventory',
     icon: 'inventory',
-    shortcut: ['p', 'p'],
+    shortcut: ['i', 'n', 'v'],
     isActive: false,
     items: [] // No child items
   },
@@ -109,7 +109,7 @@ export const ownerNavItems = [
     title: 'Team',
     url: '/team',
     icon: 'team',
-    shortcut: ['p', 'p'],
+    shortcut: ['t', 'e', 'a'],
     isActive: false,
     items: [] // No child items
   },
@@ -117,7 +117,7 @@ export const ownerNavItems = [
     title: 'DMS',
     url: '/dms',
     icon: 'dms',
-    shortcut: ['z', 'z'],
+    shortcut: ['d', 'm', 's'],
     isActive: false,
     items: [] // No child items
   },
@@ -126,7 +126,7 @@ export const ownerNavItems = [
     title: 'Quotation',
     url: '/quotation',
     icon: 'quotation',
-    shortcut: ['m', 'm'],
+    shortcut: ['q', 'u', 'o'],
     isActive: false,
     items: [] // No child items
   },
@@ -135,7 +135,7 @@ export const ownerNavItems = [
     title: 'Contract',
     url: '/contract',
     icon: 'contract',
-    shortcut: ['m', 'm'],
+    shortcut: ['c', 'o', 'n'],
     isActive: false,
     items: [] // No child items
   },
@@ -148,7 +148,7 @@ export const employeeNavItems = [
     url: '/dashboard',
     icon: 'dashboard',
     isActive: true,
-    shortcut: ['d', 'd'],
+    shortcut: ['d', 'a', 's', 'h'],
     items: [] 
   },
   {
@@ -156,7 +156,7 @@ export const employeeNavItems = [
     url: '/task',
     icon: 'task',
     isActive: false,
-    shortcut: ['t', 't'],
+    shortcut: ['t', 'a', 's', 'k'],
     items: []
   },
  
@@ -166,7 +166,7 @@ export const employeeNavItems = [
     icon: 'customer',
     isActive: false,
     icon: 'userPen',
-    shortcut: ['m', 'm'],
+    shortcut: ['c', 'u', 's'],
     items: []
   },
   {
@@ -174,14 +174,14 @@ export const employeeNavItems = [
     url: '/member',
     isActive: false,
     icon: 'member',
-    shortcut: ['m', 'm'],
+    shortcut: ['m', 'e', 'm'],
     items: []
   },
   {
     title: 'DMS',
     url: '/dms',
     icon: 'dms',
-    shortcut: ['z', 'z'],
+    shortcut: ['d', 'm', 's'],
     isActive: false,
     items: [] // No child items
   },
@@ -189,7 +189,7 @@ export const employeeNavItems = [
     title: 'Commission',
     url: '/commission',
     icon: 'commission',
-    shortcut: ['s', 's'],
+    shortcut: ['c', 'o', 'm'],
     isActive: false,
     items: [] // No child items
   },
@@ -200,7 +200,7 @@ export const branchNavItem =  {
   title: 'Office Expense',
   url: '/expense',
   icon: 'expense',
-  shortcut: ['p', 'p'],
+  shortcut: ['o', 'f', 'f'],
   isActive: false,
   items: [] // No child items
 }
@@ -209,7 +209,7 @@ export const InventoryNavItem = {
   title: 'Inventory',
   url: '/inventory',
   icon: 'inventory',
-  shortcut: ['p', 'p'],
+  shortcut: ['i', 'n', 'v'],
   isActive: false,
   items: []
 }

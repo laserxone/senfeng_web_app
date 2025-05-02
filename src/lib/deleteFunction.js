@@ -6,12 +6,12 @@ import { deleteObject, ref } from "firebase/storage";
 export async function DeleteFromStorage(name) {
     try {
         const deleteRef = ref(storage, name)
-        const response = await deleteObject(deleteRef)
+        await deleteObject(deleteRef)
 
         return ("done")
     } catch (error) {
         toast({
-            title: "Error",
+            title: error.message || "Error",
             description: "Error deleting file from storage",
             variant: "destructive",
         })

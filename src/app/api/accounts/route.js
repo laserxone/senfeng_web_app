@@ -2,7 +2,7 @@
 import pool from "@/config/db";
 import { NextResponse } from "next/server"
 
-export async function GET(req, { params }) {
+export async function GET(req) {
 
 
     const searchParams = req.nextUrl.searchParams

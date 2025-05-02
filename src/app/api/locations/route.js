@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
 
 
 export async function POST(req) {
@@ -32,17 +32,15 @@ export async function POST(req) {
             , { status: 200 });
 
     } catch (error) {
-        return NextResponse.json({ message: 'Error saving data' }, { status: 500 })
+        return NextResponse.json({ message: error.message || 'Error saving data' }, { status: 500 })
     }
 }
 
 
-export async function GET(req, { params }) {
+export async function GET(req) {
 
 
     const searchParams = req.nextUrl.searchParams
-    const start_date = searchParams.get('start_date')
-    const end_date = searchParams.get('end_date')
     const user = searchParams.get('user')
 
 

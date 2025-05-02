@@ -1,6 +1,6 @@
-import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
-import { storage } from "../config/firebase";
 import { toast } from "@/hooks/use-toast";
+import { ref, uploadBytesResumable } from "firebase/storage";
+import { storage } from "../config/firebase";
 
 export function UploadImage(image, name, contentType = "image/png") {
   return new Promise(async (resolve, reject) => {

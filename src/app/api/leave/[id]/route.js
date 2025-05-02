@@ -15,7 +15,7 @@ export async function DELETE(req, { params }) {
 
     return NextResponse.json({ message: "Leave deleted" }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ message: "Error deleting leave" }, { status: 500 });
+    return NextResponse.json({ message: error.message || "Error deleting leave" }, { status: 500 });
   }
 }
 
@@ -53,7 +53,7 @@ export async function PUT(req, { params }) {
     await pool.query(query, values);
     return NextResponse.json({ message: "Updated successfully" }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ message: error.message || "Internal Server Error" }, { status: 500 });
   }
 }
 

@@ -46,7 +46,7 @@ export async function DELETE(req, { params }) {
 
         return NextResponse.json({ message: "Folder and documents deleted" }, { status: 200 })
     } catch (error) {
-        return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+        return NextResponse.json({ message: error.message || "Internal server error" }, { status: 500 })
     }
 
 }

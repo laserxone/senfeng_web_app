@@ -7,7 +7,7 @@ export async function GET() {
         const result = await pool.query(`SELECT * FROM dms ORDER BY id DESC`)
         return NextResponse.json(result.rows, { status: 200 })
     } catch (error) {
-        return NextResponse.json({ message: "Error occured" }, { status: 500 })
+        return NextResponse.json({ message: error.message ||"Error occured" }, { status: 500 })
     }
 }
 

@@ -8,7 +8,7 @@ export async function GET() {
         const result = await pool.query(`SELECT * FROM bookings`)
         return NextResponse.json(result.rows, { status: 200 })
     } catch (error) {
-        return NextResponse.json({ message: "Error occured" }, { status: 500 })
+        return NextResponse.json({ message: error.message || "Error occured" }, { status: 500 })
     }
 }
 
@@ -34,12 +34,12 @@ export async function POST(req) {
         const { rows } = await pool.query(query, values);
         return NextResponse.json(rows[0], { status: 200 });
     } catch (error) {
-        return NextResponse.json({ message: "Error occured" }, { status: 500 });
+        return NextResponse.json({ message: error.message || "Error occured" }, { status: 500 });
     }
 
 }
 
-export async function PUT(req, { params }) {
+export async function PUT(req) {
     try {
         const data = await req.json();
         const { id, ...updates } = data;

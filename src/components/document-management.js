@@ -59,7 +59,7 @@ const DocumentManagement = () => {
   }, [UserState]);
 
   const fetchFiles = async () => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve) => {
       try {
         const response = await axios.get(
           `/folder?folder=${currentFolder?.id || null}`
@@ -105,7 +105,7 @@ const DocumentManagement = () => {
       setUploadLoading(false);
       return;
     }
-    const response = await axios.post(`/document`, {
+    await axios.post(`/document`, {
       added_by: UserState.value.data?.name || UserState.value.data?.email,
       path: filePath,
       folder_id: currentFolder ? currentFolder?.id : undefined,
@@ -238,7 +238,7 @@ const DocumentManagement = () => {
     async function handleDeleteFolder(id) {
       try {
         setDeleteLoading(true)
-        const response = await axios.delete(`/folder/${id}`)
+        await axios.delete(`/folder/${id}`)
         await fetchFiles()
       } finally {
         setDeleteLoading(false)

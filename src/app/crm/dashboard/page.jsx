@@ -334,7 +334,7 @@ const CustomerExtraData = ({ data, option, onSelect }) => {
 function CustomersTab({ data }) {
   const { state: UserState } = useContext(UserContext);
 
-  const RenderEachMachine = ({ machine }) => {
+  const RenderEachMachine = ({ machine, customer_id }) => {
     const totalPayments = machine.payments.reduce(
       (sum, payment) => sum + Number(payment.amount),
       0
@@ -343,7 +343,8 @@ function CustomersTab({ data }) {
     return (
       <div className="flex justify-between items-center border-b pb-2">
         <Link
-          href={`/${UserState?.value?.data?.base_route}/customer/machine?id=${machine.id}`}
+                  href={`/${UserState?.value?.data?.base_route}/customer/${customer_id}/${machine.id}`}
+
         >
           <span className="hover:underline">{machine.serial_no}</span>
         </Link>
@@ -382,7 +383,7 @@ function CustomersTab({ data }) {
                     <AccordionTrigger className="px-4 py-2 hover:no-underline">
                       <div className="flex justify-between items-center w-full">
                         <Link
-                          href={`/${UserState.value.data?.base_route}/customer${customer.id}`}
+                          href={`/${UserState.value.data?.base_route}/customer/${customer.id}`}
                         >
                           <h3 className="font-semibold text-lg hover:underline">
                             {customer.name}
@@ -410,6 +411,7 @@ function CustomersTab({ data }) {
                               <RenderEachMachine
                                 key={machine.id}
                                 machine={machine}
+                                customer_id={customer.id}
                               />
                             ))}
                           </div>
