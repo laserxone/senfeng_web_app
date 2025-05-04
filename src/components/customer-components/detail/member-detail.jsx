@@ -578,7 +578,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
         <Card key={index}>
           <CardHeader className="p-0 flex overflow-hidden">
             <div
-              className="flex flex-1 justify-between items-center bg-gray-200 py-2 px-4"
+              className="flex flex-1 justify-between items-center bg-gray-200 dark:bg-gray-700 py-2 px-4"
               style={{ borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
             >
               <div className="flex gap-5">

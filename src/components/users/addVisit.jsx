@@ -16,7 +16,15 @@ import { UploadImage } from "@/lib/uploadFunction";
 import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getDownloadURL, ref } from "firebase/storage";
-import { Filter, Loader2, MapPin, MapPinOff, Trash2 } from "lucide-react";
+import {
+  Filter,
+  Loader2,
+  MapPin,
+  MapPinOff,
+  Pencil,
+  PencilOff,
+  Trash2,
+} from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
@@ -31,6 +39,7 @@ import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 
 const formSchema = z.object({
   note: z.string().min(1, "Note cannot be empty"),
@@ -54,6 +63,7 @@ export default function VisitTab({
   const { state: UserState } = useContext(UserContext);
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedDelete, setSelectedDelete] = useState(null);
+  const [selectedSignature, setSelectedSignature] = useState(null);
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -73,7 +83,9 @@ export default function VisitTab({
     setLoading(true);
     try {
       if (values.image) {
-        const name = `${selectedCustomer?.id}/visit/${moment().valueOf().toString()}.png`;
+        const name = `${selectedCustomer?.id}/visit/${moment()
+          .valueOf()
+          .toString()}.png`;
         const uploadRef = await UploadImage(values.image, name);
         const response = await axios.post(`/user/${id}/visit`, {
           ...values,
@@ -288,7 +300,7 @@ export default function VisitTab({
               <Card key={index}>
                 <CardHeader className="p-0 flex overflow-hidden">
                   <div
-                    className="flex flex-1 justify-between items-center bg-gray-200 py-2 px-4"
+                    className="flex flex-1 justify-between items-center bg-gray-200 dark:bg-gray-700 py-2 px-4"
                     style={{
                       borderTopRightRadius: 10,
                       borderTopLeftRadius: 10,
@@ -332,7 +344,13 @@ export default function VisitTab({
                       {feedback?.customer_number.join(", ")}
                     </p>
                   </Link>
-                  <p className="mt-2">{feedback.note}</p>
+                  {feedback?.problem && (
+                    <p className="mt-2">Problem: {feedback?.problem}</p>
+                  )}
+                  {feedback?.solution && (
+                    <p className="mt-2">Solution: {feedback?.solution}</p>
+                  )}
+                  <p className="mt-2">Remarks: {feedback.note}</p>
                   <div className="flex flex-row gap-5 mt-2">
                     {feedback.location && feedback.location.length > 0 ? (
                       <MapPin
@@ -345,6 +363,16 @@ export default function VisitTab({
                     ) : (
                       <MapPinOff className="text-red-500 h-5 w-5 opacity-50" />
                     )}
+                    {feedback.signature ? (
+                      <Pencil
+                        onClick={() => {
+                          setSelectedSignature(feedback.signature);
+                        }}
+                        className="w-5 cursor-pointer hover:opacity-50"
+                      />
+                    ) : (
+                      <PencilOff className="h-5 w-5 opacity-50" />
+                    )}
                     {feedback.image && <MyImg img={feedback.image} />}
                   </div>
                 </CardContent>
@@ -353,28 +381,109 @@ export default function VisitTab({
           </div>
         )}
       </div>
+
+      <Dialog
+        open={selectedSignature}
+        onOpenChange={() => setSelectedSignature(null)}
+      >
+        
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Signature</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-1 items-center justify-center">
+          <RenderSignature img={selectedSignature}/>
+          </div>
+        </DialogContent>
+      </Dialog>
     </ScrollArea>
   );
 }
 
-const MyImg = ({ img }) => {
+const RenderSignature = ({ img }) => {
   const [localImage, setLocalImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (img) {
-      if (img.includes("http")) {
-        setLocalImage(img);
-      } else {
-        getDownloadURL(ref(storage, img)).then((url) => {
+    if (!img) {
+      setLocalImage(null);
+      setError(false);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(false);
+
+    if (img.includes("http")) {
+      setLocalImage(img);
+      setLoading(false);
+    } else {
+      getDownloadURL(ref(storage, img))
+        .then((url) => {
           setLocalImage(url);
+        })
+        .catch(() => {
+          setError(true);
+          setLocalImage(null);
+        })
+        .finally(() => {
+          setLoading(false);
         });
-      }
     }
   }, [img]);
-  if (localImage)
-    return (
-      <Zoom>
-        <img alt="visit image" src={localImage} width="100" />
-      </Zoom>
-    );
+
+  if (loading) return <Spinner />;
+  if (!img || error || !localImage) return <p>No signature</p>;
+
+  return (
+    <Zoom>
+      <img alt="visit image" className="dark:invert" src={localImage} width="100" />
+    </Zoom>
+  );
+};
+
+const MyImg = ({ img }) => {
+  const [localImage, setLocalImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!img) {
+      setLocalImage(null);
+      setError(false);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(false);
+
+    if (img.includes("http")) {
+      setLocalImage(img);
+      setLoading(false);
+    } else {
+      getDownloadURL(ref(storage, img))
+        .then((url) => {
+          setLocalImage(url);
+        })
+        .catch(() => {
+          setError(true);
+          setLocalImage(null);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [img]);
+
+  if (loading) return <Spinner />;
+  if (!img || error || !localImage) return <p>No image</p>;
+
+  return (
+    <Zoom>
+      <img alt="visit image" src={localImage} width="100" />
+    </Zoom>
+  );
 };
