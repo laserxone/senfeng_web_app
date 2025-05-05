@@ -123,6 +123,7 @@ const AddPayment = ({
     try {
       const response = await axios.post(`/check-note`, { number });
       if (Array.isArray(response.data) && response.data.length > 0) {
+        console.log(response.data)
         setError(response.data[0]);
       }
     } catch (error) {
@@ -208,7 +209,7 @@ const AddPayment = ({
                         target="blank"
                         className="text-red-500 text-sm"
                         href={
-                          `/${UserState?.value?.data?.base_route}/member/machine?id=${error?.machine_id}` ||
+                          `/${UserState?.value?.data?.base_route}/member/${error.saleData[0]?.customer_id}/${error?.machine_id}` ||
                           "#"
                         }
                       >

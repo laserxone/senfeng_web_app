@@ -28,7 +28,7 @@ export async function POST(req) {
 
         console.log("data inserted successfully");
         if (result.rows[0].ownership) {
-            sendNotification(`${result.rows[0]?.owner || result.rows[0]?.name} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/detail?id=${result.rows[0].id}`, result.rows[0].ownership)
+            sendNotification(`${result.rows[0]?.owner || result.rows[0]?.name} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
         }
 
         return NextResponse.json({ message: "Inserted successfully", data: result.rows[0] }, { status: 201 });

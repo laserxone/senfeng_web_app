@@ -205,7 +205,7 @@ const EditPayment = ({
                       target="blank"
                       className="text-red-500 text-sm"
                       href={
-                        `/${UserState?.value?.data?.base_route}/member/machine?id=${error?.machine_id}` ||
+                        `/${UserState?.value?.data?.base_route}/member/${error.saleData[0]?.customer_id}/${error?.machine_id}` ||
                         "#"
                       }
                     >

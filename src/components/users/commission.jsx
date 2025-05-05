@@ -85,7 +85,7 @@ const OwnerView = () => {
         <CardContent className="p-4 space-y-2">
           <Link
             target="blank"
-            href={`/${UserState.value.data?.base_route}/member/machine?id=${item.sale_id}`}
+            href={`/${UserState.value.data?.base_route}/member/${item.customer_id}/${item.sale_id}`}
           >
             <h2 className="font-semibold text-lg hover:underline">
               Customer: {item.customer_name || item.customer_owner || "NIL"}
@@ -264,7 +264,7 @@ const OtherView = () => {
         <CardContent className="p-4 space-y-2">
           <Link
             target="blank"
-            href={`/${UserState.value.data?.base_route}/member/machine?id=${item.id}`}
+            href={`/${UserState.value.data?.base_route}/member/${item.customer_id}/${item.id}`}
           >
             <h2 className="font-semibold text-lg hover:underline">
               Customer: {item.customer?.name || item.customer?.owner || "NIL"}
