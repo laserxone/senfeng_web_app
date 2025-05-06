@@ -35,7 +35,7 @@ const OwnerView = () => {
   const { state: UserState } = useContext(UserContext);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPercentage, setSelectedPercentage] = useState(null);
+ 
 
   useEffect(() => {
     if (UserState.value.data?.id) {
@@ -60,6 +60,7 @@ const OwnerView = () => {
   const RenderEachRow = ({ item, onRefresh }) => {
     const [loading, setLoading] = useState(false);
     const { state: UserState } = useContext(UserContext);
+    const [selectedPercentage, setSelectedPercentage] = useState(null);
 
     async function handleUpdate(id) {
       if (!id) return;
