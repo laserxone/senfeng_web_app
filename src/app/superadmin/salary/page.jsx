@@ -113,6 +113,7 @@ const SalaryComponent = () => {
   const [TTModal, setTTModal] = useState(false);
   const [ttRate, setTTRate] = useState(1);
   const { toast } = useToast();
+  const [refresh, setRefresh] = useState(false)
   const years = Array.from(
     { length: 20 },
     (_, i) => new Date().getFullYear() - 10 + i
@@ -168,26 +169,8 @@ const SalaryComponent = () => {
           setTTModal(true);
         }
         setData(response.data);
-        if (response.data?.salary) {
-          const existing = response.data.salary;
-          setForm({
-            absents: Number(existing.absents),
-            additional_fine: Number(existing.additional_fine),
-            commission: Number(existing.commission),
-            late: Number(existing.late),
-            late_fine_per_day: Number(existing.late_fine_per_day),
-            miscellaneous: Number(existing.miscellaneous),
-            reimbursement: Number(existing.reimbursement),
-            target_achieved: Number(existing.target_achieved),
-          });
-          setChecked(existing.issued);
-          processAttendance(
-            Number(moment(startDate).format("YYYY")),
-            Number(moment(startDate).format("MM")),
-            response.data.attendance,
-            false
-          );
-        } else {
+        if(refresh){
+        
           setChecked(false);
           processAttendance(
             Number(moment(startDate).format("YYYY")),
@@ -227,18 +210,83 @@ const SalaryComponent = () => {
           if (excludeLateFine) {
             setLateComingFine(0);
           }
+        } else {
+        
+          if (response.data?.salary) {
+
+            const existing = response.data.salary;
+            setForm({
+              absents: Number(existing.absents),
+              additional_fine: Number(existing.additional_fine),
+              commission: Number(existing.commission),
+              late: Number(existing.late),
+              late_fine_per_day: Number(existing.late_fine_per_day),
+              miscellaneous: Number(existing.miscellaneous),
+              reimbursement: Number(existing.reimbursement),
+              target_achieved: Number(existing.target_achieved),
+            });
+            setChecked(existing.issued);
+            processAttendance(
+              Number(moment(startDate).format("YYYY")),
+              Number(moment(startDate).format("MM")),
+              response.data.attendance,
+              false
+            );
+          } else {
+          
+            setChecked(false);
+            processAttendance(
+              Number(moment(startDate).format("YYYY")),
+              Number(moment(startDate).format("MM")),
+              response.data.attendance,
+              true
+            );
+            if (response.data?.reimbursement) {
+              const totalAmount = response.data.reimbursement.reduce(
+                (sum, item) => sum + Number(item.amount),
+                0
+              );
+              setForm((prevState) => ({
+                ...prevState,
+                reimbursement: totalAmount,
+              }));
+            }
+            if (response.data?.commission) {
+              const totalCommission = response.data?.commission.reduce(
+                (sum, item) => sum + Number(item.commission_amount),
+                0
+              );
+              setForm((prevState) => ({
+                ...prevState,
+                commission: totalCommission,
+              }));
+            }
+            if (excludeAbsent) {
+              setForm((prev) => ({ ...prev, absents: 0 }));
+            }
+            if (excludeLate) {
+              setForm((prev) => ({ ...prev, late: 0 }));
+            }
+            if (excludeAbsentFine) {
+              setAbsentsFine(0);
+            }
+            if (excludeLateFine) {
+              setLateComingFine(0);
+            }
+          }
         }
       })
       .finally(() => {
         setLoading(false);
+        setRefresh(false)
       });
   }
 
   useEffect(() => {
     if (data && data?.user) {
       setKpi(
-        (form.target_achieved / data.user.monthly_target || 0) *
-          (data.user.total_salary - data.user.basic_salary)
+        ((Number(form.target_achieved) || 0) / (Number(data?.user?.monthly_target) || 1)) *
+        ((Number(data?.user?.total_salary) || 0) - (Number(data?.user?.basic_salary) || 0))
       );
       if (!excludeLateFine) {
         setLateComingFine(
@@ -264,36 +312,27 @@ const SalaryComponent = () => {
 
   useEffect(() => {
     if (data?.user) {
-      const basicSalary = Number(data?.user?.basic_salary) || 0;
-      const kpiValue = Number(kpi) || 0;
-      const lateFine = Number(lateComingFine) || 0;
-      const absentFine = Number(absentsFine) || 0;
-      const reimbursement = Number(form.reimbursement) || 0;
-      const commission = Number(form.commission) || 0;
-      const miscellaneous = Number(form.miscellaneous) || 0;
-      const additionalFine = Number(form.additional_fine) || 0;
-  
-      const total = (
-        basicSalary +
-        kpiValue +
-        lateFine +
-        absentFine +
-        reimbursement +
-        commission +
-        miscellaneous +
-        additionalFine
-      ).toFixed(2);
-  
-      setPayable(total);
+    
+      setPayable(
+        (
+          Number(data?.user?.basic_salary || 0) +
+        Number(kpi || 0) +
+        Number(lateComingFine || 0) +
+        Number(absentsFine || 0) +
+        Number(form.reimbursement || 0) +
+        Number(form.commission || 0) +
+        Number(form.miscellaneous || 0) +
+        Number(form.additional_fine || 0)
+        ).toFixed(2)
+      );
     }
   }, [data, form, kpi, lateComingFine, absentsFine]);
-  
 
   const handleInputChange = (field, value) => {
     setForm((prev) => ({
       ...prev,
-      // [field]: value  ? (value == "-" ? value : isNaN(value) ? "" : Number(value)) : "",
-      [field]: value,
+      [field]: value  ? (value == "-" ? value : Number(value)) : "",
+      // [field]: value,
     }));
   };
 
@@ -390,7 +429,7 @@ const SalaryComponent = () => {
         additional_fine: form.additional_fine,
         issued: checked,
         salary_month: startDate,
-        payable: payable,
+        payable: payable ,
       })
       .then(() => {
         toast({ title: "Salary saved" });
@@ -532,6 +571,7 @@ const SalaryComponent = () => {
               onClick={() => {
                 clearForm();
                 setModal(true);
+                setRefresh(true)
               }}
               className="mt-6"
             >
@@ -729,7 +769,7 @@ const SalaryComponent = () => {
             {loading ? (
               <Skeleton className={"h-[40px] w-[300px]"} />
             ) : (
-              <Input value={payable} disabled onChange={(e) => {}} readOnly />
+              <Input value={payable } disabled onChange={(e) => {}} readOnly />
             )}
           </div>
         </CardContent>
