@@ -45,7 +45,6 @@ import Link from "next/link";
 import { useContext } from "react";
 
 export default function MemberDetail({ ownership = false, from, customer_id }) {
-
   const [data, setData] = useState(null);
   const { state: UserState } = useContext(UserContext);
   const [feedback, setFeedback] = useState([]);
@@ -315,13 +314,15 @@ const ClientCard = ({ data }) => {
           <span>{data?.customer_group}</span>
         </div>
         <div className="flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-gray-500" />
+          <Link href={data?.pin || "#"} target={data?.pin ? "_blank" : "_self"}>
+            <MapPin className="h-5 w-5 text-gray-500" />
+          </Link>
           <span>{data?.location}</span>
         </div>
 
         <div className="flex items-center gap-2">
           <Factory className="h-5 w-5 text-gray-500" />
-          <span>{data?.industry || "Nill"}</span>
+          <span>{data?.industry || "Nil"}</span>
         </div>
         {/* <div className="flex items-center gap-2">
           <Label className="font-medium text-[16px]">Ownership: </Label>
