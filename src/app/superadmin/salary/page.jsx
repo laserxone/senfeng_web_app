@@ -2,7 +2,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BASE_URL } from "@/constants/data";
 import { ArrowUpDown, Trash2 } from "lucide-react";
 import {
   useCallback,
@@ -36,8 +35,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserSearch } from "@/components/user-search";
 import { storage } from "@/config/firebase";
 import { useToast } from "@/hooks/use-toast";
-import { UserContext } from "@/store/context/UserContext";
 import axios from "@/lib/axios";
+import { UserContext } from "@/store/context/UserContext";
 import { format, setMonth } from "date-fns";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
@@ -46,7 +45,6 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 
 import AccountsPdf from "@/components/accountsPdf";
-import { pdf } from "@react-pdf/renderer";
 import {
   Dialog,
   DialogClose,
@@ -56,6 +54,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { pdf } from "@react-pdf/renderer";
 
 export default function Page() {
   return (
@@ -68,7 +67,7 @@ export default function Page() {
         <TabsContent value="salary">
           <SalaryComponent />
         </TabsContent>
-          <TabsContent value="record">
+        <TabsContent value="record">
           <RecordComponent />
         </TabsContent>
       </Tabs>
@@ -111,6 +110,8 @@ const SalaryComponent = () => {
   const [excludeAbsentFine, setExcludeAbsentFine] = useState(false);
   const [excludeLateFine, setExcludeLateFine] = useState(false);
   const [modal, setModal] = useState(false);
+  const [TTModal, setTTModal] = useState(false);
+  const [ttRate, setTTRate] = useState(1);
   const { toast } = useToast();
   const years = Array.from(
     { length: 20 },
@@ -159,6 +160,13 @@ const SalaryComponent = () => {
         `/salary?user=${user}&start=${startDate}&end=${endDate}&month=${selectedMonth}&year=${selectedYear}`
       )
       .then((response) => {
+        if (
+          response.data.machines &&
+          Array.isArray(response.data?.machines) &&
+          response.data?.machines.length > 0
+        ) {
+          setTTModal(true);
+        }
         setData(response.data);
         if (response.data?.salary) {
           const existing = response.data.salary;
@@ -257,7 +265,8 @@ const SalaryComponent = () => {
   useEffect(() => {
     if (data?.user) {
       setPayable(
-        Number(data?.user?.basic_salary) +
+        (
+          Number(data?.user?.basic_salary) +
           kpi +
           lateComingFine +
           absentsFine +
@@ -265,6 +274,7 @@ const SalaryComponent = () => {
           form.commission +
           form.miscellaneous +
           form.additional_fine
+        ).toFixed(2)
       );
     }
   }, [data, form, kpi, lateComingFine, absentsFine]);
@@ -272,7 +282,8 @@ const SalaryComponent = () => {
   const handleInputChange = (field, value) => {
     setForm((prev) => ({
       ...prev,
-      [field]: value ? (value == "-" ? value : Number(value)) : "",
+      // [field]: value  ? (value == "-" ? value : isNaN(value) ? "" : Number(value)) : "",
+      [field]: value,
     }));
   };
 
@@ -405,13 +416,40 @@ const SalaryComponent = () => {
       });
   }
 
+  const RenderTTRate = ({ machines }) => {
+    const total = machines.reduce(
+      (sum, item) => sum + Number(item.price || 0),
+      0
+    );
+    return (
+      <div>
+        <p>Total PKR: {total}</p>
+        <p>USD rate: {ttRate}</p>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <Heading
-        className="my-4"
-        title={"Generate Salary"}
-        description={"Manage employee salaries"}
-      />
+      <div className="flex flex-wrap gap-4 justify-between items-start">
+        <Heading
+          className="my-4"
+          title={"Generate Salary"}
+          description={"Manage employee salaries"}
+        />
+
+        {data && Array.isArray(data?.machines) && data.machines.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>TT Rate</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RenderTTRate machines={data?.machines || []} />
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
       <div className="flex items-end gap-4 flex-wrap ">
         <div className="flex w-full sm:w-[300px] flex-col gap-2">
           <Label>Select User</Label>
@@ -523,6 +561,7 @@ const SalaryComponent = () => {
                     <Skeleton className={"h-[40px] w-[150px]"} />
                   ) : (
                     <Input
+                      type="number"
                       value={form[key]}
                       onChange={(e) => handleInputChange(key, e.target.value)}
                     />
@@ -716,6 +755,21 @@ const SalaryComponent = () => {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Target Record</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-5">
+          {loading ? (
+            <div className="flex flex-1 items-center justify-center">
+              <Spinner />
+            </div>
+          ) : (
+            <TargetRecord passingData={data?.machines || []} />
+          )}
+        </CardContent>
+      </Card>
+
       <Dialog open={modal} onOpenChange={setModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -770,6 +824,42 @@ const SalaryComponent = () => {
               }}
             >
               Proceed
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={TTModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Define USD conversion rate</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col space-y-2">
+            <Label> Enter rate</Label>
+            <Input
+              value={ttRate}
+              onChange={(e) => setTTRate(e.target.value)}
+              type="number"
+            />
+          </div>
+          <DialogFooter className="justify-start sm:justify-end gap-2">
+            <Button
+              onClick={() => {
+                if (Number(ttRate) > 0 && Array.isArray(data?.machines)) {
+                  const total = data.machines.reduce(
+                    (sum, item) => sum + Number(item.price || 0),
+                    0
+                  );
+                  const finalTotal = total / Number(ttRate);
+                  setForm((prev) => ({
+                    ...prev,
+                    target_achieved: finalTotal.toFixed(0),
+                  }));
+                }
+                setTTModal(false);
+              }}
+            >
+              Ok
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1098,6 +1188,153 @@ const AttendanceRecord = ({ passingData = [] }) => {
           data={passingData}
           totalItems={passingData.length}
           onRowClick={(val) => {}}
+        ></PageTable>
+      </div>
+    </div>
+  );
+};
+
+const TargetRecord = ({ passingData = [] }) => {
+  const { state: UserState } = useContext(UserContext);
+  const columns = [
+    {
+      accessorKey: "contract_date",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Contract Date
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="ml-2">
+          {row.getValue("contract_date")
+            ? moment(row.getValue("contract_date")).format("YYYY-MM-DD")
+            : ""}
+        </div>
+      ),
+    },
+
+    {
+      accessorKey: "customer_name",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Customer
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("customer_name")}</div>,
+    },
+
+    {
+      accessorKey: "serial_no",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Model No
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("serial_no")}</div>,
+    },
+
+    {
+      accessorKey: "order_no",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Order No
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("order_no")}</div>,
+    },
+
+    {
+      accessorKey: "source",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Source
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("source")}</div>,
+    },
+
+    {
+      accessorKey: "power",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Power
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("power")}</div>,
+    },
+
+    {
+      accessorKey: "price",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Price
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("price")}</div>,
+    },
+  ];
+
+  return (
+    <div className="flex flex-1 flex-col space-y-4">
+      <div className="flex flex-1 min-h-[600px]">
+        <PageTable
+          disableInput={true}
+          columns={columns}
+          data={passingData}
+          totalItems={passingData.length}
+          onRowClick={(val) => {
+            const url = `/${UserState.value.data?.base_route}/member/${val.customer_id}/${val.id}`;
+            window.open(url, "_blank");
+          }}
         ></PageTable>
       </div>
     </div>

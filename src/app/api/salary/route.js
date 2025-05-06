@@ -109,14 +109,25 @@ export async function GET(req) {
         const commissionQuery = `SELECT * FROM commissions WHERE user_id = $1 AND approval_date BETWEEN $2 AND $3 `;
         const commissionResult = await pool.query(commissionQuery, [user, start_date, end_date]);
 
-
+        const machineQuery = `SELECT 
+  sale.*, 
+  COALESCE(NULLIF(customer.name, ''), NULLIF(customer.owner, ''), '') AS customer_name
+FROM 
+  sale
+LEFT JOIN 
+  customer ON sale.customer_id = customer.id
+WHERE 
+  sale.sell_by = $1 
+  AND sale.contract_date BETWEEN $2 AND $3;`
+        const machineResult = await pool.query(machineQuery, [user, start_date, end_date])
 
         return NextResponse.json({
             reimbursement: reimbursement.rows,
             attendance: uniqueData,
             user: userQuery.rows[0],
             salary: salaryResult.rows.length > 0 ? salaryResult.rows[0] : null,
-            commission: commissionResult.rows || []
+            commission: commissionResult.rows || [],
+            machines : machineResult.rows
         }, { status: 200 });
 
     } catch (error) {
