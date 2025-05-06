@@ -264,20 +264,30 @@ const SalaryComponent = () => {
 
   useEffect(() => {
     if (data?.user) {
-      setPayable(
-        (
-          Number(data?.user?.basic_salary) +
-          kpi +
-          lateComingFine +
-          absentsFine +
-          form.reimbursement +
-          form.commission +
-          form.miscellaneous +
-          form.additional_fine
-        ).toFixed(2)
-      );
+      const basicSalary = Number(data?.user?.basic_salary) || 0;
+      const kpiValue = Number(kpi) || 0;
+      const lateFine = Number(lateComingFine) || 0;
+      const absentFine = Number(absentsFine) || 0;
+      const reimbursement = Number(form.reimbursement) || 0;
+      const commission = Number(form.commission) || 0;
+      const miscellaneous = Number(form.miscellaneous) || 0;
+      const additionalFine = Number(form.additional_fine) || 0;
+  
+      const total = (
+        basicSalary +
+        kpiValue +
+        lateFine +
+        absentFine +
+        reimbursement +
+        commission +
+        miscellaneous +
+        additionalFine
+      ).toFixed(2);
+  
+      setPayable(total);
     }
   }, [data, form, kpi, lateComingFine, absentsFine]);
+  
 
   const handleInputChange = (field, value) => {
     setForm((prev) => ({
