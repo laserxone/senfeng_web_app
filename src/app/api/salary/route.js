@@ -106,7 +106,7 @@ export async function GET(req) {
             }
         });
 
-        const commissionQuery = `SELECT * FROM commissions WHERE user_id = $1 AND approval_date BETWEEN $2 AND $3 `;
+        const commissionQuery = `SELECT * FROM commissions WHERE user_id = $1 AND request_date BETWEEN $2 AND $3 `;
         const commissionResult = await pool.query(commissionQuery, [user, start_date, end_date]);
 
         const machineQuery = `SELECT 
