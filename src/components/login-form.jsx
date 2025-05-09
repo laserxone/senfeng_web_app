@@ -1,5 +1,4 @@
 "use client";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,17 +9,19 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
 import { auth, provider } from "@/config/firebase";
-import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 export function LoginForm({ className, ...props }) {
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleGoogleLogin() {
     setLoading(true);
@@ -116,14 +117,29 @@ export function LoginForm({ className, ...props }) {
                       Forgot your password?
                     </a>
                   </div>
-                  <Input
-                    placeholder="*********"
-                    id="password"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      placeholder="*********"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="pr-10" // padding to the right for the icon
+                    />
+                    <div
+                    
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-0 h-auto w-auto cursor-pointer"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <Button type="submit" className="w-full">
                   {loading && <Loader2 className="animate-spin" />}
