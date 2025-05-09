@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { branchNavItem, employeeNavItems, InventoryNavItem, ownerNavItems, POSNavItem } from "@/constants/data";
+import { branchNavItem, employeeNavItems, InventoryNavItem, ownerNavItems, POSNavItem, StoreNavItem } from "@/constants/data";
 import { NextResponse } from "next/server"
 
 
@@ -21,26 +21,13 @@ export async function GET(req, { params }) {
         let nav_items = []
         if (result.rows[0].full_access) {
             nav_items = [...ownerNavItems]
-            nav_items.push({
-                title: 'POS',
-                url: '/pos',
-                icon: 'pos',
-                shortcut: ['p', 'o', 's'],
-                isActive: false,
-                items: []
-            })
+            nav_items.push(POSNavItem)
+
             base_route = "superadmin"
         }
         else if (result.rows[0].designation == 'Owner') {
             nav_items = [...ownerNavItems]
-            nav_items.push({
-                title: 'POS',
-                url: '/pos',
-                icon: 'pos',
-                shortcut: ['p', 'o', 's'],
-                isActive: false,
-                items: []
-            })
+            nav_items.push(POSNavItem)
             base_route = "superadmin"
         }
         else if (result.rows[0].designation == 'Engineer') {
@@ -93,11 +80,12 @@ export async function GET(req, { params }) {
         }
         else if (result.rows[0].designation == 'Store Manager') {
             base_route = 'store'
-            nav_items = [...POSNavItem]
+            nav_items = [...StoreNavItem]
             if (result.rows[0].branch_expenses_assigned)
                 nav_items.push(branchNavItem)
             if (result.rows[0].inventory_assigned)
                 nav_items.push(InventoryNavItem)
+            nav_items.push(POSNavItem)
         }
         return NextResponse.json({ ...result.rows[0], nav_items: nav_items, base_route: base_route, version_code: version_code }, { status: 200 })
 

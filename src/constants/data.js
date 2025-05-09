@@ -214,7 +214,7 @@ export const InventoryNavItem = {
   items: []
 }
 
-export const POSNavItem = [
+export const StoreNavItem = [
   {
     title: 'Dashboard',
     url: '/dashboard',
@@ -239,6 +239,9 @@ export const POSNavItem = [
     isActive: false,
     items: [] // No child items
   },
+  ]
+
+export const POSNavItem = 
   {
   title: 'POS',
   url: '/pos',
@@ -246,7 +249,7 @@ export const POSNavItem = [
   shortcut: ['p', 'o', 's'],
   isActive: false,
   items: []
-}]
+}
 
 export const PakCities = [
   {
