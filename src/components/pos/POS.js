@@ -1582,7 +1582,7 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
                 threshold: threshold ? Number(threshold) : "",
                 new_order: newOrder ? Number(newOrder) : ""
             })
-                .then((response) => {
+                .then(() => {
 
 
                     onRefresh()
