@@ -28,6 +28,7 @@ import "pdfjs-dist/build/pdf.worker.mjs";
 import 'pdfjs-dist/legacy/web/pdf_viewer.css';
 import NotificationBadge from './NotificationBadge';
 import { Checkbox } from '../ui/checkbox';
+import Spinner from '../ui/spinner';
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -60,6 +61,7 @@ export default function POS() {
     const [searchInvocie, setSearchInvoice] = useState(false)
     const [itemSearch, setItemSearch] = useState("")
     const [searchLoading, setSearchLoading] = useState(false)
+    const [pendingLoading, setPendingLoading] = useState(false)
     const [searchModal, setSearchModal] = useState(false)
     const [searchItemsResult, setSearchItemsResult] = useState([])
     const [selectedSearchItem, setSelectedSearchItem] = useState(null)
@@ -69,7 +71,7 @@ export default function POS() {
     const [warranty, setWarranty] = useState(false)
     const [warrantyYear, setWarrantyYear] = useState(1)
 
-  
+
 
     const handleUpdateInvoice = async () => {
         handleInvoiceBackendData()
@@ -92,7 +94,7 @@ export default function POS() {
 
         axios.put(`/api/pos/update/${selectedSearchItem.id}`, {
             olditems: selectedSearchItem,
-            newitems: { name: name, company: companyName, phone: phoneNumber, address: address, manager: manager, invoicenumber: nextInvoice, fields: invoiceItems, payment : checked }
+            newitems: { name: name, company: companyName, phone: phoneNumber, address: address, manager: manager, invoicenumber: nextInvoice, fields: invoiceItems, payment: checked }
         }).finally(() => {
             fetchData()
             setSelectedSearchItem(null)
@@ -153,7 +155,7 @@ export default function POS() {
                 }
 
                 if (response.data?.reminders) {
-                    console.log(response.data.reminders)
+
                     setReminder(response.data.reminders)
                 }
 
@@ -386,7 +388,7 @@ export default function POS() {
             }).catch((e) => {
                 console.log(e)
             }).finally(() => {
-                setSearchLoading(false)
+                setPendingLoading(false)
             })
     }
 
@@ -481,10 +483,11 @@ export default function POS() {
                         <div className="flex justify-between w-full mt-4">
                             <div className='flex flex-row gap-5 items-center'>
 
-                                <div className="flex items-center justify-between bg-white shadow-md rounded-lg px-4 py-2 w-fit gap-2 cursor-pointer" onClick={()=>{
-                                    setSearchLoading(true)
+                                <div className="flex items-center justify-between bg-white shadow-md rounded-lg px-4 py-2 w-fit gap-2 cursor-pointer" onClick={() => {
+                                    setPendingLoading(true)
                                     handlePendingPayments()
                                 }}>
+                                    {pendingLoading && <Spinner />}
                                     <Label className="text-lg font-semibold text-gray-800 cursor-pointer">Pending Payments</Label>
                                     <NotificationBadge count={reminder.length} className="ml-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm font-bold shadow-sm" />
                                 </div>
@@ -983,7 +986,7 @@ const AddItemDialog = ({ visible, onClose, handleDecrease, showOther, setShowOth
                     }} variant="destructive" className={lowStockStatus && "blinking-button"}>Low Stock</Button>
                     <Button>Order Stock</Button>
 
-                  {view ? <Table2 className='cursor-pointer' onClick={()=> setView(!view)}/> :  <List className='cursor-pointer' onClick={()=> setView(!view)}/>}
+                    {view ? <Table2 className='cursor-pointer' onClick={() => setView(!view)} /> : <List className='cursor-pointer' onClick={() => setView(!view)} />}
 
                 </div>
                 <Input
@@ -999,18 +1002,18 @@ const AddItemDialog = ({ visible, onClose, handleDecrease, showOther, setShowOth
                         <div className="flex flex-wrap gap-2 justify-center">
                             {stock.filter((item) => clickedLowStock ? item.threshold != null && item.threshold !== undefined && item.threshold <= item.qty : item).filter((item) => item?.name?.toLowerCase().includes(search.toLowerCase())).map((item, index) =>
 
-                              view ?  <RenderStockItems key={index} item={item} index={index} invoiceItems={invoiceItems} handleDecrease={handleDecrease} handleIncrease={handleIncrease} showOther={showOther} setShowOther={setShowOther} setQty={setQty} setPrice={setPrice} setOther={setOther}
+                                view ? <RenderStockItems key={index} item={item} index={index} invoiceItems={invoiceItems} handleDecrease={handleDecrease} handleIncrease={handleIncrease} showOther={showOther} setShowOther={setShowOther} setQty={setQty} setPrice={setPrice} setOther={setOther}
                                     visible={visible}
                                     onClose={onClose}
                                     onRefresh={onRefresh}
                                 />
 
-                                :
-                                <RenderStockItemsOtherView key={index} item={item} index={index} invoiceItems={invoiceItems} handleDecrease={handleDecrease} handleIncrease={handleIncrease} showOther={showOther} setShowOther={setShowOther} setQty={setQty} setPrice={setPrice} setOther={setOther}
-                                    visible={visible}
-                                    onClose={onClose}
-                                    onRefresh={onRefresh}
-                                />
+                                    :
+                                    <RenderStockItemsOtherView key={index} item={item} index={index} invoiceItems={invoiceItems} handleDecrease={handleDecrease} handleIncrease={handleIncrease} showOther={showOther} setShowOther={setShowOther} setQty={setQty} setPrice={setPrice} setOther={setOther}
+                                        visible={visible}
+                                        onClose={onClose}
+                                        onRefresh={onRefresh}
+                                    />
 
 
                             )}
@@ -1163,9 +1166,7 @@ const RenderStockItems = ({ item, index, invoiceItems, handleDecrease, handleInc
                 threshold: threshold ? Number(threshold) : "",
                 new_order: newOrder ? Number(newOrder) : ""
             })
-                .then((response) => {
-                    console.log(response.data)
-                }).catch((e) => {
+                .catch((e) => {
                     console.log(e)
                 }).finally(() => {
                     setLoading(false)
@@ -1321,7 +1322,7 @@ const RenderStockItemsOtherView = ({ item, index, invoiceItems, handleDecrease, 
     const [newOrder, setNewOrder] = useState("")
 
 
-  
+
     const uploadFiles = async (item, imgRef) => {
         let name = ""
         if (imgRef) {
@@ -1378,9 +1379,7 @@ const RenderStockItemsOtherView = ({ item, index, invoiceItems, handleDecrease, 
                 threshold: threshold ? Number(threshold) : "",
                 new_order: newOrder ? Number(newOrder) : ""
             })
-                .then((response) => {
-                    console.log(response.data)
-                }).catch((e) => {
+                .catch((e) => {
                     console.log(e)
                 }).finally(() => {
                     setLoading(false)
@@ -1584,7 +1583,7 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
                 new_order: newOrder ? Number(newOrder) : ""
             })
                 .then((response) => {
-                    console.log(response.data)
+
 
                     onRefresh()
                 }).catch((e) => {

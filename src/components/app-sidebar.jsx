@@ -113,7 +113,7 @@ export default function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent className="overflow-x-hidden">
-        <SidebarGroup> 
+        <SidebarGroup>
           <SidebarMenu>
             {UserState.value.data?.nav_items &&
               UserState.value.data?.nav_items.map((item) => {
@@ -171,7 +171,8 @@ export default function AppSidebar() {
                       <Link
                         onClick={() => {
                           if (isMobile) toggleSidebar();
-                            }}
+                          if (item.title === "POS") toggleSidebar();
+                        }}
                         href={`/${UserState.value.data?.base_route}${item.url}`}
                       >
                         <Icon />
