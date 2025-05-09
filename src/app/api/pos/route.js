@@ -3,7 +3,7 @@ import pool from '@/config/db';
 import { NextResponse } from 'next/server';
 
 
-export async function GET(req, res) {
+export async function GET() {
 
 
     try {
@@ -63,7 +63,7 @@ export async function POST(req) {
         RETURNING *
     `;
 
-        const { rows } = await pool.query(query, values);
+        await pool.query(query, values);
 
         console.log("data inserted successfully");
         return NextResponse.json({
@@ -77,7 +77,7 @@ export async function POST(req) {
 }
 
 
-export async function PUT(req, res) {
+export async function PUT(req) {
 
     try {
         const {

@@ -3,7 +3,7 @@
 import pool from '@/config/db';
 import { NextResponse } from 'next/server';
 
-export async function GET(req, res) {
+export async function GET() {
 
 
     try {
@@ -18,7 +18,7 @@ export async function GET(req, res) {
 
 }
 
-export async function PUT(req, res) {
+export async function PUT(req) {
 
     try {
         const {

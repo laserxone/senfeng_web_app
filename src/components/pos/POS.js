@@ -52,12 +52,10 @@ export default function POS() {
     const [showOther, setShowOther] = useState(false)
     const [customers, setCustomers] = useState([])
     const [manager, setManager] = useState("")
-    const [search, setSearch] = useState('')
     const [nextInvoice, setNextInvoice] = useState(`${moment().format("YYYYMMDD")}-1`)
     const [filteredCustomers, setFilteredCustomers] = useState([]);
     const [showList, setShowList] = useState(false)
     const [customerLoading, setCustomerLoading] = useState(false)
-    const [scale, setScale] = useState(1);
     const [addProductVisible, setAddProductVisible] = useState(false)
     const [searchInvocie, setSearchInvoice] = useState(false)
     const [itemSearch, setItemSearch] = useState("")
@@ -71,19 +69,7 @@ export default function POS() {
     const [warranty, setWarranty] = useState(false)
     const [warrantyYear, setWarrantyYear] = useState(1)
 
-    useEffect(() => {
-
-        const handleResize = () => {
-            const screenHeight = window.innerHeight;
-            const boxHeight = 1500;
-            const newScale = screenHeight / boxHeight;
-            setScale(newScale < 1 ? newScale : 1);
-        };
-
-        handleResize(); // Call on mount
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
+  
 
     const handleUpdateInvoice = async () => {
         handleInvoiceBackendData()
@@ -300,7 +286,6 @@ export default function POS() {
         setOther("")
         setShowOther(false)
         setManager('')
-        setSearch('')
         setNextInvoice("")
     }
 
@@ -1332,7 +1317,6 @@ const RenderStockItemsOtherView = ({ item, index, invoiceItems, handleDecrease, 
     const [localImage, setLocalImage] = useState(null)
     const [editable, setEditable] = useState(false)
     const [loading, setLoading] = useState(false)
-    const [itemImg, setImg] = useState(null)
     const [threshold, setThreshold] = useState("")
     const [newOrder, setNewOrder] = useState("")
 

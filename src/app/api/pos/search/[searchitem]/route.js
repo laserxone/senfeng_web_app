@@ -26,7 +26,7 @@ export async function GET(req, { params }) {
       const values = [`%${searchitem}%`];
       const result = await pool.query(query, values);
       return NextResponse.json(result.rows, { status: 200 });
-    } else {
+    } else if(pending) {
       const query = `
       SELECT * FROM savedinvoices
       WHERE payment = FALSE`
