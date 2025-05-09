@@ -433,9 +433,13 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
                       )
                     : ""}
                 </p>
-                <p>
-                  <strong>Order No:</strong> {machine?.order_no}
-                </p>
+                {machine?.order_no_arr &&
+                  machine?.order_no_arr.map((item, index) => (
+                    <p key={index}>
+                      <strong>Order No:</strong> {item}
+                    </p>
+                  ))}
+
                 <p>
                   <strong>Model No:</strong>{" "}
                   {machine?.model_no || machine.serial_no}

@@ -306,7 +306,7 @@ export default function Machine({ id }) {
       name: data?.customer?.owner,
       contact: data?.customer.number?.join(", "),
       model: data?.machine?.serial_no,
-      serial: data?.machine?.order_no,
+      serial: data?.machine?.order_no_arr?.join(", "),
       manager: data?.machine?.sell_by_name || "NA",
       payments: convertedPayment,
       received: received || 0,
@@ -539,13 +539,20 @@ const ClientCard = memo(({ data, payment, machine, manager }) => {
                   Source:{" "}
                   <span className="font-medium">{machine.source || "N/A"}</span>
                 </p>
-                <p>
+                {machine.order_no_arr && machine.order_no_arr.length === 0
+                  ?   <p >
                   <ClipboardList className="inline h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
                   Order No:{" "}
-                  <span className="font-medium">
-                    {machine.order_no || "N/A"}
-                  </span>
+                  <span className="font-medium">{"N/A"}</span>
                 </p>
+                  : machine.order_no_arr.map((item, index) => (
+                      <p key={index}>
+                        <ClipboardList className="inline h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
+                        Order No:{" "}
+                        <span className="font-medium">{item || "N/A"}</span>
+                      </p>
+                    ))}
+
                 <p>
                   <ClipboardList className="inline h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
                   Contract Date:{" "}

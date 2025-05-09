@@ -12,12 +12,16 @@ import { UserContext } from "@/store/context/UserContext";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { BASE_URL } from "@/constants/data";
 import axios from "@/lib/axios";
 import { Loader2 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
-export default function InventoryDetail({booking_id}) {
+export default function InventoryDetail({ booking_id }) {
   const { state: UserState } = useContext(UserContext);
   const [focusedRow, setFocusedRow] = useState(null);
   const [focusedBoard, setFocusedBoard] = useState(false);
@@ -301,7 +305,11 @@ export default function InventoryDetail({booking_id}) {
       </div>
 
       <div
-        style={{ maxHeight: tableMaxHeight, maxWidth:availableWidth }}
+        style={{
+          maxHeight: tableMaxHeight,
+          maxWidth: availableWidth,
+          minHeight: tableMaxHeight,
+        }}
         ref={tableContainerRef}
         className={`overflow-y-auto flex-1  overflow-x-auto`}
       >
@@ -335,29 +343,48 @@ export default function InventoryDetail({booking_id}) {
               "POWER",
               "SOURCE",
               "CUSTOMER",
-              "NUMBER",
+              "MOBILE",
               "CITY",
               "MANAGER",
               "PRICE",
               "DELIVERY",
               "REMARKS",
-            ].map((item, index) => (
-              <div
-                key={index}
-                className={` p-2 text-center text-white font-semibold ${
-                  item === "REMARKS" ? "w-[300px]" : "w-[130px]"
-                }`}
-              >
-                {item}
-              </div>
-            ))}
+            ].map((item, index) =>
+              item === "MOBILE" ? (
+                <TooltipProvider  key={index}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div
+                        className={` p-2 text-center text-white font-semibold ${
+                          item === "REMARKS" ? "w-[300px]" : "w-[130px]"
+                        }`}
+                      >
+                        {item}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div>Customer Mobile Number</div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <div
+                  key={index}
+                  className={` p-2 text-center text-white font-semibold ${
+                    item === "REMARKS" ? "w-[300px]" : "w-[130px]"
+                  }`}
+                >
+                  {item}
+                </div>
+              )
+            )}
           </div>
           {data &&
             data.length > 0 &&
             data.map((item, ind) => (
               <div key={ind} className={`flex flex-row ${item.color}`}>
                 {fieldOrder.map((key, index1) => (
-                  <div 
+                  <div
                     key={`${ind}-${index1}`}
                     className={`border border-gray-400 dark:border-gray-400 ${
                       key === "REMARKS" ? "w-[300px]" : "w-[130px]"
@@ -437,6 +464,7 @@ const newItem = {
   POWER: "",
   SOURCE: "",
   CUSTOMER: "",
+  NUMBER: "",
   CITY: "",
   MANAGER: "",
   PRICE: "",

@@ -48,7 +48,6 @@ export async function POST(req) {
 export async function PUT(req) {
     try {
         const data = await req.json();
-        console.log(data)
         const { id, ...updates } = data;
 
         if (!id) {

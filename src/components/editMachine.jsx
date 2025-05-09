@@ -1,7 +1,7 @@
 import { BASE_URL } from "@/constants/data";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "@/lib/axios";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -27,15 +27,18 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Textarea } from "./ui/textarea";
+import { Label } from "./ui/label";
 
 const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [orderNumbers, setOrderNumbers] = useState([""]);
+  const [orderNumberError, setOrderNumberError] = useState("");
   const formSchema = z.object({
     machineModel: z.string().min(1, { message: "Machine model is required." }),
     power: z.string().min(1, { message: "Power is required." }),
     source: z.string().min(1, { message: "Source is required." }),
-    orderNo: z.string().min(1, { message: "Order number is required." }),
+
     contractDate: z.date({ required_error: "Contract date is required." }),
     isSpeedMoney: z.boolean().default(false),
     speedMoney: z.number().optional(),
@@ -49,13 +52,11 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
       machineModel: "",
       power: "",
       source: "",
-      orderNo: "",
       contractDate: undefined,
       isSpeedMoney: false,
       speedMoney: "",
       speedMoneyNote: "",
       totalPrice: 0,
-  
     },
   });
 
@@ -65,19 +66,35 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
         machineModel: data?.serial_no || "",
         power: data?.power || "",
         source: data?.source || "",
-        orderNo: data?.order_no || "",
         contractDate: data?.contract_date ? new Date(data.contract_date) : null,
         isSpeedMoney: data?.speed_money,
         speedMoney: data?.speed_money_amount || "",
         speedMoneyNote: data?.speed_money_note || "",
         totalPrice: Number(data?.price || 0),
-    
       });
+      if (data?.order_no_arr) {
+        setOrderNumbers([...data.order_no_arr]);
+      }
     }
   }, [data, form]);
 
   function onSubmit(values) {
-    // console.log("Form Data:", values);
+    const cleanedOrderNumbers = orderNumbers.filter(
+      (num) => num?.trim() !== ""
+    );
+
+    if (cleanedOrderNumbers.length === 0) {
+      setOrderNumberError("At least one order number is required.");
+      return;
+    } else if (cleanedOrderNumbers.some((num) => num.length !== 9)) {
+      setOrderNumberError(
+        "Order number wrong format. Each must be 9 characters."
+      );
+      return;
+    } else {
+      setOrderNumberError("");
+    }
+
     setLoading(true);
     axios
       .put(`/machine/${machine_id}`, {
@@ -88,9 +105,8 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
         serial_no: values.machineModel,
         power: values.power,
         source: values.source,
-        order_no: values.orderNo,
+        order_no_arr: cleanedOrderNumbers,
         price: values.totalPrice,
-      
         contract_date: values.contractDate,
       })
       .then(() => {
@@ -109,6 +125,25 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
     form.reset();
     onClose(val);
   }
+
+  const addNumberField = () => {
+    setOrderNumbers((prevState) => [...prevState, ""]);
+  };
+
+  const removeNumberField = (index) => {
+    setOrderNumbers((prevState) => prevState.filter((_, ind) => ind !== index));
+  };
+
+  const handleNumberChange = (index, value) => {
+    if (orderNumberError) {
+      setOrderNumberError("");
+    }
+    setOrderNumbers((prevState) => {
+      const newState = [...prevState];
+      newState[index] = value;
+      return newState;
+    });
+  };
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -187,13 +222,44 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Order No</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter order number" {...field} />
-                        </FormControl>
-                        <FormMessage />
+                        {orderNumbers.map((num, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <FormControl className="flex-1">
+                              <Input
+                                placeholder="202501011"
+                                value={num}
+                                onChange={(e) =>
+                                  handleNumberChange(index, e.target.value)
+                                }
+                              />
+                            </FormControl>
+                            {index > 0 && (
+                              <Button
+                                variant="destructive"
+                                size="icon"
+                                onClick={() => {
+                                  removeNumberField(index);
+                                }}
+                              >
+                                <Trash size={16} />
+                              </Button>
+                            )}
+                            {index === orderNumbers.length - 1 && (
+                              <Button size="icon" onClick={addNumberField}>
+                                <Plus size={16} />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
                       </FormItem>
                     )}
                   />
+
+                  {orderNumberError && (
+                    <Label className="text-red-700 dark:text-red-300 font-medium text-sm">
+                      {orderNumberError}
+                    </Label>
+                  )}
 
                   <FormField
                     control={form.control}
@@ -234,7 +300,6 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
                       </FormItem>
                     )}
                   />
-               
 
                   <FormField
                     control={form.control}

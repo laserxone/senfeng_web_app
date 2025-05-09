@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { branchNavItem, employeeNavItems, InventoryNavItem, ownerNavItems } from "@/constants/data";
+import { branchNavItem, employeeNavItems, InventoryNavItem, ownerNavItems, POSNavItem } from "@/constants/data";
 import { NextResponse } from "next/server"
 
 
@@ -70,6 +70,14 @@ export async function GET(req, { params }) {
         else if (result.rows[0].designation == 'Manager') {
             base_route = 'manager'
             nav_items = [...employeeNavItems]
+            if (result.rows[0].branch_expenses_assigned)
+                nav_items.push(branchNavItem)
+            if (result.rows[0].inventory_assigned)
+                nav_items.push(InventoryNavItem)
+        }
+        else if (result.rows[0].designation == 'Store Manager') {
+            base_route = 'store'
+            nav_items = [...POSNavItem]
             if (result.rows[0].branch_expenses_assigned)
                 nav_items.push(branchNavItem)
             if (result.rows[0].inventory_assigned)

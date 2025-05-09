@@ -42,6 +42,7 @@ import {
   ShieldXIcon,
   Scroll,
   Signature,
+  ShoppingCart,
 } from 'lucide-react';
 
 
@@ -88,6 +89,7 @@ export const Icons = {
   quotation : Scroll,
   contract : Signature,
   commission : BadgeDollarSign,
+  pos : ShoppingCart,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden='true'

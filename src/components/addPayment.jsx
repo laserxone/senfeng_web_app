@@ -48,6 +48,7 @@ const AddPayment = ({
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const { state: UserState } = useContext(UserContext);
+  const [lockTID, setLockTID] = useState(false)
   const [error, setError] = useState({});
   const formSchema = z.object({
     note: z.string().min(1, { message: "Note is required." }),
@@ -99,6 +100,7 @@ const AddPayment = ({
     }
   }
 
+ 
   function handleClose(val) {
     form.reset();
     setLoading(false);
@@ -123,7 +125,7 @@ const AddPayment = ({
     try {
       const response = await axios.post(`/check-note`, { number });
       if (Array.isArray(response.data) && response.data.length > 0) {
-        console.log(response.data)
+        console.log(response.data);
         setError(response.data[0]);
       }
     } catch (error) {
@@ -195,9 +197,9 @@ const AddPayment = ({
                           </FormLabel>
                           <FormControl>
                             <div className="flex">
-                              <Input placeholder="Enter TID" {...field} />
+                              <Input disabled={lockTID} placeholder="Enter TID" {...field} />
                               {checking && <Spinner className={"ml-2"} />}
-                            </div> 
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -228,7 +230,22 @@ const AddPayment = ({
                           </FormLabel>
                           <FormControl>
                             <Select
-                              onValueChange={(val) => field.onChange(val)}
+                              onValueChange={(val) => {
+                                field.onChange(val);
+                                if (val === "Cash") {
+                                  form.setValue(
+                                    "note",
+                                    moment()
+                                      .format("YYYYMMDDHHmmss")
+                                      .toString()
+                                  );
+                                  setLockTID(true)
+                                } else {
+                                  if(form.getValues("note") && lockTID){
+                                    setLockTID(false)
+                                  }
+                                }
+                              }}
                               value={field.value}
                             >
                               <SelectTrigger>

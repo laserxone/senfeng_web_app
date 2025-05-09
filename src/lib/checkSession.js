@@ -24,7 +24,6 @@ export default function useCheckSession() {
         try {
             const response = await axios.get(`/userdetail/${user.email}`);
             const userData = response.data;
-
             if (userData?.designation) {
 
                 if (userData.full_access) {
@@ -81,7 +80,14 @@ export default function useCheckSession() {
                         router.push("/aftersales/dashboard")
                     }
                 }
+                else if (userData.designation === 'Store Manager') {
+                    if (!pathname.includes("store")) {
+                        startHolyLoader()
+                        router.push("/store/dashboard")
+                    }
+                }
                 else {
+
                     signOut(auth);
                 }
 
@@ -92,6 +98,7 @@ export default function useCheckSession() {
                 return { error: "User not found" };
             }
         } catch (e) {
+
             signOut(auth);
             return { error: e.message };
         }

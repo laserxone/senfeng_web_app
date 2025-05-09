@@ -214,6 +214,40 @@ export const InventoryNavItem = {
   items: []
 }
 
+export const POSNavItem = [
+  {
+    title: 'Dashboard',
+    url: '/dashboard',
+    icon: 'dashboard',
+    isActive: true,
+    shortcut: ['d', 'a', 's', 'h'],
+    items: [] 
+  },
+  {
+    title: 'Task Management',
+    url: '/task',
+    icon: 'task',
+    isActive: false,
+    shortcut: ['t', 'a', 's', 'k'],
+    items: []
+  },
+  {
+    title: 'DMS',
+    url: '/dms',
+    icon: 'dms',
+    shortcut: ['d', 'm', 's'],
+    isActive: false,
+    items: [] // No child items
+  },
+  {
+  title: 'POS',
+  url: '/pos',
+  icon: 'pos',
+  shortcut: ['p', 'o', 's'],
+  isActive: false,
+  items: []
+}]
+
 export const PakCities = [
   {
     "country": "PK",

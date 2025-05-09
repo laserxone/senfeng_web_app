@@ -525,7 +525,7 @@ const FilterSheet = ({ visible, onClose, onReturn }) => {
                     <AppCalendar
                       date={field.value}
                       onChange={(date) => {
-                        console.log(date);
+                      
                         field.onChange(date);
                       }}
                     />

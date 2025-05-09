@@ -250,7 +250,7 @@ const InvoicePDF = ({ data }) => {
 const FormField = ({ data }) => {
     return (
         <View style={{ marginBottom: 5, flex: 0.5 }}>
-            {['Company', 'Name', 'Contact', 'Model', 'Serial No', 'Manager'].map((label, index) => (
+            {['Company', 'Name', 'Contact', 'Model', 'Order No', 'Manager'].map((label, index) => (
                 <View key={label} style={{ display: 'flex', flexDirection: 'column', marginBottom: 5 }}>
                     <Text style={{ color: '#7F7F7FFF', marginLeft: 10, fontFamily: 'Helvetica-Bold', fontSize: 11 }}>{label}:</Text>
                     <View style={{ backgroundColor: '#dce4f1', paddingLeft: 10, border: '1px solid #E5E7EB', maxWidth: '360px', height: 20, fontSize: 9, display: 'flex', justifyContent: 'center', }}>

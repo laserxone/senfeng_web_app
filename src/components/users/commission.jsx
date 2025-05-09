@@ -35,7 +35,6 @@ const OwnerView = () => {
   const { state: UserState } = useContext(UserContext);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
- 
 
   useEffect(() => {
     if (UserState.value.data?.id) {
@@ -66,109 +65,82 @@ const OwnerView = () => {
       if (!id) return;
       setLoading(true);
       try {
-        await axios
-          .put(`/commission/${id}`, {
-            is_approved: true,
-            approval_date: new Date(),
-            commission_amount: (item.total_amount * selectedPercentage) / 100,
-          })
-          .then(async () => {
-            await onRefresh();
-          });
+        await axios.put(`/commission/${id}`, {
+          is_approved: true,
+          approval_date: new Date(),
+          commission_amount: (item.total_amount * selectedPercentage) / 100,
+        });
+        await onRefresh();
       } catch (error) {
+        console.error("Update failed:", error);
       } finally {
         setLoading(false);
       }
     }
 
     return (
-      <Card className="max-w-[calc(100vw-34px)]">
-        <CardContent className="p-4 space-y-2">
+      <TableRow>
+          <TableCell>
+          {item.request_date
+            ? moment(item.request_date).format("YYYY-MM-DD")
+            : ""}
+        </TableCell>
+        <TableCell>{item.user_name}</TableCell>
+        <TableCell>
           <Link
             target="blank"
             href={`/${UserState.value.data?.base_route}/member/${item.customer_id}/${item.sale_id}`}
+            className="hover:underline"
           >
-            <h2 className="font-semibold text-lg hover:underline">
-              Customer: {item.customer_name || item.customer_owner || "NIL"}
-            </h2>
+            {item.customer_name || item.customer_owner}
           </Link>
-          <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Employee</TableHead>
-                <TableHead>Machine</TableHead>
-                <TableHead>
-                  {item.is_approved
-                    ? "Commission Amount"
-                    : "Commission Percentage"}
-                </TableHead>
-                <TableHead>Note</TableHead>
-                <TableHead>Commission Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell>{item.user_name}</TableCell>
-                <TableCell>{item.machine_name}</TableCell>
-                <TableCell>
-                  {item.is_approved ? (
-                    item.commission_amount
-                  ) : (
-                    <Select
-                      onValueChange={(val) => {
-                        setSelectedPercentage(val);
-                      }}
-                      value={selectedPercentage ? selectedPercentage : ""}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select commission percentage" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array(9)
-                          .fill(0)
-                          .map((_, i) => {
-                            const value = (i + 1).toString();
-                            return (
-                              <SelectItem key={value} value={value}>
-                                {value}%
-                              </SelectItem>
-                            );
-                          })}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </TableCell>
-                <TableCell>{item.note}</TableCell>
-                {/* <TableCell>{}</TableCell> */}
-                <TableCell>
-                  {loading ? (
-                    <Spinner />
-                  ) : item.is_approved === null ? (
-                    <div>
-                      <Button
-                        disabled={!selectedPercentage}
-                        onClick={() => {
-                          if (!selectedPercentage) return;
-                          handleUpdate(item.id, true);
-                        }}
-                        className="mr-2"
-                      >
-                        Approve
-                      </Button>
-                    </div>
-                  ) : item.is_approved === false ? (
-                    <span className="text-red-600">Disapproved</span>
-                  ) : (
-                    <span className="text-green-600">Approved</span>
-                  )}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+        </TableCell>
+        <TableCell>{item.machine_name}</TableCell>
+        <TableCell>
+          <div className="min-h-[40px] flex items-center">
+            {item.is_approved ? (
+              item.commission_amount
+            ) : (
+              <Select
+                onValueChange={(val) => setSelectedPercentage(val)}
+                value={selectedPercentage || ""}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select %" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 9 }, (_, i) => {
+                    const val = (i + 1).toString();
+                    return (
+                      <SelectItem key={val} value={val}>
+                        {val}%
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </TableCell>
+        <TableCell>{item.note}</TableCell>
+      
+        <TableCell>
+          {loading ? (
+            <Spinner />
+          ) : item.is_approved === null ? (
+            <Button
+              disabled={!selectedPercentage}
+              onClick={() => handleUpdate(item.id)}
+            >
+              Approve
+            </Button>
+          ) : item.is_approved === false ? (
+            <span className="text-red-600">Disapproved</span>
+          ) : (
+            <span className="text-green-600">Approved</span>
+          )}
+        </TableCell>
+      </TableRow>
     );
   };
 
@@ -187,15 +159,29 @@ const OwnerView = () => {
           {data.length === 0 ? (
             <p>No data available.</p>
           ) : (
-            data.map((item) => (
-              <RenderEachRow
-                key={item.id}
-                item={item}
-                onRefresh={async () => {
-                  await fetchData();
-                }}
-              />
-            ))
+            <Table>
+              <TableHeader>
+                <TableRow>
+                <TableHead>Request Date</TableHead>
+                  <TableHead>Employee</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Machine</TableHead>
+                  <TableHead>Commission</TableHead>
+                  <TableHead>Note</TableHead>
+                 
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.map((item) => (
+                  <RenderEachRow
+                    key={item.id}
+                    item={item}
+                    onRefresh={fetchData}
+                  />
+                ))}
+              </TableBody>
+            </Table>
           )}
         </div>
       )}
@@ -271,7 +257,7 @@ const OtherView = () => {
               Customer: {item.customer?.name || item.customer?.owner || "NIL"}
             </h2>
           </Link>
-    
+
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -306,7 +292,9 @@ const OtherView = () => {
                     {item.commission_issued ? (
                       <span className="text-green-600">Approved</span>
                     ) : item.balance !== 0 ? (
-                      <span className="text-red-600">Payment not cleared yet</span>
+                      <span className="text-red-600">
+                        Payment not cleared yet
+                      </span>
                     ) : item.commission?.id ? (
                       item.commission.is_approved ? (
                         <span className="text-green-600">Approved</span>
@@ -328,11 +316,10 @@ const OtherView = () => {
                 </TableRow>
               </TableBody>
             </Table>
-            </div>
+          </div>
         </CardContent>
       </Card>
     );
-    
   };
 
   return (

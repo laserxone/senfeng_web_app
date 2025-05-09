@@ -51,7 +51,7 @@ const AddCustomerDialog = ({
   ownership,
 }) => {
   const [numbers, setNumbers] = useState([""]);
-  const [numberError, setNumberError] = useState("");
+  const [numberError, setNumberError] = useState(""); 
   const [loading, setLoading] = useState(false);
   const { state: UserState } = useContext(UserContext);
   const [checking, setChecking] = useState(false);

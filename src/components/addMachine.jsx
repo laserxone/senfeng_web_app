@@ -24,19 +24,21 @@ import {
 import AppCalendar from "./appCalendar";
 import { Checkbox } from "./ui/checkbox";
 import { Button } from "./ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Trash } from "lucide-react";
 import { Textarea } from "./ui/textarea";
 import { RequiredStar } from "./RequiredStar";
 import { BASE_URL } from "@/constants/data";
+import { Label } from "./ui/label";
 
 const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [orderNumbers, setOrderNumbers] = useState([""]);
+  const [orderNumberError, setOrderNumberError] = useState("");
   const formSchema = z.object({
     machineModel: z.string().min(1, { message: "Machine model is required." }),
     power: z.string().min(1, { message: "Power is required." }),
     source: z.string().min(1, { message: "Source is required." }),
-    orderNo: z.string().min(1, { message: "Order number is required." }),
     contractDate: z.date({ required_error: "Contract date is required." }),
     isSpeedMoney: z.boolean().default(false),
     speedMoney: z.string().optional(),
@@ -51,7 +53,6 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
       machineModel: "",
       power: "",
       source: "",
-      orderNo: "",
       contractDate: undefined,
       isSpeedMoney: false, // Default value set to false
       speedMoney: "",
@@ -62,6 +63,22 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   });
 
   function onSubmit(values) {
+    const cleanedOrderNumbers = orderNumbers.filter(
+      (num) => num?.trim() !== ""
+    );
+
+    if (cleanedOrderNumbers.length === 0) {
+      setOrderNumberError("At least one order number is required.");
+      return
+    } else if (cleanedOrderNumbers.some((num) => num.length !== 9)) {
+      setOrderNumberError(
+        "Order number wrong format. Each must be 9 characters."
+      );
+      return
+    } else {
+      setOrderNumberError("");
+    }
+
     // console.log("Form Data:", values);
     setLoading(true);
     axios
@@ -74,23 +91,44 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
         serial_no: values.machineModel,
         power: values.power,
         source: values.source,
-        order_no: values.orderNo,
         sell_by: user_id,
         commission: true,
         price: values.totalPrice,
         contract_date: values.contractDate,
         cnic: values.cnic,
+        order_no_arr : cleanedOrderNumbers
       })
       .then(() => {
         onRefresh();
         handleClose(false);
-      });
+      }).catch(()=>{
+        setLoading(false)
+      })
   }
 
   function handleClose(val) {
     form.reset();
     onClose(val);
   }
+
+  const addNumberField = () => {
+    setOrderNumbers((prevState) => [...prevState, ""]);
+  };
+
+  const removeNumberField = (index) => {
+    setOrderNumbers((prevState) => prevState.filter((_, ind) => ind !== index));
+  };
+
+  const handleNumberChange = (index, value) => {
+    if (orderNumberError) {
+      setOrderNumberError("");
+    }
+    setOrderNumbers((prevState) => {
+      const newState = [...prevState];
+      newState[index] = value;
+      return newState;
+    });
+  };
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -112,7 +150,9 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                     name="machineModel"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Machine Model <RequiredStar /></FormLabel>
+                        <FormLabel>
+                          Machine Model <RequiredStar />
+                        </FormLabel>
                         <FormControl>
                           <Input placeholder="example: SF3015G" {...field} />
                         </FormControl>
@@ -126,7 +166,9 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                     name="power"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Power <RequiredStar /></FormLabel>
+                        <FormLabel>
+                          Power <RequiredStar />
+                        </FormLabel>
                         <FormControl>
                           <Input
                             placeholder="example: 3000/1500/6000"
@@ -143,7 +185,9 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                     name="source"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Source <RequiredStar /></FormLabel>
+                        <FormLabel>
+                          Source <RequiredStar />
+                        </FormLabel>
                         <FormControl>
                           <Select
                             onValueChange={(val) => field.onChange(val)}
@@ -171,21 +215,56 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                     name="orderNo"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Order No <RequiredStar /></FormLabel>
-                        <FormControl>
-                          <Input placeholder="example: 202501001" {...field} />
-                        </FormControl>
-                        <FormMessage />
+                        <FormLabel>
+                          Order No <RequiredStar />
+                        </FormLabel>
+                        {orderNumbers.map((num, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <FormControl className="flex-1">
+                              <Input
+                                placeholder="202501011"
+                                value={num}
+                                onChange={(e) =>
+                                  handleNumberChange(index, e.target.value)
+                                }
+                              />
+                            </FormControl>
+                            {index > 0 && (
+                              <Button
+                                variant="destructive"
+                                size="icon"
+                                onClick={() => {
+                                  removeNumberField(index);
+                                }}
+                              >
+                                <Trash size={16} />
+                              </Button>
+                            )}
+                            {index === orderNumbers.length - 1 && (
+                              <Button size="icon" onClick={addNumberField}>
+                                <Plus size={16} />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
                       </FormItem>
                     )}
                   />
+
+                  {orderNumberError && (
+                    <Label className="text-red-700 dark:text-red-300 font-medium text-sm">
+                      {orderNumberError}
+                    </Label>
+                  )}
 
                   <FormField
                     control={form.control}
                     name="contractDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Contract Date <RequiredStar /></FormLabel>
+                        <FormLabel>
+                          Contract Date <RequiredStar />
+                        </FormLabel>
                         <FormControl>
                           <AppCalendar
                             date={field.value}
@@ -202,7 +281,9 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                     name="totalPrice"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Total Price <RequiredStar /></FormLabel>
+                        <FormLabel>
+                          Total Price <RequiredStar />
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="number"
