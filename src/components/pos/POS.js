@@ -1138,7 +1138,7 @@ const RenderStockItems = ({ item, index, invoiceItems, handleDecrease, handleInc
                             break;
                     }
                 },
-                (error) => {
+                () => {
                     setLoading(false);
                     reject(null)
                 },
@@ -1353,7 +1353,7 @@ const RenderStockItemsOtherView = ({ item, index, invoiceItems, handleDecrease, 
                             break;
                     }
                 },
-                (error) => {
+                () => {
                     setLoading(false);
                     reject(null)
                 },
@@ -1559,7 +1559,7 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
                             break;
                     }
                 },
-                (error) => {
+                () => {
                     setLoading(false);
                     reject(null)
                 },

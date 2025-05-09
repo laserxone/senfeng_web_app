@@ -21,10 +21,26 @@ export async function GET(req, { params }) {
         let nav_items = []
         if (result.rows[0].full_access) {
             nav_items = [...ownerNavItems]
+            nav_items.push({
+                title: 'POS',
+                url: '/pos',
+                icon: 'pos',
+                shortcut: ['p', 'o', 's'],
+                isActive: false,
+                items: []
+            })
             base_route = "superadmin"
         }
         else if (result.rows[0].designation == 'Owner') {
             nav_items = [...ownerNavItems]
+            nav_items.push({
+                title: 'POS',
+                url: '/pos',
+                icon: 'pos',
+                shortcut: ['p', 'o', 's'],
+                isActive: false,
+                items: []
+            })
             base_route = "superadmin"
         }
         else if (result.rows[0].designation == 'Engineer') {
@@ -83,7 +99,7 @@ export async function GET(req, { params }) {
             if (result.rows[0].inventory_assigned)
                 nav_items.push(InventoryNavItem)
         }
-        return NextResponse.json({ ...result.rows[0], nav_items: nav_items, base_route: base_route, version_code : version_code }, { status: 200 })
+        return NextResponse.json({ ...result.rows[0], nav_items: nav_items, base_route: base_route, version_code: version_code }, { status: 200 })
 
     } catch (error) {
         console.error('Error inserting data: ', error);
