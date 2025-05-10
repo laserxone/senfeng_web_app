@@ -95,7 +95,7 @@ export async function PUT(req) {
         await pool.query(
             `INSERT INTO savedinvoices 
             (name, company, phone, address, manager, invoicenumber, fields, payment) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, %8)`,
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
             [name, company, phone, address, manager, invoicenumber, JSON.stringify(fields), payment]
         );
         if (entries.length > 0) {
