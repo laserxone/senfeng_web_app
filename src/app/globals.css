@@ -171,3 +171,7 @@ body {
     stroke-dashoffset: 4500;
   }
 }
+
+.rdp-vhidden {
+  @apply hidden;
+}

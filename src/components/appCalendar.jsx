@@ -1,13 +1,15 @@
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useState } from "react";
 import { Button } from "./ui/button";
 import { Calendar } from "./ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 const AppCalendar = ({ date, onChange, min = new Date("1900-01-01") }) => {
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   return (
-    <Popover>
+    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
       <PopoverTrigger asChild>
         <Button
           variant={"outline"}
@@ -24,9 +26,13 @@ const AppCalendar = ({ date, onChange, min = new Date("1900-01-01") }) => {
         <Calendar
           mode="single"
           selected={date}
-          onSelect={onChange}
+          onSelect={(e)=>{
+            onChange(e)
+             setIsCalendarOpen(false);
+          }}
           disabled={(date) => date < min}
           initialFocus
+         
         />
       </PopoverContent>
     </Popover>
