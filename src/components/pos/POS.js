@@ -782,7 +782,7 @@ export default function POS() {
     )
 }
 
-const RenderPaid = ({ row }) => {
+const RenderPaid = ({ row, onRefresh }) => {
     async function handleUpdatePayment(checked) {
         setLocalLoading(true)
         await axios.put(`/api/pos/payment/${row.original.id}`, {
@@ -920,7 +920,8 @@ const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh }) => {
                 );
             },
             cell: ({ row }) => (
-                <RenderPaid row={row}/>
+                <RenderPaid row={row}
+                onRefresh={onRefresh}/>
             )
         },
 
