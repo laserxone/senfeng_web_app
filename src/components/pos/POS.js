@@ -782,6 +782,37 @@ export default function POS() {
     )
 }
 
+const RenderPaid = ({ row }) => {
+    async function handleUpdatePayment(checked) {
+        setLocalLoading(true)
+        await axios.put(`/api/pos/payment/${row.original.id}`, {
+            payment: checked
+        }).then(async () => {
+            setLocalChecked(checked)
+            await onRefresh(row.original, checked)
+        }).catch((e) => {
+            console.log(e)
+        }).finally(() => {
+            setLocalLoading(false)
+        })
+    }
+
+    const [localChecked, setLocalChecked] = useState(row.getValue("payment"))
+    const [localLoading, setLocalLoading] = useState(false)
+    return (
+        <div className="flex flex-row gap-2 items-center">
+            {localLoading ? <Spinner /> : <>
+                <Label className="text-lg">{localChecked ? "Paid" : "Unpaid"}</Label>
+                <Checkbox
+                    checked={localChecked}
+                    onCheckedChange={handleUpdatePayment}
+                />
+            </>
+            }
+
+        </div>
+    )
+}
 
 const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh }) => {
 
@@ -888,38 +919,9 @@ const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh }) => {
                     </Button>
                 );
             },
-            cell: ({ row }) => {
-
-                async function handleUpdatePayment(checked) {
-                    setLocalLoading(true)
-                    await axios.put(`/api/pos/payment/${row.original.id}`, {
-                        payment: checked
-                    }).then(async () => {
-                        setLocalChecked(checked)
-                        await onRefresh(row.original, checked)
-                    }).catch((e) => {
-                        console.log(e)
-                    }).finally(() => {
-                        setLocalLoading(false)
-                    })
-                }
-
-                const [localChecked, setLocalChecked] = useState(row.getValue("payment"))
-                const [localLoading, setLocalLoading] = useState(false)
-                return (
-                    <div className="flex flex-row gap-2 items-center">
-                        {localLoading ? <Spinner /> : <>
-                            <Label className="text-lg">{localChecked ? "Paid" : "Unpaid"}</Label>
-                            <Checkbox
-                                checked={localChecked}
-                                onCheckedChange={handleUpdatePayment}
-                            />
-                        </>
-                        }
-
-                    </div>
-                )
-            }
+            cell: ({ row }) => (
+                <RenderPaid row={row}/>
+            )
         },
 
         {
