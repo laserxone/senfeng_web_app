@@ -141,31 +141,35 @@ export default function POS() {
 
     const fetchData = async () => {
         clearAll()
-        axios.get("/api/pos")
-            .then((response) => {
-                if (response.data.stock.length > 0) {
-                    let resultedData = [...response.data.stock]
-                    resultedData.push({ name: "Other", id: resultedData[resultedData.length - 1].id + 1 })
-                    resultedData.push({ name: "Plus", id: resultedData[resultedData.length - 1].id + 2 })
-                    setStock([...resultedData]);
+        return new Promise((resolve) => {
+            axios.get("/api/pos")
+                .then((response) => {
+                    if (response.data.stock.length > 0) {
+                        let resultedData = [...response.data.stock]
+                        resultedData.push({ name: "Other", id: resultedData[resultedData.length - 1].id + 1 })
+                        resultedData.push({ name: "Plus", id: resultedData[resultedData.length - 1].id + 2 })
+                        setStock([...resultedData]);
 
-                }
-                if (response.data?.lastInventoryId) {
-                    setNextInvoice(`${moment().format("YYYYMMDD")}-${response.data?.lastInventoryId + 1}`)
-                }
+                    }
+                    if (response.data?.lastInventoryId) {
+                        setNextInvoice(`${moment().format("YYYYMMDD")}-${response.data?.lastInventoryId + 1}`)
+                    }
 
-                if (response.data?.reminders) {
+                    if (response.data?.reminders) {
 
-                    setReminder(response.data.reminders)
-                }
+                        setReminder(response.data.reminders)
+                    }
 
-            })
-            .catch((e) => {
-                console.log(e);
-            })
-            .finally(() => {
-                setLoading(false);
-            });
+                })
+                .catch((e) => {
+                    console.log(e);
+                })
+                .finally(() => {
+                    setLoading(false);
+                    resolve()
+                });
+        })
+
     };
 
     const fetchDataCustomer = async () => {
@@ -374,23 +378,31 @@ export default function POS() {
     }
 
     async function handlePendingPayments() {
-        axios.get(`/api/pos/search/null?pending=true`)
-            .then((response) => {
-                if (response.data.length > 0) {
-                    const resultWithTotal = response.data.map((item) => {
-                        return { ...item, total: item.fields.reduce((acc, curr) => acc + Number(curr.total), 0) }
-                    })
-                    setSearchModal(true)
-                    setSearchItemsResult(resultWithTotal)
+        return new Promise((resolve) => {
+            axios.get(`/api/pos/search/null?pending=true`)
+                .then((response) => {
+                    if (response.data.length > 0) {
+                        const resultWithTotal = response.data.map((item) => {
+                            return { ...item, total: item.fields.reduce((acc, curr) => acc + Number(curr.total), 0) }
+                        })
+                        setSearchModal(true)
+                        setSearchItemsResult(resultWithTotal)
 
-                }
+                    }
 
-            }).catch((e) => {
-                console.log(e)
-            }).finally(() => {
-                setPendingLoading(false)
-            })
+                }).catch((e) => {
+                    console.log(e)
+                }).finally(() => {
+                    setPendingLoading(false)
+                    resolve()
+                })
+        })
+
     }
+
+    useEffect(() => {
+        console.log(reminder)
+    }, [reminder])
 
     return (
         (loading || customerLoading) ?
@@ -705,7 +717,33 @@ export default function POS() {
                         setAddress(val.address)
                         setInvoiceItems(val.fields)
                         setNextInvoice(val.invoicenumber)
-                    }} />
+                    }}
+                        onRefresh={(item, val) => {
+                            if (val == true) {
+                                setReminder((prevState) => {
+                                    const updated = prevState.filter((old) => old.id !== item.id)
+                                    return updated
+                                })
+                            } else {
+                                setReminder((prevState) => {
+                                    const newState = [...prevState]
+                                    newState.push({ ...item, payment: val })
+                                    return newState
+                                })
+                            }
+
+                            setSearchItemsResult((prev) => {
+                                const updated = prev.map((old) => {
+                                    if (old.id === item.id) {
+                                        return { ...old, payment: val }
+                                    }
+                                    return old
+                                })
+                                return updated
+                            })
+
+                        }}
+                    />
                 </div>
 
                 <Dialog open={modal} onOpenChange={setModal}>
@@ -745,7 +783,7 @@ export default function POS() {
 }
 
 
-const SearchResultModal = ({ visible, onClose, data, onselect }) => {
+const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh }) => {
 
     const pageTableRef = useRef()
     const [value, setValue] = useState("")
@@ -835,6 +873,53 @@ const SearchResultModal = ({ visible, onClose, data, onselect }) => {
                 );
             },
             cell: ({ row }) => <div>{row.getValue("total")}</div>,
+        },
+
+        {
+            accessorKey: "payment",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Status
+                        <ArrowUpDown />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => {
+
+                async function handleUpdatePayment(checked) {
+                    setLocalLoading(true)
+                    await axios.put(`/api/pos/payment/${row.original.id}`, {
+                        payment: checked
+                    }).then(async () => {
+                        setLocalChecked(checked)
+                        await onRefresh(row.original, checked)
+                    }).catch((e) => {
+                        console.log(e)
+                    }).finally(() => {
+                        setLocalLoading(false)
+                    })
+                }
+
+                const [localChecked, setLocalChecked] = useState(row.getValue("payment"))
+                const [localLoading, setLocalLoading] = useState(false)
+                return (
+                    <div className="flex flex-row gap-2 items-center">
+                        {localLoading ? <Spinner /> : <>
+                            <Label className="text-lg">{localChecked ? "Paid" : "Unpaid"}</Label>
+                            <Checkbox
+                                checked={localChecked}
+                                onCheckedChange={handleUpdatePayment}
+                            />
+                        </>
+                        }
+
+                    </div>
+                )
+            }
         },
 
         {
