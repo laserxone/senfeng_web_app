@@ -524,7 +524,7 @@ const ClientCard = memo(({ data, payment, machine, manager }) => {
               <div className="text-gray-600 dark:text-gray-300 text-sm space-y-2">
                 <p>
                   <Wrench className="inline h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-                  Serial No:{" "}
+                  Model:{" "}
                   <span className="font-medium">
                     {machine.serial_no || "N/A"}
                   </span>
