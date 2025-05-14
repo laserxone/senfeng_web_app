@@ -186,10 +186,9 @@ export default function Page() {
         <div>
         <Button
           onClick={() => setFilterVisible(true)}
-          variant="ghost"
-          className="p-0 w-8"
+          
         >
-          <Filter />
+          <Filter /> Filter user and date
         </Button>
         </div>
       </div>

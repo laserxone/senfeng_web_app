@@ -42,31 +42,39 @@ export async function GET(req) {
 
     const searchParams = req.nextUrl.searchParams
     const user = searchParams.get('user')
-    const start_date = searchParams.get('start_date')
-    const end_date = searchParams.get('end_date')
 
 
     try {
-        let query = `
+
+
+        if (!user) {
+            const query = `
+        SELECT l.*, u.id AS user_id, u.name AS user_name
+        FROM locations l
+        INNER JOIN (
+            SELECT user_id, MAX(created_at) AS latest_created_at
+            FROM locations
+            GROUP BY user_id
+        ) latest ON l.user_id = latest.user_id AND l.created_at = latest.latest_created_at
+        INNER JOIN users u ON l.user_id = u.id
+        ORDER BY l.created_at DESC;
+    `;
+
+            const result = await pool.query(query);
+            return NextResponse.json(result.rows, { status: 200 });
+        } else {
+           let query = `
             SELECT l.*, u.id AS user_id, u.name AS user_name
             FROM locations l
             INNER JOIN users u ON l.user_id = u.id
+            WHERE l.created_at BETWEEN $1 AND $2
+            AND user_id = $3
+            ORDER BY l.created_at ASC;
           `;
 
-        const queryParams = [];
-
-        if (start_date && end_date) {
-            query += ` WHERE l.created_at BETWEEN $1 AND $2`;
-            queryParams.push(start_date, end_date);
-        }
-
-        if (user) {
-            query += ` AND user_id = $3`
-            queryParams.push(user);
-        }
-        query += ` ORDER BY l.created_at ASC;`;
-        const result = await pool.query(query, queryParams);
+        const result = await pool.query(query, [start_date, end_date, user]);
         return NextResponse.json(result.rows, { status: 200 });
+        }
 
 
     } catch (error) {
