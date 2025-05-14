@@ -1,8 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
-import Spinner from "@/components/ui/spinner";
-import { UserSearch } from "@/components/user-search";
 import FilterSheet from "@/components/users/filterSheet";
 import { toast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";

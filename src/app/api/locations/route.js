@@ -42,7 +42,8 @@ export async function GET(req) {
 
     const searchParams = req.nextUrl.searchParams
     const user = searchParams.get('user')
-
+    const start_date = searchParams.get('start_date')
+    const end_date = searchParams.get('end_date')
 
     try {
 

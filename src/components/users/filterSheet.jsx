@@ -133,7 +133,7 @@ const FilterSheet = ({ visible, onClose, onReturn }) => {
               )}
             />
 
-            <Button className="w-full" type="submit">
+            <Button disabled={loading} className="w-full" type="submit">
               {loading && <Loader2 className="animate-spin" />} Filter
             </Button>
           </form>
