@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import Spinner from "@/components/ui/spinner";
 import { UserSearch } from "@/components/user-search";
+import FilterSheet from "@/components/users/filterSheet";
+import { toast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
 import { MapProvider } from "@/providers/map-provider";
 import {
@@ -11,6 +13,7 @@ import {
   Marker,
   Polyline,
 } from "@react-google-maps/api";
+import { Filter } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useState } from "react";
 
@@ -24,6 +27,7 @@ export default function Page() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const { theme } = useTheme();
+  const [filterVisible, setFilterVisible] = useState(false);
 
   const [defaultMapOptions, setDefaultMapOptions] = useState({
     zoomControl: true,
@@ -47,16 +51,27 @@ export default function Page() {
     }
   }, [theme]);
 
-  async function fetchData() {
-    setLoading(true);
-    axios
-      .get(`/locations?user=${selectedUser}`)
-      .then((response) => {
-        setData(response.data);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+  async function fetchData(start, end, user) {
+   
+    if (!start || !end || !user) {
+        toast({
+            title: "User is required",
+            variant: "destructive",
+          });
+      return;
+    }
+    return new Promise((resolve) => {
+      setLoading(true);
+      axios
+        .get(`/locations?start_date=${start}&end_date=${end}&user=${user}`)
+        .then((response) => {
+          setData(response.data);
+        })
+        .finally(() => {
+          setLoading(false);
+          resolve();
+        });
+    });
   }
 
   const MapWithPath = useCallback(
@@ -73,7 +88,7 @@ export default function Page() {
       const center = path[1];
 
       return (
-        <div className="flex flex-1 flex-row gap-4">
+        <div className="flex flex-1 flex-col gap-4 sm:flex-row overflow-y-auto">
           <MapProvider>
             <GoogleMap
               mapContainerStyle={containerStyle}
@@ -125,7 +140,7 @@ export default function Page() {
               )}
             </GoogleMap>
           </MapProvider>
-          <div className="flex flex-col gap-4 overflow-y-auto w-[400px] max-h-[70vh]">
+          <div className="flex flex-col gap-4 overflow-y-auto w-full h-[500px] sm:w-[400px] sm:h-[80vh]">
             {data.map((item, index) => {
               let labelText = "";
               if (index === 0) {
@@ -166,21 +181,33 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex flex-row justify-between items-center">
+      <div className="flex  flex-row justify-between items-center flex-wrap gap-2">
         <Heading title="Map record" description="View user locations record" />
-        <div className="flex flex-row gap-2">
-          <div className="w-[300px]">
-            <UserSearch value={selectedUser} onReturn={setSelectedUser} />
-          </div>
-          <Button disabled={!selectedUser} onClick={fetchData}>
-            {loading && <Spinner />}
-            Check
-          </Button>
+        <div>
+        <Button
+          onClick={() => setFilterVisible(true)}
+          variant="ghost"
+          className="p-0 w-8"
+        >
+          <Filter />
+        </Button>
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 max-h-[90vh] overflow-y-auto pr-2"></div>
+      {/* <div className="flex flex-col gap-4 h-auto lg:max-h-[90vh] overflow-y-auto pr-2"></div> */}
       {data.length > 0 && <MapWithPath data={data} />}
+
+      <FilterSheet
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        onReturn={async (val) => {
+          await fetchData(
+            val.start.toISOString(),
+            val.end.toISOString(),
+            val.user
+          );
+        }}
+      />
     </div>
   );
 }

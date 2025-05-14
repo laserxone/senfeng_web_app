@@ -44,14 +44,13 @@ export default function Page() {
   }, [UserState?.value?.data]);
 
   async function fetchData(start, end, user = null) {
-    return new Promise((res, rej) => {
+    return new Promise((res, ) => {
       axios
         .get(
           `/attendance?start_date=${start}&end_date=${end}&user=${user || ""}`
         )
         .then((response) => {
           if (response.data.length > 0) {
-          
             const apiData = response.data.map((item) => {
               let status = "Absent";
 
@@ -73,8 +72,8 @@ export default function Page() {
                 status,
               };
             });
-            console.log(apiData);
-            setData(apiData);
+            const convertedData = generateAttendanceData(apiData, start, end);
+            setData(convertedData);
           } else {
             setData([]);
           }
@@ -86,6 +85,63 @@ export default function Page() {
           res(true);
         });
     });
+  }
+
+  function generateAttendanceData(rawData, start, end) {
+    const start_date = moment(start);
+    const end_date = moment(end);
+
+    const uniqueUsers = Array.from(
+      new Set(rawData.map((item) => item.user_email))
+    );
+
+    const datesInMonth = [];
+    let current = moment(start_date);
+    while (current.isSameOrBefore(end_date)) {
+      datesInMonth.push(current.format("YYYY-MM-DD"));
+      current.add(1, "day");
+    }
+
+    const finalData = [];
+
+    const userMap = {};
+    rawData.forEach((item) => {
+      if (!userMap[item.user_email]) {
+        userMap[item.user_email] = item.user_name;
+      }
+    });
+
+    uniqueUsers.forEach((user) => {
+      datesInMonth.forEach((date) => {
+        const match = rawData.find(
+          (item) =>
+            item.user_email === user &&
+            moment(item.date).format("YYYY-MM-DD") === date
+        );
+
+        finalData.push({
+          date: date,
+          user_email: user,
+          user_name: match?.user_name || userMap[user] || null,
+          status: match?.status || "Absent",
+          time_in: match?.time_in || null,
+          time_out: match?.time_out || null,
+          note_time_in: match?.note_time_in || null,
+          note_time_out: match?.note_time_out || null,
+          image_time_in: match?.image_time_in || null,
+          image_time_out: match?.image_time_out || null,
+          location_time_in: match?.location_time_in || null,
+          location_time_out: match?.location_time_out || null,
+        });
+      });
+    });
+
+    finalData.sort((a, b) => new Date(b.date) - new Date(a.date));
+    const today = moment().format("YYYY-MM-DD");
+
+    const filteredData = finalData.filter((item) => item.date <= today);
+
+    return filteredData;
   }
 
   const columns = [

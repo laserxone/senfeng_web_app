@@ -1,4 +1,5 @@
 "use client";
+import AppCalendar from "@/components/appCalendar";
 import { AreaStats } from "@/components/charts/area_stats/page";
 import { BarStats } from "@/components/charts/bar_stats/page";
 import { Stats } from "@/components/charts/pie_stats/page";
@@ -43,7 +44,7 @@ export default function Page() {
       axios.get(`/customer`).then((response) => {
         const customerList = response.data;
         const newArray = mergeArrays(customerList, PakCities);
-    
+
         setCustomers(newArray);
       });
     } catch (error) {
