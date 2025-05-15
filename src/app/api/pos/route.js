@@ -95,7 +95,7 @@ export async function PUT(req) {
         const lastIdResult = await pool.query("SELECT MAX(id) AS last_id FROM savedinvoices");
         const invoicenumber = Number(lastIdResult.rows[0]?.last_id || 0) + 1
         const generatedInvoiceNumber = `${moment().format("YYYYMMDD")}-${invoicenumber}`
-       const newSavedInvoice = await pool.query(
+       await pool.query(
             `INSERT INTO savedinvoices 
             (name, company, phone, address, manager, invoicenumber, fields, payment) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
