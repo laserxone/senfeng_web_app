@@ -86,3 +86,50 @@ export const FeedbackTakenCard = ({ value, remaining, total }) => {
     </div>
   );
 };
+
+
+export const VisitsDoneCard = ({ value, remaining, total }) => {
+  return (
+    <div
+      className="shadow-md border border-gray-200 rounded-lg bg-white p-4"
+      style={{ height: "fit-content" }}
+    >
+      {/* Header */}
+      <div className="flex flex-row items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            className="h-4 w-4 text-gray-500"
+          >
+            <path d="M3 12h3l3 8 4-16 3 8h4" />
+          </svg>
+          <span className="text-xs font-medium text-gray-600">
+            Visits Done This Month
+          </span>
+        </div>
+        <div className="flex items-baseline space-x-1 text-gray-900 ml-4">
+          <span className="text-2xl font-extrabold">{value}</span>
+          <span className="text-sm font-medium text-gray-600">/ {total}</span>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="mt-1">
+        <p
+          className={`text-xs font-medium ${
+            remaining === 0 ? "text-green-500" : "text-red-500"
+          } flex items-center`}
+        >
+          {remaining === 0 ? "No" : remaining} visits remaining
+        </p>
+      </div>
+    </div>
+  );
+};
+

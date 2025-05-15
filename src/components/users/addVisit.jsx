@@ -363,16 +363,7 @@ export default function VisitTab({
                     ) : (
                       <MapPinOff className="text-red-500 h-5 w-5 opacity-50" />
                     )}
-                    {feedback.signature ? (
-                      <Pencil
-                        onClick={() => {
-                          setSelectedSignature(feedback.signature);
-                        }}
-                        className="w-5 cursor-pointer hover:opacity-50"
-                      />
-                    ) : (
-                      <PencilOff className="h-5 w-5 opacity-50" />
-                    )}
+                     {feedback.signature && <MyImg img={feedback.signature} />}
                     {feedback.image && <MyImg img={feedback.image} />}
                   </div>
                 </CardContent>
@@ -483,7 +474,7 @@ export const MyImg = ({ img }) => {
 
   return (
     <Zoom>
-      <img alt="visit image" src={localImage} width="100" />
+      <img alt="visit image" src={localImage} className="h-[100px] w-auto object-contain" />
     </Zoom>
   );
 };

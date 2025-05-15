@@ -3,8 +3,8 @@ import AutoScrollMembers from "@/components/autoScroll";
 import {
   FeedbackTakenCard,
   MachinesSoldCard,
+  VisitsDoneCard,
 } from "@/components/dashboardCards";
-import CustomerEmployee from "@/components/users/customer";
 import {
   Accordion,
   AccordionContent,
@@ -19,31 +19,40 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import VisitTab from "@/components/users/addVisit";
 import Attendance from "@/components/users/attendance";
+import CustomerEmployee from "@/components/users/customer";
 import Reimbursement from "@/components/users/Reimbursement";
-import { BASE_URL } from "@/constants/data";
 import { GetProfileImage } from "@/lib/getProfileImage";
 import { UserContext } from "@/store/context/UserContext";
 
+import SalaryRecord from "@/components/users/SalaryRecord";
+import axios from "@/lib/axios";
 import { AlertCircle, CheckCircle, Clock } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
-import SalaryRecord from "@/components/users/SalaryRecord";
-import axios from "@/lib/axios";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import Spinner from "@/components/ui/spinner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function Page() {
   const [data, setData] = useState();
   const { state: UserState } = useContext(UserContext);
-  const [totalSales, setTotalSales] = useState(0);
   const [customers, setCustomers] = useState([]);
   const [visitData, setVisitData] = useState([]);
   const [extraData, setExtraData] = useState({});
   const [selectedOption, setSelectedOption] = useState("");
   const [reimbursementData, setReimbursementData] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
-  const router = useRouter();
+
+  const [callData, setCallData] = useState([]);
 
   useEffect(() => {
     if (UserState.value.data?.id) {
@@ -55,8 +64,24 @@ export default function Page() {
       fetchExtraCustomerOptions();
       fetchReimbursementData(startDate, endDate);
       fetchAttendanceData(startDate, endDate);
+      fetchCallData(startDate, endDate);
     }
   }, [UserState]);
+
+  async function fetchCallData(startDate, endDate) {
+    return new Promise((resolve) => {
+      axios
+        .get(
+          `/user/${UserState.value.data?.id}/call?start_date=${startDate}&end_date=${endDate}`
+        )
+        .then((response) => {
+          setCallData(response.data);
+        })
+        .finally(() => {
+          resolve();
+        });
+    });
+  }
 
   async function fetchReimbursementData(startDate, endDate) {
     return new Promise((resolve, reject) => {
@@ -102,19 +127,15 @@ export default function Page() {
   }
 
   async function fetchData() {
-    axios.get(`/user/${UserState.value.data?.id}`).then((response) => {
-      setData(response.data);
-      if (response.data.customers && response.data.customers.length > 0) {
-        let total = 0;
-        response.data.customers.map((eachCustomer) => {
-          if (eachCustomer.sales && eachCustomer.sales.length > 0) {
-            eachCustomer.sales.map((eachSale) => {
-              total = total + Number(eachSale.price);
-            });
-          }
+    return new Promise((resolve) => {
+      axios
+        .get(`/user/${UserState.value.data?.id}`)
+        .then((response) => {
+          setData(response.data);
+        })
+        .finally(() => {
+          resolve();
         });
-        setTotalSales(total);
-      }
     });
   }
 
@@ -157,6 +178,7 @@ export default function Page() {
           const startDate = moment().startOf("month").toISOString();
           const endDate = moment().endOf("month").toISOString();
           await fetchVisitData(startDate, endDate);
+          await fetchData()
         }}
         onFetchData={async (start, end, userId) => {
           await fetchVisitData(start, end);
@@ -237,6 +259,24 @@ export default function Page() {
     );
   }, [attendanceData]);
 
+  const RenderCallTab = useCallback(() => {
+    return (
+      <Card>
+        <CardContent className="pt-2">
+          <Calls
+            data={callData}
+            onRefresh={async () => {
+              const startDate = moment().startOf("month").toISOString();
+              const endDate = moment().endOf("month").toISOString();
+              await fetchData();
+              await fetchCallData(startDate, endDate);
+            }}
+          />
+        </CardContent>
+      </Card>
+    );
+  }, [callData]);
+
   return (
     <div className="flex flex-1 gap-5">
       <div className="flex flex-1 flex-col">
@@ -268,6 +308,13 @@ export default function Page() {
             total={data?.totalCustomers || 0}
             remaining={data?.remainingFeedbacks || 0}
           />
+          {UserState.value.data?.designation === "Sales" && (
+            <VisitsDoneCard
+              value={data?.totalVisits || 0}
+              total={15}
+              remaining={15 - data?.totalVisits || 0}
+            />
+          )}
         </div>
 
         <Tabs
@@ -281,10 +328,10 @@ export default function Page() {
             {/* <TabsTrigger value="commission">Commission</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger> */}
             <TabsTrigger value="visit">Visit</TabsTrigger>
+            <TabsTrigger value="calls">Calls</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
-            <TabsTrigger value="location">Location</TabsTrigger>
-            <TabsTrigger value="calls">Calls</TabsTrigger>
+            {/* <TabsTrigger value="location">Location</TabsTrigger> */}
           </TabsList>
 
           <TabsContent value="newCustomers">
@@ -304,12 +351,16 @@ export default function Page() {
           <TabsContent value="visit">
             <RenderVisitTab />
           </TabsContent>
+
           <TabsContent value="salary">
             <Card>
               <CardContent className="pt-2">
                 <SalaryRecord />
               </CardContent>
             </Card>
+          </TabsContent>
+          <TabsContent value="calls">
+            <RenderCallTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -515,6 +566,114 @@ function CustomersTab({ data }) {
           )}
         </Accordion>
       </ScrollArea>
+    </div>
+  );
+}
+
+function Calls({ data, onRefresh }) {
+  const [visible, setVisible] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [feedback, setFeedback] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { state: UserState } = useContext(UserContext);
+  const [satisfactory, setSatisfactory] = useState(false);
+
+  async function handleSaveFeedback() {
+    setLoading(true);
+    axios
+      .post(`/feedback`, {
+        feedback: feedback,
+        top_follow: false,
+        type: feedback,
+        customer_id: selectedCustomer?.id,
+        user_id: UserState.value.data?.id,
+        status: satisfactory ? "Satisfactory" : "Unsatisfactory",
+      })
+      .then(async () => {
+        await onRefresh();
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }
+
+  const RenderEachCall = ({ call }) => {
+    return (
+      <Card key={call.id} className="w-full">
+        <CardContent className="py-4 px-6">
+          <div className="grid grid-cols-12 gap-4 items-center">
+            {/* Name / Owner */}
+            <div className="col-span-4 font-semibold text-lg truncate">
+              {call.name || call.owner}
+            </div>
+
+            {/* Phone Number(s) */}
+            <div className="col-span-6 text-sm text-muted-foreground truncate">
+              {call.number.join(", ")}
+            </div>
+
+            {/* Button */}
+            <div className="col-span-2 text-right">
+              <Button
+                onClick={() => {
+                  setSelectedCustomer(call);
+                  setVisible(true);
+                }}
+                variant="secondary"
+                className="w-full sm:w-auto"
+              >
+                Call
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="h-[650px]">
+      <ScrollArea className="h-[650px] p-5">
+        {data.length === 0 ? (
+          <Label>No feedbacks remaining</Label>
+        ) : (
+          <div className="space-y-3">
+            {data.map((call) => (
+              <RenderEachCall call={call} key={call.id} />
+            ))}
+          </div>
+        )}
+      </ScrollArea>
+
+      <Dialog open={visible} onOpenChange={setVisible}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Feedback</DialogTitle>
+            <div className="flex flex-1 flex-col gap-2">
+              <Input
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+              />
+              <div className="flex flex-row items-center gap-2">
+                <h1>Satisfactory?</h1>
+                <Checkbox
+                  checked={satisfactory}
+                  onCheckedChange={(checked) => {
+                    setSatisfactory(checked);
+                  }}
+                />
+              </div>
+              <Button
+                onClick={() => {
+                  handleSaveFeedback();
+                }}
+              >
+                {loading && <Spinner />} Save
+              </Button>
+            </div>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

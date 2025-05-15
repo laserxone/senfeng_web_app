@@ -47,13 +47,13 @@ export async function GET(req, { params }) {
     const firstDayOfLastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
     const lastDayOfLastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
 
-    
+
     const machinesSoldQuery = `
       SELECT COUNT(*) AS total_machines_sold 
       FROM sale 
       WHERE created_at BETWEEN $1 AND $2 AND sell_by = $3
     `;
-    
+
     const currentMonthSalesResult = await pool.query(machinesSoldQuery, [
       firstDayOfCurrentMonth,
       lastDayOfCurrentMonth,
@@ -61,7 +61,7 @@ export async function GET(req, { params }) {
     ]);
     const machinesSoldThisMonth = parseInt(currentMonthSalesResult.rows[0].total_machines_sold, 10) || 0;
 
-    
+
     const lastMonthSalesResult = await pool.query(machinesSoldQuery, [
       firstDayOfLastMonth,
       lastDayOfLastMonth,
@@ -69,10 +69,10 @@ export async function GET(req, { params }) {
     ]);
     const machinesSoldLastMonth = parseInt(lastMonthSalesResult.rows[0].total_machines_sold, 10) || 0;
 
-   
+
     let percentageChange = 0;
     if (machinesSoldLastMonth === 0) {
-      percentageChange = machinesSoldThisMonth > 0 ? 100 : 0; 
+      percentageChange = machinesSoldThisMonth > 0 ? 100 : 0;
     } else {
       percentageChange = ((machinesSoldThisMonth - machinesSoldLastMonth) / machinesSoldLastMonth) * 100;
     }
@@ -93,6 +93,14 @@ export async function GET(req, { params }) {
     // Calculate remaining feedbacks
     const remainingFeedbacks = totalCustomers - feedbacksTakenThisMonth;
 
+    const visitQuery = await pool.query(`
+      SELECT COUNT(*) AS total_visits
+      FROM visit
+      WHERE created_at BETWEEN $1 AND $2
+      AND user_id = $3`, [firstDayOfCurrentMonth, lastDayOfCurrentMonth, id])
+
+    let totalVisits = 0
+    totalVisits = parseInt(visitQuery.rows[0].total_visits, 10) || 0;
     const allTasks = await pool.query(
       `SELECT * FROM task WHERE assigned_to = $1 AND status = 'Pending'`, [id]
     )
@@ -105,7 +113,8 @@ export async function GET(req, { params }) {
       machinesSoldLastMonth,
       feedbacksTakenThisMonth,
       remainingFeedbacks,
-      allTasks : allTasks.rows.length,
+      totalVisits,
+      allTasks: allTasks.rows.length,
       percentageChange: percentageChange.toFixed(2),
       customers: customers.map((customer) => ({
         ...customer,
