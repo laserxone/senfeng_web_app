@@ -27,7 +27,6 @@ import {
   Trash,
   Wrench,
 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
 import {
   memo,
   useCallback,
@@ -64,6 +63,7 @@ import {
 } from "@/components/ui/tooltip";
 import { storage } from "@/config/firebase";
 import { Colors } from "@/constants/data";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
 import { debounce } from "@/lib/debounce";
@@ -73,11 +73,11 @@ import { UserContext } from "@/store/context/UserContext";
 import { pdf } from "@react-pdf/renderer";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
+import Image from "next/image";
 import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import "pdfjs-dist/build/pdf.worker";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Machine({ id }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -150,148 +150,176 @@ export default function Machine({ id }) {
     }
   }
 
-  const columns = [
-    {
-      accessorKey: "track",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Payment
-            <ArrowUpDown />
-          </Button>
-        );
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: "track",
+        filterFn: "includesString",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              Payment
+              <ArrowUpDown />
+            </Button>
+          );
+        },
+        cell: ({ row }) => <div className="ml-2">{row.getValue("track")}</div>,
       },
-      cell: ({ row }) => <div className="ml-2">{row.getValue("track")}</div>,
-    },
 
-    {
-      accessorKey: "transaction_date",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Transaction Date
-            <ArrowUpDown />
-          </Button>
-        );
+      {
+        accessorKey: "transaction_date",
+        filterFn: "includesString",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              Transaction Date
+              <ArrowUpDown />
+            </Button>
+          );
+        },
+        cell: ({ row }) => (
+          <div>
+            {row.getValue("transaction_date")
+              ? moment(new Date(row.getValue("transaction_date"))).format(
+                  "YYYY-MM-DD"
+                )
+              : ""}
+          </div>
+        ),
       },
-      cell: ({ row }) => (
-        <div>
-          {row.getValue("transaction_date")
-            ? moment(new Date(row.getValue("transaction_date"))).format(
-                "YYYY-MM-DD"
-              )
-            : ""}
-        </div>
-      ),
-    },
 
-    {
-      accessorKey: "clearance_date",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      {
+        accessorKey: "clearance_date",
+        filterFn: "includesString",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              Clearance Date
+              <ArrowUpDown />
+            </Button>
+          );
+        },
+        cell: ({ row }) => (
+          <div
+            style={{ color: !row.getValue("clearance_date") ? "red" : "green" }}
           >
-            Clearance Date
-            <ArrowUpDown />
-          </Button>
-        );
+            {row.getValue("clearance_date")
+              ? moment(new Date(row.getValue("clearance_date"))).format(
+                  "YYYY-MM-DD"
+                )
+              : "Pending"}
+          </div>
+        ),
       },
-      cell: ({ row }) => (
-        <div
-          style={{ color: !row.getValue("clearance_date") ? "red" : "green" }}
-        >
-          {row.getValue("clearance_date")
-            ? moment(new Date(row.getValue("clearance_date"))).format(
-                "YYYY-MM-DD"
-              )
-            : "Pending"}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "amount",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Amount
-            <ArrowUpDown />
-          </Button>
-        );
+      {
+        accessorKey: "amount",
+        filterFn: "includesString",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              Amount
+              <ArrowUpDown />
+            </Button>
+          );
+        },
+        cell: ({ row }) => <div className="ml-2">{row.getValue("amount")}</div>,
       },
-      cell: ({ row }) => <div className="ml-2">{row.getValue("amount")}</div>,
-    },
-    {
-      accessorKey: "note",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Note
-            <ArrowUpDown />
-          </Button>
-        );
+      {
+        accessorKey: "note",
+        filterFn: "includesString",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              Note
+              <ArrowUpDown />
+            </Button>
+          );
+        },
+        cell: ({ row }) => <div>{row.getValue("note")}</div>,
       },
-      cell: ({ row }) => <div>{row.getValue("note")}</div>,
-    },
 
-    {
-      accessorKey: "mode",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Method
-            <ArrowUpDown />
-          </Button>
-        );
+      {
+        accessorKey: "mode",
+        filterFn: "includesString",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              Method
+              <ArrowUpDown />
+            </Button>
+          );
+        },
+        cell: ({ row }) => <div>{row.getValue("mode")}</div>,
       },
-      cell: ({ row }) => <div>{row.getValue("mode")}</div>,
-    },
 
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const currentItem = row.original;
+      {
+        id: "actions",
+        cell: ({ row }) => {
+          const currentItem = row.original;
 
-        return (
-          data?.machine &&
-          !data?.machine?.payment_lock &&
-          editAllowed && (
-            <EditIcon
-              style={{ color: Colors.button }}
-              className="cursor-pointer h-5 w-5"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedPayment(currentItem);
-                setEditPayment(true);
-              }}
-            />
-          )
-        );
+          return (
+            <div className="flex flex-row gap-2 items-center">
+              {currentItem.image && (
+                <div
+                  onClick={() => {
+                    if (currentItem.id) {
+                      setImageURL(currentItem);
+                      setVisible(true);
+                    }
+                  }}
+                >
+                  <MyImg img={currentItem.image} />
+                </div>
+              )}
+
+              {data?.machine && !data?.machine?.payment_lock && editAllowed && (
+                <EditIcon
+                  style={{ color: Colors.button }}
+                  className="cursor-pointer h-5 w-5"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedPayment(currentItem);
+                    setEditPayment(true);
+                  }}
+                />
+              )}
+            </div>
+          );
+        },
       },
-    },
-  ];
+    ],
+    [data, editAllowed]
+  );
 
   async function handleDownloadLedger() {
     let runningBalance = total;
@@ -404,12 +432,7 @@ export default function Machine({ id }) {
             data={payments}
             totalItems={payments.length}
             disableInput={true}
-            onRowClick={(val) => {
-              if (val.id) {
-                setImageURL(val);
-                setVisible(true);
-              }
-            }}
+            onRowClick={(val) => {}}
           />
         </div>
         <EditMachine
@@ -429,7 +452,10 @@ export default function Machine({ id }) {
         <ImageSheet
           editAllowed={editAllowed}
           visible={visible}
-          onClose={() => setVisible(false)}
+          onClose={() => {
+            setVisible(false)
+            setImageURL(null)
+          }}
           img={imageURL?.image || null}
           note={imageURL?.note || null}
           remarks={imageURL?.remarks || null}
@@ -539,19 +565,20 @@ const ClientCard = memo(({ data, payment, machine, manager }) => {
                   Source:{" "}
                   <span className="font-medium">{machine.source || "N/A"}</span>
                 </p>
-                {machine.order_no_arr && machine.order_no_arr.length === 0
-                  ?   <p >
-                  <ClipboardList className="inline h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-                  Order No:{" "}
-                  <span className="font-medium">{"N/A"}</span>
-                </p>
-                  : machine.order_no_arr.map((item, index) => (
-                      <p key={index}>
-                        <ClipboardList className="inline h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-                        Order No:{" "}
-                        <span className="font-medium">{item || "N/A"}</span>
-                      </p>
-                    ))}
+                {machine.order_no_arr && machine.order_no_arr.length === 0 ? (
+                  <p>
+                    <ClipboardList className="inline h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
+                    Order No: <span className="font-medium">{"N/A"}</span>
+                  </p>
+                ) : (
+                  machine.order_no_arr.map((item, index) => (
+                    <p key={index}>
+                      <ClipboardList className="inline h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
+                      Order No:{" "}
+                      <span className="font-medium">{item || "N/A"}</span>
+                    </p>
+                  ))
+                )}
 
                 <p>
                   <ClipboardList className="inline h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
@@ -635,10 +662,11 @@ const ImageSheet = ({
   const [imageOpen, setImageOpen] = useState(false);
   const [localImage, setLocalImage] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const { state: UserState } = useContext(UserContext);
   const { toast } = useToast();
 
+
   useEffect(() => {
+    console.log("call")
     if (img) {
       if (img.includes("http")) {
         setLocalImage(img);
@@ -1076,5 +1104,47 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
         </ScrollArea>
       </DialogContent>
     </Dialog>
+  );
+};
+
+const MyImg = ({ img }) => {
+  const [localImage, setLocalImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!img) {
+      setLocalImage(null);
+      setError(false);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(false);
+
+    if (img.includes("http")) {
+      setLocalImage(img);
+      setLoading(false);
+    } else {
+      getDownloadURL(ref(storage, img))
+        .then((url) => {
+          setLocalImage(url);
+        })
+        .catch(() => {
+          setError(true);
+          setLocalImage(null);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [img]);
+
+  if (loading) return <Spinner />;
+  if (!img || error || !localImage) return <p>No image</p>;
+
+  return (
+    <Image alt="payment image" src={localImage} width={50} height={50} />
   );
 };

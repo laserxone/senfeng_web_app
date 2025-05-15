@@ -444,7 +444,7 @@ const RenderSignature = ({ img }) => {
   );
 };
 
-const MyImg = ({ img }) => {
+export const MyImg = ({ img }) => {
   const [localImage, setLocalImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);

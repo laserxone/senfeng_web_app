@@ -1063,7 +1063,7 @@ const AddItemDialog = ({ visible, onClose, handleDecrease, showOther, setShowOth
 
             </DialogTrigger>
 
-            <DialogContent className="max-w-[90vw] h-[90vh]">
+            <DialogContent className="w-full sm:max-w-[90vw]">
                 <DialogHeader>
                     <DialogTitle>Select Item
                     </DialogTitle>
@@ -1084,10 +1084,9 @@ const AddItemDialog = ({ visible, onClose, handleDecrease, showOther, setShowOth
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 />
-                <ScrollArea>
-
+             
+                <ScrollArea className="h-[70vh]">
                     <div className="flex flex-col gap-5 p-4">
-
 
                         <div className="flex flex-wrap gap-2 justify-center">
                             {stock.filter((item) => clickedLowStock ? item.threshold != null && item.threshold !== undefined && item.threshold <= item.qty : item).filter((item) => item?.name?.toLowerCase().includes(search.toLowerCase())).map((item, index) =>
@@ -1145,6 +1144,7 @@ const AddItemDialog = ({ visible, onClose, handleDecrease, showOther, setShowOth
                     </div>
 
                 </ScrollArea>
+               
                 {/* 
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose}>
