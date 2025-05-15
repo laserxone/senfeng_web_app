@@ -312,7 +312,7 @@ export default function Page() {
             <VisitsDoneCard
               value={data?.totalVisits || 0}
               total={15}
-              remaining={15 - data?.totalVisits || 0}
+             remaining={Math.max(15 - (data?.totalVisits || 0), 0)}
             />
           )}
         </div>
