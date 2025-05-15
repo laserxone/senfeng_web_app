@@ -5,7 +5,7 @@ import axios from 'axios';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { ArrowUpDown, Copy, List, Loader2, Minus, PencilIcon, Plus, Table2 } from 'lucide-react';
 import moment from 'moment';
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { FaGlobe, FaMinusCircle, FaPlus, } from "react-icons/fa";
 import { FaPhone } from 'react-icons/fa6';
 import './Button.css';
@@ -29,6 +29,7 @@ import 'pdfjs-dist/legacy/web/pdf_viewer.css';
 import NotificationBadge from './NotificationBadge';
 import { Checkbox } from '../ui/checkbox';
 import Spinner from '../ui/spinner';
+import { UserContext } from '@/store/context/UserContext';
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -70,6 +71,7 @@ export default function POS() {
     const [reminder, setReminder] = useState([])
     const [warranty, setWarranty] = useState(false)
     const [warrantyYear, setWarrantyYear] = useState(1)
+    const { state: UserState } = useContext(UserContext)
 
 
 
@@ -104,40 +106,49 @@ export default function POS() {
     }
 
     const generatePDF = async () => {
-        handleUpdateStock()
+
         const blob = await pdf(<InvoicePDF companyName={companyName} name={name} phoneNumber={phoneNumber} address={address} manager={manager} nextInvoice={nextInvoice} invoiceItems={invoiceItems} totalAmount={totalAmount} warranty={warranty} warrantyYear={warrantyYear} />).toBlob();
         const url = URL.createObjectURL(blob);
         window.open(url, "_blank");
         setTimeout(() => URL.revokeObjectURL(url), 600000);
+        await handleUpdateStock()
     };
 
     async function handleUpdateStock() {
 
-        const modified = stock.filter((item) => item?.modified)
+        return new Promise((resolve) => {
+            const modified = stock.filter((item) => item?.modified)
 
 
-        axios.put("/api/pos", {
-            entries: modified,
-            name: name,
-            company: companyName,
-            phone: phoneNumber,
-            address: address,
-            manager: manager,
-            invoicenumber: nextInvoice,
-            fields: invoiceItems,
-            payment: checked
+            axios.put("/api/pos", {
+                entries: modified,
+                name: name,
+                company: companyName,
+                phone: phoneNumber,
+                address: address,
+                manager: manager,
+                invoicenumber: nextInvoice,
+                fields: invoiceItems,
+                payment: checked
 
-        }).finally(() => {
-            fetchData()
+            }).finally(async () => {
+                await fetchData()
+                resolve()
+            })
         })
+
+
 
 
     }
 
     useEffect(() => {
-        fetchData();
-        fetchDataCustomer()
-    }, []);
+        if (UserState.value.data?.id) {
+            fetchData();
+            fetchDataCustomer()
+        }
+
+    }, [UserState]);
 
     const fetchData = async () => {
         clearAll()
@@ -921,7 +932,7 @@ const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh }) => {
             },
             cell: ({ row }) => (
                 <RenderPaid row={row}
-                onRefresh={onRefresh}/>
+                    onRefresh={onRefresh} />
             )
         },
 
