@@ -54,7 +54,7 @@ export default function POS() {
     const [showOther, setShowOther] = useState(false)
     const [customers, setCustomers] = useState([])
     const [manager, setManager] = useState("")
-    const [nextInvoice, setNextInvoice] = useState(`${moment().format("YYYYMMDD")}-1`)
+    const [nextInvoice, setNextInvoice] = useState(`xxxxxxxx-xxx`)
     const [filteredCustomers, setFilteredCustomers] = useState([]);
     const [showList, setShowList] = useState(false)
     const [customerLoading, setCustomerLoading] = useState(false)
@@ -107,39 +107,31 @@ export default function POS() {
 
     const generatePDF = async () => {
 
-        const blob = await pdf(<InvoicePDF companyName={companyName} name={name} phoneNumber={phoneNumber} address={address} manager={manager} nextInvoice={nextInvoice} invoiceItems={invoiceItems} totalAmount={totalAmount} warranty={warranty} warrantyYear={warrantyYear} />).toBlob();
+        const invNumber = await handleUpdateStock()
+        const blob = await pdf(<InvoicePDF companyName={companyName} name={name} phoneNumber={phoneNumber} address={address} manager={manager} nextInvoice={invNumber.nextinvoice} invoiceItems={invoiceItems} totalAmount={totalAmount} warranty={warranty} warrantyYear={warrantyYear} />).toBlob();
         const url = URL.createObjectURL(blob);
         window.open(url, "_blank");
+        await fetchData()
+        fetchDataCustomer()
         setTimeout(() => URL.revokeObjectURL(url), 600000);
-        await handleUpdateStock()
+
+
     };
 
     async function handleUpdateStock() {
+        const modified = stock.filter((item) => item?.modified);
+        const response = await axios.put("/api/pos", {
+            entries: modified,
+            name: name,
+            company: companyName,
+            phone: phoneNumber,
+            address: address,
+            manager: manager,
+            fields: invoiceItems,
+            payment: checked
+        });
 
-        return new Promise((resolve) => {
-            const modified = stock.filter((item) => item?.modified)
-
-
-            axios.put("/api/pos", {
-                entries: modified,
-                name: name,
-                company: companyName,
-                phone: phoneNumber,
-                address: address,
-                manager: manager,
-                invoicenumber: nextInvoice,
-                fields: invoiceItems,
-                payment: checked
-
-            }).finally(async () => {
-                await fetchData()
-                resolve()
-            })
-        })
-
-
-
-
+        return response.data;
     }
 
     useEffect(() => {
@@ -162,9 +154,9 @@ export default function POS() {
                         setStock([...resultedData]);
 
                     }
-                    if (response.data?.lastInventoryId) {
-                        setNextInvoice(`${moment().format("YYYYMMDD")}-${response.data?.lastInventoryId + 1}`)
-                    }
+                    // if (response.data?.lastInventoryId) {
+                    //     setNextInvoice(`${moment().format("YYYYMMDD")}-${response.data?.lastInventoryId + 1}`)
+                    // }
 
                     if (response.data?.reminders) {
 
@@ -303,7 +295,7 @@ export default function POS() {
         setOther("")
         setShowOther(false)
         setManager('')
-        setNextInvoice("")
+        setNextInvoice("xxxxxxxx-xxx")
     }
 
     const handlePhoneChange = (e) => {
