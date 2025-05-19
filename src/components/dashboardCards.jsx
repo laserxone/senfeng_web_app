@@ -1,42 +1,56 @@
+import { useState } from "react";
 
-export const MachinesSoldCard = ({ value, percentage }) => {
+export const MachinesSoldCard = ({ value, percentage, onClick }) => {
+
   return (
-    <div className="shadow-md border border-gray-200 rounded-lg bg-white p-4" style={{height:'fit-content'}}>
-    {/* Header */}
-    <div className="flex flex-row items-center justify-between">
-      <div className="flex items-center space-x-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          className="h-4 w-4 text-gray-500"
-        >
-          <rect width="20" height="14" x="2" y="5" rx="2" />
-          <path d="M2 10h20" />
-        </svg>
-        <span className="text-xs font-medium text-gray-600">
-          Machines Sold This Month
-        </span>
-      </div>
-      <div className="text-2xl font-bold text-gray-900 ml-4">{value}</div>
-    </div>
-  
-    {/* Content */}
-    <div className="mt-1">
-      <p
-        className={`text-xs font-medium ${
-          percentage >= 0 ? "text-green-500" : "text-red-500"
-        } flex items-center`}
+    <>
+      <div
+        className="shadow-md border border-gray-200 rounded-lg bg-white p-4"
+        style={{ height: "fit-content" }}
       >
-        {percentage >= 0 ? "▲" : "▼"} {Math.abs(percentage)}% from last month
-      </p>
-    </div>
-  </div>
-  
+        {/* Header */}
+        <div className="flex flex-row items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              className="h-4 w-4 text-gray-500"
+            >
+              <rect width="20" height="14" x="2" y="5" rx="2" />
+              <path d="M2 10h20" />
+            </svg>
+            <span className="text-xs font-medium text-gray-600">
+              Machines Sold This Month
+            </span>
+          </div>
+          <div
+            onClick={onClick}
+            className="text-2xl font-bold text-gray-900 ml-4 hover:underline cursor-pointer"
+          >
+            {value}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="mt-1">
+          <p
+            className={`text-xs font-medium ${
+              percentage >= 0 ? "text-green-500" : "text-red-500"
+            } flex items-center`}
+          >
+            {percentage >= 0 ? "▲" : "▼"} {Math.abs(percentage)}% from last
+            month
+          </p>
+        </div>
+      </div>
+
+   
+    </>
   );
 };
 
@@ -87,7 +101,6 @@ export const FeedbackTakenCard = ({ value, remaining, total }) => {
   );
 };
 
-
 export const VisitsDoneCard = ({ value, remaining, total }) => {
   return (
     <div
@@ -132,4 +145,3 @@ export const VisitsDoneCard = ({ value, remaining, total }) => {
     </div>
   );
 };
-

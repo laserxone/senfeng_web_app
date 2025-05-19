@@ -51,8 +51,9 @@ export default function Page() {
   const [selectedOption, setSelectedOption] = useState("");
   const [reimbursementData, setReimbursementData] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
-
   const [callData, setCallData] = useState([]);
+  const [machineData, setMachineData] = useState([]);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (UserState.value.data?.id) {
@@ -178,7 +179,7 @@ export default function Page() {
           const startDate = moment().startOf("month").toISOString();
           const endDate = moment().endOf("month").toISOString();
           await fetchVisitData(startDate, endDate);
-          await fetchData()
+          await fetchData();
         }}
         onFetchData={async (start, end, userId) => {
           await fetchVisitData(start, end);
@@ -280,7 +281,7 @@ export default function Page() {
   return (
     <div className="flex flex-1 gap-5">
       <div className="flex flex-1 flex-col">
-        <div className="flex flex-1 justify-between mb-8 flex-wrap">
+        <div className="flex flex-1 justify-between mb-8 flex-wrap gap-2">
           <Link
             href={
               UserState.value.data?.base_route
@@ -302,6 +303,10 @@ export default function Page() {
           <MachinesSoldCard
             value={data?.machinesSoldThisMonth || 0}
             percentage={data?.percentageChange || 0}
+            onClick={() => {
+              setMachineData(data?.machinesSoldThisMonthDetail || []);
+              setVisible(true);
+            }}
           />
           <FeedbackTakenCard
             value={data?.feedbacksTakenThisMonth || 0}
@@ -312,7 +317,7 @@ export default function Page() {
             <VisitsDoneCard
               value={data?.totalVisits || 0}
               total={15}
-             remaining={Math.max(15 - (data?.totalVisits || 0), 0)}
+              remaining={Math.max(15 - (data?.totalVisits || 0), 0)}
             />
           )}
         </div>
@@ -366,6 +371,36 @@ export default function Page() {
       </div>
 
       {customers.length > 0 && <AutoScrollMembers customers={customers} />}
+
+      <Dialog open={visible} onOpenChange={setVisible}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Machines Sold</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[70vh]">
+            <div className="flex flex-1 flex-col gap-2">
+              <div className="grid grid-cols-3 font-semibold border-b pb-2">
+                <div>Serial No</div>
+                <div>Company</div>
+                <div>Owner</div>
+              </div>
+
+              {machineData.map((item, index) => (
+                <Link
+                  key={index}
+                  target="_blank"
+                  href={`/${UserState.value.data?.base_route}/member/${item.customer_id}/${item.id}`}
+                  className="grid grid-cols-3 hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded"
+                >
+                  <div>{item.serial_no}</div>
+                  <div>{item.customer_name || "-"}</div>
+                  <div>{item.customer_owner || "-"}</div>
+                </Link>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

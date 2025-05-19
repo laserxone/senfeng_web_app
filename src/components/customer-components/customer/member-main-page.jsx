@@ -1,5 +1,5 @@
 "use client";
-import { ArrowUpDown, Trash2 } from "lucide-react";
+import { ArrowUpDown, Filter, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useContext, useEffect, useState } from "react";
 import ConfimationDialog from "@/components/alert-dialog";
@@ -21,6 +21,8 @@ import { UserContext } from "@/store/context/UserContext";
 import { startHolyLoader } from "holy-loader";
 import moment from "moment";
 import { useRouter } from "next/navigation";
+import Spinner from "@/components/ui/spinner";
+import FilterSheet from "@/components/users/filterSheet";
 
 const tableHeader = [
   {
@@ -64,6 +66,8 @@ export default function MemberMainPage() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [numCount, setNumCount] = useState({});
   const [loading, setLoading] = useState(true)
+  const [resetLoading, setResetLoading] = useState(false);
+  const [filterVisible, setFilterVisible] = useState(false);
 
   useEffect(() => {
 
@@ -72,10 +76,10 @@ export default function MemberMainPage() {
     })
   }, [UserState.value.data]);
 
-  async function fetchData() {
+  async function fetchData(startDate, endDate, user) {
     return new Promise((resolve, reject) => {
       axios
-        .get(`/customer/machines`)
+        .get(`/customer/machines?start_date=${startDate || ""}&end_date=${endDate || ""}&user=${user || ""}`)
         .then((response) => {
           const apiData = response.data;
           const temp = apiData
@@ -356,20 +360,10 @@ export default function MemberMainPage() {
               );
             }
           }}
-          // filter={true}
-          // onFilterClick={() => setFilterVisible(true)}
         >
           <div className=" flex justify-between flex-wrap">
             <div className="flex gap-4 flex-wrap">
-              {/* <div className="flex items-center gap-2">
-
-              <Label>Members?</Label>
-              <Checkbox
-                checked={member}
-                onCheckedChange={(checked) => setMember(checked)}
-              />
-              </div> */}
-
+            
               {(UserState.value.data?.designation === "Owner" ||
                 UserState.value.data?.full_access) && (
                 <>
@@ -424,6 +418,26 @@ export default function MemberMainPage() {
                   </Button>
                 </>
               )}
+              
+               <div className="flex gap-4">
+            <Button
+              onClick={() => setFilterVisible(true)}
+              variant="ghost"
+              className="p-0 w-8"
+            >
+              <Filter />
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                setResetLoading(true);
+                await fetchData();
+                setResetLoading(false);
+              }}
+            >
+              {resetLoading && <Spinner />} Reset
+            </Button>
+          </div>
             </div>
           </div>
         </PageTable>
@@ -436,6 +450,18 @@ export default function MemberMainPage() {
         description={"Your action will remove customer from the system"}
         onPressYes={() => handleDelete(selectedCustomerId)}
         onPressCancel={() => setShowConfirmation(false)}
+      />
+
+         <FilterSheet
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        onReturn={async (val) => {
+          await fetchData(
+            val.start.toISOString(),
+            val.end.toISOString(),
+            val.user
+          );
+        }}
       />
     </PageContainer>
   );

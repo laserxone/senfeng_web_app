@@ -51,7 +51,7 @@ export async function GET(req, { params }) {
     const machinesSoldQuery = `
       SELECT COUNT(*) AS total_machines_sold 
       FROM sale 
-      WHERE created_at BETWEEN $1 AND $2 AND sell_by = $3
+      WHERE contract_date BETWEEN $1 AND $2 AND sell_by = $3
     `;
 
     const currentMonthSalesResult = await pool.query(machinesSoldQuery, [
@@ -60,6 +60,26 @@ export async function GET(req, { params }) {
       id,
     ]);
     const machinesSoldThisMonth = parseInt(currentMonthSalesResult.rows[0].total_machines_sold, 10) || 0;
+
+    const saleDetailsQuery = `
+  SELECT 
+    s.id, 
+    s.customer_id, 
+    s.contract_date,
+    s.serial_no,
+    c.name AS customer_name, 
+    c.owner AS customer_owner
+  FROM sale s
+  LEFT JOIN customer c ON s.customer_id = c.id
+  WHERE s.contract_date BETWEEN $1 AND $2 
+    AND s.sell_by = $3
+`;
+
+    const saleDetailQueryResult = await pool.query(saleDetailsQuery, [
+      firstDayOfCurrentMonth,
+      lastDayOfCurrentMonth,
+      id,
+    ])
 
 
     const lastMonthSalesResult = await pool.query(machinesSoldQuery, [
@@ -111,6 +131,7 @@ export async function GET(req, { params }) {
       totalSales,
       machinesSoldThisMonth,
       machinesSoldLastMonth,
+      machinesSoldThisMonthDetail : saleDetailQueryResult.rows,
       feedbacksTakenThisMonth,
       remainingFeedbacks,
       totalVisits,

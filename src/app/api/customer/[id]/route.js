@@ -23,7 +23,7 @@ export async function GET(req, { params }) {
     const customer = customerResult.rows[0];
 
     // 2. Get all machines related to this customer
-    const machinesQuery = `SELECT * FROM sale WHERE customer_id = $1 ORDER BY created_at ASC`;
+    const machinesQuery = `SELECT * FROM sale WHERE customer_id = $1 ORDER BY contract_date ASC`;
     const machinesResult = await pool.query(machinesQuery, [id]);
 
     let machines = machinesResult.rows;
