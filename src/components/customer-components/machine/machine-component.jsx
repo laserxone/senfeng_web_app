@@ -78,6 +78,7 @@ import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import "pdfjs-dist/build/pdf.worker";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
+import { downloadCustomerZip } from "@/components/downloadzip";
 
 export default function Machine({ id }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -95,6 +96,7 @@ export default function Machine({ id }) {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const { state: UserState } = useContext(UserContext);
   const [editAllowed, setEditAllowed] = useState(false);
+  const [zipDownloading, setZipDwonloading] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -401,6 +403,17 @@ export default function Machine({ id }) {
                 Download Ledger
               </Button>
             )}
+            {editAllowed && (
+              <Button
+                onClick={async () => {
+                  setZipDwonloading(true);
+                  await downloadCustomerZip(data);
+                  setZipDwonloading(false);
+                }}
+              >
+                {zipDownloading && <Spinner />} Download ZIP
+              </Button>
+            )}
 
             <AddPayment
               customer_id={data?.customer?.id}
@@ -453,8 +466,8 @@ export default function Machine({ id }) {
           editAllowed={editAllowed}
           visible={visible}
           onClose={() => {
-            setVisible(false)
-            setImageURL(null)
+            setVisible(false);
+            setImageURL(null);
           }}
           img={imageURL?.image || null}
           note={imageURL?.note || null}
@@ -664,9 +677,8 @@ const ImageSheet = ({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const { toast } = useToast();
 
-
   useEffect(() => {
-    console.log("call")
+    console.log("call");
     if (img) {
       if (img.includes("http")) {
         setLocalImage(img);
@@ -1144,7 +1156,5 @@ const MyImg = ({ img }) => {
   if (loading) return <Spinner />;
   if (!img || error || !localImage) return <p>No image</p>;
 
-  return (
-    <Image alt="payment image" src={localImage} width={50} height={50} />
-  );
+  return <Image alt="payment image" src={localImage} width={50} height={50} />;
 };
