@@ -1,4 +1,5 @@
 import pool from "@/config/db";
+import moment from "moment";
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
@@ -40,12 +41,16 @@ export async function GET(req, { params }) {
       payments = paymentsQuery.rows;
     }
 
-    const currentDate = new Date();
-    const firstDayOfCurrentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const lastDayOfCurrentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-    const firstDayOfLastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-    const lastDayOfLastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
+    const currentDate = moment();
+
+    // Current month
+    const firstDayOfCurrentMonth = currentDate.clone().startOf('month').startOf('day'); // 1st of month at 00:00:00
+    const lastDayOfCurrentMonth = currentDate.clone().endOf('month').endOf('day');      // Last of month at 23:59:59
+
+    // Last month
+    const firstDayOfLastMonth = currentDate.clone().subtract(1, 'month').startOf('month').startOf('day');
+    const lastDayOfLastMonth = currentDate.clone().subtract(1, 'month').endOf('month').endOf('day');
 
 
     const machinesSoldQuery = `
@@ -131,7 +136,7 @@ export async function GET(req, { params }) {
       totalSales,
       machinesSoldThisMonth,
       machinesSoldLastMonth,
-      machinesSoldThisMonthDetail : saleDetailQueryResult.rows,
+      machinesSoldThisMonthDetail: saleDetailQueryResult.rows,
       feedbacksTakenThisMonth,
       remainingFeedbacks,
       totalVisits,
