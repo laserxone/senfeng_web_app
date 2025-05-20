@@ -199,8 +199,8 @@ export default function Page() {
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
           await fetchData(
-            val.start.toISOString(),
-            val.end.toISOString(),
+            val.start,
+            val.end,
             val.user
           );
         }}

@@ -193,8 +193,8 @@ export default function VisitTab({
                       onClose={() => setFilterVisible(false)}
                       onReturn={async (val) => {
                         await onFetchData(
-                          val.start.toISOString(),
-                          val.end.toISOString(),
+                          val.start,
+                          val.end,
                           val.user
                         );
                       }}

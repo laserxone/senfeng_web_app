@@ -17,7 +17,7 @@ import { Heading } from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import FilterSheet from "@/components/users/filterSheet";
-import { BASE_URL } from "@/constants/data";
+import { BASE_URL, TIMEZONE } from "@/constants/data";
 import { MapProvider } from "@/providers/map-provider";
 import { UserContext } from "@/store/context/UserContext";
 import { GoogleMap, Marker } from "@react-google-maps/api";
@@ -25,6 +25,7 @@ import axios from "@/lib/axios";
 import moment from "moment";
 import { useTheme } from "next-themes";
 import { GetProfileImage } from "@/lib/getProfileImage";
+import momentT from "moment-timezone";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -37,8 +38,8 @@ export default function Page() {
 
   useEffect(() => {
     if (UserState?.value?.data?.id) {
-      const start_date = moment().startOf("month").toISOString();
-      const end_date = moment().endOf("month").toISOString();
+      const start_date = momentT.tz(TIMEZONE).startOf("month").startOf("day").utc().toISOString();
+      const end_date = momentT.tz(TIMEZONE).endOf("month").endOf("day").utc().toISOString();
       fetchData(start_date, end_date);
     }
   }, [UserState?.value?.data]);
@@ -342,8 +343,8 @@ export default function Page() {
               variant="destructive"
               onClick={async () => {
                 setResetLoading(true);
-                const startDate = moment().startOf("month").toISOString();
-                const endDate = moment().endOf("month").toISOString();
+                const startDate = momentT.tz(TIMEZONE).startOf("month").startOf("day").utc().toISOString();
+                const endDate = momentT.tz(TIMEZONE).endOf("month").endOf("day").utc().toISOString();
                 await fetchData(startDate, endDate);
                 setResetLoading(false);
               }}
@@ -359,8 +360,8 @@ export default function Page() {
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
           await fetchData(
-            val.start.toISOString(),
-            val.end.toISOString(),
+            val.start,
+            val.end,
             val.user
           );
         }}

@@ -4398,3 +4398,5 @@ export const BASE_URL = "/api"
 export const Colors = {
   button : '#0E997D'
 }
+
+export const TIMEZONE = "Asia/Karachi";

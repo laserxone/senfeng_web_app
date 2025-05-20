@@ -12,7 +12,7 @@ import {
   useReactTable,
   PaginationState,
 } from "@tanstack/react-table";
-import { BASE_URL } from "@/constants/data";
+import { BASE_URL, TIMEZONE } from "@/constants/data";
 import {
   ArrowUpDown,
   BadgeCheck,
@@ -123,6 +123,7 @@ import { UserSearch } from "@/components/user-search";
 import moment from "moment";
 import { toast, useToast } from "@/hooks/use-toast";
 import FilterSheet from "./filterSheet";
+import momentT from "moment-timezone";
 
 const getSchema = (isClientSelected) =>
   z.object({
@@ -140,12 +141,22 @@ export default function TaskEmployee({ id }) {
   const [selectedTask, setSelectedTask] = useState({});
   const [addTaskVisible, setAddTaskVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
-      const startDate = moment().startOf("month").toISOString();
-      const endDate = moment().endOf("month").toISOString();
+      const startDate = momentT
+        .tz(TIMEZONE)
+        .startOf("month")
+        .startOf("day")
+        .utc()
+        .toISOString();
+      const endDate = momentT
+        .tz(TIMEZONE)
+        .endOf("month")
+        .endOf("day")
+        .utc()
+        .toISOString();
       fetchData(id, startDate, endDate);
     }
   }, [id]);
@@ -275,33 +286,40 @@ export default function TaskEmployee({ id }) {
   ];
 
   async function fetchData(id, start_date, end_date) {
-    setLoading(true)
+    setLoading(true);
     return new Promise((resolve, reject) => {
       axios
-        .get(
-          `/user/${id}/task?start_date=${start_date}&end_date=${end_date}`
-        )
+        .get(`/user/${id}/task?start_date=${start_date}&end_date=${end_date}`)
         .then((response) => {
           const apiData = response.data.map((item) => {
             return { ...item, created_at_time: item.created_at };
           });
 
           setData(apiData);
-         
         })
         .catch((e) => {
           console.log(e);
-         
-        }).finally(()=>{
-          setLoading(false)
-          resolve(true)
         })
+        .finally(() => {
+          setLoading(false);
+          resolve(true);
+        });
     });
   }
 
   async function handleUpdateMark() {
-    const startDate = moment().startOf("month").toISOString();
-    const endDate = moment().endOf("month").toISOString();
+    const startDate = momentT
+      .tz(TIMEZONE)
+      .startOf("month")
+      .startOf("day")
+      .utc()
+      .toISOString();
+    const endDate = momentT
+      .tz(TIMEZONE)
+      .endOf("month")
+      .endOf("day")
+      .utc()
+      .toISOString();
     fetchData(UserState?.value?.data?.id, startDate, endDate);
   }
 
@@ -320,11 +338,20 @@ export default function TaskEmployee({ id }) {
 
         <AddTask
           onRefresh={() => {
-            const startDate = moment()
+            const startDate = momentT
+              .tz(TIMEZONE)
               .subtract(2, "months")
               .startOf("month")
+              .startOf("day")
+              .utc()
               .toISOString();
-            const endDate = moment().endOf("month").toISOString();
+            const endDate = momentT
+              .tz(TIMEZONE)
+              .endOf("month")
+              .endOf("day")
+              .utc()
+              .toISOString();
+
             fetchData(UserState?.value?.data?.id, startDate, endDate);
           }}
           user_id={UserState.value.data?.id}
@@ -370,7 +397,7 @@ export default function TaskEmployee({ id }) {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(id, val.start.toISOString(), val.end.toISOString());
+          await fetchData(id, val.start, val.end);
         }}
       />
     </div>
@@ -406,7 +433,7 @@ const TaskDetail = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const {toast} = useToast()
+  const { toast } = useToast();
 
   async function handleUpdateStatus(values) {
     setLoading(true);
@@ -419,7 +446,7 @@ const TaskDetail = ({
         toast({ title: "Status updated" });
         onClose(false);
       })
-     
+
       .finally(() => {
         setLoading(false);
         onMark();
@@ -434,7 +461,7 @@ const TaskDetail = ({
         onClose(false);
         toast({ title: "Task deleted" });
       })
-     
+
       .finally(() => {
         setDeleteLoading(false);
         onDelete({ id: detail.id });
@@ -442,17 +469,13 @@ const TaskDetail = ({
   }
 
   return (
-    <Sheet
-      open={visible}
-      onOpenChange={onClose}
-    >
+    <Sheet open={visible} onOpenChange={onClose}>
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Task Detail</SheetTitle>
           <SheetDescription>Check task details</SheetDescription>
           <div className="w-full flex justify-end">
             <Button onClick={handleDelete}>
-              
               {deleteLoading && <Loader2 className="animate-spin" />} Delete
             </Button>
           </div>
@@ -519,7 +542,7 @@ const TaskDetail = ({
 const AddTask = ({ visible, onClose, onRefresh, user_id }) => {
   const [selectedRadio, setSelectedRadio] = useState("office");
   const [loading, setLoading] = useState(false);
-  const {toast} = useToast()
+  const { toast } = useToast();
 
   const form = useForm({
     resolver: zodResolver(getSchema(selectedRadio === "client")),
@@ -559,7 +582,7 @@ const AddTask = ({ visible, onClose, onRefresh, user_id }) => {
         handleClose(false);
         toast({ title: "Task created successfully" });
       })
-     
+
       .finally(() => {
         setLoading(false);
       });

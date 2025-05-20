@@ -264,7 +264,7 @@ export default function Reimbursement({
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await onFilterReturn(val.start.toISOString(), val.end.toISOString());
+          await onFilterReturn(val.start, val.end);
         }}
       />
       <ImageSheet

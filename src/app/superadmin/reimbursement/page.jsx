@@ -1,12 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  ArrowUpDown,
-  Filter,
-  Loader2,
-  Trash
-} from "lucide-react";
+import { ArrowUpDown, Filter, Loader2, Trash } from "lucide-react";
 import {
   useCallback,
   useContext,
@@ -25,7 +20,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -41,7 +36,7 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle
+  SheetTitle,
 } from "@/components/ui/sheet";
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,6 +56,8 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
 import { getStoragePathFromUrl } from "@/components/customer-components/machine/machine-component";
+import { TIMEZONE } from "@/constants/data";
+import momentT from "moment-timezone";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -77,8 +74,18 @@ export default function Page() {
 
   useEffect(() => {
     if (UserState.value.data?.id) {
-      const startDate = moment().startOf("month").toISOString();
-      const endDate = moment().endOf("month").toISOString();
+      const startDate = momentT
+        .tz(TIMEZONE)
+        .startOf("month")
+        .startOf("day")
+        .utc()
+        .toISOString();
+      const endDate = momentT
+        .tz(TIMEZONE)
+        .endOf("month")
+        .endOf("day")
+        .utc()
+        .toISOString();
       fetchData(startDate, endDate);
     }
   }, [UserState]);
@@ -314,8 +321,8 @@ export default function Page() {
             variant="destructive"
             onClick={async () => {
               setResetLoading(true);
-              const startDate = moment().startOf("month").toISOString();
-              const endDate = moment().endOf("month").toISOString();
+             const startDate = momentT.tz(TIMEZONE).startOf("month").startOf("day").utc().toISOString();
+const endDate = momentT.tz(TIMEZONE).endOf("month").endOf("day").utc().toISOString();
               await fetchData(startDate, endDate);
               setResetLoading(false);
             }}
@@ -336,11 +343,7 @@ export default function Page() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(
-            val.start.toISOString(),
-            val.end.toISOString(),
-            val.user
-          );
+          await fetchData(val.start, val.end, val.user);
         }}
       />
       <ImageSheet
@@ -433,15 +436,15 @@ const ImageSheet = ({
 
   async function handleDelete() {
     if (img) {
-         if (img.includes("https")) {
-           const storagePath = getStoragePathFromUrl(img);
-           if (storagePath) {
-             DeleteFromStorage(storagePath);
-           }
-         } else {
-           DeleteFromStorage(img);
-         }
-       }
+      if (img.includes("https")) {
+        const storagePath = getStoragePathFromUrl(img);
+        if (storagePath) {
+          DeleteFromStorage(storagePath);
+        }
+      } else {
+        DeleteFromStorage(img);
+      }
+    }
     axios.delete(`/reimbursement/${id}`).then(async () => {
       await onRefresh(id);
       setDeleteLoading(false);

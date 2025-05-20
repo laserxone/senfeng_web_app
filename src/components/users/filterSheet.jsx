@@ -23,6 +23,8 @@ import { Loader2 } from "lucide-react";
 import { UserContext } from "@/store/context/UserContext";
 import { UserSearch } from "../user-search";
 import moment from "moment";
+import momentT from "moment-timezone";
+import { TIMEZONE } from "@/constants/data";
 
 const FilterSheet = ({ visible, onClose, onReturn }) => {
   const [loading, setLoading] = useState(false);
@@ -44,27 +46,30 @@ const FilterSheet = ({ visible, onClose, onReturn }) => {
 
   async function onSubmit(values) {
     setLoading(true);
-    let start = values.start
-    let end = values.end
+    let start = values.start;
+    let end = values.end;
 
-    await onReturn({start : moment(start).startOf("day"), end : moment(end).endOf("day"), user : values.user});
+    await onReturn({
+      start: momentT.tz(start, TIMEZONE).startOf("day").utc().toISOString(),
+      end: momentT.tz(end, TIMEZONE).endOf("day").utc().toISOString(),
+      user: values.user,
+    });
     setLoading(false);
     onClose();
-    handleClear()
+    handleClear();
   }
 
-  function handleClose (val){
-    
-    onClose()
-    handleClear()
+  function handleClose(val) {
+    onClose();
+    handleClear();
   }
 
-  function handleClear(){
+  function handleClear() {
     form.reset({
       start: moment().startOf("month").toDate(),
       end: moment().endOf("month").toDate(),
       user: null,
-    }); 
+    });
   }
 
   return (
@@ -77,7 +82,8 @@ const FilterSheet = ({ visible, onClose, onReturn }) => {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {(UserState.value.data?.designation === 'Owner' || UserState.value.data?.full_access) && (
+            {(UserState.value.data?.designation === "Owner" ||
+              UserState.value.data?.full_access) && (
               <FormField
                 control={form.control}
                 name="user"
@@ -106,7 +112,8 @@ const FilterSheet = ({ visible, onClose, onReturn }) => {
                     <AppCalendar
                       date={field.value}
                       onChange={(date) => {
-                        field.onChange(date)}}
+                        field.onChange(date);
+                      }}
                     />
                   </FormControl>
                   <FormMessage />

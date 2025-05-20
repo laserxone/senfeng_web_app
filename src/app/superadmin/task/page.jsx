@@ -1,5 +1,11 @@
 "use client";
-import { ArrowUpDown, BadgeCheck, CircleDashed, Filter, Loader2 } from "lucide-react";
+import {
+  ArrowUpDown,
+  BadgeCheck,
+  CircleDashed,
+  Filter,
+  Loader2,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,12 +44,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { UserSearch } from "@/components/user-search";
-import { BASE_URL } from "@/constants/data";
+import { BASE_URL, TIMEZONE } from "@/constants/data";
 import { UserContext } from "@/store/context/UserContext";
 import axios from "@/lib/axios";
 import moment from "moment";
 import FilterSheet from "@/components/users/filterSheet";
 import { useToast } from "@/hooks/use-toast";
+import momentT from "moment-timezone";
 
 const columns = [
   {
@@ -170,23 +177,31 @@ export default function Page() {
   const [selectedTask, setSelectedTask] = useState({});
   const [addTaskVisible, setAddTaskVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
-  const [dataLoading, setDataLoading] = useState(false)
+  const [dataLoading, setDataLoading] = useState(false);
 
   useEffect(() => {
     if (UserState?.value?.data?.id) {
-      const startDate = moment().startOf("month").toISOString();
-      const endDate = moment().endOf("month").toISOString();
+      const startDate = momentT
+        .tz(TIMEZONE)
+        .startOf("month")
+        .startOf("day")
+        .utc()
+        .toISOString();
+      const endDate = momentT
+        .tz(TIMEZONE)
+        .endOf("month")
+        .endOf("day")
+        .utc()
+        .toISOString();
       fetchData("", startDate, endDate);
     }
   }, [UserState?.value?.data]);
 
   async function fetchData(user, start_date, end_date) {
-    setDataLoading(true)
+    setDataLoading(true);
     return new Promise((resolve, reject) => {
       axios
-        .get(
-          `/task?start_date=${start_date}&end_date=${end_date}&user=${user}`
-        )
+        .get(`/task?start_date=${start_date}&end_date=${end_date}&user=${user}`)
         .then((response) => {
           const apiData = response.data.map((item) => {
             return { ...item, created_at_time: item.created_at };
@@ -198,15 +213,25 @@ export default function Page() {
           console.log(e);
         })
         .finally(() => {
-          setDataLoading(false)
+          setDataLoading(false);
           resolve(true);
         });
     });
   }
 
   async function handleUpdateMark() {
-    const startDate = moment().startOf("month").toISOString();
-    const endDate = moment().endOf("month").toISOString();
+    const startDate = momentT
+      .tz(TIMEZONE)
+      .startOf("month")
+      .startOf("day")
+      .utc()
+      .toISOString();
+    const endDate = momentT
+      .tz(TIMEZONE)
+      .endOf("month")
+      .endOf("day")
+      .utc()
+      .toISOString();
     fetchData("", startDate, endDate);
   }
 
@@ -225,11 +250,20 @@ export default function Page() {
 
         <AddTask
           onRefresh={() => {
-            const startDate = moment()
+            const startDate = momentT
+              .tz(TIMEZONE)
               .subtract(2, "months")
               .startOf("month")
+              .startOf("day")
+              .utc()
               .toISOString();
-            const endDate = moment().endOf("month").toISOString();
+            const endDate = momentT
+              .tz(TIMEZONE)
+              .endOf("month")
+              .endOf("day")
+              .utc()
+              .toISOString();
+
             fetchData("", startDate, endDate);
           }}
           defaultRadio={"office"}
@@ -239,7 +273,7 @@ export default function Page() {
       </div>
 
       <PageTable
-      loading={dataLoading}
+        loading={dataLoading}
         columns={columns}
         data={data}
         totalItems={data.length}
@@ -275,12 +309,7 @@ export default function Page() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          console.log(val);
-          await fetchData(
-            val.user || "",
-            val.start.toISOString(),
-            val.end.toISOString()
-          );
+          await fetchData(val.user || "", val.start, val.end);
         }}
       />
     </div>
@@ -316,7 +345,7 @@ const TaskDetail = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const {toast} = useToast()
+  const { toast } = useToast();
 
   async function handleUpdateStatus(values) {
     setLoading(true);
@@ -343,7 +372,7 @@ const TaskDetail = ({
         onClose(false);
         toast({ title: "Task deleted" });
       })
-      
+
       .finally(() => {
         setDeleteLoading(false);
         onDelete({ id: detail.id });
@@ -429,7 +458,7 @@ const TaskDetail = ({
 const AddTask = ({ visible, onClose, onRefresh }) => {
   const [selectedRadio, setSelectedRadio] = useState("office");
   const [loading, setLoading] = useState(false);
-  const {toast} = useToast()
+  const { toast } = useToast();
 
   const form = useForm({
     resolver: zodResolver(getSchema(selectedRadio === "client")),
@@ -470,7 +499,7 @@ const AddTask = ({ visible, onClose, onRefresh }) => {
         handleClose(false);
         toast({ title: "Task created successfully" });
       })
-     
+
       .finally(() => {
         setLoading(false);
       });
@@ -481,7 +510,7 @@ const AddTask = ({ visible, onClose, onRefresh }) => {
       radio: "office",
       task: "",
       client: null,
-      user : null
+      user: null,
     });
     onClose(val);
   }

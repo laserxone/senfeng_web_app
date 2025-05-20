@@ -1,9 +1,5 @@
 "use client";
-import {
-  ArrowUpDown,
-  Filter,
-  Loader2
-} from "lucide-react";
+import { ArrowUpDown, Filter, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +14,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -34,7 +30,7 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle
+  SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import FilterSheet from "@/components/users/filterSheet";
@@ -54,6 +50,8 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
 import Spinner from "../ui/spinner";
+import momentT from "moment-timezone";
+import { TIMEZONE } from "@/constants/data";
 
 export default function EmployeeBranchExpenses() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -68,15 +66,25 @@ export default function EmployeeBranchExpenses() {
   const router = useRouter();
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (UserState?.value?.data?.id) {
       if (!UserState.value.data?.branch_expenses_assigned) {
         router.push("/not-allowed");
       }
-      const startDate = moment().startOf("month").toISOString();
-      const endDate = moment().endOf("month").toISOString();
+      const startDate = momentT
+        .tz(TIMEZONE)
+        .startOf("month")
+        .startOf("day")
+        .utc()
+        .toISOString();
+      const endDate = momentT
+        .tz(TIMEZONE)
+        .endOf("month")
+        .endOf("day")
+        .utc()
+        .toISOString();
       fetchData(startDate, endDate);
     }
   }, [UserState?.value?.data]);
@@ -92,9 +100,8 @@ export default function EmployeeBranchExpenses() {
           console.log(e);
         })
         .finally(() => {
-          setLoading(false)
+          setLoading(false);
           resolve(true);
-
         });
     });
   }
@@ -177,7 +184,7 @@ export default function EmployeeBranchExpenses() {
   function handleDownload() {
     setDownloadLoading(true);
     try {
-      const headers = ["Date","Note", "Amount", "Submitted By"];
+      const headers = ["Date", "Note", "Amount", "Submitted By"];
       let finalData = [];
       finalData = [...data];
       const formattedData = finalData.map((item) => [
@@ -201,14 +208,22 @@ export default function EmployeeBranchExpenses() {
       if (imageURL && imageURL?.image && !imageURL.image.includes("http")) {
         DeleteFromStorage(imageURL.image);
       }
-      const response = await axios.delete(
-        `/expenses/${id}`
-      );
+      const response = await axios.delete(`/expenses/${id}`);
       toast({ title: "Branch Expense Deleted" });
-      const startDate = moment().startOf("month").toISOString();
-      const endDate = moment().endOf("month").toISOString();
+      const startDate = momentT
+        .tz(TIMEZONE)
+        .startOf("month")
+        .startOf("day")
+        .utc()
+        .toISOString();
+      const endDate = momentT
+        .tz(TIMEZONE)
+        .endOf("month")
+        .endOf("day")
+        .utc()
+        .toISOString();
       await fetchData(startDate, endDate);
-    }  finally {
+    } finally {
       setDeleteLoading(false);
       setShowConfirmation(false);
       setVisible(false);
@@ -237,7 +252,7 @@ export default function EmployeeBranchExpenses() {
         loading={deleteLoading}
       />
       <PageTable
-      loading={loading}
+        loading={loading}
         columns={columns}
         data={data}
         totalItems={data.length}
@@ -261,8 +276,8 @@ export default function EmployeeBranchExpenses() {
           variant="destructive"
           onClick={async () => {
             setResetLoading(true);
-            const startDate = moment().startOf("month").toISOString();
-            const endDate = moment().endOf("month").toISOString();
+          const startDate = momentT.tz(TIMEZONE).startOf("month").startOf("day").utc().toISOString();
+const endDate = momentT.tz(TIMEZONE).endOf("month").endOf("day").utc().toISOString();
             await fetchData(startDate, endDate);
             setResetLoading(false);
           }}
@@ -278,7 +293,7 @@ export default function EmployeeBranchExpenses() {
         visible={filterVisible}
         onClose={setFilterVisible}
         onReturn={async (val) => {
-          await fetchData(val.start.toISOString(), val.end.toISOString());
+          await fetchData(val.start, val.end);
         }}
       />
 
@@ -288,9 +303,8 @@ export default function EmployeeBranchExpenses() {
         user_id={UserState.value.data?.id}
         onRefresh={async () =>
           await fetchData(
-            UserState.value.data.id,
-            moment().startOf("month").toISOString(),
-            moment().endOf("month").toISOString()
+            momentT.tz(TIMEZONE).startOf("month").startOf("day").utc().toISOString(),
+            momentT.tz(TIMEZONE).endOf("month").endOf("day").utc().toISOString()
           )
         }
       />
