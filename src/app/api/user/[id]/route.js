@@ -44,13 +44,17 @@ export async function GET(req, { params }) {
 
     const currentDate = moment();
 
-    // Current month
-    const firstDayOfCurrentMonth = currentDate.clone().startOf('month').startOf('day'); // 1st of month at 00:00:00
-    const lastDayOfCurrentMonth = currentDate.clone().endOf('month').endOf('day');      // Last of month at 23:59:59
+    const firstCurrentMonth = currentDate.clone().startOf('month').startOf('day');
+    const lastCurrentMonth = currentDate.clone().endOf('month').endOf('day');
 
-    // Last month
-    const firstDayOfLastMonth = currentDate.clone().subtract(1, 'month').startOf('month').startOf('day');
-    const lastDayOfLastMonth = currentDate.clone().subtract(1, 'month').endOf('month').endOf('day');
+    const firstLastMonth = currentDate.clone().subtract(1, 'month').startOf('month').startOf('day');
+    const lastLastMonth = currentDate.clone().subtract(1, 'month').endOf('month').endOf('day');
+
+    const firstDayOfCurrentMonth = firstCurrentMonth.clone().utc().toISOString();
+    const lastDayOfCurrentMonth = lastCurrentMonth.clone().utc().toISOString();
+
+    const firstDayOfLastMonth = firstLastMonth.clone().utc().toISOString();
+    const lastDayOfLastMonth = lastLastMonth.clone().utc().toISOString();
 
 
     const machinesSoldQuery = `
