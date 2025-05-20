@@ -28,6 +28,7 @@ import {
 } from "./ui/select";
 import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
+import Spinner from "./ui/spinner";
 
 const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
@@ -41,7 +42,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
 
     contractDate: z.date({ required_error: "Contract date is required." }),
     isSpeedMoney: z.boolean().default(false),
-    speedMoney: z.number().optional(),
+    speedMoney: z.string().optional(),
     speedMoneyNote: z.string().optional(),
     totalPrice: z.number().min(1, { message: "Total price is required." }),
   });
@@ -109,8 +110,8 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
         price: values.totalPrice,
         contract_date: values.contractDate,
       })
-      .then(() => {
-        onRefresh();
+      .then(async () => {
+        await onRefresh();
         handleClose(false);
       })
       .catch((e) => {
@@ -149,7 +150,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent className="p-4">
         <DialogHeader>
-          <DialogTitle>Add New Machine</DialogTitle>
+          <DialogTitle>Edit Machine</DialogTitle>
         </DialogHeader>
 
         <div className="w-full flex flex-1">
@@ -157,7 +158,9 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
             <div className="px-2">
               <Form {...form}>
                 <form
-                  onSubmit={form.handleSubmit(onSubmit)}
+                  onSubmit={form.handleSubmit(onSubmit, (errors)=>{
+                    console.log("Form validation errors:", errors);
+                  })}
                   className="space-y-2"
                 >
                   <FormField
@@ -367,7 +370,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
                   )}
 
                   <Button className="w-full" type="submit">
-                    {loading && <Loader2 className="animate-spin" />} Submit
+                    {loading && <Spinner />} Submit
                   </Button>
                 </form>
               </Form>
