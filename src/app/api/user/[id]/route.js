@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import moment from "moment";
+import moment from 'moment-timezone';
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
@@ -42,7 +42,9 @@ export async function GET(req, { params }) {
     }
 
 
-    const currentDate = moment();
+    const TIMEZONE = 'Asia/Karachi';
+    const currentDate = moment.tz(TIMEZONE);
+
 
     const firstCurrentMonth = currentDate.clone().startOf('month').startOf('day');
     const lastCurrentMonth = currentDate.clone().endOf('month').endOf('day');
