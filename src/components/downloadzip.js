@@ -25,7 +25,6 @@ const CustomerPDF = ({ data }) => (
 
       <View style={styles.section}>
         <Text style={styles.heading}>Machine</Text>
-        <Text style={styles.line}>Name: {data.machine.name}</Text>
         <Text style={styles.line}>Serial: {data.machine.serial_no}</Text>
         <Text style={styles.line}>Power: {data.machine.power}</Text>
         <Text style={styles.line}>Source: {data.machine.source}</Text>

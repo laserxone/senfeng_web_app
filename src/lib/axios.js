@@ -8,6 +8,13 @@ const axiosInstance = axios.create({
  
 })
 
+axios.interceptors.request.use(config => {
+  config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+  config.headers['Pragma'] = 'no-cache';
+  config.headers['Expires'] = '0';
+  return config;
+});
+
 axiosInstance.interceptors.response.use(
   response => response,
   error => {

@@ -678,7 +678,6 @@ const ImageSheet = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    console.log("call");
     if (img) {
       if (img.includes("http")) {
         setLocalImage(img);
@@ -709,8 +708,15 @@ const ImageSheet = ({
   }, []);
 
   async function handleDelete() {
-    if (img && !img.includes("http")) {
-      DeleteFromStorage(img);
+    if (img) {
+      if (img.includes("https")) {
+        const storagePath = getStoragePathFromUrl(img);
+        if (storagePath) {
+          DeleteFromStorage(storagePath);
+        }
+      } else {
+        DeleteFromStorage(img);
+      }
     }
     axios.delete(`/payment/${id}`).then(async () => {
       await onRefresh(id);
@@ -765,6 +771,16 @@ const ImageSheet = ({
     </Sheet>
   );
 };
+
+export function getStoragePathFromUrl(url) {
+  try {
+    const match = url.match(/\/o\/(.*?)\?alt=media/);
+    if (match && match[1]) return decodeURIComponent(match[1]);
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 const ViewImagesSheet = ({
   editAllowed,

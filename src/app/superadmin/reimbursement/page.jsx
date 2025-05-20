@@ -60,6 +60,7 @@ import { useForm } from "react-hook-form";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
+import { getStoragePathFromUrl } from "@/components/customer-components/machine/machine-component";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -431,9 +432,16 @@ const ImageSheet = ({
   const memoizedImage = useMemo(() => localImage, [localImage]);
 
   async function handleDelete() {
-    if (img && !img.includes("http")) {
-      DeleteFromStorage(img);
-    }
+    if (img) {
+         if (img.includes("https")) {
+           const storagePath = getStoragePathFromUrl(img);
+           if (storagePath) {
+             DeleteFromStorage(storagePath);
+           }
+         } else {
+           DeleteFromStorage(img);
+         }
+       }
     axios.delete(`/reimbursement/${id}`).then(async () => {
       await onRefresh(id);
       setDeleteLoading(false);
