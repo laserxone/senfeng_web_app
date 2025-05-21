@@ -60,7 +60,6 @@ export default function Reimbursement({
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
-  const [filterValues, setFilterValues] = useState(null);
   const [imageURL, setImageURL] = useState(null);
   const [visible, setVisible] = useState(false);
   const [reimbursementVisible, setReimbursementVisible] = useState(false);

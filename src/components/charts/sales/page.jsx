@@ -1,10 +1,9 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Card,
-  CardHeader,
   CardContent,
-  CardTitle,
-  CardDescription,
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
 import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";

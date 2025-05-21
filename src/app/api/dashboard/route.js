@@ -1,52 +1,73 @@
 import pool from "@/config/db";
 import { NextResponse } from "next/server";
+import momentT from 'moment-timezone';
+import moment from "moment/moment";
 
-export async function GET() {
+export async function GET(req) {
+
     try {
         // Get the current and last month's date range
-        const currentDate = new Date();
-        const firstDayOfCurrentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        const lastDayOfLastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
-        const firstDayOfLastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-        const lastDayOfCurrentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        const TIMEZONE = 'Asia/Karachi';
+        const currentDate = momentT.tz(TIMEZONE);
 
-        const firstDayOfThreeMonthsAgo = new Date(currentDate.getFullYear(), currentDate.getMonth() - 2, 1);
+        // Current Month
+        const firstCurrentMonth = currentDate.clone().startOf('month').startOf('day');
+        const lastCurrentMonth = currentDate.clone().endOf('month').endOf('day');
+
+        // Last Month
+        const firstLastMonth = currentDate.clone().subtract(1, 'month').startOf('month').startOf('day');
+        const lastLastMonth = currentDate.clone().subtract(1, 'month').endOf('month').endOf('day');
+
+        // Three Months Ago (start)
+        const firstThreeMonthsAgo = currentDate.clone().subtract(2, 'month').startOf('month').startOf('day');
+
+        // Convert to UTC ISO strings
+        const firstDayOfCurrentMonth = firstCurrentMonth.clone().utc().toISOString();
+        const lastDayOfCurrentMonth = lastCurrentMonth.clone().utc().toISOString();
+
+        const firstDayOfLastMonth = firstLastMonth.clone().utc().toISOString();
+        const lastDayOfLastMonth = lastLastMonth.clone().utc().toISOString();
+
+        const firstDayOfThreeMonthsAgo = firstThreeMonthsAgo.clone().utc().toISOString();
 
         // Query to get daily machine sales for the last 3 months
         const machinesSoldLast3MonthsQuery = `
-          SELECT 
-        s.created_at::DATE as sale_date, 
-        COUNT(*) as total_machines_sold 
+    SELECT 
+        s.contract_date AS sale_date,
+        COUNT(*) AS total_machines_sold 
     FROM 
         sale s 
     WHERE 
-        s.created_at >= $1 AND s.created_at <= $2
+        s.contract_date BETWEEN $1 AND $2
     GROUP BY sale_date
     ORDER BY sale_date;
-        `;
+`;
 
         const machinesSoldLast3MonthsResult = await pool.query(machinesSoldLast3MonthsQuery, [
             firstDayOfThreeMonthsAgo,
             lastDayOfCurrentMonth
         ]);
-        
+
         const salesMap = new Map(
             machinesSoldLast3MonthsResult.rows.map(row => [
-                new Date(row.sale_date).toISOString().split("T")[0], // Normalize format
-                row.total_machines_sold
+                moment(row.sale_date).format('YYYY-MM-DD'),
+                Number(row.total_machines_sold)
             ])
         );
-        
+
         const dateArray = [];
-        let tempDate = new Date(firstDayOfThreeMonthsAgo);
-        while (tempDate <= lastDayOfCurrentMonth) {
-            const formattedDate = tempDate.toISOString().split("T")[0]; // YYYY-MM-DD format
+        let tempDate = moment.utc(firstDayOfThreeMonthsAgo);
+        const endDate = moment.utc(lastDayOfCurrentMonth);
+
+        while (tempDate.isSameOrBefore(endDate)) {
+            const formattedDate = tempDate.format('YYYY-MM-DD');
             dateArray.push({
                 date: formattedDate,
                 total_machines_sold: salesMap.get(formattedDate) || 0
             });
-            tempDate.setDate(tempDate.getDate() + 1); // Move to next day
+            tempDate.add(1, 'day');
         }
+
 
         const paymentQuery = `
             SELECT 
@@ -63,7 +84,7 @@ export async function GET() {
             FROM 
                 sale s
             WHERE 
-                s.created_at BETWEEN $1 AND $2
+                s.contract_date BETWEEN $1 AND $2
         `;
 
         // Query to get new customers added this month
@@ -76,47 +97,38 @@ export async function GET() {
                 c.created_at BETWEEN $1 AND $2
         `;
 
-        // Query to get low stock items
-        const lowStockQuery = `
-            SELECT 
-                COUNT(*) AS total_low_stock
-            FROM 
-                inventory
-            WHERE 
-                qty < 10
-        `;
 
-        // Query to get the recent 6 sales with user details
+
         const recentSalesQuery = `
-            SELECT 
-    s.price,
-    s.created_at,
-    s.contract_date,
-    u.name AS seller_name,
-    u.email AS seller_email,
-    u.dp AS seller_dp,
-    c.id AS customer_id,
-    c.name AS customer_name,
-    c.owner AS customer_owner
-FROM 
-    sale s
-JOIN 
-    users u ON u.id = s.sell_by
-JOIN 
-    customer c ON c.id = s.customer_id
-ORDER BY 
-    GREATEST(s.created_at, s.contract_date) DESC
-LIMIT 5;
-        `;
+        SELECT 
+        s.price,
+        s.contract_date,
+        u.name AS seller_name,
+        u.email AS seller_email,
+        u.dp AS seller_dp,
+        c.id AS customer_id,
+        c.name AS customer_name,
+        c.owner AS customer_owner
+        FROM 
+        sale s
+        JOIN 
+        users u ON u.id = s.sell_by
+        JOIN 
+        customer c ON c.id = s.customer_id
+        ORDER BY 
+        s.contract_date DESC
+        LIMIT 5;
+`;
+
 
         const industryCount = `
         SELECT industry, COUNT(*) as customer_count
-FROM customer
-GROUP BY industry;
-`
+        FROM customer
+        GROUP BY industry;
+        `
 
-const feedbackQuery = `
- WITH months AS (
+        const feedbackQuery = `
+        WITH months AS (
             SELECT TO_CHAR(date_trunc('month', CURRENT_DATE) - INTERVAL '1 month' * generate_series(0, 11), 'YYYY-MM') AS month
         )
         SELECT 
@@ -129,22 +141,69 @@ const feedbackQuery = `
         ORDER BY months.month;`;
 
         // Execute all queries in parallel
+
+    const teamProgressQuery = `
+WITH sales_users AS (
+  SELECT id, name, email, monthly_target
+  FROM users
+  WHERE designation = 'Sales'
+),
+feedback_count AS (
+  SELECT user_id, COUNT(*) AS total_feedbacks
+  FROM feedback
+  WHERE created_at BETWEEN $1 AND $2
+  GROUP BY user_id
+),
+visit_count AS (
+  SELECT user_id, COUNT(*) AS total_visits
+  FROM visit
+  WHERE created_at BETWEEN $1 AND $2
+  GROUP BY user_id
+),
+customer_count AS (
+  SELECT ownership AS user_id, COUNT(*) AS total_members
+  FROM customer
+  GROUP BY ownership
+),
+sale_sum AS (
+  SELECT sell_by AS user_id, SUM(price) AS total_sale_price
+  FROM sale
+  WHERE contract_date BETWEEN $1 AND $2
+  GROUP BY sell_by
+)
+SELECT 
+  u.id,
+  u.name,
+  u.email,
+  u.monthly_target,
+  COALESCE(s.total_sale_price, 0) AS total_sale_price,
+  COALESCE(c.total_members, 0) AS total_members,
+  COALESCE(f.total_feedbacks, 0) AS total_feedbacks,
+  COALESCE(v.total_visits, 0) AS total_visits
+FROM sales_users u
+LEFT JOIN feedback_count f ON u.id = f.user_id
+LEFT JOIN visit_count v ON u.id = v.user_id
+LEFT JOIN customer_count c ON u.id = c.user_id
+LEFT JOIN sale_sum s ON u.id = s.user_id;
+`;
+
+
         const [
             paymentResult,
             machinesSoldResult,
             newCustomersResult,
-            lowStockResult,
             recentSalesResult,
             industryCountResult,
-            feedbackResult
+            feedbackResult,
+            tempProgressResult
         ] = await Promise.all([
             pool.query(paymentQuery, [firstDayOfCurrentMonth, lastDayOfCurrentMonth]),
             pool.query(machinesSoldQuery, [firstDayOfCurrentMonth, lastDayOfCurrentMonth]),
             pool.query(newCustomersQuery, [firstDayOfCurrentMonth, lastDayOfCurrentMonth]),
-            pool.query(lowStockQuery),
             pool.query(recentSalesQuery),
             pool.query(industryCount),
-            pool.query(feedbackQuery)
+            pool.query(feedbackQuery),
+            pool.query(teamProgressQuery, [firstDayOfCurrentMonth, lastDayOfCurrentMonth])
         ]);
 
         const formattedFeedbackData = feedbackResult.rows.map(row => ({
@@ -187,22 +246,22 @@ const feedbackQuery = `
             payment_change_percentage: paymentChangePercentage.toFixed(2), // rounded to 2 decimal places
             total_machines_sold_this_month: totalMachinesSoldThisMonth,
             machines_sold_change_percentage: machinesSoldChangePercentage.toFixed(2),
-            total_low_stock: lowStockResult.rows[0].total_low_stock,
             total_new_customers_this_month: totalNewCustomersThisMonth,
             new_customer_change_percentage: newCustomerChangePercentage.toFixed(2),
             recent_sales: recentSalesResult.rows.map(sale => ({
                 price: sale.price,
-                created_at: sale.created_at,
+                contract_date: sale.contract_date,
                 seller_name: sale.seller_name,
                 seller_email: sale.seller_email,
                 seller_dp: sale.seller_dp,
-                customer_id : sale.customer_id,
-                customer_name : sale.customer_name,
-                customer_owner : sale.customer_owner
+                customer_id: sale.customer_id,
+                customer_name: sale.customer_name,
+                customer_owner: sale.customer_owner
             })),
-            industry_count : industryCountResult.rows,
+            industry_count: industryCountResult.rows,
             machines_sold_last_3_months: dateArray,
-            feedback_status_last_6_months : formattedFeedbackData
+            feedback_status_last_6_months: formattedFeedbackData,
+            team_progress: tempProgressResult.rows
         };
 
         return NextResponse.json(responseData, { status: 200 });
