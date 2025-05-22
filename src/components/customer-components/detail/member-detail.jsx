@@ -43,6 +43,8 @@ import { CheckCircle, Clock } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useContext } from "react";
+import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
 
 export default function MemberDetail({ ownership = false, from, customer_id }) {
   const [data, setData] = useState(null);
@@ -181,6 +183,25 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
               </h1>
             </div>
           </div>
+
+          <div className="flex flex-row items-center gap-2">
+            <Label className="text-sm font-bold mb-1 text-gray-700 dark:text-gray-300">
+              Profile Completion
+            </Label>
+            <div className="h-[70px] w-[70px] ">
+              <CircularProgressbar
+                value={data?.profile_completion || 0}
+                text={`${data?.profile_completion || 0}%`}
+                styles={buildStyles({
+                  pathColor: "#4ade80", // green
+                  textColor: "#1f2937", // gray-800
+                  trailColor: "#e5e7eb", // gray-200
+                  textSize: "28px",
+                })}
+              />
+            </div>
+          </div>
+
           <BillingInformation
             total={data?.bill_total}
             received={data?.bill_received}
@@ -402,6 +423,9 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
                 </h3>
               </Link>
               <div className="flex items-center">
+                 <span className="font-normal text-sm text-gray-600 mr-2">
+                  Profile completion:{" "}  {machine?.profile_completion || 0}%
+                  </span>
                 {Number(machine.price) === totalPayments ? (
                   <CheckCircle className="text-green-500 w-5 h-5 mr-2" />
                 ) : (

@@ -25,6 +25,7 @@ import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
 import SalaryRecord from "@/components/users/SalaryRecord";
+import NewsTicker from "@/components/newsTicker";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -183,7 +184,9 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 gap-5">
+     
       <div className="flex flex-1 flex-col">
+         <NewsTicker />
         <div className="flex flex-1 justify-between mb-8 flex-wrap">
           <div className="flex items-center ">
             <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
@@ -268,174 +271,4 @@ const ProfilePicture = ({ img, name }) => {
   );
 };
 
-const CustomerExtraData = ({ data, option, onSelect }) => {
-  const menuItems = [
-    { key: "top", label: "Top Follow Up", dataKey: "top_followup" },
-    { key: "recent", label: "Recent Customers", dataKey: "recent_customer" },
-    { key: "weekly", label: "Weekly Follow Up", dataKey: "weekly" },
-    { key: "monthly", label: "Monthly Follow Up", dataKey: "monthly" },
-  ];
 
-  return (
-    // <Card>
-    //   <CardContent>
-    <div className="flex flex-col gap-10 mt-5">
-      <div className="py-2 px-5 bg-gray-100 rounded-lg dark:bg-gray-800">
-        <h2 className="text-2xl font-bold tracking-tight">
-          {"Customer Group"}
-        </h2>
-      </div>
-      <>
-        {menuItems.map(({ key, label, dataKey }) => (
-          <div
-            onClick={() => {
-              onSelect(option == dataKey ? "" : dataKey);
-            }}
-            key={key}
-            className={`flex items-center justify-between py-2 px-5 cursor-pointer rounded-lg transition-all duration-300
-          ${
-            option === dataKey
-              ? "bg-[hsl(180,85%,30%)] text-white"
-              : "hover:bg-[hsl(180,85%,90%)] hover:text-[hsl(180,85%,30%)]"
-          }
-        `}
-          >
-            <h1 className="text-lg font-medium">{label}</h1>
-            {data?.[dataKey]?.length > 0 && (
-              <div
-                className={`h-8 w-8 flex items-center justify-center font-semibold rounded-full shadow-md ml-2
-              ${
-                option === dataKey
-                  ? "bg-white text-[hsl(180,85%,30%)]"
-                  : "bg-[hsl(180,85%,30%)] text-white"
-              }
-            `}
-              >
-                {data?.[dataKey]?.length ?? 0}
-              </div>
-            )}
-          </div>
-        ))}
-      </>
-      {/* <div className="py-2 px-5 hover:cursor-pointer hover:bg-blue-50 hover:text-blue-500">
-          <h1 className="text-lg font-semibold " style={{ fontWeight: "500" }}>
-            City Wise
-          </h1>
-        </div>
-        <div className="py-2 px-5 hover:cursor-pointer hover:bg-blue-50 hover:text-blue-500">
-          <h1 className="text-lg font-semibold " style={{ fontWeight: "500" }}>
-            Field Wise
-          </h1>
-        </div> */}
-    </div>
-    // </CardContent>
-    // </Card>
-  );
-};
-
-function CustomersTab({ data }) {
-  const { state: UserState } = useContext(UserContext);
-
-  const RenderEachMachine = ({ machine, customer_id }) => {
-    const totalPayments = machine.payments.reduce(
-      (sum, payment) => sum + Number(payment.amount),
-      0
-    );
-
-    return (
-      <div className="flex justify-between items-center border-b pb-2">
-        <Link
-          href={`/${UserState?.value?.data?.base_route}/member/${customer_id}/${machine.id}`}
-        >
-          <span className="hover:underline">{machine.serial_no}</span>
-        </Link>
-        <div className="flex items-center">
-          {Number(machine.price) === totalPayments ? (
-            <CheckCircle className="text-green-500 w-5 h-5 mr-2" />
-          ) : (
-            <Clock className="text-yellow-500 w-5 h-5 mr-2" />
-          )}
-          <Badge
-            variant={
-              Number(machine.price) === totalPayments ? "success" : "warning"
-            }
-          >
-            {Number(machine.price) === totalPayments ? "Completed" : "Pending"}
-          </Badge>
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <ScrollArea className="h-[calc(70dvh-52px)] p-5">
-      <Accordion type="single" collapsible className="w-full space-y-4">
-        {data.length == 0 ? (
-          <Label>No Data found</Label>
-        ) : (
-          data.map((customer) => (
-            <div className="flex gap-5" key={customer.id}>
-              <div className="flex flex-1">
-                <AccordionItem
-                  className="w-full"
-                  value={`customer-${customer.id}`}
-                >
-                  <Card>
-                    <AccordionTrigger className="px-4 py-2 hover:no-underline">
-                      <div className="flex justify-between items-center w-full">
-                        <Link
-                             href={`/${UserState.value.data?.base_route}/${
-                              customer.member ? "member" : "customer"
-                            }/${customer.id}`}
-                        >
-                          <h3 className="font-semibold text-lg hover:underline">
-                            {customer.name}
-                          </h3>
-                        </Link>
-                        <Badge
-                          className={"mr-2"}
-                          variant={
-                            customer.sales.length === 0
-                              ? "secondary"
-                              : "default"
-                          }
-                        >
-                          {customer.sales.length === 0
-                            ? "Assigned"
-                            : "Purchased"}
-                        </Badge>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <CardContent className="pt-0">
-                        {customer.sales.length > 0 ? (
-                          <div className="space-y-2">
-                            {customer.sales.map((machine) => (
-                              <RenderEachMachine
-                                key={machine.id}
-                                machine={machine}
-                                customer_id={customer.id}
-                              />
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="flex items-center text-muted-foreground">
-                            <AlertCircle className="w-5 h-5 mr-2" />
-                            No machines purchased yet
-                          </div>
-                        )}
-                      </CardContent>
-                    </AccordionContent>
-                  </Card>
-                </AccordionItem>
-              </div>
-              {/* <Button variant="outline" className="mt-1">
-                Satisfaction
-              </Button> */}
-            </div>
-          ))
-        )}
-      </Accordion>
-    </ScrollArea>
-  );
-}

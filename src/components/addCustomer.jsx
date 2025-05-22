@@ -51,7 +51,7 @@ const AddCustomerDialog = ({
   ownership,
 }) => {
   const [numbers, setNumbers] = useState([""]);
-  const [numberError, setNumberError] = useState(""); 
+  const [numberError, setNumberError] = useState("");
   const [loading, setLoading] = useState(false);
   const { state: UserState } = useContext(UserContext);
   const [checking, setChecking] = useState(false);
@@ -109,6 +109,17 @@ const AddCustomerDialog = ({
   }
 
   async function onSubmit(values) {
+   const hasInvalidNumber = numbers.some(
+  (item) => item && (!item.startsWith("3") || !/^\d+$/.test(item))
+);
+
+    if (hasInvalidNumber) {
+      setNumberError("Invalid number format");
+      return;
+    }
+
+    setNumberError(""); 
+
     setLoading(true);
 
     try {
@@ -177,6 +188,7 @@ const AddCustomerDialog = ({
     if (numberError) {
       setNumberError("");
     }
+
     setNumbers((prevState) => {
       const newState = [...prevState];
       newState[index] = value;

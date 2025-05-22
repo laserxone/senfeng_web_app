@@ -15,18 +15,14 @@ export default function NewsTicker() {
     axiosInstance.get("/news").then((response) => {
       const apiData = response.data;
       setData(apiData);
-      let temp = "";
-      apiData.map((item) => {
-        temp += ` ${item.news}`;
-      });
-      //   setData(temp)
     });
   }
 
   return (
-    <div className="bg-red-600 text-white font-bold py-2 px-4 flex items-center overflow-hidden relative">
-      <div className="animate-marquee whitespace-nowrap">
-        {data.map((item, index) => (
+  data.length > 0 && (
+    <div className="bg-red-600 text-white font-bold py-2 px-4 overflow-hidden relative my-2">
+      <div className="flex whitespace-nowrap animate-marquee">
+        {data.concat(data).map((item, index) => (
           <span
             key={index}
             className="mx-4 before:content-['•'] before:mr-2 before:text-white"
@@ -36,5 +32,7 @@ export default function NewsTicker() {
         ))}
       </div>
     </div>
-  );
+  )
+);
+
 }

@@ -1,6 +1,6 @@
 "use client";
 import { useContext, useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,8 @@ import axios from "@/lib/axios";
 import AppCalendar from "@/components/appCalendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import moment from "moment";
+import Spinner from "@/components/ui/spinner";
+import { Trash } from "lucide-react";
 
 export default function NewsPage() {
   const [newsList, setNewsList] = useState([]);
@@ -20,6 +22,7 @@ export default function NewsPage() {
   const [endDate, setEndDate] = useState("");
   const [loading, setLoading] = useState(false);
   const { state: UserState } = useContext(UserContext);
+  
 
   useEffect(() => {
     if (UserState.value.data?.id) {
@@ -27,44 +30,47 @@ export default function NewsPage() {
     }
   }, [UserState]);
 
-  async function fetchData() {
+  const fetchData = async () => {
     setLoading(true);
-
     try {
-      axios.get("/news").then((response) => {
-        console.log(response.data);
-        setNewsList(response.data);
-      });
+      const response = await axios.get("/news");
+      setNewsList(response.data);
     } catch (error) {
-      console.log(error);
+      console.error("Fetch Error:", error);
     } finally {
-      setLoading(false);
-    }
-  }
-
-  const addNews = async () => {
-    if (!newsText || !startDate || !endDate)
-      return alert("All fields required");
-    setLoading(true);
-    try {
-      axios
-        .post("/news", {
-          news: newsText,
-          start_date: startDate,
-          end_date: endDate,
-        })
-        .then(async () => {
-          await fetchData();
-        });
-    } catch (err) {
-      console.log("Submit Error:", err);
-    } finally {
-      setNewsText("");
-      setStartDate("");
-      setEndDate("");
       setLoading(false);
     }
   };
+
+  const addNews = async () => {
+    setLoading(true);
+    try {
+      await axios.post("/news", {
+        news: newsText,
+        start_date: startDate,
+        end_date: endDate,
+      });
+
+      await fetchData();
+      setNewsText("");
+      setStartDate("");
+      setEndDate("");
+    } catch (error) {
+      console.error("Submit Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+    async function handleDelete(id) {
+    try {
+      await axios.delete(`/news/${id}`);
+      await fetchData();
+    } catch (error) {
+      console.error("Submit Error:", error);
+    } 
+  }
+  
 
   return (
     <div className="flex flex-1 flex-col space-y-6 p-4">
@@ -94,32 +100,56 @@ export default function NewsPage() {
           </div>
         </div>
 
-        <Button onClick={addNews} disabled={loading}>
-          {loading ? "Saving..." : "Submit News"}
+        <Button
+          onClick={addNews}
+          disabled={loading || !newsText || !startDate || !endDate}
+        >
+          {loading && <Spinner />} Submit News
         </Button>
       </div>
 
       {/* News List */}
       <ScrollArea className="h-[calc(100dvh-450px)] pr-4">
-      <div className="space-y-4">
-        {newsList.length > 0 ? (
-          newsList.map((item) => (
-           <Card key={item.id}>
-              <CardContent className="p-4">
-                <p className="font-medium mb-1">{item.news}</p>
-                <div className="text-sm text-gray-500">
-                  Start {moment(item.start_date).format("YYYY-MM-DD")} -{" "}
-                  End {moment(item.end_date).format("YYYY-MM-DD")}
-                </div>
-              </CardContent>
-            </Card>
-            
-          ))
-        ) : (
-          <div className="text-gray-500 text-center">No news available</div>
-        )}
-      </div>
+        <div className="space-y-4">
+          {newsList.length > 0 ? (
+            newsList.map((item) => <RenderEachRow key={item.id} item={item} handleDelete={handleDelete}/>)
+          ) : (
+            <div className="text-gray-500 text-center">No news available</div>
+          )}
+        </div>
       </ScrollArea>
     </div>
   );
 }
+
+const RenderEachRow = ({item, handleDelete}) => {
+
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+
+
+  return (
+    <Card >
+      <CardContent className="flex flex-row justify-between p-4">
+        <div className="flex flex-col flex-1 pr-2">
+          <p className="font-medium mb-1">{item.news}</p>
+          <div className="text-sm text-gray-500">
+            Start {moment(item.start_date).format("YYYY-MM-DD")} - End{" "}
+            {moment(item.end_date).format("YYYY-MM-DD")}
+          </div>
+        </div>
+
+        <Button
+          variant="destructive"
+          size="icon"
+          onClick={(e) => {
+            setDeleteLoading(true);
+            handleDelete(item.id);
+          }}
+        >
+          {deleteLoading ? <Spinner /> : <Trash size={16} />}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};

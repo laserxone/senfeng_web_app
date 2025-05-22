@@ -22,43 +22,90 @@ export async function GET(req, { params }) {
 
     const customer = customerResult.rows[0];
 
-    // 2. Get all machines related to this customer
+
+
+    let filledCount = 0;
+    profileFields.forEach(field => {
+      const value = customer[field];
+      const isFilled =
+        field === 'rating'
+          ? typeof value === 'number' && value > 0
+          : Array.isArray(value)
+            ? value.length > 0
+            : typeof value === 'boolean'
+              ? true
+              : typeof value === 'number'
+                ? true
+                : typeof value === 'string'
+                  ? value.trim() !== '' && value !== 'null'
+                  : value !== null && value !== undefined;
+      if (isFilled) filledCount++;
+    });
+
     const machinesQuery = `SELECT * FROM sale WHERE customer_id = $1 ORDER BY contract_date ASC`;
     const machinesResult = await pool.query(machinesQuery, [id]);
-
     let machines = machinesResult.rows;
 
-    // 3. Get all payments related to these machines & calculate total received
+    let saleFilledCount = 0;
+    const customerTotalFields = profileFields.length;
+    const saleTotalFields = saleFields.length * machines.length;
+
+    machines = machines.map(machine => {
+      let machineFilled = 0;
+      saleFields.forEach(field => {
+        const value = machine[field];
+        const isFilled =
+          Array.isArray(value)
+            ? value.length > 0
+            : typeof value === 'boolean'
+              ? true
+              : typeof value === 'number'
+                ? ['price', 'usd_tt_rate', 'speed_money_amount'].includes(field)
+                  ? value !== null && !isNaN(value)
+                  : true
+                : typeof value === 'string'
+                  ? value.trim() !== '' && value !== 'null'
+                  : value !== null && value !== undefined;
+        if (isFilled) machineFilled++;
+      });
+      saleFilledCount += machineFilled;
+      return {
+        ...machine,
+        profile_completion: Math.round((machineFilled / saleFields.length) * 100),
+      };
+    });
+
+    const overallFilled = filledCount + saleFilledCount;
+    const overallTotal = customerTotalFields + saleTotalFields;
+    const overallCompletion = Math.round((overallFilled / overallTotal) * 100);
+
+
     const machineIds = machines.map(m => m.id);
 
     let billReceived = 0;
     let payments = [];
 
     if (machineIds.length > 0) {
-      // Fetch all payments related to these machines
       const paymentsQuery = `SELECT * FROM payment WHERE machine_id = ANY($1)`;
       const paymentsResult = await pool.query(paymentsQuery, [machineIds]);
       payments = paymentsResult.rows;
 
-      // Calculate total received
       const totalReceivedQuery = `SELECT SUM(amount) AS total_received FROM payment WHERE machine_id = ANY($1)`;
       const totalReceivedResult = await pool.query(totalReceivedQuery, [machineIds]);
       billReceived = totalReceivedResult.rows[0].total_received || 0;
     }
 
-    // 4. Attach payments to their respective machines
     machines = machines.map(machine => ({
       ...machine,
       payments: payments.filter(payment => payment.machine_id === machine.id)
     }));
 
-    // 5. Calculate total price of all machines
     const billTotal = machines.reduce((sum, machine) => sum + (Number(machine.price) || 0), 0);
 
-    // 6. Attach machines & calculated values to customer object
     customer.machines = machines;
     customer.bill_received = parseFloat(billReceived);
     customer.bill_total = parseFloat(billTotal);
+    customer.profile_completion = overallCompletion;
 
     return NextResponse.json(customer, { status: 200 });
 
@@ -170,3 +217,55 @@ export async function DELETE(req, { params }) {
 }
 
 export const revalidate = 0;
+
+
+const saleFields = [
+  'type',
+  'speed_money_note',
+  'speed_money',
+  'sell_by',
+  'commission',
+  'name',
+  'order_no',
+  'price',
+  'qty',
+  'serial_no',
+  'contract_images_png',
+  'contract_images_pdf',
+  'other_images_png',
+  'other_images_pdf',
+  'contract_date',
+  'usd_tt_rate',
+  'speed_money_amount',
+  'power',
+  'source',
+  'cnic',
+  'commission_issued',
+  'payment_lock',
+  'order_no_arr',
+  'machine_nameplate_images',
+  'final_handover_images',
+  'handover_user_id'
+];
+
+
+const profileFields = [
+  'name',
+  'email',
+  'customer_group',
+  'industry',
+  'location',
+  'number',        // TEXT[]
+  'owner',         // string with possible 'null'
+  'ownership',     // INTEGER
+  'address',
+  'remarks',
+  'rating',        // INTEGER (must be > 0 to count as filled)
+  'image',
+  'member',        // BOOLEAN
+  'created_by',    // INTEGER
+  'lead',          // INTEGER
+  'platform',
+  'other',
+  'pin'
+];

@@ -41,6 +41,7 @@ import {
 import { Input } from "@/components/ui/input";
 import Spinner from "@/components/ui/spinner";
 import { Checkbox } from "@/components/ui/checkbox";
+import NewsTicker from "@/components/newsTicker";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -281,6 +282,7 @@ export default function Page() {
   return (
     <div className="flex flex-1 gap-5">
       <div className="flex flex-1 flex-col">
+         <NewsTicker />
         <div className="flex flex-1 justify-between mb-8 flex-wrap gap-2">
           <Link
             href={

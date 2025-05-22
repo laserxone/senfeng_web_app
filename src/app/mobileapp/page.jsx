@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function SenFengAppPage() {
   const href =
-    "https://github.com/laserxone/senfeng-app-apk/releases/download/v4.9.0-alpha/Release.apk";
+    "https://github.com/laserxone/senfeng-app-apk/releases/download/v4.9.0/Releasev4.9.0.apk";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center text-white px-4">
@@ -17,9 +17,9 @@ export default function SenFengAppPage() {
       />
 
       {/* App Name */}
-      <h1 className="text-4xl font-bold mb-2">SenFeng Mobile App</h1>
+      <h1 className="text-4xl font-bold mb-2">Senfeng Mobile App</h1>
       <p className="text-gray-300 mb-6 text-center max-w-md">
-        Manage your SenFeng experience on the go with our official mobile app.
+        Manage your Senfeng experience on the go with our official mobile app.
       </p>
 
       {/* Download Button */}
