@@ -59,7 +59,7 @@ export function Sale({ data }) {
                   }).format(item.price || 0)}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {moment(item.created_at).format("YYYY-MM-DD")}
+                  {moment(item.contract_date).format("YYYY-MM-DD")}
                 </p>
               </div>
             </div>

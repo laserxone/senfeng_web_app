@@ -122,9 +122,18 @@ export async function GET(req) {
 
 
         const industryCount = `
-        SELECT industry, COUNT(*) as customer_count
-        FROM customer
-        GROUP BY industry;
+       SELECT 
+  CASE 
+    WHEN industry IS NULL OR industry = '' THEN 'No industry'
+    ELSE industry
+  END AS industry,
+  COUNT(*) AS customer_count
+FROM customer
+GROUP BY 
+  CASE 
+    WHEN industry IS NULL OR industry = '' THEN 'No industry'
+    ELSE industry
+  END;
         `
 
         const feedbackQuery = `

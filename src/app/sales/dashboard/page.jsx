@@ -670,7 +670,7 @@ function Calls({ data, onRefresh }) {
     <div className="h-[650px]">
       <ScrollArea className="h-[650px] p-5">
         {data.length === 0 ? (
-          <Label>No feedbacks remaining</Label>
+          <Label>No calls remaining</Label>
         ) : (
           <div className="space-y-3">
             {data.map((call) => (

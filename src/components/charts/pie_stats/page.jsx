@@ -53,7 +53,6 @@ export function Stats({industryData}) {
     return config;
   }, [industryData]);
 
-  // Step 2: Transform Data to Match Normalized Keys
   const processedData = React.useMemo(() => {
     return industryData.map((industry) => ({
       industry: industry.industry.toLowerCase().replace(/\s+/g, ""), // Normalized key
@@ -62,20 +61,18 @@ export function Stats({industryData}) {
     }));
   }, [industryData]);
 
-  // Step 3: Calculate Total Customers
   const totalCustomers = React.useMemo(() => {
     return processedData.reduce((acc, curr) => acc + curr.customer_count, 0);
   }, [processedData]);
   return (
     <Card className='flex flex-col'>
-      <CardHeader className='items-center pb-0'>
+      <CardHeader className='pb-0'>
         <CardTitle>Working Industries</CardTitle>
-        {/* <CardDescription>January - June 2024</CardDescription> */}
       </CardHeader>
       <CardContent className='flex-1 pb-0'>
         <ChartContainer
           config={chartConfig}
-          className='mx-auto aspect-square max-h-[360px]'
+          className='mx-auto aspect-square max-h-[355px]'
         >
           <PieChart>
             <ChartTooltip

@@ -6,6 +6,7 @@ import { Stats } from "@/components/charts/pie_stats/page";
 import { Sale } from "@/components/charts/sales/page";
 import SalesTeamProgressChart from "@/components/charts/sales_progress/page";
 import { CustomerMapComponent } from "@/components/customerMapComponent";
+import NewsTicker from "@/components/newsTicker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -88,13 +89,14 @@ export default function Page() {
   }
 
   return (
-    <div className="flex flex-1 flex-col space-y-2">
+    <div className="flex flex-1 flex-col space-y-4">
+      <NewsTicker />
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-2xl font-bold tracking-tight">
           Hi, Welcome back 👋
         </h2>
       </div>
-      <div className="flex flex-row justify-between flex-wrap gap-2">
+      <div className="flex flex-row justify-between flex-wrap gap-4">
         <Card className="w-full sm:w-auto sm:min-w-[350px]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -217,7 +219,8 @@ export default function Page() {
           {loading ? (
             <Skeleton className="h-64" />
           ) : (
-            <BarStats data={data?.machines_sold_last_3_months || []} />
+            //
+            <SalesTeamProgressChart passingData={data?.team_progress || []} />
           )}
         </div>
         <div className="col-span-4 md:col-span-3">
@@ -231,24 +234,24 @@ export default function Page() {
           {loading ? (
             <Skeleton className="h-64" />
           ) : (
-            <AreaStats data={data?.feedback_status_last_6_months || []} />
+            <BarStats data={data?.machines_sold_last_3_months || []} />
           )}
         </div>
         <div className="col-span-4 md:col-span-3">
           {loading ? (
             <Skeleton className="h-64" />
           ) : (
-            <Stats
-              industryData={
-                data?.industry_count?.filter((item) => item.industry) || []
-              }
-            />
+            <Stats industryData={data?.industry_count || []} />
           )}
         </div>
       </div>
 
       <div>
-        <SalesTeamProgressChart passingData={data?.team_progress || []} />
+        {loading ? (
+          <Skeleton className="h-64" />
+        ) : (
+          <AreaStats data={data?.feedback_status_last_6_months || []} />
+        )}
       </div>
 
       <div className="mb-5">

@@ -12,8 +12,9 @@ export async function GET(req, { params }) {
         let base_route = ""
         const result = await pool.query(query, [email]);
 
-        const versionResult = await pool.query(`SELECT version_code FROM settings`)
+        const versionResult = await pool.query(`SELECT version_code, url FROM settings`)
         const version_code = versionResult.rows[0].version_code
+        const route_url = versionResult.rows[0].url
 
         if (result.rows.length == 0) {
             return NextResponse.json({ message: "User not found, contact your manager" }, { status: 404 })
@@ -87,7 +88,7 @@ export async function GET(req, { params }) {
                 nav_items.push(InventoryNavItem)
             nav_items.push(POSNavItem)
         }
-        return NextResponse.json({ ...result.rows[0], nav_items: nav_items, base_route: base_route, version_code: version_code }, { status: 200 })
+        return NextResponse.json({ ...result.rows[0], nav_items: nav_items, base_route: base_route, version_code: version_code, route_url : route_url }, { status: 200 })
 
     } catch (error) {
         console.error('Error inserting data: ', error);

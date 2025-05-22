@@ -6,11 +6,11 @@ export const ownerNavItems = [
     icon: 'dashboard',
     isActive: false,
     shortcut: ['d', 'a', 's', 'h'],
-    items: [] 
+    items: []
   },
   {
     title: 'Task Management',
-    url: '#', 
+    url: '#',
     icon: 'task',
     isActive: true,
 
@@ -31,7 +31,7 @@ export const ownerNavItems = [
   },
   {
     title: 'Human Resource',
-    url: '#', 
+    url: '#',
     icon: 'hr',
     isActive: true,
 
@@ -64,7 +64,7 @@ export const ownerNavItems = [
   },
   {
     title: 'Customer',
-    url: '#', 
+    url: '#',
     icon: 'customer',
     isActive: true,
 
@@ -86,6 +86,19 @@ export const ownerNavItems = [
         shortcut: ['f', 'e', 'e'],
         url: '/feedback',
         icon: 'login'
+      },
+      {
+        title: 'Quotation',
+        url: '/quotation',
+        icon: 'quotation',
+        shortcut: ['q', 'u', 'o'],
+      },
+      {
+        title: 'Contract',
+        url: '/contract',
+        icon: 'contract',
+        shortcut: ['c', 'o', 'n'],
+
       },
     ]
   },
@@ -121,25 +134,18 @@ export const ownerNavItems = [
     isActive: false,
     items: [] // No child items
   },
-
   {
-    title: 'Quotation',
-    url: '/quotation',
-    icon: 'quotation',
-    shortcut: ['q', 'u', 'o'],
+    title: 'News',
+    url: '/news',
+    icon: 'news',
+    shortcut: ['n', 'e', 'w', 's'],
     isActive: false,
     items: [] // No child items
   },
 
-  {
-    title: 'Contract',
-    url: '/contract',
-    icon: 'contract',
-    shortcut: ['c', 'o', 'n'],
-    isActive: false,
-    items: [] // No child items
-  },
-  
+
+
+
 ];
 
 export const employeeNavItems = [
@@ -149,7 +155,7 @@ export const employeeNavItems = [
     icon: 'dashboard',
     isActive: true,
     shortcut: ['d', 'a', 's', 'h'],
-    items: [] 
+    items: []
   },
   {
     title: 'Task Management',
@@ -159,7 +165,7 @@ export const employeeNavItems = [
     shortcut: ['t', 'a', 's', 'k'],
     items: []
   },
- 
+
   {
     title: 'Customers',
     url: '/customer',
@@ -193,10 +199,10 @@ export const employeeNavItems = [
     isActive: false,
     items: [] // No child items
   },
-  
+
 ];
 
-export const branchNavItem =  {
+export const branchNavItem = {
   title: 'Office Expense',
   url: '/expense',
   icon: 'expense',
@@ -221,7 +227,7 @@ export const StoreNavItem = [
     icon: 'dashboard',
     isActive: true,
     shortcut: ['d', 'a', 's', 'h'],
-    items: [] 
+    items: []
   },
   {
     title: 'Task Management',
@@ -239,10 +245,10 @@ export const StoreNavItem = [
     isActive: false,
     items: [] // No child items
   },
-  ]
+]
 
-export const POSNavItem = 
-  {
+export const POSNavItem =
+{
   title: 'POS',
   url: '/pos',
   icon: 'pos',
@@ -4396,7 +4402,7 @@ export const CountriesList = [
 export const BASE_URL = "/api"
 
 export const Colors = {
-  button : '#0E997D'
+  button: '#0E997D'
 }
 
 export const TIMEZONE = "Asia/Karachi";

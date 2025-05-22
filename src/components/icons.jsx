@@ -43,6 +43,7 @@ import {
   Scroll,
   Signature,
   ShoppingCart,
+  Newspaper,
 } from 'lucide-react';
 
 
@@ -90,6 +91,7 @@ export const Icons = {
   contract : Signature,
   commission : BadgeDollarSign,
   pos : ShoppingCart,
+  news : Newspaper,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden='true'
