@@ -32,8 +32,6 @@ export async function GET(req, { params }) {
           ? typeof value === 'number' && value > 0
           : Array.isArray(value)
             ? value.length > 0
-            : typeof value === 'boolean'
-              ? true
               : typeof value === 'number'
                 ? true
                 : typeof value === 'string'
@@ -48,36 +46,45 @@ export async function GET(req, { params }) {
 
     let saleFilledCount = 0;
     const customerTotalFields = profileFields.length;
-    const saleTotalFields = saleFields.length * machines.length;
 
     machines = machines.map(machine => {
       let machineFilled = 0;
+
+      // Handle contract_images as one field
+      const hasContractImages =
+        (Array.isArray(machine.contract_images_pdf) && machine.contract_images_pdf.length > 0) ||
+        (Array.isArray(machine.contract_images_png) && machine.contract_images_png.length > 0);
+
+      if (hasContractImages) machineFilled++;
+
+      // Handle other saleFields
       saleFields.forEach(field => {
         const value = machine[field];
         const isFilled =
           Array.isArray(value)
             ? value.length > 0
-            : typeof value === 'boolean'
-              ? true
               : typeof value === 'number'
-                ? ['price', 'usd_tt_rate', 'speed_money_amount'].includes(field)
+                ? ['price'].includes(field)
                   ? value !== null && !isNaN(value)
                   : true
                 : typeof value === 'string'
                   ? value.trim() !== '' && value !== 'null'
                   : value !== null && value !== undefined;
+
         if (isFilled) machineFilled++;
       });
+
+      const totalFields = saleFields.length + 1;
+
       saleFilledCount += machineFilled;
+
       return {
         ...machine,
-        profile_completion: Math.round((machineFilled / saleFields.length) * 100),
+        percentage_completion: Math.round((machineFilled / totalFields) * 100),
       };
     });
 
-    const overallFilled = filledCount + saleFilledCount;
-    const overallTotal = customerTotalFields + saleTotalFields;
-    const overallCompletion = Math.round((overallFilled / overallTotal) * 100);
+    const overallCompletion = Math.round((filledCount / customerTotalFields) * 100);
 
 
     const machineIds = machines.map(m => m.id);
@@ -90,7 +97,7 @@ export async function GET(req, { params }) {
       const paymentsResult = await pool.query(paymentsQuery, [machineIds]);
       payments = paymentsResult.rows;
 
-      const totalReceivedQuery = `SELECT SUM(amount) AS total_received FROM payment WHERE machine_id = ANY($1)`;
+      const totalReceivedQuery = `SELECT SUM(amount) AS total_received FROM payment WHERE machine_id = ANY($1) AND clearance_date IS NOT NULL`;
       const totalReceivedResult = await pool.query(totalReceivedQuery, [machineIds]);
       billReceived = totalReceivedResult.rows[0].total_received || 0;
     }
@@ -219,52 +226,34 @@ export async function DELETE(req, { params }) {
 export const revalidate = 0;
 
 
-const saleFields = [
-  'type',
-  'speed_money_note',
-  'speed_money',
-  'sell_by',
-  'commission',
-  'name',
-  'order_no',
+export const saleFields = [
   'price',
-  'qty',
   'serial_no',
-  'contract_images_png',
-  'contract_images_pdf',
-  'other_images_png',
-  'other_images_pdf',
   'contract_date',
-  'usd_tt_rate',
-  'speed_money_amount',
   'power',
   'source',
   'cnic',
-  'commission_issued',
-  'payment_lock',
   'order_no_arr',
   'machine_nameplate_images',
   'final_handover_images',
-  'handover_user_id'
+  'handover_user_id',
+  'installation_report',
+  'handshake_images'
 ];
 
 
-const profileFields = [
+export const profileFields = [
   'name',
   'email',
   'customer_group',
   'industry',
   'location',
-  'number',        // TEXT[]
-  'owner',         // string with possible 'null'
-  'ownership',     // INTEGER
+  'number',        
+  'owner',         
   'address',
   'remarks',
-  'rating',        // INTEGER (must be > 0 to count as filled)
+  'rating',        
   'image',
-  'member',        // BOOLEAN
-  'created_by',    // INTEGER
-  'lead',          // INTEGER
   'platform',
   'other',
   'pin'

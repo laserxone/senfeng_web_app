@@ -79,6 +79,7 @@ import "pdfjs-dist/build/pdf.worker";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { downloadCustomerZip } from "@/components/downloadzip";
+import { UserSearch } from "@/components/user-search";
 
 export default function Machine({ id }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -140,7 +141,7 @@ export default function Machine({ id }) {
 
         const payments =
           machine?.payments?.filter((p) => p.clearance_date !== null) || [];
-        setPayments(payments);
+        setPayments(machine?.payments);
         setReceived(
           payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
         );
@@ -359,7 +360,21 @@ export default function Machine({ id }) {
         />
         {data && (
           <div className="flex gap-2 flex-wrap">
-            <Button onClick={() => setImagesVisible(true)}>View Images</Button>
+            <Button
+              onClick={() => {
+                if (!editAllowed) {
+                  toast({
+                    title: "You are not allowed to edit machine",
+                    variant: "destructive",
+                  });
+                  return;
+                } else {
+                  setEditMachine(true);
+                }
+              }}
+            >
+              Edit Machine
+            </Button>
 
             {data?.machine && !data?.machine?.payment_lock && (
               <Button
@@ -379,21 +394,8 @@ export default function Machine({ id }) {
               </Button>
             )}
 
-            <Button
-              onClick={() => {
-                if (!editAllowed) {
-                  toast({
-                    title: "You are not allowed to edit machine",
-                    variant: "destructive",
-                  });
-                  return;
-                } else {
-                  setEditMachine(true);
-                }
-              }}
-            >
-              Edit Machine
-            </Button>
+            <Button onClick={() => setImagesVisible(true)}>View Images</Button>
+
             {payments.length > 0 && (
               <Button
                 onClick={() => {
@@ -798,6 +800,19 @@ const ViewImagesSheet = ({
 
   const contractImages = useMemo(() => data?.contract_images_png || [], [data]);
   const otherImages = useMemo(() => data?.other_images_png || [], [data]);
+  const handshakeImages = useMemo(() => data?.handshake_images || [], [data]);
+  const handoverImages = useMemo(
+    () => data?.final_handover_images || [],
+    [data]
+  );
+  const nameplateImages = useMemo(
+    () => data?.machine_nameplate_images || [],
+    [data]
+  );
+  const installationReport = useMemo(
+    () => data?.installation_report || [],
+    [data]
+  );
 
   const prepareData = useCallback(async (pdfUrls, condition) => {
     let localImages = [];
@@ -854,23 +869,28 @@ const ViewImagesSheet = ({
 
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
-      <SheetContent>
+      <SheetContent
+        className="w-[90vw] max-w-[90vw]"
+        style={{ width: "100%", maxWidth: "90vw" }}
+      >
         <SheetHeader className="mb-4">
-          <SheetTitle className="text-2xl">View Images</SheetTitle>
-          <Button
-            onClick={() => {
-              if (editAllowed) {
-                setAddImageVisible(true);
-              } else {
-                toast({
-                  title: "You are not allowed to perform this action ",
-                  variant: "destructive",
-                });
-              }
-            }}
-          >
-            Add Image
-          </Button>
+          <div className="flex gap-4 flex-wrap">
+            <SheetTitle className="text-2xl">View Images</SheetTitle>
+            <Button
+              onClick={() => {
+                if (editAllowed) {
+                  setAddImageVisible(true);
+                } else {
+                  toast({
+                    title: "You are not allowed to perform this action ",
+                    variant: "destructive",
+                  });
+                }
+              }}
+            >
+              Add Image
+            </Button>
+          </div>
           <AddImages
             customer_id={customer_id}
             machine={data}
@@ -881,11 +901,87 @@ const ViewImagesSheet = ({
           <ScrollArea className="h-[85vh] px-4">
             <div className="flex flex-1 flex-col gap-2">
               <Label className="font-semibold text-[18px]">
+                Handshake Images
+              </Label>
+              <div className="flex flex-row gap-2 flex-wrap">
+                {handshakeImages.length > 0 ? (
+                  handshakeImages.map((item, ind) => (
+                    <RenderImage
+                      key={ind}
+                      img={item}
+                      setImageOpen={setImageOpen}
+                    />
+                  ))
+                ) : (
+                  <p>No images found</p>
+                )}
+              </div>
+              <Label className="font-semibold text-[18px]">
+                Nameplate Images
+              </Label>
+              <div className="flex flex-row gap-2 flex-wrap">
+                {nameplateImages.length > 0 ? (
+                  nameplateImages.map((item, ind) => (
+                    <RenderImage
+                      key={ind}
+                      img={item}
+                      setImageOpen={setImageOpen}
+                    />
+                  ))
+                ) : (
+                  <p>No images found</p>
+                )}
+              </div>
+
+              <Label className="font-semibold text-[18px]">
+                Handover Images
+              </Label>
+              <div className="flex flex-row gap-2 flex-wrap">
+                {handoverImages.length > 0 ? (
+                  handoverImages.map((item, ind) => (
+                    <RenderImage
+                      key={ind}
+                      img={item}
+                      setImageOpen={setImageOpen}
+                    />
+                  ))
+                ) : (
+                  <p>No images found</p>
+                )}
+              </div>
+              <Label className="font-semibold text-[18px]">
+                Installation Report
+              </Label>
+              <div className="flex flex-row gap-2 flex-wrap">
+                {installationReport.length > 0 ? (
+                  installationReport.map((item, ind) => (
+                    <RenderImage
+                      key={ind}
+                      img={item}
+                      setImageOpen={setImageOpen}
+                    />
+                  ))
+                ) : (
+                  <p>No report found</p>
+                )}
+              </div>
+
+              <Label className="font-semibold text-[18px]">
                 Contract Images
               </Label>
-              {contractImages.map((item, ind) => (
-                <RenderImage key={ind} img={item} setImageOpen={setImageOpen} />
-              ))}
+              <div className="flex flex-row gap-2 flex-wrap">
+                {contractImages.length > 0 ? (
+                  contractImages.map((item, ind) => (
+                    <RenderImage
+                      key={ind}
+                      img={item}
+                      setImageOpen={setImageOpen}
+                    />
+                  ))
+                ) : (
+                  <p>No images found</p>
+                )}
+              </div>
               {contractPdfImages.map((item, ind) => (
                 <RenderImage
                   key={ind}
@@ -898,9 +994,19 @@ const ViewImagesSheet = ({
               <Label className="font-semibold text-[18px]">
                 Additional Images
               </Label>
-              {otherImages.map((item, ind) => (
-                <RenderImage key={ind} img={item} setImageOpen={setImageOpen} />
-              ))}
+              <div className="flex flex-row gap-2 flex-wrap">
+                {otherImages.length > 0 ? (
+                  otherImages.map((item, ind) => (
+                    <RenderImage
+                      key={ind}
+                      img={item}
+                      setImageOpen={setImageOpen}
+                    />
+                  ))
+                ) : (
+                  <p>No images found</p>
+                )}
+              </div>
               {otherPdfImages.map((item, ind) => (
                 <RenderImage
                   key={ind}
@@ -946,31 +1052,46 @@ const RenderImage = memo(({ img, type, setImageOpen }) => {
 
   return (
     <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
-      <img src={localImage} alt="payment-img" />
+      <img
+        src={localImage}
+        alt="payment-img"
+        className="h-[150px] w-auto object-contain"
+      />
     </ControlledZoom>
   );
 });
 
 const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
   const [loading, setLoading] = useState(false);
-  const formSchema = z.object({
-    note: z.string().min(1, { message: "Type is required." }),
-    images: z
-      .array(z.string().url())
-      .min(1, { message: "one image is required" }),
-  });
+  const formSchema = z
+    .object({
+      note: z.string().min(1, { message: "Type is required." }),
+      images: z
+        .array(z.string().url())
+        .min(1, { message: "one image is required" }),
+      handover_user_id: z.number().nullable().optional(),
+    })
+    .refine(
+      (data) =>
+        data.note !== "handover" ||
+        (data.handover_user_id !== null && data.handover_user_id !== undefined),
+      {
+        message: "Handover User ID is required",
+        path: ["handover_user_id"],
+      }
+    );
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       type: "",
       images: [],
+      handover_user_id: null,
     },
   });
 
   async function onSubmit(values) {
     setLoading(true);
-    console.log("Form Data:", values);
     let allProcessedImages = [];
     await Promise.all(
       values.images.map(async (item) => {
@@ -982,17 +1103,38 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
       })
     );
     let formData = {};
-    if (values.note == "contract") {
+    if (values.note === "contract") {
       formData.contract_images_png = [
         ...machine.contract_images_png,
         ...allProcessedImages,
       ];
-    } else {
+    } else if (values.note === "additional") {
       formData.other_images_png = [
         ...machine.other_images_png,
         ...allProcessedImages,
       ];
+    } else if (values.note === "handshake") {
+      formData.handshake_images = [
+        ...machine.handshake_images,
+        ...allProcessedImages,
+      ];
+    } else if (values.note === "installation") {
+      formData.installation_report = [
+        ...machine.installation_report,
+        ...allProcessedImages,
+      ];
+    } else if (values.note === "handover") {
+      formData.final_handover_images = [
+        ...machine.final_handover_images,
+        ...allProcessedImages,
+      ];
+    } else if (values.note === "nameplate") {
+      formData.machine_nameplate_images = [
+        ...machine.machine_nameplate_images,
+        ...allProcessedImages,
+      ];
     }
+    formData.handover_user_id = values.handover_user_id;
     await axios
       .put(`/machine/${machine.id}`, formData)
       .then(async (response) => {
@@ -1043,8 +1185,8 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
   };
 
   const fetchPdfData = async (file) => {
-    const arrayBuffer = await file.arrayBuffer(); // Get the raw data of the PDF
-    return new Uint8Array(arrayBuffer); // Return it as a Uint8Array for PDF.js to handle
+    const arrayBuffer = await file.arrayBuffer();
+    return new Uint8Array(arrayBuffer);
   };
 
   return (
@@ -1066,16 +1208,31 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
                   name="note"
                   render={({ field }) => (
                     <FormItem>
-                      {/* <FormLabel>Note</FormLabel> */}
                       <FormControl>
                         <RadioGroup
                           defaultValue={field.value}
                           onValueChange={field.onChange}
-                          className="flex"
+                          className="flex flex-wrap"
                         >
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="contract" id="r1" />
                             <Label htmlFor="r1">Contract</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="handshake" id="r2" />
+                            <Label htmlFor="r2">Handshake</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="nameplate" id="r2" />
+                            <Label htmlFor="r2">Machine nameplate</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="handover" id="r2" />
+                            <Label htmlFor="r2">Final handover</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="installation" id="r2" />
+                            <Label htmlFor="r2">Installation report</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="additional" id="r2" />
@@ -1087,6 +1244,25 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
                     </FormItem>
                   )}
                 />
+
+                {form.watch("note") === "handover" && (
+                  <FormField
+                    control={form.control}
+                    name="handover_user_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Handover User</FormLabel>
+                        <FormControl>
+                          <UserSearch
+                            value={field.value}
+                            onReturn={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}

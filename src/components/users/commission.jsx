@@ -26,6 +26,8 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Input } from "../ui/input";
+import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "../ui/toast";
 
 export default function Commission({ owner }) {
   return owner ? <OwnerView /> : <OtherView />;
@@ -80,7 +82,7 @@ const OwnerView = () => {
 
     return (
       <TableRow>
-          <TableCell>
+        <TableCell>
           {item.request_date
             ? moment(item.request_date).format("YYYY-MM-DD")
             : ""}
@@ -123,7 +125,7 @@ const OwnerView = () => {
           </div>
         </TableCell>
         <TableCell>{item.note}</TableCell>
-      
+
         <TableCell>
           {loading ? (
             <Spinner />
@@ -162,13 +164,13 @@ const OwnerView = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                <TableHead>Request Date</TableHead>
+                  <TableHead>Request Date</TableHead>
                   <TableHead>Employee</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Machine</TableHead>
                   <TableHead>Commission</TableHead>
                   <TableHead>Note</TableHead>
-                 
+
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -219,7 +221,51 @@ const OtherView = () => {
     const { state: UserState } = useContext(UserContext);
     const [note, setNote] = useState(item?.note || "");
 
-    async function handleApplyCommission(id, amount) {
+    async function handleApplyCommission(id, amount, item) {
+      if (item.customer.profile_completion < 100) {
+        toast({
+          title: "Incomplete data",
+          description:
+            "Data incomplete in customer record, kindly enter all data in this customer",
+          variant: "destructive",
+          action: (
+            <ToastAction
+              onClick={() => {
+                window.open(
+                  `/${UserState.value.data?.base_route}/member/${item.customer.id}`,
+                  "_blank"
+                );
+              }}
+              altText="Open customer"
+            >
+              Open customer
+            </ToastAction>
+          ),
+        });
+        return;
+      }
+      if (item.percentage_completion < 100) {
+        toast({
+          title: "Incomplete data",
+          description:
+            "Data incomplete in machine record, kindly enter all data in this machine",
+          variant: "destructive",
+          action: (
+            <ToastAction
+              onClick={() => {
+                window.open(
+                  `/${UserState.value.data?.base_route}/member/${item.customer.id}/${item.id}`,
+                  "_blank"
+                );
+              }}
+              altText="Open Machine"
+            >
+              Open Machine
+            </ToastAction>
+          ),
+        });
+        return;
+      }
       if (!id) return;
       setLoading(true);
       try {
@@ -306,7 +352,7 @@ const OtherView = () => {
                     ) : (
                       <Button
                         onClick={() =>
-                          handleApplyCommission(item.id, item.paid_amount)
+                          handleApplyCommission(item.id, item.paid_amount, item)
                         }
                       >
                         Apply for Commission

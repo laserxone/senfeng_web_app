@@ -1,7 +1,7 @@
 "use client"
 import { storage } from '@/config/firebase';
 import { pdf } from '@react-pdf/renderer';
-import axios from 'axios';
+import axios from '@/lib/axios';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { ArrowUpDown, Copy, List, Loader2, Minus, PencilIcon, Plus, Table2 } from 'lucide-react';
 import { useContext, useEffect, useRef, useState } from 'react';
@@ -29,6 +29,8 @@ import 'pdfjs-dist/legacy/web/pdf_viewer.css';
 import { Checkbox } from '../ui/checkbox';
 import Spinner from '../ui/spinner';
 import NotificationBadge from './NotificationBadge';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { UserSearch } from '../user-search';
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -71,6 +73,8 @@ export default function POS() {
     const [warranty, setWarranty] = useState(false)
     const [warrantyYear, setWarrantyYear] = useState(1)
     const { state: UserState } = useContext(UserContext)
+    const [selectedRadio, setSelectedRadio] = useState("customer")
+    const [selectedUser, setSelectedUser] = useState({ id: null, label: null })
 
 
 
@@ -84,7 +88,7 @@ export default function POS() {
 
     const handleInvoiceBackendData = async () => {
 
-        axios.put("/api/pos/customer", {
+        axios.put("/pos/customer", {
             name: name,
             company: companyName,
             phone: phoneNumber,
@@ -93,7 +97,7 @@ export default function POS() {
             fetchDataCustomer()
         })
 
-        axios.put(`/api/pos/update/${selectedSearchItem.id}`, {
+        axios.put(`/pos/update/${selectedSearchItem.id}`, {
             olditems: selectedSearchItem,
             newitems: { name: name, company: companyName, phone: phoneNumber, address: address, manager: manager, invoicenumber: nextInvoice, fields: invoiceItems, payment: checked }
         }).finally(() => {
@@ -105,32 +109,41 @@ export default function POS() {
     }
 
     const generatePDF = async () => {
-
-        const invNumber = await handleUpdateStock()
-        const blob = await pdf(<InvoicePDF companyName={companyName} name={name} phoneNumber={phoneNumber} address={address} manager={manager} nextInvoice={invNumber.nextinvoice} invoiceItems={invoiceItems} totalAmount={totalAmount} warranty={warranty} warrantyYear={warrantyYear} />).toBlob();
-        const url = URL.createObjectURL(blob);
-        window.open(url, "_blank");
-        await fetchData()
-        fetchDataCustomer()
-        setTimeout(() => URL.revokeObjectURL(url), 600000);
-
-
+        try {
+            const invNumber = await handleUpdateStock()
+            const blob = await pdf(<InvoicePDF companyName={companyName} name={name} phoneNumber={phoneNumber} address={address} manager={manager} nextInvoice={invNumber.nextinvoice} selectedUser={selectedUser} invoiceItems={invoiceItems} totalAmount={totalAmount} warranty={warranty} warrantyYear={warrantyYear} />).toBlob();
+            const url = URL.createObjectURL(blob);
+            window.open(url, "_blank");
+            await fetchData()
+            fetchDataCustomer()
+            setTimeout(() => URL.revokeObjectURL(url), 600000);
+        } catch (error) {
+            console.log(error)
+            setCustomerLoading(false)
+            setLoading(false)
+        }
     };
 
     async function handleUpdateStock() {
         const modified = stock.filter((item) => item?.modified);
-        const response = await axios.put("/api/pos", {
-            entries: modified,
-            name: name,
-            company: companyName,
-            phone: phoneNumber,
-            address: address,
-            manager: manager,
-            fields: invoiceItems,
-            payment: checked
-        });
 
-        return response.data;
+        try {
+            const response = await axios.put("/pos", {
+                entries: modified,
+                name: name,
+                company: companyName,
+                phone: phoneNumber,
+                address: address,
+                manager: manager,
+                fields: invoiceItems,
+                payment: checked,
+                selecteduser: selectedUser,
+            });
+
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
     }
 
     useEffect(() => {
@@ -144,7 +157,7 @@ export default function POS() {
     const fetchData = async () => {
         clearAll()
         return new Promise((resolve) => {
-            axios.get("/api/pos")
+            axios.get("/pos")
                 .then((response) => {
                     if (response.data.stock.length > 0) {
                         let resultedData = [...response.data.stock]
@@ -175,7 +188,7 @@ export default function POS() {
     };
 
     const fetchDataCustomer = async () => {
-        axios.get("/api/pos/customer")
+        axios.get("/pos/customer")
             .then((response) => {
 
                 if (response.data.customers.length > 0) {
@@ -295,6 +308,7 @@ export default function POS() {
         setShowOther(false)
         setManager('')
         setNextInvoice("xxxxxxxx-xxx")
+        setSelectedRadio("customer")
     }
 
     const handlePhoneChange = (e) => {
@@ -351,7 +365,7 @@ export default function POS() {
     };
 
     async function handleItemSearch() {
-        axios.get(`/api/pos/search/${itemSearch}`)
+        axios.get(`/pos/search/${itemSearch}`)
             .then((response) => {
                 if (response.data.length > 0) {
                     const resultWithTotal = response.data.map((item) => {
@@ -381,7 +395,7 @@ export default function POS() {
 
     async function handlePendingPayments() {
         return new Promise((resolve) => {
-            axios.get(`/api/pos/search/null?pending=true`)
+            axios.get(`/pos/search/null?pending=true`)
                 .then((response) => {
                     if (response.data.length > 0) {
                         const resultWithTotal = response.data.map((item) => {
@@ -403,8 +417,8 @@ export default function POS() {
     }
 
     useEffect(() => {
-        console.log(reminder)
-    }, [reminder])
+        setSelectedUser({ id: null, label: null })
+    }, [selectedRadio])
 
     return (
         (loading || customerLoading) ?
@@ -415,6 +429,31 @@ export default function POS() {
             <PageContainer scrollable={true}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                     <div className='flex flex-1 p-2 flex-col p-6 border rounded-lg shadow-lg bg-gray-50 gap-4'>
+
+                        <RadioGroup
+                            defaultValue={selectedRadio}
+                            onValueChange={setSelectedRadio}
+                            className="flex"
+                        >
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="customer" id="r1" />
+                                <Label htmlFor="r1">Customer</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="engineer" id="r2" />
+                                <Label htmlFor="r2">Engineer</Label>
+                            </div>
+                        </RadioGroup>
+
+                        {selectedRadio === 'engineer' &&
+                            <UserSearch
+                                value={selectedUser.id}
+                                onReturn={(val) => {
+                                    setSelectedUser((prevState) => ({ ...prevState, id: val }))
+                                }}
+                                onReturnName={(val) => {
+                                    setSelectedUser((prevState) => ({ ...prevState, label: val }))
+                                }} placeholder='Select user' />}
 
                         <div className="w-full relative">
                             <Input
@@ -523,6 +562,19 @@ export default function POS() {
                                 <div className="flex-1 bg-white p-3 font-bold text-center">{totalAmount ? `${totalAmount}` : "0"}</div>
                             </div>
                         </div>
+
+                         <Button
+                         variant="outline"
+                            onClick={() => {
+                                setSearchInvoice(!searchInvocie)
+
+                            }}
+                            className="w-full"
+                        >
+
+                            Open Engineer items
+                        </Button>
+
                         {selectedSearchItem ?
                             <Button
                                 onClick={() => {
@@ -540,7 +592,14 @@ export default function POS() {
                             :
                             <Button
                                 onClick={() => {
-                                    setModal(true)
+                                    if (selectedUser?.id) {
+                                        setLoading(true)
+                                        setCustomerLoading(true)
+                                        generatePDF()
+                                    } else {
+                                        setModal(true)
+                                    }
+
 
                                 }}
                                 disabled={invoiceItems.length === 0}
@@ -591,7 +650,7 @@ export default function POS() {
                                 {/* Company Details */}
                                 <CompanyDetails />
                                 {/* Form Fields */}
-                                <FormField companyName={companyName} name={name} phoneNumber={phoneNumber} address={address} manager={manager} inv={nextInvoice} />
+                                <FormField companyName={companyName} name={name} phoneNumber={phoneNumber} address={address} manager={manager} inv={nextInvoice} selectedUser={selectedUser} />
                                 {/* Invoice Table */}
                                 <div style={{ marginBottom: 5, width: '100%' }}>
                                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -787,7 +846,7 @@ export default function POS() {
 const RenderPaid = ({ row, onRefresh }) => {
     async function handleUpdatePayment(checked) {
         setLocalLoading(true)
-        await axios.put(`/api/pos/payment/${row.original.id}`, {
+        await axios.put(`/pos/payment/${row.original.id}`, {
             payment: checked
         }).then(async () => {
             setLocalChecked(checked)
@@ -1084,7 +1143,7 @@ const AddItemDialog = ({ visible, onClose, handleDecrease, showOther, setShowOth
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 />
-             
+
                 <ScrollArea className="h-[70vh]">
                     <div className="flex flex-col gap-5 p-4">
 
@@ -1144,7 +1203,7 @@ const AddItemDialog = ({ visible, onClose, handleDecrease, showOther, setShowOth
                     </div>
 
                 </ScrollArea>
-               
+
                 {/* 
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose}>
@@ -1248,7 +1307,7 @@ const RenderStockItems = ({ item, index, invoiceItems, handleDecrease, handleInc
         setLoading(true)
         try {
             const result = await uploadFiles(localImage, imgRef)
-            axios.put(`/api/pos/${id}`, {
+            axios.put(`/pos/${id}`, {
                 name: localName,
                 price: Number(localPrice),
                 qty: Number(localQty),
@@ -1461,7 +1520,7 @@ const RenderStockItemsOtherView = ({ item, index, invoiceItems, handleDecrease, 
         setLoading(true)
         try {
             const result = await uploadFiles(localImage, imgRef)
-            axios.put(`/api/pos/${id}`, {
+            axios.put(`/pos/${id}`, {
                 name: localName,
                 price: Number(localPrice),
                 qty: Number(localQty),
@@ -1664,7 +1723,7 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
         setLoading(true)
         try {
             const result = await uploadFiles(image)
-            axios.post("/api/pos", {
+            axios.post("/pos", {
                 name: name,
                 price: Number(price),
                 qty: Number(qty),
@@ -1673,8 +1732,6 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
                 new_order: newOrder ? Number(newOrder) : ""
             })
                 .then(() => {
-
-
                     onRefresh()
                 }).catch((e) => {
                     console.log(e)
@@ -1793,15 +1850,15 @@ const BankDetail = () => {
     )
 }
 
-const FormField = ({ phoneNumber, address, companyName, name, manager, inv }) => {
+const FormField = ({ phoneNumber, address, companyName, name, manager, inv, selectedUser }) => {
     return (
         <div style={{ display: 'grid', gap: 0, marginBottom: 5 }}>
-            {['Company', 'Name', 'Contact', 'Address', 'Manager', 'Invoice No'].map((label, index) => (
+            {['Company', 'Name', 'Contact', 'Address', 'Manager', selectedUser?.id ? "Engineer" : 'Invoice No'].map((label, index) => (
                 <div key={label} style={{ display: 'flex', flexDirection: 'column' }}>
                     <label style={{ color: '#7F7F7FFF', marginLeft: 10, fontWeight: '600' }}>{label}:</label>
                     <div style={{ backgroundColor: '#dce4f1', paddingLeft: 10, border: '1px solid #E5E7EB', maxWidth: '600px', height: 30, fontSize: 18, display: 'flex', alignItems: 'center' }}>
                         <Label>
-                            {index == 0 ? companyName : index == 1 ? name : index == 2 ? phoneNumber : index == 3 ? address : index == 4 ? manager : index == 5 ? inv : ""}
+                            {index == 0 ? companyName : index == 1 ? name : index == 2 ? phoneNumber : index == 3 ? address : index == 4 ? manager : index == 5 ? selectedUser?.id ? selectedUser?.label : inv : ""}
                         </Label>
                     </div>
 

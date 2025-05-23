@@ -9,10 +9,10 @@ export async function GET() {
 
     try {
         const result = await pool.query("SELECT * FROM inventory ORDER BY id ASC");
-        
+
         const reminders = await pool.query("SELECT * FROM savedinvoices WHERE payment=false");
 
-        return NextResponse.json({ stock: result.rows, reminders : reminders.rows }, { status: 200 })
+        return NextResponse.json({ stock: result.rows, reminders: reminders.rows }, { status: 200 })
     } catch (error) {
         console.log(error)
         return NextResponse.json({ message: "Processing error" }, { status: 500 })
@@ -89,18 +89,35 @@ export async function PUT(req) {
             address,
             manager,
             fields,
-            payment
+            payment,
+            selecteduser
         } = await req.json();
 
-        const lastIdResult = await pool.query("SELECT MAX(id) AS last_id FROM savedinvoices");
-        const invoicenumber = Number(lastIdResult.rows[0]?.last_id || 0) + 1
-        const generatedInvoiceNumber = `${moment().format("YYYYMMDD")}-${invoicenumber}`
-       await pool.query(
-            `INSERT INTO savedinvoices 
+        let generatedInvoiceNumber = ""
+
+        if (selecteduser?.id) {
+
+            await pool.query(
+                `INSERT INTO issueditems 
+            (name, company, phone, address, manager, fields, user_id, issued) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                [name, company, phone, address, manager, JSON.stringify(fields), selecteduser.id, true]
+            );
+
+        } else {
+            const lastIdResult = await pool.query("SELECT MAX(id) AS last_id FROM savedinvoices");
+            const invoicenumber = Number(lastIdResult.rows[0]?.last_id || 0) + 1
+            generatedInvoiceNumber = `${moment().format("YYYYMMDD")}-${invoicenumber}`
+            await pool.query(
+                `INSERT INTO savedinvoices 
             (name, company, phone, address, manager, invoicenumber, fields, payment) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-            [name, company, phone, address, manager, generatedInvoiceNumber, JSON.stringify(fields), payment]
-        );
+                [name, company, phone, address, manager, generatedInvoiceNumber, JSON.stringify(fields), payment]
+            );
+
+        }
+
+
         if (entries.length > 0) {
             for (const entry of entries) {
                 const { id, qty } = entry;
@@ -127,11 +144,11 @@ export async function PUT(req) {
             );
         }
 
-        return NextResponse.json({ nextinvoice : generatedInvoiceNumber }, { status: 200 });
+        return NextResponse.json({ nextinvoice: generatedInvoiceNumber }, { status: 200 });
 
     } catch (error) {
         console.log(error)
-        return NextResponse.json({ message: "Processing error" }, { status: 500 })
+        return NextResponse.json({ message: error?.message || "Processing error" }, { status: 500 })
     }
 
 }

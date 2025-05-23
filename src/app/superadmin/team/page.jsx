@@ -37,15 +37,12 @@ import {
 } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
-import { BASE_URL } from "@/constants/data";
 import { useToast } from "@/hooks/use-toast";
-import { UserContext } from "@/store/context/UserContext";
 import axios from "@/lib/axios";
+import { UserContext } from "@/store/context/UserContext";
 import { startHolyLoader } from "holy-loader";
 import moment from "moment";
 import { useRouter } from "next/navigation";
-import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "@/config/firebase";
 
 const columns = [
   {
@@ -99,6 +96,29 @@ const columns = [
       <div>
         {row.getValue("joining_date")
           ? moment(row.getValue("joining_date")).format("YYYY-MM-DD")
+          : null}
+      </div>
+    ),
+  },
+
+  {
+    accessorKey: "leaving_date",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Leaving Date
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => (
+      <div>
+        {row.getValue("leaving_date")
+          ? moment(row.getValue("leaving_date")).format("YYYY-MM-DD")
           : null}
       </div>
     ),

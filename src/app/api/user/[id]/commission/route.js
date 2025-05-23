@@ -1,3 +1,4 @@
+import { profileFields, saleFields } from "@/app/api/customer/[id]/route";
 import pool from "@/config/db";
 import { NextResponse } from "next/server"
 
@@ -15,14 +16,59 @@ export async function GET(req, { params }) {
           
           const enrichedSales = await Promise.all(
             sales.map(async (sale) => {
-              // Step 2: Get customer details (id, name, owner only)
+
+              let machineFilled = 0;
+              
+                    // Handle contract_images as one field
+                    const hasContractImages =
+                      (Array.isArray(sale.contract_images_pdf) && sale.contract_images_pdf.length > 0) ||
+                      (Array.isArray(sale.contract_images_png) && sale.contract_images_png.length > 0);
+              
+                    if (hasContractImages) machineFilled++;
+              
+                    // Handle other saleFields
+                    saleFields.forEach(field => {
+                      const value = sale[field];
+                      const isFilled =
+                        Array.isArray(value)
+                          ? value.length > 0
+                            : typeof value === 'number'
+                              ? ['price'].includes(field)
+                                ? value !== null && !isNaN(value)
+                                : true
+                              : typeof value === 'string'
+                                ? value.trim() !== '' && value !== 'null'
+                                : value !== null && value !== undefined;
+              
+                      if (isFilled) machineFilled++;
+                    });
+              
+                    const totalFields = saleFields.length + 1;
+
               const customerResult = await pool.query(
-                'SELECT id, name, owner FROM customer WHERE id = $1',
+                'SELECT * FROM customer WHERE id = $1',
                 [sale.customer_id]
               );
               const customer = customerResult.rows[0] || {};
+
+              const customerTotalFields = profileFields.length;
+
+                let filledCount = 0;
+                  profileFields.forEach(field => {
+                    const value = customer[field];
+                    const isFilled =
+                      field === 'rating'
+                        ? typeof value === 'number' && value > 0
+                        : Array.isArray(value)
+                          ? value.length > 0
+                            : typeof value === 'number'
+                              ? true
+                              : typeof value === 'string'
+                                ? value.trim() !== '' && value !== 'null'
+                                : value !== null && value !== undefined;
+                    if (isFilled) filledCount++;
+                  });
           
-              // Step 3: Get all payments for this sale (assuming sale.id is machine_id)
               const paymentResult = await pool.query(
                 'SELECT * FROM payment WHERE machine_id = $1',
                 [sale.id]
@@ -31,17 +77,17 @@ export async function GET(req, { params }) {
                 (payment) => payment.clearance_date !== null
               );
           
-              // Sum payment amounts
               const paid_amount = payments.reduce((sum, payment) => {
                 return sum + Number(payment.amount || 0);
               }, 0);
           
-              // Step 4: Get commission for this sale
               const commissionResult = await pool.query(
                 'SELECT * FROM commissions WHERE sale_id = $1',
                 [sale.id]
               );
               const commission = commissionResult.rows[0] || {};
+
+              customer.profile_completion = Math.round((filledCount / customerTotalFields) * 100);
           
               return {
                 ...sale,
@@ -51,6 +97,7 @@ export async function GET(req, { params }) {
                 paid_amount,
                 balance: Number(sale.price || 0) - paid_amount,
                 commission,
+                percentage_completion: Math.round((machineFilled / totalFields) * 100),
               };
             })
           );

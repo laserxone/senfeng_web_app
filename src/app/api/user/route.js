@@ -119,22 +119,32 @@ export async function GET(req) {
 
   const searchParams = req.nextUrl.searchParams
   const user = searchParams.get('user')
+  const withoutleave = searchParams.get('withoutleave')
 
 
   try {
     let query = `SELECT * FROM users`;
-
-    let queryParams = []
+    let queryParams = [];
+    let conditions = [];
 
     if (user) {
-      query += ` WHERE id = $1`
-      queryParams.push(user)
+      conditions.push(`id = $${queryParams.length + 1}`);
+      queryParams.push(user);
+    }
+
+    if (withoutleave) {
+      conditions.push(`(leaving_date IS NULL OR leaving_date > now())`);
+    }
+
+    if (conditions.length > 0) {
+      query += ` WHERE ` + conditions.join(" AND ");
     }
 
     query += ` ORDER BY name ASC;`;
 
     const result = await pool.query(query, queryParams);
-    return NextResponse.json(result.rows, { status: 200 })
+    return NextResponse.json(result.rows, { status: 200 });
+
 
   } catch (error) {
     console.error('Error inserting data: ', error);

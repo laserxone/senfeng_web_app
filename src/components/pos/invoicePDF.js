@@ -2,7 +2,7 @@ import { Document, Image, Page, Path, Svg, Text, View } from '@react-pdf/rendere
 
 
 
-const InvoicePDF = ({ companyName, name, phoneNumber, address, manager, nextInvoice, invoiceItems, totalAmount, warranty, warrantyYear }) => {
+const InvoicePDF = ({ companyName, name, phoneNumber, address, manager, nextInvoice, invoiceItems, totalAmount, warranty, warrantyYear, selectedUser }) => {
 
 
   return (
@@ -18,7 +18,7 @@ const InvoicePDF = ({ companyName, name, phoneNumber, address, manager, nextInvo
           <CompanyDetails />
 
           {/* Form Fields */}
-          <FormField companyName={companyName} name={name} phoneNumber={phoneNumber} address={address} manager={manager} inv={nextInvoice} />
+          <FormField selectedUser={selectedUser} companyName={companyName} name={name} phoneNumber={phoneNumber} address={address} manager={manager} inv={nextInvoice} />
 
           {/* Invoice Table */}
           <View style={{ width: '100%' }}>
@@ -165,15 +165,15 @@ const BankDetail = () => {
   )
 }
 
-const FormField = ({ phoneNumber, address, companyName, name, manager, inv }) => {
+const FormField = ({ phoneNumber, address, companyName, name, manager, inv, selectedUser }) => {
   return (
     <View style={{ marginBottom: 5 }}>
-      {['Company', 'Name', 'Contact', 'Address', 'Manager', 'Invoice No'].map((label, index) => (
+      {['Company', 'Name', 'Contact', 'Address', 'Manager', selectedUser?.id ? "Engineer" : 'Invoice No'].map((label, index) => (
         <View key={label} style={{ display: 'flex', flexDirection: 'column', marginBottom: 5 }}>
           <Text style={{ color: '#7F7F7FFF', marginLeft: 10, fontFamily: 'Helvetica-Bold', fontSize: 11 }}>{label}:</Text>
           <View style={{ backgroundColor: '#dce4f1', paddingLeft: 10, border: '1px solid #E5E7EB', maxWidth: '360px', height: 20, fontSize: 11, display: 'flex', justifyContent: 'center', }}>
             <Text>
-              {index == 0 ? companyName : index == 1 ? name : index == 2 ? phoneNumber : index == 3 ? address : index == 4 ? manager : index == 5 ? inv : ""}
+              {index == 0 ? companyName : index == 1 ? name : index == 2 ? phoneNumber : index == 3 ? address : index == 4 ? manager : index == 5 ? selectedUser?.id ? selectedUser?.label : inv : ""}
             </Text>
           </View>
 

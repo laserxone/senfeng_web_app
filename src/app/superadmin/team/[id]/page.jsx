@@ -28,6 +28,7 @@ export default function Page({ params }) {
   const [customers, setCustomers] = useState([]);
   const [allowedExtraData, setAllowedExtraData] = useState(true);
   const [joiningDate, setJoiningDate] = useState(null);
+   const [leavingDate, setLeavingDate] = useState(null);
   const [dataLoading, setDataLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [employeeId, setEmployeeId] = useState(null);
@@ -108,6 +109,7 @@ export default function Page({ params }) {
           });
 
           setJoiningDate(apiData?.joining_date);
+          setLeavingDate(apiData?.leaving_date)
         } else {
           toast({
             title: "Employee details not found",
@@ -158,6 +160,7 @@ export default function Page({ params }) {
         limited_access: checks?.limited_access,
         full_access: checks?.full_access,
         joining_date: joiningDate,
+        leaving_date : leavingDate
       })
       .then(() => {
         toast({ title: "Information updated" });
@@ -328,6 +331,14 @@ export default function Page({ params }) {
                   <AppCalendar
                     date={joiningDate}
                     onChange={(date) => setJoiningDate(date)}
+                  />
+                </div>
+
+                 <div className="flex flex-col gap-1">
+                  <Label>LEAVING DATE</Label>
+                  <AppCalendar
+                    date={leavingDate}
+                    onChange={(date) => setLeavingDate(date)}
                   />
                 </div>
               </CardContent>

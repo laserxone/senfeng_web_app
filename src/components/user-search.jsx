@@ -26,13 +26,14 @@ export function UserSearch({
   onReturn,
   placeholder = "Select user...",
   lead = false,
+  onReturnName
 }) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState([]);
 
   React.useEffect(() => {
     async function fetchData() {
-      axios.get(`/user`).then((response) => {
+      axios.get(`/user?withoutleave=true`).then((response) => {
         if (response.data.length > 0) {
           if (lead) {
             const finalData = response.data
@@ -83,6 +84,7 @@ export function UserSearch({
                   value={item.label}
                   onSelect={() => {
                     onReturn(Number(item.value));
+                    onReturnName(item.label)
                     setOpen(false);
                   }}
                 >

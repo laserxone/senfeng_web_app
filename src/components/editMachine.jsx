@@ -39,12 +39,12 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
     machineModel: z.string().min(1, { message: "Machine model is required." }),
     power: z.string().min(1, { message: "Power is required." }),
     source: z.string().min(1, { message: "Source is required." }),
-
     contractDate: z.date({ required_error: "Contract date is required." }),
     isSpeedMoney: z.boolean().default(false),
     speedMoney: z.string().optional(),
     speedMoneyNote: z.string().optional(),
     totalPrice: z.number().min(1, { message: "Total price is required." }),
+    cnic: z.string().optional(),
   });
 
   const form = useForm({
@@ -58,6 +58,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
       speedMoney: "",
       speedMoneyNote: "",
       totalPrice: 0,
+      cnic: "",
     },
   });
 
@@ -72,6 +73,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
         speedMoney: data?.speed_money_amount || "",
         speedMoneyNote: data?.speed_money_note || "",
         totalPrice: Number(data?.price || 0),
+        cnic: data?.cnic || "",
       });
       if (data?.order_no_arr) {
         setOrderNumbers([...data.order_no_arr]);
@@ -109,6 +111,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
         order_no_arr: cleanedOrderNumbers,
         price: values.totalPrice,
         contract_date: values.contractDate,
+        cnic: values.cnic,
       })
       .then(async () => {
         await onRefresh();
@@ -158,7 +161,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
             <div className="px-2">
               <Form {...form}>
                 <form
-                  onSubmit={form.handleSubmit(onSubmit, (errors)=>{
+                  onSubmit={form.handleSubmit(onSubmit, (errors) => {
                     console.log("Form validation errors:", errors);
                   })}
                   className="space-y-2"
@@ -368,6 +371,23 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
                       />
                     </>
                   )}
+
+                  <FormField
+                    control={form.control}
+                    name="cnic"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cnic</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="example: 1234567891234"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   <Button className="w-full" type="submit">
                     {loading && <Spinner />} Submit

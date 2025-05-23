@@ -56,6 +56,7 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
   const { toast } = useToast();
   const router = useRouter();
   const [visitData, setVisitData] = useState([]);
+  const [profileCompletion, setProfileCompletion] = useState(0);
 
   useEffect(() => {
     if (customer_id && UserState?.value?.data?.id) {
@@ -77,14 +78,28 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
 
   async function fetchCustomerDetail() {
     axios.get(`/customer/${customer_id}`).then((response) => {
-      setData(response.data);
-      if (response.data?.machines?.length === 0) {
+      const data = response.data;
+      setData(data);
+
+      const customerCompletion = Number(data.profile_completion) || 0;
+      const machines = data.machines || [];
+
+      if (machines.length === 0) {
         toast({
           variant: "destructive",
-          title: "Ops",
+          title: "Oops",
           description: "No machine sold",
         });
       }
+
+      const totalMachineCompletion = machines.reduce(
+        (sum, item) => sum + Number(item.percentage_completion || 0),
+        0
+      );
+
+      const overallCompletion =
+        (customerCompletion + totalMachineCompletion) / (machines.length + 1);
+      setProfileCompletion(overallCompletion.toFixed(0));
     });
   }
 
@@ -186,12 +201,12 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
 
           <div className="flex flex-row items-center gap-2">
             <Label className="text-sm font-bold mb-1 text-gray-700 dark:text-gray-300">
-              Profile Completion
+              Overall Profile Completion
             </Label>
             <div className="h-[70px] w-[70px] ">
               <CircularProgressbar
-                value={data?.profile_completion || 0}
-                text={`${data?.profile_completion || 0}%`}
+                value={profileCompletion}
+                text={`${profileCompletion}%`}
                 styles={buildStyles({
                   pathColor: "#4ade80", // green
                   textColor: "#1f2937", // gray-800
@@ -405,7 +420,7 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
   const { state: UserState } = useContext(UserContext);
 
   const RenderEachMachine = ({ machine }) => {
-    const totalPayments = machine?.payments?.reduce(
+    const totalPayments = machine?.payments.filter((item)=> item.clearance_date)?.reduce(
       (sum, payment) => sum + Number(payment.amount),
       0
     );
@@ -423,10 +438,10 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
                 </h3>
               </Link>
               <div className="flex items-center">
-                 <span className="font-normal text-sm text-gray-600 mr-2">
-                  Profile completion:{" "}  {machine?.profile_completion || 0}%
-                  </span>
-                {Number(machine.price) === totalPayments ? (
+                <span className="font-normal text-sm text-gray-600 mr-2">
+                  Data completion: {machine?.percentage_completion || 0}%
+                </span>
+                {Number(machine.price) === totalPayments && machine?.percentage_completion === 100 ? (
                   <CheckCircle className="text-green-500 w-5 h-5 mr-2" />
                 ) : (
                   <Clock className="text-yellow-500 w-5 h-5 mr-2" />
