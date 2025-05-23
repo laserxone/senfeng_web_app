@@ -9,60 +9,6 @@ export const ownerNavItems = [
     items: []
   },
   {
-    title: 'Task Management',
-    url: '#',
-    icon: 'task',
-    isActive: true,
-
-    items: [
-      {
-        title: 'Assign Task',
-        url: '/task',
-        icon: 'userPen',
-        shortcut: ['a', 's', 's']
-      },
-      {
-        title: 'Map View',
-        shortcut: ['m', 'a', 'p'],
-        url: '/map',
-        icon: 'login'
-      }
-    ]
-  },
-  {
-    title: 'Human Resource',
-    url: '#',
-    icon: 'hr',
-    isActive: true,
-
-    items: [
-      {
-        title: 'Attendance',
-        url: '/attendance',
-        icon: 'userPen',
-        shortcut: ['a', 't', 't']
-      },
-      {
-        title: 'Salary',
-        shortcut: ['s', 'a', 'l'],
-        url: '/salary',
-        icon: 'login'
-      },
-      {
-        title: 'Reimbursement',
-        shortcut: ['r', 'e', 'i'],
-        url: '/reimbursement',
-        icon: 'login'
-      },
-      {
-        title: 'Commission',
-        shortcut: ['c', 'o', 'm'],
-        url: '/commission',
-        icon: 'commission'
-      }
-    ]
-  },
-  {
     title: 'Customer',
     url: '#',
     icon: 'customer',
@@ -102,6 +48,67 @@ export const ownerNavItems = [
       },
     ]
   },
+
+  {
+    title: 'Human Resource',
+    url: '#',
+    icon: 'hr',
+    isActive: true,
+
+    items: [
+      {
+        title: 'Attendance',
+        url: '/attendance',
+        icon: 'userPen',
+        shortcut: ['a', 't', 't']
+      },
+      {
+        title: 'Salary',
+        shortcut: ['s', 'a', 'l'],
+        url: '/salary',
+        icon: 'login'
+      },
+      {
+        title: 'Reimbursement',
+        shortcut: ['r', 'e', 'i'],
+        url: '/reimbursement',
+        icon: 'login'
+      },
+      {
+        title: 'Commission',
+        shortcut: ['c', 'o', 'm'],
+        url: '/commission',
+        icon: 'commission'
+      },
+      {
+        title: 'Team',
+        url: '/team',
+        icon: 'team',
+        shortcut: ['t', 'e', 'a'],
+      },
+    ]
+  },
+  {
+    title: 'Task Management',
+    url: '#',
+    icon: 'task',
+    isActive: true,
+
+    items: [
+      {
+        title: 'Assign Task',
+        url: '/task',
+        icon: 'userPen',
+        shortcut: ['a', 's', 's']
+      },
+      {
+        title: 'Map View',
+        shortcut: ['m', 'a', 'p'],
+        url: '/map',
+        icon: 'login'
+      }
+    ]
+  },
   {
     title: 'Office Expense',
     url: '/expense',
@@ -118,14 +125,7 @@ export const ownerNavItems = [
     isActive: false,
     items: [] // No child items
   },
-  {
-    title: 'Team',
-    url: '/team',
-    icon: 'team',
-    shortcut: ['t', 'e', 'a'],
-    isActive: false,
-    items: [] // No child items
-  },
+
   {
     title: 'DMS',
     url: '/dms',

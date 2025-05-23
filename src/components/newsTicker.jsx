@@ -20,7 +20,7 @@ export default function NewsTicker() {
 
   return (
   data.length > 0 && (
-    <div className="bg-red-600 text-white font-bold py-2 px-4 overflow-hidden relative my-2">
+    <div className="bg-red-600 text-white font-bold py-2 px-4 overflow-hidden relative">
       <div className="flex whitespace-nowrap animate-marquee">
         {data.concat(data).map((item, index) => (
           <span

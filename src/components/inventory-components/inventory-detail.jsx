@@ -13,13 +13,31 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import axios from "@/lib/axios";
-import { Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "../ui/command";
+import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
 
 export default function InventoryDetail({ booking_id }) {
   const { state: UserState } = useContext(UserContext);
@@ -35,6 +53,10 @@ export default function InventoryDetail({ booking_id }) {
   const tableContainerRef = useRef(null);
   const [tableMaxHeight, setTableMaxHeight] = useState("auto");
   const [availableWidth, setAvailableWidth] = useState("full");
+  const [allCustomers, setAllCustomers] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [visible, setVisible] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(null);
 
   useEffect(() => {
     const updateWidth = () => {
@@ -59,7 +81,6 @@ export default function InventoryDetail({ booking_id }) {
           .put(`/bookings`, { id: apiData.id, data: debouncedData })
           .catch((error) => console.error("Failed to update backend", error))
           .finally(() => {
-            const temp = debouncedData;
             setLoadingMessage("");
             setLoading(false);
           });
@@ -69,6 +90,7 @@ export default function InventoryDetail({ booking_id }) {
   useEffect(() => {
     if (UserState.value.data?.id && booking_id) {
       fetchData();
+      fetchCustomerData();
     }
   }, [UserState.value.data]);
 
@@ -140,6 +162,22 @@ export default function InventoryDetail({ booking_id }) {
       .finally(() => {
         setPrefetching(false);
       });
+  }
+
+  async function fetchCustomerData() {
+    axios.get(`/customer?withoutsale=true`).then((response) => {
+      if (response.data.length > 0) {
+        const apiData = response.data.sort((a, b) =>
+          a?.name.localeCompare(b?.name || "")
+        );
+        const finalData = apiData
+          .map((item) => {
+            return { ...item, value: item.id, label: item.name || item.owner };
+          })
+          .filter((item) => !!item.label);
+        setAllCustomers(finalData);
+      }
+    });
   }
 
   const handleClickOutside = useCallback((event) => {
@@ -270,30 +308,62 @@ export default function InventoryDetail({ booking_id }) {
     return filledData;
   }
 
-  return (
-    <div
-      className="flex flex-1 flex-col pb-10"
-      ref={tableRef}
-      onFocus={() => setFocusedBoard(true)}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex gap-5 items-center">
-          <Label>{loadingMessage}</Label>
-        </div>
-        <div className="flex w-full justify-end">
-          <Button
-            onClick={() => {
-              setLoading(true);
-              setTimeout(() => {
-                setLoading(false);
-              }, [1000]);
-            }}
-          >
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            Submit
-          </Button>
+  const handleCustomerSelect = (customerId, rowIndex) => {
+    const selected = allCustomers.find((c) => c.value === customerId);
+    if (!selected) return;
 
-          {/* <Button
+    const updatedData = [...data];
+
+    updatedData[rowIndex] = {
+      ...updatedData[rowIndex],
+      CUSTOMER: selected.label || "",
+      NUMBER:
+        Array.isArray(selected.number) && selected.number.length > 0
+          ? selected.number[0]
+          : "",
+      CITY: selected.location || "",
+    };
+
+    setData(updatedData);
+    setVisible(false);
+    setSelectedIndex(null);
+  };
+
+  useEffect(() => {
+    if (!visible) {
+      document.body.style.pointerEvents = "auto";
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    console.log(visible);
+  }, [visible]);
+
+  return (
+    <>
+      <div
+        className="flex flex-1 flex-col pb-10"
+        ref={tableRef}
+        onFocus={() => setFocusedBoard(true)}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex gap-5 items-center">
+            <Label>{loadingMessage}</Label>
+          </div>
+          <div className="flex w-full justify-end">
+            <Button
+              onClick={() => {
+                setLoading(true);
+                setTimeout(() => {
+                  setLoading(false);
+                }, [1000]);
+              }}
+            >
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              Submit
+            </Button>
+
+            {/* <Button
           onClick={() => {
             let filledData = fillData();
             setData(filledData);
@@ -301,159 +371,255 @@ export default function InventoryDetail({ booking_id }) {
         >
           Auto Fill
         </Button> */}
+          </div>
+        </div>
+
+        <div
+          style={{
+            maxHeight: tableMaxHeight,
+            maxWidth: availableWidth,
+            minHeight: tableMaxHeight,
+          }}
+          ref={tableContainerRef}
+          className={`overflow-y-auto flex-1  overflow-x-auto`}
+        >
+          <div className="min-w-full inline-block align-middle">
+            <div className="sticky top-0 z-30  bg-[#44546A]">
+              <div className="border border-gray-600 p-2 text-center font-semibold w-full">
+                <input
+                  className="bg-transparent text-black dark:text-white dark:placeholder-gray-300"
+                  style={{
+                    borderColor: "transparent",
+                    height: 35,
+                    width: "100%",
+                    fontWeight: 600,
+                    fontSize: "19px",
+                    color: "white",
+                    textAlign: "center",
+                  }}
+                  onBlur={() => handleSaveShipment()}
+                  value={apiData?.shipment || ""}
+                  onChange={(e) =>
+                    setApiData({ ...apiData, shipment: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+            <div className=" sticky top-[53px] z-20 flex flex-row bg-red-600">
+              {[
+                "QTY",
+                "SERIAL",
+                "MODEL",
+                "POWER",
+                "SOURCE",
+                "CUSTOMER",
+                "MOBILE",
+                "CITY",
+                "MANAGER",
+                "PRICE",
+                "DELIVERY",
+                "REMARKS",
+              ].map((item, index) =>
+                item === "MOBILE" ? (
+                  <TooltipProvider key={index}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={` p-2 text-center text-white font-semibold ${
+                            item === "REMARKS" ? "w-[300px]" : "w-[130px]"
+                          }`}
+                        >
+                          {item}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <div>Customer Mobile Number</div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <div
+                    key={index}
+                    className={` p-2 text-center text-white font-semibold ${
+                      item === "REMARKS" ? "w-[300px]" : "w-[130px]"
+                    }`}
+                  >
+                    {item}
+                  </div>
+                )
+              )}
+            </div>
+            {data &&
+              data.length > 0 &&
+              data.map((item, ind) => (
+                <div key={ind} className={`flex flex-row ${item.color}`}>
+                  {fieldOrder.map((key, index1) => (
+                    <div
+                      key={`${ind}-${index1}`}
+                      className={`border border-gray-400 dark:border-gray-400 ${
+                        key === "REMARKS" ? "w-[300px]" : "w-[130px]"
+                      } text-black dark:text-white`}
+                    >
+                      <ContextMenu>
+                        <ContextMenuTrigger>
+                          <input
+                            onFocus={() => setFocusedRow(ind)}
+                            onBlur={(e) => {
+                              if (
+                                !e.relatedTarget ||
+                                !tableRef.current.contains(e.relatedTarget)
+                              ) {
+                                setFocusedRow(null);
+                                setFocusedBoard(false);
+                              }
+                            }}
+                            className="bg-transparent text-black dark:text-white dark:placeholder-gray-300"
+                            style={{
+                              borderColor: "transparent",
+                              height: 35,
+                              width: "100%",
+                              fontWeight: 600,
+                              fontSize: "14px",
+                              borderRadius: 0,
+                              paddingInline: 5,
+                            }}
+                            value={item[key] || ""}
+                            onChange={(e) => {
+                              const inputValue = e.target.value;
+                              const parsedValue =
+                                inputValue.trim() === ""
+                                  ? ""
+                                  : isNaN(inputValue)
+                                  ? inputValue
+                                  : Number(inputValue);
+
+                              setData((prevState) => {
+                                const newState = [...prevState];
+                                newState[ind] = {
+                                  ...newState[ind],
+                                  [key]: parsedValue,
+                                };
+                                return newState;
+                              });
+                            }}
+                          />
+                        </ContextMenuTrigger>
+                        <ContextMenuContent>
+                          <ContextMenuItem
+                            onClick={() => {
+                              setSelectedIndex(ind);
+                              setVisible(true);
+                            }}
+                          >
+                            Select customer
+                          </ContextMenuItem>
+                          <ContextMenuItem
+                            onClick={() => handleSameRowAbove(ind)}
+                          >
+                            Add same row above
+                          </ContextMenuItem>
+                          <ContextMenuItem
+                            onClick={() => handleSameRowBelow(ind)}
+                          >
+                            Add same row below
+                          </ContextMenuItem>
+                        </ContextMenuContent>
+                      </ContextMenu>
+                    </div>
+                  ))}
+                </div>
+              ))}
+          </div>
         </div>
       </div>
+      <CustomPopup visible={visible} onClose={() => setVisible(false)}>
+        <h2 className="text-lg font-semibold mb-4">Select Customer</h2>
 
-      <div
-        style={{
-          maxHeight: tableMaxHeight,
-          maxWidth: availableWidth,
-          minHeight: tableMaxHeight,
-        }}
-        ref={tableContainerRef}
-        className={`overflow-y-auto flex-1  overflow-x-auto`}
-      >
-        <div className="min-w-full inline-block align-middle">
-          <div className="sticky top-0 z-30  bg-[#44546A]">
-            <div className="border border-gray-600 p-2 text-center font-semibold w-full">
-              <input
-                className="bg-transparent text-black dark:text-white dark:placeholder-gray-300"
-                style={{
-                  borderColor: "transparent",
-                  height: 35,
-                  width: "100%",
-                  fontWeight: 600,
-                  fontSize: "19px",
-                  color: "white",
-                  textAlign: "center",
-                }}
-                onBlur={() => handleSaveShipment()}
-                value={apiData?.shipment || ""}
-                onChange={(e) =>
-                  setApiData({ ...apiData, shipment: e.target.value })
-                }
-              />
-            </div>
-          </div>
-          <div className=" sticky top-[53px] z-20 flex flex-row bg-red-600">
-            {[
-              "QTY",
-              "SERIAL",
-              "MODEL",
-              "POWER",
-              "SOURCE",
-              "CUSTOMER",
-              "MOBILE",
-              "CITY",
-              "MANAGER",
-              "PRICE",
-              "DELIVERY",
-              "REMARKS",
-            ].map((item, index) =>
-              item === "MOBILE" ? (
-                <TooltipProvider  key={index}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div
-                        className={` p-2 text-center text-white font-semibold ${
-                          item === "REMARKS" ? "w-[300px]" : "w-[130px]"
-                        }`}
-                      >
-                        {item}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <div>Customer Mobile Number</div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : (
-                <div
-                  key={index}
-                  className={` p-2 text-center text-white font-semibold ${
-                    item === "REMARKS" ? "w-[300px]" : "w-[130px]"
-                  }`}
-                >
-                  {item}
-                </div>
-              )
-            )}
-          </div>
-          {data &&
-            data.length > 0 &&
-            data.map((item, ind) => (
-              <div key={ind} className={`flex flex-row ${item.color}`}>
-                {fieldOrder.map((key, index1) => (
-                  <div
-                    key={`${ind}-${index1}`}
-                    className={`border border-gray-400 dark:border-gray-400 ${
-                      key === "REMARKS" ? "w-[300px]" : "w-[130px]"
-                    } text-black dark:text-white`}
-                  >
-                    <ContextMenu>
-                      <ContextMenuTrigger>
-                        <input
-                          onFocus={() => setFocusedRow(ind)}
-                          onBlur={(e) => {
-                            if (
-                              !e.relatedTarget ||
-                              !tableRef.current.contains(e.relatedTarget)
-                            ) {
-                              setFocusedRow(null);
-                              setFocusedBoard(false);
-                            }
-                          }}
-                          className="bg-transparent text-black dark:text-white dark:placeholder-gray-300"
-                          style={{
-                            borderColor: "transparent",
-                            height: 35,
-                            width: "100%",
-                            fontWeight: 600,
-                            fontSize: "14px",
-                            borderRadius: 0,
-                            paddingInline: 5,
-                          }}
-                          value={item[key] || ""}
-                          onChange={(e) => {
-                            const inputValue = e.target.value;
-                            const parsedValue =
-                              inputValue.trim() === ""
-                                ? ""
-                                : isNaN(inputValue)
-                                ? inputValue
-                                : Number(inputValue);
+        <CustomerSearch
+          customers={allCustomers}
+          onReturn={setSelectedCustomer}
+          value={selectedCustomer}
+        />
 
-                            setData((prevState) => {
-                              const newState = [...prevState];
-                              newState[ind] = {
-                                ...newState[ind],
-                                [key]: parsedValue,
-                              };
-                              return newState;
-                            });
-                          }}
-                        />
-                      </ContextMenuTrigger>
-                      <ContextMenuContent>
-                        <ContextMenuItem
-                          onClick={() => handleSameRowAbove(ind)}
-                        >
-                          Add same row above
-                        </ContextMenuItem>
-                        <ContextMenuItem
-                          onClick={() => handleSameRowBelow(ind)}
-                        >
-                          Add same row below
-                        </ContextMenuItem>
-                      </ContextMenuContent>
-                    </ContextMenu>
-                  </div>
-                ))}
-              </div>
-            ))}
+        <div className="mt-4 flex justify-end">
+          <Button
+            onClick={() => {
+              handleCustomerSelect(selectedCustomer, selectedIndex);
+            }}
+          >
+            OK
+          </Button>
         </div>
+      </CustomPopup>
+    </>
+  );
+}
+
+function CustomPopup({ visible, onClose, children }) {
+  if (!visible) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-gray-800 p-6 rounded-lg w-[500px] max-h-[80vh] overflow-y-auto shadow-xl"
+        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+      >
+        {children}
       </div>
     </div>
+  );
+}
+
+function CustomerSearch({ value, onReturn, customers }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between"
+        >
+          {value
+            ? customers.find((item) => item.value === value)?.label
+            : "Select customer..."}
+          <ChevronsUpDown className="opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="py-2 px-0">
+        <Command>
+          <CommandInput placeholder="Search customer..." className="h-9" />
+          <CommandList>
+            <CommandEmpty>No customer found.</CommandEmpty>
+            <CommandGroup>
+              {customers.map((item) => (
+                <CommandItem
+                  key={item.value}
+                  value={item.label}
+                  onSelect={() => {
+                    onReturn(Number(item.value));
+                    setOpen(false);
+                  }}
+                >
+                  {item.label}
+                  <Check
+                    className={cn(
+                      "ml-auto",
+                      value === item.value ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
 

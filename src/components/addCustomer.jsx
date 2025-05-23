@@ -1,12 +1,24 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { debounce } from "@/lib/debounce";
+import { UserContext } from "@/store/context/UserContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2, Trash } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useContext, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import AppCalendar from "./appCalendar";
+import { CitiesSearch } from "./cities-search";
+import { IndustrySearch } from "./industry-search";
+import { NumberSearch } from "./number-search";
+import { RequiredStar } from "./RequiredStar";
+import StarRating from "./startRating";
+import { Button } from "./ui/button";
+import { Checkbox } from "./ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { ScrollArea } from "./ui/scroll-area";
 import {
   Form,
   FormControl,
@@ -16,32 +28,17 @@ import {
   FormMessage,
 } from "./ui/form";
 import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { Loader2, Star, Trash } from "lucide-react";
 import { Label } from "./ui/label";
-import { CitiesSearch } from "./cities-search";
-import { IndustrySearch } from "./industry-search";
-import StarRating from "./startRating";
-import { Checkbox } from "./ui/checkbox";
-import { RequiredStar } from "./RequiredStar";
-import { UserSearch } from "./user-search";
-import { toast } from "@/hooks/use-toast";
-import { BASE_URL } from "@/constants/data";
-import { UserContext } from "@/store/context/UserContext";
-import { debounce } from "@/lib/debounce";
-import Link from "next/link";
-import { useDebounce } from "@/hooks/use-debounce";
-import { NumberSearch } from "./number-search";
+import { ScrollArea } from "./ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "./ui/select";
-import AppCalendar from "./appCalendar";
+import { UserSearch } from "./user-search";
 
 const AddCustomerDialog = ({
   onRefresh,
@@ -109,16 +106,16 @@ const AddCustomerDialog = ({
   }
 
   async function onSubmit(values) {
-   const hasInvalidNumber = numbers.some(
-  (item) => item && (!item.startsWith("3") || !/^\d+$/.test(item))
-);
+    const hasInvalidNumber = numbers.some(
+      (item) => item && (!item.startsWith("3") || !/^\d+$/.test(item))
+    );
 
     if (hasInvalidNumber) {
       setNumberError("Invalid number format");
       return;
     }
 
-    setNumberError(""); 
+    setNumberError("");
 
     setLoading(true);
 

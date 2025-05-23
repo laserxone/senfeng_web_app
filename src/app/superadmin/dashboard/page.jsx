@@ -214,13 +214,17 @@ export default function Page() {
         </Card>
       </div>
 
+      {loading ? (
+        <Skeleton className="h-64" />
+      ) : (
+        <SalesTeamProgressChart passingData={data?.team_progress || []} />
+      )}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
         <div className="col-span-4">
           {loading ? (
             <Skeleton className="h-64" />
           ) : (
-            //
-            <SalesTeamProgressChart passingData={data?.team_progress || []} />
+            <BarStats data={data?.machines_sold_last_3_months || []} />
           )}
         </div>
         <div className="col-span-4 md:col-span-3">
@@ -234,7 +238,7 @@ export default function Page() {
           {loading ? (
             <Skeleton className="h-64" />
           ) : (
-            <BarStats data={data?.machines_sold_last_3_months || []} />
+            <AreaStats data={data?.feedback_status_last_6_months || []} />
           )}
         </div>
         <div className="col-span-4 md:col-span-3">
@@ -244,14 +248,6 @@ export default function Page() {
             <Stats industryData={data?.industry_count || []} />
           )}
         </div>
-      </div>
-
-      <div>
-        {loading ? (
-          <Skeleton className="h-64" />
-        ) : (
-          <AreaStats data={data?.feedback_status_last_6_months || []} />
-        )}
       </div>
 
       <div className="mb-5">
