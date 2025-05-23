@@ -31,6 +31,7 @@ import Spinner from '../ui/spinner';
 import NotificationBadge from './NotificationBadge';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { UserSearch } from '../user-search';
+import moment from 'moment';
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -75,6 +76,9 @@ export default function POS() {
     const { state: UserState } = useContext(UserContext)
     const [selectedRadio, setSelectedRadio] = useState("customer")
     const [selectedUser, setSelectedUser] = useState({ id: null, label: null })
+    const [engineerLoading, setEngineerLoading] = useState(false)
+    const [allEngineersData, setAllEngineersData] = useState([])
+    const [engineersModal, setEngineersModal] = useState(false)
 
 
 
@@ -420,6 +424,85 @@ export default function POS() {
         setSelectedUser({ id: null, label: null })
     }, [selectedRadio])
 
+    async function handleEngineerItems() {
+        try {
+            setEngineerLoading(true)
+            const response = await axios.get(`/pos/engineer`)
+            console.log(response.data)
+            setAllEngineersData(response.data)
+            setEngineersModal(true)
+            return true
+        } finally {
+            setEngineerLoading(false)
+        }
+
+
+
+
+    }
+
+    const RenderEachEngineerRow = ({ item, onRefresh }) => {
+        const [updateLoading, setUpdateLoading] = useState(false)
+
+        async function handleReceivedBack() {
+            setUpdateLoading(true)
+            axios.post(`/pos/engineer/${item.id}`, { field: item.fields })
+                .then(async () => {
+                    await onRefresh()
+                    setUpdateLoading(false)
+                }).catch(() => {
+                    setUpdateLoading(false)
+                })
+        }
+
+        return (
+            <div className="border rounded-lg shadow-sm mb-4 overflow-hidden">
+                {/* Top Info Section */}
+                <div className="bg-gray-100 dark:bg-gray-800 px-4 py-3 flex flex-col md:flex-row justify-between gap-4">
+                    <div>
+                        <p className="font-medium text-sm md:text-base">Engineer Name: <span className="font-normal">{item.user_name}</span></p>
+                        <p className="font-medium text-sm md:text-base">Name: <span className="font-normal">{item.name}</span></p>
+                        <p className="font-medium text-sm md:text-base">Company: <span className="font-normal">{item.company}</span></p>
+                    </div>
+
+                    <div>
+                        <p className="font-medium text-sm md:text-base">Address: <span className="font-normal">{item.address}</span></p>
+                        <p className="font-medium text-sm md:text-base">Phone: <span className="font-normal">{item.phone}</span></p>
+                        <p className="font-medium text-sm md:text-base">Issue Date: <span className="font-normal">{moment(item.created_at).format("YYYY-MM-DD")}</span></p>
+                    </div>
+                </div>
+
+                {/* Table Section */}
+                <div className="overflow-x-auto">
+                    <table className="w-full table-auto text-sm">
+                        <thead className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white">
+                            <tr>
+                                <th className="px-4 py-2 text-left border-b">Name</th>
+                                <th className="px-4 py-2 text-left border-b">Qty</th>
+                                <th className="px-4 py-2 text-left border-b">Price</th>
+                                <th className="px-4 py-2 text-left border-b">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {item.fields?.map((field, idx) => (
+                                <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                    <td className="px-4 py-2 border-b">{field.name}</td>
+                                    <td className="px-4 py-2 border-b">{field.qty}</td>
+                                    <td className="px-4 py-2 border-b">{field.price}</td>
+                                    <td className="px-4 py-2 border-b">{field.total}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                <Button className="m-2" onClick={handleReceivedBack}>
+                    {updateLoading && <Spinner />}  Received back
+                </Button>
+            </div>
+        );
+
+    }
     return (
         (loading || customerLoading) ?
             <div className='flex flex-1 w-full items-center justify-center h-[80vh]'>
@@ -563,16 +646,13 @@ export default function POS() {
                             </div>
                         </div>
 
-                         <Button
-                         variant="outline"
-                            onClick={() => {
-                                setSearchInvoice(!searchInvocie)
-
-                            }}
+                        <Button
+                            variant="outline"
+                            onClick={handleEngineerItems}
                             className="w-full"
                         >
 
-                            Open Engineer items
+                            {engineerLoading && <Spinner />}  Open Engineer items
                         </Button>
 
                         {selectedSearchItem ?
@@ -837,6 +917,34 @@ export default function POS() {
                                 Proceed
                             </Button>
                         </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+
+                <Dialog open={engineersModal} onOpenChange={setEngineersModal}>
+
+                    <DialogContent className="max-w-[90vw] h-[90vh]">
+                        <DialogHeader >
+                            <DialogTitle>Issued Items To Engineers</DialogTitle>
+                        </DialogHeader>
+
+                        {allEngineersData.length == 0
+                            ?
+                            <p>No data found</p>
+                            :
+                            <div>
+                                <ScrollArea className="h-[80vh] px-2">
+                                    {allEngineersData.map((item, index) => (
+                                        <RenderEachEngineerRow key={index} item={item} onRefresh={async () => {await handleEngineerItems()
+                                            fetchData()
+                                        }
+                                            
+                                        } />
+
+                                    ))}
+                                </ScrollArea>
+                            </div>
+                        }
                     </DialogContent>
                 </Dialog>
             </PageContainer >
