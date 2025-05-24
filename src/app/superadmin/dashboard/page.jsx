@@ -90,7 +90,6 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <NewsTicker />
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-2xl font-bold tracking-tight">
           Hi, Welcome back 👋

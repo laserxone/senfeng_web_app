@@ -20,6 +20,16 @@ export async function GET(req, { params }) {
     const customers = customersQuery.rows;
     const totalCustomers = customers.length;
 
+     const customersWithSaleQuery = await pool.query(
+            `SELECT DISTINCT customer.*
+      FROM customer
+      INNER JOIN sale ON sale.customer_id = customer.id
+      WHERE customer.ownership = $1`,
+            [id]
+        );
+
+      const totalCustomersWithSale = customersWithSaleQuery.rows.length
+
     const customerIds = customers.map((customer) => customer.id);
     let sales = [];
     let totalSales = 0;
@@ -123,7 +133,7 @@ export async function GET(req, { params }) {
     }
 
     // Calculate remaining feedbacks
-    const remainingFeedbacks = totalCustomers - feedbacksTakenThisMonth;
+    const remainingFeedbacks = totalCustomersWithSale - feedbacksTakenThisMonth;
 
     const visitQuery = await pool.query(`
       SELECT COUNT(*) AS total_visits
@@ -140,6 +150,7 @@ export async function GET(req, { params }) {
     const responseData = {
       user,
       totalCustomers,
+      totalCustomersWithSale,
       totalSales,
       machinesSoldThisMonth,
       machinesSoldLastMonth,

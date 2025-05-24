@@ -1,13 +1,25 @@
 import pool from "@/config/db";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(req) {
+
+    const searchParams = req.nextUrl.searchParams
+    const expiry = searchParams.get('expiry')
 
     try {
-        const result = await pool.query(`SELECT * FROM news ORDER BY id DESC`)
-        return NextResponse.json(result.rows, { status: 200 })
+        let query = `SELECT * FROM news`;
+        if (expiry) {
+            query += ` WHERE now() BETWEEN start_date AND end_date`;
+        }
+        query += ` ORDER BY id ASC`;
+
+        const result = await pool.query(query);
+        return NextResponse.json(result.rows, { status: 200 });
     } catch (error) {
-        return NextResponse.json({ message: error.message || "Error occured" }, { status: 500 })
+        return NextResponse.json(
+            { message: error.message || "Error occurred" },
+            { status: 500 }
+        );
     }
 }
 

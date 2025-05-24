@@ -1,10 +1,13 @@
 "use client";
+import { useIsMobile } from "@/hooks/use-mobile";
 import axiosInstance from "@/lib/axios";
 import { UserContext } from "@/store/context/UserContext";
 import { useContext, useEffect, useState } from "react";
+import Marquee from "react-fast-marquee";
 
 export default function NewsTicker() {
   const { state: UserState } = useContext(UserContext);
+  const isMobile = useIsMobile();
   const [data, setData] = useState([]);
   useEffect(() => {
     if (UserState.value.data?.id) {
@@ -13,26 +16,17 @@ export default function NewsTicker() {
   }, [UserState]);
 
   async function fetchData() {
-    axiosInstance.get("/news").then((response) => {
+    axiosInstance.get("/news?expiry=true").then((response) => {
       const apiData = response.data;
       setData(apiData);
     });
   }
-
-  return (
-   data.length > 0 && (
-  <div className="relative flex overflow-hidden h-[40px] bg-red-600 text-white font-bold py-2 px-4">
-    <div className="flex animate-marquee whitespace-nowrap">
-      {[...data, ...data].map((item, index) => (
-        <span
-          key={index}
-          className="mx-4 whitespace-nowrap before:content-['•'] before:mr-2 before:text-white"
-        >
-          {item.news}
-        </span>
-      ))}
-    </div>
-  </div>
-)
-  );
+  if (!isMobile)
+    return (
+      data.length > 0 && (
+        <Marquee className="bg-red-500 text-white" speed={100} style={{fontSize:'18px'}}>
+          {data.map((item, index) => <div key={index} className="mx-2">{item.news}</div>)}
+        </Marquee>
+      )
+    );
 }

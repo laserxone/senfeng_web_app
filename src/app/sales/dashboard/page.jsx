@@ -281,8 +281,7 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 gap-5">
-      <div className="flex flex-1 flex-col space-y-4">
-        <NewsTicker />
+      <div className="flex flex-1 flex-col">
         <div className="flex flex-1 justify-between mb-8 flex-wrap gap-2">
           <Link
             href={
@@ -312,7 +311,7 @@ export default function Page() {
           />
           <FeedbackTakenCard
             value={data?.feedbacksTakenThisMonth || 0}
-            total={data?.totalCustomers || 0}
+            total={data?.totalCustomersWithSale || 0}
             remaining={data?.remainingFeedbacks || 0}
           />
           {UserState.value.data?.designation === "Sales" && (
