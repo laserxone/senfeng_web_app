@@ -36,7 +36,7 @@ import {
   SelectGroup,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "./ui/select";
 import { UserSearch } from "./user-search";
 
@@ -106,9 +106,18 @@ const AddCustomerDialog = ({
   }
 
   async function onSubmit(values) {
-    const hasInvalidNumber = numbers.some(
-      (item) => item && (!item.startsWith("3") || !/^\d+$/.test(item))
-    );
+    const hasInvalidNumber = selectedNumber.some((code, index) => {
+      const number = numbers[index];
+      if (!number) return true;
+
+      const isAllDigits = /^\d+$/.test(number);
+
+      if (code === "+92") {
+        return !(number.startsWith("3") && isAllDigits);
+      }
+
+      return !isAllDigits;
+    });
 
     if (hasInvalidNumber) {
       setNumberError("Invalid number format");
