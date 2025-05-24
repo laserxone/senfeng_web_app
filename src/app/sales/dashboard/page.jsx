@@ -282,7 +282,7 @@ export default function Page() {
   return (
     <div className="flex flex-1 gap-5">
       <div className="flex flex-1 flex-col space-y-4">
-       
+        <NewsTicker />
         <div className="flex flex-1 justify-between mb-8 flex-wrap gap-2">
           <Link
             href={
