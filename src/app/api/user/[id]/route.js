@@ -4,226 +4,178 @@ import { NextResponse } from "next/server";
 import { profileFields, saleFields } from "../../customer/[id]/route";
 
 export async function GET(req, { params }) {
-  try {
-    const { id } = await params;
+ try {
+    const { id } = params;
 
-    const userQuery = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
-    if (userQuery.rows.length === 0) {
+    const [userResult] = await Promise.all([
+      pool.query("SELECT * FROM users WHERE id = $1", [id])
+    ]);
+
+    if (userResult.rows.length === 0) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
-    const user = userQuery.rows[0];
 
-    const customersQuery = await pool.query(
-      "SELECT * FROM customer WHERE ownership = $1",
-      [id]
-    );
+    const user = userResult.rows[0];
+
+    const [customersQuery, customersWithSaleQuery] = await Promise.all([
+      pool.query("SELECT * FROM customer WHERE ownership = $1", [id]),
+      pool.query(`
+        SELECT DISTINCT customer.* 
+        FROM customer 
+        INNER JOIN sale ON sale.customer_id = customer.id 
+        WHERE customer.ownership = $1`, [id])
+    ]);
+
     const customers = customersQuery.rows;
+    const customersWithSale = customersWithSaleQuery.rows;
     const totalCustomers = customers.length;
+    const totalCustomersWithSale = customersWithSale.length;
 
-     const customersWithSaleQuery = await pool.query(
-            `SELECT DISTINCT customer.*
-      FROM customer
-      INNER JOIN sale ON sale.customer_id = customer.id
-      WHERE customer.ownership = $1`,
-            [id]
-        );
+    const customerIds = customers.map(c => c.id);
+    const saleCustomerIds = customersWithSale.map(c => c.id);
 
-      const totalCustomersWithSale = customersWithSaleQuery.rows.length
-
-    const customerIds = customers.map((customer) => customer.id);
     let sales = [];
-    let totalSales = 0;
-    if (customerIds.length > 0) {
-      const salesQuery = await pool.query(
-        `SELECT * FROM sale WHERE customer_id = ANY($1)`,
-        [customerIds]
-      );
-      sales = salesQuery.rows;
-      totalSales = sales.length;
-    }
-
-    const machineIds = sales.map((sale) => sale.id);
     let payments = [];
-    if (machineIds.length > 0) {
-      const paymentsQuery = await pool.query(
-        `SELECT * FROM payment WHERE machine_id = ANY($1)`,
-        [machineIds]
-      );
-      payments = paymentsQuery.rows;
+
+    if (customerIds.length > 0) {
+      const salesQuery = await pool.query(`SELECT * FROM sale WHERE customer_id = ANY($1)`, [customerIds]);
+      sales = salesQuery.rows;
+
+      if (sales.length > 0) {
+        const machineIds = sales.map(s => s.id);
+        const paymentsQuery = await pool.query(`SELECT * FROM payment WHERE machine_id = ANY($1)`, [machineIds]);
+        payments = paymentsQuery.rows;
+      }
     }
 
-
-    const TIMEZONE = 'Asia/Karachi';
-    const currentDate = moment.tz(TIMEZONE);
-
-
-    const firstCurrentMonth = currentDate.clone().startOf('month').startOf('day');
-    const lastCurrentMonth = currentDate.clone().endOf('month').endOf('day');
-
-    const firstLastMonth = currentDate.clone().subtract(1, 'month').startOf('month').startOf('day');
-    const lastLastMonth = currentDate.clone().subtract(1, 'month').endOf('month').endOf('day');
-
-    const firstDayOfCurrentMonth = firstCurrentMonth.clone().utc().toISOString();
-    const lastDayOfCurrentMonth = lastCurrentMonth.clone().utc().toISOString();
-
-    const firstDayOfLastMonth = firstLastMonth.clone().utc().toISOString();
-    const lastDayOfLastMonth = lastLastMonth.clone().utc().toISOString();
-
+    const TIMEZONE = "Asia/Karachi";
+    const now = moment.tz(TIMEZONE);
+    const currentMonthStart = now.clone().startOf("month").toISOString();
+    const currentMonthEnd = now.clone().endOf("month").toISOString();
+    const lastMonthStart = now.clone().subtract(1, "month").startOf("month").toISOString();
+    const lastMonthEnd = now.clone().subtract(1, "month").endOf("month").toISOString();
 
     const machinesSoldQuery = `
-      SELECT COUNT(*) AS total_machines_sold 
+      SELECT COUNT(*) AS total 
       FROM sale 
       WHERE contract_date BETWEEN $1 AND $2 AND sell_by = $3
     `;
 
-    const currentMonthSalesResult = await pool.query(machinesSoldQuery, [
-      firstDayOfCurrentMonth,
-      lastDayOfCurrentMonth,
-      id,
+    const [
+      currentMonthSalesResult,
+      lastMonthSalesResult,
+      saleDetailsQueryResult,
+      feedbackQueryResult,
+      visitQueryResult,
+      allTasksQueryResult
+    ] = await Promise.all([
+      pool.query(machinesSoldQuery, [currentMonthStart, currentMonthEnd, id]),
+      pool.query(machinesSoldQuery, [lastMonthStart, lastMonthEnd, id]),
+      pool.query(`
+        SELECT 
+          s.id, s.customer_id, s.contract_date, s.serial_no, 
+          c.name AS customer_name, c.owner AS customer_owner 
+        FROM sale s 
+        LEFT JOIN customer c ON s.customer_id = c.id 
+        WHERE s.contract_date BETWEEN $1 AND $2 
+        AND s.sell_by = $3`, [currentMonthStart, currentMonthEnd, id]),
+      saleCustomerIds.length > 0
+        ? pool.query(`
+            SELECT COUNT(DISTINCT customer_id) AS feedbacks_taken 
+            FROM feedback 
+            WHERE created_at BETWEEN $1 AND $2 
+            AND user_id = $3 
+            AND customer_id = ANY($4)`, [currentMonthStart, currentMonthEnd, id, saleCustomerIds])
+        : { rows: [{ feedbacks_taken: 0 }] },
+      pool.query(`
+        SELECT COUNT(*) AS total_visits 
+        FROM visit 
+        WHERE created_at BETWEEN $1 AND $2 
+        AND user_id = $3`, [currentMonthStart, currentMonthEnd, id]),
+      pool.query(`SELECT * FROM task WHERE assigned_to = $1 AND status = 'Pending'`, [id])
     ]);
-    const machinesSoldThisMonth = parseInt(currentMonthSalesResult.rows[0].total_machines_sold, 10) || 0;
 
-    const saleDetailsQuery = `
-  SELECT 
-    s.id, 
-    s.customer_id, 
-    s.contract_date,
-    s.serial_no,
-    c.name AS customer_name, 
-    c.owner AS customer_owner
-  FROM sale s
-  LEFT JOIN customer c ON s.customer_id = c.id
-  WHERE s.contract_date BETWEEN $1 AND $2 
-    AND s.sell_by = $3
-`;
-
-    const saleDetailQueryResult = await pool.query(saleDetailsQuery, [
-      firstDayOfCurrentMonth,
-      lastDayOfCurrentMonth,
-      id,
-    ])
-
-
-    const lastMonthSalesResult = await pool.query(machinesSoldQuery, [
-      firstDayOfLastMonth,
-      lastDayOfLastMonth,
-      id,
-    ]);
-    const machinesSoldLastMonth = parseInt(lastMonthSalesResult.rows[0].total_machines_sold, 10) || 0;
-
-
-    let percentageChange = 0;
-    if (machinesSoldLastMonth === 0) {
-      percentageChange = machinesSoldThisMonth > 0 ? 100 : 0;
-    } else {
-      percentageChange = ((machinesSoldThisMonth - machinesSoldLastMonth) / machinesSoldLastMonth) * 100;
-    }
-
-    let feedbacksTakenThisMonth = 0;
-    if (customerIds.length > 0) {
-      const feedbackQuery = await pool.query(
-        `SELECT COUNT(DISTINCT customer_id) AS feedbacks_taken
-         FROM feedback 
-         WHERE created_at BETWEEN $1 AND $2 
-         AND user_id = $3 
-         AND customer_id = ANY($4)`,
-        [firstDayOfCurrentMonth, lastDayOfCurrentMonth, id, customerIds]
-      );
-      feedbacksTakenThisMonth = parseInt(feedbackQuery.rows[0].feedbacks_taken, 10) || 0;
-    }
-
-    // Calculate remaining feedbacks
+    const machinesSoldThisMonth = parseInt(currentMonthSalesResult.rows[0].total, 10) || 0;
+    const machinesSoldLastMonth = parseInt(lastMonthSalesResult.rows[0].total, 10) || 0;
+    const feedbacksTakenThisMonth = parseInt(feedbackQueryResult.rows[0].feedbacks_taken, 10) || 0;
+    const totalVisits = parseInt(visitQueryResult.rows[0].total_visits, 10) || 0;
+    const percentageChange =
+      machinesSoldLastMonth === 0
+        ? machinesSoldThisMonth > 0 ? 100 : 0
+        : ((machinesSoldThisMonth - machinesSoldLastMonth) / machinesSoldLastMonth) * 100;
     const remainingFeedbacks = totalCustomersWithSale - feedbacksTakenThisMonth;
 
-    const visitQuery = await pool.query(`
-      SELECT COUNT(*) AS total_visits
-      FROM visit
-      WHERE created_at BETWEEN $1 AND $2
-      AND user_id = $3`, [firstDayOfCurrentMonth, lastDayOfCurrentMonth, id])
+    const enrichedCustomers = customers.map((customer) => {
+      const filledCount = profileFields.reduce((count, field) => {
+        const value = customer[field];
+        const filled =
+          field === "rating"
+            ? typeof value === "number" && value > 0
+            : Array.isArray(value)
+            ? value.length > 0
+            : typeof value === "string"
+            ? value.trim() !== "" && value !== "null"
+            : value !== null && value !== undefined;
+        return filled ? count + 1 : count;
+      }, 0);
 
-    let totalVisits = 0
-    totalVisits = parseInt(visitQuery.rows[0].total_visits, 10) || 0;
-    const allTasks = await pool.query(
-      `SELECT * FROM task WHERE assigned_to = $1 AND status = 'Pending'`, [id]
-    )
+      const customerSales = sales
+        .filter(s => s.customer_id === customer.id)
+        .map(sale => {
+          let machineFilled = 0;
 
-    const responseData = {
+          const hasContractImages =
+            (Array.isArray(sale.contract_images_pdf) && sale.contract_images_pdf.length > 0) ||
+            (Array.isArray(sale.contract_images_png) && sale.contract_images_png.length > 0);
+
+          if (hasContractImages) machineFilled++;
+
+          saleFields.forEach(field => {
+            const value = sale[field];
+            const filled =
+              Array.isArray(value)
+                ? value.length > 0
+                : typeof value === "string"
+                ? value.trim() !== "" && value !== "null"
+                : typeof value === "number"
+                ? !isNaN(value)
+                : value !== null && value !== undefined;
+
+            if (filled) machineFilled++;
+          });
+
+          const totalFields = saleFields.length + 1;
+          const completion = Math.round((machineFilled / totalFields) * 100);
+
+          return {
+            ...sale,
+            payments: payments.filter(p => p.machine_id === sale.id),
+            percentage_completion: completion,
+          };
+        });
+
+      return {
+        ...customer,
+        profile_completion: Math.round((filledCount / profileFields.length) * 100),
+        sales: customerSales,
+      };
+    });
+
+    return NextResponse.json({
       user,
       totalCustomers,
       totalCustomersWithSale,
-      totalSales,
+      totalSales: sales.length,
       machinesSoldThisMonth,
       machinesSoldLastMonth,
-      machinesSoldThisMonthDetail: saleDetailQueryResult.rows,
+      machinesSoldThisMonthDetail: saleDetailsQueryResult.rows,
       feedbacksTakenThisMonth,
       remainingFeedbacks,
       totalVisits,
-      allTasks: allTasks.rows.length,
+      allTasks: allTasksQueryResult.rows.length,
       percentageChange: percentageChange.toFixed(2),
-      customers: customers.map((customer) => {
-
-        let filledCount = 0;
-        profileFields.forEach(field => {
-          const value = customer[field];
-          const isFilled =
-            field === 'rating'
-              ? typeof value === 'number' && value > 0
-              : Array.isArray(value)
-                ? value.length > 0
-                : typeof value === 'number'
-                  ? true
-                  : typeof value === 'string'
-                    ? value.trim() !== '' && value !== 'null'
-                    : value !== null && value !== undefined;
-          if (isFilled) filledCount++;
-        });
-        const customerTotalFields = profileFields.length;
-        return {
-          ...customer,
-          profile_completion: Math.round((filledCount / customerTotalFields) * 100),
-          sales: sales
-            .filter((sale) => sale.customer_id === customer.id)
-            .map((sale) => {
-              let machineFilled = 0;
-
-              // Handle contract_images as one field
-              const hasContractImages =
-                (Array.isArray(sale.contract_images_pdf) && sale.contract_images_pdf.length > 0) ||
-                (Array.isArray(sale.contract_images_png) && sale.contract_images_png.length > 0);
-
-              if (hasContractImages) machineFilled++;
-
-              // Handle other saleFields
-              saleFields.forEach(field => {
-                const value = sale[field];
-                const isFilled =
-                  Array.isArray(value)
-                    ? value.length > 0
-                    : typeof value === 'number'
-                      ? ['price'].includes(field)
-                        ? value !== null && !isNaN(value)
-                        : true
-                      : typeof value === 'string'
-                        ? value.trim() !== '' && value !== 'null'
-                        : value !== null && value !== undefined;
-
-                if (isFilled) machineFilled++;
-              });
-
-              const totalFields = saleFields.length + 1;
-
-
-              return {
-                ...sale,
-                payments: payments.filter((payment) => payment.machine_id === sale.id),
-                percentage_completion: Math.round((machineFilled / totalFields) * 100),
-              }
-            }),
-        }
-      }),
-    };
-
-    return NextResponse.json(responseData, { status: 200 });
+      customers: enrichedCustomers,
+    });
   } catch (error) {
     console.error("Error fetching data:", error);
     return NextResponse.json(
