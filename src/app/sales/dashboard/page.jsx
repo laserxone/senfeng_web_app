@@ -282,7 +282,7 @@ export default function Page() {
   return (
     <div className="flex flex-1 gap-5">
       <div className="flex flex-1 flex-col space-y-4">
-         <NewsTicker />
+       
         <div className="flex flex-1 justify-between mb-8 flex-wrap gap-2">
           <Link
             href={
@@ -500,6 +500,28 @@ const CustomerExtraData = ({ data, option, onSelect }) => {
 
 function CustomersTab({ data }) {
   const { state: UserState } = useContext(UserContext);
+  const [profileCompletion, setProfileCompletion] = useState(0);
+  const [localData, setLocalData] = useState([]);
+
+  useEffect(() => {
+    if (data.length > 0) {
+      const temp = data.map((customer) => {
+        const customerCompletion = Number(customer.profile_completion) || 0;
+        const machines = customer.sales || [];
+
+        const totalMachineCompletion = machines.reduce(
+          (sum, item) => sum + Number(item.percentage_completion || 0),
+          0
+        );
+
+        const overallCompletion =
+          (customerCompletion + totalMachineCompletion) / (machines.length + 1);
+
+        return { ...customer, overall: overallCompletion.toFixed(0) };
+      });
+      setLocalData(temp);
+    }
+  }, [data]);
 
   const RenderEachMachine = ({ machine, customer_id }) => {
     const totalPayments = machine.payments.reduce(
@@ -515,11 +537,16 @@ function CustomersTab({ data }) {
           <span className="hover:underline">{machine.serial_no}</span>
         </Link>
         <div className="flex items-center">
-          {Number(machine.price) === totalPayments ? (
+          <span className="font-normal text-sm text-gray-600 mr-2">
+            Data completion: {machine?.percentage_completion || 0}%
+          </span>
+          {Number(machine.price) === totalPayments &&
+          machine?.percentage_completion === 100 ? (
             <CheckCircle className="text-green-500 w-5 h-5 mr-2" />
           ) : (
             <Clock className="text-yellow-500 w-5 h-5 mr-2" />
           )}
+
           <Badge
             variant={
               Number(machine.price) === totalPayments ? "success" : "warning"
@@ -536,10 +563,10 @@ function CustomersTab({ data }) {
     <div className="h-[650px]">
       <ScrollArea className="h-[650px] p-5">
         <Accordion type="single" collapsible className="w-full space-y-4">
-          {data.length == 0 ? (
+          {localData.length == 0 ? (
             <Label>No Data found</Label>
           ) : (
-            data.map((customer) => (
+            localData.map((customer) => (
               <div className="flex gap-5" key={customer.id}>
                 <div className="flex flex-1">
                   <AccordionItem
@@ -558,18 +585,23 @@ function CustomersTab({ data }) {
                               {customer.name}
                             </h3>
                           </Link>
-                          <Badge
-                            className={"mr-2"}
-                            variant={
-                              customer.sales.length === 0
-                                ? "secondary"
-                                : "default"
-                            }
-                          >
-                            {customer.sales.length === 0
-                              ? "Assigned"
-                              : "Purchased"}
-                          </Badge>
+                          <div className="flex flex-row gap-2">
+                            <span className="font-normal text-sm text-gray-600 mr-2">
+                              Overall profile completion: {customer.overall}%
+                            </span>
+                            <Badge
+                              className={"mr-2"}
+                              variant={
+                                customer.sales.length === 0
+                                  ? "secondary"
+                                  : "default"
+                              }
+                            >
+                              {customer.sales.length === 0
+                                ? "Assigned"
+                                : "Purchased"}
+                            </Badge>
+                          </div>
                         </div>
                       </AccordionTrigger>
                       <AccordionContent>

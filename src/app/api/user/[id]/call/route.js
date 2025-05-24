@@ -13,7 +13,10 @@ export async function GET(req, { params }) {
 
     try {
         const customersResult = await pool.query(
-            "SELECT * FROM customer WHERE ownership = $1",
+            `SELECT DISTINCT customer.*
+      FROM customer
+      INNER JOIN sale ON sale.customer_id = customer.id
+      WHERE customer.ownership = $1`,
             [id]
         );
 

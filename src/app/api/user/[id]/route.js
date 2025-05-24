@@ -1,6 +1,7 @@
 import pool from "@/config/db";
 import moment from 'moment-timezone';
 import { NextResponse } from "next/server";
+import { profileFields, saleFields } from "../../customer/[id]/route";
 
 export async function GET(req, { params }) {
   try {
@@ -148,15 +149,67 @@ export async function GET(req, { params }) {
       totalVisits,
       allTasks: allTasks.rows.length,
       percentageChange: percentageChange.toFixed(2),
-      customers: customers.map((customer) => ({
-        ...customer,
-        sales: sales
-          .filter((sale) => sale.customer_id === customer.id)
-          .map((sale) => ({
-            ...sale,
-            payments: payments.filter((payment) => payment.machine_id === sale.id),
-          })),
-      })),
+      customers: customers.map((customer) => {
+
+        let filledCount = 0;
+        profileFields.forEach(field => {
+          const value = customer[field];
+          const isFilled =
+            field === 'rating'
+              ? typeof value === 'number' && value > 0
+              : Array.isArray(value)
+                ? value.length > 0
+                : typeof value === 'number'
+                  ? true
+                  : typeof value === 'string'
+                    ? value.trim() !== '' && value !== 'null'
+                    : value !== null && value !== undefined;
+          if (isFilled) filledCount++;
+        });
+        const customerTotalFields = profileFields.length;
+        return {
+          ...customer,
+          profile_completion: Math.round((filledCount / customerTotalFields) * 100),
+          sales: sales
+            .filter((sale) => sale.customer_id === customer.id)
+            .map((sale) => {
+              let machineFilled = 0;
+
+              // Handle contract_images as one field
+              const hasContractImages =
+                (Array.isArray(sale.contract_images_pdf) && sale.contract_images_pdf.length > 0) ||
+                (Array.isArray(sale.contract_images_png) && sale.contract_images_png.length > 0);
+
+              if (hasContractImages) machineFilled++;
+
+              // Handle other saleFields
+              saleFields.forEach(field => {
+                const value = sale[field];
+                const isFilled =
+                  Array.isArray(value)
+                    ? value.length > 0
+                    : typeof value === 'number'
+                      ? ['price'].includes(field)
+                        ? value !== null && !isNaN(value)
+                        : true
+                      : typeof value === 'string'
+                        ? value.trim() !== '' && value !== 'null'
+                        : value !== null && value !== undefined;
+
+                if (isFilled) machineFilled++;
+              });
+
+              const totalFields = saleFields.length + 1;
+
+
+              return {
+                ...sale,
+                payments: payments.filter((payment) => payment.machine_id === sale.id),
+                percentage_completion: Math.round((machineFilled / totalFields) * 100),
+              }
+            }),
+        }
+      }),
     };
 
     return NextResponse.json(responseData, { status: 200 });

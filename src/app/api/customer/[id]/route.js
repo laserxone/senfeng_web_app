@@ -23,7 +23,7 @@ export async function GET(req, { params }) {
     const customer = customerResult.rows[0];
 
 
-
+ 
     let filledCount = 0;
     profileFields.forEach(field => {
       const value = customer[field];
