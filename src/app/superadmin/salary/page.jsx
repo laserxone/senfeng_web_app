@@ -113,7 +113,7 @@ const SalaryComponent = () => {
   const [TTModal, setTTModal] = useState(false);
   const [ttRate, setTTRate] = useState(1);
   const { toast } = useToast();
-  const [refresh, setRefresh] = useState(false)
+  const [refresh, setRefresh] = useState(false);
   const years = Array.from(
     { length: 20 },
     (_, i) => new Date().getFullYear() - 10 + i
@@ -161,6 +161,7 @@ const SalaryComponent = () => {
         `/salary?user=${user}&start=${startDate}&end=${endDate}&month=${selectedMonth}&year=${selectedYear}`
       )
       .then((response) => {
+        console.log(response.data);
         if (
           response.data.machines &&
           Array.isArray(response.data?.machines) &&
@@ -169,8 +170,7 @@ const SalaryComponent = () => {
           setTTModal(true);
         }
         setData(response.data);
-        if(refresh){
-        
+        if (refresh) {
           setChecked(false);
           processAttendance(
             Number(moment(startDate).format("YYYY")),
@@ -211,9 +211,7 @@ const SalaryComponent = () => {
             setLateComingFine(0);
           }
         } else {
-        
           if (response.data?.salary) {
-
             const existing = response.data.salary;
             setForm({
               absents: Number(existing.absents),
@@ -233,7 +231,6 @@ const SalaryComponent = () => {
               false
             );
           } else {
-          
             setChecked(false);
             processAttendance(
               Number(moment(startDate).format("YYYY")),
@@ -278,16 +275,49 @@ const SalaryComponent = () => {
       })
       .finally(() => {
         setLoading(false);
-        setRefresh(false)
+        setRefresh(false);
       });
   }
 
   useEffect(() => {
     if (data && data?.user) {
-      setKpi(
-        ((Number(form.target_achieved) || 0) / (Number(data?.user?.monthly_target) || 1)) *
-        ((Number(data?.user?.total_salary) || 0) - (Number(data?.user?.basic_salary) || 0))
-      );
+      if (data?.user?.designation === "Sales") {
+        const totalSalary = Number(data?.user?.total_salary) || 0;
+        const basicSalary = Number(data?.user?.basic_salary) || 0;
+        const performanceSalary = totalSalary - basicSalary;
+
+        const targetAchieved = Number(form.target_achieved) || 0;
+        const monthlyTarget = Number(data?.user?.monthly_target) || 1;
+
+        const feedbacksTaken = Number(data?.feedbacksTakenThisMonth) || 0;
+        const maxFeedbacks = Number(data?.totalCustomersWithSale) || 1;
+
+        const visitsTaken = Number(data?.totalVisits) || 0;
+        const maxVisits = 15;
+
+        const targetPercentage = targetAchieved / monthlyTarget;
+        const feedbackPercentage = Math.min(feedbacksTaken / maxFeedbacks, 1);
+        const visitPercentage = Math.min(visitsTaken / maxVisits, 1);
+
+        const weightedTarget = targetPercentage * 0.6;
+        const weightedFeedback = feedbackPercentage * 0.2;
+        const weightedVisit = visitPercentage * 0.2;
+
+        const kpiAmount =
+          performanceSalary *
+          (weightedTarget + weightedFeedback + weightedVisit);
+
+        // Set KPI
+        setKpi(kpiAmount);
+      } else {
+        setKpi(
+          ((Number(form.target_achieved) || 0) /
+            (Number(data?.user?.monthly_target) || 1)) *
+            ((Number(data?.user?.total_salary) || 0) -
+              (Number(data?.user?.basic_salary) || 0))
+        );
+      }
+
       if (!excludeLateFine) {
         setLateComingFine(
           data?.user ? (form.late_fine_per_day || 0) * (form.late || 0) : 0
@@ -312,17 +342,16 @@ const SalaryComponent = () => {
 
   useEffect(() => {
     if (data?.user) {
-    
       setPayable(
         (
           Number(data?.user?.basic_salary || 0) +
-        Number(kpi || 0) +
-        Number(lateComingFine || 0) +
-        Number(absentsFine || 0) +
-        Number(form.reimbursement || 0) +
-        Number(form.commission || 0) +
-        Number(form.miscellaneous || 0) +
-        Number(form.additional_fine || 0)
+          Number(kpi || 0) +
+          Number(lateComingFine || 0) +
+          Number(absentsFine || 0) +
+          Number(form.reimbursement || 0) +
+          Number(form.commission || 0) +
+          Number(form.miscellaneous || 0) +
+          Number(form.additional_fine || 0)
         ).toFixed(2)
       );
     }
@@ -331,7 +360,7 @@ const SalaryComponent = () => {
   const handleInputChange = (field, value) => {
     setForm((prev) => ({
       ...prev,
-      [field]: value  ? (value == "-" ? value : Number(value)) : "",
+      [field]: value ? (value == "-" ? value : Number(value)) : "",
       // [field]: value,
     }));
   };
@@ -429,7 +458,7 @@ const SalaryComponent = () => {
         additional_fine: form.additional_fine,
         issued: checked,
         salary_month: startDate,
-        payable: payable ,
+        payable: payable,
       })
       .then(() => {
         toast({ title: "Salary saved" });
@@ -571,7 +600,7 @@ const SalaryComponent = () => {
               onClick={() => {
                 clearForm();
                 setModal(true);
-                setRefresh(true)
+                setRefresh(true);
               }}
               className="mt-6"
             >
@@ -667,6 +696,44 @@ const SalaryComponent = () => {
                   readOnly
                 />
               </div>
+              {data?.user?.designation === "Sales" && (
+                <>
+                  <div className="flex flex-col gap-1">
+                    <Label>MONTHLY VISITS</Label>
+                    <Input value={15} disabled onChange={(e) => {}} readOnly />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <Label>VISITS DONE</Label>
+                    <Input
+                      value={data?.totalVisits || 0}
+                      disabled
+                      onChange={(e) => {}}
+                      readOnly
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <Label>MONTHLY FEEDBACKS</Label>
+                    <Input
+                      value={data?.totalCustomersWithSale || 0}
+                      disabled
+                      onChange={(e) => {}}
+                      readOnly
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Label>FEEDBACKS TAKEN</Label>
+                    <Input
+                      value={data?.feedbacksTakenThisMonth || 0}
+                      disabled
+                      onChange={(e) => {}}
+                      readOnly
+                    />
+                  </div>
+                </>
+              )}
+
               <div className="flex flex-col gap-1">
                 <Label>KPI ACHIEVED</Label>
                 <Input
@@ -769,7 +836,7 @@ const SalaryComponent = () => {
             {loading ? (
               <Skeleton className={"h-[40px] w-[300px]"} />
             ) : (
-              <Input value={payable } disabled onChange={(e) => {}} readOnly />
+              <Input value={payable} disabled onChange={(e) => {}} readOnly />
             )}
           </div>
         </CardContent>

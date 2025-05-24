@@ -78,7 +78,7 @@ export async function GET(req) {
         })
 
 
-        const userQuery = await pool.query(`SELECT id, name, email, basic_salary, total_salary, monthly_target FROM users WHERE id = $1`, [user])
+        const userQuery = await pool.query(`SELECT id, name, email, basic_salary, total_salary, monthly_target, designation FROM users WHERE id = $1`, [user])
 
 
         const userMap = {};
@@ -120,13 +120,53 @@ WHERE
   AND sale.contract_date BETWEEN $2 AND $3;`
         const machineResult = await pool.query(machineQuery, [user, start_date, end_date])
 
+        const customersWithSaleQuery = await pool.query(`
+        SELECT DISTINCT customer.* 
+        FROM customer 
+        INNER JOIN sale ON sale.customer_id = customer.id 
+        WHERE customer.ownership = $1`, [user])
+
+        const customersWithSale = customersWithSaleQuery.rows;
+        const totalCustomersWithSale = customersWithSale.length;
+        const saleCustomerIds = customersWithSale.map(c => c.id);
+
+
+
+      const feedbackQueryResult = saleCustomerIds.length > 0
+    ? await pool.query(`
+        SELECT COUNT(DISTINCT customer_id) AS feedbacks_taken 
+        FROM feedback 
+        WHERE created_at BETWEEN $1 AND $2 
+        AND user_id = $3 
+        AND customer_id = ANY($4)`, 
+        [start_date, end_date, user, saleCustomerIds])
+    : { rows: [{ feedbacks_taken: 0 }] };
+
+const feedbacksTakenThisMonth = parseInt(feedbackQueryResult.rows[0].feedbacks_taken, 10) || 0;
+
+
+        const remainingFeedbacks = totalCustomersWithSale - feedbacksTakenThisMonth;
+
+        const visitQueryResult = await pool.query(`
+        SELECT COUNT(*) AS total_visits 
+        FROM visit 
+        WHERE created_at BETWEEN $1 AND $2 
+        AND user_id = $3`, [start_date, end_date, user])
+
+        const totalVisits = parseInt(visitQueryResult.rows[0].total_visits, 10) || 0;
+
+
         return NextResponse.json({
             reimbursement: reimbursement.rows,
             attendance: uniqueData,
             user: userQuery.rows[0],
             salary: salaryResult.rows.length > 0 ? salaryResult.rows[0] : null,
             commission: commissionResult.rows || [],
-            machines : machineResult.rows
+            machines: machineResult.rows,
+            feedbacksTakenThisMonth,
+            remainingFeedbacks,
+            totalCustomersWithSale,
+            totalVisits
         }, { status: 200 });
 
     } catch (error) {
