@@ -13,6 +13,7 @@ import moment from "moment";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
 import SalaryRecord from "@/components/users/SalaryRecord";
+import NewsTicker from "@/components/newsTicker";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -124,7 +125,8 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 gap-5">
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col space-y-4">
+        <NewsTicker />
         <div className="flex flex-1 justify-between mb-8 flex-wrap">
           <div className="flex items-center ">
             <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
