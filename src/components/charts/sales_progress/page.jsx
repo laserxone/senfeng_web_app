@@ -1,31 +1,27 @@
 import {
-  BarChart,
   Bar,
-  XAxis,
-  YAxis,
+  BarChart,
   CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
+  XAxis,
+  YAxis
 } from "recharts";
 
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
-  CardTitle,
+  CardTitle
 } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useDebounce } from "@/hooks/use-debounce";
+import React, { useEffect, useState } from "react";
 
 const chartConfig = {
   completed_feedback: {

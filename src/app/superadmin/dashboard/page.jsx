@@ -1,28 +1,19 @@
 "use client";
-import AppCalendar from "@/components/appCalendar";
 import { AreaStats } from "@/components/charts/area_stats/page";
 import { BarStats } from "@/components/charts/bar_stats/page";
 import { Stats } from "@/components/charts/pie_stats/page";
 import { Sale } from "@/components/charts/sales/page";
 import SalesTeamProgressChart from "@/components/charts/sales_progress/page";
 import { CustomerMapComponent } from "@/components/customerMapComponent";
-import NewsTicker from "@/components/newsTicker";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PakCities } from "@/constants/data";
 import axios from "@/lib/axios";
 import { MapProvider } from "@/providers/map-provider";
 import { UserContext } from "@/store/context/UserContext";
+import moment from "moment";
 import { useContext, useEffect, useState } from "react";
 
 export default function Page() {
@@ -30,8 +21,7 @@ export default function Page() {
   const [data, setData] = useState();
   const [loading, setLoading] = useState(true);
   const { state: UserState } = useContext(UserContext);
-  const [dollarRate, setDollarRate] = useState("");
-  const [visible, setVisible] = useState(false);
+  const [userTaskData, setUserTaskData] = useState([]);
 
   useEffect(() => {
     if (UserState?.value?.data?.id) {
@@ -49,6 +39,36 @@ export default function Page() {
       .get(`/dashboard`)
       .then((response) => {
         setData(response.data);
+        if (response.data?.team_task) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          const yesterday = new Date(today);
+          yesterday.setDate(today.getDate() - 1);
+
+          const todayEnd = new Date(today);
+          todayEnd.setHours(23, 59, 59, 999);
+
+          const splitTasksByDay = response.data.team_task.map((user) => {
+            const yesterdayTasks = user.tasks.filter((task) => {
+              const createdAt = new Date(task.created_at);
+              return createdAt >= yesterday && createdAt < today;
+            });
+
+            const todayTasks = user.tasks.filter((task) => {
+              const createdAt = new Date(task.created_at);
+              return createdAt >= today && createdAt <= todayEnd;
+            });
+
+            return {
+              ...user,
+              yesterdayTasks,
+              todayTasks,
+            };
+          });
+
+          setUserTaskData(splitTasksByDay);
+        }
       })
       .catch((e) => console.log(e))
       .finally(() => {
@@ -248,6 +268,27 @@ export default function Page() {
           )}
         </div>
       </div>
+      <Card>
+        <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
+          <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
+            <CardTitle>Task status</CardTitle>
+            <Separator className="my-2" />
+            <ScrollArea className="h-[500px] pr-3">
+              {userTaskData.map((user) => (
+                <div key={user.assigned_user_id} className="mb-10">
+                  <h2 className="text-xl font-bold mb-4">
+                    {user.assigned_user_name}
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {renderTaskCard(user.yesterdayTasks, "🕒 Yesterday")}
+                    {renderTaskCard(user.todayTasks, "📅 Today")}
+                  </div>
+                </div>
+              ))}
+            </ScrollArea>
+          </div>
+        </CardHeader>
+      </Card>
 
       <div className="mb-5">
         {loading ? (
@@ -263,3 +304,33 @@ export default function Page() {
     </div>
   );
 }
+
+const renderTaskCard = (tasks, label) => (
+  <Card className="w-full">
+    <CardHeader className="text-base font-semibold">{label}</CardHeader>
+    <CardContent className="space-y-2">
+      {tasks.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No tasks</p>
+      ) : (
+        tasks.map((task) => (
+         <div
+  key={task.id}
+  className={`p-3 rounded text-sm border border-muted-foreground/10 ${
+    task.status === 'Pending' ? 'bg-red-200' : 'bg-green-200'
+  }`}
+>
+  <p className="font-medium text-black">
+    {task.title || `Task #${task.id}`}{" "}
+    {task.customer_name || task.customer_owner}
+  </p>
+
+  <p className="text-xs text-muted-foreground">
+    {moment(task.created_at).format("YYYY-MM-DD hh:mm A")}
+  </p>
+</div>
+
+        ))
+      )}
+    </CardContent>
+  </Card>
+);

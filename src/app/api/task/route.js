@@ -58,9 +58,9 @@ export async function POST(req) {
         let taskName = task_name;
 
         if (client) {
-            const clientResult = await pool.query("SELECT name FROM customer WHERE id = $1", [client]);
+            const clientResult = await pool.query("SELECT name, owner FROM customer WHERE id = $1", [client]);
             if (clientResult.rows.length > 0) {
-                taskName += ` - ${clientResult.rows[0].name}`;
+                taskName += ` - ${clientResult.rows[0].name || clientResult.rows[0].owner}`;
                 const query = `
                 INSERT INTO task(
                     assigned_to, status, task_name, type, created_at, customer_id

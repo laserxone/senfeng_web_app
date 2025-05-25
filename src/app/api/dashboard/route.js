@@ -30,7 +30,14 @@ export async function GET(req) {
 
         const firstDayOfThreeMonthsAgo = firstThreeMonthsAgo.clone().utc().toISOString();
 
-        // Query to get daily machine sales for the last 3 months
+        const startOfYesterday = currentDate.clone().subtract(1, 'day').startOf('day');
+        const startOfYesterdayUTC = startOfYesterday.clone().utc().toISOString();
+
+
+        const endOfToday = currentDate.clone().endOf('day');
+        const endOfTodayUTC = endOfToday.clone().utc().toISOString();
+
+
         const machinesSoldLast3MonthsQuery = `
     SELECT 
         s.contract_date AS sale_date,
@@ -151,7 +158,7 @@ GROUP BY
 
         // Execute all queries in parallel
 
-    const teamProgressQuery = `
+        const teamProgressQuery = `
 WITH sales_users AS (
   SELECT id, name, email, monthly_target
   FROM users
@@ -196,6 +203,33 @@ LEFT JOIN customer_count c ON u.id = c.user_id
 LEFT JOIN sale_sum s ON u.id = s.user_id;
 `;
 
+     const taskQuery = `
+  SELECT
+    users.id AS assigned_user_id,
+    users.name AS assigned_user_name,
+    COUNT(task.id) AS total_tasks,
+    JSON_AGG(
+      JSON_BUILD_OBJECT(
+        'id', task.id,
+        'title', task.task_name,
+        'status', task.status,
+        'created_at', task.created_at,
+        'customer_id', task.customer_id,
+        'customer_name', customer.name,
+        'customer_owner', customer.owner
+      )
+      ORDER BY task.created_at DESC
+    ) AS tasks
+  FROM task
+  LEFT JOIN users ON task.assigned_to = users.id
+  LEFT JOIN customer ON task.customer_id = customer.id
+  WHERE task.created_at BETWEEN $1 AND $2
+  GROUP BY users.id, users.name
+  ORDER BY MAX(task.created_at) DESC;
+`;
+
+
+
 
         const [
             paymentResult,
@@ -204,7 +238,8 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
             recentSalesResult,
             industryCountResult,
             feedbackResult,
-            tempProgressResult
+            tempProgressResult,
+            taskResult
         ] = await Promise.all([
             pool.query(paymentQuery, [firstDayOfCurrentMonth, lastDayOfCurrentMonth]),
             pool.query(machinesSoldQuery, [firstDayOfCurrentMonth, lastDayOfCurrentMonth]),
@@ -212,7 +247,8 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
             pool.query(recentSalesQuery),
             pool.query(industryCount),
             pool.query(feedbackQuery),
-            pool.query(teamProgressQuery, [firstDayOfCurrentMonth, lastDayOfCurrentMonth])
+            pool.query(teamProgressQuery, [firstDayOfCurrentMonth, lastDayOfCurrentMonth]),
+            pool.query(taskQuery, [startOfYesterdayUTC, endOfTodayUTC])
         ]);
 
         const formattedFeedbackData = feedbackResult.rows.map(row => ({
@@ -270,7 +306,8 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
             industry_count: industryCountResult.rows,
             machines_sold_last_3_months: dateArray,
             feedback_status_last_6_months: formattedFeedbackData,
-            team_progress: tempProgressResult.rows
+            team_progress: tempProgressResult.rows,
+            team_task : taskResult.rows
         };
 
         return NextResponse.json(responseData, { status: 200 });
