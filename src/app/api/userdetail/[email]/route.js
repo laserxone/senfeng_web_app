@@ -1,10 +1,15 @@
 import pool from "@/config/db";
 import { branchNavItem, employeeNavItems, InventoryNavItem, ownerNavItems, POSNavItem, StoreNavItem } from "@/constants/data";
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
 
 
 export async function GET(req, { params }) {
     const { email } = await params
+    const referrer = req.headers.get('referer')
+    const url = new URL(referrer);
+    const segments = url.pathname.split('/'); 
+    const city = segments[1]; 
+
     try {
         const query = `
       SELECT * FROM users WHERE email = $1 LIMIT 1
@@ -20,19 +25,19 @@ export async function GET(req, { params }) {
             return NextResponse.json({ message: "User not found, contact your manager" }, { status: 404 })
         }
         let nav_items = []
-        if (result.rows[0].full_access) {
-            nav_items = [...ownerNavItems]
-            nav_items.push(POSNavItem)
+        const branchOffice = result.rows[0].office.toLowerCase()
 
-            base_route = "superadmin"
-        }
-        else if (result.rows[0].designation == 'Owner') {
+
+
+        if (result.rows[0].full_access || result.rows[0].designation == 'Owner') {
+
             nav_items = [...ownerNavItems]
             nav_items.push(POSNavItem)
-            base_route = "superadmin"
+            base_route = `${city}/superadmin`
         }
+       
         else if (result.rows[0].designation == 'Engineer') {
-            base_route = 'engineer'
+            base_route = `${branchOffice}/engineer`
             nav_items = [...employeeNavItems]
             if (result.rows[0].branch_expenses_assigned)
                 nav_items.push(branchNavItem)
@@ -40,14 +45,14 @@ export async function GET(req, { params }) {
                 nav_items.push(InventoryNavItem)
         }
         else if (result.rows[0].designation == 'Sales') {
-            base_route = 'sales'
+            base_route = `${branchOffice}/sales`
             nav_items = [...employeeNavItems]
             if (result.rows[0].branch_expenses_assigned)
                 nav_items.push(branchNavItem)
             if (result.rows[0].inventory_assigned)
                 nav_items.push(InventoryNavItem)
         } else if (result.rows[0].designation == 'Customer Relationship Manager') {
-            base_route = 'crm'
+            base_route = `${branchOffice}/sales`
             nav_items = [...employeeNavItems]
             if (result.rows[0].branch_expenses_assigned)
                 nav_items.push(branchNavItem)
@@ -56,7 +61,7 @@ export async function GET(req, { params }) {
         }
 
         else if (result.rows[0].designation == 'Customer Relationship Manager (After Sales)') {
-            base_route = 'aftersales'
+            base_route = `${branchOffice}/aftersales`
             nav_items = [...employeeNavItems]
             if (result.rows[0].branch_expenses_assigned)
                 nav_items.push(branchNavItem)
@@ -64,7 +69,7 @@ export async function GET(req, { params }) {
                 nav_items.push(InventoryNavItem)
         }
         else if (result.rows[0].designation == 'Social Media Manager') {
-            base_route = 'smm'
+            base_route = `${branchOffice}/smm`
             nav_items = [...employeeNavItems]
             if (result.rows[0].branch_expenses_assigned)
                 nav_items.push(branchNavItem)
@@ -72,7 +77,7 @@ export async function GET(req, { params }) {
                 nav_items.push(InventoryNavItem)
         }
         else if (result.rows[0].designation == 'Manager') {
-            base_route = 'manager'
+            base_route = `${branchOffice}/manager`
             nav_items = [...employeeNavItems]
             if (result.rows[0].branch_expenses_assigned)
                 nav_items.push(branchNavItem)
@@ -80,7 +85,7 @@ export async function GET(req, { params }) {
                 nav_items.push(InventoryNavItem)
         }
         else if (result.rows[0].designation == 'Store Manager') {
-            base_route = 'store'
+            base_route = `${branchOffice}/store`
             nav_items = [...StoreNavItem]
             if (result.rows[0].branch_expenses_assigned)
                 nav_items.push(branchNavItem)
@@ -88,7 +93,7 @@ export async function GET(req, { params }) {
                 nav_items.push(InventoryNavItem)
             nav_items.push(POSNavItem)
         }
-        return NextResponse.json({ ...result.rows[0], nav_items: nav_items, base_route: base_route, version_code: version_code, route_url : route_url }, { status: 200 })
+        return NextResponse.json({ ...result.rows[0], nav_items: nav_items, base_route: base_route, version_code: version_code, route_url: route_url }, { status: 200 })
 
     } catch (error) {
         console.error('Error inserting data: ', error);

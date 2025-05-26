@@ -335,9 +335,6 @@ export default function InventoryDetail({ booking_id }) {
     }
   }, [visible]);
 
-  useEffect(() => {
-    console.log(visible);
-  }, [visible]);
 
   return (
     <>

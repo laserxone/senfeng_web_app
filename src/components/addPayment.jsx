@@ -125,7 +125,7 @@ const AddPayment = ({
     try {
       const response = await axios.post(`/check-note`, { number });
       if (Array.isArray(response.data) && response.data.length > 0) {
-        console.log(response.data);
+        
         setError(response.data[0]);
       }
     } catch (error) {

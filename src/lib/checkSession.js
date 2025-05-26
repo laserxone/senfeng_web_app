@@ -24,72 +24,84 @@ export default function useCheckSession() {
         try {
             const response = await axios.get(`/userdetail/${user.email}`);
             const userData = response.data;
+
+
             if (userData?.designation) {
 
-                if (userData.full_access) {
+
+                if (userData.full_access || userData.designation === 'Owner') {
                     if (!pathname.includes("superadmin")) {
                         startHolyLoader()
-                        router.push("/superadmin/dashboard")
+                        router.push(`/${userData.office.toLowerCase()}/superadmin/dashboard`)
+                    }
+                } else {
+                    if (!pathname.includes(userData.base_route)) {
+                        startHolyLoader()
+                        router.replace(`/${userData.base_route}`)
                     }
                 }
 
-                else if (userData.designation === 'Owner') {
-                    if (!pathname.includes("superadmin")) {
-                        startHolyLoader()
-                        router.push("/superadmin/dashboard")
-                    }
-                }
-                else if (userData.designation === 'Social Media Manager') {
-                    if (!pathname.includes("smm")) {
-                        startHolyLoader()
-                        router.push("/smm/dashboard")
-                    }
-                }
 
-                else if (userData.designation === 'Sales') {
-                    if (!pathname.includes("sales")) {
-                        startHolyLoader()
-                        router.push("/sales/dashboard")
-                    }
-                }
 
-                else if (userData.designation === 'Engineer') {
-                    if (!pathname.includes("engineer")) {
-                        startHolyLoader()
-                        router.push("/engineer/dashboard")
-                    }
-                }
 
-                else if (userData.designation === 'Manager') {
-                    if (!pathname.includes("manager")) {
-                        startHolyLoader()
-                        router.push("/manager/dashboard")
-                    }
-                }
 
-                else if (userData.designation === 'Customer Relationship Manager') {
-                    if (!pathname.includes("crm")) {
-                        startHolyLoader()
-                        router.push("/crm/dashboard")
-                    }
-                }
+                // else if (userData.designation === 'Owner') {
+                //     if (!pathname.includes("superadmin")) {
+                //         startHolyLoader()
+                //         router.push(`/${userData.office}/superadmin/dashboard`)
+                //     }
+                // }
+                // else if (userData.designation === 'Social Media Manager') {
+                //     if (!pathname.includes("smm")) {
+                //         startHolyLoader()
+                //         router.push(`/${userData.office}/smm/dashboard`)
+                //     }
+                // }
 
-                else if (userData.designation === 'Customer Relationship Manager (After Sales)') {
-                    if (!pathname.includes("aftersales")) {
-                        startHolyLoader()
-                        router.push("/aftersales/dashboard")
-                    }
-                }
-                else if (userData.designation === 'Store Manager') {
-                    if (!pathname.includes("store")) {
-                        startHolyLoader()
-                        router.push("/store/dashboard")
-                    }
-                }
-                else {
+                // else if (userData.designation === 'Sales') {
+                //     if (!pathname.includes("sales")) {
+                //         startHolyLoader()
+                //         router.push(`/${userData.office}/sales/dashboard`)
+                //     }
+                // }
 
-                    signOut(auth);
-                }
+                // else if (userData.designation === 'Engineer') {
+                //     if (!pathname.includes("engineer")) {
+                //         startHolyLoader()
+                //         router.push(`/${userData.office}/engineer/dashboard`)
+                //     }
+                // }
+
+                // else if (userData.designation === 'Manager') {
+                //     if (!pathname.includes("manager")) {
+                //         startHolyLoader()
+                //         router.push(`/${userData.office}/manager/dashboard`)
+                //     }
+                // }
+
+                // else if (userData.designation === 'Customer Relationship Manager') {
+                //     if (!pathname.includes("crm")) {
+                //         startHolyLoader()
+                //         router.push(`/${userData.office}/crm/dashboard`)
+                //     }
+                // }
+
+                // else if (userData.designation === 'Customer Relationship Manager (After Sales)') {
+                //     if (!pathname.includes("aftersales")) {
+                //         startHolyLoader()
+                //         router.push(`/${userData.office}/aftersales/dashboard`)
+                //     }
+                // }
+                // else if (userData.designation === 'Store Manager') {
+                //     if (!pathname.includes("store")) {
+                //         startHolyLoader()
+                //         router.push(`/${userData.office}/store/dashboard`)
+                //     }
+                // }
+                // else {
+
+                //     signOut(auth);
+                // }
 
                 return { user: { ...userData, ...user } };
             } else {
@@ -100,7 +112,8 @@ export default function useCheckSession() {
         } catch (e) {
 
             signOut(auth);
-            return { error: e.message };
+            toast({ title: e?.message || "Error occured", variant: "destructive" })
+            return { error: e?.message || "Error occured"};
         }
     }
 

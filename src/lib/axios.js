@@ -3,17 +3,26 @@ import axios from 'axios'
 import { BASE_URL } from '@/constants/data'
 import { toast } from '@/hooks/use-toast'
 
+let userOffice = '' // this will be injected from the component
+
+export const setUserOffice = (office) => {
+  userOffice = office?.toLowerCase() || ''
+}
+
 const axiosInstance = axios.create({
+  // default baseURL – will be overridden by interceptor
   baseURL: BASE_URL
- 
 })
 
-axios.interceptors.request.use(config => {
+axiosInstance.interceptors.request.use(config => {
+  config.baseURL = `${BASE_URL}${userOffice}`
+
   config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
   config.headers['Pragma'] = 'no-cache';
   config.headers['Expires'] = '0';
-  return config;
-});
+
+  return config
+})
 
 axiosInstance.interceptors.response.use(
   response => response,

@@ -1,6 +1,4 @@
-
 export const MachinesSoldCard = ({ value, percentage, onClick }) => {
-
   return (
     <>
       <div
@@ -47,8 +45,6 @@ export const MachinesSoldCard = ({ value, percentage, onClick }) => {
           </p>
         </div>
       </div>
-
-   
     </>
   );
 };
@@ -144,3 +140,5 @@ export const VisitsDoneCard = ({ value, remaining, total }) => {
     </div>
   );
 };
+
+

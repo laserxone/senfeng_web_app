@@ -6,22 +6,17 @@ import moment from "moment/moment";
 export async function GET(req) {
 
     try {
-        // Get the current and last month's date range
         const TIMEZONE = 'Asia/Karachi';
         const currentDate = momentT.tz(TIMEZONE);
 
-        // Current Month
         const firstCurrentMonth = currentDate.clone().startOf('month').startOf('day');
         const lastCurrentMonth = currentDate.clone().endOf('month').endOf('day');
 
-        // Last Month
         const firstLastMonth = currentDate.clone().subtract(1, 'month').startOf('month').startOf('day');
         const lastLastMonth = currentDate.clone().subtract(1, 'month').endOf('month').endOf('day');
 
-        // Three Months Ago (start)
         const firstThreeMonthsAgo = currentDate.clone().subtract(2, 'month').startOf('month').startOf('day');
 
-        // Convert to UTC ISO strings
         const firstDayOfCurrentMonth = firstCurrentMonth.clone().utc().toISOString();
         const lastDayOfCurrentMonth = lastCurrentMonth.clone().utc().toISOString();
 

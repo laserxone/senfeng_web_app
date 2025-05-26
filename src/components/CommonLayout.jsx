@@ -5,13 +5,13 @@ import KBar from "@/components/kbar";
 import UserContextProvider from "@/store/context/UserContext";
 import NotificationContextProvider from "@/store/context/NotificationContext";
 
-export default async function CommonLayout({ children }) {
+export default async function CommonLayout({ office, children }) {
   return (
     <UserContextProvider>
       <KBar>
         <NotificationContextProvider>
           <SidebarProvider>
-            <AppSidebar />
+            <AppSidebar office={office}/>
             <SidebarInset>
               <Header />
               <div className="flex flex-1">{children}</div>

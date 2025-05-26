@@ -24,17 +24,34 @@ import axios from "@/lib/axios";
 export function CustomerSearch({ value, onReturn }) {
   const [open, setOpen] = React.useState(false);
   const [customers, setCustomers] = React.useState([]);
- 
 
   React.useEffect(() => {
     async function fetchData() {
       axios.get(`/customer?withoutsale=true`).then((response) => {
         if (response.data.length > 0) {
-          const apiData = response.data.sort((a, b) =>
-            a?.name.localeCompare(b?.name || "")
-          );
+          const apiData = response.data
+            .filter((item) => {
+              // Check if there's at least a valid name or a valid owner
+              const hasValidName = item.name && item.name.trim() !== "";
+              const hasValidOwner = item.owner && item.owner.trim() !== "";
+              return hasValidName || hasValidOwner;
+            })
+            .map((item) => {
+              const hasValidName = item.name && item.name.trim() !== "";
+              return {
+                ...item,
+                label: hasValidName
+                  ? item.name.trim()
+                  : `${item.owner?.trim() || ""} ${
+                      item.location?.trim() || ""
+                    }`.trim(),
+              };
+            })
+            .filter((item) => !!item.label)
+            .sort((a, b) => a.label.localeCompare(b.label));
+
           const finalData = apiData.map((item) => {
-            return { value: item.id, label: item.name || item.owner };
+            return { value: item.id, label: item.label };
           });
           setCustomers(finalData);
         }
@@ -60,8 +77,8 @@ export function CustomerSearch({ value, onReturn }) {
       </PopoverTrigger>
       <PopoverContent className="py-2 px-0">
         <Command>
-          <CommandInput  placeholder="Search customer..." className="h-9" />
-          <CommandList >
+          <CommandInput placeholder="Search customer..." className="h-9" />
+          <CommandList>
             <CommandEmpty>No customer found.</CommandEmpty>
             <CommandGroup>
               {customers.map((item) => (

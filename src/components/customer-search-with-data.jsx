@@ -29,13 +29,32 @@ export function CustomerSearchWithData({ value, onReturn }) {
     async function fetchData() {
       const response = await axios.get(`/customer?withoutsale=true`);
       if (response.data.length > 0) {
-        const finalData = response.data.map((item)=>{
-          return {...item, search : item.name || item.owner}
-        })
-        const sortedData = finalData.sort((a, b) =>
-          a?.search.localeCompare(b?.search || "")
-        );
-        setCustomers(sortedData);
+        const apiData = response.data
+          .filter((item) => {
+            // Check if there's at least a valid name or a valid owner
+            const hasValidName = item.name && item.name.trim() !== "";
+            const hasValidOwner = item.owner && item.owner.trim() !== "";
+            return hasValidName || hasValidOwner;
+          })
+          .map((item) => {
+            const hasValidName = item.name && item.name.trim() !== "";
+            return {
+              ...item,
+              label: hasValidName
+                ? item.name.trim()
+                : `${item.owner?.trim() || ""} ${
+                    item.location?.trim() || ""
+                  }`.trim(),
+            };
+          })
+          .filter((item) => !!item.label) 
+          .sort((a, b) => a.label.localeCompare(b.label));
+
+        const finalData = apiData.map((item) => {
+          return { ...item, search: item.label };
+        });
+
+        setCustomers(finalData);
       }
     }
     fetchData();

@@ -5,9 +5,9 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
-import { AttendanceDetail } from "@/app/superadmin/attendance/page";
+import { AttendanceDetail } from "@/app/[city]/superadmin/attendance/page";
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
 import moment from "moment";
@@ -17,8 +17,6 @@ import FilterSheet from "./filterSheet";
 export default function Attendance({ passingData, onFilterReturn, onRefresh }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
-  const [value, setValue] = useState("");
-  const pageTableRef = useRef();
   const [data, setData] = useState([]);
   const [visible, setVisible] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState(null);

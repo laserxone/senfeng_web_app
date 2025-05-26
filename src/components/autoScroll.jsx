@@ -20,9 +20,26 @@ const AutoScrollMembers = ({ customers }) => {
   useEffect(() => {
     if (customers.length > 0) {
       const temp = [...customers]
-        .map((item) => ({ ...item, name: item.name?.trim() || item.owner?.trim() }))
-        .filter((item) => item.name)
+        .filter((item) => {
+          // Check if there's at least a valid name or a valid owner
+          const hasValidName = item.name && item.name.trim() !== "";
+          const hasValidOwner = item.owner && item.owner.trim() !== "";
+          return hasValidName || hasValidOwner;
+        })
+        .map((item) => {
+          const hasValidName = item.name && item.name.trim() !== "";
+          return {
+            ...item,
+            name: hasValidName
+              ? item.name.trim()
+              : `${item.owner?.trim() || ""} ${
+                  item.location?.trim() || ""
+                }`.trim(),
+          };
+        })
+        .filter((item) => !!item.name)
         .sort((a, b) => a.name.localeCompare(b.name));
+
       setLocalData(temp);
     }
   }, [customers]);
@@ -102,7 +119,9 @@ const AutoScrollMembers = ({ customers }) => {
                 <Link
                   key={index}
                   className="flex items-center m-2 cursor-pointer"
-                  href={`/${UserState.value.data?.base_route}/${item.member ? "member" : "customer"}/${item.id}`}
+                  href={`/${UserState.value.data?.base_route}/${
+                    item.member ? "member" : "customer"
+                  }/${item.id}`}
                 >
                   <Avatar className="w-12 h-12 mr-4 ">
                     <AvatarImage src="/" alt="Customer Picture" />

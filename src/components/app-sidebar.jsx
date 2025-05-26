@@ -57,6 +57,7 @@ import NotificationBadge from "./NotificationBadge";
 import NotificationBadgeWithoutCount from "./NotificationBadgeWithoutCount";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useContext, useEffect } from "react";
+import { setUserOffice } from "@/lib/axios";
 
 export const company = {
   name: "SENFENG",
@@ -64,7 +65,7 @@ export const company = {
   plan: "Pakistan",
 };
 
-export default function AppSidebar() {
+export default function AppSidebar({office}) {
   const pathname = usePathname();
   const checkSession = useCheckSession();
   const { state: UserState, setUser } = useContext(UserContext);
@@ -76,11 +77,18 @@ export default function AppSidebar() {
 
   useEffect(() => {
     checkSession().then((val) => {
-      if (val?.user) {
-        setUser(val.user);
-      }
+      updateData(val);
     });
-  }, []);
+  }, [office]);
+
+  async function updateData(val) {
+    if (val?.user) {
+      // if (office) {
+      //   setUserOffice(`/${office}`);
+      // }
+      setUser(val.user);
+    }
+  }
 
   useEffect(() => {
     if (UserState?.value?.data?.email) {

@@ -935,10 +935,11 @@ export default function POS() {
                             <div>
                                 <ScrollArea className="h-[80vh] px-2">
                                     {allEngineersData.map((item, index) => (
-                                        <RenderEachEngineerRow key={index} item={item} onRefresh={async () => {await handleEngineerItems()
+                                        <RenderEachEngineerRow key={index} item={item} onRefresh={async () => {
+                                            await handleEngineerItems()
                                             fetchData()
                                         }
-                                            
+
                                         } />
 
                                     ))}
@@ -1325,6 +1326,7 @@ const AddItemDialog = ({ visible, onClose, handleDecrease, showOther, setShowOth
 
 const RenderStockItems = ({ item, index, invoiceItems, handleDecrease, handleIncrease, showOther, setShowOther, setPrice, setQty, setOther, visible, onClose, onRefresh }) => {
     const [localName, setLocalName] = useState("")
+     const [localChineseName, setLocalChineseName] = useState("")
     const [localQty, setLocalQty] = useState("")
     const [localPrice, setLocalPrice] = useState("")
     const [localImage, setLocalImage] = useState(null)
@@ -1476,7 +1478,9 @@ const RenderStockItems = ({ item, index, invoiceItems, handleDecrease, handleInc
                                     drag="Drop the files here..."
                                 />
 
-                                <input placeholder={item?.name} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px' }} className='px-2' value={localName} onChange={(e) => setLocalName(e.target.value)} />
+                                <input placeholder={item?.name || "Product name"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px' }} className='px-2' value={localName} onChange={(e) => setLocalName(e.target.value)} />
+
+                                 <input placeholder={item?.chinese_name || "Product chinese name"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px' }} className='px-2' value={localChineseName} onChange={(e) => setLocalChineseName(e.target.value)} />
 
                                 <div className='flex justify-between'>
 
@@ -1557,6 +1561,7 @@ const RenderStockItems = ({ item, index, invoiceItems, handleDecrease, handleInc
                                 setLocalPrice(item?.price || 0)
                                 setThreshold(item?.threshold || "")
                                 setNewOrder(item?.new_order || "")
+                                setLocalChineseName(item?.chinese_name || "")
                                 setEditable(!editable)
                             }}>
                                 <PencilIcon className='h-4' />
@@ -1570,6 +1575,7 @@ const RenderStockItems = ({ item, index, invoiceItems, handleDecrease, handleInc
 
 const RenderStockItemsOtherView = ({ item, index, invoiceItems, handleDecrease, handleIncrease, showOther, setShowOther, setPrice, setQty, setOther, visible, onClose, onRefresh }) => {
     const [localName, setLocalName] = useState("")
+     const [localChineseName, setLocalChineseName] = useState("")
     const [localQty, setLocalQty] = useState("")
     const [localPrice, setLocalPrice] = useState("")
     const [localImage, setLocalImage] = useState(null)
@@ -1634,7 +1640,8 @@ const RenderStockItemsOtherView = ({ item, index, invoiceItems, handleDecrease, 
                 qty: Number(localQty),
                 img: result,
                 threshold: threshold ? Number(threshold) : "",
-                new_order: newOrder ? Number(newOrder) : ""
+                new_order: newOrder ? Number(newOrder) : "",
+                chinese_name : localChineseName
             })
                 .catch((e) => {
                     console.log(e)
@@ -1688,7 +1695,9 @@ const RenderStockItemsOtherView = ({ item, index, invoiceItems, handleDecrease, 
                                     drag="Drop the files here..."
                                 />
 
-                                <input placeholder={item?.name} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px' }} className='px-2' value={localName} onChange={(e) => setLocalName(e.target.value)} />
+                                <input placeholder={item?.name || "Product name"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px' }} className='px-2' value={localName} onChange={(e) => setLocalName(e.target.value)} />
+
+                                <input placeholder={item?.chinese_name || "Product chinese name"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px' }} className='px-2' value={localChineseName} onChange={(e) => setLocalChineseName(e.target.value)} />
 
                                 <div className='flex justify-between'>
 
@@ -1765,6 +1774,7 @@ const RenderStockItemsOtherView = ({ item, index, invoiceItems, handleDecrease, 
                             </div>
                             <div className='hover:cursor-pointer' onClick={() => {
                                 setLocalName(item.name)
+                                setLocalChineseName(item.chinese_name)
                                 setLocalQty(item?.qty || 0)
                                 setLocalPrice(item?.price || 0)
                                 setThreshold(item?.threshold || "")
@@ -1781,6 +1791,7 @@ const RenderStockItemsOtherView = ({ item, index, invoiceItems, handleDecrease, 
 
 const AddNewProduct = ({ visible, onClose, onRefresh }) => {
     const [name, setName] = useState("")
+    const [chineseName, setChineseName] = useState("")
     const [qty, setQty] = useState("")
     const [price, setPrice] = useState("")
     const [image, setImage] = useState(null)
@@ -1837,7 +1848,8 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
                 qty: Number(qty),
                 img: result,
                 threshold: threshold ? Number(threshold) : "",
-                new_order: newOrder ? Number(newOrder) : ""
+                new_order: newOrder ? Number(newOrder) : "",
+                chinese_name: chineseName
             })
                 .then(() => {
                     onRefresh()
@@ -1869,7 +1881,7 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Add new customer</DialogTitle>
+                    <DialogTitle>Add new stock item</DialogTitle>
                 </DialogHeader>
                 <div>
                     <ScrollArea className="h-[80vh] px-2">
@@ -1877,6 +1889,8 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
 
                             <div className='text-md'>Name</div>
                             <Input placeholder="Enter product name" value={name} onChange={(e) => setName(e.target.value)} />
+                            <div className='text-md'>Chinese name</div>
+                            <Input placeholder="Enter product chinese name" value={chineseName} onChange={(e) => setChineseName(e.target.value)} />
                             <div className='text-md mt-2'>Quantity</div>
                             <Input type="number" placeholder="Enter quantity" value={qty || ""} onChange={(e) => {
                                 if (!isNaN(e.target.value))
