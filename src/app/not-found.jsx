@@ -20,7 +20,7 @@ export default function NotFound() {
         moved.
       </p>
       <div className='mt-8 flex justify-center gap-2'>
-        <Button onClick={() => router.back()} variant='default' size='lg'>
+        <Button onClick={() => router.push("/")} variant='default' size='lg'>
           Go back
         </Button>
         
