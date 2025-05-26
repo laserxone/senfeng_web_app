@@ -16,9 +16,12 @@ export async function GET(req, { params }) {
     t.*, 
     u.id AS user_id, 
     u.name AS assigned_to_name,
-    u.email AS assigned_to_email
+    u.email AS assigned_to_email,
+    c.name AS customer_name,
+    c.owner AS customer_owner
 FROM task t
 INNER JOIN users u ON t.assigned_to = u.id
+LEFT JOIN customer c ON t.customer_id = c.id
 WHERE u.id = $1
     `;
 
@@ -30,7 +33,27 @@ WHERE u.id = $1
         }
         query += ` ORDER BY t.created_at DESC;`;
         const result = await pool.query(query, queryParams);
-        return NextResponse.json(result.rows, { status: 200 })
+       
+        
+        const teamTasks = result.rows
+        const updatedTasks = teamTasks.map(task => {
+
+            if (task.customer_id) {
+                const [firstPart] = task.task_name.split("-");
+                const customerInfo = task.customer_name || task.customer_owner || "";
+                const updatedTitle = `${firstPart.trim()} - ${customerInfo}`;
+                return {
+                    ...task,
+                    task_name: updatedTitle
+                };
+            }
+            return task;
+        });
+
+
+
+
+        return NextResponse.json(updatedTasks, { status: 200 })
 
     } catch (error) {
         console.error('Error fetching data: ', error);

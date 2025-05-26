@@ -203,7 +203,7 @@ LEFT JOIN customer_count c ON u.id = c.user_id
 LEFT JOIN sale_sum s ON u.id = s.user_id;
 `;
 
-     const taskQuery = `
+        const taskQuery = `
   SELECT
     users.id AS assigned_user_id,
     users.name AS assigned_user_name,
@@ -272,6 +272,28 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
         const totalNewCustomersThisMonth = newCustomersResult.rows[0].total_new_customers || 0;
         const totalNewCustomersLastMonth = lastMonthNewCustomersResult.rows[0].total_new_customers || 0;
 
+        const teamTasks = taskResult.rows
+        const updatedTasks = teamTasks.map(user => {
+            const updatedUserTasks = user.tasks.map(task => {
+                if (task.customer_id) {
+                    const [firstPart] = task.title.split("-");
+                    const customerInfo = task.customer_name || task.customer_owner || "";
+                    const updatedTitle = `${firstPart.trim()} - ${customerInfo}`;
+                    return {
+                        ...task,
+                        title: updatedTitle
+                    };
+                }
+                return task;
+            });
+
+            return {
+                ...user,
+                tasks: updatedUserTasks
+            };
+        });
+
+
         // Calculate percentage changes
         const paymentChangePercentage = totalPaymentLastMonth === 0
             ? 0
@@ -307,7 +329,7 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
             machines_sold_last_3_months: dateArray,
             feedback_status_last_6_months: formattedFeedbackData,
             team_progress: tempProgressResult.rows,
-            team_task : taskResult.rows
+            team_task: updatedTasks
         };
 
         return NextResponse.json(responseData, { status: 200 });

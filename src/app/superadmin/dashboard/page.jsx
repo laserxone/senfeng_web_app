@@ -313,22 +313,21 @@ const renderTaskCard = (tasks, label) => (
         <p className="text-sm text-muted-foreground">No tasks</p>
       ) : (
         tasks.map((task) => (
-         <div
-  key={task.id}
-  className={`p-3 rounded text-sm border border-muted-foreground/10 ${
-    task.status === 'Pending' ? 'bg-red-200' : 'bg-green-200'
-  }`}
->
-  <p className="font-medium text-black">
-    {task.title || `Task #${task.id}`}{" "}
-    {task.customer_name || task.customer_owner}
-  </p>
+          <div
+            key={task.id}
+            className={`p-3 rounded text-sm border border-muted-foreground/10 ${
+              task.status === "Pending" ? "bg-red-200" : "bg-green-200"
+            }`}
+          >
+            {/* <p className="font-medium text-black">
+              {task.title || `Task #${task.id}`}{" "}
+              {task.customer_name || task.customer_owner}
+            </p> */}
 
-  <p className="text-xs text-muted-foreground">
-    {moment(task.created_at).format("YYYY-MM-DD hh:mm A")}
-  </p>
-</div>
-
+            <p className="text-xs text-muted-foreground">
+              {moment(task.created_at).format("YYYY-MM-DD hh:mm A")}
+            </p>
+          </div>
         ))
       )}
     </CardContent>

@@ -45,6 +45,17 @@ import Link from "next/link";
 import { useContext } from "react";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import TaskEmployee from "@/components/users/task";
+import CustomerTask from "@/components/users/customerTask";
+import {
+  Timeline,
+  TimelineDescription,
+  TimelineHeader,
+  TimelineItem,
+  TimelineTime,
+  TimelineTitle,
+} from "@/components/timeline";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function MemberDetail({ ownership = false, from, customer_id }) {
   const [data, setData] = useState(null);
@@ -57,6 +68,7 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
   const router = useRouter();
   const [visitData, setVisitData] = useState([]);
   const [profileCompletion, setProfileCompletion] = useState(0);
+  const [taskData, setTaskData] = useState([]);
 
   useEffect(() => {
     if (customer_id && UserState?.value?.data?.id) {
@@ -68,7 +80,14 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
     fetchCustomerDetail();
     fetchCustomerFeedback();
     fetchVisitData();
+    fetchTaskData();
   }, 500);
+
+  async function fetchTaskData(start, end) {
+    const response = await axios.get(`/customer/${customer_id}/task`);
+    setTaskData(response.data);
+    return true;
+  }
 
   async function fetchVisitData(start, end) {
     axios.get(`/customer/${customer_id}/visit`).then((response) => {
@@ -143,6 +162,17 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
       />
     );
   }, [visitData, customer_id]);
+
+  const RenderTaskTab = useCallback(() => {
+    return (
+      <CustomerTask
+        id={UserState.value.data?.id}
+        customer_id={customer_id}
+        data={taskData}
+        onFetchData={async () => await fetchTaskData()}
+      />
+    );
+  }, [taskData, customer_id]);
 
   const RenderFeedbackTabs = useCallback(() => {
     return (
@@ -224,11 +254,9 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
           />
         </div>
 
-        <Tabs
-          defaultValue={data?.member ? "aftersales" : "feedback"}
-          className="w-full"
-        >
+        <Tabs defaultValue={"timeline"} className="w-full">
           <TabsList>
+            <TabsTrigger value="timeline">Timeline</TabsTrigger>
             <TabsTrigger value="feedback">
               {data?.member ? "After Sales" : "Feedback"}
             </TabsTrigger>
@@ -236,10 +264,24 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
             <TabsTrigger value="customers">Machines</TabsTrigger>
 
             <TabsTrigger value="visit">Visit</TabsTrigger>
+            <TabsTrigger value="task">Task</TabsTrigger>
             <TabsTrigger value="about">About</TabsTrigger>
           </TabsList>
           <TabsContent value="feedback">
             <RenderFeedbackTabs />
+          </TabsContent>
+
+          <TabsContent value="task">
+            <RenderTaskTab />
+          </TabsContent>
+
+          <TabsContent value="timeline">
+            <RenderTimeline
+              feedbackData={feedback}
+              visitData={visitData}
+              taskData={taskData}
+              customerDetail={data}
+            />
           </TabsContent>
 
           <TabsContent value="about">
@@ -420,10 +462,9 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
   const { state: UserState } = useContext(UserContext);
 
   const RenderEachMachine = ({ machine }) => {
-    const totalPayments = machine?.payments.filter((item)=> item.clearance_date)?.reduce(
-      (sum, payment) => sum + Number(payment.amount),
-      0
-    );
+    const totalPayments = machine?.payments
+      .filter((item) => item.clearance_date)
+      ?.reduce((sum, payment) => sum + Number(payment.amount), 0);
     const total = machine.price || 0;
     return (
       <AccordionItem key={machine.id} value={`customer-${machine.id}`}>
@@ -441,7 +482,8 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
                 <span className="font-normal text-sm text-gray-600 mr-2">
                   Data completion: {machine?.percentage_completion || 0}%
                 </span>
-                {Number(machine.price) === totalPayments && machine?.percentage_completion === 100 ? (
+                {Number(machine.price) === totalPayments &&
+                machine?.percentage_completion === 100 ? (
                   <CheckCircle className="text-green-500 w-5 h-5 mr-2" />
                 ) : (
                   <Clock className="text-yellow-500 w-5 h-5 mr-2" />
@@ -700,5 +742,130 @@ const BillingInformationMachine = ({ payment }) => {
         </div>
       </div>
     </div>
+  );
+};
+
+const RenderTimeline = ({
+  feedbackData,
+  visitData,
+  taskData,
+  customerDetail,
+}) => {
+  const [timelineData, setTimelineData] = useState([]);
+
+  useEffect(() => {
+    const localData = [];
+
+    taskData.forEach((task) => {
+      localData.push({
+        id: `task-${task.id}`,
+        title: `Task: ${task.task_name.split("-")[0]}`,
+        description: `Task assigned to ${task.user_name}`,
+        time: task.created_at,
+      });
+    });
+
+    visitData.forEach((visit) => {
+      localData.push({
+        id: `visit-${visit.id}`,
+        title: `Visit by ${visit.user_name}`,
+        description: `Problem: ${visit?.problem || "Nil"}, Solution: ${
+          visit?.solution || "Nil"
+        } Note: ${visit.note}`,
+        time: visit.created_at,
+      });
+    });
+
+    feedbackData.forEach((feedback) => {
+      localData.push({
+        id: `feedback-${feedback.id}`,
+        title: `Feedback taken by ${feedback.user_name}`,
+        description: `${feedback.feedback}`,
+        time: feedback.created_at,
+      });
+    });
+
+    if (customerDetail) {
+      customerDetail?.machines?.forEach((machine) => {
+        localData.push({
+          id: `machine-${machine.id}`,
+          title: `Sell Machine: ${machine.serial_no} (${machine.source || "Nil"})`,
+          description: `Power: ${machine.power || "Nil"}W, Price: $${
+            machine.price
+          }, Order No: ${machine.order_no_arr?.join(", ")}`,
+          time: machine.contract_date
+            ? machine.contract_date
+            : machine.created_at,
+        });
+
+        machine.payments?.forEach((payment) => {
+          localData.push({
+            id: `payment-${payment.id}`,
+            title: `Payment for Machine ${machine.serial_no}`,
+            description: `Tx: ${
+              payment.note
+            }, Amount: $${payment.amount}, Mode: ${
+              payment.mode
+            }, Received by: ${payment.received_by}, Clearance Date: ${
+              payment.clearance_data
+                ? moment(payment.clearance_data).format("YYYY-MM-DD")
+                : "Pending"
+            }`,
+            time: payment.transaction_date,
+          });
+        });
+      });
+
+      localData.push({
+        id: `customer-${customerDetail.id}`,
+        title: `Customer added`,
+        description: `Company: ${customerDetail.name || "Nil"}, Owner: ${
+          customerDetail.owner || "Nil"
+        }, Location: ${customerDetail.location}`,
+        time: customerDetail.created_at,
+      });
+    }
+
+    localData.sort((a, b) => {
+      const dateA = moment(a.time);
+      const dateB = moment(b.time);
+
+      if (dateA.isBefore(dateB)) return 1;
+      if (dateA.isAfter(dateB)) return -1;
+
+      // Same date: prioritize by type
+      const getPriority = (id) => {
+        if (id.startsWith("payment-")) return 1;
+        if (id.startsWith("machine-")) return 2;
+        return 3;
+      };
+
+      return getPriority(a.id) - getPriority(b.id);
+    });
+
+    setTimelineData(localData);
+  }, [feedbackData, visitData, taskData, customerDetail]);
+
+  return (
+    <Card className="shadow-lg rounded-2xl p-4 self-center">
+        <ScrollArea className="h-[calc(100dvh-340px)]">
+          <Timeline className="mt-8">
+            {timelineData.map((item) => (
+              <TimelineItem key={item.id}>
+                <TimelineHeader>
+                  <TimelineTime>
+                    {moment(item.time).format("YYYY-MM-DD")}
+                  </TimelineTime>
+                  <TimelineTitle>{item.title}</TimelineTitle>
+                </TimelineHeader>
+                {item.description && (
+                  <TimelineDescription>{item.description}</TimelineDescription>
+                )}
+              </TimelineItem>
+            ))}
+          </Timeline>
+        </ScrollArea>
+      
+    </Card>
   );
 };
