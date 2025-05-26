@@ -319,10 +319,9 @@ const renderTaskCard = (tasks, label) => (
               task.status === "Pending" ? "bg-red-200" : "bg-green-200"
             }`}
           >
-            {/* <p className="font-medium text-black">
+            <p className="font-medium text-black">
               {task.title || `Task #${task.id}`}{" "}
-              {task.customer_name || task.customer_owner}
-            </p> */}
+            </p>
 
             <p className="text-xs text-muted-foreground">
               {moment(task.created_at).format("YYYY-MM-DD hh:mm A")}
