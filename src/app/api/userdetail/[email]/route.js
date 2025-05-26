@@ -6,9 +6,13 @@ import { NextResponse } from "next/server";
 export async function GET(req, { params }) {
     const { email } = await params
     const referrer = req.headers.get('referer')
-    const url = new URL(referrer);
-    const segments = url.pathname.split('/'); 
-    const city = segments[1]; 
+    let city = ""
+    if (referrer) {
+        const url = new URL(referrer);
+        const segments = url.pathname.split('/');
+        city = segments[1];
+    }
+
 
     try {
         const query = `
@@ -33,9 +37,9 @@ export async function GET(req, { params }) {
 
             nav_items = [...ownerNavItems]
             nav_items.push(POSNavItem)
-            base_route = `${city}/superadmin`
+            base_route = `${city ? city : branchOffice}/superadmin`
         }
-       
+
         else if (result.rows[0].designation == 'Engineer') {
             base_route = `${branchOffice}/engineer`
             nav_items = [...employeeNavItems]

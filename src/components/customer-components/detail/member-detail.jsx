@@ -100,6 +100,13 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
       const data = response.data;
       setData(data);
 
+      const isLimited = UserState.value.data?.limited_access;
+      if(isLimited){
+        if(response.data.lead !== UserState.value.data?.id){
+          router.replace("/")
+        }
+      }
+
       const customerCompletion = Number(data.profile_completion) || 0;
       const machines = data.machines || [];
 

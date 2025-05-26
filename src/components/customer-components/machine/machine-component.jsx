@@ -119,6 +119,13 @@ export default function Machine({ id }) {
       const machine = response.data?.machine;
       const userData = UserState.value.data;
 
+        const isLimited = userData?.limited_access;
+      if(isLimited){
+        if(response.data?.customer?.lead !== userData?.id){
+          router.replace("/")
+        }
+      }
+
       if (
         response.data?.customer &&
         response.data?.customer?.ownership === userData?.id
