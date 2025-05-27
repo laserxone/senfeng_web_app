@@ -14,6 +14,7 @@ import { useState } from "react";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/config/firebase";
 import { Loader2 } from "lucide-react";
+import Spinner from "./ui/spinner";
 
 export function ForgetPasswordForm({ className, ...props }) {
   const { toast } = useToast();
@@ -71,7 +72,7 @@ export function ForgetPasswordForm({ className, ...props }) {
                 </div>
 
                 <Button type="submit" className="w-full">
-                  {loading && <Loader2 className="animate-spin" />}
+                  {loading && <Spinner />}
                   Reset
                 </Button>
               </div>

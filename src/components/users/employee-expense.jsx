@@ -285,7 +285,7 @@ const endDate = momentT.tz(TIMEZONE).endOf("month").endOf("day").utc().toISOStri
           {resetLoading && <Spinner />} Reset
         </Button>
         <Button onClick={handleDownload}>
-          {downloadLoading && <Loader2 className="animate-spin" />} Download
+          {downloadLoading && <Spinner />} Download
         </Button>
       </PageTable>
 
@@ -384,7 +384,7 @@ const ImageSheet = ({
           </ControlledZoom>
           {UserState.value.data?.branch_expenses_delete_access && (
             <Button variant="destructive" onClick={onDelete}>
-              {loading && <Loader2 className="animate-spin" />} Delete
+              {loading && <Spinner />} Delete
             </Button>
           )}
         </SheetHeader>
@@ -540,7 +540,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
                 />
 
                 <Button className="w-full" type="submit">
-                  {loading && <Loader2 className="animate-spin" />} Submit
+                  {loading && <Spinner />} Submit
                 </Button>
               </form>
             </Form>

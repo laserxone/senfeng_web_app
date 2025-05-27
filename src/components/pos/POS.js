@@ -523,7 +523,7 @@ export default function POS() {
     return (
         (loading || customerLoading) ?
             <div className='flex flex-1 w-full items-center justify-center h-[80vh]'>
-                <Loader2 className="animate-spin" />
+                <Spinner />
             </div>
             :
             <PageContainer scrollable={true}>
@@ -731,7 +731,7 @@ export default function POS() {
                                     setSearchLoading(true)
                                     handleItemSearch()
                                 }}>
-                                    {searchLoading && <Loader2 className="animate-spin" />}
+                                    {searchLoading && <Spinner />}
                                     Search
                                 </Button>
                                 {searchItemsResult.length > 0 && <Button variant="destructive" onClick={() => handleReset()}>Clear</Button>}
@@ -1376,14 +1376,14 @@ const OrderStockDialog = ({ dialogVisible, onCloseDialog, stock }) => {
         const headers = [
             "Name",
             "English Name",
-            "Quantity",
+            "New Order",
             "Buying Price",
         ];
 
         const formattedData = [...stock].map((item) => [
             item.chinese_name,
             item.name,
-            item.qty,
+            item.new_order,
             item.buying
         ]);
         exportToExcel(headers, formattedData, "New Order.xlsx");
@@ -1674,7 +1674,7 @@ const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrea
 
 
                                 <Button onClick={() => handleSave(item.id, item.img)}>
-                                    {loading && <Loader2 className="animate-spin" />}
+                                    {loading && <Spinner />}
                                     Save</Button>
                             </div>
                         }
@@ -1905,7 +1905,7 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
 
 
                                 <Button onClick={() => handleSave(item.id, item.img)}>
-                                    {loading && <Loader2 className="animate-spin" />}
+                                    {loading && <Spinner />}
                                     Save</Button>
                             </div>
                         }
@@ -2089,7 +2089,7 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
 
 
                             <Button disabled={!image || !name || !price || !qty} className="w-full mt-2" onClick={handleSaveProduct}>
-                                {loading && <Loader2 className="animate-spin" />}
+                                {loading && <Spinner />}
                                 Save</Button>
                         </div>
                     </ScrollArea>

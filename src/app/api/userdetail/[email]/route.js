@@ -38,65 +38,38 @@ export async function GET(req, { params }) {
             nav_items = [...ownerNavItems]
             nav_items.push(POSNavItem)
             base_route = `${city ? city : branchOffice}/superadmin`
+        } else {
+            nav_items = [...employeeNavItems]
+            if (result.rows[0].branch_expenses_assigned)
+                nav_items.push(branchNavItem)
+            if (result.rows[0].inventory_assigned)
+                nav_items.push(InventoryNavItem)
+            if (result.rows[0].designation == 'Engineer') {
+                base_route = `${branchOffice}/engineer`
+            }
+            if (result.rows[0].designation == 'Sales') {
+                base_route = `${branchOffice}/sales`
+            }
+            if (result.rows[0].designation == 'Customer Relationship Manager') {
+                base_route = `${branchOffice}/crm`
+            }
+            if (result.rows[0].designation == 'Customer Relationship Manager (After Sales)') {
+                base_route = `${branchOffice}/aftersales`
+            }
+            if (result.rows[0].designation == 'Social Media Manager') {
+                base_route = `${branchOffice}/smm`
+            }
+            if (result.rows[0].designation == 'Manager') {
+                base_route = `${branchOffice}/manager`
+            }
+            if (result.rows[0].designation == 'Store Manager') {
+                base_route = `${branchOffice}/store`
+                nav_items.push(StoreNavItem)
+            }
+
         }
 
-        else if (result.rows[0].designation == 'Engineer') {
-            base_route = `${branchOffice}/engineer`
-            nav_items = [...employeeNavItems]
-            if (result.rows[0].branch_expenses_assigned)
-                nav_items.push(branchNavItem)
-            if (result.rows[0].inventory_assigned)
-                nav_items.push(InventoryNavItem)
-        }
-        else if (result.rows[0].designation == 'Sales') {
-            base_route = `${branchOffice}/sales`
-            nav_items = [...employeeNavItems]
-            if (result.rows[0].branch_expenses_assigned)
-                nav_items.push(branchNavItem)
-            if (result.rows[0].inventory_assigned)
-                nav_items.push(InventoryNavItem)
-        } else if (result.rows[0].designation == 'Customer Relationship Manager') {
-            base_route = `${branchOffice}/crm`
-            nav_items = [...employeeNavItems]
-            if (result.rows[0].branch_expenses_assigned)
-                nav_items.push(branchNavItem)
-            if (result.rows[0].inventory_assigned)
-                nav_items.push(InventoryNavItem)
-        }
 
-        else if (result.rows[0].designation == 'Customer Relationship Manager (After Sales)') {
-            base_route = `${branchOffice}/aftersales`
-            nav_items = [...employeeNavItems]
-            if (result.rows[0].branch_expenses_assigned)
-                nav_items.push(branchNavItem)
-            if (result.rows[0].inventory_assigned)
-                nav_items.push(InventoryNavItem)
-        }
-        else if (result.rows[0].designation == 'Social Media Manager') {
-            base_route = `${branchOffice}/smm`
-            nav_items = [...employeeNavItems]
-            if (result.rows[0].branch_expenses_assigned)
-                nav_items.push(branchNavItem)
-            if (result.rows[0].inventory_assigned)
-                nav_items.push(InventoryNavItem)
-        }
-        else if (result.rows[0].designation == 'Manager') {
-            base_route = `${branchOffice}/manager`
-            nav_items = [...employeeNavItems]
-            if (result.rows[0].branch_expenses_assigned)
-                nav_items.push(branchNavItem)
-            if (result.rows[0].inventory_assigned)
-                nav_items.push(InventoryNavItem)
-        }
-        else if (result.rows[0].designation == 'Store Manager') {
-            base_route = `${branchOffice}/store`
-            nav_items = [...StoreNavItem]
-            if (result.rows[0].branch_expenses_assigned)
-                nav_items.push(branchNavItem)
-            if (result.rows[0].inventory_assigned)
-                nav_items.push(InventoryNavItem)
-            nav_items.push(POSNavItem)
-        }
         return NextResponse.json({ ...result.rows[0], nav_items: nav_items, base_route: base_route, version_code: version_code, route_url: route_url }, { status: 200 })
 
     } catch (error) {

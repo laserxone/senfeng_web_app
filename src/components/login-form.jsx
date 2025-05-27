@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState } from "react";
+import Spinner from "./ui/spinner";
 
 export function LoginForm({ className, ...props }) {
   const { toast } = useToast();
@@ -142,7 +143,7 @@ export function LoginForm({ className, ...props }) {
                   </div>
                 </div>
                 <Button type="submit" className="w-full">
-                  {loading && <Loader2 className="animate-spin" />}
+                  {loading && <Spinner />}
                   Login
                 </Button>
               </div>

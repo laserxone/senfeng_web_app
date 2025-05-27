@@ -10,6 +10,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
+import Spinner from "./ui/spinner";
 
 const ConfimationDialog = ({ children, title, description, onPressYes,onPressCancel, open, loading }) => {
   return (
@@ -25,7 +26,7 @@ const ConfimationDialog = ({ children, title, description, onPressYes,onPressCan
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onPressCancel}>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={() => onPressYes()}>
-           {loading && <Loader2 className="animate-spin"/>} Yes
+           {loading && <Spinner />} Yes
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -382,7 +382,7 @@ const AddPayment = ({
                       className="w-full"
                       type="submit"
                     >
-                      {loading && <Loader2 className="animate-spin" />} Submit
+                      {loading && <Spinner />} Submit
                     </Button>
                   </form>
                 </Form>

@@ -51,6 +51,7 @@ import moment from "moment";
 import FilterSheet from "@/components/users/filterSheet";
 import { useToast } from "@/hooks/use-toast";
 import momentT from "moment-timezone";
+import Spinner from "@/components/ui/spinner";
 
 const columns = [
   {
@@ -392,7 +393,7 @@ const TaskDetail = ({
           <SheetDescription>Check task details</SheetDescription>
           <div className="w-full flex justify-end">
             <Button onClick={handleDelete}>
-              {deleteLoading && <Loader2 className="animate-spin" />} Delete
+              {deleteLoading && <Spinner />} Delete
             </Button>
           </div>
         </SheetHeader>
@@ -444,7 +445,7 @@ const TaskDetail = ({
               });
             }}
           >
-            {loading && <Loader2 className="animate-spin" />}
+            {loading && <Spinner />}
             {detail?.status === "Completed"
               ? "Mark as Pending"
               : "Mark as Completed"}
@@ -597,7 +598,7 @@ const AddTask = ({ visible, onClose, onRefresh }) => {
               )}
 
               <Button className="w-full" type="submit">
-                {loading && <Loader2 className="animate-spin" />} Submit
+                {loading && <Spinner />} Submit
               </Button>
             </form>
           </Form>

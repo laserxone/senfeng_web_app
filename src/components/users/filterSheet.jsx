@@ -25,6 +25,7 @@ import { UserSearch } from "../user-search";
 import moment from "moment";
 import momentT from "moment-timezone";
 import { TIMEZONE } from "@/constants/data";
+import Spinner from "../ui/spinner";
 
 const FilterSheet = ({ visible, onClose, onReturn }) => {
   const [loading, setLoading] = useState(false);
@@ -141,7 +142,7 @@ const FilterSheet = ({ visible, onClose, onReturn }) => {
             />
 
             <Button disabled={loading} className="w-full" type="submit">
-              {loading && <Loader2 className="animate-spin" />} Filter
+              {loading && <Spinner />} Filter
             </Button>
           </form>
         </Form>

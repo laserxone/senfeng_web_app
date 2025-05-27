@@ -39,6 +39,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { UserSearch } from "./user-search";
+import Spinner from "./ui/spinner";
 
 const AddCustomerDialog = ({
   onRefresh,
@@ -285,7 +286,7 @@ const AddCustomerDialog = ({
                               </Button>
                             )}
                             {checking && (
-                              <Loader2 className="animate-spin ml-2" />
+                             <Spinner />
                             )}
                           </div>
                         ))}
@@ -624,7 +625,7 @@ const AddCustomerDialog = ({
                   className="w-full mt-10"
                   type="submit"
                 >
-                  {loading && <Loader2 className="animate-spin" />} Submit
+                  {loading && <Spinner />} Submit
                 </Button>
               </form>
             </Form>

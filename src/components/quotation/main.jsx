@@ -55,6 +55,7 @@ import { BASE_URL } from "@/constants/data";
 import { CustomerSearch } from "../customer-search";
 import { CustomerSearchWithData } from "../customer-search-with-data";
 import { cn } from "@/lib/utils";
+import Spinner from "../ui/spinner";
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -481,7 +482,7 @@ export default function Quotation() {
 
   return loading || customerLoading ? (
     <div className="flex flex-1 w-full items-center justify-center h-[100vh]">
-      <Loader2 className="animate-spin" />
+      <Spinner />
     </div>
   ) : (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
@@ -819,7 +820,7 @@ export default function Quotation() {
                 handleItemSearch();
               }}
             >
-              {searchLoading && <Loader2 className="animate-spin" />}
+              {searchLoading && <Spinner />}
               Search
             </Button>
             {searchItemsResult.length > 0 && (
@@ -1672,7 +1673,7 @@ const RenderStockItems = ({
           </div>
 
           <Button onClick={() => handleSave(item.id, item.img)}>
-            {loading && <Loader2 className="animate-spin" />}
+            {loading && <Spinner />}
             Save
           </Button>
         </div>
@@ -1882,7 +1883,7 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
                 className="w-full mt-2"
                 onClick={handleSaveProduct}
               >
-                {loading && <Loader2 className="animate-spin" />}
+                {loading && <Spinner />}
                 Save
               </Button>
             </div>

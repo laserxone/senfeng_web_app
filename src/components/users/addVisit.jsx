@@ -287,7 +287,7 @@ export default function VisitTab({
                 />
 
                 <Button type="submit" className="mt-2 w-full">
-                  {loading && <Loader2 className="animate-spin" />} Post
+                  {loading && <Spinner />} Post
                 </Button>
               </form>
             </Form>

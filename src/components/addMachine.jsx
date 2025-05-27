@@ -29,6 +29,7 @@ import { Textarea } from "./ui/textarea";
 import { RequiredStar } from "./RequiredStar";
 import { BASE_URL } from "@/constants/data";
 import { Label } from "./ui/label";
+import Spinner from "./ui/spinner";
 
 const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
@@ -379,7 +380,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                   />
 
                   <Button className="w-full" type="submit">
-                    {loading && <Loader2 className="animate-spin" />} Submit
+                    {loading && <Spinner />} Submit
                   </Button>
                 </form>
               </Form>

@@ -61,6 +61,7 @@ import momentT from "moment-timezone";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { CustomerSearchWithData } from "@/components/customer-search-with-data";
+import { RequiredStar } from "@/components/RequiredStar";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -623,7 +624,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        {selectedRadio == "customer" ? "Customer" : "Other"}
+                        {selectedRadio == "customer" ? "Customer" : "Other"} <RequiredStar />
                       </FormLabel>
                       <FormControl>
                         {selectedRadio === "other" ? (
@@ -651,7 +652,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="city"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>City</FormLabel>
+                      <FormLabel>City <RequiredStar /></FormLabel>
                       <FormControl>
                         <Input placeholder="Enter city" {...field} />
                       </FormControl>
@@ -665,7 +666,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Description <RequiredStar /></FormLabel>
                       <FormControl>
                         <Textarea placeholder="Enter description" {...field} />
                       </FormControl>
@@ -679,7 +680,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Amount</FormLabel>
+                      <FormLabel>Amount <RequiredStar /></FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -702,7 +703,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="date"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date</FormLabel>
+                      <FormLabel>Date <RequiredStar /></FormLabel>
                       <FormControl>
                         <AppCalendar
                           date={field.value}
@@ -719,7 +720,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="submitted_by"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Select User</FormLabel>
+                      <FormLabel>Select User <RequiredStar /></FormLabel>
                       <FormControl>
                         <UserSearch
                           value={field.value}
@@ -736,7 +737,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="image"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Image</FormLabel>
+                      <FormLabel>Image <RequiredStar /></FormLabel>
                       <FormControl>
                         <div className="flex flex-1 items-center justify-center">
                           <Dropzone
@@ -757,7 +758,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                 />
 
                 <Button className="w-full" type="submit">
-                  {loading && <Loader2 className="animate-spin" />} Submit
+                  {loading && <Spinner />} Submit
                 </Button>
               </form>
             </Form>

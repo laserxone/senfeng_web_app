@@ -31,6 +31,7 @@ import { startHolyLoader } from "holy-loader";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import Spinner from "../ui/spinner";
 
 export default function Inventory() {
   return <RenderInventory />;
@@ -209,7 +210,7 @@ const AddInventory = ({ visible, onClose, onRefresh }) => {
                   />
 
                   <Button className="w-full" type="submit">
-                    {loading && <Loader2 className="animate-spin" />} Submit
+                    {loading && <Spinner />} Submit
                   </Button>
                 </form>
               </Form>

@@ -50,6 +50,7 @@ import moment from "moment";
 import momentT from "moment-timezone";
 import FilterSheet from "./filterSheet";
 import { ScrollArea } from "../ui/scroll-area";
+import Spinner from "../ui/spinner";
 
 const getSchema = (isClientSelected) =>
   z.object({
@@ -261,7 +262,7 @@ const TaskDetail = ({
           <SheetDescription>Check task details</SheetDescription>
           <div className="w-full flex justify-end">
             <Button onClick={handleDelete}>
-              {deleteLoading && <Loader2 className="animate-spin" />} Delete
+              {deleteLoading && <Spinner />} Delete
             </Button>
           </div>
         </SheetHeader>
@@ -313,7 +314,7 @@ const TaskDetail = ({
               });
             }}
           >
-            {loading && <Loader2 className="animate-spin" />}
+            {loading && <Spinner />}
             {detail?.status === "Completed"
               ? "Mark as Pending"
               : "Mark as Completed"}

@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import Spinner from "@/components/ui/spinner";
 import { useToast } from "@/hooks/use-toast";
 import { UserContext } from "@/store/context/UserContext";
 import {
@@ -128,7 +129,7 @@ export default function Page() {
               onClick={handleSave}
               className="w-full"
             >
-              {loading && <Loader2 className="animate-spin" />}
+              {loading && <Spinner />}
               Save Changes
             </Button>
 
@@ -156,7 +157,7 @@ export default function Page() {
                   onClick={handleChangePassword}
                   disabled={passwordLoading}
                 >
-                  {passwordLoading && <Loader2 className="animate-spin" />}{" "}
+                  {passwordLoading && <Spinner />}
                   Submit
                 </Button>
               </DialogContent>

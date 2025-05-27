@@ -46,6 +46,7 @@ import {
 } from "./ui/select";
 import { UserSearch } from "./user-search";
 import AppCalendar from "./appCalendar";
+import Spinner from "./ui/spinner";
 
 const EditCustomerDialog = ({
   onRefresh,
@@ -350,7 +351,7 @@ const EditCustomerDialog = ({
                                 </Button>
                               )}
                               {checking && (
-                                <Loader2 className="animate-spin ml-2" />
+                                <Spinner />
                               )}
                             </div>
                           ))}
@@ -717,7 +718,7 @@ const EditCustomerDialog = ({
                     className="w-full mt-10"
                     type="submit"
                   >
-                    {loading && <Loader2 className="animate-spin" />} Submit
+                    {loading && <Spinner />} Submit
                   </Button>
                 </form>
               </Form>

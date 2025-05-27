@@ -663,7 +663,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
               handleSavePost();
             }}
           >
-            {loading && <Loader2 className="animate-spin" />} Post
+            {loading && <Spinner />} Post
           </Button>
         </CardContent>
       </Card>

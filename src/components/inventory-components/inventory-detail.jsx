@@ -38,6 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
+import Spinner from "../ui/spinner";
 
 export default function InventoryDetail({ booking_id }) {
   const { state: UserState } = useContext(UserContext);
@@ -356,7 +357,7 @@ export default function InventoryDetail({ booking_id }) {
                 }, [1000]);
               }}
             >
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {loading && <Spinner />}
               Submit
             </Button>
 
