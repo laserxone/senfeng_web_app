@@ -39,7 +39,13 @@ export async function GET(req, { params }) {
             nav_items.push(POSNavItem)
             base_route = `${city ? city : branchOffice}/superadmin`
         } else {
-            nav_items = [...employeeNavItems]
+            if (result.rows[0].designation == 'Store Manager') {
+                base_route = `${branchOffice}/store`
+                nav_items = [...StoreNavItem]
+                nav_items.push(POSNavItem)
+            } else {
+                nav_items = [...employeeNavItems]
+            }
             if (result.rows[0].branch_expenses_assigned)
                 nav_items.push(branchNavItem)
             if (result.rows[0].inventory_assigned)
@@ -62,10 +68,9 @@ export async function GET(req, { params }) {
             if (result.rows[0].designation == 'Manager') {
                 base_route = `${branchOffice}/manager`
             }
-            if (result.rows[0].designation == 'Store Manager') {
-                base_route = `${branchOffice}/store`
-                nav_items.push(StoreNavItem)
-            }
+
+
+
 
         }
 
