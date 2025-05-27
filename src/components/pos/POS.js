@@ -1386,7 +1386,7 @@ const OrderStockDialog = ({ dialogVisible, onCloseDialog, stock }) => {
             item.new_order,
             item.buying
         ]);
-        exportToExcel(headers, formattedData, "New Order.xlsx");
+        exportToExcel(headers, formattedData, "New Order.xlsx", true);
 
 
     }
@@ -1448,7 +1448,7 @@ const RenderOtherStockItems = ({ item, index }) => {
                     <p >{item.chinese_name}</p>
                 </div>
                 <p className='w-1/3'>New order: {item.new_order}</p>
-                <p className='w-1/3'>Buying: {item.buying}</p>
+                <p className='w-1/3'>Buying ¥: {item.buying}</p>
             </div>
 
 
@@ -1662,7 +1662,7 @@ const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrea
                                 {designation && designation === 'Owner' &&
                                     < div className='flex justify-between'>
 
-                                        <div className='text-[14px]'>Buying</div>
+                                        <div className='text-[14px]'>Buying ¥</div>
                                         <input type='number' placeholder={item?.buying || "Enter buying price"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} className='px-2 ' value={buying || ""} onChange={(e) => {
                                             if (!isNaN(e.target.value)) {
                                                 setBuying(Number(e.target.value))
@@ -1893,7 +1893,7 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
                                 {designation && designation === 'Owner' &&
                                     < div className='flex justify-between'>
 
-                                        <div className='text-[14px]'>Buying</div>
+                                        <div className='text-[14px]'>Buying ¥</div>
                                         <input type='number' placeholder={item?.buying || "Enter buying price"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} className='px-2 ' value={buying || ""} onChange={(e) => {
                                             if (!isNaN(e.target.value)) {
                                                 setBuying(Number(e.target.value))

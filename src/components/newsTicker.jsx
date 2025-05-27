@@ -30,7 +30,7 @@ export default function NewsTicker() {
   if (!isMobile)
     return (
       data.length > 0 && (
-        <Marquee className="bg-red-500 text-white" speed={100} style={{fontSize:'18px'}}>
+        <Marquee className="bg-red-500 text-white" speed={100} style={{fontSize:'17px'}}>
           {data.map((item, index) => <div key={index} className="mx-2">{item.news}</div>)}
         </Marquee>
       )
