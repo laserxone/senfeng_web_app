@@ -56,7 +56,7 @@ export async function GET(req, { params }) {
             if (result.rows[0].inventory_assigned)
                 nav_items.push(InventoryNavItem)
         } else if (result.rows[0].designation == 'Customer Relationship Manager') {
-            base_route = `${branchOffice}/sales`
+            base_route = `${branchOffice}/crm`
             nav_items = [...employeeNavItems]
             if (result.rows[0].branch_expenses_assigned)
                 nav_items.push(branchNavItem)
