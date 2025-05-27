@@ -518,7 +518,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description <RequiredStar /></FormLabel>
+                      <FormLabel>Purpose <RequiredStar /></FormLabel>
                       <FormControl>
                         <Textarea placeholder="Enter description" {...field} />
                       </FormControl>

@@ -472,6 +472,7 @@ export default function Machine({ id }) {
           onPressCancel={() => setShowConfirmation(false)}
         />
         <ImageSheet
+        payment_lock={data?.machine?.payment_lock}
           editAllowed={editAllowed}
           visible={visible}
           onClose={() => {
@@ -664,6 +665,21 @@ const ClientCard = memo(({ data, payment, machine, manager }) => {
                 </p>
               </div>
             </div>
+
+            {machine?.speed_money &&
+            <>
+             <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mt-3">
+              Speed Money
+            </h3>
+              <div className="flex flex-col">
+                <p>
+                  Amount: {machine?.speed_money_amount}
+                </p>
+                <p>
+                  {machine?.speed_money_note}
+                </p>
+                </div>
+            </>}
           </CardContent>
         </Card>
       </div>
@@ -672,6 +688,7 @@ const ClientCard = memo(({ data, payment, machine, manager }) => {
 });
 
 const ImageSheet = ({
+  payment_lock,
   visible,
   onClose,
   img,
@@ -740,7 +757,7 @@ const ImageSheet = ({
       <SheetContent>
         <SheetHeader className="mb-4">
           <SheetTitle>Payment Image</SheetTitle>
-          {editAllowed && (
+          {!payment_lock && editAllowed && (
             <Button
               className="mb-2"
               variant="destructive"

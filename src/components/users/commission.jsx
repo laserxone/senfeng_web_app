@@ -68,7 +68,7 @@ const OwnerView = () => {
       setLoading(true);
       try {
         await axios.put(`/commission/${id}`, {
-          is_approved: true,
+          is_approved: true, 
           approval_date: new Date(),
           commission_amount: (item.total_amount * selectedPercentage) / 100,
         });
@@ -268,13 +268,20 @@ const OtherView = () => {
       }
       if (!id) return;
       setLoading(true);
+
+      let totalPrice = 0
+
+      if(item.speed_money_amount && Number(item.speed_money_amount) > 0) {
+        totalPrice = Number(item.price) -  Number(item.speed_money_amount)
+      }
+
       try {
         await axios
           .post(`/commission`, {
             sale_id: id,
             user_id: UserState.value.data?.id,
             is_requested: true,
-            total_amount: item.price,
+            total_amount: totalPrice,
             note: note,
           })
           .then(async () => {

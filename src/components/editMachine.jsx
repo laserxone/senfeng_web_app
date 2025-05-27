@@ -75,6 +75,9 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
         totalPrice: Number(data?.price || 0),
         cnic: data?.cnic || "",
       });
+      if (data?.speed_money) {
+        setIsSpeedMoney(true);
+      }
       if (data?.order_no_arr) {
         setOrderNumbers([...data.order_no_arr]);
       }
@@ -104,7 +107,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
         id: machine_id,
         speed_money_note: values.speedMoneyNote,
         speed_money: values.isSpeedMoney,
-        speed_money_amount: values.speenModay,
+        speed_money_amount: values.speedMoney ? Number(values.speedMoney) : 0,
         serial_no: values.machineModel,
         power: values.power,
         source: values.source,
@@ -320,6 +323,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
                             checked={isSpeedMoney}
                             onCheckedChange={(checked) => {
                               setIsSpeedMoney(checked);
+                              field.onChange(checked);
                               if (!checked) {
                                 form.setValue("speedMoney", "");
                                 form.setValue("speedMoneyNote", "");
@@ -341,12 +345,11 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
                             <FormLabel>Speed Money</FormLabel>
                             <FormControl>
                               <Input
-                                type="number"
                                 placeholder="Enter speed money"
                                 value={field.value ? field.value : ""}
                                 onChange={(e) => {
-                                  if (!isNaN(e.target.value)) {
-                                    field.onChange(Number(e.target.value));
+                                  if (!isNaN(Number(e.target.value))) {
+                                    field.onChange(e.target.value);
                                   }
                                 }}
                               />

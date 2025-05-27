@@ -77,6 +77,9 @@ export async function GET() {
         commissions.*, 
         users.name AS user_name,
         sale.serial_no AS machine_name,
+        sale.speed_money AS speed_money,
+        sale.speed_money_note AS speed_money_note,
+        sale.speed_money_amount AS speed_money_amount,
         customer.id AS customer_id,
         customer.name AS customer_name,
         customer.owner AS customer_owner

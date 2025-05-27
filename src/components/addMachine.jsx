@@ -88,7 +88,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
         type: "Machine",
         speed_money_note: values.speedMoneyNote,
         speed_money: values.isSpeedMoney,
-        speed_money_amount: values.speenModay,
+         speed_money_amount: values.speedMoney ? Number(values.speedMoney) : 0,
         serial_no: values.machineModel,
         power: values.power,
         source: values.source,
@@ -315,6 +315,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                             checked={isSpeedMoney}
                             onCheckedChange={(checked) => {
                               setIsSpeedMoney(checked);
+                              field.onChange(checked);
                               if (!checked) {
                                 form.setValue("speedMoney", "");
                                 form.setValue("speedMoneyNote", "");
@@ -335,10 +336,14 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                           <FormItem>
                             <FormLabel>Speed Money</FormLabel>
                             <FormControl>
-                              <Input
-                                type="number"
+                             <Input
                                 placeholder="Enter speed money"
-                                {...field}
+                                value={field.value ? field.value : ""}
+                                onChange={(e) => {
+                                  if (!isNaN(Number(e.target.value))) {
+                                    field.onChange(e.target.value);
+                                  }
+                                }}
                               />
                             </FormControl>
                             <FormMessage />
