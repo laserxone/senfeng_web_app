@@ -58,6 +58,9 @@ import { z } from "zod";
 import { getStoragePathFromUrl } from "@/components/customer-components/machine/machine-component";
 import { TIMEZONE } from "@/constants/data";
 import momentT from "moment-timezone";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { CustomerSearchWithData } from "@/components/customer-search-with-data";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -321,8 +324,18 @@ export default function Page() {
             variant="destructive"
             onClick={async () => {
               setResetLoading(true);
-             const startDate = momentT.tz(TIMEZONE).startOf("month").startOf("day").utc().toISOString();
-const endDate = momentT.tz(TIMEZONE).endOf("month").endOf("day").utc().toISOString();
+              const startDate = momentT
+                .tz(TIMEZONE)
+                .startOf("month")
+                .startOf("day")
+                .utc()
+                .toISOString();
+              const endDate = momentT
+                .tz(TIMEZONE)
+                .endOf("month")
+                .endOf("day")
+                .utc()
+                .toISOString();
               await fetchData(startDate, endDate);
               setResetLoading(false);
             }}
@@ -516,6 +529,8 @@ const ImageSheet = ({
 
 const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
   const [loading, setLoading] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedRadio, setSelectedRadio] = useState("customer");
   const formSchema = z.object({
     title: z.string().min(1, { message: "Title is required." }),
     description: z.string().min(1, { message: "Description is required." }),
@@ -582,7 +597,21 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
         </DialogHeader>
 
         <ScrollArea className="max-h-[80vh] px-2">
-          <div className="px-2">
+          <div className="px-2 space-y-4">
+            <RadioGroup
+              defaultValue={selectedRadio}
+              onValueChange={setSelectedRadio}
+              className="flex"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="customer" id="r1" />
+                <Label htmlFor="r1">Customer</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="other" id="r2" />
+                <Label htmlFor="r2">Other</Label>
+              </div>
+            </RadioGroup>
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
@@ -593,9 +622,24 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Customer</FormLabel>
+                      <FormLabel>
+                        {selectedRadio == "customer" ? "Customer" : "Other"}
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter customer" {...field} />
+                        {selectedRadio === "other" ? (
+                          <Input placeholder="Type here" {...field} />
+                        ) : (
+                          <CustomerSearchWithData
+                            value={selectedCustomer}
+                            onReturn={(val) => {
+                              setSelectedCustomer(val);
+                              if (val.location) {
+                                form.setValue("city", val.location);
+                              }
+                              form.setValue("title", val.company || val.owner);
+                            }}
+                          />
+                        )}
                       </FormControl>
                       <FormMessage />
                     </FormItem>

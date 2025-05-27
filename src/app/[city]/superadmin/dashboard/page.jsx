@@ -25,7 +25,7 @@ export default function Page({params}) {
   const { state: UserState } = useContext(UserContext);
   const [userTaskData, setUserTaskData] = useState([]);
   const userId = UserState?.value?.data?.id;
-  const debouncedUserId = useDebounce(userId, 500);
+  const debouncedUserId = useDebounce(userId, 1000);
 
   useEffect(() => {
     if (debouncedUserId) {

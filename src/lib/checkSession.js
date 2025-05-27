@@ -37,7 +37,7 @@ export default function useCheckSession() {
                 } else {
                     if (!pathname.includes(userData.base_route)) {
                         startHolyLoader()
-                        router.replace(`/${userData.base_route}`)
+                        router.replace(`/${userData.base_route}/dashboard`)
                     }
                 }
 

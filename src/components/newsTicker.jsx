@@ -1,4 +1,5 @@
 "use client";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useIsMobile } from "@/hooks/use-mobile";
 import axiosInstance from "@/lib/axios";
 import { UserContext } from "@/store/context/UserContext";
@@ -9,11 +10,16 @@ export default function NewsTicker() {
   const { state: UserState } = useContext(UserContext);
   const isMobile = useIsMobile();
   const [data, setData] = useState([]);
-  useEffect(() => {
-    if (UserState.value.data?.id) {
-      fetchData();
-    }
-  }, [UserState]);
+
+  const userId = UserState?.value?.data?.id;
+    const debouncedUserId = useDebounce(userId, 1000);
+  
+    useEffect(() => {
+      if (debouncedUserId) {
+        fetchData();
+      }
+    }, [debouncedUserId]);
+  
 
   async function fetchData() {
     axiosInstance.get("/news?expiry=true").then((response) => {

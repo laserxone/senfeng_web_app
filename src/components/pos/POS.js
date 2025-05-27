@@ -32,6 +32,9 @@ import NotificationBadge from './NotificationBadge';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { UserSearch } from '../user-search';
 import moment from 'moment';
+import { useDebounce } from '@/hooks/use-debounce';
+import OrderStockPDF from './orderStockPDF';
+import exportToExcel from '@/lib/exportToExcel';
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -79,6 +82,20 @@ export default function POS() {
     const [engineerLoading, setEngineerLoading] = useState(false)
     const [allEngineersData, setAllEngineersData] = useState([])
     const [engineersModal, setEngineersModal] = useState(false)
+    const [clickedOrderStock, setClickedOrderStock] = useState(false)
+    const [dialogVisible, setDialogVisible] = useState(false)
+    const [orderStockVisible, setOrderStockVisible] = useState(false)
+
+    const userId = UserState?.value?.data?.id;
+    const debouncedUserId = useDebounce(userId, 1000);
+
+    useEffect(() => {
+        if (debouncedUserId) {
+            fetchData();
+            fetchDataCustomer()
+        }
+    }, [debouncedUserId]);
+
 
 
 
@@ -150,13 +167,7 @@ export default function POS() {
         }
     }
 
-    useEffect(() => {
-        if (UserState.value.data?.id) {
-            fetchData();
-            fetchDataCustomer()
-        }
 
-    }, [UserState]);
 
     const fetchData = async () => {
         clearAll()
@@ -503,6 +514,12 @@ export default function POS() {
         );
 
     }
+
+    function handleOrderStock() {
+        setDialogVisible(false)
+        setOrderStockVisible(true)
+    }
+
     return (
         (loading || customerLoading) ?
             <div className='flex flex-1 w-full items-center justify-center h-[80vh]'>
@@ -606,14 +623,17 @@ export default function POS() {
                                 </TableBody>
                             </Table>
                             <div className="flex justify-center mt-4">
-                                <AddItemDialog handleDecrease={handleDecrease} invoiceItems={invoiceItems} stock={stock} other={other} price={price} setOther={setOther} setPrice={setPrice} qty={qty} setQty={setQty} setShowOther={setShowOther} showOther={showOther} handleIncrease={handleIncrease} handleAddToInvoice={handleAddToInvoice}
-                                    visible={addProductVisible}
-                                    onClose={(val) => setAddProductVisible(val)}
-                                    onRefresh={() => {
-                                        setAddProductVisible(false)
-                                        setStock([])
-                                        fetchData()
-                                    }} />
+
+                                <div onClick={() => setDialogVisible(true)} className="p-4 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-700">
+                                    <FaPlus />
+                                </div>
+
+
+                                <OrderStockDialog dialogVisible={orderStockVisible} onCloseDialog={setOrderStockVisible} stock={stock.filter((item) => item.threshold != null && item.threshold !== undefined && item.threshold <= item.qty)}
+
+                                />
+
+
                             </div>
                         </Card>
                         <div className="flex justify-between w-full mt-4">
@@ -652,7 +672,7 @@ export default function POS() {
                             className="w-full"
                         >
 
-                            {engineerLoading && <Spinner />}  Open Engineer items
+                            {engineerLoading && <Spinner />}  Check Engineer issued items
                         </Button>
 
                         {selectedSearchItem ?
@@ -948,6 +968,17 @@ export default function POS() {
                         }
                     </DialogContent>
                 </Dialog>
+
+                <AddItemDialog dialogVisible={dialogVisible} onCloseDialog={setDialogVisible} handleDecrease={handleDecrease} invoiceItems={invoiceItems} stock={stock} other={other} price={price} setOther={setOther} setPrice={setPrice} qty={qty} setQty={setQty} setShowOther={setShowOther} showOther={showOther} handleIncrease={handleIncrease} handleAddToInvoice={handleAddToInvoice}
+                    visible={addProductVisible}
+                    onClose={(val) => setAddProductVisible(val)}
+                    onRefresh={() => {
+                        setAddProductVisible(false)
+                        setStock([])
+                        fetchData()
+                    }}
+                    handleOrderStock={handleOrderStock}
+                    designation={UserState.value.data?.designation} />
             </PageContainer >
     )
 }
@@ -1199,7 +1230,7 @@ const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh }) => {
     );
 }
 
-const AddItemDialog = ({ visible, onClose, handleDecrease, showOther, setShowOther, stock, invoiceItems, price, setPrice, setQty, qty, other, setOther, handleIncrease, handleAddToInvoice, onRefresh, }) => {
+const AddItemDialog = ({ designation, visible, onClose, handleDecrease, showOther, setShowOther, stock, invoiceItems, price, setPrice, setQty, qty, other, setOther, handleIncrease, handleAddToInvoice, onRefresh, handleOrderStock, dialogVisible, onCloseDialog }) => {
 
 
 
@@ -1221,15 +1252,11 @@ const AddItemDialog = ({ visible, onClose, handleDecrease, showOther, setShowOth
         setClickedLowStock(!clickedLowStock)
     }
 
+
+
     return (
-        <Dialog >
-            <DialogTrigger>
+        <Dialog open={dialogVisible} onOpenChange={onCloseDialog}>
 
-                <div className="p-4 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-700">
-                    <FaPlus />
-                </div>
-
-            </DialogTrigger>
 
             <DialogContent className="w-full sm:max-w-[90vw]">
                 <DialogHeader>
@@ -1242,7 +1269,7 @@ const AddItemDialog = ({ visible, onClose, handleDecrease, showOther, setShowOth
                             handleLowStock()
                         }
                     }} variant="destructive" className={lowStockStatus && "blinking-button"}>Low Stock</Button>
-                    <Button>Order Stock</Button>
+                    <Button onClick={handleOrderStock}>Order Stock</Button>
 
                     {view ? <Table2 className='cursor-pointer' onClick={() => setView(!view)} /> : <List className='cursor-pointer' onClick={() => setView(!view)} />}
 
@@ -1263,6 +1290,7 @@ const AddItemDialog = ({ visible, onClose, handleDecrease, showOther, setShowOth
                                     visible={visible}
                                     onClose={onClose}
                                     onRefresh={onRefresh}
+                                    designation={designation}
                                 />
 
                                     :
@@ -1270,6 +1298,7 @@ const AddItemDialog = ({ visible, onClose, handleDecrease, showOther, setShowOth
                                         visible={visible}
                                         onClose={onClose}
                                         onRefresh={onRefresh}
+                                        designation={designation}
                                     />
 
 
@@ -1324,9 +1353,113 @@ const AddItemDialog = ({ visible, onClose, handleDecrease, showOther, setShowOth
     );
 }
 
-const RenderStockItems = ({ item, index, invoiceItems, handleDecrease, handleIncrease, showOther, setShowOther, setPrice, setQty, setOther, visible, onClose, onRefresh }) => {
+const OrderStockDialog = ({ dialogVisible, onCloseDialog, stock }) => {
+
+    const [search, setSearch] = useState("")
+    const [loading, setLoading] = useState(false)
+
+    async function handleCreatePDF() {
+        // setLoading(true)
+        // try {
+        //     const blob = await pdf(<OrderStockPDF stock={stock} />).toBlob();
+        //     const url = URL.createObjectURL(blob);
+        //     window.open(url, "_blank");
+        //     setTimeout(() => URL.revokeObjectURL(url), 600000);
+
+
+        // } catch (error) {
+        //     console.log(error)
+        // } finally {
+        //     setLoading(false)
+        // }
+
+        const headers = [
+            "Name",
+            "English Name",
+            "Quantity",
+            "Buying Price",
+        ];
+
+        const formattedData = [...stock].map((item) => [
+            item.chinese_name,
+            item.name,
+            item.qty,
+            item.buying
+        ]);
+        exportToExcel(headers, formattedData, "New Order.xlsx");
+
+
+    }
+
+
+    return (
+        <Dialog open={dialogVisible} onOpenChange={onCloseDialog}>
+
+            <DialogContent className="w-full sm:max-w-[90vw]">
+                <DialogHeader>
+                    <DialogTitle>Order new stock
+                    </DialogTitle>
+
+                    <div className='flex flex-1 justify-end gap-4 items-center'>
+
+                        <Button onClick={handleCreatePDF}>{loading && <Spinner />}Export</Button>
+
+
+                    </div>
+                </DialogHeader>
+
+                <Input
+                    placeholder="Search items here"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+
+                <ScrollArea className="h-[70vh]">
+                    <div className="flex flex-col gap-5 p-4">
+
+                        <div className="flex flex-wrap gap-2 justify-center">
+                            {stock.filter((item) => item?.name?.toLowerCase().includes(search.toLowerCase())).map((item, index) =>
+
+                                <RenderOtherStockItems key={index} index={index} item={item} />
+
+                            )}
+                        </div>
+
+
+                    </div>
+
+                </ScrollArea>
+
+
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+const RenderOtherStockItems = ({ item, index }) => {
+
+
+    return (
+        <div className={`w-full border border-gray-300 rounded-lg shadow-md p-5 flex flex-col`}>
+
+            <div className='flex flex-1 flex-row justify-between'>
+                <div className='w-1/3'>
+                    <p >{item.name}</p>
+                    <p >{item.chinese_name}</p>
+                </div>
+                <p className='w-1/3'>New order: {item.new_order}</p>
+                <p className='w-1/3'>Buying: {item.buying}</p>
+            </div>
+
+
+
+        </div>
+    )
+}
+
+const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrease, handleIncrease, showOther, setShowOther, setPrice, setQty, setOther, visible, onClose, onRefresh }) => {
     const [localName, setLocalName] = useState("")
-     const [localChineseName, setLocalChineseName] = useState("")
+    const [localChineseName, setLocalChineseName] = useState("")
     const [localQty, setLocalQty] = useState("")
     const [localPrice, setLocalPrice] = useState("")
     const [localImage, setLocalImage] = useState(null)
@@ -1335,6 +1468,7 @@ const RenderStockItems = ({ item, index, invoiceItems, handleDecrease, handleInc
     const [itemImg, setImg] = useState(null)
     const [threshold, setThreshold] = useState("")
     const [newOrder, setNewOrder] = useState("")
+    const [buying, setBuying] = useState("")
 
 
     useEffect(() => {
@@ -1423,7 +1557,8 @@ const RenderStockItems = ({ item, index, invoiceItems, handleDecrease, handleInc
                 qty: Number(localQty),
                 img: result,
                 threshold: threshold ? Number(threshold) : "",
-                new_order: newOrder ? Number(newOrder) : ""
+                new_order: newOrder ? Number(newOrder) : undefined,
+                buying: buying ? Number(buying) : undefined,
             })
                 .catch((e) => {
                     console.log(e)
@@ -1480,7 +1615,7 @@ const RenderStockItems = ({ item, index, invoiceItems, handleDecrease, handleInc
 
                                 <input placeholder={item?.name || "Product name"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px' }} className='px-2' value={localName} onChange={(e) => setLocalName(e.target.value)} />
 
-                                 <input placeholder={item?.chinese_name || "Product chinese name"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px' }} className='px-2' value={localChineseName} onChange={(e) => setLocalChineseName(e.target.value)} />
+                                <input placeholder={item?.chinese_name || "Product chinese name"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px' }} className='px-2' value={localChineseName} onChange={(e) => setLocalChineseName(e.target.value)} />
 
                                 <div className='flex justify-between'>
 
@@ -1521,10 +1656,20 @@ const RenderStockItems = ({ item, index, invoiceItems, handleDecrease, handleInc
                                         if (!isNaN(e.target.value)) {
                                             setNewOrder(Number(e.target.value))
                                         }
-
-
                                     }} />
                                 </div>
+
+                                {designation && designation === 'Owner' &&
+                                    < div className='flex justify-between'>
+
+                                        <div className='text-[14px]'>Buying</div>
+                                        <input type='number' placeholder={item?.buying || "Enter buying price"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} className='px-2 ' value={buying || ""} onChange={(e) => {
+                                            if (!isNaN(e.target.value)) {
+                                                setBuying(Number(e.target.value))
+                                            }
+                                        }} />
+                                    </div>
+                                }
 
 
 
@@ -1567,15 +1712,15 @@ const RenderStockItems = ({ item, index, invoiceItems, handleDecrease, handleInc
                                 <PencilIcon className='h-4' />
                             </div>
                         </div>
-                    </div>
+                    </div >
                 )
     )
 }
 
 
-const RenderStockItemsOtherView = ({ item, index, invoiceItems, handleDecrease, handleIncrease, showOther, setShowOther, setPrice, setQty, setOther, visible, onClose, onRefresh }) => {
+const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, handleDecrease, handleIncrease, showOther, setShowOther, setPrice, setQty, setOther, visible, onClose, onRefresh }) => {
     const [localName, setLocalName] = useState("")
-     const [localChineseName, setLocalChineseName] = useState("")
+    const [localChineseName, setLocalChineseName] = useState("")
     const [localQty, setLocalQty] = useState("")
     const [localPrice, setLocalPrice] = useState("")
     const [localImage, setLocalImage] = useState(null)
@@ -1583,6 +1728,7 @@ const RenderStockItemsOtherView = ({ item, index, invoiceItems, handleDecrease, 
     const [loading, setLoading] = useState(false)
     const [threshold, setThreshold] = useState("")
     const [newOrder, setNewOrder] = useState("")
+    const [buying, setBuying] = useState("")
 
 
 
@@ -1641,7 +1787,8 @@ const RenderStockItemsOtherView = ({ item, index, invoiceItems, handleDecrease, 
                 img: result,
                 threshold: threshold ? Number(threshold) : "",
                 new_order: newOrder ? Number(newOrder) : "",
-                chinese_name : localChineseName
+                chinese_name: localChineseName,
+                buying: buying ? Number(buying) : undefined
             })
                 .catch((e) => {
                     console.log(e)
@@ -1742,6 +1889,18 @@ const RenderStockItemsOtherView = ({ item, index, invoiceItems, handleDecrease, 
 
                                     }} />
                                 </div>
+
+                                {designation && designation === 'Owner' &&
+                                    < div className='flex justify-between'>
+
+                                        <div className='text-[14px]'>Buying</div>
+                                        <input type='number' placeholder={item?.buying || "Enter buying price"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} className='px-2 ' value={buying || ""} onChange={(e) => {
+                                            if (!isNaN(e.target.value)) {
+                                                setBuying(Number(e.target.value))
+                                            }
+                                        }} />
+                                    </div>
+                                }
 
 
 

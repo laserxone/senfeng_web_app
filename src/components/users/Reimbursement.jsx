@@ -1,12 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { BASE_URL } from "@/constants/data";
-import {
-  ArrowUpDown,
-  Filter,
-  Loader2
-} from "lucide-react";
+import { ArrowUpDown, Filter, Loader2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import ConfimationDialog from "@/components/alert-dialog";
@@ -18,7 +13,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -33,20 +28,23 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle
+  SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { storage } from "@/config/firebase";
+import axios from "@/lib/axios";
 import exportToExcel from "@/lib/exportToExcel";
 import { UploadImage } from "@/lib/uploadFunction";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "@/lib/axios";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import { useForm } from "react-hook-form";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
+import { CustomerSearchWithData } from "../customer-search-with-data";
+import { Label } from "../ui/label";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
 
@@ -55,7 +53,7 @@ export default function Reimbursement({
   passingData,
   onAddRefresh,
   onFilterReturn,
-  onReset
+  onReset,
 }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
@@ -64,7 +62,7 @@ export default function Reimbursement({
   const [visible, setVisible] = useState(false);
   const [reimbursementVisible, setReimbursementVisible] = useState(false);
   const [total, setTotal] = useState(0);
-  const [resetLoading, setResetLoading] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
     setData([...passingData]);
@@ -108,7 +106,7 @@ export default function Reimbursement({
           </Button>
         );
       },
-      cell: ({ row }) => <div >{row.getValue("title")}</div>,
+      cell: ({ row }) => <div>{row.getValue("title")}</div>,
     },
     {
       accessorKey: "city",
@@ -159,7 +157,6 @@ export default function Reimbursement({
       },
       cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
-
   ];
 
   function handleDownload() {
@@ -171,7 +168,7 @@ export default function Reimbursement({
       "Description",
       "Submitted By",
     ];
-   
+
     const formattedData = [...data].map((item) => [
       moment(item.date).format("YYYY-MM-DD"),
       item.title,
@@ -224,15 +221,15 @@ export default function Reimbursement({
 
           <Button
             variant="destructive"
-            onClick={async() => {
-              setResetLoading(true)
+            onClick={async () => {
+              setResetLoading(true);
               const startDate = moment().startOf("month").toISOString();
               const endDate = moment().endOf("month").toISOString();
-             await onReset(startDate, endDate);
-             setResetLoading(false)
+              await onReset(startDate, endDate);
+              setResetLoading(false);
             }}
           >
-          {resetLoading && <Spinner />}  Reset
+            {resetLoading && <Spinner />} Reset
           </Button>
 
           <Button onClick={() => setReimbursementVisible(true)}>
@@ -281,7 +278,7 @@ export default function Reimbursement({
         onRefresh={(val) => {
           if (val) {
             let temp = [...data];
-            temp.push(val)
+            temp.push(val);
             temp.sort(
               (a, b) => moment(b.date).valueOf() - moment(a.date).valueOf()
             );
@@ -383,6 +380,8 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
 };
 
 const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
+  const [selectedRadio, setSelectedRadio] = useState("customer");
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
   const formSchema = z.object({
     title: z.string().min(1, { message: "Title is required." }),
@@ -423,6 +422,8 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
       });
       onRefresh(response.data.reimbursement);
       form.reset();
+      setSelectedCustomer(null);
+      setSelectedRadio("customer");
     } catch (error) {
       console.log(error);
     } finally {
@@ -435,6 +436,8 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
       open={visible}
       onOpenChange={(val) => {
         form.reset();
+        setSelectedCustomer(null);
+        setSelectedRadio("customer");
         setLoading(false);
         onClose(val);
       }}
@@ -445,7 +448,22 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
         </DialogHeader>
 
         <ScrollArea className="max-h-[80vh] px-2">
-          <div className="px-2">
+          <div className="px-2 space-y-4">
+            <RadioGroup
+              defaultValue={selectedRadio}
+              onValueChange={setSelectedRadio}
+              className="flex"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="customer" id="r1" />
+                <Label htmlFor="r1">Customer</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="other" id="r2" />
+                <Label htmlFor="r2">Other</Label>
+              </div>
+            </RadioGroup>
+
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
@@ -456,9 +474,24 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Customer</FormLabel>
+                      <FormLabel>
+                        {selectedRadio == "customer" ? "Customer" : "Other"}
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter customer" {...field} />
+                        {selectedRadio === "other" ? (
+                          <Input placeholder="Type here" {...field} />
+                        ) : (
+                          <CustomerSearchWithData
+                            value={selectedCustomer}
+                            onReturn={(val) => {
+                              setSelectedCustomer(val);
+                              if (val.location) {
+                                form.setValue("city", val.location);
+                              }
+                              form.setValue("title", val.company || val.owner);
+                            }}
+                          />
+                        )}
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -526,7 +559,13 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                         <AppCalendar
                           date={field.value}
                           onChange={field.onChange}
-                          min = {new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
+                          min={
+                            new Date(
+                              new Date().getFullYear(),
+                              new Date().getMonth(),
+                              1
+                            )
+                          }
                         />
                       </FormControl>
                       <FormMessage />

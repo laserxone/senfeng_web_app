@@ -1,39 +1,23 @@
 "use client";
 import AutoScrollMembers from "@/components/autoScroll";
-import CustomerEmployee from "@/components/users/customer";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Attendance from "@/components/users/attendance";
+import CustomerEmployee from "@/components/users/customer";
 import Reimbursement from "@/components/users/Reimbursement";
-import { BASE_URL } from "@/constants/data";
+import SalaryRecord from "@/components/users/SalaryRecord";
+import axios from "@/lib/axios";
 import { GetProfileImage } from "@/lib/getProfileImage";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "@/lib/axios";
-import { AlertCircle, CheckCircle, Clock } from "lucide-react";
 import moment from "moment";
-import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
-import SalaryRecord from "@/components/users/SalaryRecord";
-import NewsTicker from "@/components/newsTicker";
 
 export default function Page() {
   const [data, setData] = useState();
   const { state: UserState } = useContext(UserContext);
-  const [totalSales, setTotalSales] = useState(0);
   const [customers, setCustomers] = useState([]);
-  const [extraData, setExtraData] = useState({});
-  const [selectedOption, setSelectedOption] = useState("");
   const [reimbursementData, setReimbursementData] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
 
@@ -44,7 +28,7 @@ export default function Page() {
       fetchData();
 
       fetchAllCustomers();
-      fetchExtraCustomerOptions();
+
       fetchReimbursementData(startDate, endDate);
       fetchAttendanceData(startDate, endDate);
     }
@@ -94,36 +78,15 @@ export default function Page() {
   }
 
   async function fetchData() {
-    axios
-      .get(`/user/${UserState.value.data?.id}`)
-      .then((response) => {
-        setData(response.data);
-        if (response.data.customers && response.data.customers.length > 0) {
-          let total = 0;
-          response.data.customers.map((eachCustomer) => {
-            if (eachCustomer.sales && eachCustomer.sales.length > 0) {
-              eachCustomer.sales.map((eachSale) => {
-                total = total + Number(eachSale.price);
-              });
-            }
-          });
-          setTotalSales(total);
-        }
-      });
+    axios.get(`/user/${UserState.value.data?.id}`).then((response) => {
+      setData(response.data);
+    });
   }
 
   async function fetchAllCustomers() {
     axios.get(`/customer`).then((response) => {
-      
       setCustomers(response.data);
     });
-  }
-  async function fetchExtraCustomerOptions() {
-    axios
-      .get(`/user/${UserState.value.data?.id}/extra`)
-      .then((response) => {
-        setExtraData(response.data);
-      });
   }
 
   const RenderNewCustomer = useCallback(() => {
@@ -185,7 +148,6 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 gap-5">
-     
       <div className="flex flex-1 flex-col">
         <div className="flex flex-1 justify-between mb-8 flex-wrap">
           <div className="flex items-center ">
@@ -270,5 +232,3 @@ const ProfilePicture = ({ img, name }) => {
     </Avatar>
   );
 };
-
-
