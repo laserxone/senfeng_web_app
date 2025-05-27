@@ -624,12 +624,12 @@ export default function POS() {
                             </Table>
                             <div className="flex justify-center mt-4">
 
-                                <div onClick={() => setDialogVisible(true)} className="p-4 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-700">
+                                <div onClick={() => setDialogVisible(true)} className="p-4 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-700 cursor-pointer">
                                     <FaPlus />
                                 </div>
 
 
-                                <OrderStockDialog dialogVisible={orderStockVisible} onCloseDialog={setOrderStockVisible} stock={stock.filter((item) => item.threshold != null && item.threshold !== undefined && item.qty <= item.threshold )}
+                                <OrderStockDialog dialogVisible={orderStockVisible} onCloseDialog={setOrderStockVisible} stock={stock.filter((item) => item.threshold != null && item.threshold !== undefined && item.qty <= item.threshold)}
 
                                 />
 
@@ -665,64 +665,82 @@ export default function POS() {
                                 <div className="flex-1 bg-white p-3 font-bold text-center">{totalAmount ? `${totalAmount}` : "0"}</div>
                             </div>
                         </div>
+                        <div className='flex flex-row flex-wrap gap-2 w-full'>
+                          
 
-                        <Button
-                            variant="outline"
-                            onClick={handleEngineerItems}
-                            className="w-full"
-                        >
-
-                            {engineerLoading && <Spinner />}  Check Engineer issued items
-                        </Button>
-
-                        {selectedSearchItem ?
-                            <Button
-                                onClick={() => {
-                                    setLoading(true)
-                                    setCustomerLoading(true)
-                                    handleUpdateInvoice()
-
-                                }}
-                                disabled={invoiceItems.length === 0}
-                                className="w-full"
-                            >
-
-                                Update Invoice
-                            </Button>
-                            :
-                            <Button
-                                onClick={() => {
-                                    if (selectedUser?.id) {
+                            {selectedSearchItem ?
+                                <Button
+                                    onClick={() => {
                                         setLoading(true)
                                         setCustomerLoading(true)
-                                        generatePDF()
-                                    } else {
-                                        setModal(true)
-                                    }
+                                        handleUpdateInvoice()
+                                        className = "h-[100px] w-[100px] text-wrap"
+                                    }}
+                                    disabled={invoiceItems.length === 0}
 
+                                >
+
+                                    Update Invoice
+                                </Button>
+                                :
+                                <Button
+                                    onClick={() => {
+                                        if (selectedUser?.id) {
+                                            setLoading(true)
+                                            setCustomerLoading(true)
+                                            generatePDF()
+                                        } else {
+                                            setModal(true)
+                                        }
+
+
+                                    }}
+                                    disabled={invoiceItems.length === 0}
+                                    className="h-[100px] w-[100px] text-wrap"
+                                >
+
+                                    Print Invoice
+                                </Button>
+                            }
+
+
+                            <Button
+                                onClick={() => {
+                                    setSearchInvoice(!searchInvocie)
 
                                 }}
-                                disabled={invoiceItems.length === 0}
-                                className="w-full"
+                                className="h-[100px] w-[100px] text-wrap"
                             >
 
-                                Print Invoice
+                                Search Invoice
                             </Button>
-                        }
 
+                              <Button
+                                variant="outline"
+                                onClick={handleEngineerItems}
+                                className="h-[100px] w-[100px] text-wrap"
+                            >
 
-                        <Button
-                            onClick={() => {
-                                setSearchInvoice(!searchInvocie)
+                                <div> {engineerLoading && <Spinner />}Engineer issued items</div>
+                            </Button>
 
-                            }}
-                            className="w-full"
-                        >
+                              <Button
+                                onClick={handleEngineerItems}
+                                className="h-[100px] w-[100px] text-wrap"
+                            >
 
-                            Search Invoice
-                        </Button>
+                                <div>Inward Gatepass</div>
+                            </Button>
 
+                              <Button
+                                onClick={handleEngineerItems}
+                                className="h-[100px] w-[100px] text-wrap"
+                            >
 
+                                <div>Outward Gatepass</div>
+                            </Button>
+
+                        </div>
 
                         {searchInvocie &&
                             <div className='flex w-full gap-4'>
@@ -1284,7 +1302,7 @@ const AddItemDialog = ({ designation, visible, onClose, handleDecrease, showOthe
                     <div className="flex flex-col gap-5 p-4">
 
                         <div className="flex flex-wrap gap-2 justify-center">
-                            {stock.filter((item) => clickedLowStock ? item.threshold != null && item.threshold !== undefined && item.qty <= item.threshold  : item).filter((item) => item?.name?.toLowerCase().includes(search.toLowerCase())).map((item, index) =>
+                            {stock.filter((item) => clickedLowStock ? item.threshold != null && item.threshold !== undefined && item.qty <= item.threshold : item).filter((item) => item?.name?.toLowerCase().includes(search.toLowerCase())).map((item, index) =>
 
                                 view ? <RenderStockItems key={index} item={item} index={index} invoiceItems={invoiceItems} handleDecrease={handleDecrease} handleIncrease={handleIncrease} showOther={showOther} setShowOther={setShowOther} setQty={setQty} setPrice={setPrice} setOther={setOther}
                                     visible={visible}

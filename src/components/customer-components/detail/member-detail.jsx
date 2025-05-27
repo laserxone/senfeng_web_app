@@ -101,9 +101,9 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
       setData(data);
 
       const isLimited = UserState.value.data?.limited_access;
-      if(isLimited){
-        if(response.data.lead !== UserState.value.data?.id){
-          router.replace("/")
+      if (isLimited) {
+        if (response.data.lead !== UserState.value.data?.id) {
+          router.replace("/");
         }
       }
 
@@ -796,7 +796,9 @@ const RenderTimeline = ({
       customerDetail?.machines?.forEach((machine) => {
         localData.push({
           id: `machine-${machine.id}`,
-          title: `Sell Machine: ${machine.serial_no} (${machine.source || "Nil"})`,
+          title: `Sell Machine ${machine.serial_no} (${
+            machine.source || "Nil"
+          })`,
           description: `Power: ${machine.power || "Nil"}W, Price: $${
             machine.price
           }, Order No: ${machine.order_no_arr?.join(", ")}`,
@@ -809,11 +811,11 @@ const RenderTimeline = ({
           localData.push({
             id: `payment-${payment.id}`,
             title: `Payment for Machine ${machine.serial_no}`,
-            description: `Tx: ${
-              payment.note
-            }, Amount: $${payment.amount}, Mode: ${
-              payment.mode
-            }, Received by: ${payment.received_by}, Clearance Date: ${
+            description: `Tx: ${payment.note}, Amount: $${
+              payment.amount
+            }, Mode: ${payment.mode}, Received by: ${
+              payment.received_by
+            }, Clearance Date: ${
               payment.clearance_data
                 ? moment(payment.clearance_data).format("YYYY-MM-DD")
                 : "Pending"
@@ -826,7 +828,7 @@ const RenderTimeline = ({
       localData.push({
         id: `customer-${customerDetail.id}`,
         title: `Customer added`,
-        description: `Company: ${customerDetail.name || "Nil"}, Owner: ${
+        description: `Company ${customerDetail.name || "Nil"}, Owner: ${
           customerDetail.owner || "Nil"
         }, Location: ${customerDetail.location}`,
         time: customerDetail.created_at,
@@ -855,24 +857,41 @@ const RenderTimeline = ({
 
   return (
     <Card className="shadow-lg rounded-2xl p-4 self-center">
-        <ScrollArea className="h-[calc(100dvh-340px)]">
-          <Timeline className="mt-8">
-            {timelineData.map((item) => (
-              <TimelineItem key={item.id}>
-                <TimelineHeader>
-                  <TimelineTime>
-                    {moment(item.time).format("YYYY-MM-DD")}
-                  </TimelineTime>
-                  <TimelineTitle>{item.title}</TimelineTitle>
-                </TimelineHeader>
-                {item.description && (
-                  <TimelineDescription>{item.description}</TimelineDescription>
-                )}
-              </TimelineItem>
-            ))}
-          </Timeline>
-        </ScrollArea>
-      
+      <ScrollArea className="h-[calc(100dvh-340px)]">
+        <Timeline className="mt-8">
+          {timelineData.map((item) => (
+            <TimelineItem key={item.id}>
+              <TimelineHeader>
+                <TimelineTime>
+                  {moment(item.time).format("YYYY-MM-DD")}
+                </TimelineTime>
+                <TimelineTitle
+               className={`${
+  item.title.toLowerCase().includes("feedback")
+    ? "text-orange-500"
+    : item.title.toLowerCase().includes("customer")
+    ? "text-blue-500"
+    : item.title.toLowerCase().includes("payment")
+    ? "text-green-500"
+    : item.title.toLowerCase().includes("machine")
+    ? "text-purple-500"
+    : item.title.toLowerCase().includes("visit")
+    ? "text-red-500"
+    : item.title.toLowerCase().includes("task")
+    ? "text-yellow-500"
+    : "text-black"
+}`}
+                >
+                  {item.title}
+                </TimelineTitle>
+              </TimelineHeader>
+              {item.description && (
+                <TimelineDescription>{item.description}</TimelineDescription>
+              )}
+            </TimelineItem>
+          ))}
+        </Timeline>
+      </ScrollArea>
     </Card>
   );
 };

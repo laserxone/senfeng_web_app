@@ -119,10 +119,10 @@ export default function Machine({ id }) {
       const machine = response.data?.machine;
       const userData = UserState.value.data;
 
-        const isLimited = userData?.limited_access;
-      if(isLimited){
-        if(response.data?.customer?.lead !== userData?.id){
-          router.replace("/")
+      const isLimited = userData?.limited_access;
+      if (isLimited) {
+        if (response.data?.customer?.lead !== userData?.id) {
+          router.replace("/");
         }
       }
 
@@ -472,7 +472,7 @@ export default function Machine({ id }) {
           onPressCancel={() => setShowConfirmation(false)}
         />
         <ImageSheet
-        payment_lock={data?.machine?.payment_lock}
+          payment_lock={data?.machine?.payment_lock}
           editAllowed={editAllowed}
           visible={visible}
           onClose={() => {
@@ -666,20 +666,17 @@ const ClientCard = memo(({ data, payment, machine, manager }) => {
               </div>
             </div>
 
-            {machine?.speed_money &&
-            <>
-             <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mt-3">
-              Speed Money
-            </h3>
-              <div className="flex flex-col">
-                <p>
-                  Amount: {machine?.speed_money_amount}
-                </p>
-                <p>
-                  {machine?.speed_money_note}
-                </p>
+            {machine?.speed_money && (
+              <>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mt-3">
+                  Speed Money
+                </h3>
+                <div className="flex flex-col">
+                  <p>Amount: {machine?.speed_money_amount}</p>
+                  <p>{machine?.speed_money_note}</p>
                 </div>
-            </>}
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -891,6 +888,38 @@ const ViewImagesSheet = ({
     }
   }, [imageOpen, onClose]);
 
+  const handleDeleteImage = async (imgUrl, typeKey) => {
+    try {
+      if (!imgUrl || !typeKey) return;
+
+      const storagePath = imgUrl.includes("https")
+        ? getStoragePathFromUrl(imgUrl)
+        : imgUrl;
+
+      if (storagePath) {
+        await DeleteFromStorage(storagePath);
+      }
+
+      const updatedImages = data[typeKey].filter((i) => i !== imgUrl);
+      let formData = { [typeKey]: updatedImages };
+
+      if (typeKey === "final_handover_images") {
+        formData.handover_user_id = null;
+      }
+
+      await axios.put(`/machine/${data.id}`, formData);
+
+      toast({ title: "Image deleted successfully." });
+      await onRefresh();
+    } catch (error) {
+      toast({
+        title: "Failed to delete image",
+        description: error.message || "An error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
       <SheetContent
@@ -934,6 +963,8 @@ const ViewImagesSheet = ({
                       key={ind}
                       img={item}
                       setImageOpen={setImageOpen}
+                      onDelete={editAllowed ? handleDeleteImage : null}
+                      imageType="handshake_images"
                     />
                   ))
                 ) : (
@@ -950,6 +981,8 @@ const ViewImagesSheet = ({
                       key={ind}
                       img={item}
                       setImageOpen={setImageOpen}
+                      onDelete={editAllowed ? handleDeleteImage : null}
+                      imageType="machine_nameplate_images"
                     />
                   ))
                 ) : (
@@ -967,6 +1000,8 @@ const ViewImagesSheet = ({
                       key={ind}
                       img={item}
                       setImageOpen={setImageOpen}
+                      onDelete={editAllowed ? handleDeleteImage : null}
+                      imageType="final_handover_images"
                     />
                   ))
                 ) : (
@@ -983,6 +1018,8 @@ const ViewImagesSheet = ({
                       key={ind}
                       img={item}
                       setImageOpen={setImageOpen}
+                      onDelete={editAllowed ? handleDeleteImage : null}
+                      imageType="installation_report"
                     />
                   ))
                 ) : (
@@ -1000,6 +1037,8 @@ const ViewImagesSheet = ({
                       key={ind}
                       img={item}
                       setImageOpen={setImageOpen}
+                      onDelete={editAllowed ? handleDeleteImage : null}
+                      imageType="contract_images_png"
                     />
                   ))
                 ) : (
@@ -1025,6 +1064,8 @@ const ViewImagesSheet = ({
                       key={ind}
                       img={item}
                       setImageOpen={setImageOpen}
+                      onDelete={editAllowed ? handleDeleteImage : null}
+                      imageType="other_images_png"
                     />
                   ))
                 ) : (
@@ -1047,9 +1088,10 @@ const ViewImagesSheet = ({
   );
 };
 
-const RenderImage = memo(({ img, type, setImageOpen }) => {
+const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }) => {
   const [localImage, setLocalImage] = useState(null);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const handleZoomChange = useCallback((shouldZoom) => {
     setIsZoomed(shouldZoom);
@@ -1075,13 +1117,27 @@ const RenderImage = memo(({ img, type, setImageOpen }) => {
   }, [img, type]);
 
   return (
-    <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
-      <img
-        src={localImage}
-        alt="payment-img"
-        className="h-[150px] w-auto object-contain"
-      />
-    </ControlledZoom>
+    <div className="space-y-2">
+      <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
+        <img
+          src={localImage}
+          alt="payment-img"
+          className="h-[150px] w-auto object-contain"
+        />
+      </ControlledZoom>
+      {onDelete && (
+        <Button
+          variant="destructive"
+          size="icon"
+          onClick={(e) => {
+            setDeleteLoading(true);
+            onDelete(img, imageType);
+          }}
+        >
+          {deleteLoading ? <Spinner /> : <Trash size={16} />}
+        </Button>
+      )}
+    </div>
   );
 });
 
