@@ -629,7 +629,7 @@ export default function POS() {
                                 </div>
 
 
-                                <OrderStockDialog dialogVisible={orderStockVisible} onCloseDialog={setOrderStockVisible} stock={stock.filter((item) => item.threshold != null && item.threshold !== undefined && item.threshold <= item.qty)}
+                                <OrderStockDialog dialogVisible={orderStockVisible} onCloseDialog={setOrderStockVisible} stock={stock.filter((item) => item.threshold != null && item.threshold !== undefined && item.qty <= item.threshold )}
 
                                 />
 
@@ -1284,7 +1284,7 @@ const AddItemDialog = ({ designation, visible, onClose, handleDecrease, showOthe
                     <div className="flex flex-col gap-5 p-4">
 
                         <div className="flex flex-wrap gap-2 justify-center">
-                            {stock.filter((item) => clickedLowStock ? item.threshold != null && item.threshold !== undefined && item.threshold <= item.qty : item).filter((item) => item?.name?.toLowerCase().includes(search.toLowerCase())).map((item, index) =>
+                            {stock.filter((item) => clickedLowStock ? item.threshold != null && item.threshold !== undefined && item.qty <= item.threshold  : item).filter((item) => item?.name?.toLowerCase().includes(search.toLowerCase())).map((item, index) =>
 
                                 view ? <RenderStockItems key={index} item={item} index={index} invoiceItems={invoiceItems} handleDecrease={handleDecrease} handleIncrease={handleIncrease} showOther={showOther} setShowOther={setShowOther} setQty={setQty} setPrice={setPrice} setOther={setOther}
                                     visible={visible}
