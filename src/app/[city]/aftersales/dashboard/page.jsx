@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import AppCalendar from "@/components/appCalendar";
 import Spinner from "@/components/ui/spinner";
+import { RequiredStar } from "@/components/RequiredStar";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -44,8 +45,8 @@ export default function Page() {
 
       // fetchAllCustomers();
 
-      // fetchReimbursementData(startDate, endDate);
-      // fetchAttendanceData(startDate, endDate);
+      fetchReimbursementData(startDate, endDate);
+      fetchAttendanceData(startDate, endDate);
     }
   }, [UserState]);
 
@@ -93,7 +94,7 @@ export default function Page() {
   }
 
   async function fetchData() {
-    return new Promise(async(resolve) => {
+    return new Promise(async (resolve) => {
       try {
         const response = await axios.get(`/user/${UserState.value.data?.id}`);
 
@@ -469,22 +470,23 @@ const CustomerEmployeeAfterSales = ({
         <Dialog open={showFeedback} onOpenChange={setShowFeedback}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Feedback</DialogTitle>
+              <DialogTitle>Add Feedback</DialogTitle>
               <div className="flex flex-1 flex-col gap-2">
+                <h1>
+                  Enter Feedback <RequiredStar />
+                </h1>
                 <Input
+                  placeholder="feedback"
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
                 />
-               
-              
-                  <h1>Next Follow-up</h1>
-                  <AppCalendar
-                    date={next}
-                    onChange={setNext}
-                    min={new Date()}
-                  />
-              
-                 <div className="flex flex-row items-center gap-2">
+
+                <h1>
+                  Next Follow-up <RequiredStar />
+                </h1>
+                <AppCalendar date={next} onChange={setNext} min={new Date()} />
+
+                <div className="flex flex-row items-center gap-2">
                   <h1>Satisfactory?</h1>
                   <Checkbox
                     checked={satisfactory}
@@ -494,6 +496,7 @@ const CustomerEmployeeAfterSales = ({
                   />
                 </div>
                 <Button
+                  disabled={!next || !feedback}
                   onClick={() => {
                     handleSaveFeedback();
                   }}
