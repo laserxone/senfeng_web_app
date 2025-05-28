@@ -44,6 +44,7 @@ import {
   Signature,
   ShoppingCart,
   Newspaper,
+  ScanLine,
 } from 'lucide-react';
 
 
@@ -92,6 +93,7 @@ export const Icons = {
   commission : BadgeDollarSign,
   pos : ShoppingCart,
   news : Newspaper,
+  gatepass : ScanLine,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden='true'

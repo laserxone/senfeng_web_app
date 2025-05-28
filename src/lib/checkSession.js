@@ -32,7 +32,7 @@ export default function useCheckSession() {
                 if (userData.full_access || userData.designation === 'Owner') {
                     if (!pathname.includes("superadmin")) {
                         startHolyLoader()
-                        router.push(`/${userData.office.toLowerCase()}/superadmin/dashboard`)
+                        router.push(`/${userData.office.toLowerCase()}/superadmin`)
                     }
                 } else {
                     if (!pathname.includes(userData.base_route)) {

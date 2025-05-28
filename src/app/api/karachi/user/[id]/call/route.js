@@ -31,7 +31,7 @@ export async function GET(req, { params }) {
                 `
         SELECT * FROM feedback
         WHERE customer_id = $1
-          AND created_at BETWEEN $2 AND $3
+        AND created_at BETWEEN $2 AND $3
         ORDER BY created_at DESC
         LIMIT 1
         `,

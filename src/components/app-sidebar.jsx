@@ -65,7 +65,7 @@ export const company = {
   plan: "Pakistan",
 };
 
-export default function AppSidebar({office}) {
+export default function AppSidebar({ office }) {
   const pathname = usePathname();
   const checkSession = useCheckSession();
   const { state: UserState, setUser } = useContext(UserContext);
@@ -74,6 +74,7 @@ export default function AppSidebar({office}) {
   const profileImage = useProfileImage();
   const { toggleSidebar } = useSidebar();
   const isMobile = useIsMobile();
+  
 
   useEffect(() => {
     checkSession().then((val) => {
@@ -271,6 +272,18 @@ export default function AppSidebar({office}) {
                       />
                     </DropdownMenuItem>
                   </Link>
+
+                  {(UserState?.value?.data?.designation === "Owner" ||
+                    UserState?.value?.data?.full_access) && (
+                    <Link
+                      href={`/${pathname.includes("karachi") ? "lahore" : "karachi"}/superadmin/dashboard`}
+                    >
+                      <DropdownMenuItem>
+                        <CreditCard />
+                        Switch to {pathname.includes("karachi") ? "lahore" : "karachi"} Dashboard
+                      </DropdownMenuItem>
+                    </Link>
+                  )}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => signOut(auth)}>

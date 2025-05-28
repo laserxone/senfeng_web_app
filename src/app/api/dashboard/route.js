@@ -172,9 +172,10 @@ visit_count AS (
   GROUP BY user_id
 ),
 customer_count AS (
-  SELECT ownership AS user_id, COUNT(*) AS total_members
-  FROM customer
-  GROUP BY ownership
+  SELECT c.ownership AS user_id, COUNT(DISTINCT c.id) AS total_members
+  FROM customer c
+  INNER JOIN sale s ON s.customer_id = c.id
+  GROUP BY c.ownership
 ),
 sale_sum AS (
   SELECT sell_by AS user_id, SUM(price) AS total_sale_price
@@ -196,6 +197,7 @@ LEFT JOIN feedback_count f ON u.id = f.user_id
 LEFT JOIN visit_count v ON u.id = v.user_id
 LEFT JOIN customer_count c ON u.id = c.user_id
 LEFT JOIN sale_sum s ON u.id = s.user_id;
+
 `;
 
         const taskQuery = `

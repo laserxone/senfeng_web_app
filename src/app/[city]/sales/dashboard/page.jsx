@@ -655,7 +655,7 @@ function Calls({ data, onRefresh }) {
       .post(`/feedback`, {
         feedback: feedback,
         top_follow: false,
-        type: feedback,
+        type: "feedback",
         customer_id: selectedCustomer?.id,
         user_id: UserState.value.data?.id,
         status: satisfactory ? "Satisfactory" : "Unsatisfactory",
@@ -744,7 +744,7 @@ function Calls({ data, onRefresh }) {
             </div>
           </DialogHeader>
         </DialogContent>
-      </Dialog>
+      </Dialog> 
     </div>
   );
 }

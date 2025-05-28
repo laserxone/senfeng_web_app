@@ -398,6 +398,25 @@ export default function POS() {
             })
     }
 
+     async function handleItemSearchAll() {
+        axios.get(`/pos/search`)
+            .then((response) => {
+                if (response.data.length > 0) {
+                    const resultWithTotal = response.data.map((item) => {
+                        return { ...item, total: item.fields.reduce((acc, curr) => acc + Number(curr.total), 0) }
+                    })
+                    setSearchModal(true)
+                    setSearchItemsResult(resultWithTotal)
+
+                }
+
+            }).catch((e) => {
+                console.log(e)
+            }).finally(() => {
+                setSearchLoading(false)
+            })
+    }
+
     async function handleReset() {
         setLoading(true)
         setCustomerLoading(true)
@@ -751,6 +770,13 @@ export default function POS() {
                                 }}>
                                     {searchLoading && <Spinner />}
                                     Search
+                                </Button>
+                                  <Button onClick={() => {
+                                    setSearchLoading(true)
+                                    handleItemSearchAll()
+                                }}>
+                                    {searchLoading && <Spinner />}
+                                    Open All
                                 </Button>
                                 {searchItemsResult.length > 0 && <Button variant="destructive" onClick={() => handleReset()}>Clear</Button>}
 

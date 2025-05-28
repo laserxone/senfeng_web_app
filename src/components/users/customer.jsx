@@ -1,127 +1,21 @@
 "use client";
 import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
-  ArrowUpDown,
-  Check,
-  ChevronDown,
-  ChevronsRight,
-  ChevronsUpDown,
-  CircleArrowRight,
-  Loader2,
-  MoreHorizontal,
-  Plus,
-  Star,
-  Trash,
+  ArrowUpDown
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { custom, z } from "zod";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import Dropzone from "@/components/dropzone";
 
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import PageTable from "@/components/app-table";
 import ConfimationDialog from "@/components/alert-dialog";
-import AppCalendar from "@/components/appCalendar";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heading } from "@/components/ui/heading";
-import { useRouter } from "next/navigation";
-import PageContainer from "@/components/page-container";
+import PageTable from "@/components/app-table";
 import axios from "@/lib/axios";
-import Link from "next/link";
-import { CitiesSearch } from "../cities-search";
-import { IndustrySearch } from "../industry-search";
-import moment from "moment";
-import { UploadImage } from "@/lib/uploadFunction";
-import { useToast } from "@/hooks/use-toast";
 import { UserContext } from "@/store/context/UserContext";
-import AddCustomerDialog from "../addCustomer";
-import { BASE_URL } from "@/constants/data";
 import { startHolyLoader } from "holy-loader";
+import moment from "moment";
+import { useRouter } from "next/navigation";
+import AddCustomerDialog from "../addCustomer";
 
 const tableHeader = [
   {
@@ -331,7 +225,7 @@ export default function CustomerEmployee({
           totalCustomer={data.length}
           
           columns={columns}
-          data={data}
+          data={data} 
           totalItems={data.length}
        
           tableHeader={tableHeader}

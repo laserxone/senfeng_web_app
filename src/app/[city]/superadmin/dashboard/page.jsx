@@ -99,7 +99,7 @@ export default function Page({params}) {
   function mergeArrays(array1, array2) {
     return array1
       .map((obj1) => {
-        const matchingCity = array2.find((obj2) => obj2.name === obj1.location);
+        const matchingCity = array2.find((obj2) => obj2?.name === obj1?.location);
 
         if (matchingCity) {
           return {
