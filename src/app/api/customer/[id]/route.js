@@ -1,6 +1,7 @@
 import pool from "@/config/db";
 import admin from "@/lib/firebaseAdmin";
 import { NextResponse } from "next/server";
+import { profileFields, saleFields } from "@/constants/data";
 
 export async function GET(req, { params }) {
   const { id } = await params;
@@ -226,35 +227,4 @@ export async function DELETE(req, { params }) {
 export const revalidate = 0;
 
 
-export const saleFields = [
-  'price',
-  'serial_no',
-  'contract_date',
-  'power',
-  'source',
-  'cnic',
-  'order_no_arr',
-  'machine_nameplate_images',
-  'final_handover_images',
-  'handover_user_id',
-  'installation_report',
-  'handshake_images'
-];
 
-
-export const profileFields = [
-  'name',
-  'email',
-  'customer_group',
-  'industry',
-  'location',
-  'number',        
-  'owner',         
-  'address',
-  'remarks',
-  'rating',        
-  'image',
-  'platform',
-  'other',
-  'pin'
-];

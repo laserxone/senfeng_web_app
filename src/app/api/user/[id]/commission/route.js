@@ -1,6 +1,7 @@
-import { profileFields, saleFields } from "@/app/api/customer/[id]/route";
-import pool from "@/config/db";
+import pool from "@/config/db";0
 import { NextResponse } from "next/server"
+import { profileFields, saleFields } from "@/constants/data";
+
 
 
 export async function GET(req, { params }) {

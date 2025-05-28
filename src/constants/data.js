@@ -4406,3 +4406,37 @@ export const Colors = {
 }
 
 export const TIMEZONE = "Asia/Karachi";
+
+
+export const saleFields = [
+  'price',
+  'serial_no',
+  'contract_date',
+  'power',
+  'source',
+  'cnic',
+  'order_no_arr',
+  'machine_nameplate_images',
+  'final_handover_images',
+  'handover_user_id',
+  'installation_report',
+  'handshake_images'
+];
+
+
+export const profileFields = [
+  'name',
+  'email',
+  'customer_group',
+  'industry',
+  'location',
+  'number',        
+  'owner',         
+  'address',
+  'remarks',
+  'rating',        
+  'image',
+  'platform',
+  'other',
+  'pin'
+];

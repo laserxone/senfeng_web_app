@@ -12,30 +12,31 @@ export async function GET(req, { params }) {
     const end_date = searchParams.get('end_date')
 
     try {
-        const customersResult = await pool.query(
-            `SELECT DISTINCT customer.*
-      FROM customer
-      INNER JOIN sale ON sale.customer_id = customer.id
-      WHERE customer.ownership = $1`,
-            [id]
-        );
+       const customersResult = await pool.query(
+  `SELECT DISTINCT customer.id, customer.name, customer.ownership, customer.number, customer.owner
+   FROM customer
+   INNER JOIN sale ON sale.customer_id = customer.id
+   WHERE customer.ownership = $1`,
+  [id]
+);
 
         const customers = customersResult.rows;
 
         const customersWithFeedback = [];
         const customersWithoutFeedback = [];
 
-        // Step 2: For each customer, get latest feedback in the date range
+        
         for (const customer of customers) {
             const feedbackResult = await pool.query(
                 `
-        SELECT * FROM feedback
-        WHERE customer_id = $1
-          AND created_at BETWEEN $2 AND $3
-        ORDER BY created_at DESC
-        LIMIT 1
-        `,
-                [customer.id, start_date, end_date]
+                 SELECT id, user_id, created_at, customer_id FROM feedback
+                WHERE customer_id = $1
+                AND user_id = $2
+                AND created_at BETWEEN $3 AND $4
+                ORDER BY created_at DESC
+                LIMIT 1
+                `,
+                [customer.id, id, start_date, end_date]
             );
 
             if (feedbackResult.rows.length > 0) {
