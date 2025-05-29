@@ -2,6 +2,7 @@ import pool from "@/config/db";
 import admin from "@/lib/firebaseAdmin";
 import { NextResponse } from "next/server";
 import { profileFields, saleFields } from "@/constants/data";
+import { sendNotificationToSMM } from "@/lib/sendNotificationToSMM";
 
 export async function GET(req, { params }) {
   const { id } = await params;
@@ -24,7 +25,7 @@ export async function GET(req, { params }) {
     const customer = customerResult.rows[0];
 
 
- 
+
     let filledCount = 0;
     profileFields.forEach(field => {
       const value = customer[field];
@@ -33,11 +34,11 @@ export async function GET(req, { params }) {
           ? typeof value === 'number' && value > 0
           : Array.isArray(value)
             ? value.length > 0
-              : typeof value === 'number'
-                ? true
-                : typeof value === 'string'
-                  ? value.trim() !== '' && value !== 'null'
-                  : value !== null && value !== undefined;
+            : typeof value === 'number'
+              ? true
+              : typeof value === 'string'
+                ? value.trim() !== '' && value !== 'null'
+                : value !== null && value !== undefined;
       if (isFilled) filledCount++;
     });
 
@@ -64,13 +65,13 @@ export async function GET(req, { params }) {
         const isFilled =
           Array.isArray(value)
             ? value.length > 0
-              : typeof value === 'number'
-                ? ['price'].includes(field)
-                  ? value !== null && !isNaN(value)
-                  : true
-                : typeof value === 'string'
-                  ? value.trim() !== '' && value !== 'null'
-                  : value !== null && value !== undefined;
+            : typeof value === 'number'
+              ? ['price'].includes(field)
+                ? value !== null && !isNaN(value)
+                : true
+              : typeof value === 'string'
+                ? value.trim() !== '' && value !== 'null'
+                : value !== null && value !== undefined;
 
         if (isFilled) machineFilled++;
       });
@@ -124,6 +125,10 @@ export async function GET(req, { params }) {
 }
 
 export async function PUT(req, { params }) {
+
+  const searchParams = req.nextUrl.searchParams
+  const notify = searchParams.get('notify')
+
   try {
     const data = await req.json();
     const { ...updates } = data;
@@ -147,16 +152,23 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ message: "No valid data provided for update" }, { status: 400 });
     }
 
-    values.push(id); // Add ID as the last parameter for WHERE clause
+    values.push(id);
     const query = `
           UPDATE customer 
           SET ${fields.join(", ")}
           WHERE id = $${values.length}
+          RETURNING id, lead, ownership, name, owner, member
       `;
 
-    await pool.query(query, values);
+    const result = await pool.query(query, values);
 
-    console.log("Inventory data updated successfully");
+    if (notify && notify == 'true') {
+      if (result.rows[0].ownership && result.rows[0].lead) {
+        sendNotificationToSMM(result.rows[0].lead, `${result.rows[0]?.name || result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
+      }
+
+    }
+
     return NextResponse.json({ message: "Updated successfully" }, { status: 200 });
   } catch (error) {
     console.error("Error updating inventory data:", error);

@@ -197,9 +197,13 @@ const EditCustomerDialog = ({
     };
 
     try {
+      let notifyToSMM = false
+      if(data.ownership !== values.ownership){
+        notifyToSMM = true
+      }
       if (data.image && !imageUrl) {
         DeleteFromStorage(data.image);
-        const response = await axios.put(`/customer/${data.id}`, {
+        const response = await axios.put(`/customer/${data.id}?notify=${notifyToSMM}`, {
           ...apiData,
           image: null,
         });
@@ -208,7 +212,7 @@ const EditCustomerDialog = ({
           .valueOf()
           .toString()}.png`;
         const uploadRef = await UploadImage(imageUrl, name);
-        const response = await axios.put(`/customer/${data.id}`, {
+        const response = await axios.put(`/customer/${data.id}?notify=${notifyToSMM}`, {
           ...apiData,
           image: name,
         });
@@ -218,7 +222,7 @@ const EditCustomerDialog = ({
         const uploadRef = await UploadImage(imageUrl, name);
 
       } else {
-        const response = await axios.put(`/customer/${data.id}`, apiData);
+        const response = await axios.put(`/customer/${data.id}?notify=${notifyToSMM}`, apiData);
       }
 
       toast({ title: "Customer Edited successfully" });
