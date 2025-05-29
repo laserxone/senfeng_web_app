@@ -1,6 +1,6 @@
 import pool from "@/config/db";
 import { sendNotification } from "@/lib/sendNotification";
-import { sendNotificationToCRM } from "@/lib/sendNotificationToCRM";
+import { sendNotificationToCRM, sendNotificationToCRMWithoutLead } from "@/lib/sendNotificationToCRM";
 import { NextResponse } from "next/server"
 
 
@@ -23,16 +23,19 @@ export async function POST(req) {
         RETURNING *
     `;
 
-        
+
 
 
         const result = await pool.query(query, values);
 
-        if(result.rows[0].lead){
+        if (result.rows[0].lead) {
             sendNotificationToCRM(result.rows[0].lead, `${result.rows[0]?.name || result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`)
         }
 
-       
+        if (result.rows[0]?.lead !== result.rows[0].created_by) {
+            sendNotificationToCRMWithoutLead(`${result.rows[0]?.name || result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`)
+        }
+
         if (result.rows[0].ownership) {
             sendNotification(`${result.rows[0]?.owner || result.rows[0]?.name} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
         }

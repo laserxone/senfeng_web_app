@@ -364,6 +364,7 @@ export default function CustomerMainPage() {
               UserState.value.data?.designation ===
                 "Customer Relationship Manager (After Sales)"
             }
+            user_designation = {UserState.value.data?.designation}
             visible={addCustomer}
             onClose={setAddCustomer}
             onRefresh={async () => {

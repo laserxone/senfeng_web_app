@@ -7,7 +7,7 @@ import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Trash } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import AppCalendar from "./appCalendar";
@@ -47,6 +47,7 @@ const AddCustomerDialog = ({
   onClose,
   user_id,
   ownership,
+  user_designation = null,
 }) => {
   const [numbers, setNumbers] = useState([""]);
   const [numberError, setNumberError] = useState("");
@@ -97,7 +98,31 @@ const AddCustomerDialog = ({
     },
   });
 
-  const { control, setValue, getValues } = form;
+  useEffect(() => {
+    if (user_designation && user_designation === "Social Media Manager") {
+      console.log("smm")
+      form.reset({
+        company: "",
+        owner: "",
+        email: "",
+        city: "",
+        industry: "",
+        remarks: "",
+        address: "",
+        group: "",
+        lead: user_id,
+        other: "",
+        pin: "",
+        platform: "SOCIAL MEDIA",
+        rating: 0,
+        member: false,
+        ownership: null,
+        created_at: null,
+      });
+    }
+  }, [user_designation, user_id]);
+
+  const { control } = form;
 
   function handleClose(val) {
     setNumberError("");
@@ -285,9 +310,7 @@ const AddCustomerDialog = ({
                                 <Trash size={16} />
                               </Button>
                             )}
-                            {checking && (
-                             <Spinner />
-                            )}
+                            {checking && <Spinner />}
                           </div>
                         ))}
                         <Button
@@ -347,7 +370,9 @@ const AddCustomerDialog = ({
                       name="company"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Company <RequiredStar /></FormLabel>
+                          <FormLabel>
+                            Company <RequiredStar />
+                          </FormLabel>
                           <FormControl>
                             <Input
                               placeholder="Enter company name"
@@ -421,7 +446,16 @@ const AddCustomerDialog = ({
                             <UserSearch
                               lead={true}
                               value={field.value}
-                              onReturn={(val) => field.onChange(val)}
+                              onReturn={(val) => {
+                                field.onChange(val);
+                              }}
+                              onReturnData={(val) => {
+                                if (val.designation == "Social Media Manager") {
+                                  form.setValue("platform", "SOCIAL MEDIA");
+                                } else {
+                                   form.setValue("platform", "");
+                                }
+                              }}
                             />
                           </FormControl>
                           <FormMessage />

@@ -20,3 +20,18 @@ export async function sendNotificationToCRM(id, customer, page) {
       sendNotification(`${customer} added by social media manager`, page, crm.id);
     });
 }
+
+
+export async function sendNotificationToCRMWithoutLead( customer, page) {
+  
+
+  const crmQuery = await pool.query(
+    `SELECT id FROM users WHERE designation = 'Customer Relationship Manager'`
+  );
+
+  if (crmQuery.rows.length === 0) return;
+
+   crmQuery.rows.forEach((crm) => {
+      sendNotification(`${customer} added in the systems`, page, crm.id);
+    });
+}

@@ -25,7 +25,8 @@ export function UserSearch({
   onReturn,
   placeholder = "Select user...",
   lead = false,
-  onReturnName = () => {}
+  onReturnName = () => {},
+  onReturnData = () => {}
 }) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState([]);
@@ -37,11 +38,11 @@ export function UserSearch({
           if (lead) {
             const finalData = response.data
               .filter((item) => {
-                if (item.id === 28 || item.id === 12 || item.id === 15)
+                if (item.designation === 'Customer Relationship Manager' || item.designation === 'Owner' || item.designation === 'Social Media Manager')
                   return item;
               })
               .map((item) => {
-                return { value: item.id, label: item?.name || item.email };
+                return { value: item.id, label: item?.name || item.email, data : item };
               });
             setData(finalData);
           } else {
@@ -84,6 +85,9 @@ export function UserSearch({
                   onSelect={() => {
                     onReturn(Number(item.value));
                     onReturnName(item.label)
+                    if(lead){
+                      onReturnData(item.data)
+                    }
                     setOpen(false);
                   }}
                 >
