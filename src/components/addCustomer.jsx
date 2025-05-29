@@ -40,6 +40,7 @@ import {
 } from "./ui/select";
 import { UserSearch } from "./user-search";
 import Spinner from "./ui/spinner";
+import { generateLog } from "@/lib/generateLog";
 
 const AddCustomerDialog = ({
   onRefresh,
@@ -158,17 +159,6 @@ const AddCustomerDialog = ({
         return selectedNumber[index] + item;
       });
 
-      // let i = 0;
-      // temp.forEach((num) => {
-      //   if (num && num.charAt(0) !== "+") {
-      //     i++;
-      //     setNumberError("Follow correct number format");
-      //     return;
-      //   }
-      // });
-
-      // if (i > 0) return;
-
       const response = await axios.post(`/customer`, {
         name: values.company,
         email: values.email,
@@ -195,7 +185,9 @@ const AddCustomerDialog = ({
         created_by: UserState.value.data?.id,
         created_at: values.created_at || undefined,
       });
+
       toast({ title: "Customer Addedd successfully" });
+
       await onRefresh(response.data.data);
       handleClose(false);
     } finally {
@@ -452,7 +444,7 @@ const AddCustomerDialog = ({
                                 if (val.designation == "Social Media Manager") {
                                   form.setValue("platform", "SOCIAL MEDIA");
                                 } else {
-                                   form.setValue("platform", "");
+                                  form.setValue("platform", "");
                                 }
                               }}
                             />

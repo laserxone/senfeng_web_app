@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import { profileFields, saleFields } from "@/constants/data";
 import { sendNotificationToSMM } from "@/lib/sendNotificationToSMM";
 import { sendNotification } from "@/lib/sendNotification";
+import { generateLog } from "@/lib/generateLog";
+import { addLog } from "@/lib/addLog";
 
 export async function GET(req, { params }) {
   const { id } = await params;
@@ -129,6 +131,7 @@ export async function PUT(req, { params }) {
 
   const searchParams = req.nextUrl.searchParams
   const notify = searchParams.get('notify')
+  const userid = searchParams.get('userid')
 
   try {
     const data = await req.json();
@@ -172,6 +175,10 @@ export async function PUT(req, { params }) {
         sendNotification(`${result.rows[0]?.name || result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
       }
     }
+
+    const logMSG = generateLog(data)
+
+    addLog({ text: logMSG, user_id: userid ? Number(userid) : null, customer_id: result.rows[0].id })
 
     return NextResponse.json({ message: "Updated successfully" }, { status: 200 });
   } catch (error) {

@@ -197,9 +197,9 @@ const EditCustomerDialog = ({
     };
 
     try {
-      let backendRoute = `/customer/${data.id}`
+      let backendRoute = `/customer/${data.id}?userid=${UserState.value.data?.id}`
       if(data.ownership !== values.ownership){
-        backendRoute = `/customer/${data.id}?notify=true`
+        backendRoute = `/customer/${data.id}?notify=true&userid=${UserState.value.data?.id}`
       }
       if (data.image && !imageUrl) {
         DeleteFromStorage(data.image);

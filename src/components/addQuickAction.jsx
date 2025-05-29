@@ -72,7 +72,7 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
   const handleUpdate = async (id, ownership) => {
     setLoading(true);
     try {
-      const response = await axios.put(`/customer/${id}`, {
+      const response = await axios.put(`/customer/${id}?notify=true`, {
         ownership: ownership,
       });
       onRefresh(id, ownership);

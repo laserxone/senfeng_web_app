@@ -1,4 +1,6 @@
 import pool from "@/config/db";
+import { addLog } from "@/lib/addLog";
+import { generateLog } from "@/lib/generateLog";
 import { sendNotification } from "@/lib/sendNotification";
 import { sendNotificationToCRM, sendNotificationToCRMWithoutLead } from "@/lib/sendNotificationToCRM";
 import { NextResponse } from "next/server"
@@ -28,6 +30,8 @@ export async function POST(req) {
 
         const result = await pool.query(query, values);
 
+
+
         if (result.rows[0].lead) {
             sendNotificationToCRM(result.rows[0].lead, `${result.rows[0]?.name || result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`)
         }
@@ -39,6 +43,11 @@ export async function POST(req) {
         if (result.rows[0].ownership) {
             sendNotification(`${result.rows[0]?.owner || result.rows[0]?.name} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
         }
+
+        const logMSG = generateLog(data)
+
+        addLog({ text: logMSG, user_id: result.rows[0].created_by, customer_id: result.rows[0].id })
+
 
         return NextResponse.json({ message: "Inserted successfully", data: result.rows[0] }, { status: 201 });
 
