@@ -105,7 +105,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
 
     setLoading(true);
     axios
-      .put(`/machine/${machine_id}?userid=${UserState}`, {
+      .put(`/machine/${machine_id}?userid=${UserState.value.data?.id}`, {
         id: machine_id,
         speed_money_note: values.speedMoneyNote,
         speed_money: values.isSpeedMoney,
