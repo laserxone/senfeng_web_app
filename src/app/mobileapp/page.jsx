@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function SenFengAppPage() {
   const href =
-    "https://github.com/laserxone/senfeng-app-apk/releases/download/v5.0.0/application-215b7b7b-bf38-43bb-a2ae-8caa74448411.apk";
+    "https://github.com/laserxone/senfeng-app-apk/releases/download/v5.0.0/senfeng.apk";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center text-white px-4">
