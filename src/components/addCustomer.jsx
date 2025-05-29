@@ -155,7 +155,7 @@ const AddCustomerDialog = ({
         owner: values.owner,
         address: values.address,
         rating: values.rating,
-        image: "",
+        image: null,
         remarks: values.remarks,
         member: values.member,
         lead: values.lead || undefined,

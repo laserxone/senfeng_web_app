@@ -217,7 +217,7 @@ const EditCustomerDialog = ({
         DeleteFromStorage(data.image);
         const response = await axios.put(`/customer/${data.id}`, {
           ...apiData,
-          image: "",
+          image: null,
         });
       } else if (values.image && !data.image) {
         const name = `customer/${data.id}/profile/${moment()

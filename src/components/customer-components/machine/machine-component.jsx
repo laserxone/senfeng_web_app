@@ -1208,13 +1208,14 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
         ...machine.final_handover_images,
         ...allProcessedImages,
       ];
+      formData.handover_user_id = values.handover_user_id;
     } else if (values.note === "nameplate") {
       formData.machine_nameplate_images = [
         ...machine.machine_nameplate_images,
         ...allProcessedImages,
       ];
     }
-    formData.handover_user_id = values.handover_user_id;
+    
     await axios
       .put(`/machine/${machine.id}`, formData)
       .then(async (response) => {
