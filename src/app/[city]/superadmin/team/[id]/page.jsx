@@ -100,6 +100,7 @@ export default function Page({ params }) {
             dms_write_access: apiData?.dms_write_access,
             limited_access: apiData?.limited_access,
             full_access: apiData?.full_access,
+            pos_assigned : apiData?.pos_assigned
           });
           setForm({
             basic_salary: apiData?.basic_salary || 0,
