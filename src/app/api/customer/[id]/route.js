@@ -3,6 +3,7 @@ import admin from "@/lib/firebaseAdmin";
 import { NextResponse } from "next/server";
 import { profileFields, saleFields } from "@/constants/data";
 import { sendNotificationToSMM } from "@/lib/sendNotificationToSMM";
+import { sendNotification } from "@/lib/sendNotification";
 
 export async function GET(req, { params }) {
   const { id } = await params;
@@ -162,11 +163,14 @@ export async function PUT(req, { params }) {
 
     const result = await pool.query(query, values);
 
-    if (notify && notify == 'true') {
+    if (notify) {
       if (result.rows[0].ownership && result.rows[0].lead) {
         sendNotificationToSMM(result.rows[0].lead, `${result.rows[0]?.name || result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
       }
 
+      if (result.rows[0].ownership) {
+        sendNotification(`${result.rows[0]?.name || result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
+      }
     }
 
     return NextResponse.json({ message: "Updated successfully" }, { status: 200 });
