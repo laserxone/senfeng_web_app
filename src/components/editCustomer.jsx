@@ -67,7 +67,7 @@ const EditCustomerDialog = ({
   const [originalUrl, setOriginalUrl] = useState(null)
 
   const formSchema = z.object({
-    company: z.string().optional(), // Optional field without min(1)
+    company: z.string().min(1, { message: "" }), // Optional field without min(1)
     owner: z.string().min(1, { message: "" }), // Required field
     email: z.string().optional(), // Optional but must be a valid email if provided
     city: z.string().min(1, { message: "" }), // Required field
@@ -382,7 +382,7 @@ const EditCustomerDialog = ({
                         name="owner"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Customer</FormLabel>
+                            <FormLabel>Customer <RequiredStar /></FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Enter customer name"
@@ -399,7 +399,7 @@ const EditCustomerDialog = ({
                         name="company"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Company</FormLabel>
+                            <FormLabel>Company <RequiredStar /></FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Enter company name"
@@ -433,7 +433,7 @@ const EditCustomerDialog = ({
                         name="city"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>City</FormLabel>
+                            <FormLabel>City <RequiredStar /></FormLabel>
                             <FormControl>
                               <CitiesSearch
                                 value={field.value}

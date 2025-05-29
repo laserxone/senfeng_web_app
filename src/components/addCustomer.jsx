@@ -57,7 +57,7 @@ const AddCustomerDialog = ({
   const [selectedNumber, setSelectedNumber] = useState(["+92"]);
 
   const formSchema = z.object({
-    company: z.string().optional(), // Optional field without min(1)
+    company: z.string().min(1, { message: "" }), // Optional field without min(1)
     owner: z.string().min(1, { message: "" }), // Required field
     email: z.string().optional(), // Optional but must be a valid email if provided
     city: z.string().min(1, { message: "" }), // Required field
@@ -347,7 +347,7 @@ const AddCustomerDialog = ({
                       name="company"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Company</FormLabel>
+                          <FormLabel>Company <RequiredStar /></FormLabel>
                           <FormControl>
                             <Input
                               placeholder="Enter company name"
