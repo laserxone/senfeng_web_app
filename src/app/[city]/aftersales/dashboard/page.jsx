@@ -503,6 +503,7 @@ const CustomerEmployeeAfterSales = ({
         </div>
 
         <AddCustomerDialog
+        user_designation={UserState.value.data?.designation}
           user_id={user_id}
           ownership={true}
           visible={addCustomer}

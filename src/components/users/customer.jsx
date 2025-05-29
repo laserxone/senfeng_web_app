@@ -257,6 +257,7 @@ export default function CustomerEmployee({
 
       <AddCustomerDialog
         user_id={user_id}
+        user_designation={UserState.value.data?.designation}
         ownership={ownership}
         visible={addCustomer}
         onClose={setAddCustomer}
