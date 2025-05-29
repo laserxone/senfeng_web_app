@@ -92,11 +92,9 @@ export default function Page() {
   }
 
   async function fetchData() {
-    axios
-      .get(`/user/${UserState.value.data?.id}`)
-      .then((response) => {
-        setData(response.data);
-      });
+    axios.get(`/user/${UserState.value.data?.id}`).then((response) => {
+      setData(response.data);
+    });
   }
 
   async function fetchAllCustomers() {
@@ -105,13 +103,15 @@ export default function Page() {
       if (!UserState.value.data?.limited_access) {
         setCustomers(apiData);
       } else {
-        const temp = apiData.filter((item)=> item?.lead === UserState.value.data?.id)
-        setCustomers([...temp])
+        const temp = apiData.filter(
+          (item) => item?.lead === UserState.value.data?.id
+        );
+        setCustomers([...temp]);
       }
     });
   }
   async function fetchExtraCustomerOptions(val) {
-    let access = `access=${val}`
+    let access = `access=${val}`;
     axios
       .get(`/user/${UserState.value.data?.id}/extra?${access}`)
       .then((response) => {
@@ -345,8 +345,7 @@ function CustomersTab({ data }) {
     return (
       <div className="flex justify-between items-center border-b pb-2">
         <Link
-                  href={`/${UserState?.value?.data?.base_route}/member/${customer_id}/${machine.id}`}
-
+          href={`/${UserState?.value?.data?.base_route}/member/${customer_id}/${machine.id}`}
         >
           <span className="hover:underline">{machine.serial_no}</span>
         </Link>
@@ -385,9 +384,9 @@ function CustomersTab({ data }) {
                     <AccordionTrigger className="px-4 py-2 hover:no-underline">
                       <div className="flex justify-between items-center w-full">
                         <Link
-                            href={`/${UserState.value.data?.base_route}/${
-                              customer.member ? "member" : "customer"
-                            }/${customer.id}`}
+                          href={`/${UserState.value.data?.base_route}/${
+                            customer.member ? "member" : "customer"
+                          }/${customer.id}`}
                         >
                           <h3 className="font-semibold text-lg hover:underline">
                             {customer.name}

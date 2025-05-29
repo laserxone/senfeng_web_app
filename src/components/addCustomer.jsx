@@ -100,7 +100,6 @@ const AddCustomerDialog = ({
 
   useEffect(() => {
     if (user_designation && user_designation === "Social Media Manager") {
-      console.log("smm")
       form.reset({
         company: "",
         owner: "",

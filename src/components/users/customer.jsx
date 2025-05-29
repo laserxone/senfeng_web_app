@@ -256,7 +256,7 @@ export default function CustomerEmployee({
       </div>
 
       <AddCustomerDialog
-        user_id={user_id}
+        user_id={UserState.value.data?.id}
         user_designation={UserState.value.data?.designation}
         ownership={ownership}
         visible={addCustomer}
