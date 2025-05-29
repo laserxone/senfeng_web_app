@@ -5,15 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Attendance from "@/components/users/attendance";
 import Reimbursement from "@/components/users/Reimbursement";
-import { BASE_URL } from "@/constants/data";
+import SalaryRecord from "@/components/users/SalaryRecord";
+import axios from "@/lib/axios";
 import { GetProfileImage } from "@/lib/getProfileImage";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "@/lib/axios";
 import moment from "moment";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
-import SalaryRecord from "@/components/users/SalaryRecord";
-import NewsTicker from "@/components/newsTicker";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -27,7 +25,6 @@ export default function Page() {
       const startDate = moment().startOf("month").toISOString();
       const endDate = moment().endOf("month").toISOString();
       fetchData();
-      fetchAllCustomers();
       fetchReimbursementData(startDate, endDate);
       fetchAttendanceData(startDate, endDate);
     }

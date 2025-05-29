@@ -59,6 +59,7 @@ export default function Page({ params }) {
     dms_write_access: false,
     limited_access: false,
     full_access: false,
+    pos_assigned : false
   });
   const { toast } = useToast();
 
@@ -159,7 +160,8 @@ export default function Page({ params }) {
         limited_access: checks?.limited_access,
         full_access: checks?.full_access,
         joining_date: joiningDate,
-        leaving_date : leavingDate
+        leaving_date : leavingDate,
+        pos_assigned : checks?.pos_assigned
       })
       .then(() => {
         toast({ title: "Information updated" });

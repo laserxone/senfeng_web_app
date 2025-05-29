@@ -12,7 +12,7 @@ import axios from "@/lib/axios";
 import { GetProfileImage } from "@/lib/getProfileImage";
 import { UserContext } from "@/store/context/UserContext";
 import { startHolyLoader } from "holy-loader";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Filter } from "lucide-react";
 import moment from "moment";
 import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useState } from "react";
@@ -29,6 +29,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import AppCalendar from "@/components/appCalendar";
 import Spinner from "@/components/ui/spinner";
 import { RequiredStar } from "@/components/RequiredStar";
+import FilterSheet from "@/components/users/filterSheet";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -36,6 +37,9 @@ export default function Page() {
   const [customers, setCustomers] = useState([]);
   const [reimbursementData, setReimbursementData] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
+  const [filter, setFilter] = useState({ start: null, end: null });
+  const [filterData, setFilterData] = useState();
+  const [selectedOption, setSelectedOption] = useState("withoutFeedback");
 
   useEffect(() => {
     if (UserState.value.data?.id) {
@@ -45,8 +49,8 @@ export default function Page() {
 
       // fetchAllCustomers();
 
-      fetchReimbursementData(startDate, endDate);
-      fetchAttendanceData(startDate, endDate);
+      // fetchReimbursementData(startDate, endDate);
+      // fetchAttendanceData(startDate, endDate);
     }
   }, [UserState]);
 
@@ -119,11 +123,29 @@ export default function Page() {
     });
   }
 
-  async function fetchAllCustomers() {
-    axios.get(`/customer`).then((response) => {
-      setCustomers(response.data);
+ useEffect(() => {
+  if (filter.start) {
+    let temp = {};
+    const startDate = moment(new Date(filter.start));
+    const endDate = moment(new Date(filter.end));
+
+    temp.user = data.user;
+    temp.withoutFeedback = [...data.withoutFeedback];
+    temp.withFeedback = [...data.withFeedback].filter((item) => {
+      const feedbackDate = moment(new Date(item.feedback_date));
+      return feedbackDate.isSameOrAfter(startDate) && feedbackDate.isSameOrBefore(endDate);
     });
+
+    setFilterData(temp);
+  } else {
+    setFilterData(data);
   }
+}, [filter, data]);
+
+
+  useEffect(()=>{
+    console.log(filterData)
+  },[filterData])
 
   const RenderNewCustomer = useCallback(() => {
     return (
@@ -131,18 +153,22 @@ export default function Page() {
         <CardContent className="pt-5">
           <div className="flex flex-1 gap-5">
             <CustomerEmployeeAfterSales
-              data={data}
+              data={filterData ? filterData : data}
               totalCustomerText={"Total Members"}
               user_id={data?.user?.id}
-              withFeedback={data?.withFeedback || []}
-              withoutFeedback={data?.withoutFeedback || []}
               onRefresh={async () => await fetchData()}
+              onFilterData={(start, end) => {
+                setFilter({ start: moment(start), end: moment(end) });
+              }}
+              handleClear={()=> setFilter({ start: null, end: null })}
+              selectedOption={selectedOption}
+              setSelectedOption={setSelectedOption}
             />
           </div>
         </CardContent>
       </Card>
     );
-  }, [UserState.value.data, data]);
+  }, [data, filterData, selectedOption]);
 
   const RenderReimbursement = useCallback(() => {
     return (
@@ -232,7 +258,7 @@ export default function Page() {
         </Tabs>
       </div>
 
-      {customers.length > 0 && <AutoScrollMembers customers={customers} />}
+      {/* {customers.length > 0 && <AutoScrollMembers customers={customers} />} */}
     </div>
   );
 }
@@ -268,11 +294,13 @@ const CustomerEmployeeAfterSales = ({
   onRefresh,
   totalCustomerText,
   user_id,
-  withFeedback,
-  withoutFeedback,
   data,
+  onFilterData,
+  handleClear,
+  selectedOption,
+  setSelectedOption
 }) => {
-  const [selectedOption, setSelectedOption] = useState("withoutFeedback");
+  
   const { state: UserState } = useContext(UserContext);
   const [addCustomer, setAddCustomer] = useState(false);
   const router = useRouter();
@@ -282,6 +310,7 @@ const CustomerEmployeeAfterSales = ({
   const [next, setNext] = useState(null);
   const [satisfactory, setSatisfactory] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [filterVisible, setFilterVisible] = useState(false);
 
   const columns = [
     {
@@ -352,7 +381,7 @@ const CustomerEmployeeAfterSales = ({
     },
 
     {
-      accessorKey: "created_at",
+      accessorKey: "feedback_date",
       filterFn: "includesString",
       header: ({ column }) => {
         return (
@@ -360,14 +389,14 @@ const CustomerEmployeeAfterSales = ({
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Added
+            Feedback
             <ArrowUpDown />
           </Button>
         );
       },
       cell: ({ row }) => (
         <div>
-          {moment(new Date(row.getValue("created_at"))).format("YYYY-MM-DD")}
+          {row.getValue("feedback_date") ? moment(new Date(row.getValue("feedback_date"))).format("YYYY-MM-DD") : "Not taken"}
         </div>
       ),
     },
@@ -417,7 +446,10 @@ const CustomerEmployeeAfterSales = ({
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex flex-row flex-1 gap-2">
         <CustomerExtraData
-          data={{ withFeedback, withoutFeedback }}
+          data={{
+            withFeedback: data?.withFeedback || [],
+            withoutFeedback: data?.withoutFeedback || [],
+          }}
           option={selectedOption}
           onSelect={(val) => {
             setSelectedOption(val);
@@ -433,7 +465,6 @@ const CustomerEmployeeAfterSales = ({
             totalItems={data?.[selectedOption]?.length || 0}
             tableHeader={tableHeader}
             onRowClick={(val) => {
-              console.log(val);
               if (val?.id) {
                 startHolyLoader();
                 router.push(
@@ -444,15 +475,29 @@ const CustomerEmployeeAfterSales = ({
               }
             }}
           >
-            <div className=" flex justify-between">
-              <div className="flex gap-4">
-                {UserState.value.data &&
-                  UserState.value.data.customer_add_access && (
-                    <Button onClick={() => setAddCustomer(true)}>
-                      Add Customer
-                    </Button>
-                  )}
+            <div className=" flex justify-between gap-2 flex-wrap items-center">
+              <div className="flex flex-row gap-2 flex-wrap items-center">
+                <Button
+                  onClick={() => setFilterVisible(true)}
+                  variant="ghost"
+                  className="p-0 w-8"
+                >
+                  <Filter />
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleClear()}
+                >
+                  Clear
+                </Button>
               </div>
+
+              {UserState.value.data &&
+                UserState.value.data.customer_add_access && (
+                  <Button onClick={() => setAddCustomer(true)}>
+                    Add Customer
+                  </Button>
+                )}
             </div>
           </PageTable>
         </div>
@@ -464,6 +509,14 @@ const CustomerEmployeeAfterSales = ({
           onClose={setAddCustomer}
           onRefresh={() => {
             onRefresh();
+          }}
+        />
+
+        <FilterSheet
+          visible={filterVisible}
+          onClose={() => setFilterVisible(false)}
+          onReturn={async (val) => {
+            await onFilterData(val.start, val.end);
           }}
         />
 
@@ -482,7 +535,7 @@ const CustomerEmployeeAfterSales = ({
                 />
 
                 <h1>
-                  Next Follow-up <RequiredStar />
+                  Next Follow Up <RequiredStar />
                 </h1>
                 <AppCalendar date={next} onChange={setNext} min={new Date()} />
 

@@ -25,42 +25,9 @@ export async function GET(req, { params }) {
 
     const user = userResult.rows[0];
 
-    if (user?.designation === 'Customer Relationship Manager (After Sales)') {
 
-      const customersResult = await pool.query(
-        `SELECT id, name, location, number, owner, member, created_at
-            FROM customer
-            WHERE member IS TRUE`
-      );
+    if (user?.designation === 'Sales' || user?.designation === 'Social Media Manager' || user?.designation === 'Customer Relationship Manager') {
 
-      const customers = customersResult.rows;
-
-      const customersWithFeedback = [];
-      const customersWithoutFeedback = [];
-
-      for (const customer of customers) {
-        const feedbackResult = await pool.query(
-          `
-              SELECT id, customer_id, user_id, created_at FROM feedback
-              WHERE customer_id = $1
-              AND user_id = $2
-              AND created_at BETWEEN $3 AND $4
-              ORDER BY created_at DESC
-              LIMIT 1
-              `,
-          [customer.id, id, currentMonthStart, currentMonthEnd]
-        );
-
-        if (feedbackResult.rows.length > 0) {
-          customersWithFeedback.push(customer);
-        } else {
-          customersWithoutFeedback.push(customer);
-        }
-      }
-
-      return NextResponse.json({user, withFeedback: customersWithFeedback, withoutFeedback: customersWithoutFeedback }, { status: 200 })
-
-    } else {
       const [customersQuery, customersWithSaleQuery] = await Promise.all([
         pool.query("SELECT * FROM customer WHERE ownership = $1", [id]),
         pool.query(`
@@ -200,16 +167,12 @@ export async function GET(req, { params }) {
         };
       });
 
-      const totalSales = saleDetailsQueryResult.rows.reduce(
-        (sum, payment) => sum + Number(payment.price),
-        0
-      );
+
 
       return NextResponse.json({
         user,
         totalCustomers,
         totalCustomersWithSale,
-        totalSales: sales.length,
         machinesSoldThisMonth,
         machinesSoldLastMonth,
         machinesSoldThisMonthDetail: saleDetailsQueryResult.rows,
@@ -219,8 +182,48 @@ export async function GET(req, { params }) {
         allTasks: allTasksQueryResult.rows.length,
         percentageChange: percentageChange.toFixed(2),
         customers: enrichedCustomers,
-        totalSales
       });
+
+    } else if (user?.designation === 'Customer Relationship Manager (After Sales)') {
+
+      const customersResult = await pool.query(
+        `SELECT id, name, location, number, owner, member, created_at
+            FROM customer
+            WHERE member IS TRUE`
+      );
+
+      const customers = customersResult.rows;
+
+      const customersWithFeedback = [];
+      const customersWithoutFeedback = [];
+
+      for (const customer of customers) {
+        const feedbackResult = await pool.query(
+          `
+              SELECT id, customer_id, user_id, created_at FROM feedback
+              WHERE customer_id = $1
+              AND user_id = $2
+              AND created_at BETWEEN $3 AND $4
+              ORDER BY created_at DESC
+              LIMIT 1
+              `,
+          [customer.id, id, currentMonthStart, currentMonthEnd]
+        );
+
+        if (feedbackResult.rows.length > 0) {
+          customersWithFeedback.push({ ...customer, feedback_date: feedbackResult.rows[0].created_at });
+        } else {
+          customersWithoutFeedback.push(customer);
+        }
+      }
+
+      const allTasksQueryResult = await pool.query(`SELECT * FROM task WHERE assigned_to = $1 AND status = 'Pending'`, [id])
+
+      return NextResponse.json({ user, withFeedback: customersWithFeedback, withoutFeedback: customersWithoutFeedback, allTasks: allTasksQueryResult.rows.length }, { status: 200 })
+
+    } else {
+      const allTasksQueryResult = await pool.query(`SELECT * FROM task WHERE assigned_to = $1 AND status = 'Pending'`, [id])
+      return NextResponse.json({ user, allTasks: allTasksQueryResult.rows.length }, { status: 200 })
     }
 
 

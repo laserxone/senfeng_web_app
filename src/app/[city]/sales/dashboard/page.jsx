@@ -41,6 +41,8 @@ import moment from "moment";
 import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
+import AppCalendar from "@/components/appCalendar";
+import { RequiredStar } from "@/components/RequiredStar";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -49,7 +51,7 @@ export default function Page() {
   const [visitData, setVisitData] = useState([]);
   const [extraData, setExtraData] = useState({});
   const [selectedOption, setSelectedOption] = useState("");
-  const [reimbursementData, setReimbursementData] = useState([]);
+  const [reimbursementData, setReimbursementData] = useState([]); 
   const [attendanceData, setAttendanceData] = useState([]);
   const [callData, setCallData] = useState([]);
   const [machineData, setMachineData] = useState([]);
@@ -502,7 +504,6 @@ const CustomerExtraData = ({ data, option, onSelect }) => {
 
 function CustomersTab({ data }) {
   const { state: UserState } = useContext(UserContext);
-  const [profileCompletion, setProfileCompletion] = useState(0);
   const [localData, setLocalData] = useState([]);
 
   useEffect(() => {
@@ -648,6 +649,7 @@ function Calls({ data, onRefresh }) {
   const [loading, setLoading] = useState(false);
   const { state: UserState } = useContext(UserContext);
   const [satisfactory, setSatisfactory] = useState(false);
+   const [next, setNext] = useState(null);
 
   async function handleSaveFeedback() {
     setLoading(true);
@@ -659,6 +661,7 @@ function Calls({ data, onRefresh }) {
         customer_id: selectedCustomer?.id,
         user_id: UserState.value.data?.id,
         status: satisfactory ? "Satisfactory" : "Unsatisfactory",
+        next_followup: next,
       })
       .then(async () => {
         await onRefresh();
@@ -719,29 +722,40 @@ function Calls({ data, onRefresh }) {
       <Dialog open={visible} onOpenChange={setVisible}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Feedback</DialogTitle>
-            <div className="flex flex-1 flex-col gap-2">
-              <Input
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-              />
-              <div className="flex flex-row items-center gap-2">
-                <h1>Satisfactory?</h1>
-                <Checkbox
-                  checked={satisfactory}
-                  onCheckedChange={(checked) => {
-                    setSatisfactory(checked);
-                  }}
+            <DialogTitle>Add Feedback</DialogTitle>
+             <div className="flex flex-1 flex-col gap-2">
+                <h1>
+                  Enter Feedback <RequiredStar />
+                </h1>
+                <Input
+                  placeholder="feedback"
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
                 />
+
+                <h1>
+                  Next Follow Up <RequiredStar />
+                </h1>
+                <AppCalendar date={next} onChange={setNext} min={new Date()} />
+
+                <div className="flex flex-row items-center gap-2">
+                  <h1>Satisfactory?</h1>
+                  <Checkbox
+                    checked={satisfactory}
+                    onCheckedChange={(checked) => {
+                      setSatisfactory(checked);
+                    }}
+                  />
+                </div>
+                <Button
+                  disabled={!next || !feedback}
+                  onClick={() => {
+                    handleSaveFeedback();
+                  }}
+                >
+                  {loading && <Spinner />} Save
+                </Button>
               </div>
-              <Button
-                onClick={() => {
-                  handleSaveFeedback();
-                }}
-              >
-                {loading && <Spinner />} Save
-              </Button>
-            </div>
           </DialogHeader>
         </DialogContent>
       </Dialog> 

@@ -56,6 +56,7 @@ import {
   TimelineTitle,
 } from "@/components/timeline";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { RequiredStar } from "@/components/RequiredStar";
 
 export default function MemberDetail({ ownership = false, from, customer_id }) {
   const [data, setData] = useState(null);
@@ -627,7 +628,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
     <div className="space-y-4">
       <Card>
         <CardContent className="p-4">
-          <h2 className="font-semibold mb-2">Feedback</h2>
+          <h2 className="font-semibold mb-2">Feedback <RequiredStar/></h2>
           <textarea
             value={writeFeedback}
             onChange={(e) => setWriteFeedback(e.target.value)}
@@ -636,7 +637,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
             placeholder="Write something..."
           ></textarea>
           <div className="flex gap-5 items-center mt-2 flex-wrap">
-            <h1>Next Follow Up</h1>
+            <h1>Next Follow Up <RequiredStar/></h1>
             <div className="w-[250px]">
               <AppCalendar date={date} onChange={setDate} />
             </div>
@@ -658,7 +659,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
           </div>
           <Button
             className="w-full mt-4"
-            disabled={!writeFeedback}
+            disabled={!writeFeedback || !date}
             onClick={() => {
               handleSavePost();
             }}
@@ -866,21 +867,21 @@ const RenderTimeline = ({
                   {moment(item.time).format("YYYY-MM-DD")}
                 </TimelineTime>
                 <TimelineTitle
-               className={`${
-  item.title.toLowerCase().includes("feedback")
-    ? "text-orange-500"
-    : item.title.toLowerCase().includes("customer")
-    ? "text-blue-500"
-    : item.title.toLowerCase().includes("payment")
-    ? "text-green-500"
-    : item.title.toLowerCase().includes("machine")
-    ? "text-purple-500"
-    : item.title.toLowerCase().includes("visit")
-    ? "text-red-500"
-    : item.title.toLowerCase().includes("task")
-    ? "text-yellow-500"
-    : "text-black"
-}`}
+                  className={`${
+                    item.title.toLowerCase().includes("feedback")
+                      ? "text-orange-500"
+                      : item.title.toLowerCase().includes("customer")
+                      ? "text-blue-500"
+                      : item.title.toLowerCase().includes("payment")
+                      ? "text-green-500"
+                      : item.title.toLowerCase().includes("machine")
+                      ? "text-purple-500"
+                      : item.title.toLowerCase().includes("visit")
+                      ? "text-red-500"
+                      : item.title.toLowerCase().includes("task")
+                      ? "text-yellow-500"
+                      : "text-black"
+                  }`}
                 >
                   {item.title}
                 </TimelineTitle>
