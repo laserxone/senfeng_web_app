@@ -5,7 +5,7 @@ import axios from "@/lib/axios";
 import { debounce } from "@/lib/debounce";
 import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Trash } from "lucide-react";
+import { Trash } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -38,9 +38,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { UserSearch } from "./user-search";
 import Spinner from "./ui/spinner";
-import { generateLog } from "@/lib/generateLog";
+import { UserSearch } from "./user-search";
 
 const AddCustomerDialog = ({
   onRefresh,
