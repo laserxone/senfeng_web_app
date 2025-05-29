@@ -63,6 +63,8 @@ const EditCustomerDialog = ({
   const [checking, setChecking] = useState(false);
   const [customerInfo, setCustomerInfo] = useState([]);
   const [selectedNumber, setSelectedNumber] = useState(["+92"]);
+  const [imageUrl, setImageUrl] = useState(null)
+  const [originalUrl, setOriginalUrl] = useState(null)
 
   const formSchema = z.object({
     company: z.string().optional(), // Optional field without min(1)
@@ -134,28 +136,12 @@ const EditCustomerDialog = ({
       setNumbers([...tempNumbers]);
       if (data.image) {
         getDownloadURL(ref(storage, data.image)).then((url) => {
-          form.reset({
-            company: data?.name || "",
-            owner: data?.owner || "",
-            email: data?.email || "",
-            city: data?.location || "",
-            industry: data?.industry || "",
-            remarks: data?.remarks || "",
-            address: data?.address || "",
-            group: data?.customer_group || "",
-            rating: data?.rating || 0,
-            image: url || "",
-            member: data?.member || false,
-            ownership: data?.ownership || null,
-            lead: data?.lead || null,
-            other: data?.other || "",
-            pin: data?.pin || "",
-            platform: data?.platform || "",
-            created_at: data?.created_at ? new Date(data.created_at) : null,
-          });
-        });
-      } else {
-        form.reset({
+          setImageUrl(url)
+          setOriginalUrl(url)
+        })
+      } 
+
+       form.reset({
           company: data?.name || "",
           owner: data?.owner || "",
           email: data?.email || "",
@@ -174,7 +160,6 @@ const EditCustomerDialog = ({
           platform: data?.platform || "",
           created_at: data?.created_at ? new Date(data.created_at) : null,
         });
-      }
     }
   }, [data, form]);
 
@@ -201,7 +186,6 @@ const EditCustomerDialog = ({
       owner: values.owner,
       address: values.address,
       rating: values.rating,
-      image: values.image,
       remarks: values.remarks,
       member: values.member,
       ownership: values.ownership,
@@ -213,27 +197,32 @@ const EditCustomerDialog = ({
     };
 
     try {
-      if (data.image && !values.image) {
+      if (data.image && !imageUrl) {
         DeleteFromStorage(data.image);
         const response = await axios.put(`/customer/${data.id}`, {
           ...apiData,
           image: null,
         });
-      } else if (values.image && !data.image) {
+      } else if (imageUrl && !data.image) {
         const name = `customer/${data.id}/profile/${moment()
           .valueOf()
           .toString()}.png`;
-        const uploadRef = await UploadImage(values.image, name);
+        const uploadRef = await UploadImage(imageUrl, name);
         const response = await axios.put(`/customer/${data.id}`, {
           ...apiData,
           image: name,
         });
+      } else if (originalUrl !== imageUrl) {
+
+        const name = data.image
+        const uploadRef = await UploadImage(imageUrl, name);
+
       } else {
         const response = await axios.put(`/customer/${data.id}`, apiData);
       }
 
       toast({ title: "Customer Edited successfully" });
-      onRefresh();
+      await onRefresh();
       handleClose(false);
     } finally {
       setLoading(false);
@@ -350,9 +339,7 @@ const EditCustomerDialog = ({
                                   <Trash size={16} />
                                 </Button>
                               )}
-                              {checking && (
-                                <Spinner />
-                              )}
+                              {checking && <Spinner />}
                             </div>
                           ))}
                           <Button
@@ -511,22 +498,22 @@ const EditCustomerDialog = ({
                             </FormItem>
                           )}
                         />
-                          <FormField
-                        control={form.control}
-                        name="created_at"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Date</FormLabel>
-                            <FormControl>
-                              <AppCalendar
-                                date={field.value}
-                                onChange={field.onChange}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        <FormField
+                          control={form.control}
+                          name="created_at"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Date</FormLabel>
+                              <FormControl>
+                                <AppCalendar
+                                  date={field.value}
+                                  onChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                         <FormField
                           control={control}
                           name="member"
@@ -546,7 +533,6 @@ const EditCustomerDialog = ({
                             </FormItem>
                           )}
                         />
-                       
                       </div>
                     </div>
 
@@ -560,10 +546,9 @@ const EditCustomerDialog = ({
                             <FormControl>
                               <div className="flex flex-1 items-center justify-center">
                                 <Dropzone
-                                  noImage={true}
-                                  value={field.value}
+                                  value={imageUrl}
                                   onDrop={(file) => {
-                                    field.onChange(file);
+                                    setImageUrl(file)
                                   }}
                                   title={"Click to upload"}
                                   subheading={"or drag and drop"}
@@ -702,8 +687,6 @@ const EditCustomerDialog = ({
                           </FormItem>
                         )}
                       />
-
-                     
                     </div>
                   </div>
 

@@ -97,36 +97,44 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
   }
 
   async function fetchCustomerDetail() {
-    axios.get(`/customer/${customer_id}`).then((response) => {
-      const data = response.data;
-      setData(data);
+    return new Promise((resolve) => {
+      axios
+        .get(`/customer/${customer_id}`)
+        .then((response) => {
+          const data = response.data;
+          setData(data);
 
-      const isLimited = UserState.value.data?.limited_access;
-      if (isLimited) {
-        if (response.data.lead !== UserState.value.data?.id) {
-          router.replace("/");
-        }
-      }
+          const isLimited = UserState.value.data?.limited_access;
+          if (isLimited) {
+            if (response.data.lead !== UserState.value.data?.id) {
+              router.replace("/");
+            }
+          }
 
-      const customerCompletion = Number(data.profile_completion) || 0;
-      const machines = data.machines || [];
+          const customerCompletion = Number(data.profile_completion) || 0;
+          const machines = data.machines || [];
 
-      if (machines.length === 0) {
-        toast({
-          variant: "destructive",
-          title: "Oops",
-          description: "No machine sold",
+          if (machines.length === 0) {
+            toast({
+              variant: "destructive",
+              title: "Oops",
+              description: "No machine sold",
+            });
+          }
+
+          const totalMachineCompletion = machines.reduce(
+            (sum, item) => sum + Number(item.percentage_completion || 0),
+            0
+          );
+
+          const overallCompletion =
+            (customerCompletion + totalMachineCompletion) /
+            (machines.length + 1);
+          setProfileCompletion(overallCompletion.toFixed(0));
+        })
+        .finally(() => {
+          resolve(true);
         });
-      }
-
-      const totalMachineCompletion = machines.reduce(
-        (sum, item) => sum + Number(item.percentage_completion || 0),
-        0
-      );
-
-      const overallCompletion =
-        (customerCompletion + totalMachineCompletion) / (machines.length + 1);
-      setProfileCompletion(overallCompletion.toFixed(0));
     });
   }
 
@@ -246,9 +254,9 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
                 value={profileCompletion}
                 text={`${profileCompletion}%`}
                 styles={buildStyles({
-                  pathColor: "#4ade80", // green
-                  textColor: "#1f2937", // gray-800
-                  trailColor: "#e5e7eb", // gray-200
+                  pathColor: "#4ade80",
+                  textColor: "#1f2937",
+                  trailColor: "#e5e7eb",
                   textSize: "28px",
                 })}
               />
@@ -313,7 +321,7 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
             data={data}
             visible={editVisible}
             onClose={setEditVisible}
-            onRefresh={() => fetchCustomerDetail()}
+            onRefresh={async () => await fetchCustomerDetail()}
             onClickDelete={() => setShowConfirmation(true)}
           />
         )}
@@ -628,7 +636,9 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
     <div className="space-y-4">
       <Card>
         <CardContent className="p-4">
-          <h2 className="font-semibold mb-2">Feedback <RequiredStar/></h2>
+          <h2 className="font-semibold mb-2">
+            Feedback <RequiredStar />
+          </h2>
           <textarea
             value={writeFeedback}
             onChange={(e) => setWriteFeedback(e.target.value)}
@@ -637,7 +647,9 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
             placeholder="Write something..."
           ></textarea>
           <div className="flex gap-5 items-center mt-2 flex-wrap">
-            <h1>Next Follow Up <RequiredStar/></h1>
+            <h1>
+              Next Follow Up <RequiredStar />
+            </h1>
             <div className="w-[250px]">
               <AppCalendar date={date} onChange={setDate} />
             </div>

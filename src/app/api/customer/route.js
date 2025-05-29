@@ -1,5 +1,6 @@
 import pool from "@/config/db";
 import { sendNotification } from "@/lib/sendNotification";
+import { sendNotificationToCRM } from "@/lib/sendNotificationToCRM";
 import { NextResponse } from "next/server"
 
 
@@ -22,11 +23,16 @@ export async function POST(req) {
         RETURNING *
     `;
 
+        
 
 
         const result = await pool.query(query, values);
 
-        console.log("data inserted successfully");
+        if(result.rows[0].lead){
+            sendNotificationToCRM(result.rows[0].lead, `${result.rows[0]?.name || result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`)
+        }
+
+       
         if (result.rows[0].ownership) {
             sendNotification(`${result.rows[0]?.owner || result.rows[0]?.name} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
         }
@@ -39,51 +45,6 @@ export async function POST(req) {
     }
 }
 
-
-// export async function POST(req) {
-//     const { data } = await req.json()
-//     const client = await pool.connect();
-
-
-
-//     try {
-//         for (const item of data) {
-//             const query = `
-//           INSERT INTO customer(
-//                     name, email, customer_group, industry, location, number, owner, ownership, old_ref, created_at
-//                 )
-//                 VALUES(
-//                     $1, $2, $3, $4, $5, $6, $7, $8, $9, TO_TIMESTAMP($10 / 1000.0)
-//                 )
-//           `;
-//             const values = [
-//                 item.company, // name
-//                 item.email,    // email
-//                 item.group,    // group
-//                 item.industry, // industry
-//                 item.location, // location
-//                 item.number,   // number
-//                 item.owner,    // owner
-//                 null,
-//                 item.id,       // old_ref
-//                 Number(item.TimeStamp) // created_at (in milliseconds)
-//             ];
-
-//             await client.query(query, values);
-//             console.log(item.company, "done")
-//         }
-
-//         console.log('Customer data inserted successfully');
-//     } catch (error) {
-//         console.error('Error inserting data: ', error);
-//     } finally {
-//         client.release()
-//     }
-
-
-
-//     return NextResponse.json({ message: 'done' }, { status: 200 })
-// }
 
 export async function GET(req) {
 
@@ -128,3 +89,4 @@ export async function GET(req) {
 }
 
 export const revalidate = 0
+
