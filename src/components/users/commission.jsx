@@ -167,7 +167,6 @@ const OwnerView = () => {
             )}
             {showManual && (
               <Input
-                type="number"
                 value={manualNumber}
                 onChange={(e) => {
                   if (!isNaN(e.target.value)) {
