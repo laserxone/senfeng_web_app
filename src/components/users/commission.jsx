@@ -304,7 +304,7 @@ const OwnerView = () => {
             />
           </div>
           <DialogFooter>
-            <Button disabled={disapproveLoading} onClick={handleDisapprove}>
+            <Button disabled={disapproveLoading || !disapproveMsg} onClick={handleDisapprove}>
               {disapproveLoading && <Spinner />} Submit
             </Button>
           </DialogFooter>
