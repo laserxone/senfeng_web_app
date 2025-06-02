@@ -169,9 +169,13 @@ const OwnerView = () => {
               <Input
                 value={manualNumber}
                 onChange={(e) => {
-                  if (!isNaN(e.target.value)) {
-                    setManualNumber(Number(e.target.value));
-                    setSelectedPercentage(Number(e.target.value));
+                  const value = e.target.value; 
+                  const regex = /^\d*\.?\d*$/;
+
+                  if (regex.test(value)) {
+                    const numericValue = Number(value);
+                    setManualNumber(numericValue);
+                    setSelectedPercentage(numericValue);
                   }
                 }}
               />
@@ -251,12 +255,13 @@ const OwnerView = () => {
     }
   }
 
-
- const filteredData = data.filter((item) => {
-  if (!search) return true;
-  const allSearch = `${item.customer_name || ""} ${item.user_name || ""} ${item.customer_owner || ""}`;
-  return allSearch.toLowerCase().includes(search.toLowerCase());
-});
+  const filteredData = data.filter((item) => {
+    if (!search) return true;
+    const allSearch = `${item.customer_name || ""} ${item.user_name || ""} ${
+      item.customer_owner || ""
+    }`;
+    return allSearch.toLowerCase().includes(search.toLowerCase());
+  });
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
