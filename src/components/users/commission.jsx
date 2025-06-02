@@ -222,12 +222,12 @@ const OwnerView = () => {
     setDisapproveLoading(true);
     try {
       await axios
-        .put(`/commission/${id}`, {
+        .put(`/commission/${selectedItem?.id}`, {
           is_approved: false,
           owner_note: disapproveMsg,
         })
         .then(async () => {
-          await axios.put(`/machine/${item.sale_id}`, {
+          await axios.put(`/machine/${selectedItem.sale_id}`, {
             payment_lock: false,
           });
         });
@@ -274,6 +274,7 @@ const OwnerView = () => {
                     item={item}
                     onRefresh={fetchData}
                     onDisapprove={() => {
+                      console.log(item)
                       setSelectedItem(item);
                       setVisibleDisapprove(true);
                     }}
