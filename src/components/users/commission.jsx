@@ -123,6 +123,7 @@ const OwnerView = () => {
           </Link>
         </TableCell>
         <TableCell>{item.machine_name}</TableCell>
+        <TableCell>{item.total_amount}</TableCell>
         <TableCell>
           <div className="min-h-[40px] flex items-center gap-2">
             {item.is_approved ? (
@@ -173,6 +174,8 @@ const OwnerView = () => {
         <TableCell>
           {loading ? (
             <Spinner />
+          ) : item.commission_issued === true ? (
+            <span className="text-green-600">Issued</span>
           ) : item.is_approved === null ? (
             <div className="flex gap-2 items-center">
               <Button
@@ -261,6 +264,7 @@ const OwnerView = () => {
                   <TableHead>Employee</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Machine</TableHead>
+                  <TableHead>Price</TableHead>
                   <TableHead>Commission</TableHead>
                   <TableHead>Note</TableHead>
 
@@ -274,7 +278,6 @@ const OwnerView = () => {
                     item={item}
                     onRefresh={fetchData}
                     onDisapprove={() => {
-                      console.log(item)
                       setSelectedItem(item);
                       setVisibleDisapprove(true);
                     }}
@@ -305,7 +308,10 @@ const OwnerView = () => {
             />
           </div>
           <DialogFooter>
-            <Button disabled={disapproveLoading || !disapproveMsg} onClick={handleDisapprove}>
+            <Button
+              disabled={disapproveLoading || !disapproveMsg}
+              onClick={handleDisapprove}
+            >
               {disapproveLoading && <Spinner />} Submit
             </Button>
           </DialogFooter>
@@ -432,7 +438,6 @@ const OtherView = () => {
           .put(`/commission/${id}`, {
             is_requested: true,
             is_approved: null,
-            note: note,
           })
           .then(async () => {
             await axios
@@ -492,7 +497,11 @@ const OtherView = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    {item.balance !== 0 ? (
+                    {loading ? (
+                      <Spinner />
+                    ) : item.commission.commission_issued === true ? (
+                      <span className="text-green-600">Issued</span>
+                    ) : item.balance !== 0 ? (
                       <span className="text-red-600">
                         Payment not cleared yet
                       </span>
@@ -511,11 +520,14 @@ const OtherView = () => {
                                 </div>
                               </TooltipTrigger>
                               <TooltipContent className="bg-red-600 mr-2">
-                                <p className="text-white">{item.owner_note}</p>
+                                <p className="text-white">
+                                  {item.commission.owner_note}
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
                           <Button
+                            variant="outline"
                             onClick={() =>
                               handleApplyCommissionAgain(item.commission?.id)
                             }
@@ -526,8 +538,6 @@ const OtherView = () => {
                       ) : (
                         <span className="text-yellow-600">Pending</span>
                       )
-                    ) : loading ? (
-                      <Spinner />
                     ) : (
                       <Button
                         onClick={() =>

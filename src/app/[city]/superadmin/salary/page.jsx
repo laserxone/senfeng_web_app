@@ -461,6 +461,11 @@ const SalaryComponent = () => {
       })
       .then(() => {
         toast({ title: "Salary saved" });
+        if (data?.commission) {
+          data.commission.map((item) => {
+            axios.put(`/commission/${item.id}`, { commission_issued: true });
+          });
+        }
       })
       .finally(() => {
         setSaveLoading(false);
