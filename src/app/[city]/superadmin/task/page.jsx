@@ -3,8 +3,7 @@ import {
   ArrowUpDown,
   BadgeCheck,
   CircleDashed,
-  Filter,
-  Loader2,
+  Filter
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -15,8 +14,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  DialogTitle
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -43,15 +41,15 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { UserSearch } from "@/components/user-search";
-import { BASE_URL, TIMEZONE } from "@/constants/data";
-import { UserContext } from "@/store/context/UserContext";
-import axios from "@/lib/axios";
-import moment from "moment";
-import FilterSheet from "@/components/users/filterSheet";
-import { useToast } from "@/hooks/use-toast";
-import momentT from "moment-timezone";
 import Spinner from "@/components/ui/spinner";
+import { UserSearch } from "@/components/user-search";
+import FilterSheet from "@/components/users/filterSheet";
+import { TIMEZONE } from "@/constants/data";
+import { useToast } from "@/hooks/use-toast";
+import axios from "@/lib/axios";
+import { UserContext } from "@/store/context/UserContext";
+import moment from "moment";
+import momentT from "moment-timezone";
 
 const columns = [
   {
@@ -270,6 +268,7 @@ export default function Page() {
           defaultRadio={"office"}
           visible={addTaskVisible}
           onClose={setAddTaskVisible}
+            assigned_by={UserState.value.data?.id}
         />
       </div>
 
@@ -456,7 +455,7 @@ const TaskDetail = ({
   );
 };
 
-const AddTask = ({ visible, onClose, onRefresh }) => {
+const AddTask = ({ visible, onClose, onRefresh, assigned_by }) => {
   const [selectedRadio, setSelectedRadio] = useState("office");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -494,6 +493,7 @@ const AddTask = ({ visible, onClose, onRefresh }) => {
         client: values.client,
         status: "Pending",
         assigned_to: values.user,
+          assigned_by : assigned_by
       })
       .then(() => {
         onRefresh();

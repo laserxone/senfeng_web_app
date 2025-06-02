@@ -5,15 +5,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Attendance from "@/components/users/attendance";
 import Reimbursement from "@/components/users/Reimbursement";
-import { BASE_URL } from "@/constants/data";
+import SalaryRecord from "@/components/users/SalaryRecord";
+import axios from "@/lib/axios";
 import { GetProfileImage } from "@/lib/getProfileImage";
 import { UserContext } from "@/store/context/UserContext";
-import axios from "@/lib/axios";
 import moment from "moment";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
-import SalaryRecord from "@/components/users/SalaryRecord";
-import NewsTicker from "@/components/newsTicker";
+import TeamTask from "@/components/teamTask";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -141,6 +140,7 @@ export default function Page() {
           <TabsList className="justify-start">
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>  
+             <TabsTrigger value="task">Team Task</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
           </TabsList>
 
@@ -154,6 +154,13 @@ export default function Page() {
             <Card>
               <CardContent className="pt-2">
                 <SalaryRecord />
+              </CardContent>
+            </Card>
+          </TabsContent>
+            <TabsContent value="task">
+            <Card>
+              <CardContent className="pt-2">
+                <TeamTask />
               </CardContent>
             </Card>
           </TabsContent>
@@ -190,3 +197,4 @@ const ProfilePicture = ({ img, name }) => {
     </Avatar>
   );
 };
+

@@ -1,24 +1,15 @@
 "use client";
-import { TIMEZONE } from "@/constants/data";
-import {
-  ArrowUpDown,
-  BadgeCheck,
-  CircleDashed,
-  Filter,
-  Loader2
-} from "lucide-react";
-
+import { ArrowUpDown, BadgeCheck, CircleDashed, Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useContext, useEffect, useState } from "react";
 
-
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -26,7 +17,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
+  FormMessage,
 } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,36 +34,147 @@ import {
   SheetDescription,
   SheetFooter,
   SheetHeader,
-  SheetTitle
+  SheetTitle,
 } from "@/components/ui/sheet";
+import Spinner from "@/components/ui/spinner";
+import { UserSearch } from "@/components/user-search";
+import FilterSheet from "@/components/users/filterSheet";
+import { TIMEZONE } from "@/constants/data";
 import { useToast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
 import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
 import momentT from "moment-timezone";
-import FilterSheet from "./filterSheet";
-import Spinner from "../ui/spinner";
+
+const columns = [
+  {
+    accessorKey: "status",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Status
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => (
+      <div className="flex ml-2 gap-1 items-center">
+        <div>
+          {row.getValue("status") === "Pending" ? (
+            <CircleDashed color="red" size={"15px"} />
+          ) : (
+            <BadgeCheck color="green" size={"15px"} />
+          )}
+        </div>
+        <div>{row.getValue("status")}</div>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "task_name",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Task Name
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => <div>{row.getValue("task_name")}</div>,
+  },
+
+  {
+    accessorKey: "assigned_to_name",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Assigned To
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => <div>{row.getValue("assigned_to_name")}</div>,
+  },
+
+  {
+    accessorKey: "created_at_time",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Assign Time
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => (
+      <div>
+        {new Date(row.getValue("created_at_time")).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}
+      </div>
+    ),
+  },
+
+  {
+    accessorKey: "created_at",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Assign Date
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => (
+      <div>
+        {moment(new Date(row.getValue("created_at"))).format("YYYY-MM-DD")}
+      </div>
+    ),
+  },
+];
 
 const getSchema = (isClientSelected) =>
   z.object({
     radio: z.enum(["office", "client"]),
     task: z.string().min(5, { message: "Task must be at least 5 characters." }),
+    user: z.number({ required_error: "User is required." }),
     client: isClientSelected
-      ? z.number({ required_error: "Client is required." }) 
-      : z.number().optional().nullable(), 
+      ? z.number({ required_error: "Client is required." }) // Required when client is selected
+      : z.number().optional(), // Optional when office is selected
   });
 
-export default function TaskEmployee({ id }) {
+export default function TeamTask() {
   const { state: UserState } = useContext(UserContext);
   const [data, setData] = useState([]);
   const [visible, setVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState({});
   const [addTaskVisible, setAddTaskVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [dataLoading, setDataLoading] = useState(false);
 
   useEffect(() => {
-    if (id) {
+    if (UserState?.value?.data?.id) {
       const startDate = momentT
         .tz(TIMEZONE)
         .startOf("month")
@@ -85,139 +187,17 @@ export default function TaskEmployee({ id }) {
         .endOf("day")
         .utc()
         .toISOString();
-      fetchData(id, startDate, endDate);
+      fetchData(startDate, endDate);
     }
-  }, [id]);
+  }, [UserState?.value?.data]);
 
-  const columns = [
-    {
-      accessorKey: "status",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Status
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => (
-        <div className="flex ml-2 gap-1 items-center">
-          <div>
-            {row.getValue("status") === "Pending" ? (
-              <CircleDashed color="red" size={"15px"} />
-            ) : (
-              <BadgeCheck color="green" size={"15px"} />
-            )}
-          </div>
-          <div>{row.getValue("status")}</div>
-        </div>
-      ),
-    },
-    {
-      accessorKey: "task_name",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Task Name
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div>{row.getValue("task_name")}</div>,
-    },
-
-    {
-      accessorKey: "assigned_to_name",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Assigned To
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div>{row.getValue("assigned_to_name")}</div>,
-    },
-
-    {
-      accessorKey: "created_at_time",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Assign Time
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => (
-        <div>
-          {new Date(row.getValue("created_at_time")).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </div>
-      ),
-    },
-
-    {
-      accessorKey: "created_at",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Assign Date
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => (
-        <div>
-          {moment(new Date(row.getValue("created_at"))).format("YYYY-MM-DD")}
-        </div>
-      ),
-    },
-
-    // {
-    //   id: "actions",
-    //   enableHiding: false,
-    //   cell: ({ row }) => {
-    //     return (
-    //       <ChevronsRight
-    //         onClick={() => {
-    //           setSelectedTask(row.original);
-    //           setVisible(true);
-    //         }}
-    //         className="cursor-pointer"
-    //       />
-    //     );
-    //   },
-    // },
-  ];
-
-  async function fetchData(id, start_date, end_date) {
-    setLoading(true);
+  async function fetchData(start_date, end_date) {
+    setDataLoading(true);
     return new Promise((resolve, reject) => {
       axios
-        .get(`/user/${id}/task?start_date=${start_date}&end_date=${end_date}`)
+        .get(
+          `/task?start_date=${start_date}&end_date=${end_date}&by=${UserState.value.data?.id}`
+        )
         .then((response) => {
           const apiData = response.data.map((item) => {
             return { ...item, created_at_time: item.created_at };
@@ -229,7 +209,7 @@ export default function TaskEmployee({ id }) {
           console.log(e);
         })
         .finally(() => {
-          setLoading(false);
+          setDataLoading(false);
           resolve(true);
         });
     });
@@ -248,66 +228,42 @@ export default function TaskEmployee({ id }) {
       .endOf("day")
       .utc()
       .toISOString();
-    fetchData(UserState?.value?.data?.id, startDate, endDate);
+    fetchData(startDate, endDate);
   }
 
   return (
-    <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-center justify-between">
-        <Heading title="Task Management" description="Manage team tasks" />
-
-        <Button
-          onClick={() => {
-            setAddTaskVisible(true);
+    <div className="flex flex-1 flex-col pt-2">
+      <div className="flex flex-1 min-h-[600px]">
+        <PageTable
+          loading={dataLoading}
+          columns={columns}
+          data={data}
+          totalItems={data.length}
+          searchItem={"task_name"}
+          searchName={"Search task..."}
+          onRowClick={(val) => {
+            setSelectedTask(val);
+            setVisible(true);
           }}
         >
-          Add Task
-        </Button>
-
-        <AddTask
-          onRefresh={() => {
-            const startDate = momentT
-              .tz(TIMEZONE)
-              .subtract(2, "months")
-              .startOf("month")
-              .startOf("day")
-              .utc()
-              .toISOString();
-            const endDate = momentT
-              .tz(TIMEZONE)
-              .endOf("month")
-              .endOf("day")
-              .utc()
-              .toISOString();
-
-            fetchData(UserState?.value?.data?.id, startDate, endDate);
-          }}
-          user_id={UserState.value.data?.id}
-          defaultRadio={"office"}
-          visible={addTaskVisible}
-          onClose={setAddTaskVisible}
-        />
+          <Button
+            onClick={() => setFilterVisible(true)}
+            variant="ghost"
+            className="p-0 w-8"
+          >
+            <Filter />
+          </Button>
+          {UserState.value.data?.id && (
+            <Button
+              onClick={() => {
+                setAddTaskVisible(true);
+              }}
+            >
+              Add Task
+            </Button>
+          )}
+        </PageTable>
       </div>
-
-      <PageTable
-        columns={columns}
-        data={data}
-        totalItems={data.length}
-        searchItem={"task_name"}
-        searchName={"Search task..."}
-        onRowClick={(val) => {
-          setSelectedTask(val);
-          setVisible(true);
-        }}
-      >
-        <Button
-          onClick={() => setFilterVisible(true)}
-          variant="ghost"
-          className="p-0 w-8"
-        >
-          <Filter />
-        </Button>
-      </PageTable>
 
       <TaskDetail
         user_id={UserState?.value?.data?.id}
@@ -325,8 +281,32 @@ export default function TaskEmployee({ id }) {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(id, val.start, val.end);
+          await fetchData(val.start, val.end);
         }}
+      />
+
+      <AddTask
+        onRefresh={() => {
+          const startDate = momentT
+            .tz(TIMEZONE)
+            .subtract(2, "months")
+            .startOf("month")
+            .startOf("day")
+            .utc()
+            .toISOString();
+          const endDate = momentT
+            .tz(TIMEZONE)
+            .endOf("month")
+            .endOf("day")
+            .utc()
+            .toISOString();
+
+          fetchData(startDate, endDate);
+        }}
+        defaultRadio={"office"}
+        visible={addTaskVisible}
+        onClose={setAddTaskVisible}
+        assigned_by={UserState.value.data?.id}
       />
     </div>
   );
@@ -374,7 +354,6 @@ const TaskDetail = ({
         toast({ title: "Status updated" });
         onClose(false);
       })
-
       .finally(() => {
         setLoading(false);
         onMark();
@@ -397,7 +376,12 @@ const TaskDetail = ({
   }
 
   return (
-    <Sheet open={visible} onOpenChange={onClose}>
+    <Sheet
+      open={visible}
+      onOpenChange={onClose}
+      onDelete={onDelete}
+      onMark={onMark}
+    >
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Task Detail</SheetTitle>
@@ -430,7 +414,7 @@ const TaskDetail = ({
               </Label>
               <Label htmlFor="assign_date" className="text-sm text-gray-800">
                 {detail?.created_at
-                  ? moment(detail?.created_at).format("YYYY-MM-DD")
+                  ? moment(detail?.created_at).format("DD/MM/YYYY")
                   : ""}
               </Label>
               {/* <Label htmlFor="assigned_to" className="text-sm text-gray-800">
@@ -467,7 +451,7 @@ const TaskDetail = ({
   );
 };
 
-const AddTask = ({ visible, onClose, onRefresh, user_id }) => {
+const AddTask = ({ visible, onClose, onRefresh, assigned_by }) => {
   const [selectedRadio, setSelectedRadio] = useState("office");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -478,6 +462,7 @@ const AddTask = ({ visible, onClose, onRefresh, user_id }) => {
       radio: "office",
       task: "",
       client: null,
+      user: null,
     },
   });
 
@@ -487,7 +472,7 @@ const AddTask = ({ visible, onClose, onRefresh, user_id }) => {
     reset(
       {
         ...getValues(),
-        client: selectedRadio === "client" ? getValues().client : null, // Ensure null
+        client: selectedRadio === "client" ? getValues().client : null,
       },
       {
         resolver: zodResolver(getSchema(selectedRadio === "client")),
@@ -503,7 +488,8 @@ const AddTask = ({ visible, onClose, onRefresh, user_id }) => {
         type: values.radio == "office" ? "Office Task" : "Client Visit",
         client: values.client,
         status: "Pending",
-        assigned_to: user_id,
+        assigned_to: values.user,
+        assigned_by: assigned_by,
       })
       .then(() => {
         onRefresh();
@@ -521,6 +507,7 @@ const AddTask = ({ visible, onClose, onRefresh, user_id }) => {
       radio: "office",
       task: "",
       client: null,
+      user: null,
     });
     onClose(val);
   }
@@ -563,6 +550,23 @@ const AddTask = ({ visible, onClose, onRefresh, user_id }) => {
                     <FormLabel>Task</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter task" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={control}
+                name="user"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Select Employee</FormLabel>
+                    <FormControl>
+                      <UserSearch
+                        value={field.value}
+                        onReturn={field.onChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

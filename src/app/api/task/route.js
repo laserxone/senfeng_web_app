@@ -1,4 +1,5 @@
 import pool from "@/config/db";
+import { sendNotification } from "@/lib/sendNotification";
 import { NextResponse } from "next/server"
 
 // export async function POST(req) {
@@ -49,7 +50,7 @@ import { NextResponse } from "next/server"
 
 export async function POST(req) {
     try {
-        const { task_name, type, client, status, assigned_to } = await req.json();
+        const { task_name, type, client, status, assigned_to, assigned_by } = await req.json();
 
         if (!task_name || !type || !status || !assigned_to) {
             return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
@@ -63,11 +64,11 @@ export async function POST(req) {
                 taskName += ` - ${clientResult.rows[0].name || clientResult.rows[0].owner}`;
                 const query = `
                 INSERT INTO task(
-                    assigned_to, status, task_name, type, created_at, customer_id
+                    assigned_to, status, task_name, type, created_at, customer_id, assigned_by
                 )
-                VALUES ($1, $2, $3, $4, NOW(), $5) 
+                VALUES ($1, $2, $3, $4, NOW(), $5, $6) 
             `;
-                const values = [assigned_to, status, taskName, type, client];
+                const values = [assigned_to, status, taskName, type, client, assigned_by || null];
                 await pool.query(query, values);
                 return NextResponse.json({ message: "Task created successfully" }, { status: 201 });
             }
@@ -75,14 +76,21 @@ export async function POST(req) {
 
         const query = `
         INSERT INTO task(
-            assigned_to, status, task_name, type, created_at
+            assigned_to, status, task_name, type, created_at, assigned_by
         )
-        VALUES ($1, $2, $3, $4, NOW()) 
+        VALUES ($1, $2, $3, $4, NOW(), $5) 
     `;
 
-        const values = [assigned_to, status, taskName, type];
+        const values = [assigned_to, status, taskName, type, assigned_by || null];
         await pool.query(query, values);
+
+        if (assigned_by && assigned_by !== assigned_to) {
+            sendNotification(`Task assigned: ${taskName}`, "task", assigned_to)
+        }
+
         return NextResponse.json({ message: "Task created successfully" }, { status: 201 });
+
+
 
 
 
@@ -101,6 +109,7 @@ export async function GET(req) {
     const start_date = searchParams.get('start_date')
     const end_date = searchParams.get('end_date')
     const user = searchParams.get("user")
+    const by = searchParams.get("by")
 
     let queryParams = []
 
@@ -124,6 +133,9 @@ LEFT JOIN customer c ON t.customer_id = c.id
         }
         if (user) {
             query += ` AND t.assigned_to = $3`;
+            queryParams.push(user);
+        } else if (by) {
+            query += ` AND t.assigned_by = $3`;
             queryParams.push(user);
         }
         query += ` ORDER BY t.created_at DESC;`;
