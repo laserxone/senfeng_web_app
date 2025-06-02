@@ -224,7 +224,12 @@ const OwnerView = () => {
       await axios.put(`/commission/${id}`, {
         is_approved: false,
         owner_note: disapproveMsg,
-      });
+      }).then(async()=>{
+         await axios
+              .put(`/machine/${item.sale_id}`, {
+                payment_lock: true,
+              })
+      })
       await fetchData();
       setVisibleDisapprove(false);
       setDisapproveMsg("");
