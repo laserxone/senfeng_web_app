@@ -221,15 +221,16 @@ const OwnerView = () => {
     if (!selectedItem?.id) return;
     setDisapproveLoading(true);
     try {
-      await axios.put(`/commission/${id}`, {
-        is_approved: false,
-        owner_note: disapproveMsg,
-      }).then(async()=>{
-         await axios
-              .put(`/machine/${item.sale_id}`, {
-                payment_lock: true,
-              })
-      })
+      await axios
+        .put(`/commission/${id}`, {
+          is_approved: false,
+          owner_note: disapproveMsg,
+        })
+        .then(async () => {
+          await axios.put(`/machine/${item.sale_id}`, {
+            payment_lock: false,
+          });
+        });
       await fetchData();
       setVisibleDisapprove(false);
       setDisapproveMsg("");
@@ -490,9 +491,7 @@ const OtherView = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    {item.commission_issued ? (
-                      <span className="text-green-600">Approved</span>
-                    ) : item.balance !== 0 ? (
+                    {item.balance !== 0 ? (
                       <span className="text-red-600">
                         Payment not cleared yet
                       </span>
