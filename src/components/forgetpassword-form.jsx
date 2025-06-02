@@ -25,7 +25,7 @@ export function ForgetPasswordForm({ className, ...props }) {
     setLoading(true);
     event.preventDefault();
     await sendPasswordResetEmail(auth, email, {
-      url : `https://senfeng-web.vercel.app/login`
+      url : `https://app.senfenglaserpk.com/login`
     })
       .then(() => {
         toast({
