@@ -99,6 +99,9 @@ const OwnerView = () => {
           commission_amount: commission_amount,
         });
         await onRefresh();
+        setShowManual(false);
+        setManualNumber("");
+        setSelectedPercentage(null);
       } catch (error) {
         console.error("Update failed:", error);
       } finally {
@@ -169,13 +172,12 @@ const OwnerView = () => {
               <Input
                 value={manualNumber}
                 onChange={(e) => {
-                  const value = e.target.value; 
+                  const value = e.target.value;
                   const regex = /^\d*\.?\d*$/;
 
                   if (regex.test(value)) {
                     const numericValue = Number(value);
                     setManualNumber(numericValue);
-                    setSelectedPercentage(numericValue);
                   }
                 }}
               />
@@ -198,7 +200,9 @@ const OwnerView = () => {
                     item.id,
                     true,
                     new Date(),
-                    (item.total_amount * selectedPercentage) / 100
+                    showManual
+                      ? manualNumber
+                      : (item.total_amount * (selectedPercentage || 0)) / 100
                   )
                 }
               >
