@@ -54,9 +54,15 @@ export async function PUT(req, { params }) {
 
     const response = await pool.query(query, values);
 
-     // Step 4: Add notifications to Firestore
-     sendNotification("Your commission is approved", "commission", response.rows[0].user_id)
-    
+    if (data.is_approved === true) {
+      sendNotification("Your commission is approved", "commission", response.rows[0].user_id)
+    } else if (data.is_approved === false) {
+      sendNotification("Your commission is rejected", "commission", response.rows[0].user_id)
+    }
+
+    // Step 4: Add notifications to Firestore
+
+
 
     return NextResponse.json({ message: "Updated successfully" }, { status: 200 });
   } catch (error) {

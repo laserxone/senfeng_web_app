@@ -28,6 +28,20 @@ import {
 import { Input } from "../ui/input";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "../ui/toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Label } from "../ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
 export default function Commission({ owner }) {
   return owner ? <OwnerView /> : <OtherView />;
@@ -37,6 +51,10 @@ const OwnerView = () => {
   const { state: UserState } = useContext(UserContext);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [visibleDisapprove, setVisibleDisapprove] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [disapproveMsg, setDisapproveMsg] = useState("");
+  const [disapproveLoading, setDisapproveLoading] = useState(false);
 
   useEffect(() => {
     if (UserState.value.data?.id) {
@@ -58,19 +76,26 @@ const OwnerView = () => {
     });
   }
 
-  const RenderEachRow = ({ item, onRefresh }) => {
+  const RenderEachRow = ({ item, onRefresh, onDisapprove }) => {
     const [loading, setLoading] = useState(false);
     const { state: UserState } = useContext(UserContext);
     const [selectedPercentage, setSelectedPercentage] = useState(null);
+    const [showManual, setShowManual] = useState(false);
+    const [manualNumber, setManualNumber] = useState("");
 
-    async function handleUpdate(id) {
+    async function handleUpdate(
+      id,
+      is_approved,
+      approval_date,
+      commission_amount
+    ) {
       if (!id) return;
       setLoading(true);
       try {
         await axios.put(`/commission/${id}`, {
-          is_approved: true, 
-          approval_date: new Date(),
-          commission_amount: (item.total_amount * selectedPercentage) / 100,
+          is_approved: is_approved,
+          approval_date: approval_date,
+          commission_amount: commission_amount,
         });
         await onRefresh();
       } catch (error) {
@@ -99,12 +124,18 @@ const OwnerView = () => {
         </TableCell>
         <TableCell>{item.machine_name}</TableCell>
         <TableCell>
-          <div className="min-h-[40px] flex items-center">
+          <div className="min-h-[40px] flex items-center gap-2">
             {item.is_approved ? (
               item.commission_amount
             ) : (
               <Select
-                onValueChange={(val) => setSelectedPercentage(val)}
+                onValueChange={(val) => {
+                  if (val === "manual") {
+                    setShowManual(true);
+                  } else {
+                    setSelectedPercentage(val);
+                  }
+                }}
                 value={selectedPercentage || ""}
               >
                 <SelectTrigger>
@@ -119,8 +150,21 @@ const OwnerView = () => {
                       </SelectItem>
                     );
                   })}
+                  <SelectItem value={"manual"}>Manual</SelectItem>
                 </SelectContent>
               </Select>
+            )}
+            {showManual && (
+              <Input
+                type="number"
+                value={manualNumber}
+                onChange={(e) => {
+                  if (!isNaN(e.target.value)) {
+                    setManualNumber(Number(e.target.value));
+                    setSelectedPercentage(Number(e.target.value));
+                  }
+                }}
+              />
             )}
           </div>
         </TableCell>
@@ -130,21 +174,64 @@ const OwnerView = () => {
           {loading ? (
             <Spinner />
           ) : item.is_approved === null ? (
-            <Button
-              disabled={!selectedPercentage}
-              onClick={() => handleUpdate(item.id)}
-            >
-              Approve
-            </Button>
+            <div className="flex gap-2 items-center">
+              <Button
+                disabled={!selectedPercentage}
+                onClick={() =>
+                  handleUpdate(
+                    item.id,
+                    true,
+                    new Date(),
+                    (item.total_amount * selectedPercentage) / 100
+                  )
+                }
+              >
+                Approve
+              </Button>
+
+              <Button onClick={onDisapprove}>Disapprove</Button>
+            </div>
           ) : item.is_approved === false ? (
-            <span className="text-red-600">Disapproved</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <div>
+                    <span className="text-red-600">Disapproved</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="bg-red-600 mr-2">
+                  <p className="text-white">{item.owner_note}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           ) : (
-            <span className="text-green-600">Approved</span>
+            <div className="flex gap-2 items-center">
+              <span className="text-green-600">Approved</span>
+              <Button onClick={() => handleUpdate(item.id, null, null, null)}>
+                Undo
+              </Button>
+            </div>
           )}
         </TableCell>
       </TableRow>
     );
   };
+
+  async function handleDisapprove() {
+    if (!selectedItem?.id) return;
+    setDisapproveLoading(true);
+    try {
+      await axios.put(`/commission/${id}`, {
+        is_approved: false,
+        owner_note: disapproveMsg,
+      });
+      await fetchData();
+      setVisibleDisapprove(false);
+      setDisapproveMsg("");
+    } finally {
+      setDisapproveLoading(false);
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -180,6 +267,10 @@ const OwnerView = () => {
                     key={item.id}
                     item={item}
                     onRefresh={fetchData}
+                    onDisapprove={() => {
+                      setSelectedItem(item);
+                      setVisibleDisapprove(true);
+                    }}
                   />
                 ))}
               </TableBody>
@@ -187,6 +278,32 @@ const OwnerView = () => {
           )}
         </div>
       )}
+
+      <Dialog
+        open={visibleDisapprove}
+        onOpenChange={(val) => {
+          setVisibleDisapprove(val);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Commission</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col space-y-4">
+            <Label>Rejection Message</Label>
+            <Input
+              placeholder="Enter message"
+              value={disapproveMsg}
+              onChange={(e) => setDisapproveMsg(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button disabled={disapproveLoading} onClick={handleDisapprove}>
+              {disapproveLoading && <Spinner />} Submit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -269,10 +386,10 @@ const OtherView = () => {
       if (!id) return;
       setLoading(true);
 
-      let totalPrice = item.price
+      let totalPrice = item.price;
 
-      if(item.speed_money_amount && Number(item.speed_money_amount) > 0) {
-        totalPrice = Number(item.price) -  Number(item.speed_money_amount)
+      if (item.speed_money_amount && Number(item.speed_money_amount) > 0) {
+        totalPrice = Number(item.price) - Number(item.speed_money_amount);
       }
 
       try {
@@ -282,6 +399,32 @@ const OtherView = () => {
             user_id: UserState.value.data?.id,
             is_requested: true,
             total_amount: totalPrice,
+            note: note,
+          })
+          .then(async () => {
+            await axios
+              .put(`/machine/${id}`, {
+                payment_lock: true,
+              })
+              .then(async () => {
+                await onRefresh();
+              });
+          });
+      } catch (error) {
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function handleApplyCommissionAgain(id) {
+      if (!id) return;
+      setLoading(true);
+
+      try {
+        await axios
+          .put(`/commission/${id}`, {
+            is_requested: true,
+            is_approved: null,
             note: note,
           })
           .then(async () => {
@@ -349,8 +492,32 @@ const OtherView = () => {
                         Payment not cleared yet
                       </span>
                     ) : item.commission?.id ? (
-                      item.commission.is_approved ? (
+                      item.commission.is_approved === true ? (
                         <span className="text-green-600">Approved</span>
+                      ) : item.commission.is_approved === false ? (
+                        <div className="flex items-center gap-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <div>
+                                  <span className="text-red-600">
+                                    Disapproved
+                                  </span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent className="bg-red-600 mr-2">
+                                <p className="text-white">{item.owner_note}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <Button
+                            onClick={() =>
+                              handleApplyCommissionAgain(item.commission?.id)
+                            }
+                          >
+                            Apply again
+                          </Button>
+                        </div>
                       ) : (
                         <span className="text-yellow-600">Pending</span>
                       )
