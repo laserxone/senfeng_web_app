@@ -20,30 +20,6 @@ export async function GET() {
 
 }
 
-// export async function POST(req, res) {
-
-
-
-//     try {
-
-//         const { name, price, qty, image, threshold, new_order } = await req.json()
-//         if (!name || !price || !qty || !image || !threshold || !new_order) {
-//             return NextResponse.json({ message: "All fields are required." }, { status: 400 });
-//         }
-
-//         const result = await pool.query(
-//             "INSERT INTO inventory (name, price, qty, img, threshold, new_order) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-//             [name, price, qty, image, threshold, new_order]
-//         );
-
-//         return NextResponse.json(result.rows, { status: 200 })
-//     } catch (error) {
-//         console.log(error)
-//         return NextResponse.json({ message: "Processing error" }, { status: 500 })
-//     }
-
-// }
-
 
 export async function POST(req) {
 
@@ -90,7 +66,8 @@ export async function PUT(req) {
             manager,
             fields,
             payment,
-            selecteduser
+            selecteduser,
+            customer_id
         } = await req.json();
 
         let generatedInvoiceNumber = ""
@@ -110,9 +87,9 @@ export async function PUT(req) {
             generatedInvoiceNumber = `${moment().format("YYYYMMDD")}-${invoicenumber}`
             await pool.query(
                 `INSERT INTO savedinvoices 
-            (name, company, phone, address, manager, invoicenumber, fields, payment) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-                [name, company, phone, address, manager, generatedInvoiceNumber, JSON.stringify(fields), payment]
+            (name, company, phone, address, manager, invoicenumber, fields, payment, customer_id) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+                [name, company, phone, address, manager, generatedInvoiceNumber, JSON.stringify(fields), payment, customer_id]
             );
 
         }

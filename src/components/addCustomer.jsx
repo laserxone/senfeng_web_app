@@ -597,23 +597,27 @@ const AddCustomerDialog = ({
                           </FormItem>
                         )}
                       />
-
-                      <FormField
-                        control={form.control}
-                        name="created_at"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Date</FormLabel>
-                            <FormControl>
-                              <AppCalendar
-                                date={field.value}
-                                onChange={field.onChange}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      {(UserState.value.data?.designation === "Owner" ||
+                        UserState.value.data?.full_access ||
+                        UserState.value.data?.designation ===
+                          "Customer Relationship Manager") && (
+                        <FormField
+                          control={form.control}
+                          name="created_at"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Date</FormLabel>
+                              <FormControl>
+                                <AppCalendar
+                                  date={field.value}
+                                  onChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
 
                       <FormField
                         control={control}

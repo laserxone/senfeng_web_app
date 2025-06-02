@@ -65,11 +65,25 @@ export async function GET(req) {
     try {
         if (urlQuery) {
 
-            const result = await pool.query(`SELECT * FROM customer ORDER BY name ASC`)
+            const result = await pool.query(`
+                SELECT 
+  customer.*, 
+  users.name AS ownership_name
+FROM customer
+LEFT JOIN users ON customer.ownership = users.id
+ORDER BY customer.name ASC;
+`)
             return NextResponse.json(result.rows, { status: 200 });
         }
         else {
-            const customerQuery = await pool.query(`SELECT * FROM customer ORDER BY name ASC`);
+            const customerQuery = await pool.query(`
+                SELECT 
+  customer.*, 
+  users.name AS ownership_name
+FROM customer
+LEFT JOIN users ON customer.ownership = users.id
+ORDER BY customer.name ASC;
+`);
             const customers = customerQuery.rows;
 
             if (customers.length === 0) {

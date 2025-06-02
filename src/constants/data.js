@@ -12,7 +12,7 @@ export const ownerNavItems = [
     title: 'Customer',
     url: '#',
     icon: 'customer',
-    isActive: true,
+    isActive : false,
 
     items: [
       {
@@ -53,7 +53,7 @@ export const ownerNavItems = [
     title: 'Human Resource',
     url: '#',
     icon: 'hr',
-    isActive: true,
+    isActive : false,
 
     items: [
       {
@@ -92,7 +92,7 @@ export const ownerNavItems = [
     title: 'Task Management',
     url: '#',
     icon: 'task',
-    isActive: true,
+    isActive : false,
 
     items: [
       {
@@ -153,7 +153,7 @@ export const employeeNavItems = [
     title: 'Dashboard',
     url: '/dashboard',
     icon: 'dashboard',
-    isActive: true,
+    isActive : false,
     shortcut: ['d', 'a', 's', 'h'],
     items: []
   },
@@ -225,7 +225,7 @@ export const StoreNavItem = [
     title: 'Dashboard',
     url: '/dashboard',
     icon: 'dashboard',
-    isActive: true,
+    isActive : false,
     shortcut: ['d', 'a', 's', 'h'],
     items: []
   },
@@ -248,13 +248,31 @@ export const StoreNavItem = [
 ]
 
 export const POSNavItem =
+
 {
-  title: 'POS',
-  url: '/pos',
+  title: 'Point Of Sale',
+  url: '#',
   icon: 'pos',
-  shortcut: ['p', 'o', 's'],
   isActive: false,
-  items: []
+
+  items: [
+    {
+      title: 'POS',
+      url: '/pos',
+      shortcut: ['p', 'o', 's'],
+    },
+    {
+      title: 'Orders',
+      shortcut: ['o', 'r', 'd', 'e'],
+      url: '/orders',
+
+    },
+    {
+      title: 'Gate Pass',
+      shortcut: ['g', 'a', 't', 'e'],
+      url: '/gatepass',
+    }
+  ]
 }
 
 export const PakCities = [
@@ -4430,11 +4448,11 @@ export const profileFields = [
   'customer_group',
   'industry',
   'location',
-  'number',        
-  'owner',         
+  'number',
+  'owner',
   'address',
   'remarks',
-  'rating',        
+  'rating',
   'image',
   'platform',
   'other',

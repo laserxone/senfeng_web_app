@@ -156,6 +156,7 @@ export default function AppSidebar({ office }) {
                                 <Link
                                   onClick={() => {
                                     if (isMobile) toggleSidebar();
+                                    if (subItem.title === "POS") toggleSidebar();
                                   }}
                                   href={`/${UserState.value.data?.base_route}${subItem.url}`}
                                 >
@@ -180,7 +181,7 @@ export default function AppSidebar({ office }) {
                       <Link
                         onClick={() => {
                           if (isMobile) toggleSidebar();
-                          if (item.title === "POS") toggleSidebar();
+                          
                         }}
                         href={`/${UserState.value.data?.base_route}${item.url}`}
                       >

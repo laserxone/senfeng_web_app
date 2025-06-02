@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Calendar } from "./ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import moment from "moment";
 
 const AppCalendar = ({ date, onChange, min = new Date("1900-01-01") }) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -26,13 +27,20 @@ const AppCalendar = ({ date, onChange, min = new Date("1900-01-01") }) => {
         <Calendar
           mode="single"
           selected={date}
-          onSelect={(e)=>{
-            onChange(e)
-             setIsCalendarOpen(false);
+          onSelect={(e) => {
+            const now = new Date();
+            const updatedDate = new Date(e);
+            updatedDate.setHours(
+              now.getHours(),
+              now.getMinutes(),
+              now.getSeconds(),
+              now.getMilliseconds()
+            );
+            onChange(updatedDate);
+            setIsCalendarOpen(false);
           }}
           disabled={(date) => date < min}
           initialFocus
-         
         />
       </PopoverContent>
     </Popover>

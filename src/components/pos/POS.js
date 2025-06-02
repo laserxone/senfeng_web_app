@@ -34,6 +34,7 @@ import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import Spinner from '../ui/spinner';
 import { UserSearch } from '../user-search';
 import NotificationBadge from './NotificationBadge';
+import { CustomerSearchWithData } from '../customer-search-with-data';
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -81,9 +82,10 @@ export default function POS() {
     const [engineerLoading, setEngineerLoading] = useState(false)
     const [allEngineersData, setAllEngineersData] = useState([])
     const [engineersModal, setEngineersModal] = useState(false)
-    const [clickedOrderStock, setClickedOrderStock] = useState(false)
+    const [selectedCustomer, setSelectedCustomer] = useState(false)
     const [dialogVisible, setDialogVisible] = useState(false)
     const [orderStockVisible, setOrderStockVisible] = useState(false)
+    const [walkIn, setWalkIn] = useState(false)
 
     const userId = UserState?.value?.data?.id;
     const debouncedUserId = useDebounce(userId, 1000);
@@ -158,6 +160,7 @@ export default function POS() {
                 fields: invoiceItems,
                 payment: checked,
                 selecteduser: selectedUser,
+                customer_id: selectedCustomer ? selectedCustomer?.id : null
             });
 
             return response.data;
@@ -397,7 +400,7 @@ export default function POS() {
             })
     }
 
-     async function handleItemSearchAll() {
+    async function handleItemSearchAll() {
         axios.get(`/pos/search`)
             .then((response) => {
                 if (response.data.length > 0) {
@@ -557,10 +560,29 @@ export default function POS() {
                                 <RadioGroupItem value="customer" id="r1" />
                                 <Label htmlFor="r1">Customer</Label>
                             </div>
+
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="engineer" id="r2" />
                                 <Label htmlFor="r2">Engineer</Label>
                             </div>
+
+                            {selectedRadio === 'customer' && <div className="flex items-center space-x-2">
+                                <div className="flex flex-row items-center gap-2">
+                                    <h1>Walk-in customer?</h1>
+                                    <Checkbox
+                                        checked={walkIn}
+                                        onCheckedChange={(checked) => {
+                                            setWalkIn(checked);
+                                            setSelectedCustomer(null)
+                                            setPhoneNumber("")
+                                            setName("")
+                                            setCompanyName("")
+                                            setManager("")
+                                            setAddress("")
+                                        }}
+                                    />
+                                </div>
+                            </div>}
                         </RadioGroup>
 
                         {selectedRadio === 'engineer' &&
@@ -572,17 +594,31 @@ export default function POS() {
                                 onReturnName={(val) => {
                                     setSelectedUser((prevState) => ({ ...prevState, label: val }))
                                 }} placeholder='Select user' />}
+                        {!walkIn &&
+                            <CustomerSearchWithData value={selectedCustomer} onReturn={(val) => {
+                                setSelectedCustomer(val)
+                                setPhoneNumber(val.number.length > 0 ? val.number[0] : "")
+                                setName(val?.owner || "")
+                                setCompanyName(val?.name || "")
+                                setManager(val?.ownership_name || "")
+                                setAddress(val?.address || "")
+                            }} />
+                        }
 
                         <div className="w-full relative">
-                            <Input
-                                placeholder="Phone Number"
-                                value={phoneNumber}
-                                onFocus={() => setShowList(true)}
-                                onBlur={() => setTimeout(() => setShowList(false), 500)}
-                                onChange={(e) => {
-                                    handlePhoneChange(e)
-                                }}
-                            />
+                            <div className='flex flex-row w-full gap-2 items-center'>
+                                <Label className="text-base font-semibold w-[100px]">Number:</Label>
+                                <Input
+                                    disabled={!walkIn}
+                                    placeholder="Phone Number"
+                                    value={phoneNumber}
+                                    onFocus={() => setShowList(true)}
+                                    onBlur={() => setTimeout(() => setShowList(false), 500)}
+                                    onChange={(e) => {
+                                        handlePhoneChange(e)
+                                    }}
+                                />
+                            </div>
                             {phoneNumber && showList && (
                                 <div className="absolute z-10 max-h-[200px] overflow-auto bg-white border rounded-md shadow-md">
                                     {filteredCustomers.length > 0 && (
@@ -597,13 +633,22 @@ export default function POS() {
                                 </div>
                             )}
                         </div>
-                        <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-                        <Input placeholder="Company Name" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
-                        <div>
-                            <p className="font-bold text-lg mb-2">Address</p>
+                        <div className='flex flex-row w-full gap-2 items-center'>
+                            <Label className="text-base font-semibold w-[100px]">Customer:</Label>
+                            <Input disabled={!walkIn} placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+                        </div>
+                        <div className='flex flex-row w-full gap-2 items-center'>
+                            <Label className="text-base font-semibold w-[100px]">Company:</Label>
+                            <Input disabled={!walkIn} placeholder="Company Name" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+                        </div>
+                        <div className='flex flex-row w-full gap-2 items-center'>
+                            <Label className="text-base font-semibold w-[100px]">Address:</Label>
                             <Textarea placeholder="Enter Address" value={address} onChange={(e) => setAddress(e.target.value)} />
                         </div>
-                        <Input placeholder="Manager" value={manager} onChange={(e) => setManager(e.target.value)} />
+                        <div className='flex flex-row w-full gap-2 items-center'>
+                            <Label className="text-base font-semibold w-[100px]">Manager:</Label>
+                            <Input placeholder="Manager" value={manager} onChange={(e) => setManager(e.target.value)} />
+                        </div>
                         <Card className="p-5 bg-gray-100 rounded-md shadow-sm">
                             <Table>
                                 <TableHeader>
@@ -684,7 +729,7 @@ export default function POS() {
                             </div>
                         </div>
                         <div className='flex flex-row flex-wrap gap-2 w-full'>
-                          
+
 
                             {selectedSearchItem ?
                                 <Button
@@ -733,7 +778,7 @@ export default function POS() {
                                 Search Invoice
                             </Button>
 
-                              <Button
+                            <Button
                                 variant="outline"
                                 onClick={handleEngineerItems}
                                 className="h-[100px] w-[100px] text-wrap"
@@ -742,7 +787,7 @@ export default function POS() {
                                 <div> {engineerLoading && <Spinner />}Engineer issued items</div>
                             </Button>
 
-                              <Button
+                            <Button
                                 onClick={handleEngineerItems}
                                 className="h-[100px] w-[100px] text-wrap"
                             >
@@ -750,7 +795,7 @@ export default function POS() {
                                 <div>Inward Gatepass</div>
                             </Button>
 
-                              <Button
+                            <Button
                                 onClick={handleEngineerItems}
                                 className="h-[100px] w-[100px] text-wrap"
                             >
@@ -770,7 +815,7 @@ export default function POS() {
                                     {searchLoading && <Spinner />}
                                     Search
                                 </Button>
-                                  <Button onClick={() => {
+                                <Button onClick={() => {
                                     setSearchLoading(true)
                                     handleItemSearchAll()
                                 }}>

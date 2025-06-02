@@ -206,7 +206,7 @@ export default function Page() {
           className="w-full flex flex-1 flex-col"
         >
           <TabsList className="justify-start">
-            <TabsTrigger value="newCustomers">New Customers</TabsTrigger>
+            <TabsTrigger value="newCustomers">Customers</TabsTrigger>
             <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>
             {/* <TabsTrigger value="commission">Commission</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger> */}

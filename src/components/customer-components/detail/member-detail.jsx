@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
 import {
+  Calendar,
   Factory,
   Loader2,
   Mail,
@@ -418,11 +419,11 @@ const ClientCard = ({ data }) => {
           <Factory className="h-5 w-5 text-gray-500" />
           <span>{data?.industry || "Nil"}</span>
         </div>
-        {/* <div className="flex items-center gap-2">
-          <Label className="font-medium text-[16px]">Ownership: </Label>
-          <span>{data?.ownership_name}</span>
-         
-        </div> */}
+
+         <div className="flex items-center gap-2">
+          <Calendar className="h-5 w-5 text-gray-500" />
+          <span>{data?.created_at ? moment(data.created_at).format("YYYY-MM-DD hh:mm A") : "Nil"}</span>
+        </div>
       </CardContent>
     </Card>
   );

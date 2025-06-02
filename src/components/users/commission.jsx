@@ -269,7 +269,7 @@ const OtherView = () => {
       if (!id) return;
       setLoading(true);
 
-      let totalPrice = 0
+      let totalPrice = item.price
 
       if(item.speed_money_amount && Number(item.speed_money_amount) > 0) {
         totalPrice = Number(item.price) -  Number(item.speed_money_amount)

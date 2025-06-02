@@ -3,7 +3,7 @@ import AddCustomerDialog from "@/components/addCustomer";
 import AutoScrollMembers from "@/components/autoScroll";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Attendance from "@/components/users/attendance";
 import Reimbursement from "@/components/users/Reimbursement";
@@ -30,6 +30,26 @@ import AppCalendar from "@/components/appCalendar";
 import Spinner from "@/components/ui/spinner";
 import { RequiredStar } from "@/components/RequiredStar";
 import FilterSheet from "@/components/users/filterSheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -123,29 +143,31 @@ export default function Page() {
     });
   }
 
- useEffect(() => {
-  if (filter.start) {
-    let temp = {};
-    const startDate = moment(new Date(filter.start));
-    const endDate = moment(new Date(filter.end));
+  useEffect(() => {
+    if (filter.start) {
+      let temp = {};
+      const startDate = moment(new Date(filter.start));
+      const endDate = moment(new Date(filter.end));
 
-    temp.user = data.user;
-    temp.withoutFeedback = [...data.withoutFeedback];
-    temp.withFeedback = [...data.withFeedback].filter((item) => {
-      const feedbackDate = moment(new Date(item.feedback_date));
-      return feedbackDate.isSameOrAfter(startDate) && feedbackDate.isSameOrBefore(endDate);
-    });
+      temp.user = data.user;
+      temp.withoutFeedback = [...data.withoutFeedback];
+      temp.withFeedback = [...data.withFeedback].filter((item) => {
+        const feedbackDate = moment(new Date(item.feedback_date));
+        return (
+          feedbackDate.isSameOrAfter(startDate) &&
+          feedbackDate.isSameOrBefore(endDate)
+        );
+      });
 
-    setFilterData(temp);
-  } else {
-    setFilterData(data);
-  }
-}, [filter, data]);
+      setFilterData(temp);
+    } else {
+      setFilterData(data);
+    }
+  }, [filter, data]);
 
-
-  useEffect(()=>{
-    console.log(filterData)
-  },[filterData])
+  useEffect(() => {
+    console.log(filterData);
+  }, [filterData]);
 
   const RenderNewCustomer = useCallback(() => {
     return (
@@ -160,7 +182,7 @@ export default function Page() {
               onFilterData={(start, end) => {
                 setFilter({ start: moment(start), end: moment(end) });
               }}
-              handleClear={()=> setFilter({ start: null, end: null })}
+              handleClear={() => setFilter({ start: null, end: null })}
               selectedOption={selectedOption}
               setSelectedOption={setSelectedOption}
             />
@@ -298,9 +320,8 @@ const CustomerEmployeeAfterSales = ({
   onFilterData,
   handleClear,
   selectedOption,
-  setSelectedOption
+  setSelectedOption,
 }) => {
-  
   const { state: UserState } = useContext(UserContext);
   const [addCustomer, setAddCustomer] = useState(false);
   const router = useRouter();
@@ -311,6 +332,7 @@ const CustomerEmployeeAfterSales = ({
   const [satisfactory, setSatisfactory] = useState(false);
   const [loading, setLoading] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
+  const [oldRecordVisible, setOldRecordVisible] = useState(false);
 
   const columns = [
     {
@@ -396,7 +418,11 @@ const CustomerEmployeeAfterSales = ({
       },
       cell: ({ row }) => (
         <div>
-          {row.getValue("feedback_date") ? moment(new Date(row.getValue("feedback_date"))).format("YYYY-MM-DD") : "Not taken"}
+          {row.getValue("feedback_date")
+            ? moment(new Date(row.getValue("feedback_date"))).format(
+                "YYYY-MM-DD"
+              )
+            : "Not taken"}
         </div>
       ),
     },
@@ -484,10 +510,7 @@ const CustomerEmployeeAfterSales = ({
                 >
                   <Filter />
                 </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => handleClear()}
-                >
+                <Button variant="destructive" onClick={() => handleClear()}>
                   Clear
                 </Button>
               </div>
@@ -498,12 +521,19 @@ const CustomerEmployeeAfterSales = ({
                     Add Customer
                   </Button>
                 )}
+
+              <Button
+                variant={"outline"}
+                onClick={() => setOldRecordVisible(true)}
+              >
+                Open Record
+              </Button>
             </div>
           </PageTable>
         </div>
 
         <AddCustomerDialog
-        user_designation={UserState.value.data?.designation}
+          user_designation={UserState.value.data?.designation}
           user_id={user_id}
           ownership={true}
           visible={addCustomer}
@@ -519,6 +549,12 @@ const CustomerEmployeeAfterSales = ({
           onReturn={async (val) => {
             await onFilterData(val.start, val.end);
           }}
+        />
+
+        <OldRecordSheet
+          visible={oldRecordVisible}
+          onClose={setOldRecordVisible}
+          user_id={UserState.value.data?.id}
         />
 
         <Dialog open={showFeedback} onOpenChange={setShowFeedback}>
@@ -563,6 +599,175 @@ const CustomerEmployeeAfterSales = ({
         </Dialog>
       </div>
     </div>
+  );
+};
+
+const OldRecordSheet = ({ visible, onClose, user_id }) => {
+  const [loading, setLoading] = useState(false);
+
+  const [data, setData] = useState([]);
+  const { state: UserState } = useContext(UserContext);
+
+  const formSchema = z.object({
+    start: z.date({ required_error: "Start date is required." }),
+    end: z.date({ required_error: "End date is required." }),
+  });
+
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      start: moment().startOf("month").toDate(),
+      end: moment().endOf("month").toDate(),
+    },
+  });
+
+  async function onSubmit(values) {
+    if (!user_id) return;
+    setLoading(true);
+    let start = values.start.toISOString();
+    let end = values.end.toISOString();
+
+    try {
+      const response = await axios.get(
+        `/user/${user_id}/feedback?start_date=${start}&end_date=${end}`
+      );
+
+      setData(response.data);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleClose(val) {
+    onClose(val);
+    handleClear();
+  }
+
+  function handleClear() {
+    form.reset({
+      start: moment().startOf("month").toDate(),
+      end: moment().endOf("month").toDate(),
+    });
+    setData([]);
+  }
+
+  return (
+    <Sheet open={visible} onOpenChange={handleClose}>
+      <SheetContent
+        style={{ width: "100%", maxWidth: "95vw", alignItems: "flex-start" }}
+      >
+        <SheetHeader className="mb-4">
+          <SheetTitle className="text-2xl">Feedbacks Record</SheetTitle>
+          <SheetDescription>Filter data</SheetDescription>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="flex flex-row gap-4 items-end flex-wrap"
+            >
+              <FormField
+                control={form.control}
+                name="start"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start date</FormLabel>
+                    <FormControl>
+                      <AppCalendar
+                        date={field.value}
+                        onChange={(date) => {
+                          field.onChange(date);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="end"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>End date</FormLabel>
+                    <FormControl>
+                      <AppCalendar
+                        date={field.value}
+                        onChange={(date) => {
+                          field.onChange(date);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button disabled={loading} type="submit">
+                {loading && <Spinner />} Filter
+              </Button>
+            </form>
+          </Form>
+          <ScrollArea className="h-[80vh] px-4">
+            {data.length == 0 ? (
+              <div className="flex flex-1 flex-col gap-2">
+                <p>No data to display</p>
+              </div>
+            ) : (
+              <div className="px-4 py-6 space-y-2 border-l-2 border-muted relative">
+                {data.map((fb, index) => (
+                  <div key={fb.id} className="relative pl-6">
+                    {/* Dot on the timeline */}
+                    <div className="absolute left-[-9px] top-2 w-3 h-3 bg-primary rounded-full border-2 border-background shadow-md" />
+
+                    {/* Card content */}
+                    <Card className="bg-background border border-border shadow-sm">
+                      <CardHeader className="pb-0">
+                        <div className="text-sm text-muted-foreground">
+                          {moment(fb.feedback_date).format("YYYY-MM-DD")}
+                        </div>
+                        <Link
+                          target="blank"
+                          href={`/${UserState.value.data?.base_route}/member/${fb.customer_id}`}
+                        >
+                          <div className="text-base font-semibold text-foreground hover:underline">
+                            {`${fb.name} - ${fb.owner} - ${fb.location}`}
+                          </div>
+                        </Link>
+                      </CardHeader>
+
+                      <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-sm">
+                        <div>
+                          <span className="font-medium text-foreground">
+                            Number:
+                          </span>{" "}
+                          {fb.number}
+                        </div>
+                        <div>
+                          <span className="font-medium text-foreground">
+                            Status:
+                          </span>{" "}
+                          {fb.status}
+                        </div>
+
+                        <div className="col-span-full pt-2 border-t mt-2 text-foreground whitespace-pre-line">
+                          <p className="mt-2">
+                            {fb.feedback || (
+                              <em className="text-muted-foreground">
+                                No feedback provided.
+                              </em>
+                            )}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </SheetHeader>
+      </SheetContent>
+    </Sheet>
   );
 };
 
@@ -635,3 +840,18 @@ const tableHeader = [
     label: "Location",
   },
 ];
+
+const thStyle = {
+  padding: "0.75rem",
+  textAlign: "left",
+  borderBottom: "1px solid #444",
+};
+
+const tdStyle = {
+  padding: "0.75rem",
+  borderBottom: "1px solid #ddd",
+};
+
+const trStyle = {
+  backgroundColor: "#fff",
+};

@@ -502,6 +502,10 @@ const EditCustomerDialog = ({
                             </FormItem>
                           )}
                         />
+                         {(UserState.value.data?.designation === "Owner" ||
+                        UserState.value.data?.full_access ||
+                        UserState.value.data?.designation ===
+                          "Customer Relationship Manager") &&
                         <FormField
                           control={form.control}
                           name="created_at"
@@ -518,6 +522,7 @@ const EditCustomerDialog = ({
                             </FormItem>
                           )}
                         />
+}
                         <FormField
                           control={control}
                           name="member"
