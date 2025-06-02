@@ -55,6 +55,7 @@ const OwnerView = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [disapproveMsg, setDisapproveMsg] = useState("");
   const [disapproveLoading, setDisapproveLoading] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (UserState.value.data?.id) {
@@ -119,7 +120,16 @@ const OwnerView = () => {
             href={`/${UserState.value.data?.base_route}/member/${item.customer_id}/${item.sale_id}`}
             className="hover:underline"
           >
-            {item.customer_name || item.customer_owner}
+            {item.customer_name}
+          </Link>
+        </TableCell>
+        <TableCell>
+          <Link
+            target="blank"
+            href={`/${UserState.value.data?.base_route}/member/${item.customer_id}/${item.sale_id}`}
+            className="hover:underline"
+          >
+            {item.customer_owner}
           </Link>
         </TableCell>
         <TableCell>{item.machine_name}</TableCell>
@@ -242,6 +252,13 @@ const OwnerView = () => {
     }
   }
 
+
+ const filteredData = data.filter((item) => {
+  if (!search) return true;
+  const allSearch = `${item.customer_name || ""} ${item.user_name || ""} ${item.customer_owner || ""}`;
+  return allSearch.toLowerCase().includes(search.toLowerCase());
+});
+
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-center justify-between">
@@ -254,7 +271,15 @@ const OwnerView = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {data.length === 0 ? (
+          <div className="max-w-3xl">
+            <Input
+              placeholder="Search customer, company, user"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          {filteredData.length === 0 ? (
             <p>No data available.</p>
           ) : (
             <Table>
@@ -263,6 +288,7 @@ const OwnerView = () => {
                   <TableHead>Request Date</TableHead>
                   <TableHead>Employee</TableHead>
                   <TableHead>Customer</TableHead>
+                  <TableHead>Owner</TableHead>
                   <TableHead>Machine</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Commission</TableHead>
@@ -272,7 +298,7 @@ const OwnerView = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.map((item) => (
+                {filteredData.map((item) => (
                   <RenderEachRow
                     key={item.id}
                     item={item}
