@@ -201,6 +201,7 @@ export default function VisitTab({
                     />
 
                     <AddCustomerDialog
+                    user_designation={UserState.value.data?.designation}
                       user_id={UserState.value.data?.id}
                       ownership={
                         UserState.value.data?.designation === "Owner" ||
