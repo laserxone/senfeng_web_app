@@ -1,5 +1,6 @@
 import pool from "@/config/db";
 import { sendNotification } from "@/lib/sendNotification";
+import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
 import { NextResponse } from "next/server"
 
 // export async function POST(req) {
@@ -50,7 +51,7 @@ import { NextResponse } from "next/server"
 
 export async function POST(req) {
     try {
-        const { task_name, type, client, status, assigned_to, assigned_by } = await req.json();
+        const { task_name, type, client, status, assigned_to, assigned_by, problem, solution } = await req.json();
 
         if (!task_name || !type || !status || !assigned_to) {
             return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
@@ -64,12 +65,18 @@ export async function POST(req) {
                 taskName += ` - ${clientResult.rows[0].name || clientResult.rows[0].owner}`;
                 const query = `
                 INSERT INTO task(
-                    assigned_to, status, task_name, type, created_at, customer_id, assigned_by
+                    assigned_to, status, task_name, type, created_at, customer_id, assigned_by, problem, solution
                 )
-                VALUES ($1, $2, $3, $4, NOW(), $5, $6) 
+                VALUES ($1, $2, $3, $4, NOW(), $5, $6, $7, $8) 
             `;
-                const values = [assigned_to, status, taskName, type, client, assigned_by || null];
-                await pool.query(query, values);
+                const values = [assigned_to, status, taskName, type, client, assigned_by || null, problem, solution];
+                const newTask = await pool.query(query, values);
+
+                if (assigned_by && assigned_by !== assigned_to) {
+
+                    sendNotificationToMobile(`Task assigned: ${taskName}`, assigned_to, newTask.rows[0], "task")
+                }
+
                 return NextResponse.json({ message: "Task created successfully" }, { status: 201 });
             }
         }
@@ -78,11 +85,12 @@ export async function POST(req) {
         INSERT INTO task(
             assigned_to, status, task_name, type, created_at, assigned_by
         )
-        VALUES ($1, $2, $3, $4, NOW(), $5) 
+        VALUES ($1, $2, $3, $4, NOW(), $5)
+        RETURNING *
     `;
 
         const values = [assigned_to, status, taskName, type, assigned_by || null];
-        await pool.query(query, values);
+        const newTask = await pool.query(query, values);
 
         if (assigned_by && assigned_by !== assigned_to) {
             sendNotification(`Task assigned: ${taskName}`, "task", assigned_to)

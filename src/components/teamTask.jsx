@@ -26,7 +26,6 @@ import { z } from "zod";
 
 import PageTable from "@/components/app-table";
 import { CustomerSearch } from "@/components/customer-search";
-import { Heading } from "@/components/ui/heading";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Sheet,
@@ -154,14 +153,23 @@ const columns = [
   },
 ];
 
-const getSchema = (isClientSelected) =>
+const getSchema = (isClient) =>
   z.object({
     radio: z.enum(["office", "client"]),
-    task: z.string().min(5, { message: "Task must be at least 5 characters." }),
-    user: z.number({ required_error: "User is required." }),
-    client: isClientSelected
-      ? z.number({ required_error: "Client is required." }) // Required when client is selected
-      : z.number().optional(), // Optional when office is selected
+    task: z.string().min(1, "Task is required"),
+    client: isClient
+      ? z
+          .any()
+          .nullable()
+          .refine((val) => val, "Client is required")
+      : z.any().nullable(),
+    user: z.any().refine((val) => val, "User is required"),
+    problem: isClient
+      ? z.string().min(1, "Problem is required")
+      : z.string().optional(),
+    solution: isClient
+      ? z.string().min(1, "Solution is required")
+      : z.string().optional(),
   });
 
 export default function TeamTask() {
@@ -463,6 +471,8 @@ const AddTask = ({ visible, onClose, onRefresh, assigned_by }) => {
       task: "",
       client: null,
       user: null,
+      problem: "",
+      solution: "",
     },
   });
 
@@ -487,9 +497,11 @@ const AddTask = ({ visible, onClose, onRefresh, assigned_by }) => {
         task_name: values.task,
         type: values.radio == "office" ? "Office Task" : "Client Visit",
         client: values.client,
-        status: "Pending",
+        status: "Assigned",
         assigned_to: values.user,
         assigned_by: assigned_by,
+        problem: values.problem,
+        solution: values.solution,
       })
       .then(() => {
         onRefresh();
@@ -575,22 +587,55 @@ const AddTask = ({ visible, onClose, onRefresh, assigned_by }) => {
 
               {/* Client Selection (Only When "Client" is Selected) */}
               {selectedRadio === "client" && (
-                <FormField
-                  control={control}
-                  name="client"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Client</FormLabel>
-                      <FormControl>
-                        <CustomerSearch
-                          value={field.value}
-                          onReturn={(val) => field.onChange(val)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <>
+                  <FormField
+                    control={control}
+                    name="client"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Client</FormLabel>
+                        <FormControl>
+                          <CustomerSearch
+                            value={field.value}
+                            onReturn={(val) => field.onChange(val)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={control}
+                    name="problem"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Problem</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Describe the problem"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={control}
+                    name="solution"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Solution</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Proposed solution" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
               )}
 
               <Button className="w-full" type="submit">
