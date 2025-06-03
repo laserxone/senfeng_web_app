@@ -194,7 +194,7 @@ const OwnerView = () => {
           ) : item.is_approved === null ? (
             <div className="flex gap-2 items-center">
               <Button
-                disabled={!selectedPercentage}
+                disabled={showManual ? !manualNumber : !selectedPercentage}
                 onClick={() =>
                   handleUpdate(
                     item.id,

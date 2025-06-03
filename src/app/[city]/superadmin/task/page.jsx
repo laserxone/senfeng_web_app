@@ -1,10 +1,5 @@
 "use client";
-import {
-  ArrowUpDown,
-  BadgeCheck,
-  CircleDashed,
-  Filter
-} from "lucide-react";
+import { ArrowUpDown, BadgeCheck, CircleDashed, Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +9,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -268,7 +263,7 @@ export default function Page() {
           defaultRadio={"office"}
           visible={addTaskVisible}
           onClose={setAddTaskVisible}
-            assigned_by={UserState.value.data?.id}
+          assigned_by={UserState.value.data?.id}
         />
       </div>
 
@@ -493,7 +488,7 @@ const AddTask = ({ visible, onClose, onRefresh, assigned_by }) => {
         client: values.client,
         status: "Pending",
         assigned_to: values.user,
-          assigned_by : assigned_by
+        assigned_by: assigned_by,
       })
       .then(() => {
         onRefresh();
