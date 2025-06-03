@@ -3,6 +3,7 @@ import { addLog } from "@/lib/addLog";
 import { generateLog } from "@/lib/generateLog";
 import { sendNotification } from "@/lib/sendNotification";
 import { sendNotificationToCRM, sendNotificationToCRMWithoutLead } from "@/lib/sendNotificationToCRM";
+import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
 import { NextResponse } from "next/server"
 
 
@@ -42,6 +43,7 @@ export async function POST(req) {
 
         if (result.rows[0].ownership) {
             sendNotification(`${result.rows[0]?.owner || result.rows[0]?.name} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
+             sendNotificationToMobile(`${result.rows[0]?.owner || result.rows[0]?.name} assigned to you`,"Customer" ,result.rows[0].ownership, result.rows[0], "client", `/dashboard/customer/${result.rows[0].id}` )
         }
 
         const logMSG = generateLog(data)

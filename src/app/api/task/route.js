@@ -74,7 +74,7 @@ export async function POST(req) {
 
                 if (assigned_by && assigned_by !== assigned_to) {
 
-                    sendNotificationToMobile(`Task assigned: ${taskName}`, assigned_to, newTask.rows[0], "task")
+                    sendNotificationToMobile(`Task assigned: ${taskName}`,"Task", assigned_to, newTask.rows[0], "task", "/dashboard/task")
                 }
 
                 return NextResponse.json({ message: "Task created successfully" }, { status: 201 });

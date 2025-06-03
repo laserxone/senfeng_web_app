@@ -4,16 +4,16 @@ import pool from "@/config/db";
 
 
 
-export const sendNotificationToMobile = async (title, sendTo, data, type) => {
+export const sendNotificationToMobile = async (title, heading, sendTo, data, type, url) => {
     try {
         console.log("sending to mobile")
         const result = await pool.query(`SELECT token, id FROM users WHERE id = $1`, [sendTo])
         const message = {
             to: result.rows[0].token,
             sound: 'default',
-            title: "Task",
+            title: heading,
             body: title,
-            data: {...data, type : type, url : "/dashboard/task"},
+            data: { ...data, type: type, url: url },
         };
 
         await fetch('https://exp.host/--/api/v2/push/send', {
