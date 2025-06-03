@@ -50,6 +50,7 @@ import { z } from "zod";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import TeamTask from "@/components/teamTask";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -257,6 +258,7 @@ export default function Page() {
             {/* <TabsTrigger value="commission">Commission</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger> */}
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
+            <TabsTrigger value="task">Team Task</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
           </TabsList>
 
@@ -274,6 +276,13 @@ export default function Page() {
             <Card>
               <CardContent className="pt-2">
                 <SalaryRecord />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="task">
+            <Card>
+              <CardContent className="pt-2">
+                <TeamTask />
               </CardContent>
             </Card>
           </TabsContent>

@@ -24,6 +24,7 @@ import moment from "moment";
 import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
+import TeamTask from "@/components/teamTask";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -90,11 +91,9 @@ export default function Page() {
   }
 
   async function fetchData() {
-    axios
-      .get(`/user/${UserState.value.data?.id}`)
-      .then((response) => {
-        setData(response.data);
-      });
+    axios.get(`/user/${UserState.value.data?.id}`).then((response) => {
+      setData(response.data);
+    });
   }
 
   async function fetchAllCustomers() {
@@ -103,13 +102,15 @@ export default function Page() {
       if (!UserState.value.data?.limited_access) {
         setCustomers(apiData);
       } else {
-        const temp = apiData.filter((item)=> item?.lead === UserState.value.data?.id)
-        setCustomers([...temp])
+        const temp = apiData.filter(
+          (item) => item?.lead === UserState.value.data?.id
+        );
+        setCustomers([...temp]);
       }
     });
   }
   async function fetchExtraCustomerOptions(val) {
-    let access = `access=${val}`
+    let access = `access=${val}`;
     axios
       .get(`/user/${UserState.value.data?.id}/extra?${access}`)
       .then((response) => {
@@ -211,6 +212,7 @@ export default function Page() {
             {/* <TabsTrigger value="commission">Commission</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger> */}
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
+            <TabsTrigger value="task">Team Task</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
           </TabsList>
 
@@ -228,6 +230,14 @@ export default function Page() {
             <Card>
               <CardContent className="pt-2">
                 <SalaryRecord />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="task">
+            <Card>
+              <CardContent className="pt-2">
+                <TeamTask />
               </CardContent>
             </Card>
           </TabsContent>
@@ -343,8 +353,7 @@ function CustomersTab({ data }) {
     return (
       <div className="flex justify-between items-center border-b pb-2">
         <Link
-                  href={`/${UserState?.value?.data?.base_route}/member/${customer_id}/${machine.id}`}
-
+          href={`/${UserState?.value?.data?.base_route}/member/${customer_id}/${machine.id}`}
         >
           <span className="hover:underline">{machine.serial_no}</span>
         </Link>
@@ -383,9 +392,9 @@ function CustomersTab({ data }) {
                     <AccordionTrigger className="px-4 py-2 hover:no-underline">
                       <div className="flex justify-between items-center w-full">
                         <Link
-                            href={`/${UserState.value.data?.base_route}/${
-                              customer.member ? "member" : "customer"
-                            }/${customer.id}`}
+                          href={`/${UserState.value.data?.base_route}/${
+                            customer.member ? "member" : "customer"
+                          }/${customer.id}`}
                         >
                           <h3 className="font-semibold text-lg hover:underline">
                             {customer.name}

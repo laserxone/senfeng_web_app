@@ -89,7 +89,7 @@ export default function CustomerTask({
       },
       cell: ({ row }) => (
         <div className="flex ml-2 gap-1 items-center">
-         <div>
+          <div>
             {row.getValue("status") === "Completed" ? (
               <BadgeCheck color="green" size={"15px"} />
             ) : (
@@ -256,15 +256,17 @@ const TaskDetail = ({
 
   return (
     <Sheet open={visible} onOpenChange={onClose}>
-      <SheetContent>
+      <SheetContent
+      className="w-[50vw] max-w-[50vw]"
+        style={{ width: "100%", maxWidth: "50vw" }}>
         <SheetHeader>
           <SheetTitle>Task Detail</SheetTitle>
           <SheetDescription>Check task details</SheetDescription>
-          <div className="w-full flex justify-end">
+          {/* <div className="w-full flex justify-end">
             <Button onClick={handleDelete}>
               {deleteLoading && <Spinner />} Delete
             </Button>
-          </div>
+          </div> */}
         </SheetHeader>
         <div className="w-full py-6 px-4 bg-white rounded-lg shadow-lg mt-2">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -300,25 +302,35 @@ const TaskDetail = ({
               <Label htmlFor="assigned_task" className="text-sm text-gray-800">
                 {detail?.task_name}
               </Label>
+
+                {detail?.problem && (
+                <>
+                  <Label htmlFor="problem" className="text-sm text-gray-800">
+                    {detail?.problem}
+                  </Label>
+                  <Label htmlFor="solution" className="text-sm text-gray-800">
+                    {detail?.solution}
+                  </Label>
+                </>
+              )}
             </div>
           </div>
         </div>
 
         <SheetFooter className={"mt-4"}>
-          <Button
-            onClick={() => {
-              handleUpdateStatus({
-                ...detail,
-                status:
-                  detail?.status === "Completed" ? "Pending" : "Completed",
-              });
-            }}
-          >
-            {loading && <Spinner />}
-            {detail?.status === "Completed"
-              ? "Mark as Pending"
-              : "Mark as Completed"}
-          </Button>
+          {detail?.status !== "Completed" && (
+            <Button
+              onClick={() => {
+                handleUpdateStatus({
+                  ...detail,
+                  status: "Completed",
+                });
+              }}
+            >
+              {loading && <Spinner />}
+              {"Mark as Completed"}
+            </Button>
+          )}
         </SheetFooter>
       </SheetContent>
     </Sheet>

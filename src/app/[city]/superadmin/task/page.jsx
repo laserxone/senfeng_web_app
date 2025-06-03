@@ -381,7 +381,9 @@ const TaskDetail = ({
       onDelete={onDelete}
       onMark={onMark}
     >
-      <SheetContent>
+      <SheetContent
+      className="w-[50vw] max-w-[50vw]"
+        style={{ width: "100%", maxWidth: "50vw" }}>
         <SheetHeader>
           <SheetTitle>Task Detail</SheetTitle>
           <SheetDescription>Check task details</SheetDescription>
@@ -425,6 +427,17 @@ const TaskDetail = ({
               <Label htmlFor="assigned_task" className="text-sm text-gray-800">
                 {detail?.task_name}
               </Label>
+
+                {detail?.problem && (
+                <>
+                  <Label htmlFor="problem" className="text-sm text-gray-800">
+                    {detail?.problem}
+                  </Label>
+                  <Label htmlFor="solution" className="text-sm text-gray-800">
+                    {detail?.solution}
+                  </Label>
+                </>
+              )}
             </div>
           </div>
         </div>
