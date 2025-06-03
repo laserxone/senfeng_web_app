@@ -8,6 +8,9 @@ export async function GET(req, { params }) {
 
     const { id } = await params
 
+    const searchParams = req.nextUrl.searchParams
+    const crm = searchParams.get('crm')
+
     try {
         const salesResult = await pool.query(
             'SELECT * FROM sale WHERE sell_by = $1',

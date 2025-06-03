@@ -49,8 +49,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-export default function Commission({ owner }) {
-  return owner ? <OwnerView /> : <OtherView />;
+export default function Commission({ owner, crm }) {
+  return owner ? <OwnerView /> : crm ? <CrmView/> : <OtherView />;
 }
 
 const OwnerView = () => {
@@ -391,6 +391,275 @@ const OwnerView = () => {
 };
 
 const OtherView = () => {
+  const { state: UserState } = useContext(UserContext);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (UserState.value.data?.id) {
+      fetchData(UserState.value.data?.id);
+    }
+  }, [UserState]);
+
+  async function fetchData(id) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const route = `/user/${id}/commission`;
+        const response = await axios.get(route);
+        setData(response.data);
+      } catch (error) {
+      } finally {
+        resolve(true);
+        setLoading(false);
+      }
+    });
+  }
+
+  const RenderEachRow = ({ item, onRefresh }) => {
+    const [loading, setLoading] = useState(false);
+    const { state: UserState } = useContext(UserContext);
+    const [note, setNote] = useState(item?.note || "");
+
+    async function handleApplyCommission(id, amount, item) {
+      if (item.customer.profile_completion < 100) {
+        toast({
+          title: "Incomplete data",
+          description:
+            "Data incomplete in customer record, kindly enter all data in this customer",
+          variant: "destructive",
+          action: (
+            <ToastAction
+              onClick={() => {
+                window.open(
+                  `/${UserState.value.data?.base_route}/member/${item.customer.id}`,
+                  "_blank"
+                );
+              }}
+              altText="Open customer"
+            >
+              Open customer
+            </ToastAction>
+          ),
+        });
+        return;
+      }
+      if (item.percentage_completion < 100) {
+        toast({
+          title: "Incomplete data",
+          description:
+            "Data incomplete in machine record, kindly enter all data in this machine",
+          variant: "destructive",
+          action: (
+            <ToastAction
+              onClick={() => {
+                window.open(
+                  `/${UserState.value.data?.base_route}/member/${item.customer.id}/${item.id}`,
+                  "_blank"
+                );
+              }}
+              altText="Open Machine"
+            >
+              Open Machine
+            </ToastAction>
+          ),
+        });
+        return;
+      }
+      if (!id) return;
+      setLoading(true);
+
+      let totalPrice = item.price;
+
+      if (item.speed_money_amount && Number(item.speed_money_amount) > 0) {
+        totalPrice = Number(item.price) - Number(item.speed_money_amount);
+      }
+
+      try {
+        await axios
+          .post(`/commission`, {
+            sale_id: id,
+            user_id: UserState.value.data?.id,
+            is_requested: true,
+            total_amount: totalPrice,
+            note: note,
+          })
+          .then(async () => {
+            await axios
+              .put(`/machine/${id}`, {
+                payment_lock: true,
+              })
+              .then(async () => {
+                await onRefresh();
+              });
+          });
+      } catch (error) {
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function handleApplyCommissionAgain(id) {
+      if (!id) return;
+      setLoading(true);
+
+      try {
+        await axios
+          .put(`/commission/${id}`, {
+            is_requested: true,
+            is_approved: null,
+            request_date : new Date()
+          })
+          .then(async () => {
+            await axios
+              .put(`/machine/${id}`, {
+                payment_lock: true,
+              })
+              .then(async () => {
+                await onRefresh();
+              });
+          });
+      } catch (error) {
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    return (
+      <Card className="max-w-[calc(100vw-34px)]">
+        <CardContent className="p-4 space-y-2">
+          <Link
+            target="blank"
+            href={`/${UserState.value.data?.base_route}/member/${item.customer_id}/${item.id}`}
+          >
+            <h2 className="font-semibold text-lg hover:underline">
+              Customer: {item.customer?.name || item.customer?.owner || "NIL"}
+            </h2>
+          </Link>
+
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Machine</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Paid</TableHead>
+                  <TableHead>Balance</TableHead>
+                  <TableHead>Note</TableHead>
+                  <TableHead>Commission Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>{item.serial_no}</TableCell>
+                  <TableCell>{item.created_amount}</TableCell>
+                  <TableCell>{item.paid_amount}</TableCell>
+                  <TableCell>{item.balance}</TableCell>
+                  <TableCell>
+                    {item.balance !== 0 ? null : item.commission?.id ? (
+                      <span>{item.commission?.note}</span>
+                    ) : (
+                      <div className="flex flex-row gap-2">
+                        <Input
+                          value={note || ""}
+                          onChange={(e) => setNote(e.target.value)}
+                        />
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {loading ? (
+                      <Spinner />
+                    ) : item.commission.commission_issued === true ? (
+                      <span className="text-green-600">Issued</span>
+                    ) : item.balance !== 0 ? (
+                      <span className="text-red-600">
+                        Payment not cleared yet
+                      </span>
+                    ) : item.commission?.id ? (
+                      item.commission.is_approved === true ? (
+                        <span className="text-green-600">Approved</span>
+                      ) : item.commission.is_approved === false ? (
+                        <div className="flex items-center gap-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <div>
+                                  <span className="text-red-600">
+                                    Disapproved
+                                  </span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent className="bg-red-600 mr-2">
+                                <p className="text-white">
+                                  {item.commission.owner_note}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <Button
+                            variant="outline"
+                            onClick={() =>
+                              handleApplyCommissionAgain(item.commission?.id)
+                            }
+                          >
+                            Apply again
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-yellow-600">Pending</span>
+                      )
+                    ) : (
+                      <Button
+                        onClick={() =>
+                          handleApplyCommission(item.id, item.paid_amount, item)
+                        }
+                      >
+                        Apply for Commission
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="flex flex-1 flex-col space-y-4">
+      <div className="flex items-center justify-between">
+        <Heading title="Commission" description="Apply for your commission" />
+      </div>
+
+      {loading ? (
+        <div className="flex flex-1 items-center justify-center">
+          <Spinner />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {data.length === 0 ? (
+            <p>No data available.</p>
+          ) : (
+            data.map((item) => (
+              <RenderEachRow
+                key={item.id}
+                item={item}
+                onRefresh={async () => {
+                  await fetchData(UserState.value.data?.id);
+                }}
+              />
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+const CrmView = () => {
   const { state: UserState } = useContext(UserContext);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);

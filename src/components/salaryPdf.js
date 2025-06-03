@@ -166,7 +166,7 @@ const SalaryPdf = ({ data }) => {
                             <View style={styles.summaryContainer}>
                                 <View style={[styles.summaryBox, styles.totalAmount]}>
                                     <Text style={styles.summaryLabel}>Payable Salary</Text>
-                                    <Text style={styles.summaryValue}>Rs. {formatCurrency(Number(data?.payable || 0) )}</Text>
+                                    <Text style={styles.summaryValue}>Rs. {formatCurrency(Number(data?.payable || 0))}</Text>
                                 </View>
 
                                 {/* <View style={[styles.summaryBox, styles.received]}>
@@ -250,62 +250,62 @@ const SalaryPdf = ({ data }) => {
 const FormField = ({ data }) => {
     return (
         <View style={{ marginBottom: 5, flex: 1 }}>
-        {[
-          'Name',
-          'Salary Month',
-          'Reimbursement',
-          'Commission',
-          'Target Achieved',
-          'Miscellaneous',
-          'Additional Fine',
-          'Late Fine/Day',
-          'Absents',
-          'Late',
-        ].map((label, index) => (
-          <View key={label} style={{ display: 'flex', flexDirection: 'column', marginBottom: 5 }}>
-            <Text style={{ color: '#7F7F7FFF', marginLeft: 10, fontFamily: 'Helvetica-Bold', fontSize: 11 }}>
-              {label}:
-            </Text>
-            <View
-              style={{
-                backgroundColor: '#dce4f1',
-                paddingLeft: 10,
-                border: '1px solid #E5E7EB',
-                maxWidth: '360px',
-                height: 20,
-                fontSize: 9,
-                display: 'flex',
-                justifyContent: 'center',
-              }}
-            >
-              <Text>
-                {index === 0
-                  ? data?.user_name
-                  : index === 1
-                  ? moment(data?.salary_month).format("MMMM YYYY")
-                  : index === 2
-                  ? data?.reimbursement
-                  : index === 3
-                  ? data?.commission
-                  : index === 4
-                  ? data?.target_achieved
-                  : index === 5
-                  ? data?.miscellaneous
-                  : index === 6
-                  ? data?.additional_fine
-                  : index === 7
-                  ? data?.late_fine_per_day
-                  : index === 8
-                  ? data?.absents
-                  : index === 9
-                  ? data?.late
-                  : ''}
-              </Text>
-            </View>
-          </View>
-        ))}
-      </View>
-      
+            {[
+                'Name',
+                'Salary Month',
+                'Reimbursement',
+                'Commission',
+                "KPI Salary",
+                'Miscellaneous',
+                'Additional Fine',
+                'Late Fine/Day',
+                'Absents',
+                'Late',
+            ].map((label, index) => (
+                <View key={label} style={{ display: 'flex', flexDirection: 'column', marginBottom: 5 }}>
+                    <Text style={{ color: '#7F7F7FFF', marginLeft: 10, fontFamily: 'Helvetica-Bold', fontSize: 11 }}>
+                        {label}:
+                    </Text>
+                    <View
+                        style={{
+                            backgroundColor: '#dce4f1',
+                            paddingLeft: 10,
+                            border: '1px solid #E5E7EB',
+                            maxWidth: '360px',
+                            height: 20,
+                            fontSize: 9,
+                            display: 'flex',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <Text>
+                            {index === 0
+                                ? data?.user_name
+                                : index === 1
+                                    ? moment(data?.salary_month).format("MMMM YYYY")
+                                    : index === 2
+                                        ? data?.reimbursement
+                                        : index === 3
+                                            ? data?.commission
+                                            : index === 4
+                                                ? data?.kpi :
+                                                index === 5
+                                                    ? data?.miscellaneous
+                                                    : index === 6
+                                                        ? data?.additional_fine
+                                                        : index === 7
+                                                            ? data?.late_fine_per_day
+                                                            : index === 8
+                                                                ? data?.absents
+                                                                : index === 9
+                                                                    ? data?.late
+                                                                    : ''}
+                        </Text>
+                    </View>
+                </View>
+            ))}
+        </View>
+
     )
 }
 

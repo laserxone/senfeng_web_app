@@ -106,8 +106,28 @@ export async function GET(req) {
             }
         });
 
-        const commissionQuery = `SELECT * FROM commissions WHERE user_id = $1 AND is_approved = TRUE AND request_date BETWEEN $2 AND $3 `;
-        const commissionResult = await pool.query(commissionQuery, [user, start_date, end_date]);
+        const commissionQuery = `
+        SELECT
+    commissions.*, 
+    users.name AS user_name,
+    sale.serial_no AS machine_name,
+    sale.speed_money AS speed_money,
+    sale.speed_money_note AS speed_money_note,
+    sale.speed_money_amount AS speed_money_amount,
+    customer.id AS customer_id,
+    customer.name AS customer_name,
+    customer.owner AS customer_owner
+  FROM 
+    commissions
+  LEFT JOIN users ON commissions.user_id = users.id
+  LEFT JOIN sale ON commissions.sale_id = sale.id
+  LEFT JOIN customer AS customer ON sale.customer_id = customer.id
+  WHERE 
+    commissions.user_id = $1 
+    AND commissions.is_approved = TRUE 
+    AND commissions.commission_issued = FALSE
+        `;
+        const commissionResult = await pool.query(commissionQuery, [user]);
         const machineQuery = `SELECT 
   sale.*, 
   COALESCE(NULLIF(customer.name, ''), NULLIF(customer.owner, ''), '') AS customer_name

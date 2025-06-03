@@ -55,6 +55,13 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { pdf } from "@react-pdf/renderer";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import CommissionRecord from "@/components/commission-salary";
 
 export default function Page() {
   return (
@@ -222,6 +229,7 @@ const SalaryComponent = () => {
               reimbursement: Number(existing.reimbursement),
               target_achieved: Number(existing.target_achieved),
             });
+            setKpi(existing.kpi)
             setChecked(existing.issued);
             processAttendance(
               Number(moment(startDate).format("YYYY")),
@@ -306,7 +314,6 @@ const SalaryComponent = () => {
           performanceSalary *
           (weightedTarget + weightedFeedback + weightedVisit);
 
-        // Set KPI
         setKpi(kpiAmount);
       } else {
         setKpi(
@@ -458,6 +465,7 @@ const SalaryComponent = () => {
         issued: checked,
         salary_month: startDate,
         payable: payable,
+        kpi : kpi
       })
       .then(() => {
         toast({ title: "Salary saved" });
@@ -639,7 +647,7 @@ const SalaryComponent = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {Object.keys(form).map((key) => (
                 <div key={key} className="flex flex-col gap-1">
-                  <Label>{key.replace(/_/g, " ").toUpperCase()}</Label>
+                  <Label>{key.replace(/_/g, " ").toUpperCase()}{" "}{key === "target_achieved" && "(USD)"}</Label>
                   {loading ? (
                     <Skeleton className={"h-[40px] w-[150px]"} />
                   ) : (
@@ -846,50 +854,95 @@ const SalaryComponent = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Reimbursement Record</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-5">
-          {loading ? (
-            <div className="flex flex-1 items-center justify-center">
-              <Spinner />
-            </div>
-          ) : (
-            <Reimbursement passingData={data?.reimbursement || []} />
-          )}
-        </CardContent>
-      </Card>
+      <Accordion type="multiple" className="space-y-2">
+        <AccordionItem value="commission">
+          <AccordionTrigger>
+            <span>Commission</span>
+          </AccordionTrigger>
+          <AccordionContent>
+            <Card>
+              <CardHeader>
+                <CardTitle>Commission Record</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-5">
+                {loading ? (
+                  <div className="flex flex-1 items-center justify-center">
+                    <Spinner />
+                  </div>
+                ) : (
+                  <CommissionRecord data={data?.commission || []} fetchData={handleGenerate}/>
+                )}
+              </CardContent>
+            </Card>
+          </AccordionContent>
+        </AccordionItem>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Attendance Record</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-5">
-          {loading ? (
-            <div className="flex flex-1 items-center justify-center">
-              <Spinner />
-            </div>
-          ) : (
-            <AttendanceRecord passingData={attendanceData} />
-          )}
-        </CardContent>
-      </Card>
+        <AccordionItem value="target">
+          <AccordionTrigger>
+            <span>Target</span>
+          </AccordionTrigger>
+          <AccordionContent>
+            <Card>
+              <CardHeader>
+                <CardTitle>Target Record</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-5">
+                {loading ? (
+                  <div className="flex flex-1 items-center justify-center">
+                    <Spinner />
+                  </div>
+                ) : (
+                  <TargetRecord passingData={data?.machines || []} />
+                )}
+              </CardContent>
+            </Card>
+          </AccordionContent>
+        </AccordionItem>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Target Record</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-5">
-          {loading ? (
-            <div className="flex flex-1 items-center justify-center">
-              <Spinner />
-            </div>
-          ) : (
-            <TargetRecord passingData={data?.machines || []} />
-          )}
-        </CardContent>
-      </Card>
+        <AccordionItem value="reimbursement">
+          <AccordionTrigger>
+            <span>Reimbursement</span>
+          </AccordionTrigger>
+          <AccordionContent>
+            <Card>
+              <CardHeader>
+                <CardTitle>Reimbursement Record</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-5">
+                {loading ? (
+                  <div className="flex flex-1 items-center justify-center">
+                    <Spinner />
+                  </div>
+                ) : (
+                  <Reimbursement passingData={data?.reimbursement || []} />
+                )}
+              </CardContent>
+            </Card>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="attendance">
+          <AccordionTrigger>
+            <span>Attendance</span>
+          </AccordionTrigger>
+          <AccordionContent>
+            <Card>
+              <CardHeader>
+                <CardTitle>Attendance Record</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-5">
+                {loading ? (
+                  <div className="flex flex-1 items-center justify-center">
+                    <Spinner />
+                  </div>
+                ) : (
+                  <AttendanceRecord passingData={attendanceData} />
+                )}
+              </CardContent>
+            </Card>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       <Dialog open={modal} onOpenChange={setModal}>
         <DialogContent className="sm:max-w-md">
