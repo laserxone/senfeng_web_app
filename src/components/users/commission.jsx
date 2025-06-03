@@ -42,6 +42,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export default function Commission({ owner }) {
   return owner ? <OwnerView /> : <OtherView />;
@@ -76,6 +82,31 @@ const OwnerView = () => {
       }
     });
   }
+
+  function groupByMonth(data) {
+    return data.reduce((acc, item) => {
+      const key = item.request_date
+        ? moment(item.request_date).format("YYYY-MM")
+        : "Unknown";
+
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(item);
+      return acc;
+    }, {});
+  }
+
+
+  const filteredData = data.filter((item) => {
+    if (!search) return true;
+    const allSearch = `${item.customer_name || ""} ${item.user_name || ""} ${
+      item.customer_owner || ""
+    }`;
+    return allSearch.toLowerCase().includes(search.toLowerCase());
+  });
+
+  const groupedData = groupByMonth(filteredData);
 
   const RenderEachRow = ({ item, onRefresh, onDisapprove }) => {
     const [loading, setLoading] = useState(false);
@@ -259,13 +290,7 @@ const OwnerView = () => {
     }
   }
 
-  const filteredData = data.filter((item) => {
-    if (!search) return true;
-    const allSearch = `${item.customer_name || ""} ${item.user_name || ""} ${
-      item.customer_owner || ""
-    }`;
-    return allSearch.toLowerCase().includes(search.toLowerCase());
-  });
+  
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -287,38 +312,48 @@ const OwnerView = () => {
             />
           </div>
 
-          {filteredData.length === 0 ? (
+          {Object.keys(groupedData).length === 0 ? (
             <p>No data available.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Request Date</TableHead>
-                  <TableHead>Employee</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Owner</TableHead>
-                  <TableHead>Machine</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Commission</TableHead>
-                  <TableHead>Note</TableHead>
-
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredData.map((item) => (
-                  <RenderEachRow
-                    key={item.id}
-                    item={item}
-                    onRefresh={fetchData}
-                    onDisapprove={() => {
-                      setSelectedItem(item);
-                      setVisibleDisapprove(true);
-                    }}
-                  />
-                ))}
-              </TableBody>
-            </Table>
+            <Accordion type="multiple" className="space-y-2">
+              {Object.entries(groupedData).map(([month, items]) => (
+                <AccordionItem key={month} value={month}>
+                  <AccordionTrigger>
+                    <span>{moment(month, "YYYY-MM").format("MMMM YYYY")}</span>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Request Date</TableHead>
+                          <TableHead>Employee</TableHead>
+                          <TableHead>Customer</TableHead>
+                          <TableHead>Owner</TableHead>
+                          <TableHead>Machine</TableHead>
+                          <TableHead>Price</TableHead>
+                          <TableHead>Commission</TableHead>
+                          <TableHead>Note</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {items.map((item) => (
+                          <RenderEachRow
+                            key={item.id}
+                            item={item}
+                            onRefresh={fetchData}
+                            onDisapprove={() => {
+                              setSelectedItem(item);
+                              setVisibleDisapprove(true);
+                            }}
+                          />
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           )}
         </div>
       )}
@@ -472,6 +507,7 @@ const OtherView = () => {
           .put(`/commission/${id}`, {
             is_requested: true,
             is_approved: null,
+            request_date : new Date()
           })
           .then(async () => {
             await axios
