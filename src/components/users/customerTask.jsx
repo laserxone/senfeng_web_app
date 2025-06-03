@@ -89,11 +89,11 @@ export default function CustomerTask({
       },
       cell: ({ row }) => (
         <div className="flex ml-2 gap-1 items-center">
-          <div>
-            {row.getValue("status") === "Pending" ? (
-              <CircleDashed color="red" size={"15px"} />
-            ) : (
+         <div>
+            {row.getValue("status") === "Completed" ? (
               <BadgeCheck color="green" size={"15px"} />
+            ) : (
+              <CircleDashed color="red" size={"15px"} />
             )}
           </div>
           <div>{row.getValue("status")}</div>

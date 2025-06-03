@@ -5,20 +5,18 @@ import {
   BadgeCheck,
   CircleDashed,
   Filter,
-  Loader2
+  Loader2,
 } from "lucide-react";
-
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useContext, useEffect, useState } from "react";
 
-
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -26,7 +24,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
+  FormMessage,
 } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,7 +41,7 @@ import {
   SheetDescription,
   SheetFooter,
   SheetHeader,
-  SheetTitle
+  SheetTitle,
 } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
@@ -58,8 +56,8 @@ const getSchema = (isClientSelected) =>
     radio: z.enum(["office", "client"]),
     task: z.string().min(5, { message: "Task must be at least 5 characters." }),
     client: isClientSelected
-      ? z.number({ required_error: "Client is required." }) 
-      : z.number().optional().nullable(), 
+      ? z.number({ required_error: "Client is required." })
+      : z.number().optional().nullable(),
   });
 
 export default function TaskEmployee({ id }) {
@@ -107,10 +105,10 @@ export default function TaskEmployee({ id }) {
       cell: ({ row }) => (
         <div className="flex ml-2 gap-1 items-center">
           <div>
-            {row.getValue("status") === "Pending" ? (
-              <CircleDashed color="red" size={"15px"} />
-            ) : (
+            {row.getValue("status") === "Completed" ? (
               <BadgeCheck color="green" size={"15px"} />
+            ) : (
+              <CircleDashed color="red" size={"15px"} />
             )}
           </div>
           <div>{row.getValue("status")}</div>

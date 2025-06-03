@@ -13,7 +13,7 @@ export const sendNotificationToMobile = async (title, sendTo, data, type) => {
             sound: 'default',
             title: "Task",
             body: title,
-            data: {...data, type : type},
+            data: {...data, type : type, url : "/dashboard/task"},
         };
 
         await fetch('https://exp.host/--/api/v2/push/send', {

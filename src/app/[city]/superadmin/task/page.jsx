@@ -64,10 +64,10 @@ const columns = [
     cell: ({ row }) => (
       <div className="flex ml-2 gap-1 items-center">
         <div>
-          {row.getValue("status") === "Pending" ? (
-            <CircleDashed color="red" size={"15px"} />
-          ) : (
+          {row.getValue("status") === "Completed" ? (
             <BadgeCheck color="green" size={"15px"} />
+          ) : (
+            <CircleDashed color="red" size={"15px"} />
           )}
         </div>
         <div>{row.getValue("status")}</div>
@@ -435,14 +435,14 @@ const TaskDetail = ({
               handleUpdateStatus({
                 ...detail,
                 status:
-                  detail?.status === "Completed" ? "Pending" : "Completed",
+                  detail?.status !== "Completed" ? "Completed" : "Pending",
               });
             }}
           >
             {loading && <Spinner />}
-            {detail?.status === "Completed"
-              ? "Mark as Pending"
-              : "Mark as Completed"}
+            {detail?.status !== "Completed"
+              ? "Mark as Completed"
+              : "Mark as Pending"}
           </Button>
         </SheetFooter>
       </SheetContent>

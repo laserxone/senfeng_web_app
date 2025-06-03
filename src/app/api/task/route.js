@@ -148,7 +148,6 @@ LEFT JOIN customer c ON t.customer_id = c.id
         }
         query += ` ORDER BY t.created_at DESC;`;
 
-        console.log(query)
         const result = await pool.query(query, queryParams);
 
         const teamTasks = result.rows

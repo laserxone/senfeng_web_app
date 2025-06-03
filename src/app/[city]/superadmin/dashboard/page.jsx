@@ -322,7 +322,7 @@ const renderTaskCard = (tasks, label) => (
           <div
             key={task.id}
             className={`p-3 rounded text-sm border border-muted-foreground/10 ${
-              task.status === "Pending" ? "bg-red-200" : "bg-green-200"
+              task.status === "Completed" ? "bg-green-200" : "bg-red-200"
             }`}
           >
             <p className="font-medium text-black">

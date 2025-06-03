@@ -63,10 +63,10 @@ const columns = [
     cell: ({ row }) => (
       <div className="flex ml-2 gap-1 items-center">
         <div>
-          {row.getValue("status") === "Pending" ? (
-            <CircleDashed color="red" size={"15px"} />
-          ) : (
+          {row.getValue("status") === "Completed" ? (
             <BadgeCheck color="green" size={"15px"} />
+          ) : (
+            <CircleDashed color="red" size={"15px"} />
           )}
         </div>
         <div>{row.getValue("status")}</div>
@@ -390,7 +390,9 @@ const TaskDetail = ({
       onDelete={onDelete}
       onMark={onMark}
     >
-      <SheetContent>
+      <SheetContent
+       className="w-[50vw] max-w-[50vw]"
+        style={{ width: "100%", maxWidth: "50vw" }}>
         <SheetHeader>
           <SheetTitle>Task Detail</SheetTitle>
           <SheetDescription>Check task details</SheetDescription>
@@ -414,6 +416,14 @@ const TaskDetail = ({
               <h3 className="text-sm font-medium text-gray-600">
                 Assigned Task
               </h3>
+              {detail?.problem && (
+                <>
+                  <h3 className="text-sm font-medium text-gray-600">Problem</h3>
+                  <h3 className="text-sm font-medium text-gray-600">
+                    Solution
+                  </h3>
+                </>
+              )}
             </div>
 
             <div className="flex flex-col gap-4">
@@ -425,15 +435,27 @@ const TaskDetail = ({
                   ? moment(detail?.created_at).format("DD/MM/YYYY")
                   : ""}
               </Label>
-              {/* <Label htmlFor="assigned_to" className="text-sm text-gray-800">
-                {detail?.assigned_to_name}
-              </Label>
-              <Label htmlFor="assignee_email" className="text-sm text-gray-800">
-                {detail?.assigned_to_email}
-              </Label> */}
+          
               <Label htmlFor="assigned_task" className="text-sm text-gray-800">
                 {detail?.task_name}
               </Label>
+
+              {detail?.problem && (
+                <>
+                  <Label
+                    htmlFor="problem"
+                    className="text-sm text-gray-800"
+                  >
+                    {detail?.problem}
+                  </Label>
+                  <Label
+                    htmlFor="solution"
+                    className="text-sm text-gray-800"
+                  >
+                    {detail?.solution}
+                  </Label>
+                </>
+              )}
             </div>
           </div>
         </div>
