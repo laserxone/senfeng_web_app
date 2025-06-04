@@ -60,7 +60,7 @@ export async function POST(req) {
         let taskName = task_name;
 
         if (client) {
-            const clientResult = await pool.query("SELECT name, owner FROM customer WHERE id = $1", [client]);
+            const clientResult = await pool.query("SELECT id, name, owner, ownership FROM customer WHERE id = $1", [client]);
             if (clientResult.rows.length > 0) {
                 taskName += ` - ${clientResult.rows[0].name || clientResult.rows[0].owner}`;
                 const query = `
@@ -74,7 +74,11 @@ export async function POST(req) {
 
                 if (assigned_by && assigned_by !== assigned_to) {
 
-                    sendNotificationToMobile(`Task assigned: ${taskName}`,"Task", assigned_to, newTask.rows[0], "task", "/dashboard/task")
+                    const engineerName = await pool.query(`SELECT id, name FROM users WHERE id = $1`, [assigned_to])
+
+                    sendNotificationToMobile(`Task assigned: ${taskName}`, "Task", assigned_to, newTask.rows[0], "task", "/dashboard/task")
+
+                    sendNotificationToMobile(`Task: ${taskName} to ${engineerName.rows[0].name}`, "Task for engineer", clientResult.rows[0].ownership, {}, "task", "/dashboard")
                 }
 
                 return NextResponse.json({ message: "Task created successfully" }, { status: 201 });
