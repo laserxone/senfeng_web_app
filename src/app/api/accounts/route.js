@@ -14,7 +14,8 @@ export async function GET(req) {
             SELECT s.*, u.name  
 FROM salaries s
 LEFT JOIN users u ON s.user_id = u.id
-WHERE s.month = $1 AND s.year = $2 AND issued = $3;
+WHERE s.month = $1 AND s.year = $2 AND issued = $3
+ORDER BY u.name ASC;
         `;
         const salaryResult = await pool.query(salaryQuery, [month, year, true]);
 

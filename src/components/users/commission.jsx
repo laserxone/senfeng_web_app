@@ -686,7 +686,7 @@ const CrmView = () => {
 
   const RenderEachRow = ({ item }) => {
     const renderCommissionStatus = (item) => {
-      if (item.commission_issued === true) {
+      if (item.lead_commission_issued === true) {
         return <span className="text-green-600">Issued</span>;
       } else if (item.is_approved === true) {
         return <span className="text-green-600">Approved</span>;
