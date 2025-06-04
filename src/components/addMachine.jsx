@@ -1,10 +1,14 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "@/lib/axios";
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Plus, Trash } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import AppCalendar from "./appCalendar";
+import { RequiredStar } from "./RequiredStar";
+import { Button } from "./ui/button";
+import { Checkbox } from "./ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { ScrollArea } from "./ui/scroll-area";
 import {
   Form,
   FormControl,
@@ -14,28 +18,27 @@ import {
   FormMessage,
 } from "./ui/form";
 import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { ScrollArea } from "./ui/scroll-area";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import AppCalendar from "./appCalendar";
-import { Checkbox } from "./ui/checkbox";
-import { Button } from "./ui/button";
-import { Loader2, Plus, Trash } from "lucide-react";
-import { Textarea } from "./ui/textarea";
-import { RequiredStar } from "./RequiredStar";
-import { BASE_URL } from "@/constants/data";
-import { Label } from "./ui/label";
 import Spinner from "./ui/spinner";
+import { Textarea } from "./ui/textarea";
+import { MachineSearch } from "./machine-search";
 
 const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
   const [orderNumbers, setOrderNumbers] = useState([""]);
   const [orderNumberError, setOrderNumberError] = useState("");
+  const [selectedMachine, setSelectedMachine] = useState(null);  
+
   const formSchema = z.object({
     machineModel: z.string().min(1, { message: "Machine model is required." }),
     power: z.string().min(1, { message: "Power is required." }),
@@ -55,7 +58,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
       power: "",
       source: "",
       contractDate: undefined,
-      isSpeedMoney: false, // Default value set to false
+      isSpeedMoney: false,
       speedMoney: "",
       speedMoneyNote: "",
       totalPrice: "",
@@ -70,17 +73,16 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
 
     if (cleanedOrderNumbers.length === 0) {
       setOrderNumberError("At least one order number is required.");
-      return
+      return;
     } else if (cleanedOrderNumbers.some((num) => num.length !== 9)) {
       setOrderNumberError(
         "Order number wrong format. Each must be 9 characters."
       );
-      return
+      return;
     } else {
       setOrderNumberError("");
     }
 
-    // console.log("Form Data:", values);
     setLoading(true);
     axios
       .post(`/machine`, {
@@ -88,7 +90,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
         type: "Machine",
         speed_money_note: values.speedMoneyNote,
         speed_money: values.isSpeedMoney,
-         speed_money_amount: values.speedMoney ? Number(values.speedMoney) : 0,
+        speed_money_amount: values.speedMoney ? Number(values.speedMoney) : 0,
         serial_no: values.machineModel,
         power: values.power,
         source: values.source,
@@ -97,19 +99,21 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
         price: values.totalPrice,
         contract_date: values.contractDate,
         cnic: values.cnic,
-        order_no_arr : cleanedOrderNumbers
+        order_no_arr: cleanedOrderNumbers,
       })
       .then(() => {
         onRefresh();
         handleClose(false);
-      }).catch(()=>{
-        setLoading(false)
       })
+      .catch(() => {
+        setLoading(false);
+      });
   }
 
   function handleClose(val) {
     form.reset();
     onClose(val);
+    setSelectedMachine(null)
   }
 
   const addNumberField = () => {
@@ -140,7 +144,23 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
 
         <div className="w-full flex flex-1">
           <ScrollArea className="px-2 w-full max-h-[90vh]">
-            <div className="px-2">
+            <div className="px-2 space-y-2">
+              {/* <Label>Select available machine</Label>
+              <MachineSearch
+                value={selectedMachine}
+                onReturn={(val) => {
+                  console.log(val);
+                  setSelectedMachine(val);
+                  form.setValue("machineModel", val.machine_model);
+                  form.setValue("power", val.machine_power);
+                  form.setValue("source", val.machine_source);
+                  setOrderNumbers((prevState) => {
+                    const newState = [...prevState];
+                    newState[0] = val.machine_serial;
+                    return newState;
+                  });
+                }}
+              /> */}
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
@@ -336,7 +356,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                           <FormItem>
                             <FormLabel>Speed Money</FormLabel>
                             <FormControl>
-                             <Input
+                              <Input
                                 placeholder="Enter speed money"
                                 value={field.value ? field.value : ""}
                                 onChange={(e) => {

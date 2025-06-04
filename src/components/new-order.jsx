@@ -165,10 +165,39 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
 
   const handleSubmit = async () => {
     if (validateItems()) {
+      let processedItems = [];
+
+      items.forEach((item) => {
+        if (item.is_machine && item.qty > 1) {
+          const baseSerial = parseInt(item.machine_serial, 10);
+
+          if (!isNaN(baseSerial)) {
+            for (let i = 0; i < item.qty; i++) {
+              processedItems.push({
+                ...item,
+                qty: 1,
+                machine_serial: (baseSerial + i).toString(),
+              });
+            }
+          } else {
+            
+            processedItems.push(item);
+          }
+        } else {
+          processedItems.push(item);
+        }
+      });
+
+      
+      processedItems.sort((a, b) => {
+        if (a.is_machine === b.is_machine) return 0;
+        return a.is_machine ? 1 : -1;
+      });
+
       const payload = {
         user_id: user_id,
         status: "Order Placed",
-        items,
+        items: processedItems,
       };
       setLoading(true);
       try {
@@ -517,6 +546,24 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
                               {errors[index].machine_power}
                             </p>
                           )}
+                        </div>
+                        <div>
+                          <Label>Quantity</Label>
+                          <Input
+                            type="number"
+                            value={item.qty}
+                            onChange={(e) =>
+                              handleItemChange(
+                                index,
+                                "qty",
+                                e.target.value
+                                  ? isNaN(e.target.value)
+                                    ? ""
+                                    : parseInt(e.target.value)
+                                  : ""
+                              )
+                            }
+                          />
                         </div>
                       </div>
                     )}

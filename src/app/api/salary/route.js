@@ -108,36 +108,37 @@ export async function GET(req) {
 
         const commissionQuery = `
         SELECT
-    commissions.*, 
-    users.name AS user_name,
-    sale.serial_no AS machine_name,
-    sale.speed_money AS speed_money,
-    sale.speed_money_note AS speed_money_note,
-    sale.speed_money_amount AS speed_money_amount,
-    customer.id AS customer_id,
-    customer.name AS customer_name,
-    customer.owner AS customer_owner
-  FROM 
-    commissions
-  LEFT JOIN users ON commissions.user_id = users.id
-  LEFT JOIN sale ON commissions.sale_id = sale.id
-  LEFT JOIN customer AS customer ON sale.customer_id = customer.id
-  WHERE 
-    commissions.user_id = $1 
-    AND commissions.is_approved = TRUE 
-    AND commissions.commission_issued = FALSE
+        commissions.*, 
+        users.name AS user_name,
+        sale.serial_no AS machine_name,
+        sale.speed_money AS speed_money,
+        sale.speed_money_note AS speed_money_note,
+        sale.speed_money_amount AS speed_money_amount,
+        customer.id AS customer_id,
+        customer.name AS customer_name,
+        customer.owner AS customer_owner
+        FROM 
+        commissions
+        LEFT JOIN users ON commissions.user_id = users.id
+        LEFT JOIN sale ON commissions.sale_id = sale.id
+        LEFT JOIN customer AS customer ON sale.customer_id = customer.id
+        WHERE 
+        commissions.user_id = $1 
+        AND commissions.is_approved = TRUE 
+        AND commissions.commission_issued = FALSE
         `;
         const commissionResult = await pool.query(commissionQuery, [user]);
-        const machineQuery = `SELECT 
-  sale.*, 
-  COALESCE(NULLIF(customer.name, ''), NULLIF(customer.owner, ''), '') AS customer_name
-FROM 
-  sale
-LEFT JOIN 
-  customer ON sale.customer_id = customer.id
-WHERE 
-  sale.sell_by = $1 
-  AND sale.contract_date BETWEEN $2 AND $3;`
+        const machineQuery = `
+        SELECT 
+        sale.*, 
+        COALESCE(NULLIF(customer.name, ''), NULLIF(customer.owner, ''), '') AS customer_name
+        FROM 
+        sale
+        LEFT JOIN 
+        customer ON sale.customer_id = customer.id
+        WHERE 
+        sale.sell_by = $1 
+        AND sale.contract_date BETWEEN $2 AND $3;`
         const machineResult = await pool.query(machineQuery, [user, start_date, end_date])
 
         const customersWithSaleQuery = await pool.query(`
@@ -152,17 +153,17 @@ WHERE
 
 
 
-      const feedbackQueryResult = saleCustomerIds.length > 0
-    ? await pool.query(`
+        const feedbackQueryResult = saleCustomerIds.length > 0
+            ? await pool.query(`
         SELECT COUNT(DISTINCT customer_id) AS feedbacks_taken 
         FROM feedback 
         WHERE created_at BETWEEN $1 AND $2 
         AND user_id = $3 
-        AND customer_id = ANY($4)`, 
-        [start_date, end_date, user, saleCustomerIds])
-    : { rows: [{ feedbacks_taken: 0 }] };
+        AND customer_id = ANY($4)`,
+                [start_date, end_date, user, saleCustomerIds])
+            : { rows: [{ feedbacks_taken: 0 }] };
 
-const feedbacksTakenThisMonth = parseInt(feedbackQueryResult.rows[0].feedbacks_taken, 10) || 0;
+        const feedbacksTakenThisMonth = parseInt(feedbackQueryResult.rows[0].feedbacks_taken, 10) || 0;
 
 
         const remainingFeedbacks = totalCustomersWithSale - feedbacksTakenThisMonth;
@@ -176,12 +177,37 @@ const feedbacksTakenThisMonth = parseInt(feedbackQueryResult.rows[0].feedbacks_t
         const totalVisits = parseInt(visitQueryResult.rows[0].total_visits, 10) || 0;
 
 
+         const leadCommissionQuery = `
+        SELECT
+        commissions.*, 
+        users.name AS user_name,
+        sale.serial_no AS machine_name,
+        sale.speed_money AS speed_money,
+        sale.speed_money_note AS speed_money_note,
+        sale.speed_money_amount AS speed_money_amount,
+        customer.id AS customer_id,
+        customer.name AS customer_name,
+        customer.owner AS customer_owner
+        FROM 
+        commissions
+        LEFT JOIN users ON commissions.user_id = users.id
+        LEFT JOIN sale ON commissions.sale_id = sale.id
+        LEFT JOIN customer AS customer ON sale.customer_id = customer.id
+        WHERE 
+        commissions.lead_id = $1 
+        AND commissions.is_approved = TRUE 
+        AND commissions.lead_commission_issued = FALSE
+        `;
+        const leadCommissionResult = await pool.query(leadCommissionQuery, [user]);
+
+
         return NextResponse.json({
             reimbursement: reimbursement.rows,
             attendance: uniqueData,
             user: userQuery.rows[0],
             salary: salaryResult.rows.length > 0 ? salaryResult.rows[0] : null,
             commission: commissionResult.rows || [],
+            lead_commission : leadCommissionResult.rows || [],
             machines: machineResult.rows,
             feedbacksTakenThisMonth,
             remainingFeedbacks,

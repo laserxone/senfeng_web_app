@@ -11,7 +11,7 @@ export default function SenFengAppPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center text-white px-4">
       {/* Logo */}
       <img
-        src="/senfengLogo.png" // Change this path to your actual logo path
+        src="/senfengLogo.png" 
         alt="SenFeng Logo"
         className="w-32 h-32 mb-6 rounded shadow-lg bg-white"
       />

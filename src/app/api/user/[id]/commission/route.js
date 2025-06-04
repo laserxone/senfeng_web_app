@@ -1,4 +1,4 @@
-import pool from "@/config/db";0
+import pool from "@/config/db"; 0
 import { NextResponse } from "next/server"
 import { profileFields, saleFields } from "@/constants/data";
 
@@ -6,149 +6,189 @@ import { profileFields, saleFields } from "@/constants/data";
 
 export async function GET(req, { params }) {
 
-    const { id } = await params
+  const { id } = await params
 
-    const searchParams = req.nextUrl.searchParams
-    const crm = searchParams.get('crm')
+  const searchParams = req.nextUrl.searchParams
+  const lead = searchParams.get('lead')
 
-    try {
-        const salesResult = await pool.query(
-            'SELECT * FROM sale WHERE sell_by = $1',
-            [id]
+  try {
+
+    if (lead) {
+
+      const result = await pool.query(
+        `
+        SELECT 
+  commissions.*, 
+  u1.name AS user_name,
+  u2.name AS lead_name,
+  customer.id AS customer_id,
+  customer.name AS customer_name,
+  customer.owner AS customer_owner
+FROM 
+  commissions
+LEFT JOIN users u1 ON commissions.user_id = u1.id
+LEFT JOIN users u2 ON commissions.lead_id = u2.id
+LEFT JOIN sale ON commissions.sale_id = sale.id
+LEFT JOIN customer ON sale.customer_id = customer.id
+WHERE 
+  commissions.lead_id = $1
+ORDER BY 
+  commissions.created_at DESC
+`,
+        [id]
+      );
+
+
+
+      return NextResponse.json(result.rows, { status: 200 });
+
+    } else {
+      const salesResult = await pool.query(
+        'SELECT * FROM sale WHERE sell_by = $1',
+        [id]
+      );
+      const sales = salesResult.rows;
+
+      const enrichedSales = await Promise.all(
+        sales.map(async (sale) => {
+
+          let machineFilled = 0;
+
+
+          const hasContractImages =
+            (Array.isArray(sale.contract_images_pdf) && sale.contract_images_pdf.length > 0) ||
+            (Array.isArray(sale.contract_images_png) && sale.contract_images_png.length > 0);
+
+          if (hasContractImages) machineFilled++;
+
+
+          saleFields.forEach(field => {
+            const value = sale[field];
+            const isFilled =
+              Array.isArray(value)
+                ? value.length > 0
+                : typeof value === 'number'
+                  ? ['price'].includes(field)
+                    ? value !== null && !isNaN(value)
+                    : true
+                  : typeof value === 'string'
+                    ? value.trim() !== '' && value !== 'null'
+                    : value !== null && value !== undefined;
+
+            if (isFilled) machineFilled++;
+          });
+
+          const totalFields = saleFields.length + 1;
+
+          const customerResult = await pool.query(
+            'SELECT * FROM customer WHERE id = $1',
+            [sale.customer_id]
           );
-          const sales = salesResult.rows;
-          
-          const enrichedSales = await Promise.all(
-            sales.map(async (sale) => {
+          const customer = customerResult.rows[0] || {};
 
-              let machineFilled = 0;
-              
-                    // Handle contract_images as one field
-                    const hasContractImages =
-                      (Array.isArray(sale.contract_images_pdf) && sale.contract_images_pdf.length > 0) ||
-                      (Array.isArray(sale.contract_images_png) && sale.contract_images_png.length > 0);
-              
-                    if (hasContractImages) machineFilled++;
-              
-                    // Handle other saleFields
-                    saleFields.forEach(field => {
-                      const value = sale[field];
-                      const isFilled =
-                        Array.isArray(value)
-                          ? value.length > 0
-                            : typeof value === 'number'
-                              ? ['price'].includes(field)
-                                ? value !== null && !isNaN(value)
-                                : true
-                              : typeof value === 'string'
-                                ? value.trim() !== '' && value !== 'null'
-                                : value !== null && value !== undefined;
-              
-                      if (isFilled) machineFilled++;
-                    });
-              
-                    const totalFields = saleFields.length + 1;
+          const customerTotalFields = profileFields.length;
 
-              const customerResult = await pool.query(
-                'SELECT * FROM customer WHERE id = $1',
-                [sale.customer_id]
-              );
-              const customer = customerResult.rows[0] || {};
+          let filledCount = 0;
+          profileFields.forEach(field => {
+            const value = customer[field];
+            const isFilled =
+              field === 'rating'
+                ? typeof value === 'number' && value > 0
+                : Array.isArray(value)
+                  ? value.length > 0
+                  : typeof value === 'number'
+                    ? true
+                    : typeof value === 'string'
+                      ? value.trim() !== '' && value !== 'null'
+                      : value !== null && value !== undefined;
+            if (isFilled) filledCount++;
+          });
 
-              const customerTotalFields = profileFields.length;
-
-                let filledCount = 0;
-                  profileFields.forEach(field => {
-                    const value = customer[field];
-                    const isFilled =
-                      field === 'rating'
-                        ? typeof value === 'number' && value > 0
-                        : Array.isArray(value)
-                          ? value.length > 0
-                            : typeof value === 'number'
-                              ? true
-                              : typeof value === 'string'
-                                ? value.trim() !== '' && value !== 'null'
-                                : value !== null && value !== undefined;
-                    if (isFilled) filledCount++;
-                  });
-          
-              const paymentResult = await pool.query(
-                'SELECT * FROM payment WHERE machine_id = $1',
-                [sale.id]
-              );
-              const payments = (paymentResult.rows || []).filter(
-                (payment) => payment.clearance_date !== null
-              );
-          
-              const paid_amount = payments.reduce((sum, payment) => {
-                return sum + Number(payment.amount || 0);
-              }, 0);
-          
-              const commissionResult = await pool.query(
-                'SELECT * FROM commissions WHERE sale_id = $1',
-                [sale.id]
-              );
-              const commission = commissionResult.rows[0] || {};
-
-              customer.profile_completion = Math.round((filledCount / customerTotalFields) * 100);
-          
-              return {
-                ...sale,
-                customer,
-                payments,
-                created_amount: Number(sale.price || 0),
-                paid_amount,
-                balance: Number(sale.price || 0) - paid_amount,
-                commission,
-                percentage_completion: Math.round((machineFilled / totalFields) * 100),
-              };
-            })
+          const paymentResult = await pool.query(
+            'SELECT * FROM payment WHERE machine_id = $1',
+            [sale.id]
           );
-          
-          return NextResponse.json(enrichedSales, { status: 200 });
-          
+          const payments = (paymentResult.rows || []).filter(
+            (payment) => payment.clearance_date !== null
+          );
 
-    } catch (error) {
-        console.error('Error fetching data: ', error);
-        return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
+          const paid_amount = payments.reduce((sum, payment) => {
+            return sum + Number(payment.amount || 0);
+          }, 0);
+
+          const commissionResult = await pool.query(
+            'SELECT * FROM commissions WHERE sale_id = $1',
+            [sale.id]
+          );
+          const commission = commissionResult.rows[0] || {};
+
+          const firstSaleResult = await pool.query(
+            `SELECT id FROM sale WHERE customer_id = $1 AND contract_date IS NOT NULL ORDER BY contract_date ASC LIMIT 1`,
+            [sale.customer_id]
+          );
+          const firstMachineId = firstSaleResult.rows[0]?.id;
+
+          customer.profile_completion = Math.round((filledCount / customerTotalFields) * 100);
+
+          return {
+            ...sale,
+            customer,
+            payments,
+            created_amount: Number(sale.price || 0),
+            paid_amount,
+            balance: Number(sale.price || 0) - paid_amount,
+            commission,
+            percentage_completion: Math.round((machineFilled / totalFields) * 100),
+            first_machine: sale.id === firstMachineId,
+          };
+        })
+      );
+
+      return NextResponse.json(enrichedSales, { status: 200 });
     }
+
+
+
+  } catch (error) {
+    console.error('Error fetching data: ', error);
+    return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
+  }
 
 
 }
 
 export async function POST(req, { params }) {
 
-    try {
-        const data = await req.json();
-        const { id } = await params
+  try {
+    const data = await req.json();
+    const { id } = await params
 
-        if (!data || Object.keys(data).length === 0) {
-            return NextResponse.json({ message: "No data provided for insertion" }, { status: 400 });
-        }
+    if (!data || Object.keys(data).length === 0) {
+      return NextResponse.json({ message: "No data provided for insertion" }, { status: 400 });
+    }
 
-        const fields = Object.keys(data);
-        const values = Object.values(data);
-        const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
+    const fields = Object.keys(data);
+    const values = Object.values(data);
+    const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
 
-        const query = `
+    const query = `
         INSERT INTO visit (${fields.join(", ")})
         VALUES (${placeholders})
         RETURNING *
     `;
 
-        const { rows } = await pool.query(query, values);
-        const newData = rows[0];
-        const userQuery = `SELECT name FROM users WHERE id = $1;`;
-        const userResult = await pool.query(userQuery, [id]);
-        const user_name = userResult.rows.length > 0 ? userResult.rows[0].name : null;
+    const { rows } = await pool.query(query, values);
+    const newData = rows[0];
+    const userQuery = `SELECT name FROM users WHERE id = $1;`;
+    const userResult = await pool.query(userQuery, [id]);
+    const user_name = userResult.rows.length > 0 ? userResult.rows[0].name : null;
 
-        return NextResponse.json({ ...newData, user_name }, { status: 200 });
+    return NextResponse.json({ ...newData, user_name }, { status: 200 });
 
-    } catch (error) {
-        console.error('Error inserting data: ', error);
-        return NextResponse.json({ message: 'Error adding customer' }, { status: 500 })
-    }
+  } catch (error) {
+    console.error('Error inserting data: ', error);
+    return NextResponse.json({ message: 'Error adding customer' }, { status: 500 })
+  }
 }
 
 

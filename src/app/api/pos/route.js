@@ -4,15 +4,27 @@ import moment from 'moment';
 import { NextResponse } from 'next/server';
 
 
-export async function GET() {
+export async function GET(req) {
+
+    const searchParams = req.nextUrl.searchParams
+  const availablemachine = searchParams.get('availablemachine')
 
 
     try {
-        const result = await pool.query("SELECT * FROM inventory ORDER BY id ASC");
+        if(availablemachine){
+
+              const result = await pool.query("SELECT * FROM order_items WHERE status = 'Order Placed' AND is_machine = TRUE ORDER BY id ASC");
+
+        return NextResponse.json(result.rows, { status: 200 })
+
+        } else {
+  const result = await pool.query("SELECT * FROM inventory ORDER BY id ASC");
 
         const reminders = await pool.query("SELECT * FROM savedinvoices WHERE payment=false");
 
         return NextResponse.json({ stock: result.rows, reminders: reminders.rows }, { status: 200 })
+        }
+      
     } catch (error) {
         console.log(error)
         return NextResponse.json({ message: "Processing error" }, { status: 500 })

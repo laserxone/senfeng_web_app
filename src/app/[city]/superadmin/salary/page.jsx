@@ -204,6 +204,16 @@ const SalaryComponent = () => {
               commission: totalCommission,
             }));
           }
+          if (response.data?.lead_commission) {
+            const totalCommission = response.data?.lead_commission.reduce(
+              (sum, item) => sum + Number(item.lead_commission_amount),
+              0
+            );
+            setForm((prevState) => ({
+              ...prevState,
+              commission: totalCommission,
+            }));
+          }
           if (excludeAbsent) {
             setForm((prev) => ({ ...prev, absents: 0 }));
           }
@@ -229,7 +239,7 @@ const SalaryComponent = () => {
               reimbursement: Number(existing.reimbursement),
               target_achieved: Number(existing.target_achieved),
             });
-            setKpi(existing.kpi)
+
             setChecked(existing.issued);
             processAttendance(
               Number(moment(startDate).format("YYYY")),
@@ -465,13 +475,20 @@ const SalaryComponent = () => {
         issued: checked,
         salary_month: startDate,
         payable: payable,
-        kpi : kpi
+        kpi: kpi,
       })
       .then(() => {
         toast({ title: "Salary saved" });
         if (data?.commission) {
           data.commission.map((item) => {
             axios.put(`/commission/${item.id}`, { commission_issued: true });
+          });
+        }
+        if (data?.lead_commission) {
+          data.lead_commission.map((item) => {
+            axios.put(`/commission/${item.id}`, {
+              lead_commission_issued: true,
+            });
           });
         }
       })
@@ -647,7 +664,10 @@ const SalaryComponent = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {Object.keys(form).map((key) => (
                 <div key={key} className="flex flex-col gap-1">
-                  <Label>{key.replace(/_/g, " ").toUpperCase()}{" "}{key === "target_achieved" && "(USD)"}</Label>
+                  <Label>
+                    {key.replace(/_/g, " ").toUpperCase()}{" "}
+                    {key === "target_achieved" && "(USD)"}
+                  </Label>
                   {loading ? (
                     <Skeleton className={"h-[40px] w-[150px]"} />
                   ) : (
@@ -870,7 +890,10 @@ const SalaryComponent = () => {
                     <Spinner />
                   </div>
                 ) : (
-                  <CommissionRecord data={data?.commission || []} fetchData={handleGenerate}/>
+                  <CommissionRecord
+                    data={data?.commission || []}
+                    fetchData={handleGenerate}
+                  />
                 )}
               </CardContent>
             </Card>
