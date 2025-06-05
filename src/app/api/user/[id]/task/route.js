@@ -18,7 +18,10 @@ export async function GET(req, { params }) {
     u.name AS assigned_to_name,
     u.email AS assigned_to_email,
     c.name AS customer_name,
-    c.owner AS customer_owner
+    c.owner AS customer_owner,
+    c.number AS customer_number,
+    c.address AS customer_address,
+    c.pin AS customer_pin
 FROM task t
 INNER JOIN users u ON t.assigned_to = u.id
 LEFT JOIN customer c ON t.customer_id = c.id

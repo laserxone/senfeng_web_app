@@ -3,50 +3,7 @@ import { sendNotification } from "@/lib/sendNotification";
 import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
 import { NextResponse } from "next/server"
 
-// export async function POST(req) {
 
-//     const { data } = await req.json();
-//     const client = await pool.connect();
-
-//     try {
-//         for (const item of data) {
-//             // Lookup user ID using email
-//             const userQuery = `SELECT id FROM users WHERE email = $1`;
-//             const userResult = await client.query(userQuery, [item.assignedTo]);
-
-//             let submittedById = userResult.rows.length ? userResult.rows[0].id : null;
-
-//             const query = `
-//                 INSERT INTO task(
-//                     created_at, assigned_to, status, task_name , type
-//                 )
-//                 VALUES (
-//                     TO_TIMESTAMP($1 / 1000.0), $2, $3, $4, $5
-//                 )
-//             `;
-
-//             const values = [
-//                 Number(item.TimeStamp), // created_at (converted from ms)
-//                 submittedById,
-//                 item.status, // description
-//                 item.taskName, // image
-//                 item.type
-//             ];
-
-//             await client.query(query, values);
-//         }
-
-//         console.log('task data inserted successfully');
-//     } catch (error) {
-//         console.error('Error inserting task data:', error);
-//     } finally {
-//         client.release();
-//     }
-
-
-
-//     return NextResponse.json({ message: 'done' }, { status: 200 })
-// }
 
 
 export async function POST(req) {
@@ -133,9 +90,11 @@ export async function GET(req) {
     u.name AS assigned_to_name,
     u.email AS assigned_to_email,
     c.name AS customer_name,
-    c.owner AS customer_owner
+    c.owner AS customer_owner,
+    ab.name AS assigned_by_name
 FROM task t
 INNER JOIN users u ON t.assigned_to = u.id
+LEFT JOIN users ab ON t.assigned_by = ab.id
 LEFT JOIN customer c ON t.customer_id = c.id
     `;
 
@@ -147,8 +106,7 @@ LEFT JOIN customer c ON t.customer_id = c.id
             query += ` AND t.assigned_to = $3`;
             queryParams.push(user);
         } else if (by) {
-            query += ` AND t.assigned_by = $3`;
-            queryParams.push(by);
+            query += ` AND t.assigned_by IS NOT NULL`;
         }
         query += ` ORDER BY t.created_at DESC;`;
 

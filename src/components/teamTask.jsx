@@ -107,6 +107,23 @@ const columns = [
     cell: ({ row }) => <div>{row.getValue("assigned_to_name")}</div>,
   },
 
+   {
+    accessorKey: "assigned_by_name",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Assigned By
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => <div>{row.getValue("assigned_by_name")}</div>,
+  },
+
   {
     accessorKey: "created_at_time",
     filterFn: "includesString",
@@ -204,7 +221,7 @@ export default function TeamTask() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/task?start_date=${start_date}&end_date=${end_date}&by=${UserState.value.data?.id}`
+          `/task?start_date=${start_date}&end_date=${end_date}&by=true`
         )
         .then((response) => {
           const apiData = response.data.map((item) => {
