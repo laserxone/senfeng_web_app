@@ -5,24 +5,24 @@ import { Heading } from "@/components/ui/heading";
 import { db } from "@/config/firebase";
 import { NotificationContext } from "@/store/context/NotificationContext";
 import { UserContext } from "@/store/context/UserContext";
-import { deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { deleteDoc, doc } from "firebase/firestore";
 import { Bell, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useContext } from "react";
 
 export default function Notification() {
   const { state: NotificationState } = useContext(NotificationContext);
-  const {state : UserState} = useContext(UserContext)
+  const { state: UserState } = useContext(UserContext);
 
   const markAsRead = async (id) => {
-    await deleteDoc(doc(db, "Notification",  id))
+    await deleteDoc(doc(db, "Notification", id));
   };
 
   const markAllAsRead = async () => {
     await Promise.all(
-      NotificationState.value.data.map(async(eachNotification) =>
-        await deleteDoc(doc(db, "Notification",  eachNotification.id))
-        
+      NotificationState.value.data.map(
+        async (eachNotification) =>
+          await deleteDoc(doc(db, "Notification", eachNotification.id))
       )
     );
   };
@@ -38,7 +38,11 @@ export default function Notification() {
       <div className="flex flex-col space-y-4 p-4 w-full">
         {NotificationState.value.data.length > 0 ? (
           <>
-            <Button onClick={markAllAsRead} className="self-end" variant="outline">
+            <Button
+              onClick={markAllAsRead}
+              className="self-end"
+              variant="outline"
+            >
               <CheckCircle className="w-4 h-4 mr-2" /> Mark all as read
             </Button>
             {NotificationState.value.data.map((notification) => (
@@ -48,25 +52,20 @@ export default function Notification() {
               >
                 <CardContent className="flex items-center space-x-3 p-0">
                   <Bell className="w-5 h-5 text-blue-500" />
-                  <Link href={`/${UserState.value.data?.base_route}/${notification.page}`}>
-                  <span
-                    className={
-                      notification.read ? "text-gray-500" : "text-black font-medium"
-                    }
+                  <Link
+                    href={`/${UserState.value.data?.base_route}/${notification.page}`}
                   >
-                    {notification.title}
-                  </span>
+                    <span>{notification.title}</span>
                   </Link>
                 </CardContent>
-                {!notification.read && (
-                  <Button
-                    onClick={() => markAsRead(notification.id)}
-                    size="sm"
-                    variant="outline"
-                  >
-                    Mark as read
-                  </Button>
-                )}
+
+                <Button
+                  onClick={() => markAsRead(notification.id)}
+                  size="sm"
+                  variant="outline"
+                >
+                  Mark as read
+                </Button>
               </Card>
             ))}
           </>
