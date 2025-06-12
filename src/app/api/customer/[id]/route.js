@@ -172,7 +172,7 @@ export async function PUT(req, { params }) {
       }
 
       if (result.rows[0].ownership) {
-        sendNotification(`${result.rows[0]?.name || result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
+        sendNotification(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
       }
     }
 

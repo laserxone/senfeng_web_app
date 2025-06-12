@@ -34,16 +34,16 @@ export async function POST(req) {
 
 
         if (result.rows[0].lead) {
-            sendNotificationToCRM(result.rows[0].lead, `${result.rows[0]?.name || result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`)
+            sendNotificationToCRM(result.rows[0].lead, `${result.rows[0]?.name}-${result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`)
         }
 
         if (result.rows[0]?.lead !== result.rows[0].created_by) {
-            sendNotificationToCRMWithoutLead(`${result.rows[0]?.name || result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`)
+            sendNotificationToCRMWithoutLead(`${result.rows[0]?.name}-${result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`)
         }
 
         if (result.rows[0].ownership) {
-            sendNotification(`${result.rows[0]?.owner || result.rows[0]?.name} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
-             sendNotificationToMobile(`${result.rows[0]?.owner || result.rows[0]?.name} assigned to you`,"Customer" ,result.rows[0].ownership, result.rows[0], "client", `/dashboard/customer/${result.rows[0].id}` )
+            sendNotification(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
+             sendNotificationToMobile(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`,"Customer" ,result.rows[0].ownership, result.rows[0], "client", `/dashboard/customer/${result.rows[0].id}` )
         }
 
         const logMSG = generateLog(data)
