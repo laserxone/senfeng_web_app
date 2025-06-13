@@ -1409,8 +1409,22 @@ const MyImg = ({ img }) => {
     setError(false);
 
     if (img.includes("http")) {
-      setLocalImage(img);
-      setLoading(false);
+      const storagePath = getStoragePathFromUrl(img)
+      if(storagePath){
+        getDownloadURL(ref(storage, storagePath))
+          .then((url) => {
+            setLocalImage(url);
+          })
+          .catch(() => {
+            setError(true);
+            setLocalImage(null);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      }
+      // setLocalImage(img);
+      // setLoading(false);
     } else {
       getDownloadURL(ref(storage, img))
         .then((url) => {
