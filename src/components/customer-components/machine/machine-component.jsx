@@ -731,22 +731,18 @@ const ImageSheet = ({
   }, []);
 
   async function handleDelete() {
-    if (img) {
-      if (img.includes("https")) {
-        // const storagePath = getStoragePathFromUrl(img);
-        // if (storagePath) {
-        //   DeleteFromStorage(storagePath);
-        // }
-      } else {
-        DeleteFromStorage(img);
+    try {
+      if (img && !img.includes("https")) {
+        await DeleteFromStorage(img);
       }
-    }
-    axios.delete(`/payment/${id}`).then(async () => {
+
+      await axios.delete(`/payment/${id}`);
       await onRefresh(id);
-      setDeleteLoading(false);
       handleClose(false);
       toast({ title: "Payment Deleted" });
-    });
+    } finally {
+      setDeleteLoading(false);
+    }
   }
 
   return (
@@ -1215,7 +1211,7 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
         ...allProcessedImages,
       ];
     }
-    
+
     await axios
       .put(`/machine/${machine.id}`, formData)
       .then(async (response) => {
@@ -1393,7 +1389,6 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
 };
 
 const MyImg = ({ img }) => {
-
   const [localImage, setLocalImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -1410,24 +1405,8 @@ const MyImg = ({ img }) => {
     setError(false);
 
     if (img.includes("http")) {
-      console.log(img)
-      const storagePath = getStoragePathFromUrl(img)
-      console.log(storagePath)
-      if(storagePath){
-        getDownloadURL(ref(storage, storagePath))
-          .then((url) => {
-            setLocalImage(url);
-          })
-          .catch(() => {
-            setError(true);
-            setLocalImage(null);
-          })
-          .finally(() => {
-            setLoading(false);
-          });
-      }
-      // setLocalImage(img);
-      // setLoading(false);
+      setLocalImage(img);
+      setLoading(false);
     } else {
       getDownloadURL(ref(storage, img))
         .then((url) => {

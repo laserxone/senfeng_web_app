@@ -2,12 +2,46 @@ import pool from "@/config/db";
 import { NextResponse } from "next/server"
 import moment from "moment";
 import admin from "@/lib/firebaseAdmin";
+import { uniqueMachines, unmatched } from "@/app/test/data";
 
 
 export async function GET() {
 
 
+//    const enrichedUnmatched = [];
 
+// for (const payment of unmatched) {
+//   const machineId = payment.machine_id;
+
+//   // Get customer info based on machine_id (sale.id)
+//   const res = await pool.query(
+//     `SELECT 
+//         s.customer_id,
+//         c.name AS customer_name,
+//         c.owner AS customer_owner
+//      FROM sale s
+//      LEFT JOIN customer c ON s.customer_id = c.id
+//      WHERE s.id = $1`,
+//     [machineId]
+//   );
+
+//   const customerInfo = res.rows[0] || {
+//     customer_name: '',
+//     customer_owner: ''
+//   };
+
+//   enrichedUnmatched.push({
+//     ...payment,
+//     customer_name: customerInfo.customer_name,
+//     customer_owner: customerInfo.customer_owner,
+//   });
+//   console.log(machineId, "done")
+// }
+
+// Send to frontend
+
+
+    // return NextResponse.json({ unmatchedWithCustomerInfo: enrichedUnmatched }, { status: 200 })
 
     // const { duplicates, matched, unmatched } = await getComparisonData();
 
@@ -30,7 +64,7 @@ export async function GET() {
 
     // const {duplicates} = await getPaymentsWithDuplicateImages()
     // return NextResponse.json({ duplicates }, { status: 200 })
-     return NextResponse.json({ message : "done" }, { status: 200 })
+    return NextResponse.json({ message: "done" }, { status: 200 })
 }
 
 

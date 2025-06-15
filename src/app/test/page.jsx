@@ -1,19 +1,39 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
+import { myData } from "./data";
 
 export default function Page() {
   async function handleClick() {
-    await axios.get("/api/test").then((response) => {
-       
+    // await axios.get("/api/test").then((response) => {
+    //   const data = response.data;
+    //   console.log("done")
+    // //   downloadFile(data.duplicates, "payment_duplicates.json");
+    // //   downloadFile(data.matched, "matched_psql_entries.json");
+    // //   downloadFile(data.unmatched, "unmatched_firebase_entries.json");
+    // });
+    // const groupedData = getUniqueMachineIds(myData)
+    axios.get("/api/test").then((response) => {
+      console.log("done");
       const data = response.data;
-      console.log("done")
-
-    //   downloadFile(data.duplicates, "payment_duplicates.json");
-    //   downloadFile(data.matched, "matched_psql_entries.json");
-    //   downloadFile(data.unmatched, "unmatched_firebase_entries.json");
+      downloadFile(
+        data.unmatchedWithCustomerInfo,
+        "unmatched_non_duplicates_with_customer.json"
+      );
     });
   }
+
+  //  function getUniqueMachineIds(data) {
+  //   const machineIdSet = new Set();
+
+  //   for (const group of data) {
+  //     for (const payment of group.payments) {
+  //       machineIdSet.add(payment.machine_id);
+  //     }
+  //   }
+
+  //   return Array.from(machineIdSet).map(machine_id => ({ machine_id }));
+  // }
 
   const downloadFile = (jsonData, fileName) => {
     const blob = new Blob([JSON.stringify(jsonData, null, 2)], {
@@ -39,3 +59,8 @@ export default function Page() {
     </div>
   );
 }
+
+
+
+
+

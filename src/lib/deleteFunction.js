@@ -7,8 +7,7 @@ export async function DeleteFromStorage(name) {
     try {
         const deleteRef = ref(storage, name)
         await deleteObject(deleteRef)
-
-        return ("done")
+        return "done";
     } catch (error) {
         toast({
             title: error.message || "Error",
