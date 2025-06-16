@@ -5,6 +5,7 @@ import axios from "axios";
 
 export const sendNotificationToMobile = async (title, heading, sendTo, data, type, url) => {
     try {
+
         console.log("sending to mobile")
         const result = await pool.query(`SELECT token, id FROM users WHERE id = $1`, [sendTo])
         const message = {
@@ -15,12 +16,8 @@ export const sendNotificationToMobile = async (title, heading, sendTo, data, typ
             data: { ...data, type: type, url: url },
         };
 
-        axios.post('https://exp.host/--/api/v2/push/send', message)
-            .then(() => {
-                console.log("done")
-            }).catch(() => {
-                console.log("failed")
-            })
+        const response = await axios.post('https://exp.host/--/api/v2/push/send', message)
+
 
         // await fetch('https://exp.host/--/api/v2/push/send', {
         //     mode: 'no-cors',
