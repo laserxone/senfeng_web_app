@@ -1,5 +1,6 @@
 import pool from "@/config/db";
 import { addLog } from "@/lib/addLog";
+import { generateLog } from "@/lib/generateLog";
 import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import { NextResponse } from "next/server";
 
