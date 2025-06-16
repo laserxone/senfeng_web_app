@@ -21,10 +21,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowUpDown,
+  CircleCheck,
   ClipboardList,
   EditIcon,
+  ShieldCheck,
   Siren,
   Trash,
+  TriangleAlert,
   Wrench,
 } from "lucide-react";
 import {
@@ -178,7 +181,43 @@ export default function Machine({ id }) {
             </Button>
           );
         },
-        cell: ({ row }) => <div className="ml-2">{row.getValue("track")}</div>,
+        cell: ({ row }) => {
+          const currentItem = row.original;
+          return (
+            <div className="flex">
+              {currentItem?.status === "rejected" && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <div>
+                        <TriangleAlert className="text-red-600 h-5 w-5 animate-pulse-opacity" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-red-600 mr-2">
+                      <p className="text-white">{currentItem?.comment}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+
+              {currentItem?.status === "approved" && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <div>
+                        <ShieldCheck className="text-green-600 h-5 w-5" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-green-600 mr-2">
+                      <p className="text-white">Payment verified</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              <div className="ml-2">{row.getValue("track")}</div>
+            </div>
+          );
+        },
       },
 
       {
@@ -312,7 +351,7 @@ export default function Machine({ id }) {
                 </div>
               )}
 
-              {data?.machine && !data?.machine?.payment_lock && editAllowed && (
+              {data?.machine && !currentItem?.payment_lock && editAllowed && (
                 <EditIcon
                   style={{ color: Colors.button }}
                   className="cursor-pointer h-5 w-5"
@@ -472,7 +511,7 @@ export default function Machine({ id }) {
           onPressCancel={() => setShowConfirmation(false)}
         />
         <ImageSheet
-          payment_lock={data?.machine?.payment_lock}
+          payment_lock={imageURL?.payment_lock}
           editAllowed={editAllowed}
           visible={visible}
           onClose={() => {

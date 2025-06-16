@@ -112,7 +112,7 @@ export default function Page() {
           `/neworder?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
-          console.log(response.data)
+        
           setData(response.data);
           resolve(true);
         })

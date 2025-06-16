@@ -176,7 +176,7 @@ export async function PUT(req, { params }) {
       }
     }
 
-    const logMSG = generateLog(data)
+    const logMSG = generateLog(data, "Customer updated")
 
     addLog({ text: logMSG, user_id: userid ? Number(userid) : null, customer_id: result.rows[0].id })
 

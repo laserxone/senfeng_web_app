@@ -460,7 +460,7 @@ export default function POS() {
         try {
             setEngineerLoading(true)
             const response = await axios.get(`/pos/engineer`)
-            console.log(response.data)
+          
             setAllEngineersData(response.data)
             setEngineersModal(true)
             return true

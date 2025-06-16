@@ -1,4 +1,5 @@
 import pool from "@/config/db";
+import { addLog } from "@/lib/addLog";
 import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import { NextResponse } from "next/server";
 
@@ -33,6 +34,11 @@ export async function POST(req) {
             WHERE p.id = $1`, [result.rows[0].id])
 
         sendNotificationToOwner(`New payment added for ${customerResult.rows[0].customer_name}`, `member/${customerResult.rows[0].customer_id}/${result.rows[0].machine_id}`)
+
+        const logMSG = generateLog(data, "New Payment added")
+
+        addLog({ text: logMSG, user_id: null, customer_id: null, sale_id: result.rows[0].machine_id, payment_id: result.rows[0].id })
+
 
         return NextResponse.json({
             message: "Payment added successfully",

@@ -45,6 +45,7 @@ import {
   ShoppingCart,
   Newspaper,
   ScanLine,
+  Hammer,
 } from 'lucide-react';
 
 
@@ -94,6 +95,7 @@ export const Icons = {
   pos : ShoppingCart,
   news : Newspaper,
   gatepass : ScanLine,
+  tools : Hammer,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden='true'

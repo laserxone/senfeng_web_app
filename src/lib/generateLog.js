@@ -1,4 +1,4 @@
-export function generateLog(data) {
+export function generateLog(data, start = "") {
   const entries = Object.entries(data)
     .filter(([_, value]) => value !== null && value !== undefined && value !== "")
     .map(([key, value]) => {
@@ -11,5 +11,5 @@ export function generateLog(data) {
       return `${key}: ${value} `;
     });
 
-  return `New customer added with the following details:\n${entries.join("\n")}`;
+  return `${start}:\n${entries.join("\n")}`;
 }

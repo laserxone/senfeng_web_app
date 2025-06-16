@@ -275,6 +275,37 @@ export const POSNavItem =
   ]
 }
 
+export const Tools =  {
+    title: 'Tools',
+    url: '#',
+    icon: 'tools',
+    isActive : false,
+
+    items: [
+      {
+        title: 'Payment Verification',
+        url: '/paymentverification',
+        shortcut: ['p', 'a', 'y']
+      },
+      {
+        title: 'Multiple TID',
+        url: '/multipletid',
+        shortcut: ['m', 'u', 't']
+      },
+      {
+        title: 'Multiple Customers',
+        shortcut: ['m', 'u', 'c', 'u'],
+        url: '/feedback',
+        icon: 'login'
+      },
+      {
+        title: 'Logs',
+        url: '/logs',
+        shortcut: ['l', 'o', 'g'],
+      },
+    ]
+  }
+
 export const PakCities = [
   {
     "country": "PK",

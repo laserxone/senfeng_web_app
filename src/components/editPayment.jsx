@@ -92,6 +92,7 @@ const EditPayment = ({
         ...values,
         machine_id: machine_id,
         id: data.id,
+        status : "pending"
       });
       toast({ title: "Payment updated successfully" });
       onRefresh();
@@ -145,7 +146,7 @@ const EditPayment = ({
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent className="p-4">
         <DialogHeader>
-          <DialogTitle>Add New Payment</DialogTitle>
+          <DialogTitle>Edit Payment</DialogTitle>
         </DialogHeader>
 
         <div className="w-full ">
@@ -328,7 +329,7 @@ const EditPayment = ({
 
                   {/* Submit Button */}
                   <Button
-                    disabled={error?.errorMessage}
+                    disabled={error?.errorMessage || checking}
                     className="w-full"
                     type="submit"
                   >
