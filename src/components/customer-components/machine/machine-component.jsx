@@ -184,7 +184,7 @@ export default function Machine({ id }) {
         cell: ({ row }) => {
           const currentItem = row.original;
           return (
-            <div className="flex">
+            <div className="flex items-center ml-2">
               {currentItem?.status === "rejected" && (
                 <TooltipProvider>
                   <Tooltip>
@@ -214,7 +214,7 @@ export default function Machine({ id }) {
                   </Tooltip>
                 </TooltipProvider>
               )}
-              <div className="ml-2">{row.getValue("track")}</div>
+              <div >{row.getValue("track")}</div>
             </div>
           );
         },
