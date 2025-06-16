@@ -13,6 +13,7 @@ export async function GET() {
   s.power, 
   s.source, 
   s.order_no_arr,
+  s.contract_date,
   c.name AS customer_name, 
   c.owner AS customer_owner, 
   c.number AS customer_number
@@ -44,6 +45,7 @@ function groupPaymentsByCustomerMachine(data) {
       power,
       source,
       order_no,
+      contract_date,
       ...paymentData
     } = row;
 
@@ -68,6 +70,7 @@ function groupPaymentsByCustomerMachine(data) {
         power,
         source,
         order_no,
+        contract_date,
         payments: [],
       };
       customer.machines.push(machine);
@@ -78,7 +81,28 @@ function groupPaymentsByCustomerMachine(data) {
     });
   });
 
-  return Array.from(customerMap.values());
+  
+  const filteredCustomers = Array.from(customerMap.values())
+    .map((customer) => {
+      const filteredMachines = customer.machines.filter((machine) => {
+        return machine.payments.some((payment) => payment.status !== "approved");
+      });
+
+      if (filteredMachines.length === 0) return null;
+
+      filteredMachines.sort(
+        (a, b) => new Date(a.contract_date) - new Date(b.contract_date)
+      );
+
+      return {
+        ...customer,
+        machines: filteredMachines,
+      };
+    })
+    .filter((customer) => customer !== null);
+
+  return filteredCustomers;
 }
+
 
 export const revalidate = 0

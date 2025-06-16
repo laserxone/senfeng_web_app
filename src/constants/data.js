@@ -287,6 +287,12 @@ export const Tools =  {
         url: '/paymentverification',
         shortcut: ['p', 'a', 'y']
       },
+       {
+        title: 'Old Commissions',
+        shortcut: ['o', 'l', 'd'],
+        url: '/oldcommissions',
+        icon: 'login'
+      },
       {
         title: 'Multiple TID',
         url: '/multipletid',
@@ -295,9 +301,10 @@ export const Tools =  {
       {
         title: 'Multiple Customers',
         shortcut: ['m', 'u', 'c', 'u'],
-        url: '/feedback',
+        url: '/multiplecustomers',
         icon: 'login'
       },
+     
       {
         title: 'Logs',
         url: '/logs',

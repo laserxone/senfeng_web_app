@@ -26,6 +26,7 @@ import {
 import { RequiredStar } from "@/components/RequiredStar";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+import { Card, CardContent } from "@/components/ui/card";
 import moment from "moment";
 
 export default function Page() {
@@ -53,7 +54,8 @@ export default function Page() {
   async function fetchData() {
     setLoading(true);
     try {
-      const response = await axios.get("/payment-verification");
+      const response = await axios.get("/old-commissions");
+      console.log(response.data);
       setData(response.data);
     } catch (err) {
       console.error("Failed to fetch data:", err);
@@ -159,32 +161,10 @@ export default function Page() {
       .includes(search.toLowerCase())
   );
 
-  const getUnverifiedPaymentCount = (data) => {
-    let count = 0;
-
-    data.forEach((customer) => {
-      customer.machines.forEach((machine) => {
-        machine.payments.forEach((payment) => {
-          if (payment.status !== "approved") {
-            count++;
-          }
-        });
-      });
-    });
-
-    return count;
-  };
-
-  const unverifiedCount = getUnverifiedPaymentCount(data);
-
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-start justify-between">
-        <Heading title="Payment Verification" description="Verify payments" />
-        <p>
-          <strong>Unverified Payments:</strong>
-          <Label className="text-2xl">{unverifiedCount}</Label>
-        </p>
+        <Heading title="Old Commissions" description="Clear old commissions" />
       </div>
 
       <Input
@@ -199,142 +179,74 @@ export default function Page() {
           <Spinner />
         </div>
       ) : (
-        <Accordion type="multiple" className="w-full">
+        <Accordion type="multiple" className="w-full space-y-4">
           {filteredData.map((customer) => (
             <AccordionItem
-              key={`customer-${customer.customer_id}`}
-              value={`customer-${customer.customer_id}`}
+              key={customer.customer_id}
+              value={customer.customer_id.toString()}
+              className="border rounded-lg shadow-sm"
             >
-              <AccordionTrigger className="text-base font-semibold text-primary">
-                {customer.customer_name} ({customer.customer_owner})
+              <AccordionTrigger className="text-left px-4 py-3 font-semibold text-lg">
+                <div className="w-full flex flex-col sm:flex-row sm:justify-between">
+                  <div>
+                    <p>{customer?.customer_name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Owner: {customer?.customer_owner}
+                    </p>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground mt-2 sm:mt-0">
+                      Number:{" "}
+                      {Array.isArray(customer?.customer_number)
+                        ? customer?.customer_number?.join(", ")
+                        : customer?.customer_number}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Manager: {customer?.customer_owner_name}</p>
+                  </div>
+                </div>
               </AccordionTrigger>
-              <AccordionContent className="space-y-4 pl-4 bg-muted rounded-md p-4">
-                <p className="text-sm text-muted-foreground">
-                  <strong className="text-foreground">Number:</strong>{" "}
-                  {customer.customer_number?.join(", ")}
-                </p>
-
-                <Accordion type="multiple" className="pl-2 space-y-2">
+              <AccordionContent className="bg-muted px-4 py-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {customer.machines.map((machine) => (
-                    <AccordionItem
-                      key={`machine-${machine.machine_id}`}
-                      value={`machine-${machine.machine_id}`}
-                    >
-                      <AccordionTrigger className="text-sm font-medium text-secondary-foreground">
-                        Machine #{machine.serial_no}
-                      </AccordionTrigger>
-
-                      <AccordionContent className="space-y-3 bg-white p-3 rounded-md shadow-inner">
-                        <Button
-                          disabled={
-                            machineApproveLoadingId === machine.machine_id
-                          }
-                          className="my-2"
-                          onClick={() => handleApproveAll(machine.machine_id)}
-                        >
-                          {machineApproveLoadingId === machine.machine_id ? (
-                            <Spinner className="mr-2 h-4 w-4" />
-                          ) : null}{" "}
-                          Approve All Payments
-                        </Button>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <p>
-                            <strong>Contract:</strong>{" "}
-                            {machine.contract_date
-                              ? moment(new Date(machine.contract_date)).format(
-                                  "YYYY-MM-DD"
-                                )
-                              : ""}
+                    <Card key={machine.sale_id} className="shadow-md">
+                      <CardContent className="p-4 space-y-1">
+                        <p className="font-medium text-primary">
+                          Serial No: {machine.serial_no}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Power: {machine.power || "N/A"}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Source: {machine.source || "N/A"}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Contract:{" "}
+                          {machine.contract_date
+                            ? moment(new Date(machine.contract_date)).format(
+                                "YYY-MM-DD"
+                              )
+                            : "N/A"}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Order No(s):{" "}
+                          {machine.order_no_arr?.join(", ") || "N/A"}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Sell By: {machine?.sold_by_name || "N/A"}
+                        </p>
+                         <p className="text-sm text-muted-foreground">
+                          Price: {machine?.price || "N/A"}
+                        </p>
+                        {machine?.speed_money && (
+                          <p className="text-sm text-muted-foreground">
+                            Amount: {machine?.speed_money_amount}, Note:{" "}
+                            {machine?.speed_money_note}
                           </p>
-                          <p>
-                            <strong>Power:</strong> {machine.power}
-                          </p>
-                          <p>
-                            <strong>Source:</strong> {machine.source}
-                          </p>
-                          <p>
-                            <strong>Order No:</strong>{" "}
-                            {machine.order_no_arr?.join(", ")}
-                          </p>
-                        </div>
-
-                        <div className="space-y-3">
-                          {machine.payments.map((payment) => (
-                            <div
-                              key={`payment-${payment.id}`}
-                              className="border rounded-md p-3 flex flex-col md:flex-row justify-between items-start md:items-center bg-muted/30 shadow-sm"
-                            >
-                              <div className="text-sm space-y-1">
-                                <p>
-                                  <strong>Amount:</strong> {payment.amount}
-                                </p>
-                                <p>
-                                  <strong>TID:</strong> {payment.note}
-                                </p>
-                                <p>
-                                  <strong>Status:</strong>{" "}
-                                  <span
-                                    className={`font-medium ml-1 ${
-                                      payment.status === "approved"
-                                        ? "text-green-600"
-                                        : payment.status === "rejected"
-                                        ? "text-red-600"
-                                        : "text-yellow-600"
-                                    }`}
-                                  >
-                                    {payment.status}
-                                  </span>
-                                </p>
-                                {payment.status === "rejected" && (
-                                  <p>
-                                    <strong>Reason:</strong> {payment.comment}
-                                  </p>
-                                )}
-                                {payment.image && (
-                                  <div className="mt-2">
-                                    <RenderImage img={payment.image} />
-                                  </div>
-                                )}
-                              </div>
-
-                              {payment.status !== "approved" &&
-                                payment.status !== "rejected" && (
-                                  <div className="flex gap-2 mt-3 md:mt-0 md:ml-4">
-                                    <Button
-                                      size="sm"
-                                      disabled={approveLoadingId === payment.id}
-                                      onClick={() => {
-                                        setApproveLoadingId(payment.id);
-                                        handleApprove(
-                                          payment.id,
-                                          machine.machine_id
-                                        );
-                                      }}
-                                    >
-                                      {approveLoadingId === payment.id ? (
-                                        <Spinner className="mr-2 h-4 w-4" />
-                                      ) : null}
-                                      Approve
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="destructive"
-                                      onClick={() => {
-                                        setSelectedPayment(payment.id);
-                                        setVisible(true);
-                                      }}
-                                    >
-                                      Reject
-                                    </Button>
-                                  </div>
-                                )}
-                            </div>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
+                        )}
+                      </CardContent>
+                    </Card>
                   ))}
-                </Accordion>
+                </div>
               </AccordionContent>
             </AccordionItem>
           ))}
