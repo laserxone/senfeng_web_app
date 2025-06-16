@@ -1,10 +1,15 @@
 "use client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import axios from "axios";
-import { myData } from "./data";
+import { useState } from "react";
 
 export default function Page() {
+  const [val, setVal] = useState("");
   async function handleClick() {
+    axios.post("/api/test", { id: val }).then((response) => {
+      console.log(response.data);
+    });
     // await axios.get("/api/test").then((response) => {
     //   const data = response.data;
     //   console.log("done")
@@ -13,14 +18,14 @@ export default function Page() {
     // //   downloadFile(data.unmatched, "unmatched_firebase_entries.json");
     // });
     // const groupedData = getUniqueMachineIds(myData)
-    axios.get("/api/test").then((response) => {
-      console.log("done");
-      const data = response.data;
-      downloadFile(
-        data.unmatchedWithCustomerInfo,
-        "unmatched_non_duplicates_with_customer.json"
-      );
-    });
+    // axios.get("/api/test").then((response) => {
+    //   console.log("done");
+    //   const data = response.data;
+    //   downloadFile(
+    //     data.unmatchedWithCustomerInfo,
+    //     "unmatched_non_duplicates_with_customer.json"
+    //   );
+    // });
   }
 
   //  function getUniqueMachineIds(data) {
@@ -53,14 +58,12 @@ export default function Page() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <h1 className="text-2xl font-bold mb-4">Test Page</h1>
       <p className="text-gray-700">This is a test page.</p>
+      <div className="max-w-3xl">
+      <Input value={val} onChange={(e) => setVal(e.target.value)} />
+      </div>
       <Button onClick={handleClick} className="mt-4">
         Click Me
       </Button>
     </div>
   );
 }
-
-
-
-
-

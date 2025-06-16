@@ -3,9 +3,12 @@ import { NextResponse } from "next/server"
 import moment from "moment";
 import admin from "@/lib/firebaseAdmin";
 import { uniqueMachines, unmatched } from "@/app/test/data";
+import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
 
 
 export async function GET() {
+
+    
 
 
 //    const enrichedUnmatched = [];
@@ -207,4 +210,16 @@ async function getComparisonData() {
         matched: matchedPsqlEntries,
         unmatched: unmatchedFirebaseEntries,
     };
+}
+
+export async function POST(req) {
+
+    const {id} = await req.json()
+
+    if(!id){
+        return NextResponse.json({message : "id is required"}, {status : 400})
+    }
+
+     sendNotificationToMobile(`Test`, "Testing", Number(id), {}, "task", "/dashboard")
+     return NextResponse.json({message : "Done"}, {status : 200})
 }
