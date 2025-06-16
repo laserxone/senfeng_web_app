@@ -97,9 +97,13 @@ export async function PUT(req, { params }) {
 
     const result = await pool.query(query, values);
 
-    const logMSG = generateLog(data, "Machine updated")
+    try {
+      const logMSG = generateLog(data, "Machine updated")
+      addLog({ text: logMSG, user_id: result.rows[0].sell_by, customer_id: result.rows[0].customer_id, sale_id: result.rows[0].id })
+    } catch (error) {
+      console.log(error)
+    }
 
-    addLog({ text: logMSG, user_id: result.rows[0].sell_by, customer_id: result.rows[0].customer_id, sale_id: result.rows[0].id })
 
     console.log("data updated successfully");
     return NextResponse.json({ message: "Updated successfully" }, { status: 200 });

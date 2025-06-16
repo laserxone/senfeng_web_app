@@ -28,10 +28,16 @@ export async function POST(req) {
             await pool.query(`UPDATE customer SET member = TRUE WHERE id = $1`, [data.customer_id])
         }
 
-        const logMSG = generateLog(data, "New Machine added")
+          try {
+    const logMSG = generateLog(data, "New Machine added")
 
         addLog({ text: logMSG, user_id: data.sell_by, customer_id: data?.customer_id || null, sale_id : result.rows[0].id  })
 
+    } catch (error) {
+      console.log(error)
+    }
+
+       
         console.log("data inserted successfully");
         return NextResponse.json({ message: "Inserted successfully" }, { status: 201 });
 

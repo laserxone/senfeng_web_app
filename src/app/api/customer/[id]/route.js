@@ -176,9 +176,16 @@ export async function PUT(req, { params }) {
       }
     }
 
-    const logMSG = generateLog(data, "Customer updated")
 
-    addLog({ text: logMSG, user_id: userid ? Number(userid) : null, customer_id: result.rows[0].id })
+
+    try {
+      const logMSG = generateLog(data, "Customer updated")
+
+      addLog({ text: logMSG, user_id: userid ? Number(userid) : null, customer_id: result.rows[0].id })
+
+    } catch (error) {
+      console.log(error)
+    }
 
     return NextResponse.json({ message: "Updated successfully" }, { status: 200 });
   } catch (error) {

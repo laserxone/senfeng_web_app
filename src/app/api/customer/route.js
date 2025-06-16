@@ -46,10 +46,16 @@ export async function POST(req) {
              sendNotificationToMobile(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`,"Customer" ,result.rows[0].ownership, result.rows[0], "client", `/dashboard/customer/${result.rows[0].id}` )
         }
 
-        const logMSG = generateLog(data, "New customer added")
+        try {
+             const logMSG = generateLog(data, "New customer added")
 
         addLog({ text: logMSG, user_id: result.rows[0].created_by, customer_id: result.rows[0].id })
 
+        } catch (error) {
+            console.log(error)
+        }
+
+       
 
         return NextResponse.json({ message: "Inserted successfully", data: result.rows[0] }, { status: 201 });
 

@@ -36,10 +36,15 @@ export async function POST(req) {
 
         sendNotificationToOwner(`New payment added for ${customerResult.rows[0].customer_name}`, `member/${customerResult.rows[0].customer_id}/${result.rows[0].machine_id}`)
 
-        const logMSG = generateLog(data, "New Payment added")
+      
+            try {
+     const logMSG = generateLog(data, "New Payment added")
 
         addLog({ text: logMSG, user_id: null, customer_id: null, sale_id: result.rows[0].machine_id, payment_id: result.rows[0].id })
 
+    } catch (error) {
+      console.log(error)
+    }
 
         return NextResponse.json({
             message: "Payment added successfully",
