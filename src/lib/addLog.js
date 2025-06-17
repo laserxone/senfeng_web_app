@@ -10,8 +10,6 @@ export async function addLog({ text, user_id = null, customer_id = null, payment
 
         const values = [text, user_id, customer_id, payment_id, sale_id];
 
-        console.log(values)
-
         pool.query(query, values);
 
     } catch (error) {

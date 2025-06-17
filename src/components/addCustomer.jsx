@@ -2,7 +2,7 @@
 
 import { toast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
-import { debounce } from "@/lib/debounce";
+import { debounce, debouncePromise } from "@/lib/debounce";
 import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Trash } from "lucide-react";
@@ -130,6 +130,13 @@ const AddCustomerDialog = ({
     onClose(val);
   }
 
+  const debouncedSaveData = useCallback(debouncePromise(saveData, 1000), []);
+
+  async function saveData(formData) {
+    const response = await axios.post(`/customer`, formData);
+    return response;
+  }
+
   async function onSubmit(values) {
     const hasInvalidNumber = selectedNumber.some((code, index) => {
       const number = numbers[index];
@@ -158,7 +165,7 @@ const AddCustomerDialog = ({
         return selectedNumber[index] + item;
       });
 
-      const response = await axios.post(`/customer`, {
+      const formData = {
         name: values.company,
         email: values.email,
         customer_group: values.group,
@@ -183,7 +190,9 @@ const AddCustomerDialog = ({
             : undefined,
         created_by: UserState.value.data?.id,
         created_at: values.created_at || undefined,
-      });
+      };
+
+      const response = await debouncedSaveData(formData);
 
       toast({ title: "Customer Addedd successfully" });
 
@@ -647,6 +656,7 @@ const AddCustomerDialog = ({
 
                 <Button
                   disabled={
+                    loading ||
                     customerInfo.length > 0 ||
                     checking ||
                     numbers.filter((item) => {
