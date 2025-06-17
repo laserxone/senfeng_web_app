@@ -9,6 +9,8 @@ export async function PUT(req, {params}) {
         const data = await req.json();
         const {...updates } = data;
         const {id} = await params
+
+       
         
         if (!id) {
             return NextResponse.json({ message: "ID is required" }, { status: 400 });
@@ -34,6 +36,8 @@ export async function PUT(req, {params}) {
             SET ${fields.join(", ")}
             WHERE id = $${values.length}
         `;
+
+       
   
         await pool.query(query, values);
   

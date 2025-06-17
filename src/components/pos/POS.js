@@ -35,6 +35,7 @@ import Spinner from '../ui/spinner';
 import { UserSearch } from '../user-search';
 import NotificationBadge from './NotificationBadge';
 import { CustomerSearchWithData } from '../customer-search-with-data';
+import { toast } from '@/hooks/use-toast';
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -460,7 +461,7 @@ export default function POS() {
         try {
             setEngineerLoading(true)
             const response = await axios.get(`/pos/engineer`)
-          
+
             setAllEngineersData(response.data)
             setEngineersModal(true)
             return true
@@ -1443,11 +1444,14 @@ const AddItemDialog = ({ designation, visible, onClose, handleDecrease, showOthe
 
 const OrderStockDialog = ({ dialogVisible, onCloseDialog, stock }) => {
 
+
+
     const [search, setSearch] = useState("")
     const [loading, setLoading] = useState(false)
 
+
     async function handleCreatePDF() {
-        // setLoading(true)
+        setLoading(true)
         // try {
         //     const blob = await pdf(<OrderStockPDF stock={stock} />).toBlob();
         //     const url = URL.createObjectURL(blob);
@@ -1466,15 +1470,27 @@ const OrderStockDialog = ({ dialogVisible, onCloseDialog, stock }) => {
             "English Name",
             "New Order",
             "Buying Price",
+            "Image"
         ];
 
         const formattedData = [...stock].map((item) => [
             item.chinese_name,
             item.name,
             item.new_order,
-            item.buying
+            item.buying,
+            item.img
         ]);
-        exportToExcel(headers, formattedData, "New Order.xlsx", true);
+
+        try {
+            await exportToExcel(headers, formattedData, "New Order.xlsx", true);
+        } catch (error) {
+            toast({ title: 'Error', description: error || "Error creating excel" })
+        } finally {
+            setLoading(false)
+        }
+
+
+
 
 
     }
@@ -1592,6 +1608,7 @@ const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrea
     }, [])
 
     const uploadFiles = async (item, imgRef) => {
+
         let name = ""
         if (imgRef) {
             name = imgRef
@@ -1599,7 +1616,14 @@ const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrea
             name = new Date().getTime().toString() + ".png"
         }
         return new Promise((resolve, reject) => {
-            const metadata = {
+            if (!item) {
+                if (imgRef) {
+                    resolve(imgRef)
+                } else {
+                    resolve(null)
+                }
+            } else {
+ const metadata = {
                 contentType: "image/png",
             };
             const storageRef = ref(
@@ -1630,24 +1654,74 @@ const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrea
                     resolve(name)
                 }
             );
+            }
+           
         })
 
     };
 
     async function handleSave(id, imgRef) {
 
+        if (localPrice && isNaN(Number(localPrice))) {
+            toast({ title: 'Error', description: "Price must be a number",variant : "destructive" })
+            return
+        }
+
+        if (localQty && isNaN(Number(localQty))) {
+            toast({ title: 'Error', description: "Quantity must be a number",variant : "destructive" })
+            return
+        }
+
+        if (threshold && isNaN(Number(threshold))) {
+            toast({ title: 'Error', description: "Threshold must be a number",variant : "destructive" })
+            return
+        }
+
+        if (newOrder && isNaN(Number(newOrder))) {
+            toast({ title: 'Error', description: "New order must be a number",variant : "destructive" })
+            return
+        }
+
+        if (buying && isNaN(Number(buying))) {
+            toast({ title: 'Error', description: "Buying price must be a number",variant : "destructive" })
+            return
+        }
+
+
+        const formData = {
+            name: localName,
+            chinese_name: localChineseName,
+        }
+
+
+        if (!isNaN(Number(localPrice))) {
+            formData.price = Number(localPrice)
+        }
+
+
+        if (!isNaN(Number(localQty))) {
+            formData.qty = Number(localQty)
+        }
+
+        if (!isNaN(Number(threshold))) {
+            formData.threshold = Number(threshold)
+        }
+        if (!isNaN(Number(newOrder))) {
+            formData.new_order = Number(newOrder)
+        }
+
+        if (!isNaN(Number(buying))) {
+            formData.buying = Number(buying)
+        }
+
         setLoading(true)
         try {
             const result = await uploadFiles(localImage, imgRef)
-            axios.put(`/pos/${id}`, {
-                name: localName,
-                price: Number(localPrice),
-                qty: Number(localQty),
-                img: result,
-                threshold: threshold ? Number(threshold) : "",
-                new_order: newOrder ? Number(newOrder) : undefined,
-                buying: buying ? Number(buying) : undefined,
-            })
+            if (result) {
+                formData.img = result
+            }
+
+            axios.put(`/pos/${id}`, formData)
                 .catch((e) => {
                     console.log(e)
                 }).finally(() => {
@@ -1709,10 +1783,9 @@ const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrea
 
                                     <div className='text-[14px]'>Quantity</div>
 
-                                    <input placeholder={item?.qty || "Enter qty"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} type="number" value={localQty || ""} className='px-2 ' onChange={(e) => {
-                                        if (!isNaN(e.target.value)) {
-                                            setLocalQty(Number(e.target.value))
-                                        }
+                                    <input placeholder={item?.qty || "Enter qty"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} value={localQty} className='px-2 ' onChange={(e) => {
+                                        setLocalQty(e.target.value)
+
 
                                     }} />
                                 </div>
@@ -1720,30 +1793,25 @@ const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrea
                                 <div className='flex justify-between'>
 
                                     <div className='text-[14px]'>Price</div>
-                                    <input placeholder={item?.price || "Enter price"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} type="number" value={localPrice || ""} className='px-2 ' onChange={(e) => {
-                                        if (!isNaN(e.target.value)) {
-                                            setLocalPrice(Number(e.target.value))
-                                        }
+                                    <input placeholder={item?.price || "Enter price"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} value={localPrice} className='px-2 ' onChange={(e) => {
+
+                                        setLocalPrice(e.target.value)
+
 
                                     }} />
                                 </div>
                                 <div className='flex justify-between'>
                                     <div className='text-[14px]'>Threshold</div>
-                                    <input type='number' placeholder={item?.threshold || "Enter threshold"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} className='px-2 ' value={threshold || ""} onChange={(e) => {
-                                        if (!isNaN(e.target.value)) {
-                                            setThreshold(Number(e.target.value))
-                                        }
-
-
+                                    <input placeholder={item?.threshold || "Enter threshold"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} className='px-2 ' value={threshold} onChange={(e) => {
+                                        setThreshold(e.target.value)
                                     }} />
                                 </div>
                                 <div className='flex justify-between'>
 
                                     <div className='text-[14px]'>New order</div>
-                                    <input type='number' placeholder={item?.threshold || "Enter new order"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} className='px-2 ' value={newOrder || ""} onChange={(e) => {
-                                        if (!isNaN(e.target.value)) {
-                                            setNewOrder(Number(e.target.value))
-                                        }
+                                    <input placeholder={item?.threshold || "Enter new order"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} className='px-2 ' value={newOrder} onChange={(e) => {
+                                        setNewOrder(e.target.value)
+
                                     }} />
                                 </div>
 
@@ -1751,10 +1819,10 @@ const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrea
                                     < div className='flex justify-between'>
 
                                         <div className='text-[14px]'>Buying ¥</div>
-                                        <input type='number' placeholder={item?.buying || "Enter buying price"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} className='px-2 ' value={buying || ""} onChange={(e) => {
-                                            if (!isNaN(e.target.value)) {
-                                                setBuying(Number(e.target.value))
-                                            }
+                                        <input placeholder={item?.buying || "Enter buying price"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} className='px-2 ' value={buying} onChange={(e) => {
+
+                                            setBuying(e.target.value)
+
                                         }} />
                                     </div>
                                 }
@@ -1789,9 +1857,9 @@ const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrea
 
                             </div>
                             <div className='hover:cursor-pointer' onClick={() => {
-                                setLocalName(item.name)
-                                setLocalQty(item?.qty || 0)
-                                setLocalPrice(item?.price || 0)
+                                setLocalName(item.name || "")
+                                setLocalQty(item?.qty || "")
+                                setLocalPrice(item?.price || "")
                                 setThreshold(item?.threshold || "")
                                 setNewOrder(item?.new_order || "")
                                 setLocalChineseName(item?.chinese_name || "")
@@ -1821,6 +1889,7 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
 
 
     const uploadFiles = async (item, imgRef) => {
+
         let name = ""
         if (imgRef) {
             name = imgRef
@@ -1828,7 +1897,15 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
             name = new Date().getTime().toString() + ".png"
         }
         return new Promise((resolve, reject) => {
-            const metadata = {
+
+            if (!item) {
+                if (imgRef) {
+                    resolve(imgRef)
+                } else {
+                    resolve(null)
+                }
+            } else {
+ const metadata = {
                 contentType: "image/png",
             };
             const storageRef = ref(
@@ -1859,25 +1936,76 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
                     resolve(name)
                 }
             );
+            }
+
+           
+
+
         })
 
     };
 
     async function handleSave(id, imgRef) {
 
+        if (localPrice && isNaN(Number(localPrice))) {
+            toast({ title: 'Error', description: "Price must be a number",variant : "destructive" })
+            return
+        }
+
+        if (localQty && isNaN(Number(localQty))) {
+            toast({ title: 'Error', description: "Quantity must be a number" ,variant : "destructive" })
+            return
+        }
+
+        if (threshold && isNaN(Number(threshold))) {
+            toast({ title: 'Error', description: "Threshold must be a number",variant : "destructive" })
+            return
+        }
+
+        if (newOrder && isNaN(Number(newOrder))) {
+            toast({ title: 'Error', description: "New order must be a number",variant : "destructive" })
+            return
+        }
+
+        if (buying && isNaN(Number(buying))) {
+            toast({ title: 'Error', description: "Buying price must be a number",variant : "destructive" })
+            return
+        }
+
+        const formData = {
+            name: localName,
+            chinese_name: localChineseName,
+        }
+
+
+        if (!isNaN(Number(localPrice))) {
+            formData.price = Number(localPrice)
+        }
+
+
+        if (!isNaN(Number(localQty))) {
+            formData.qty = Number(localQty)
+        }
+
+        if (!isNaN(Number(threshold))) {
+            formData.threshold = Number(threshold)
+        }
+        if (!isNaN(Number(newOrder))) {
+            formData.new_order = Number(newOrder)
+        }
+
+        if (!isNaN(Number(buying))) {
+            formData.buying = Number(buying)
+        }
+
         setLoading(true)
         try {
             const result = await uploadFiles(localImage, imgRef)
-            axios.put(`/pos/${id}`, {
-                name: localName,
-                price: Number(localPrice),
-                qty: Number(localQty),
-                img: result,
-                threshold: threshold ? Number(threshold) : "",
-                new_order: newOrder ? Number(newOrder) : "",
-                chinese_name: localChineseName,
-                buying: buying ? Number(buying) : undefined
-            })
+            if (result) {
+                formData.img = result
+            }
+
+            axios.put(`/pos/${id}`, formData)
                 .catch((e) => {
                     console.log(e)
                 }).finally(() => {
@@ -1891,6 +2019,8 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
         }
 
     }
+
+
 
     return (
         item.name === 'Other' ?
@@ -1938,10 +2068,8 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
 
                                     <div className='text-[14px]'>Quantity</div>
 
-                                    <input placeholder={item?.qty || "Enter qty"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} type="number" value={localQty || ""} className='px-2 ' onChange={(e) => {
-                                        if (!isNaN(e.target.value)) {
-                                            setLocalQty(Number(e.target.value))
-                                        }
+                                    <input placeholder={item?.qty || "Enter qty"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} value={localQty} className='px-2 ' onChange={(e) => {
+                                        setLocalQty(e.target.value)
 
                                     }} />
                                 </div>
@@ -1949,30 +2077,26 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
                                 <div className='flex justify-between'>
 
                                     <div className='text-[14px]'>Price</div>
-                                    <input placeholder={item?.price || "Enter price"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} type="number" value={localPrice || ""} className='px-2 ' onChange={(e) => {
-                                        if (!isNaN(e.target.value)) {
-                                            setLocalPrice(Number(e.target.value))
-                                        }
+                                    <input placeholder={item?.price || "Enter price"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} value={localPrice} className='px-2 ' onChange={(e) => {
+
+                                        setLocalPrice(e.target.value)
+
 
                                     }} />
                                 </div>
                                 <div className='flex justify-between'>
                                     <div className='text-[14px]'>Threshold</div>
-                                    <input type='number' placeholder={item?.threshold || "Enter threshold"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} className='px-2 ' value={threshold || ""} onChange={(e) => {
-                                        if (!isNaN(e.target.value)) {
-                                            setThreshold(Number(e.target.value))
-                                        }
-
-
+                                    <input placeholder={item?.threshold || "Enter threshold"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} className='px-2 ' value={threshold} onChange={(e) => {
+                                        setThreshold(e.target.value)
                                     }} />
                                 </div>
                                 <div className='flex justify-between'>
 
                                     <div className='text-[14px]'>New order</div>
-                                    <input type='number' placeholder={item?.threshold || "Enter new order"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} className='px-2 ' value={newOrder || ""} onChange={(e) => {
-                                        if (!isNaN(e.target.value)) {
-                                            setNewOrder(Number(e.target.value))
-                                        }
+                                    <input placeholder={item?.threshold || "Enter new order"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} className='px-2 ' value={newOrder} onChange={(e) => {
+
+                                        setNewOrder(e.target.value)
+
 
 
                                     }} />
@@ -1982,10 +2106,10 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
                                     < div className='flex justify-between'>
 
                                         <div className='text-[14px]'>Buying ¥</div>
-                                        <input type='number' placeholder={item?.buying || "Enter buying price"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} className='px-2 ' value={buying || ""} onChange={(e) => {
-                                            if (!isNaN(e.target.value)) {
-                                                setBuying(Number(e.target.value))
-                                            }
+                                        <input placeholder={item?.buying || "Enter buying price"} style={{ borderWidth: 1, borderColor: '#cccccc', fontSize: '14px', width: '50%', }} className='px-2 ' value={buying} onChange={(e) => {
+
+                                            setBuying(e.target.value)
+
                                         }} />
                                     </div>
                                 }
@@ -2020,10 +2144,10 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
 
                             </div>
                             <div className='hover:cursor-pointer' onClick={() => {
-                                setLocalName(item.name)
-                                setLocalChineseName(item.chinese_name)
-                                setLocalQty(item?.qty || 0)
-                                setLocalPrice(item?.price || 0)
+                                setLocalName(item.name || "")
+                                setLocalChineseName(item.chinese_name || "")
+                                setLocalQty(item?.qty || "")
+                                setLocalPrice(item?.price || "")
                                 setThreshold(item?.threshold || "")
                                 setNewOrder(item?.new_order || "")
                                 setEditable(!editable)
@@ -2086,18 +2210,36 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
     };
 
     async function handleSaveProduct() {
+
+        if (
+            isNaN(Number(price)) ||
+            isNaN(Number(qty)) ||
+            (threshold !== undefined && threshold !== "" && isNaN(Number(threshold))) ||
+            (newOrder !== undefined && newOrder !== "" && isNaN(Number(newOrder)))
+        ) {
+
+            toast({ title: 'Error', description: "Price, Quantity, Threshold and New Order must be numbers",variant : "destructive" })
+            return
+        }
+
         setLoading(true)
         try {
             const result = await uploadFiles(image)
-            axios.post("/pos", {
+            const formData = {
                 name: name,
                 price: Number(price),
                 qty: Number(qty),
                 img: result,
-                threshold: threshold ? Number(threshold) : "",
-                new_order: newOrder ? Number(newOrder) : "",
                 chinese_name: chineseName
-            })
+            }
+            if (!isNaN(Number(threshold))) {
+                formData.threshold = Number(threshold)
+            }
+            if (!isNaN(Number(newOrder))) {
+                formData.new_order = Number(newOrder)
+            }
+
+            axios.post("/pos", formData)
                 .then(() => {
                     onRefresh()
                 }).catch((e) => {
@@ -2139,27 +2281,27 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
                             <div className='text-md'>Chinese name</div>
                             <Input placeholder="Enter product chinese name" value={chineseName} onChange={(e) => setChineseName(e.target.value)} />
                             <div className='text-md mt-2'>Quantity</div>
-                            <Input type="number" placeholder="Enter quantity" value={qty || ""} onChange={(e) => {
-                                if (!isNaN(e.target.value))
-                                    setQty(e.target.value)
+                            <Input placeholder="Enter quantity" value={qty} onChange={(e) => {
+
+                                setQty(e.target.value)
                             }} />
 
                             <div className='text-md mt-2'>Price</div>
-                            <Input type="number" placeholder="Enter price" value={price || ""} onChange={(e) => {
-                                if (!isNaN(e.target.value))
-                                    setPrice(e.target.value)
+                            <Input placeholder="Enter price" value={price} onChange={(e) => {
+
+                                setPrice(e.target.value)
                             }} />
 
                             <div className='text-md mt-2'>Threshold</div>
-                            <Input type="number" placeholder="Enter threshold" value={threshold || ""} onChange={(e) => {
-                                if (!isNaN(e.target.value))
-                                    setThreshold(e.target.value)
+                            <Input placeholder="Enter threshold" value={threshold} onChange={(e) => {
+
+                                setThreshold(e.target.value)
                             }} />
 
                             <div className='text-md mt-2'>New Order</div>
-                            <Input type="number" placeholder="Enter new order" value={newOrder || ""} onChange={(e) => {
-                                if (!isNaN(e.target.value))
-                                    setNewOrder(e.target.value)
+                            <Input placeholder="Enter new order" value={newOrder} onChange={(e) => {
+
+                                setNewOrder(e.target.value)
                             }} />
 
                             <div className='text-md mt-2'>Image URL</div>

@@ -1,35 +1,75 @@
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { getDownloadURL, ref } from "firebase/storage";
+import { storage } from "@/config/firebase";
 
-const exportToExcel = (headers, data, fileName = "data.xlsx", formatBuyingPrice = false) => {
-   if (!data || data.length === 0) {
+const exportToExcel = async (
+  headers,
+  data,
+  fileName = "data.xlsx",
+  formatBuyingPrice = false
+) => {
+  if (!data || data.length === 0) {
     throw new Error("No data available to export");
   }
 
-  const worksheetData = [headers, ...data];
+  const worksheetData = [headers];
+
+  for (const row of data) {
+    const newRow = [...row];
+    const refImage = row[4];
+
+    if (refImage) {
+      try {
+        const starsRef = ref(storage, `products/${refImage}`);
+        const url = await getDownloadURL(starsRef);
+        newRow[4] = `=IMAGE("${url}", "", 0)`;
+      } catch (err) {
+        console.error(`Failed to load image for ${refImage}:`, err);
+        newRow[4] = "Image not available";
+      }
+    } else {
+      newRow[4] = "Image not available";
+    }
+
+    worksheetData.push(newRow);
+  }
+
   const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
-  // If formatBuyingPrice is true, format the 4th column (index 3)
-  if (formatBuyingPrice) {
-    for (let rowIndex = 1; rowIndex <= data.length; rowIndex++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: rowIndex, c: 3 }); // column index 3 = 4th column
-      const cell = worksheet[cellAddress];
+  worksheet['!cols'] = [
+  { wch: 20 },
+  { wch: 20 },
+  { wch: 20 },
+  { wch: 20 },
+  { wch: 50 }, // Image column
+];
 
+  if (formatBuyingPrice) {
+    for (let rowIndex = 1; rowIndex < worksheetData.length; rowIndex++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: rowIndex, c: 3 });
+      const cell = worksheet[cellAddress];
       if (cell && !isNaN(cell.v)) {
         cell.t = 'n';
-        cell.z = '¥#,##0.00'; // Chinese Yuan format
-        cell.v = parseFloat(cell.v); // ensure it's a number
+        cell.z = '¥#,##0.00';
+        cell.v = parseFloat(cell.v);
       }
     }
   }
 
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+  try {
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
 
-  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-  const excelBlob = new Blob([excelBuffer], { type: "application/octet-stream" });
-  saveAs(excelBlob, fileName);
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const excelBlob = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(excelBlob, fileName);
+  } catch (error) {
+    console.error("Failed to generate or download Excel:", error);
+    throw new Error("Failed to generate Excel file");
+  }
 };
+
 
 
 export default exportToExcel;
