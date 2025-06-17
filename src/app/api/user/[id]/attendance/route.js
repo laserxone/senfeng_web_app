@@ -11,7 +11,7 @@ export async function GET(req, { params }) {
     const { id } = await params
     const searchParams = req.nextUrl.searchParams
     const start_date = searchParams.get('start_date')
-    const end_date = searchParams.get('end_date') 
+    const end_date = searchParams.get('end_date')
 
     if (!id) {
         return NextResponse.json({ message: "Parameters missing" }, { status: 404 })
@@ -105,7 +105,7 @@ WHERE u.id = $1
 export async function POST(req, { params }) {
     try {
         const { id } = await params
-        const { note, location, image, task, reason } = await req.json();
+        const { note, location, image, task, reason, customer_id } = await req.json();
 
         if (!note || !location || !image) {
             return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
@@ -127,18 +127,18 @@ export async function POST(req, { params }) {
         if (checkResult.rows.length === 0) {
             await UploadImageForMobile(image, fileName)
             const insertQuery = `
-          INSERT INTO attendance (user_id, note_time_in, time_in, location_time_in, image_time_in)
-          VALUES ($1, $2, $3, $4, $5)
+          INSERT INTO attendance (user_id, note_time_in, time_in, location_time_in, image_time_in, customer_id)
+          VALUES ($1, $2, $3, $4, $5, $6)
           RETURNING *;
         `;
-            const insertResult = await pool.query(insertQuery, [id, note, timestamp, location, fileName]);
+            const insertResult = await pool.query(insertQuery, [id, note, timestamp, location, fileName, customer_id || null]);
 
             await pool.query(`
             INSERT INTO task(
-                assigned_to, status, task_name, type, created_at
+                assigned_to, status, task_name, type, created_at, customer_id
             )
-            VALUES ($1, $2, $3, $4, NOW()) 
-        `, [id, "Pending", task, reason]);
+            VALUES ($1, $2, $3, $4, NOW(), $5) 
+        `, [id, "Pending", task, reason, customer_id || null]);
 
             return NextResponse.json({ message: "Attendance marked time in", data: insertResult.rows[0] }, { status: 201 });
         }
