@@ -170,7 +170,7 @@ const RenderEachMachine = ({ machine, onReturn }) => {
     setLoading(true);
     const formData = {
       sale_id: machine.sale_id,
-      user_id: machine.sold_by_id,
+      user_id: selectedUser,
       is_requested: true,
       request_date: new Date(),
       is_approved: true,
