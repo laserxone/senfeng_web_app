@@ -1,9 +1,5 @@
 "use client";
 
-import { Heading } from "@/components/ui/heading";
-import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
-import { useContext, useEffect, useRef, useState } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -11,23 +7,23 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import Spinner from "@/components/ui/spinner";
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@/config/firebase";
-import Zoom from "react-medium-image-zoom";
-import "react-medium-image-zoom/dist/styles.css";
+import { Card, CardContent } from "@/components/ui/card";
+import { Heading } from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { RequiredStar } from "@/components/RequiredStar";
-import { Label } from "@/components/ui/label";
-import { toast } from "@/hooks/use-toast";
-import { Card, CardContent } from "@/components/ui/card";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
+import { UserSearch } from "@/components/user-search";
+import axios from "@/lib/axios";
+import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
+import { useContext, useEffect, useRef, useState } from "react";
+import "react-medium-image-zoom/dist/styles.css";
 
 export default function Page() {
   const { state: UserState } = useContext(UserContext);
@@ -35,12 +31,6 @@ export default function Page() {
   const [data, setData] = useState([]);
   const hasFetched = useRef(false);
   const [search, setSearch] = useState("");
-  const [comment, setComment] = useState("");
-  const [selectedPayment, setSelectedPayment] = useState(null);
-  const [visible, setVisible] = useState(false);
-  const [approveLoadingId, setApproveLoadingId] = useState(null);
-  const [rejectionLoading, setRejectionLoading] = useState(false);
-  const [machineApproveLoadingId, setMachineApproveLoadingId] = useState(null);
 
   const userId = UserState.value.data?.id;
 
@@ -55,7 +45,6 @@ export default function Page() {
     setLoading(true);
     try {
       const response = await axios.get("/old-commissions");
-      console.log(response.data);
       setData(response.data);
     } catch (err) {
       console.error("Failed to fetch data:", err);
@@ -63,97 +52,6 @@ export default function Page() {
       setLoading(false);
     }
   }
-
-  const handleApprove = async (paymentId, machineId) => {
-    try {
-      await axios.put(`/payment-verification/${paymentId}`, {
-        status: "approved",
-        payment_lock: true,
-      });
-
-      // update the UI
-      setData((prevData) =>
-        prevData.map((customer) => ({
-          ...customer,
-          machines: customer.machines.map((machine) => {
-            if (machine.machine_id !== machineId) return machine;
-            return {
-              ...machine,
-              payments: machine.payments.map((payment) =>
-                payment.id === paymentId
-                  ? { ...payment, status: "approved", payment_lock: true }
-                  : payment
-              ),
-            };
-          }),
-        }))
-      );
-    } catch (err) {
-      console.error("Approve failed", err);
-    } finally {
-      setApproveLoadingId(null);
-    }
-  };
-
-  const handleApproveAll = async (machineId) => {
-    setMachineApproveLoadingId(machineId);
-
-    try {
-      const pendingPayments = [];
-
-      data.forEach((customer) => {
-        customer.machines.forEach((machine) => {
-          if (machine.machine_id === machineId) {
-            machine.payments.forEach((payment) => {
-              if (payment.status === "pending") {
-                pendingPayments.push(payment.id);
-              }
-            });
-          }
-        });
-      });
-
-      await Promise.all(
-        pendingPayments.map((paymentId) => handleApprove(paymentId, machineId))
-      );
-      toast({ title: "All Payments updated" });
-    } catch (err) {
-      toast({ title: "Bulk approval failed", variant: "destructive" });
-    } finally {
-      setMachineApproveLoadingId(null);
-    }
-  };
-  const handleReject = async (paymentId) => {
-    setRejectionLoading(true);
-    try {
-      await axios.put(`/payment-verification/${paymentId}`, {
-        status: "rejected",
-        comment: comment,
-      });
-
-      // Optimistically update UI
-      setData((prevData) =>
-        prevData.map((customer) => ({
-          ...customer,
-          machines: customer.machines.map((machine) => ({
-            ...machine,
-            payments: machine.payments.map((payment) =>
-              payment.id === paymentId
-                ? { ...payment, status: "rejected", comment }
-                : payment
-            ),
-          })),
-        }))
-      );
-
-      setVisible(false);
-      setComment("");
-    } catch (err) {
-      console.error("Reject failed", err);
-    } finally {
-      setRejectionLoading(false);
-    }
-  };
 
   const filteredData = data.filter((item) =>
     `${item.customer_name} ${item.customer_owner}`
@@ -201,50 +99,34 @@ export default function Page() {
                         ? customer?.customer_number?.join(", ")
                         : customer?.customer_number}
                     </div>
-                    <p className="text-sm text-muted-foreground">Manager: {customer?.customer_owner_name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Manager: {customer?.customer_owner_name}
+                    </p>
                   </div>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="bg-muted px-4 py-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {customer.machines.map((machine) => (
-                    <Card key={machine.sale_id} className="shadow-md">
-                      <CardContent className="p-4 space-y-1">
-                        <p className="font-medium text-primary">
-                          Serial No: {machine.serial_no}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Power: {machine.power || "N/A"}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Source: {machine.source || "N/A"}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Contract:{" "}
-                          {machine.contract_date
-                            ? moment(new Date(machine.contract_date)).format(
-                                "YYY-MM-DD"
-                              )
-                            : "N/A"}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Order No(s):{" "}
-                          {machine.order_no_arr?.join(", ") || "N/A"}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Sell By: {machine?.sold_by_name || "N/A"}
-                        </p>
-                         <p className="text-sm text-muted-foreground">
-                          Price: {machine?.price || "N/A"}
-                        </p>
-                        {machine?.speed_money && (
-                          <p className="text-sm text-muted-foreground">
-                            Amount: {machine?.speed_money_amount}, Note:{" "}
-                            {machine?.speed_money_note}
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
+                    <RenderEachMachine
+                      machine={machine}
+                      key={machine.sale_id}
+                      onReturn={(machineId) => {
+                        setData((prevData) => {
+                          return prevData.map((cust) => {
+                            if (cust.customer_id === customer.customer_id) {
+                              return {
+                                ...cust,
+                                machines: cust.machines.filter(
+                                  (m) => m.sale_id !== machineId
+                                ),
+                              };
+                            }
+                            return cust;
+                          });
+                        });
+                      }}
+                    />
                   ))}
                 </div>
               </AccordionContent>
@@ -252,81 +134,153 @@ export default function Page() {
           ))}
         </Accordion>
       )}
-
-      <Dialog open={visible} onOpenChange={setVisible}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject reason</DialogTitle>
-            <div className="flex flex-1 flex-col gap-2">
-              <h1>
-                Enter reason for rejection <RequiredStar />
-              </h1>
-              <Input
-                placeholder="Reason"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-              />
-
-              <Button
-                disabled={!comment || rejectionLoading}
-                onClick={() => handleReject(selectedPayment)}
-              >
-                {rejectionLoading && <Spinner className="mr-2 h-4 w-4" />}
-                Save
-              </Button>
-            </div>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
 
-const RenderImage = ({ img }) => {
-  const [localImage, setLocalImage] = useState(null);
+const RenderEachMachine = ({ machine, onReturn }) => {
+  const [selectedPercentage, setSelectedPercentage] = useState("2");
+  const [showManual, setShowManual] = useState(false);
+  const [manualNumber, setManualNumber] = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [commissionAmount, setCommissionAmount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!img) {
-      setLocalImage(null);
-      setError(false);
-      setLoading(false);
-      return;
+    if (machine?.sold_by_id) {
+      setSelectedUser(machine?.sold_by_id);
     }
+  }, [machine]);
 
-    setLoading(true);
-    setError(false);
-
-    if (img.includes("http")) {
-      setLocalImage(img);
-      setLoading(false);
+  useEffect(() => {
+    if (showManual) {
+      setCommissionAmount(parseFloat(manualNumber) || 0);
     } else {
-      getDownloadURL(ref(storage, img))
-        .then((url) => {
-          setLocalImage(url);
-        })
-        .catch(() => {
-          setError(true);
-          setLocalImage(null);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+      if (selectedPercentage && selectedUser) {
+        const percentage = parseFloat(selectedPercentage);
+        const price = parseFloat(machine?.price) || 0;
+        const amount = (price * percentage) / 100;
+        setCommissionAmount(amount);
+      }
     }
-  }, [img]);
+  }, [selectedPercentage, selectedUser, machine, showManual, manualNumber]);
 
-  if (loading) return <Spinner />;
-  if (!img || error || !localImage) return <p>No signature</p>;
+  async function handleClearCommission(machine) {
+    console.log(machine);
+    setLoading(true);
+    const formData = {
+      sale_id: machine.sale_id,
+      user_id: machine.sold_by_id,
+      is_requested: true,
+      request_date: new Date(),
+      is_approved: true,
+      approval_date: new Date(),
+      commission_amount: commissionAmount,
+      total_amount: machine.price,
+      commission_issued: true,
+    };
+
+    try {
+      await axios.post("/old-commissions", formData);
+      onReturn(machine.sale_id);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (selectedPercentage !== "manual") {
+      setShowManual(false);
+      setManualNumber("");
+    }
+  }, [selectedPercentage]);
 
   return (
-    <Zoom>
-      <img
-        alt="visit image"
-        className="dark:invert"
-        src={localImage}
-        width="100"
-      />
-    </Zoom>
+    <Card className="shadow-md">
+      <CardContent className="p-4 space-y-1">
+        <p className="font-medium text-primary">
+          Serial No: {machine.serial_no}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Power: {machine.power || "N/A"}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Source: {machine.source || "N/A"}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Contract:{" "}
+          {machine.contract_date
+            ? moment(new Date(machine.contract_date)).format("YYYY-MM-DD")
+            : "N/A"}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Order No(s): {machine.order_no_arr?.join(", ") || "N/A"}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Sell By: {machine?.sold_by_name || "N/A"}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Price: {machine?.price || "N/A"}
+        </p>
+        {machine?.speed_money && (
+          <p className="text-sm text-muted-foreground">
+            Amount: {machine?.speed_money_amount}, Note:{" "}
+            {machine?.speed_money_note}
+          </p>
+        )}
+        <div className="space-y-2">
+          <UserSearch value={selectedUser} onReturn={setSelectedUser} />
+          <Select
+            onValueChange={(val) => {
+              if (val === "manual") {
+                setSelectedPercentage(val);
+                setShowManual(true);
+              } else {
+                setSelectedPercentage(val);
+              }
+            }}
+            value={selectedPercentage || ""}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select %" />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 9 }, (_, i) => {
+                const val = (i + 1).toString();
+                return (
+                  <SelectItem key={val} value={val}>
+                    {val}%
+                  </SelectItem>
+                );
+              })}
+              <SelectItem value={"manual"}>Manual</SelectItem>
+            </SelectContent>
+          </Select>
+          {showManual && (
+            <Input
+              type="number"
+              value={manualNumber}
+              onChange={(e) => {
+                setManualNumber(e.target.value);
+              }}
+            />
+          )}
+          <p className="text-sm text-muted-foreground">
+            Commission Amount: {commissionAmount}
+          </p>
+          <Button
+            disabled={
+              loading ||
+              !selectedUser ||
+              !commissionAmount ||
+              commissionAmount === 0
+            }
+            onClick={() => handleClearCommission(machine)}
+          >
+            {loading && <Spinner />} Clear Commission
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

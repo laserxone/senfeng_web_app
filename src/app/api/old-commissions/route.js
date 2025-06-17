@@ -19,6 +19,7 @@ export async function GET() {
   s.speed_money_note,
   s.speed_money_amount,
   u.name AS sold_by_name,
+  u.id AS sold_by_id,
   cu.name AS customer_name,
   cu.owner AS customer_owner,
   cu.number AS customer_number,
@@ -45,8 +46,34 @@ WHERE com.sale_id IS NULL
 
 }
 
-export async function POST() {
+export async function POST(req) {
 
+    try {
+        const data = await req.json();
+
+        if (!data || Object.keys(data).length === 0) {
+            return NextResponse.json({ message: "No data provided for insertion" }, { status: 400 });
+        }
+
+        const fields = Object.keys(data);
+        const values = Object.values(data);
+        const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
+
+        const query = `
+        INSERT INTO commissions (${fields.join(", ")})
+        VALUES (${placeholders})
+    `;
+
+        await pool.query(query, values);
+
+        return NextResponse.json({
+            message: "Data added successfully",
+        }, { status: 200 });
+
+    } catch (error) {
+        console.error('Error inserting data: ', error);
+        return NextResponse.json({ message: 'Error adding Data' }, { status: 500 })
+    }
 }
 
 
@@ -67,6 +94,7 @@ function groupByCustomer(rows) {
       contract_date,
       order_no_arr,
       sold_by_name,
+      sold_by_id,
       price,
       speed_money,
       speed_money_note,
@@ -101,6 +129,7 @@ function groupByCustomer(rows) {
         order_no_arr,
         contract_date,
         sold_by_name,
+        sold_by_id,
         price,
         speed_money,
         speed_money_note,
