@@ -1,21 +1,15 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ArrowUpDown, Filter, Loader2, Trash } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import {
-  useCallback,
   useContext,
   useEffect,
-  useMemo,
-  useRef,
-  useState,
+  useState
 } from "react";
 
-import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
-import AppCalendar from "@/components/appCalendar";
-import Dropzone from "@/components/dropzone";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CustomerSearch } from "@/components/customer-search";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -23,48 +17,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Heading } from "@/components/ui/heading";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import Spinner from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
-import { UserSearch } from "@/components/user-search";
-import FilterSheet from "@/components/users/filterSheet";
-import { storage } from "@/config/firebase";
-import axios from "@/lib/axios";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
-import exportToExcel from "@/lib/exportToExcel";
-import { UploadImage } from "@/lib/uploadFunction";
-import { UserContext } from "@/store/context/UserContext";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { getDownloadURL, ref } from "firebase/storage";
-import moment from "moment";
-import { useForm } from "react-hook-form";
-import { Controlled as ControlledZoom } from "react-medium-image-zoom";
-import "react-medium-image-zoom/dist/styles.css";
-import { z } from "zod";
-import { getStoragePathFromUrl } from "@/components/customer-components/machine/machine-component";
-import { TIMEZONE } from "@/constants/data";
-import momentT from "moment-timezone";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { CustomerSearchWithData } from "@/components/customer-search-with-data";
-import { RequiredStar } from "@/components/RequiredStar";
-import { Badge } from "@/components/ui/badge";
-import { CustomerSearch } from "@/components/customer-search";
+import Spinner from "@/components/ui/spinner";
+import axios from "@/lib/axios";
+import { UserContext } from "@/store/context/UserContext";
+import "react-medium-image-zoom/dist/styles.css";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);

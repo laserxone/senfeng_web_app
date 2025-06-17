@@ -214,7 +214,7 @@ export default function Machine({ id }) {
                   </Tooltip>
                 </TooltipProvider>
               )}
-              <div >{row.getValue("track")}</div>
+              <div>{row.getValue("track")}</div>
             </div>
           );
         },
@@ -737,6 +737,8 @@ const ImageSheet = ({
   const [imageOpen, setImageOpen] = useState(false);
   const [localImage, setLocalImage] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [rotation, setRotation] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -760,8 +762,6 @@ const ImageSheet = ({
     }
   }
 
-  const [isZoomed, setIsZoomed] = useState(false);
-
   const handleZoomChange = useCallback((shouldZoom) => {
     setIsZoomed(shouldZoom);
     if (!shouldZoom) {
@@ -783,6 +783,14 @@ const ImageSheet = ({
       setDeleteLoading(false);
     }
   }
+
+ const rotateImageRight = () => {
+  setRotation((prev) => (prev + 90) % 360);
+};
+
+const rotateImageLeft = () => {
+  setRotation((prev) => (prev - 90 + 360) % 360);
+};
 
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
@@ -807,13 +815,64 @@ const ImageSheet = ({
             </Button>
           )}
           {localImage ? (
-            <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
-              <img
-                onClick={() => setImageOpen(true)}
-                className="hover:cursor-pointer"
-                src={localImage}
-                alt="payment-img"
-              />
+            <ControlledZoom
+              isZoomed={isZoomed}
+              onZoomChange={handleZoomChange}
+              ZoomContent={({img}) => isZoomed ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexDirection: "column",
+                    width: "100vw",
+                    height: "100vh",
+                    overflow: "hidden",
+                    zIndex: 9999,
+                    pointerEvents: "auto", 
+                  }}
+                >
+                  <img
+                    src={localImage}
+                    alt="payment-img"
+                    style={{
+                      transform: `rotate(${rotation}deg)`,
+                      maxWidth: "90vw",
+                      maxHeight: "90vh",
+                      objectFit: "contain",
+                      pointerEvents: "auto", 
+                    }}
+                  />
+                  <div
+                    className="mt-2 flex gap-5"
+                    style={{
+                      pointerEvents: "auto", 
+                      zIndex: 10000,
+                    }}
+                  >
+                    <Button variant="outline" size="sm" onClick={rotateImageLeft}>
+                      Rotate Left
+                    </Button>
+                     <Button variant="outline" size="sm" onClick={rotateImageRight}>
+                      Rotate Right
+                    </Button>
+                  </div>
+                </div>
+              ) : img}
+            >
+             
+                <img
+                  onClick={() => setImageOpen(true)}
+                  src={localImage}
+                  alt="payment-img"
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "400px",
+                    objectFit: "contain",
+                    cursor: "zoom-in",
+                  }}
+                />
+              
             </ControlledZoom>
           ) : (
             <Label>No Image found</Label>
