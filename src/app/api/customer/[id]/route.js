@@ -53,6 +53,22 @@ export async function GET(req, { params }) {
     let saleFilledCount = 0;
     const customerTotalFields = profileFields.length;
 
+    const machineIds = machines.map((m) => m.id);
+
+    // Fetch order item statuses for all machines in one query
+    let orderItemsMap = new Map();
+
+    if (machineIds.length > 0) {
+      const orderItemsResult = await pool.query(
+        `SELECT machine_id, status FROM order_items WHERE machine_id = ANY($1::int[])`,
+        [machineIds]
+      );
+
+      orderItemsResult.rows.forEach((row) => {
+        orderItemsMap.set(row.machine_id, row.status);
+      });
+    }
+
     machines = machines.map(machine => {
       let machineFilled = 0;
 
@@ -87,13 +103,11 @@ export async function GET(req, { params }) {
       return {
         ...machine,
         percentage_completion: Math.round((machineFilled / totalFields) * 100),
+        status: orderItemsMap.get(machine.id) || null,
       };
     });
 
     const overallCompletion = Math.round((filledCount / customerTotalFields) * 100);
-
-
-    const machineIds = machines.map(m => m.id);
 
     let billReceived = 0;
     let payments = [];

@@ -46,6 +46,7 @@ import {
   Newspaper,
   ScanLine,
   Hammer,
+  AlertCircle,
 } from 'lucide-react';
 
 
@@ -96,6 +97,7 @@ export const Icons = {
   news : Newspaper,
   gatepass : ScanLine,
   tools : Hammer,
+  complaint : AlertCircle,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden='true'

@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { branchNavItem, employeeNavItems, InventoryNavItem, ownerNavItems, POSNavItem, StoreNavItem, Tools } from "@/constants/data";
+import { branchNavItem, complaintItem, employeeNavItems, InventoryNavItem, ownerNavItems, POSNavItem, StoreNavItem, Tools } from "@/constants/data";
 import { NextResponse } from "next/server";
 
 
@@ -53,6 +53,9 @@ export async function GET(req, { params }) {
                 nav_items.push(InventoryNavItem)
             if (result.rows[0].pos_assigned) {
                 nav_items.push(POSNavItem)
+            }
+            if (result.rows[0].complaint_assigned) {
+                nav_items.push(complaintItem)
             }
             if (result.rows[0].designation == 'Engineer') {
                 base_route = `${branchOffice}/engineer`

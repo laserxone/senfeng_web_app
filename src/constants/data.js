@@ -1,13 +1,6 @@
 
 export const ownerNavItems = [
-   {
-    title: 'Complaint',
-    url: '/complaint',
-    icon: 'dashboard',
-    isActive: false,
-    shortcut: ['d', 'a', 's', 'h'],
-    items: []
-  },
+
   {
     title: 'Dashboard',
     url: '/dashboard',
@@ -17,10 +10,18 @@ export const ownerNavItems = [
     items: []
   },
   {
+    title: 'Complaint',
+    url: '/complaint',
+    icon: 'complaint',
+    isActive: false,
+    shortcut: ['c', 'o', 'm', 'p'],
+    items: []
+  },
+  {
     title: 'Customer',
     url: '#',
     icon: 'customer',
-    isActive : false,
+    isActive: false,
 
     items: [
       {
@@ -61,7 +62,7 @@ export const ownerNavItems = [
     title: 'Human Resource',
     url: '#',
     icon: 'hr',
-    isActive : false,
+    isActive: false,
 
     items: [
       {
@@ -100,7 +101,7 @@ export const ownerNavItems = [
     title: 'Task Management',
     url: '#',
     icon: 'task',
-    isActive : false,
+    isActive: false,
 
     items: [
       {
@@ -156,12 +157,21 @@ export const ownerNavItems = [
 
 ];
 
+export const complaintItem = {
+  title: 'Complaint',
+  url: '/complaint',
+  icon: 'complaint',
+  isActive: false,
+  shortcut: ['c', 'o', 'm', 'p'],
+  items: []
+}
+
 export const employeeNavItems = [
   {
     title: 'Dashboard',
     url: '/dashboard',
     icon: 'dashboard',
-    isActive : false,
+    isActive: false,
     shortcut: ['d', 'a', 's', 'h'],
     items: []
   },
@@ -233,7 +243,7 @@ export const StoreNavItem = [
     title: 'Dashboard',
     url: '/dashboard',
     icon: 'dashboard',
-    isActive : false,
+    isActive: false,
     shortcut: ['d', 'a', 's', 'h'],
     items: []
   },
@@ -283,43 +293,43 @@ export const POSNavItem =
   ]
 }
 
-export const Tools =  {
-    title: 'Tools',
-    url: '#',
-    icon: 'tools',
-    isActive : false,
+export const Tools = {
+  title: 'Tools',
+  url: '#',
+  icon: 'tools',
+  isActive: false,
 
-    items: [
-      {
-        title: 'Payment Verification',
-        url: '/paymentverification',
-        shortcut: ['p', 'a', 'y']
-      },
-       {
-        title: 'Old Commissions',
-        shortcut: ['o', 'l', 'd'],
-        url: '/oldcommissions',
-        icon: 'login'
-      },
-      {
-        title: 'Multiple TID',
-        url: '/multipletid',
-        shortcut: ['m', 'u', 't']
-      },
-      {
-        title: 'Multiple Customers',
-        shortcut: ['m', 'u', 'c', 'u'],
-        url: '/multiplecustomers',
-        icon: 'login'
-      },
-     
-      {
-        title: 'Logs',
-        url: '/logs',
-        shortcut: ['l', 'o', 'g'],
-      },
-    ]
-  }
+  items: [
+    {
+      title: 'Payment Verification',
+      url: '/paymentverification',
+      shortcut: ['p', 'a', 'y']
+    },
+    {
+      title: 'Old Commissions',
+      shortcut: ['o', 'l', 'd'],
+      url: '/oldcommissions',
+      icon: 'login'
+    },
+    {
+      title: 'Multiple TID',
+      url: '/multipletid',
+      shortcut: ['m', 'u', 't']
+    },
+    {
+      title: 'Multiple Customers',
+      shortcut: ['m', 'u', 'c', 'u'],
+      url: '/multiplecustomers',
+      icon: 'login'
+    },
+
+    {
+      title: 'Logs',
+      url: '/logs',
+      shortcut: ['l', 'o', 'g'],
+    },
+  ]
+}
 
 export const PakCities = [
   {

@@ -1,6 +1,8 @@
 import pool from "@/config/db";
+import { storage } from "@/config/firebase";
 import { addLog } from "@/lib/addLog";
 import { generateLog } from "@/lib/generateLog";
+import { deleteObject, ref } from "firebase/storage";
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
@@ -53,6 +55,10 @@ export async function GET(req, { params }) {
     // 6. Attach payments and sell_by_name to the machine object
     machine.payments = payments;
     machine.sell_by_name = sellByName; // Attach seller's name
+
+    const machineStatus = await pool.query(`SELECT status FROM order_items WHERE machine_id = $1`, [id])
+
+    machine.status = machineStatus.rows.length > 0 ? machineStatus.rows[0].status : null
 
     return NextResponse.json({ customer, machine }, { status: 200 });
 
@@ -110,6 +116,103 @@ export async function PUT(req, { params }) {
   } catch (error) {
     console.error("Error updating data:", error);
     return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req, { params }) {
+
+
+  const { id } = await params
+
+  if (!id) {
+    return NextResponse.json({ message: "ID is required" }, { status: 400 });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // Step 1: Update order_items
+    await client.query(
+      `UPDATE order_items
+       SET machine_id = NULL,
+           customer_id = NULL,
+           booked = FALSE,
+           booking_date = NULL,
+           booked_by = NULL
+       WHERE machine_id = $1`,
+      [id]
+    );
+
+    // Step 2: Update logs table
+    await client.query(
+      `UPDATE logs SET sale_id = NULL WHERE sale_id = $1`,
+      [id]
+    );
+
+    // Step 3: Get payment images
+    const paymentResult = await client.query(
+      `SELECT image FROM payment WHERE machine_id = $1`,
+      [id]
+    );
+    for (const row of paymentResult.rows) {
+      const imagePath = row.image;
+      if (imagePath && !imagePath.includes("https")) {
+        try {
+          await deleteObject(ref(storage, imagePath));
+        } catch (err) {
+          console.warn(`Failed to delete payment image: ${imagePath}`, err.message);
+        }
+      }
+    }
+
+    // Step 4: Delete payments
+    await client.query(`DELETE FROM payment WHERE machine_id = $1`, [id]);
+
+    // Step 5: Get sale images to delete
+    const saleResult = await client.query(`SELECT contract_images_png, other_images_png, machine_nameplate_images, final_handover_images, installation_report, handshake_images FROM sale WHERE id = $1`, [id]);
+
+    if (saleResult.rowCount > 0) {
+      const saleRow = saleResult.rows[0];
+
+      const imageFields = [
+        "contract_images_png",
+        "other_images_png",
+        "machine_nameplate_images",
+        "final_handover_images",
+        "installation_report",
+        "handshake_images",
+      ];
+
+      for (const field of imageFields) {
+        const images = saleRow[field];
+        if (Array.isArray(images)) {
+          for (const img of images) {
+            if (img && !img.includes("https")) {
+              try {
+                await deleteObject(ref(storage, img));
+              } catch (err) {
+                console.warn(`Failed to delete image: ${img}`, err.message);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Step 6: Delete sale
+    await client.query(`DELETE FROM sale WHERE id = $1`, [id]);
+
+    await client.query("COMMIT");
+
+    return NextResponse.json({ message: "Machine deleted successfully" }, { status: 200 });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error deleting machine:", error);
+    return NextResponse.json({ message: "Error deleting machine" }, { status: 500 });
+  } finally {
+    client.release();
   }
 }
 

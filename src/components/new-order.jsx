@@ -494,6 +494,8 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="SF3015G">SF3015G</SelectItem>
+                              <SelectItem value="SF4015G">SF4015G</SelectItem>
+                              <SelectItem value="SF6015G">SF6015G</SelectItem>
                               <SelectItem value="SF3015N">SF3015N</SelectItem>
                               <SelectItem value="SF4015N">SF4015N</SelectItem>
                               <SelectItem value="SF6015N">SF6015N</SelectItem>
@@ -554,7 +556,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
                             <SelectContent>
                               <SelectItem value="1500">1500</SelectItem>
                               <SelectItem value="3000">3000</SelectItem>
-                              <SelectItem value="5000">5000</SelectItem>
+                              <SelectItem value="6000">6000</SelectItem>
                             </SelectContent>
                           </Select>
                           {errors[index]?.machine_power && (

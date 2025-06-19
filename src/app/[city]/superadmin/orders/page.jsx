@@ -1,16 +1,8 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Calendar,
-  Filter,
-  Package
-} from "lucide-react";
-import {
-  useContext,
-  useEffect,
-  useState
-} from "react";
+import { Calendar, Filter, Package } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
 
 import CreateOrderDialog from "@/components/new-order";
 import {
@@ -29,7 +21,6 @@ import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
 import "react-medium-image-zoom/dist/styles.css";
 
-
 export default function Page() {
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
@@ -42,18 +33,15 @@ export default function Page() {
 
   useEffect(() => {
     if (UserState.value.data?.id) {
-      fetchData()
+      fetchData();
     }
   }, [UserState]);
 
   async function fetchData(startDate, endDate) {
     return new Promise((resolve, reject) => {
       axios
-        .get(
-          `/neworder?start_date=${startDate}&end_date=${endDate}`
-        )
+        .get(`/neworder?start_date=${startDate}&end_date=${endDate}`)
         .then((response) => {
-        
           setData(response.data);
           resolve(true);
         })
@@ -66,8 +54,6 @@ export default function Page() {
         });
     });
   }
-
- 
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -91,27 +77,29 @@ export default function Page() {
       <ScrollArea className="h-[700px] pr-6">
         <div className="space-y-6">
           {data.map((order) => {
-            
             return (
               <Card key={order.id} className="border shadow-md">
-                <CardContent className="p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-semibold text-primary">
-                        Order #{order.id}
-                      </h2>
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-end justify-between">
+                    <div className="space-y-2">
                       <p className="text-sm text-muted-foreground">
                         Order By: {order.user_name}
                       </p>
+                      <div className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        <span>
+                          {moment(order.created_at).format("YYYY-MM-DD")}
+                        </span>
+                      </div>
                     </div>
+
+                    <h2 className="text-xl font-semibold text-primary">
+                      {order?.title}
+                    </h2>
+
                     <Badge variant="outline" className="capitalize">
                       {order.status}
                     </Badge>
-                  </div>
-
-                  <div className="text-sm text-muted-foreground flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span>{moment(order.created_at).format("YYYY-MM-DD")}</span>
                   </div>
 
                   <Accordion type="single" collapsible>
@@ -171,9 +159,12 @@ export default function Page() {
         }}
       />
 
-      <CreateOrderDialog visible={visible} onClose={setVisible} user_id={UserState.value.data?.id} onRefresh={fetchData}/>
+      <CreateOrderDialog
+        visible={visible}
+        onClose={setVisible}
+        user_id={UserState.value.data?.id}
+        onRefresh={fetchData}
+      />
     </div>
   );
 }
-
-

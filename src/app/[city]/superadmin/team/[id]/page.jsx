@@ -27,7 +27,7 @@ export default function Page({ params }) {
   const [customers, setCustomers] = useState([]);
   const [allowedExtraData, setAllowedExtraData] = useState(true);
   const [joiningDate, setJoiningDate] = useState(null);
-   const [leavingDate, setLeavingDate] = useState(null);
+  const [leavingDate, setLeavingDate] = useState(null);
   const [dataLoading, setDataLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [employeeId, setEmployeeId] = useState(null);
@@ -59,7 +59,8 @@ export default function Page({ params }) {
     dms_write_access: false,
     limited_access: false,
     full_access: false,
-    pos_assigned : false
+    pos_assigned: false,
+    complaint_assigned: false,
   });
   const { toast } = useToast();
 
@@ -70,7 +71,7 @@ export default function Page({ params }) {
   }, [UserState]);
 
   async function fetchData() {
-    const {id} = await params
+    const { id } = await params;
     axios
       .get(`/user?user=${id}`)
       .then((response) => {
@@ -100,7 +101,8 @@ export default function Page({ params }) {
             dms_write_access: apiData?.dms_write_access,
             limited_access: apiData?.limited_access,
             full_access: apiData?.full_access,
-            pos_assigned : apiData?.pos_assigned
+            pos_assigned: apiData?.pos_assigned,
+            complaint_assigned : apiData?.complaint_assigned
           });
           setForm({
             basic_salary: apiData?.basic_salary || 0,
@@ -110,7 +112,7 @@ export default function Page({ params }) {
           });
 
           setJoiningDate(apiData?.joining_date);
-          setLeavingDate(apiData?.leaving_date)
+          setLeavingDate(apiData?.leaving_date);
         } else {
           toast({
             title: "Employee details not found",
@@ -161,8 +163,9 @@ export default function Page({ params }) {
         limited_access: checks?.limited_access,
         full_access: checks?.full_access,
         joining_date: joiningDate,
-        leaving_date : leavingDate,
-        pos_assigned : checks?.pos_assigned
+        leaving_date: leavingDate,
+        pos_assigned: checks?.pos_assigned,
+        complaint_assigned : checks?.complaint_assigned
       })
       .then(() => {
         toast({ title: "Information updated" });
@@ -336,7 +339,7 @@ export default function Page({ params }) {
                   />
                 </div>
 
-                 <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1">
                   <Label>LEAVING DATE</Label>
                   <AppCalendar
                     date={leavingDate}

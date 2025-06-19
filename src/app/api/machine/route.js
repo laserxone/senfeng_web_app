@@ -1,10 +1,14 @@
 import pool from "@/config/db";
 import { addLog } from "@/lib/addLog";
 import { generateLog } from "@/lib/generateLog";
+import moment from "moment";
 import { NextResponse } from "next/server"
 
 
 export async function POST(req) {
+
+    const searchParams = req.nextUrl.searchParams
+    const inventory = searchParams.get('inventory')
 
     try {
         const data = await req.json();
@@ -23,21 +27,35 @@ export async function POST(req) {
         RETURNING id
     `;
 
-       const result = await pool.query(query, values);
+        const result = await pool.query(query, values);
         if (data?.customer_id) {
             await pool.query(`UPDATE customer SET member = TRUE WHERE id = $1`, [data.customer_id])
         }
 
-          try {
-    const logMSG = generateLog(data, "New Machine added")
+        try {
 
-        addLog({ text: logMSG, user_id: data.sell_by, customer_id: data?.customer_id || null, sale_id : result.rows[0].id  })
+            const logMSG = generateLog(data, "New Machine added")
+            addLog({ text: logMSG, user_id: data.sell_by, customer_id: data?.customer_id || null, sale_id: result.rows[0].id })
 
-    } catch (error) {
-      console.log(error)
-    }
+        } catch (error) {
+            console.log(error)
+        }
 
-       
+        if (inventory) {
+            const inventoryId = Number(inventory)
+            await pool.query(
+                `UPDATE order_items 
+                SET 
+                booked = TRUE, 
+                booking_date = $1, 
+                machine_id = $2, 
+                booked_by = $3, 
+                customer_id = $4 
+                WHERE id = $5`
+                , [new Date(), result.rows[0].id, data.sell_by, data.customer_id, inventoryId])
+        }
+
+
         console.log("data inserted successfully");
         return NextResponse.json({ message: "Inserted successfully" }, { status: 201 });
 

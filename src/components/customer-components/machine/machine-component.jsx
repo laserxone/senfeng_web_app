@@ -83,6 +83,8 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { downloadCustomerZip } from "@/components/downloadzip";
 import { UserSearch } from "@/components/user-search";
+import { usePathname, useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
 
 export default function Machine({ id }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -101,7 +103,10 @@ export default function Machine({ id }) {
   const { state: UserState } = useContext(UserContext);
   const [editAllowed, setEditAllowed] = useState(false);
   const [zipDownloading, setZipDwonloading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const isMobile = useIsMobile();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (id && UserState?.value?.data?.id) {
@@ -396,6 +401,15 @@ export default function Machine({ id }) {
     setTimeout(() => URL.revokeObjectURL(url), 600000);
   }
 
+  async function deleteMachine() {
+    if (!id) return;
+    setDeleteLoading(true);
+    axios.delete(`/machine/${id}`).then(() => {
+      const trimmedUrl = pathname.split("/").slice(0, -1).join("/");
+      router.replace(trimmedUrl);
+    });
+  }
+
   return (
     <PageContainer scrollable={isMobile}>
       <div className="flex flex-1 flex-col space-y-4">
@@ -462,6 +476,14 @@ export default function Machine({ id }) {
                 {zipDownloading && <Spinner />} Download ZIP
               </Button>
             )}
+
+            {(UserState.value.data?.designation === "Owner" ||
+              UserState.value.data?.full_access) &&
+              !data?.machine?.payment_lock && (
+                <Button variant="destructive" onClick={deleteMachine}>
+                  {deleteLoading && <Spinner />} Delete
+                </Button>
+              )}
 
             <AddPayment
               customer_id={data?.customer?.id}
@@ -605,9 +627,16 @@ const ClientCard = memo(({ data, payment, machine, manager }) => {
         {/* Machine Info */}
         <Card className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
           <CardContent>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Machine Information
-            </h3>
+            <div className="flex gap-2 text-sm items-center">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                Machine Information
+              </h3>
+              {machine?.status && (
+                <div>
+                  <Badge variant={"secondary"}>{machine?.status}</Badge>
+                </div>
+              )}
+            </div>
             {machine ? (
               <div className="text-gray-600 dark:text-gray-300 text-sm space-y-2">
                 <p>

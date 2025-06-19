@@ -63,8 +63,8 @@ const EditCustomerDialog = ({
   const [checking, setChecking] = useState(false);
   const [customerInfo, setCustomerInfo] = useState([]);
   const [selectedNumber, setSelectedNumber] = useState(["+92"]);
-  const [imageUrl, setImageUrl] = useState(null)
-  const [originalUrl, setOriginalUrl] = useState(null)
+  const [imageUrl, setImageUrl] = useState(null);
+  const [originalUrl, setOriginalUrl] = useState(null);
 
   const formSchema = z.object({
     company: z.string().min(1, { message: "" }), // Optional field without min(1)
@@ -136,30 +136,30 @@ const EditCustomerDialog = ({
       setNumbers([...tempNumbers]);
       if (data.image) {
         getDownloadURL(ref(storage, data.image)).then((url) => {
-          setImageUrl(url)
-          setOriginalUrl(url)
-        })
-      } 
-
-       form.reset({
-          company: data?.name || "",
-          owner: data?.owner || "",
-          email: data?.email || "",
-          city: data?.location || "",
-          industry: data?.industry || "",
-          remarks: data?.remarks || "",
-          address: data?.address || "",
-          group: data?.customer_group || "",
-          rating: data?.rating || 0,
-          image: data?.image || "",
-          member: data?.member || false,
-          ownership: data?.ownership || null,
-          lead: data?.lead || null,
-          other: data?.other || "",
-          pin: data?.pin || "",
-          platform: data?.platform || "",
-          created_at: data?.created_at ? new Date(data.created_at) : null,
+          setImageUrl(url);
+          setOriginalUrl(url);
         });
+      }
+
+      form.reset({
+        company: data?.name || "",
+        owner: data?.owner || "",
+        email: data?.email || "",
+        city: data?.location || "",
+        industry: data?.industry || "",
+        remarks: data?.remarks || "",
+        address: data?.address || "",
+        group: data?.customer_group || "",
+        rating: data?.rating || 0,
+        image: data?.image || "",
+        member: data?.member || false,
+        ownership: data?.ownership || null,
+        lead: data?.lead || null,
+        other: data?.other || "",
+        pin: data?.pin || "",
+        platform: data?.platform || "",
+        created_at: data?.created_at ? new Date(data.created_at) : null,
+      });
     }
   }, [data, form]);
 
@@ -170,8 +170,7 @@ const EditCustomerDialog = ({
   }
 
   async function onSubmit(values) {
-
-     const hasInvalidNumber = selectedNumber.some((code, index) => {
+    const hasInvalidNumber = selectedNumber.some((code, index) => {
       const number = numbers[index];
       if (!number) return true;
 
@@ -185,7 +184,7 @@ const EditCustomerDialog = ({
     }
 
     setNumberError("");
-    
+
     setLoading(true);
 
     const finalData = numbers.map((item, index) => {
@@ -213,9 +212,9 @@ const EditCustomerDialog = ({
     };
 
     try {
-      let backendRoute = `/customer/${data.id}?userid=${UserState.value.data?.id}`
-      if(data.ownership !== values.ownership){
-        backendRoute = `/customer/${data.id}?notify=true&userid=${UserState.value.data?.id}`
+      let backendRoute = `/customer/${data.id}?userid=${UserState.value.data?.id}`;
+      if (data.ownership !== values.ownership) {
+        backendRoute = `/customer/${data.id}?notify=true&userid=${UserState.value.data?.id}`;
       }
       if (data.image && !imageUrl) {
         DeleteFromStorage(data.image);
@@ -233,10 +232,8 @@ const EditCustomerDialog = ({
           image: name,
         });
       } else if (originalUrl !== imageUrl) {
-
-        const name = data.image
+        const name = data.image;
         const uploadRef = await UploadImage(imageUrl, name);
-
       } else {
         const response = await axios.put(backendRoute, apiData);
       }
@@ -402,7 +399,9 @@ const EditCustomerDialog = ({
                         name="owner"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Customer <RequiredStar /></FormLabel>
+                            <FormLabel>
+                              Customer <RequiredStar />
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Enter customer name"
@@ -419,7 +418,9 @@ const EditCustomerDialog = ({
                         name="company"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Company <RequiredStar /></FormLabel>
+                            <FormLabel>
+                              Company <RequiredStar />
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Enter company name"
@@ -453,7 +454,9 @@ const EditCustomerDialog = ({
                         name="city"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>City <RequiredStar /></FormLabel>
+                            <FormLabel>
+                              City <RequiredStar />
+                            </FormLabel>
                             <FormControl>
                               <CitiesSearch
                                 value={field.value}
@@ -483,24 +486,25 @@ const EditCustomerDialog = ({
                           )}
                         />
                       )}
-
-                      <FormField
-                        control={control}
-                        name="lead"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Lead Generated By</FormLabel>
-                            <FormControl>
-                              <UserSearch
-                                lead={true}
-                                value={field.value}
-                                onReturn={(val) => field.onChange(val)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      {UserState.value.data?.designation === "Sales" ? null : (
+                        <FormField
+                          control={control}
+                          name="lead"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Lead Generated By</FormLabel>
+                              <FormControl>
+                                <UserSearch
+                                  lead={true}
+                                  value={field.value}
+                                  onReturn={(val) => field.onChange(val)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
                       <div className="flex flex-row gap-10">
                         <FormField
                           control={control}
@@ -518,46 +522,49 @@ const EditCustomerDialog = ({
                             </FormItem>
                           )}
                         />
-                         {(UserState.value.data?.designation === "Owner" ||
-                        UserState.value.data?.full_access ||
-                        UserState.value.data?.designation ===
-                          "Customer Relationship Manager") &&
-                        <FormField
-                          control={form.control}
-                          name="created_at"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Date</FormLabel>
-                              <FormControl>
-                                <AppCalendar
-                                  date={field.value}
-                                  onChange={field.onChange}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-}
-                        <FormField
-                          control={control}
-                          name="member"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="pr-2">Member?</FormLabel>
-                              <FormControl>
-                                <Checkbox
-                                  className="mt-5"
-                                  checked={field.value}
-                                  onCheckedChange={(checked) => {
-                                    field.onChange(checked);
-                                  }}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        {(UserState.value.data?.designation === "Owner" ||
+                          UserState.value.data?.full_access ||
+                          UserState.value.data?.designation ===
+                            "Customer Relationship Manager") && (
+                          <FormField
+                            control={form.control}
+                            name="created_at"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Date</FormLabel>
+                                <FormControl>
+                                  <AppCalendar
+                                    date={field.value}
+                                    onChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+                        {UserState.value.data?.designation ===
+                        "Sales" ? null : (
+                          <FormField
+                            control={control}
+                            name="member"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="pr-2">Member?</FormLabel>
+                                <FormControl>
+                                  <Checkbox
+                                    className="mt-5"
+                                    checked={field.value}
+                                    onCheckedChange={(checked) => {
+                                      field.onChange(checked);
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
                       </div>
                     </div>
 
@@ -573,7 +580,7 @@ const EditCustomerDialog = ({
                                 <Dropzone
                                   value={imageUrl}
                                   onDrop={(file) => {
-                                    setImageUrl(file)
+                                    setImageUrl(file);
                                   }}
                                   title={"Click to upload"}
                                   subheading={"or drag and drop"}

@@ -420,9 +420,13 @@ const ClientCard = ({ data }) => {
           <span>{data?.industry || "Nil"}</span>
         </div>
 
-         <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-gray-500" />
-          <span>{data?.created_at ? moment(data.created_at).format("YYYY-MM-DD hh:mm A") : "Nil"}</span>
+          <span>
+            {data?.created_at
+              ? moment(data.created_at).format("YYYY-MM-DD hh:mm A")
+              : "Nil"}
+          </span>
         </div>
       </CardContent>
     </Card>
@@ -478,7 +482,7 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
   const [visible, setVisible] = useState(false);
   const { state: UserState } = useContext(UserContext);
 
-  const RenderEachMachine = ({ machine }) => {
+  const RenderEachMachine = ({ machine, index }) => {
     const totalPayments = machine?.payments
       .filter((item) => item.clearance_date)
       ?.reduce((sum, payment) => sum + Number(payment.amount), 0);
@@ -489,8 +493,10 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
           <AccordionTrigger className="px-4 py-2 hover:no-underline">
             <div className="flex justify-between items-center w-full">
               <Link
+                className="flex gap-4 items-center"
                 href={`/${UserState.value.data?.base_route}/member/${customer_id}/${machine.id}`}
               >
+                <Badge variant={"outline"}>Machine no:{index}</Badge>
                 <h3 className="font-semibold text-lg hover:underline">
                   {machine.serial_no}
                 </h3>
@@ -523,6 +529,11 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
             <CardContent className="pt-0">
               <h4 className="text-lg font-semibold">{machine.name}</h4>
               <div className=" gap-2 text-sm ">
+                {machine?.status && (
+                  <div>
+                    <strong>Status:</strong> <Badge>{machine?.status}</Badge>
+                  </div>
+                )}
                 <p>
                   <strong>Contract Date:</strong>{" "}
                   {machine?.created_at
@@ -565,8 +576,12 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
           />
         </div>
         <Accordion type="single" collapsible className="w-full space-y-4">
-          {data.map((machine) => (
-            <RenderEachMachine key={machine.id} machine={machine} />
+          {data.map((machine, index) => (
+            <RenderEachMachine
+              key={machine.id}
+              machine={machine}
+              index={index + 1}
+            />
           ))}
         </Accordion>
       </CardContent>

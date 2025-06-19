@@ -31,13 +31,15 @@ import {
 import Spinner from "./ui/spinner";
 import { Textarea } from "./ui/textarea";
 import { MachineSearch } from "./machine-search";
+import { AvailableMachines } from "./available-machines";
 
 const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [orderNumbers, setOrderNumbers] = useState([""]);
-  const [orderNumberError, setOrderNumberError] = useState("");
-  const [selectedMachine, setSelectedMachine] = useState(null);  
+  // const [orderNumbers, setOrderNumbers] = useState([""]);
+  // const [orderNumberError, setOrderNumberError] = useState("");
+  const [selectedMachine, setSelectedMachine] = useState(null);
+  const [additionalMachines, setAdditionalMachines] = useState([]);
 
   const formSchema = z.object({
     machineModel: z.string().min(1, { message: "Machine model is required." }),
@@ -49,6 +51,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
     speedMoneyNote: z.string().optional(),
     totalPrice: z.number().min(1, { message: "Total price is required." }),
     cnic: z.string().optional(),
+    order_item: z.number({ message: "Machine selection is required" }),
   });
 
   const form = useForm({
@@ -63,29 +66,30 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
       speedMoneyNote: "",
       totalPrice: "",
       cnic: "",
+      order_item: null,
     },
   });
 
   function onSubmit(values) {
-    const cleanedOrderNumbers = orderNumbers.filter(
-      (num) => num?.trim() !== ""
-    );
+    // const cleanedOrderNumbers = orderNumbers.filter(
+    //   (num) => num?.trim() !== ""
+    // );
 
-    if (cleanedOrderNumbers.length === 0) {
-      setOrderNumberError("At least one order number is required.");
-      return;
-    } else if (cleanedOrderNumbers.some((num) => num.length !== 9)) {
-      setOrderNumberError(
-        "Order number wrong format. Each must be 9 characters."
-      );
-      return;
-    } else {
-      setOrderNumberError("");
-    }
+    // if (cleanedOrderNumbers.length === 0) {
+    //   setOrderNumberError("At least one order number is required.");
+    //   return;
+    // } else if (cleanedOrderNumbers.some((num) => num.length !== 9)) {
+    //   setOrderNumberError(
+    //     "Order number wrong format. Each must be 9 characters."
+    //   );
+    //   return;
+    // } else {
+    //   setOrderNumberError("");
+    // }
 
     setLoading(true);
     axios
-      .post(`/machine`, {
+      .post(`/machine?inventory=${values.order_item}`, {
         customer_id: customer_id,
         type: "Machine",
         speed_money_note: values.speedMoneyNote,
@@ -99,13 +103,13 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
         price: values.totalPrice,
         contract_date: values.contractDate,
         cnic: values.cnic,
-        order_no_arr: cleanedOrderNumbers,
+        // order_no_arr: cleanedOrderNumbers,
       })
       .then(() => {
         onRefresh();
         handleClose(false);
       })
-      .catch(() => {
+      .finally(() => {
         setLoading(false);
       });
   }
@@ -113,27 +117,27 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   function handleClose(val) {
     form.reset();
     onClose(val);
-    setSelectedMachine(null)
+    setSelectedMachine(null);
   }
 
-  const addNumberField = () => {
-    setOrderNumbers((prevState) => [...prevState, ""]);
-  };
+  // const addNumberField = () => {
+  //   setOrderNumbers((prevState) => [...prevState, ""]);
+  // };
 
-  const removeNumberField = (index) => {
-    setOrderNumbers((prevState) => prevState.filter((_, ind) => ind !== index));
-  };
+  // const removeNumberField = (index) => {
+  //   setOrderNumbers((prevState) => prevState.filter((_, ind) => ind !== index));
+  // };
 
-  const handleNumberChange = (index, value) => {
-    if (orderNumberError) {
-      setOrderNumberError("");
-    }
-    setOrderNumbers((prevState) => {
-      const newState = [...prevState];
-      newState[index] = value;
-      return newState;
-    });
-  };
+  // const handleNumberChange = (index, value) => {
+  //   if (orderNumberError) {
+  //     setOrderNumberError("");
+  //   }
+  //   setOrderNumbers((prevState) => {
+  //     const newState = [...prevState];
+  //     newState[index] = value;
+  //     return newState;
+  //   });
+  // };
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -145,27 +149,77 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
         <div className="w-full flex flex-1">
           <ScrollArea className="px-2 w-full max-h-[90vh]">
             <div className="px-2 space-y-2">
-              {/* <Label>Select available machine</Label>
-              <MachineSearch
-                value={selectedMachine}
-                onReturn={(val) => {
-                  console.log(val);
-                  setSelectedMachine(val);
-                  form.setValue("machineModel", val.machine_model);
-                  form.setValue("power", val.machine_power);
-                  form.setValue("source", val.machine_source);
-                  setOrderNumbers((prevState) => {
-                    const newState = [...prevState];
-                    newState[0] = val.machine_serial;
-                    return newState;
-                  });
-                }}
-              /> */}
               <Form {...form}>
                 <form
-                  onSubmit={form.handleSubmit(onSubmit)}
+                  onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                    console.log("Form validation errors:", errors);
+                  })}
                   className="space-y-2"
                 >
+                  <FormField
+                    control={form.control}
+                    name="order_item"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Select Machine <RequiredStar />
+                        </FormLabel>
+                        <FormControl>
+                          <AvailableMachines
+                            onReturn={setSelectedMachine}
+                            value={selectedMachine}
+                            onReturnItem={(val) => {
+                              field.onChange(val.id);
+                              form.setValue("machineModel", val.machine_model);
+                              form.setValue("power", val.machine_power);
+                              form.setValue("source", val.machine_source);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {additionalMachines.map((item, index) => (
+                    <div className="flex gap-2">
+                      <AvailableMachines
+                        key={index}
+                        value={item}
+                        onReturn={(id) => {
+                          const updatedMachines = [...additionalMachines];
+                          updatedMachines[index] = id;
+                          setAdditionalMachines(updatedMachines);
+                        }}
+                      />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => {
+                          const updatedMachines = additionalMachines.filter(
+                            (_, i) => i !== index
+                          );
+                          setAdditionalMachines(updatedMachines);
+                        }}
+                      >
+                        <Trash size={16} />
+                      </Button>
+                    </div>
+                  ))}
+
+                  {selectedMachine && (
+                    <Button
+                      onClick={() => {
+                        setAdditionalMachines((prevState) => [
+                          ...prevState,
+                          null,
+                        ]);
+                      }}
+                    >
+                      Add additional machine
+                    </Button>
+                  )}
+
                   <FormField
                     control={form.control}
                     name="machineModel"
@@ -175,7 +229,11 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                           Machine Model <RequiredStar />
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="example: SF3015G" {...field} />
+                          <Input
+                            disabled
+                            placeholder="example: SF3015G"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -192,6 +250,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                         </FormLabel>
                         <FormControl>
                           <Input
+                            disabled
                             placeholder="example: 3000/1500/6000"
                             {...field}
                           />
@@ -211,6 +270,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                         </FormLabel>
                         <FormControl>
                           <Select
+                            disabled
                             onValueChange={(val) => field.onChange(val)}
                             value={field.value}
                           >
@@ -231,7 +291,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                     )}
                   />
 
-                  <FormField
+                  {/* <FormField
                     control={form.control}
                     name="orderNo"
                     render={({ field }) => (
@@ -270,13 +330,13 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                         ))}
                       </FormItem>
                     )}
-                  />
+                  /> */}
 
-                  {orderNumberError && (
+                  {/* {orderNumberError && (
                     <Label className="text-red-700 dark:text-red-300 font-medium text-sm">
                       {orderNumberError}
                     </Label>
-                  )}
+                  )} */}
 
                   <FormField
                     control={form.control}

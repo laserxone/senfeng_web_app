@@ -52,7 +52,7 @@ export async function POST(req) {
     }
 
     try {
-        const result = await pool.query(`INSERT INTO orders (user_id, status) VALUES ($1, $2, $3) RETURNING id`, [data.user_id, data.status, data.title])
+        const result = await pool.query(`INSERT INTO orders (user_id, status, title) VALUES ($1, $2, $3) RETURNING id`, [data.user_id, data.status, data.title])
 
         const orderId = result.rows[0].id
 
