@@ -58,6 +58,9 @@ const DocumentManagement = () => {
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [newName, setNewName] = useState("")
   const [view, setView] = useState(false)
+  const [selectedPreview, setSelectedPreview] = useState(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [preview, setPreview] = useState(false)
 
   useEffect(() => {
     if (UserState.value.data?.id) fetchFiles();
@@ -166,9 +169,10 @@ const DocumentManagement = () => {
     fetchFiles();
   }, [currentFolder]);
 
-  const RenderEachFile = ({ item, index, view }) => {
+  const RenderEachFile = ({ item, index, view, onPreview }) => {
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [downloadLoading, setDownloadLoading] = useState(false);
+
 
     async function handleDelete(file) {
       const id = file.id;
@@ -183,32 +187,71 @@ const DocumentManagement = () => {
         });
     }
 
+    const RenderFile = ({ path, index }) => {
+      let url = "/file-icon.png"
+      if (path.includes("pdf")) {
+        url = "/pdf-icon.png"
+      }
+
+      if (path.includes("doc")) {
+        url = "/docx-icon.png"
+      }
+
+      if (path.includes("xls")) {
+        url = "/xlsx-icon.png"
+      }
+
+      if (path.includes("ppt")) {
+        url = "/ppt-icon.png"
+      }
+
+
+
+      return (
+        <>
+          <Image
+            src={url}
+            height={view ? 40 : 100}
+            width={view ? 40 : 100}
+            alt={`${index}-file`}
+
+          />
+          <Label className={view ? "text-left" : "text-center"}>{path}</Label>
+        </>
+      )
+    }
+
     return (
 
+
+
       <ContextMenu>
-        <ContextMenuTrigger >
+        <ContextMenuTrigger
+          onDoubleClick={() => {
+            onPreview(item.path)
+          }}>
           <div
-           className={`flex ${view ? "flex-row items-center gap-4" : "flex-col items-center justify-center"} ${view ? "p-0" : "p-2"} rounded cursor-pointer ${view ? "w-full" : "max-w-[150px]"} ${view ? "h-auto" : "min-h-[120px]"} `}   
+            className={`flex ${view ? "flex-row items-center gap-4" : "flex-col items-center justify-center"} ${view ? "p-0" : "p-2"} rounded cursor-pointer ${view ? "w-full" : "max-w-[150px]"} ${view ? "h-auto" : "min-h-[120px]"} `}
             style={{
               border: "1px solid transparent",
               backgroundColor: "transparent",
             }}
           >
             {(downloadLoading || deleteLoading) ? <Spinner /> :
-              <>
-                <Image
-                  src="/file-icon.png"
-                  height={view ? 40 : 100}
-                  width={view ? 40 : 100}
-                  alt={`${index}-file`}
-
-                />
-                <Label className={view ? "text-left" : "text-center"}>{item.path.split(".")[0]}</Label>
-              </>
+              <RenderFile path={item.path} index={index}/>
             }
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent>
+
+          <ContextMenuItem
+
+            onClick={async () => {
+              onPreview(item.path)
+            }}
+          >
+            Preview
+          </ContextMenuItem>
 
           <ContextMenuItem
             onClick={async () => {
@@ -253,6 +296,10 @@ const DocumentManagement = () => {
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
+
+
+
+
 
     );
   };
@@ -390,7 +437,26 @@ const DocumentManagement = () => {
             ))}
 
             {allDocuments.map((item, index) => (
-              <RenderEachFile key={index} item={item} index={index} view={view} />
+              <RenderEachFile key={index} item={item} index={index} view={view} onPreview={async (path) => {
+                setPreviewLoading(true);
+                setPreview(true)
+                try {
+                  const { data, error } = await supabase.storage
+                    .from("documents")
+                    .getPublicUrl(path)
+                  if (error) {
+                    console.error("Error downloading file", error);
+                    return;
+                  }
+
+                  setSelectedPreview(data.publicUrl)
+                } finally {
+                  setPreviewLoading(false);
+                }
+
+
+
+              }} />
             ))}
           </div>
         )}
@@ -440,6 +506,8 @@ const DocumentManagement = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PreviewFile preview={preview} setPreview={setPreview} previewLoading={previewLoading} selectedPreview={selectedPreview} />
     </div>
   );
 };
@@ -483,6 +551,38 @@ const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
         ))}
       </BreadcrumbList>
     </Breadcrumb>
+  )
+}
+
+const PreviewFile = ({ preview, setPreview, selectedPreview, previewLoading }) => {
+
+
+  return (
+    <Dialog open={preview} onOpenChange={setPreview}>
+      <DialogContent className="w-[90vw] max-w-[90vw] h-[90vh]">
+        <DialogHeader>
+          <DialogTitle>
+            Preview file
+          </DialogTitle>
+          {previewLoading ? <div className="flex flex-1 items-center justify-center"> <Spinner /> </div> :
+            selectedPreview &&
+              selectedPreview.includes("pdf") ?
+
+              <iframe
+                src={selectedPreview}
+
+                style={{ border: "none", flex: 1 }}
+              />
+              :
+              <iframe
+                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(selectedPreview)}`}
+                style={{ border: "none", flex: 1 }}
+              />
+
+          }
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
   )
 }
 

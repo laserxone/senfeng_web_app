@@ -170,6 +170,22 @@ const EditCustomerDialog = ({
   }
 
   async function onSubmit(values) {
+
+     const hasInvalidNumber = selectedNumber.some((code, index) => {
+      const number = numbers[index];
+      if (!number) return true;
+
+      const isAllDigits = /^\d+$/.test(number);
+      return !isAllDigits;
+    });
+
+    if (hasInvalidNumber) {
+      setNumberError("Invalid number format");
+      return;
+    }
+
+    setNumberError("");
+    
     setLoading(true);
 
     const finalData = numbers.map((item, index) => {

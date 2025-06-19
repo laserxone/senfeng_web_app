@@ -6,6 +6,7 @@ import { sendNotificationToSMM } from "@/lib/sendNotificationToSMM";
 import { sendNotification } from "@/lib/sendNotification";
 import { generateLog } from "@/lib/generateLog";
 import { addLog } from "@/lib/addLog";
+import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
 
 export async function GET(req, { params }) {
   const { id } = await params;
@@ -173,6 +174,8 @@ export async function PUT(req, { params }) {
 
       if (result.rows[0].ownership) {
         sendNotification(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
+        sendNotificationToMobile(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, "Customer", result.rows[0].ownership, result.rows[0], "client", `/dashboard/customer/${result.rows[0].id}`)
+
       }
     }
 

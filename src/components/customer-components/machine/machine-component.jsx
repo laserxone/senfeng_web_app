@@ -784,13 +784,18 @@ const ImageSheet = ({
     }
   }
 
- const rotateImageRight = () => {
-  setRotation((prev) => (prev + 90) % 360);
-};
+  const rotateImageRight = () => {
+    setRotation((prev) => (prev + 90) % 360);
+  };
 
-const rotateImageLeft = () => {
-  setRotation((prev) => (prev - 90 + 360) % 360);
-};
+  const rotateImageLeft = () => {
+    setRotation((prev) => (prev - 90 + 360) % 360);
+  };
+
+  const onPressClose = () => {
+    setIsZoomed(false);
+    setImageOpen(false);
+  };
 
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
@@ -818,61 +823,79 @@ const rotateImageLeft = () => {
             <ControlledZoom
               isZoomed={isZoomed}
               onZoomChange={handleZoomChange}
-              ZoomContent={({img}) => isZoomed ? (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexDirection: "column",
-                    width: "100vw",
-                    height: "100vh",
-                    overflow: "hidden",
-                    zIndex: 9999,
-                    pointerEvents: "auto", 
-                  }}
-                >
-                  <img
-                    src={localImage}
-                    alt="payment-img"
-                    style={{
-                      transform: `rotate(${rotation}deg)`,
-                      maxWidth: "90vw",
-                      maxHeight: "90vh",
-                      objectFit: "contain",
-                      pointerEvents: "auto", 
-                    }}
-                  />
+              ZoomContent={({ img }) =>
+                isZoomed ? (
                   <div
-                    className="mt-2 flex gap-5"
                     style={{
-                      pointerEvents: "auto", 
-                      zIndex: 10000,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexDirection: "column",
+                      width: "100vw",
+                      height: "100vh",
+                      overflow: "hidden",
+                      zIndex: 9999,
+                      pointerEvents: "auto",
                     }}
                   >
-                    <Button variant="outline" size="sm" onClick={rotateImageLeft}>
-                      Rotate Left
-                    </Button>
-                     <Button variant="outline" size="sm" onClick={rotateImageRight}>
-                      Rotate Right
-                    </Button>
+                    <img
+                      src={localImage}
+                      alt="payment-img"
+                      style={{
+                        transform: `rotate(${rotation}deg)`,
+                        maxWidth: "90vw",
+                        maxHeight: "90vh",
+                        objectFit: "contain",
+                        pointerEvents: "auto",
+                      }}
+                    />
+                    <div
+                      className="mt-2 flex gap-5"
+                      style={{
+                        pointerEvents: "auto",
+                        zIndex: 10000,
+                      }}
+                    >
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={rotateImageLeft}
+                      >
+                        Rotate Left
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={rotateImageRight}
+                      >
+                        Rotate Right
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onPressClose}
+                      >
+                        Close
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ) : img}
+                ) : (
+                  img
+                )
+              }
             >
-             
-                <img
-                  onClick={() => setImageOpen(true)}
-                  src={localImage}
-                  alt="payment-img"
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "400px",
-                    objectFit: "contain",
-                    cursor: "zoom-in",
-                  }}
-                />
-              
+              <img
+                onClick={() => setImageOpen(true)}
+                src={localImage}
+                alt="payment-img"
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "400px",
+                  objectFit: "contain",
+                  cursor: "zoom-in",
+                }}
+              />
             </ControlledZoom>
           ) : (
             <Label>No Image found</Label>

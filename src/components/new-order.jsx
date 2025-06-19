@@ -53,6 +53,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
   const [errors, setErrors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [existingInventory, setExistingInventory] = useState([]);
+  const [title, setTitle] = useState("");
 
   useEffect(() => {
     if (visible) {
@@ -180,7 +181,6 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
               });
             }
           } else {
-            
             processedItems.push(item);
           }
         } else {
@@ -188,7 +188,6 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
         }
       });
 
-      
       processedItems.sort((a, b) => {
         if (a.is_machine === b.is_machine) return 0;
         return a.is_machine ? 1 : -1;
@@ -198,6 +197,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
         user_id: user_id,
         status: "Order Placed",
         items: processedItems,
+        title: title,
       };
       setLoading(true);
       try {
@@ -243,6 +243,14 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
 
         <ScrollArea className="min-h-[500px] max-h-[70vh] pr-4">
           <div className="space-y-6">
+            <div className="px-2">
+              <Label>Shipment name</Label>
+              <Input
+                placeholder="Enter shipment name"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
             {items.map((item, index) => (
               <div key={index} className="border p-4 rounded-md space-y-4">
                 <div className="flex items-center justify-between">
@@ -486,7 +494,15 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="SF3015G">SF3015G</SelectItem>
-                              <SelectItem value="SF3015GN">SF3015GN</SelectItem>
+                              <SelectItem value="SF3015N">SF3015N</SelectItem>
+                              <SelectItem value="SF4015N">SF4015N</SelectItem>
+                              <SelectItem value="SF6015N">SF6015N</SelectItem>
+                              <SelectItem value="SF3015C">SF3015C</SelectItem>
+                              <SelectItem value="SF4015C">SF4015C</SelectItem>
+                              <SelectItem value="SF6015C">SF6015C</SelectItem>
+                              <SelectItem value="SF1500HW">SF1500HW</SelectItem>
+                              <SelectItem value="SF2000HW">SF2000HW</SelectItem>
+                              <SelectItem value="SF3000HW">SF3000HW</SelectItem>
                             </SelectContent>
                           </Select>
                           {errors[index]?.machine_model && (
@@ -582,7 +598,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
           <Button type="button" variant="secondary" onClick={handleClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>
+          <Button disabled={!title || loading} onClick={handleSubmit}>
             {loading && <Spinner />}Create Order
           </Button>
         </DialogFooter>

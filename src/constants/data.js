@@ -1,5 +1,13 @@
 
 export const ownerNavItems = [
+   {
+    title: 'Complaint',
+    url: '/complaint',
+    icon: 'dashboard',
+    isActive: false,
+    shortcut: ['d', 'a', 's', 'h'],
+    items: []
+  },
   {
     title: 'Dashboard',
     url: '/dashboard',

@@ -46,13 +46,13 @@ export async function GET(req) {
 
 export async function POST(req) {
     const data = await req.json()
-    console.log(data)
+    
     if (!data.user_id || !data.items) {
         return NextResponse.json({ message: "Fields missing" }, { status: 500 })
     }
 
     try {
-        const result = await pool.query(`INSERT INTO orders (user_id, status) VALUES ($1, $2) RETURNING id`, [data.user_id, data.status])
+        const result = await pool.query(`INSERT INTO orders (user_id, status) VALUES ($1, $2, $3) RETURNING id`, [data.user_id, data.status, data.title])
 
         const orderId = result.rows[0].id
 

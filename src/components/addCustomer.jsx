@@ -143,11 +143,6 @@ const AddCustomerDialog = ({
       if (!number) return true;
 
       const isAllDigits = /^\d+$/.test(number);
-
-      if (code === "+92") {
-        return !(number.startsWith("3") && isAllDigits);
-      }
-
       return !isAllDigits;
     });
 
