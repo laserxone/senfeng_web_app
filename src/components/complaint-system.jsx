@@ -38,12 +38,14 @@ import Link from "next/link";
 import { UserSearch } from "./user-search";
 import moment from "moment";
 import { MyImg } from "./users/addVisit";
+import { Checkbox } from "./ui/checkbox";
 
 const formSchema = z.object({
-  title: z.string().min(1, "Complaint is required"),
-  customer_id: z.number({ message: "Client is required" }),
+  title: z.string().min(1, "Required"),
+  customer_id: z.number({ message: "Required" }),
   problem: z.string().optional(),
   solution: z.string().optional(),
+  installation: z.boolean(),
 });
 
 const formSchemaEngineer = z.object({
@@ -94,8 +96,8 @@ export default function ComplaintSystem() {
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-start justify-between items-center">
-        <Heading title="Complaint System" description="Manage complaints" />
-        <Button onClick={() => setVisible(true)}>Register complaint</Button>
+        <Heading title="Complaint & Installation System" description="Manage complaints and machine installations" />
+        <Button onClick={() => setVisible(true)}>Register</Button>
       </div>
 
       <ScrollArea className="h-[calc(100dvh-180px)]">
@@ -300,6 +302,7 @@ const AddNewComplaint = ({ visible, onClose, onRefresh }) => {
       customer_id: null,
       problem: "",
       solution: "",
+      installation: false,
     },
   });
 
@@ -326,7 +329,7 @@ const AddNewComplaint = ({ visible, onClose, onRefresh }) => {
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Register new complaint</DialogTitle>
+          <DialogTitle>New registration</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -338,14 +341,45 @@ const AddNewComplaint = ({ visible, onClose, onRefresh }) => {
           >
             <FormField
               control={form.control}
+              name="installation"
+              render={({ field }) => (
+                <div className="flex flex-row items-center gap-2">
+                  <FormLabel>
+                    Machine Installation? <RequiredStar />
+                  </FormLabel>
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </div>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="title"
               render={({ field }) => (
                 <div>
                   <FormLabel>
-                    Complaint <RequiredStar />
+                    {form.watch("installation") === true
+                      ? "Title"
+                      : "Complaint"}{" "}
+                    <RequiredStar />
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter complaint" {...field} />
+                    <Input
+                      placeholder={`Enter ${
+                        form.watch("installation") === true
+                          ? "title"
+                          : "complaint"
+                      }`}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </div>
@@ -371,33 +405,37 @@ const AddNewComplaint = ({ visible, onClose, onRefresh }) => {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="problem"
-              render={({ field }) => (
-                <div>
-                  <FormLabel>Problem</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter problem" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
-              )}
-            />
+            {form.watch("installation") === false && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="problem"
+                  render={({ field }) => (
+                    <div>
+                      <FormLabel>Problem</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter problem" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </div>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="solution"
-              render={({ field }) => (
-                <div>
-                  <FormLabel>Solution</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter solution" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="solution"
+                  render={({ field }) => (
+                    <div>
+                      <FormLabel>Solution</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter solution" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </div>
+                  )}
+                />
+              </>
+            )}
 
             <Button disabled={loading} type="submit" className="mt-2 w-full">
               {loading && <Spinner />} Save
