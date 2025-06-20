@@ -528,7 +528,7 @@ const AddTask = ({ visible, onClose, onRefresh, assigned_by }) => {
     axios
       .post(`/task`, {
         task_name: values.task,
-        type: values.radio == "office" ? "Office Task" : "Client Visit",
+        type: values.radio == "office" ? "Office Task" : "Client Task",
         client: values.client,
         status: "Assigned",
         assigned_to: values.user,
@@ -671,7 +671,7 @@ const AddTask = ({ visible, onClose, onRefresh, assigned_by }) => {
                 </>
               )}
 
-              <Button className="w-full" type="submit">
+              <Button disabled={loading} className="w-full" type="submit">
                 {loading && <Spinner />} Submit
               </Button>
             </form>

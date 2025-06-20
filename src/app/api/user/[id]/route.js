@@ -223,7 +223,13 @@ export async function GET(req, { params }) {
 
     } else {
       const allTasksQueryResult = await pool.query(`SELECT * FROM task WHERE assigned_to = $1 AND status = 'Pending'`, [id])
-      return NextResponse.json({ user, allTasks: allTasksQueryResult.rows.length }, { status: 200 })
+      const allComplaintsQueryResult = await pool.query(`
+       SELECT COUNT(*) AS total
+      FROM complaint_assignments ca
+      JOIN complaints c ON ca.complaint_id = c.id
+      WHERE ca.engineer_id = $1 AND c.status != 'completed'
+        `, [id])
+      return NextResponse.json({ user, allTasks: allTasksQueryResult.rows.length, allComplaints: allComplaintsQueryResult.rows[0].total }, { status: 200 })
     }
 
 
