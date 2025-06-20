@@ -10,7 +10,7 @@ export const ownerNavItems = [
     items: []
   },
   {
-    title: 'Complaint',
+    title: 'Complaint & Installation',
     url: '/complaint',
     icon: 'complaint',
     isActive: false,
@@ -158,7 +158,7 @@ export const ownerNavItems = [
 ];
 
 export const complaintItem = {
-  title: 'Complaint',
+  title: 'Complaint & Installation',
   url: '/complaint',
   icon: 'complaint',
   isActive: false,
