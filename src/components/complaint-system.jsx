@@ -96,7 +96,10 @@ export default function ComplaintSystem() {
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-start justify-between items-center">
-        <Heading title="Complaint & Installation System" description="Manage complaints and machine installations" />
+        <Heading
+          title="Complaint & Installation System"
+          description="Manage complaints and machine installations"
+        />
         <Button onClick={() => setVisible(true)}>Register</Button>
       </div>
 
@@ -165,13 +168,16 @@ export default function ComplaintSystem() {
                         </Button>
                       )}
                     </div>
-
-                    <div>
-                      <strong>Problem:</strong> {complaint.problem}
-                    </div>
-                    <div>
-                      <strong>Solution:</strong> {complaint.solution || "N/A"}
-                    </div>
+                    {complaint?.problem && (
+                      <div>
+                        <strong>Problem:</strong> {complaint.problem}
+                      </div>
+                    )}
+                    {complaint?.solution && (
+                      <div>
+                        <strong>Solution:</strong> {complaint.solution || "N/A"}
+                      </div>
+                    )}
 
                     <hr />
 
