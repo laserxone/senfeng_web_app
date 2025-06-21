@@ -356,7 +356,7 @@ export default function MemberMainPage() {
             if (val.id) {
               startHolyLoader();
               router.push(
-                `/${UserState?.value?.data?.base_route}/member/${val.id}`
+                `/${UserState.value.data?.base_route}/member/${val.id}`
               );
             }
           }}

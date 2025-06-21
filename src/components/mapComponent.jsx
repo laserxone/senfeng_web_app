@@ -23,7 +23,7 @@ const MapComponent = () => {
     if (UserState.value.data?.id) {
       fetchData();
     }
-  }, [UserState?.value?.data]);
+  }, [UserState.value.data]);
 
   const defaultMapContainerStyle = {
     width: "100%",

@@ -122,7 +122,7 @@ export default function ProfilePage() {
       setLoading(true);
       try {
         const fileList = Array.from(event.target.files);
-        const name = `${UserState?.value?.data?.id}/profile/${UserState?.value?.data?.email}-dp.png`;
+        const name = `${UserState.value.data?.id}/profile/${UserState.value.data?.email}-dp.png`;
         const img = await UploadImage(URL.createObjectURL(fileList[0]), name);
         const response = await axios.put(
           `/user/${UserState.value.data.id}`,
@@ -186,8 +186,8 @@ export default function ProfilePage() {
       const [fileName, setFileName] = useState("");
       const fileInputRef = useRef();
 
-      const userId = UserState?.value?.data?.id;
-      const userEmail = UserState?.value?.data?.email;
+      const userId = UserState.value.data?.id;
+      const userEmail = UserState.value.data?.email;
 
       useEffect(() => {
         if (docsData?.[type]) {

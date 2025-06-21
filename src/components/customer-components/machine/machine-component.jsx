@@ -109,7 +109,7 @@ export default function Machine({ id }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (id && UserState?.value?.data?.id) {
+    if (id && UserState.value.data?.id) {
       debouncedFetchData(id);
     }
   }, [id, UserState]);

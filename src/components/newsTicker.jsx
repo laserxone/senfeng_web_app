@@ -11,7 +11,7 @@ export default function NewsTicker() {
   const isMobile = useIsMobile();
   const [data, setData] = useState([]);
 
-  const userId = UserState?.value?.data?.id;
+  const userId = UserState.value.data?.id;
     const debouncedUserId = useDebounce(userId, 1000);
   
     useEffect(() => {

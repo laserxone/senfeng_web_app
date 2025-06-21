@@ -246,7 +246,7 @@ export default function TaskEmployee({ id }) {
       .endOf("day")
       .utc()
       .toISOString();
-    fetchData(UserState?.value?.data?.id, startDate, endDate);
+    fetchData(UserState.value.data?.id, startDate, endDate);
   }
 
   return (
@@ -278,7 +278,7 @@ export default function TaskEmployee({ id }) {
               .utc()
               .toISOString();
 
-            fetchData(UserState?.value?.data?.id, startDate, endDate);
+            fetchData(UserState.value.data?.id, startDate, endDate);
           }}
           user_id={UserState.value.data?.id}
           defaultRadio={"office"}
@@ -308,7 +308,7 @@ export default function TaskEmployee({ id }) {
       </PageTable>
 
       <TaskDetail
-        user_id={UserState?.value?.data?.id}
+        user_id={UserState.value.data?.id}
         detail={selectedTask}
         visible={visible}
         onClose={setVisible}

@@ -37,12 +37,12 @@ export default function Page() {
   const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
-    if (UserState?.value?.data?.id) {
+    if (UserState.value.data?.id) {
       const start_date = momentT.tz(TIMEZONE).startOf("month").startOf("day").utc().toISOString();
       const end_date = momentT.tz(TIMEZONE).endOf("month").endOf("day").utc().toISOString();
       fetchData(start_date, end_date);
     }
-  }, [UserState?.value?.data]);
+  }, [UserState.value.data]);
 
   async function fetchData(start, end, user = null) {
     return new Promise((res, ) => {

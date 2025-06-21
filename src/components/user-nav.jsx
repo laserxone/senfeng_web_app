@@ -33,7 +33,7 @@ export function UserNav() {
           <Avatar className="h-8 w-8">
             <AvatarImage src={profileImage} alt={"user-dp"} />
             <AvatarFallback>
-              {UserState?.value?.data?.name.substring(0, 2)}
+              {UserState.value.data?.name.substring(0, 2)}
             </AvatarFallback>
           </Avatar>
           <div style={{position:'absolute', top:'0px', right:'0px'}}>
@@ -45,23 +45,23 @@ export function UserNav() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {UserState?.value?.data?.name}
+              {UserState.value.data?.name}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
-              {UserState?.value?.data?.email}
+              {UserState.value.data?.email}
             </p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-        <Link href={`/${UserState?.value?.data?.base_route}/profile`}>
+        <Link href={`/${UserState.value.data?.base_route}/profile`}>
           <DropdownMenuItem>
             
               Profile
            
           </DropdownMenuItem>
           </Link>
-          <Link href={`/${UserState?.value?.data?.base_route}/notification`}>
+          <Link href={`/${UserState.value.data?.base_route}/notification`}>
           <DropdownMenuItem>Notifications <NotificationBadge count={NotificationState?.value?.data.length}/></DropdownMenuItem>
           </Link>
         </DropdownMenuGroup>

@@ -174,7 +174,7 @@ export default function Page() {
   const [dataLoading, setDataLoading] = useState(false);
 
   useEffect(() => {
-    if (UserState?.value?.data?.id) {
+    if (UserState.value.data?.id) {
       const startDate = momentT
         .tz(TIMEZONE)
         .startOf("month")
@@ -189,7 +189,7 @@ export default function Page() {
         .toISOString();
       fetchData("", startDate, endDate);
     }
-  }, [UserState?.value?.data]);
+  }, [UserState.value.data]);
 
   async function fetchData(user, start_date, end_date) {
     setDataLoading(true);
@@ -289,7 +289,7 @@ export default function Page() {
       </PageTable>
 
       <TaskDetail
-        user_id={UserState?.value?.data?.id}
+        user_id={UserState.value.data?.id}
         detail={selectedTask}
         visible={visible}
         onClose={setVisible}

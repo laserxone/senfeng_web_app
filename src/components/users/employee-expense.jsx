@@ -69,7 +69,7 @@ export default function EmployeeBranchExpenses() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (UserState?.value?.data?.id) {
+    if (UserState.value.data?.id) {
       if (!UserState.value.data?.branch_expenses_assigned) {
         router.push("/not-allowed");
       }
@@ -87,7 +87,7 @@ export default function EmployeeBranchExpenses() {
         .toISOString();
       fetchData(startDate, endDate);
     }
-  }, [UserState?.value?.data]);
+  }, [UserState.value.data]);
 
   async function fetchData(startDate, endDate) {
     return new Promise((resolve, reject) => {

@@ -73,7 +73,7 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
   const [taskData, setTaskData] = useState([]);
 
   useEffect(() => {
-    if (customer_id && UserState?.value?.data?.id) {
+    if (customer_id && UserState.value.data?.id) {
       debouncedFetchCustomerData();
     }
   }, [UserState, customer_id]);
@@ -195,7 +195,7 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
     return (
       <FeedbackTab
         type={data?.member ? "aftersales" : "feedback"}
-        userID={UserState?.value?.data?.id}
+        userID={UserState.value.data?.id}
         customerID={customer_id}
         data={feedback || []}
         onRefresh={() => fetchCustomerFeedback()}
@@ -214,10 +214,10 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
               onClick={() => {
                 if (data?.id) {
                   if (
-                    UserState?.value?.data?.designation === "Sales" ||
-                    UserState?.value?.data?.designation === "Engineer"
+                    UserState.value.data?.designation === "Sales" ||
+                    UserState.value.data?.designation === "Engineer"
                   ) {
-                    if (data?.ownership === UserState?.value?.data?.id) {
+                    if (data?.ownership === UserState.value.data?.id) {
                       setEditVisible(true);
                     } else {
                       toast({
@@ -307,7 +307,7 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
           <TabsContent value="customers">
             <CustomersTab
               data={data?.machines || []}
-              user_id={UserState?.value?.data?.id}
+              user_id={UserState.value.data?.id}
               customer_id={customer_id}
               onRefresh={() => fetchCustomerDetail()}
             />

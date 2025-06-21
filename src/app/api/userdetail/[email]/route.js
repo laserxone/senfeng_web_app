@@ -16,7 +16,7 @@ export async function GET(req, { params }) {
 
     try {
         const query = `
-      SELECT * FROM users WHERE email = $1 LIMIT 1
+      SELECT id, customer_add_access, designation, name, limited_access, dp, full_access, email, dms_write_access, customer_delete_access, branch_expenses_assigned, branch_expenses_write_access, branch_expenses_delete_access, pos_assigned, complaint_assigned, inventory_assigned, office FROM users WHERE email = $1 LIMIT 1
     `;
         let base_route = ""
         const result = await pool.query(query, [email]);

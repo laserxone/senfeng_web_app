@@ -88,7 +88,7 @@ export default function POS() {
     const [orderStockVisible, setOrderStockVisible] = useState(false)
     const [walkIn, setWalkIn] = useState(false)
 
-    const userId = UserState?.value?.data?.id;
+    const userId = UserState.value.data?.id;
     const debouncedUserId = useDebounce(userId, 1000);
 
     useEffect(() => {

@@ -274,7 +274,7 @@ const DocumentManagement = () => {
           >
             Download
           </ContextMenuItem>
-          {UserState?.value?.data &&
+          {UserState.value.data &&
             (UserState.value.data.designation === "Owner" ||
               UserState.value.data.full_access) && (
               <ContextMenuItem

@@ -24,7 +24,7 @@ export default function Page({params}) {
   const [loading, setLoading] = useState(true);
   const { state: UserState } = useContext(UserContext);
   const [userTaskData, setUserTaskData] = useState([]);
-  const userId = UserState?.value?.data?.id;
+  const userId = UserState.value.data?.id;
   const debouncedUserId = useDebounce(userId, 1000);
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export default function Page({params}) {
   async function fetchDashboardData() {
    
     axios
-      .get(`/dashboard`)
+      .get(`/superadmin/dashboard`)
       .then((response) => {
         setData(response.data);
         if (response.data?.team_task) {
@@ -85,7 +85,7 @@ export default function Page({params}) {
   async function fetchCustomerList() {
     try {
       let list1 = [];
-      axios.get(`/customer`).then((response) => {
+      axios.get(`/superadmin/customer?map=true`).then((response) => {
         const customerList = response.data;
         const newArray = mergeArrays(customerList, PakCities);
 

@@ -410,7 +410,7 @@ export default function CustomerMainPage() {
             if (val.id) {
               startHolyLoader();
               router.push(
-                `/${UserState?.value?.data?.base_route}/customer/${val.id}`
+                `/${UserState.value.data?.base_route}/customer/${val.id}`
               );
             }
           }}

@@ -7,7 +7,7 @@ import { useContext, useEffect, useState } from "react";
 export const useProfileImage = () => {
   const [profileImage, setProfileImage] = useState(null);
   const { state: UserState } = useContext(UserContext);
-  const userDp = UserState?.value?.data?.dp; // Extract `dp` to avoid redundant lookups
+  const userDp = UserState.value.data?.dp; // Extract `dp` to avoid redundant lookups
 
   useEffect(() => {
     if (!userDp) {

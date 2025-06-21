@@ -9,7 +9,7 @@ import { useContext } from "react";
 export default function Page() {
   const {state : UserState} = useContext(UserContext)
  return (
-  <TaskEmployee id={UserState?.value?.data?.id}/>
+  <TaskEmployee id={UserState.value.data?.id}/>
  )
 }
 

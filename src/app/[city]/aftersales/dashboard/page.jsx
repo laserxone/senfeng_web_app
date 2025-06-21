@@ -503,7 +503,7 @@ const CustomerEmployeeAfterSales = ({
               if (val?.id) {
                 startHolyLoader();
                 router.push(
-                  `/${UserState?.value?.data?.base_route}/${
+                  `/${UserState.value.data?.base_route}/${
                     val.member ? "member" : "customer"
                   }/${val.id}`
                 );

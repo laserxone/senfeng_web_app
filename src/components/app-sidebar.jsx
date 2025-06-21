@@ -92,7 +92,7 @@ export default function AppSidebar({ office }) {
   }
 
   useEffect(() => {
-    if (UserState?.value?.data?.email) {
+    if (UserState.value.data?.email) {
       const q = query(
         collection(db, "Notification"),
         where("sendTo", "==", UserState.value.data.id),
@@ -207,13 +207,13 @@ export default function AppSidebar({ office }) {
                   <Avatar className="h-8 w-8 rounded-lg">
                     <AvatarImage src={profileImage} alt={"User-dp"} />
                     <AvatarFallback className="rounded-lg">
-                      {UserState?.value?.data?.name.substring(0, 2)}
+                      {UserState.value.data?.name.substring(0, 2)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <div className="flex flex-row gap-2 items-center">
                       <span className="truncate font-semibold">
-                        {UserState?.value?.data?.name}
+                        {UserState.value.data?.name}
                       </span>
                       <NotificationBadgeWithoutCount
                         count={NotificationState?.value?.data?.length}
@@ -221,7 +221,7 @@ export default function AppSidebar({ office }) {
                     </div>
 
                     <span className="truncate text-xs">
-                      {UserState?.value?.data?.email}
+                      {UserState.value.data?.email}
                     </span>
                   </div>
 
@@ -239,16 +239,16 @@ export default function AppSidebar({ office }) {
                     <Avatar className="h-8 w-8 rounded-lg">
                       <AvatarImage src={profileImage} alt={"User-dp"} />
                       <AvatarFallback className="rounded-lg">
-                        {UserState?.value?.data?.name.substring(0, 2)}
+                        {UserState.value.data?.name.substring(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">
-                        {UserState?.value?.data?.name}
+                        {UserState.value.data?.name}
                       </span>
                       <span className="truncate text-xs">
                         {" "}
-                        {UserState?.value?.data?.email}
+                        {UserState.value.data?.email}
                       </span>
                     </div>
                   </div>
@@ -256,14 +256,14 @@ export default function AppSidebar({ office }) {
                 <DropdownMenuSeparator />
 
                 <DropdownMenuGroup>
-                  <Link href={`/${UserState?.value?.data?.base_route}/profile`}>
+                  <Link href={`/${UserState.value.data?.base_route}/profile`}>
                     <DropdownMenuItem>
                       <CreditCard />
                       Profile
                     </DropdownMenuItem>
                   </Link>
                   <Link
-                    href={`/${UserState?.value?.data?.base_route}/notification`}
+                    href={`/${UserState.value.data?.base_route}/notification`}
                   >
                     <DropdownMenuItem>
                       <Bell />
@@ -274,8 +274,8 @@ export default function AppSidebar({ office }) {
                     </DropdownMenuItem>
                   </Link>
 
-                  {(UserState?.value?.data?.designation === "Owner" ||
-                    UserState?.value?.data?.full_access) && (
+                  {(UserState.value.data?.designation === "Owner" ||
+                    UserState.value.data?.full_access) && (
                     <Link
                       href={`/${pathname.includes("karachi") ? "lahore" : "karachi"}/superadmin/dashboard`}
                     >

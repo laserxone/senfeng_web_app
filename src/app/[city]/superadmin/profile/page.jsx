@@ -39,11 +39,11 @@ export default function Page() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (UserState?.value?.data?.id) {
+    if (UserState.value.data?.id) {
       setName(UserState.value.data.name);
       setImage(UserState.value.data.dp);
     }
-  }, [UserState?.value?.data]);
+  }, [UserState.value.data]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -64,8 +64,8 @@ export default function Page() {
 
   function checkStatus() {
     return (
-      name !== UserState?.value?.data?.name ||
-      image !== UserState?.value?.data?.dp
+      name !== UserState.value.data?.name ||
+      image !== UserState.value.data?.dp
     );
   }
 

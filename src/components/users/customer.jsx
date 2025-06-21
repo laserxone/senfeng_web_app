@@ -185,7 +185,7 @@ export default function CustomerEmployee({
 
     //     return (
     //       <Link
-    //         href={`/${UserState?.value?.data?.base_route}/customer${currentItem.id}`}
+    //         href={`/${UserState.value.data?.base_route}/customer${currentItem.id}`}
     //       >
     //         <ChevronsRight />
     //       </Link>
@@ -233,7 +233,7 @@ export default function CustomerEmployee({
             if (val?.id) {
               startHolyLoader();
               router.push(
-                `/${UserState?.value?.data?.base_route}/${val.member ? "member" : "customer"}/${val.id}`
+                `/${UserState.value.data?.base_route}/${val.member ? "member" : "customer"}/${val.id}`
               );
             }
           }}
