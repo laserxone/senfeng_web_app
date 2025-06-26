@@ -6,6 +6,7 @@ import { Lato } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import SenfengLogoLoader from "@/components/senfengLogoLoader";
+import MaintenanceWrapper from "@/components/maintenance-wrapper";
 
 export const metadata = {
   title: "SENFENG",
@@ -23,16 +24,13 @@ export default async function RootLayout({ children }) {
     <html lang="en" className={`${lato.className}`} suppressHydrationWarning>
       <body className={"overflow-hidden"}>
         {/* <NextTopLoader showSpinner={false} /> */}
+
         <HolyLoader />
-        <Suspense
-          fallback={
-          <SenfengLogoLoader />
-          }
-        >
+        <Suspense fallback={<SenfengLogoLoader />}>
           <Providers>
             {/* <MobileScreenWrapper> */}
-              {children}
-              {/* </MobileScreenWrapper> */}
+            <MaintenanceWrapper>{children}</MaintenanceWrapper>
+            {/* </MobileScreenWrapper> */}
           </Providers>
         </Suspense>
         <Toaster />
