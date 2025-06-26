@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import { RequiredStar } from "@/components/RequiredStar";
 import {
@@ -24,12 +24,7 @@ import { Switch } from "@/components/ui/switch";
 import axios from "@/lib/axios";
 import "react-medium-image-zoom/dist/styles.css";
 import { InventorySearch } from "./inventory-select";
-
-const mockInventory = [
-  { id: 1, label: "Electric Drill" },
-  { id: 2, label: "Welding Machine" },
-  { id: 3, label: "Compressor Pump" },
-];
+import { UserContext } from "@/store/context/UserContext";
 
 const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
   const [items, setItems] = useState([
@@ -40,7 +35,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
       buying_price: 0,
       threshold: 0,
       new_order: 0,
-      is_machine: false,
+      is_machine: true,
       machine_serial: "",
       machine_model: "",
       machine_source: "",
@@ -54,6 +49,8 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
   const [loading, setLoading] = useState(false);
   const [existingInventory, setExistingInventory] = useState([]);
   const [title, setTitle] = useState("");
+  const { state: UserState } = useContext(UserContext);
+  const [manual, setManual] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -94,7 +91,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
         buying_price: 0,
         threshold: 0,
         new_order: 0,
-        is_machine: false,
+        is_machine: true,
         machine_serial: "",
         machine_model: "",
         machine_source: "",
@@ -178,6 +175,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
                 ...item,
                 qty: 1,
                 machine_serial: (baseSerial + i).toString(),
+                name : (baseSerial + i).toString()
               });
             }
           } else {
@@ -201,7 +199,10 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
       };
       setLoading(true);
       try {
-        const response = await axios.post(`/neworder`, payload);
+        const response = await axios.post(
+          `/superadmin/${UserState.value.data?.id}/neworder`,
+          payload
+        );
         await onRefresh();
         handleClose();
       } finally {
@@ -456,6 +457,16 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
                     </div>
 
                     {item.is_machine && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <Switch
+                          checked={manual}
+                          onCheckedChange={(val) => setManual(true)}
+                        />
+                        <Label>Manual?</Label>
+                      </div>
+                    )}
+
+                    {item.is_machine && (
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label>
@@ -483,30 +494,49 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
                           <Label>
                             Model <RequiredStar />
                           </Label>
-                          <Select
-                            value={item.machine_model}
-                            onValueChange={(val) =>
-                              handleItemChange(index, "machine_model", val)
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Model" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="SF3015G">SF3015G</SelectItem>
-                              <SelectItem value="SF4015G">SF4015G</SelectItem>
-                              <SelectItem value="SF6015G">SF6015G</SelectItem>
-                              <SelectItem value="SF3015N">SF3015N</SelectItem>
-                              <SelectItem value="SF4015N">SF4015N</SelectItem>
-                              <SelectItem value="SF6015N">SF6015N</SelectItem>
-                              <SelectItem value="SF3015C">SF3015C</SelectItem>
-                              <SelectItem value="SF4015C">SF4015C</SelectItem>
-                              <SelectItem value="SF6015C">SF6015C</SelectItem>
-                              <SelectItem value="SF1500HW">SF1500HW</SelectItem>
-                              <SelectItem value="SF2000HW">SF2000HW</SelectItem>
-                              <SelectItem value="SF3000HW">SF3000HW</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          {manual ? (
+                            <Input
+                              value={item.machine_model}
+                              onChange={(e) => {
+                                handleItemChange(
+                                  index,
+                                  "machine_model",
+                                  e.target.value
+                                );
+                              }}
+                            />
+                          ) : (
+                            <Select
+                              value={item.machine_model}
+                              onValueChange={(val) =>
+                                handleItemChange(index, "machine_model", val)
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Model" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="SF3015G">SF3015G</SelectItem>
+                                <SelectItem value="SF4015G">SF4015G</SelectItem>
+                                <SelectItem value="SF6015G">SF6015G</SelectItem>
+                                <SelectItem value="SF3015N">SF3015N</SelectItem>
+                                <SelectItem value="SF4015N">SF4015N</SelectItem>
+                                <SelectItem value="SF6015N">SF6015N</SelectItem>
+                                <SelectItem value="SF3015C">SF3015C</SelectItem>
+                                <SelectItem value="SF4015C">SF4015C</SelectItem>
+                                <SelectItem value="SF6015C">SF6015C</SelectItem>
+                                <SelectItem value="SF1500HW">
+                                  SF1500HW
+                                </SelectItem>
+                                <SelectItem value="SF2000HW">
+                                  SF2000HW
+                                </SelectItem>
+                                <SelectItem value="SF3000HW">
+                                  SF3000HW
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
                           {errors[index]?.machine_model && (
                             <p className="text-red-600 text-sm mt-1">
                               {errors[index].machine_model}
@@ -518,21 +548,34 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
                           <Label>
                             Source <RequiredStar />
                           </Label>
-                          <Select
-                            value={item.machine_source}
-                            onValueChange={(val) =>
-                              handleItemChange(index, "machine_source", val)
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Source" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="RAYCUS">RAYCUS</SelectItem>
-                              <SelectItem value="MAX">MAX</SelectItem>
-                              <SelectItem value="IPG">IPG</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          {manual ? (
+                            <Input
+                              value={item.machine_source}
+                              onChange={(e) => {
+                                handleItemChange(
+                                  index,
+                                  "machine_source",
+                                  e.target.value?.toString()?.toUpperCase()
+                                );
+                              }}
+                            />
+                          ) : (
+                            <Select
+                              value={item.machine_source}
+                              onValueChange={(val) =>
+                                handleItemChange(index, "machine_source", val)
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Source" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="RAYCUS">RAYCUS</SelectItem>
+                                <SelectItem value="MAX">MAX</SelectItem>
+                                <SelectItem value="IPG">IPG</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
                           {errors[index]?.machine_source && (
                             <p className="text-red-600 text-sm mt-1">
                               {errors[index].machine_source}
@@ -544,21 +587,35 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
                           <Label>
                             Power <RequiredStar />
                           </Label>
-                          <Select
-                            value={item.machine_power}
-                            onValueChange={(val) =>
-                              handleItemChange(index, "machine_power", val)
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Power" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="1500">1500</SelectItem>
-                              <SelectItem value="3000">3000</SelectItem>
-                              <SelectItem value="6000">6000</SelectItem>
-                            </SelectContent>
-                          </Select>
+
+                          {manual ? (
+                            <Input
+                              value={item.machine_power}
+                              onChange={(e) => {
+                                handleItemChange(
+                                  index,
+                                  "machine_power",
+                                  e.target.value
+                                );
+                              }}
+                            />
+                          ) : (
+                            <Select
+                              value={item.machine_power}
+                              onValueChange={(val) =>
+                                handleItemChange(index, "machine_power", val)
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Power" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1500">1500</SelectItem>
+                                <SelectItem value="3000">3000</SelectItem>
+                                <SelectItem value="6000">6000</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
                           {errors[index]?.machine_power && (
                             <p className="text-red-600 text-sm mt-1">
                               {errors[index].machine_power}
