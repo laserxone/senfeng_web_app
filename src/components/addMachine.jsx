@@ -269,22 +269,11 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                           Source <RequiredStar />
                         </FormLabel>
                         <FormControl>
-                          <Select
+                          <Input
                             disabled
-                            onValueChange={(val) => field.onChange(val)}
-                            value={field.value}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select source" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {["RAYCUS", "MAX", "IPG"].map((source) => (
-                                <SelectItem key={source} value={source}>
-                                  {source}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            placeholder="example: RAYCUS / MAX /IPG"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
