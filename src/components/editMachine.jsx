@@ -31,7 +31,7 @@ import { Label } from "./ui/label";
 import Spinner from "./ui/spinner";
 import { UserContext } from "@/store/context/UserContext";
 
-const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
+const EditMachine = ({ machine_id, visible, onClose, onRefresh, data, base }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
   const [orderNumbers, setOrderNumbers] = useState([""]);
@@ -80,7 +80,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
       if (data?.speed_money) {
         setIsSpeedMoney(true);
       }
-      if (data?.order_no_arr) {
+      if (data?.order_no_arr && data?.order_no_arr.length > 0) {
         setOrderNumbers([...data.order_no_arr]);
       }
     }
@@ -105,7 +105,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
 
     setLoading(true);
     axios
-      .put(`/machine/${machine_id}?userid=${UserState.value.data?.id}`, {
+      .put(`/${UserState.value.data?.id}/machine/${machine_id}`, {
         id: machine_id,
         speed_money_note: values.speedMoneyNote,
         speed_money: values.isSpeedMoney,
@@ -178,7 +178,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
                       <FormItem>
                         <FormLabel>Machine Model</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter machine model" {...field} />
+                          <Input disabled={true} placeholder="Enter machine model" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -192,7 +192,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
                       <FormItem>
                         <FormLabel>Power</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter power" {...field} />
+                          <Input disabled={true} placeholder="Enter power" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -206,21 +206,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data }) => {
                       <FormItem>
                         <FormLabel>Source</FormLabel>
                         <FormControl>
-                          <Select
-                            onValueChange={(val) => field.onChange(val)}
-                            value={field.value}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select source" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {["RAYCUS", "MAX", "IPG"].map((source) => (
-                                <SelectItem key={source} value={source}>
-                                  {source}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                           <Input disabled={true} placeholder="Enter source" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
