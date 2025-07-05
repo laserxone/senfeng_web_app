@@ -1,38 +1,81 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server"
-import moment from "moment";
-import admin from "@/lib/firebaseAdmin";
+import { storage } from "@/config/firebase";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
+import admin from "@/lib/firebaseAdmin";
+import { ref, uploadString } from "firebase/storage";
+import moment from "moment";
+import { NextResponse } from "next/server";
 
-export async function POST(req) {
-
+export async function POST(req, { params }) {
     try {
-        const data = await req.json();
+        const { id } = await params
+        const { note, location, image, task, reason, customer_id } = await req.json();
 
-        if (!data || Object.keys(data).length === 0) {
-            return NextResponse.json({ message: "No data provided for insertion" }, { status: 400 });
+        if (!note || !location || !image) {
+            return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
         }
 
-        const fields = Object.keys(data);
-        const values = Object.values(data);
-        const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
+        const currentDate = moment().format("YYYY-MM-DD"); // Format the date
+        const timestamp = new Date(); // Current time
 
-        const query = `
-        INSERT INTO attendance (${fields.join(", ")})
-        VALUES (${placeholders})
-    `;
+        // Check if an attendance entry exists for the same date
+        const checkQuery = `
+        SELECT * FROM attendance 
+        WHERE user_id = $1 
+        AND DATE(time_in) = $2
+      `;
+        const checkResult = await pool.query(checkQuery, [id, currentDate]);
+        const fileName = `${id}/attendance/${moment().valueOf()}.png`; // Unique file path
 
-        await pool.query(query, values);
 
-        console.log("data inserted successfully");
-        return NextResponse.json({ message: "Inserted successfully" }, { status: 201 });
+        if (checkResult.rows.length === 0) {
+            await UploadImageForMobile(image, fileName)
+            const insertQuery = `
+          INSERT INTO attendance (user_id, note_time_in, time_in, location_time_in, image_time_in, customer_id)
+          VALUES ($1, $2, $3, $4, $5, $6)
+          RETURNING *;
+        `;
+            const insertResult = await pool.query(insertQuery, [id, note, timestamp, location, fileName, customer_id || null]);
+
+            await pool.query(`
+            INSERT INTO task(
+                assigned_to, status, task_name, type, created_at, customer_id
+            )
+            VALUES ($1, $2, $3, $4, NOW(), $5) 
+        `, [id, "Pending", task, reason, customer_id || null]);
+
+            return NextResponse.json({ message: "Attendance marked time in", data: insertResult.rows[0] }, { status: 201 });
+        }
+
+        const existingAttendance = checkResult.rows[0];
+
+        if (!existingAttendance.time_out) {
+            await UploadImageForMobile(image, fileName)
+            const updateQuery = `
+          UPDATE attendance 
+          SET note_time_out = $1, time_out = $2, location_time_out = $3, image_time_out = $4
+          WHERE id = $5
+          RETURNING *;
+        `;
+            const updateResult = await pool.query(updateQuery, [note, timestamp, location, fileName, existingAttendance.id]);
+
+            // await pool.query(`
+            //     INSERT INTO task(
+            //         assigned_to, status, task_name, type, created_at
+            //     )
+            //     VALUES ($1, $2, $3, $4, NOW()) 
+            // `, [id, "Pending", task, reason]);
+
+            return NextResponse.json({ message: "Attendance marked time out", data: updateResult.rows[0] }, { status: 200 });
+        }
+
+        return NextResponse.json({ message: "Attendance already marked for the day" }, { status: 400 });
 
     } catch (error) {
-        console.error('Error inserting data: ', error);
-        return NextResponse.json({ message: 'Error adding customer' }, { status: 500 })
+        console.log("message:", error);
+        return NextResponse.json({ message: error?.message || "Something went wrong" }, { status: 500 });
     }
 }
-
 
 export async function GET(req, { params }) {
 
@@ -49,7 +92,7 @@ export async function GET(req, { params }) {
 
 
     try {
-  const isSuper = await checkSuperadmin(uid)
+        const isSuper = await checkSuperadmin(uid)
 
         if (isSuper) {
             let query = `
@@ -157,7 +200,7 @@ export async function GET(req, { params }) {
             let query = `
     SELECT 
     t.*, 
-    u.id AS user_id, 
+    u.id AS user_id,  
     u.name AS user_name,
     u.email AS user_email
 FROM attendance t
@@ -238,6 +281,25 @@ WHERE u.id = $1
         return NextResponse.json({ message: error?.message || "Something went wrong" }, { status: 500 })
     }
 
+
+}
+
+
+async function UploadImageForMobile(image, fileName) {
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            const storageRef = ref(storage, fileName);
+
+            await uploadString(storageRef, image, "base64", { contentType: "image/png" });
+
+            resolve(true);
+        } catch (error) {
+            console.log(error)
+            reject(null)
+        }
+
+    })
 
 }
 

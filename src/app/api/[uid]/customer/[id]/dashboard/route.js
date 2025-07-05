@@ -151,68 +151,71 @@ export async function GET(req, { params }) {
         customer.bill_total = parseFloat(billTotal);
         customer.profile_completion = overallCompletion;
 
-        const feedback = await pool.query(
-            `SELECT f.*, 
-                    COALESCE(u.name, 'NIL') AS user_name 
-             FROM feedback f 
-             LEFT JOIN users u ON f.user_id = u.id 
-             WHERE f.customer_id = $1`,
-            [id]
-        );
+        //         const feedback = await pool.query(
+        //             `SELECT f.*, 
+        //                     COALESCE(u.name, 'NIL') AS user_name 
+        //              FROM feedback f 
+        //              LEFT JOIN users u ON f.user_id = u.id 
+        //              WHERE f.customer_id = $1`,
+        //             [id]
+        //         );
 
-        const task = await pool.query(
-            `
-    SELECT 
-    r.id,
-    r.created_at,
-    r.customer_id,
-    r.assigned_to, 
-    r.task_name,
-    r.status,
-    u.id AS user_id, 
-    u.name AS user_name,
-      c.name AS customer_name,
-     c.owner AS customer_owner
-FROM task r
-LEFT JOIN users u ON r.assigned_to = u.id
-LEFT JOIN customer c ON r.customer_id = c.id
-WHERE r.customer_id = $1
-    `, [id]);
+        //         const task = await pool.query(
+        //             `
+        //     SELECT 
+        //     r.id,
+        //     r.created_at,
+        //     r.customer_id,
+        //     r.assigned_to, 
+        //     r.task_name,
+        //     r.status,
+        //     u.id AS user_id, 
+        //     u.name AS user_name,
+        //       c.name AS customer_name,
+        //      c.owner AS customer_owner
+        // FROM task r
+        // LEFT JOIN users u ON r.assigned_to = u.id
+        // LEFT JOIN customer c ON r.customer_id = c.id
+        // WHERE r.customer_id = $1
+        //     `, [id]);
 
-        const teamTasks = task.rows
-        const updatedTasks = teamTasks.map(task => {
+        //         const teamTasks = task.rows
+        //         const updatedTasks = teamTasks.map(task => {
 
-            if (task.customer_id) {
-                const [firstPart] = task.task_name.split("-");
-                const customerInfo = task.customer_name || task.customer_owner || "";
-                const updatedTitle = `${firstPart.trim()} - ${customerInfo}`;
-                return {
-                    ...task,
-                    task_name: updatedTitle,
-                    created_at_time: task.created_at
-                };
-            }
-            return task;
-        });
+        //             if (task.customer_id) {
+        //                 const [firstPart] = task.task_name.split("-");
+        //                 const customerInfo = task.customer_name || task.customer_owner || "";
+        //                 const updatedTitle = `${firstPart.trim()} - ${customerInfo}`;
+        //                 return {
+        //                     ...task,
+        //                     task_name: updatedTitle,
+        //                     created_at_time: task.created_at
+        //                 };
+        //             }
+        //             return task;
+        //         });
 
-        const visit = await pool.query(`
-    SELECT 
-    r.*, 
-    u.id AS user_id, 
-    u.name AS user_name,
-      c.name AS customer_name,
-     c.owner AS customer_owner,
-    c.location AS customer_location,
-    c.number AS customer_number,
-    c.member AS customer_member,
-      c.id AS customer_id
-FROM visit r
-INNER JOIN users u ON r.user_id = u.id
-INNER JOIN customer c ON r.customer_id = c.id
-WHERE r.customer_id = $1
-    `, [id]);
+        //         const visit = await pool.query(`
+        //     SELECT 
+        //     r.*, 
+        //     u.id AS user_id, 
+        //     u.name AS user_name,
+        //       c.name AS customer_name,
+        //      c.owner AS customer_owner,
+        //     c.location AS customer_location,
+        //     c.number AS customer_number,
+        //     c.member AS customer_member,
+        //       c.id AS customer_id
+        // FROM visit r
+        // INNER JOIN users u ON r.user_id = u.id
+        // INNER JOIN customer c ON r.customer_id = c.id
+        // WHERE r.customer_id = $1
+        //     `, [id]);
 
-        return NextResponse.json({ customer, feedback: feedback.rows, task: updatedTasks, visit: visit.rows }, { status: 200 });
+        return NextResponse.json({
+            customer,
+            // feedback: feedback.rows, task: updatedTasks, visit: visit.rows 
+        }, { status: 200 });
 
 
 

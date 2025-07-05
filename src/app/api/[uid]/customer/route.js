@@ -239,9 +239,9 @@ export async function GET(req, { params }) {
                 }
             }
 
-            if (member) {
+            if (member && member === 'true') {
                 whereClauses.push("c.member IS TRUE");
-            } else {
+            } else if(member && member === 'false') {
                 whereClauses.push("c.member IS FALSE");
             }
 

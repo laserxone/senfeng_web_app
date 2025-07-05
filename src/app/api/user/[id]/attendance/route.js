@@ -42,7 +42,7 @@ WHERE u.id = $1
 
         const processedStartDate = moment(start_date).startOf("day")
         const processedEndDate = moment(end_date).endOf("day")
-
+ 
 
         let snapshot
         if (id) {

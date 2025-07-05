@@ -86,8 +86,31 @@ export default function MemberDetail({
   }, [UserState, customer_id]);
 
   const debouncedFetchCustomerData = debounce(() => {
-    fetchCustomerDashboard();
+   
+    fetchCustomerTask();
+    fetchCustomerVisit();
+    fetchCustomerFeedback();
+     fetchCustomerDashboard();
   }, 500);
+
+  async function fetchCustomerTask() {
+    axios.get(`/${UserState.value.data?.id}/customer/${customer_id}/task`)
+     .then((response)=>{
+      setTaskData(response.data)
+     })
+  }
+  async function fetchCustomerVisit() {
+     axios.get(`/${UserState.value.data?.id}/customer/${customer_id}/visit`)
+      .then((response)=>{
+      setVisitData(response.data)
+     })
+  }
+  async function fetchCustomerFeedback() {
+     axios.get(`/${UserState.value.data?.id}/customer/${customer_id}/feedback`)
+     .then((response)=>{
+      setFeedback(response.data)
+     })
+  }
 
   async function fetchCustomerDashboard() {
     if (onLoading) {
@@ -95,9 +118,7 @@ export default function MemberDetail({
     }
 
     axios
-      .get(
-        `/${UserState.value.data?.id}/customer/${customer_id}/dashboard`
-      )
+      .get(`/${UserState.value.data?.id}/customer/${customer_id}/dashboard`)
       .then((response) => {
         const data = response.data.customer;
         setData(data);
@@ -121,9 +142,9 @@ export default function MemberDetail({
         const overallCompletion =
           (customerCompletion + totalMachineCompletion) / (machines.length + 1);
         setProfileCompletion(overallCompletion.toFixed(0));
-        setTaskData(response.data.task);
-        setVisitData(response.data.visit);
-        setFeedback(response.data.feedback);
+        // setTaskData(response.data.task);
+        // setVisitData(response.data.visit);
+        // setFeedback(response.data.feedback);
       })
       .finally(() => {
         if (onLoading) onLoading(false);
