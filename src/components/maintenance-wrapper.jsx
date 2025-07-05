@@ -19,7 +19,7 @@ function formatTime(ms) {
 
 export default function MaintenanceWrapper({ children }) {
   const [mounted, setMounted] = useState(false);
-  const [isMaintenance, setIsMaintenance] = useState(false);
+  const [isMaintenance, setIsMaintenance] = useState(true);
 
   useEffect(()=>{
     setMounted(true)
@@ -31,7 +31,7 @@ export default function MaintenanceWrapper({ children }) {
     return (
       <div className="h-screen bg-zinc-900 text-white flex flex-col items-center justify-center text-center px-6">
         <h1 className="text-3xl font-bold mb-2">🚧 Site Under Maintenance</h1>
-        <p className="text-lg mb-4">Will be back by <strong>monday morning</strong>.</p>
+        <p className="text-lg mb-4">Will be back by <strong>monday</strong>.</p>
       </div>
     );
   }
