@@ -98,7 +98,7 @@ export default function Page() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${
+          `/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${
             user || ""
           }`
         )
@@ -406,6 +406,7 @@ const ImageSheet = ({
   const [isZoomed, setIsZoomed] = useState(false);
   const isMountedRef = useRef(true);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const {state : UserState} = useContext(UserContext)
 
   const fetchImage = useCallback(async () => {
     if (!img) return;
@@ -451,15 +452,15 @@ const ImageSheet = ({
   async function handleDelete() {
     if (img) {
       if (img.includes("https")) {
-        const storagePath = getStoragePathFromUrl(img);
-        if (storagePath) {
-          DeleteFromStorage(storagePath);
-        }
+        // const storagePath = getStoragePathFromUrl(img);
+        // if (storagePath) {
+        //   DeleteFromStorage(storagePath);
+        // }
       } else {
         DeleteFromStorage(img);
       }
     }
-    axios.delete(`/reimbursement/${id}`).then(async () => {
+    axios.delete(`/${UserState.value.data?.id}/reimbursement/${id}`).then(async () => {
       await onRefresh(id);
       setDeleteLoading(false);
       handleClose(false);
@@ -532,6 +533,8 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
   const [loading, setLoading] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedRadio, setSelectedRadio] = useState("customer");
+  const {state : UserState} = useContext(UserContext)
+
   const formSchema = z.object({
     title: z.string().min(1, { message: "Title is required." }),
     description: z.string().min(1, { message: "Description is required." }),
@@ -564,7 +567,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
         .valueOf()
         .toString()}.png`;
       const imgRef = await UploadImage(values.image, name);
-      const response = await axios.post(`/reimbursement`, {
+      const response = await axios.post(`/${UserState.value.data?.id}/reimbursement`, {
         amount: values.amount,
         title: values.title,
         description: values.description,

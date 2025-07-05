@@ -1,11 +1,37 @@
 "use client";
 
-import { UserContext } from "@/store/context/UserContext";
-import { useContext, useEffect, useState } from "react";
-import { Heading } from "../ui/heading";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { toast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
-import { BASE_URL } from "@/constants/data";
+import { UserContext } from "@/store/context/UserContext";
+import moment from "moment";
+import Link from "next/link";
+import { useContext, useEffect, useState } from "react";
+import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Heading } from "../ui/heading";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import Spinner from "../ui/spinner";
 import {
   Table,
   TableBody,
@@ -14,40 +40,13 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import Spinner from "../ui/spinner";
-import { Button } from "../ui/button";
-import Link from "next/link";
-import moment from "moment";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import { Input } from "../ui/input";
-import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "../ui/toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
-import { Label } from "../ui/label";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 
 export default function Commission({ owner, crm }) {
   return owner ? <OwnerView /> : crm ? <CrmView /> : <OtherView />;
@@ -72,7 +71,7 @@ const OwnerView = () => {
   async function fetchData() {
     return new Promise(async (resolve, reject) => {
       try {
-        const route = `/commission`;
+        const route = `/${UserState.value.data?.id}/commission`;
         const response = await axios.get(route);
         setData(response.data);
       } catch (error) {
@@ -124,7 +123,7 @@ const OwnerView = () => {
       if (!id) return;
       setLoading(true);
       try {
-        await axios.put(`/commission/${id}`, {
+        await axios.put(`/${UserState.value.data?.id}/commission/${id}`, {
           is_approved: is_approved,
           approval_date: approval_date,
           commission_amount: commission_amount,
@@ -275,12 +274,12 @@ const OwnerView = () => {
     setDisapproveLoading(true);
     try {
       await axios
-        .put(`/commission/${selectedItem?.id}`, {
+        .put(`/${UserState.value.data?.id}/commission/${selectedItem?.id}`, {
           is_approved: false,
           owner_note: disapproveMsg,
         })
         .then(async () => {
-          await axios.put(`/machine/${selectedItem.sale_id}`, {
+          await axios.put(`/${UserState.value.data?.id}/machine/${selectedItem.sale_id}`, {
             payment_lock: false,
           });
         });
@@ -404,7 +403,7 @@ const OtherView = () => {
   async function fetchData(id) {
     return new Promise(async (resolve, reject) => {
       try {
-        const route = `/user/${id}/commission`;
+        const route = `/${id}/commission`;
         const response = await axios.get(route);
         setData(response.data);
       } catch (error) {
@@ -476,7 +475,7 @@ const OtherView = () => {
 
       try {
         await axios
-          .post(`/commission`, {
+          .post(`/${UserState.value.data?.id}/commission`, {
             sale_id: id,
             user_id: UserState.value.data?.id,
             is_requested: true,
@@ -486,7 +485,7 @@ const OtherView = () => {
           })
           .then(async () => {
             await axios
-              .put(`/machine/${id}`, {
+              .put(`/${UserState.value.data?.id}/machine/${id}`, {
                 payment_lock: true,
               })
               .then(async () => {
@@ -505,14 +504,14 @@ const OtherView = () => {
 
       try {
         await axios
-          .put(`/commission/${id}`, {
+          .put(`/${UserState.value.data?.id}/commission/${id}`, {
             is_requested: true,
             is_approved: null,
             request_date: new Date(),
           })
           .then(async () => {
             await axios
-              .put(`/machine/${id}`, {
+              .put(`/${UserState.value.data?.id}/machine/${id}`, {
                 payment_lock: true,
               })
               .then(async () => {
@@ -673,7 +672,7 @@ const CrmView = () => {
   async function fetchData(id) {
     return new Promise(async (resolve, reject) => {
       try {
-        const route = `/user/${id}/commission?lead=true`;
+        const route = `/${id}/commission?lead=true`;
         const response = await axios.get(route);
         setData(response.data);
       } catch (error) {

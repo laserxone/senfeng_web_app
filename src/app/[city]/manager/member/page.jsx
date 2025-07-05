@@ -1,9 +1,5 @@
-import MemberMainPage from "@/components/customer-components/customer/member-main-page";
+import MemberBaseComponent from "@/components/customer-components/memberBaseComponent";
 
-
-export default function Page(){
-
-  return (
-    <MemberMainPage />
-  )
+export default function Page() {
+  return <MemberBaseComponent base={"team/user"}/>;
 }

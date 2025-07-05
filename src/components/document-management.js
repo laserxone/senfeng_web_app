@@ -70,7 +70,7 @@ const DocumentManagement = () => {
     return new Promise(async (resolve) => {
       try {
         const response = await axios.get(
-          `/folder?folder=${currentFolder?.id || null}`
+          `/${UserState.value.data?.id}/folder?folder=${currentFolder?.id || null}`
         );
         setAllDocuments(response.data.documents);
         setAllFolders(response.data.folders);
@@ -114,7 +114,7 @@ const DocumentManagement = () => {
         continue;
       }
 
-      await axios.post(`/document`, {
+      await axios.post(`/${UserState.value.data?.id}/document`, {
         added_by: UserState.value.data?.name || UserState.value.data?.email,
         path: filePath,
         folder_id: currentFolder ? currentFolder.id : undefined,
@@ -134,7 +134,7 @@ const DocumentManagement = () => {
   async function handleCreateFolder() {
     setFolderLoading(true)
     axios
-      .post("/folder", {
+      .post(`/${UserState.value.data?.id}/folder`, {
         name: folderName,
         parent_folder: currentFolder ? currentFolder?.id : undefined,
       })
@@ -152,7 +152,7 @@ const DocumentManagement = () => {
     if (!selectedFolder) return
     setFolderLoading(true)
     axios
-      .put(`/folder/${selectedFolder?.id}`, {
+      .put(`/${UserState.value.data?.id}/folder/${selectedFolder?.id}`, {
         name: newName,
       })
       .then(async () => {
@@ -177,7 +177,7 @@ const DocumentManagement = () => {
     async function handleDelete(file) {
       const id = file.id;
       await axios
-        .delete(`/document/${id}`)
+        .delete(`/${UserState.value.data?.id}/document/${id}`)
         .then(async () => {
           await supabase.storage.from("documents").remove([file.path]);
           await fetchFiles();
@@ -311,7 +311,7 @@ const DocumentManagement = () => {
     async function handleDeleteFolder(id) {
       try {
         setDeleteLoading(true)
-        await axios.delete(`/folder/${id}`)
+        await axios.delete(`/${UserState.value.data?.id}/folder/${id}`)
         await fetchFiles()
       } finally {
         setDeleteLoading(false)

@@ -1,6 +1,5 @@
 "use client";
 import AppCalendar from "@/components/appCalendar";
-import PageContainer from "@/components/page-container";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -9,7 +8,6 @@ import axios from "@/lib/axios";
 import {
   Calendar,
   Factory,
-  Loader2,
   Mail,
   MapPin,
   Phone,
@@ -23,6 +21,15 @@ import { FaWhatsapp } from "react-icons/fa";
 import AddMachine from "@/components/addMachine";
 import ConfimationDialog from "@/components/alert-dialog";
 import EditCustomerDialog from "@/components/editCustomer";
+import { RequiredStar } from "@/components/RequiredStar";
+import {
+  Timeline,
+  TimelineDescription,
+  TimelineHeader,
+  TimelineItem,
+  TimelineTime,
+  TimelineTitle,
+} from "@/components/timeline";
 import {
   Accordion,
   AccordionContent,
@@ -32,9 +39,11 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import VisitTab from "@/components/users/addVisit";
+import CustomerTask from "@/components/users/customerTask";
 import { debounce } from "@/lib/debounce";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { GetProfileImage } from "@/lib/getProfileImage";
@@ -46,20 +55,17 @@ import Link from "next/link";
 import { useContext } from "react";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
-import TaskEmployee from "@/components/users/task";
-import CustomerTask from "@/components/users/customerTask";
-import {
-  Timeline,
-  TimelineDescription,
-  TimelineHeader,
-  TimelineItem,
-  TimelineTime,
-  TimelineTitle,
-} from "@/components/timeline";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { RequiredStar } from "@/components/RequiredStar";
 
-export default function MemberDetail({ ownership = false, from, customer_id }) {
+export default function MemberDetail({
+  ownership = false,
+  from,
+  customer_id,
+  base,
+  onReturn = () => {},
+  onLoading = () => {},
+  route,
+  height,
+}) {
   const [data, setData] = useState(null);
   const { state: UserState } = useContext(UserContext);
   const [feedback, setFeedback] = useState([]);
@@ -71,6 +77,7 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
   const [visitData, setVisitData] = useState([]);
   const [profileCompletion, setProfileCompletion] = useState(0);
   const [taskData, setTaskData] = useState([]);
+  const [activeTab, setActiveTab] = useState("timeline");
 
   useEffect(() => {
     if (customer_id && UserState.value.data?.id) {
@@ -79,70 +86,48 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
   }, [UserState, customer_id]);
 
   const debouncedFetchCustomerData = debounce(() => {
-    fetchCustomerDetail();
-    fetchCustomerFeedback();
-    fetchVisitData();
-    fetchTaskData();
+    fetchCustomerDashboard();
   }, 500);
 
-  async function fetchTaskData(start, end) {
-    const response = await axios.get(`/customer/${customer_id}/task`);
-    setTaskData(response.data);
-    return true;
-  }
+  async function fetchCustomerDashboard() {
+    if (onLoading) {
+      onLoading(true);
+    }
 
-  async function fetchVisitData(start, end) {
-    axios.get(`/customer/${customer_id}/visit`).then((response) => {
-      setVisitData(response.data);
-    });
-  }
+    axios
+      .get(
+        `/${UserState.value.data?.id}/customer/${customer_id}/dashboard`
+      )
+      .then((response) => {
+        const data = response.data.customer;
+        setData(data);
 
-  async function fetchCustomerDetail() {
-    return new Promise((resolve) => {
-      axios
-        .get(`/customer/${customer_id}`)
-        .then((response) => {
-          const data = response.data;
-          setData(data);
+        const customerCompletion = Number(data.profile_completion) || 0;
+        const machines = data.machines || [];
 
-          const isLimited = UserState.value.data?.limited_access;
-          if (isLimited) {
-            if (response.data.lead !== UserState.value.data?.id) {
-              router.replace("/");
-            }
-          }
+        if (machines.length === 0) {
+          toast({
+            variant: "destructive",
+            title: "Oops",
+            description: "No machine sold",
+          });
+        }
 
-          const customerCompletion = Number(data.profile_completion) || 0;
-          const machines = data.machines || [];
+        const totalMachineCompletion = machines.reduce(
+          (sum, item) => sum + Number(item.percentage_completion || 0),
+          0
+        );
 
-          if (machines.length === 0) {
-            toast({
-              variant: "destructive",
-              title: "Oops",
-              description: "No machine sold",
-            });
-          }
-
-          const totalMachineCompletion = machines.reduce(
-            (sum, item) => sum + Number(item.percentage_completion || 0),
-            0
-          );
-
-          const overallCompletion =
-            (customerCompletion + totalMachineCompletion) /
-            (machines.length + 1);
-          setProfileCompletion(overallCompletion.toFixed(0));
-        })
-        .finally(() => {
-          resolve(true);
-        });
-    });
-  }
-
-  async function fetchCustomerFeedback() {
-    axios.get(`/customer/${customer_id}/feedback`).then((response) => {
-      setFeedback(response.data);
-    });
+        const overallCompletion =
+          (customerCompletion + totalMachineCompletion) / (machines.length + 1);
+        setProfileCompletion(overallCompletion.toFixed(0));
+        setTaskData(response.data.task);
+        setVisitData(response.data.visit);
+        setFeedback(response.data.feedback);
+      })
+      .finally(() => {
+        if (onLoading) onLoading(false);
+      });
   }
 
   async function handleDelete(id) {
@@ -150,9 +135,11 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
     setDeleteLoading(true);
     try {
       if (data.image) {
-        DeleteFromStorage(data.image);
+        if (!data?.image?.includes("https")) DeleteFromStorage(data.image);
       }
-      const response = await axios.delete(`/customer/${id}`);
+      const response = await axios.delete(
+        `/${UserState.value.data?.id}/customer/${id}`
+      );
       toast({ title: "Customer Deleted" });
       startHolyLoader();
       router.push(`/${UserState.value.data?.base_route}/${from}`);
@@ -166,15 +153,14 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
   const RenderVisitTab = useCallback(() => {
     return (
       <VisitTab
+        base={base}
         customer_data={customer_id || null}
         disable={true}
         id={UserState.value.data?.id}
         data={visitData}
+        height={height}
         onRefresh={async () => {
-          await fetchVisitData();
-        }}
-        onFetchData={async (start, end, userId) => {
-          fetchVisitData(start, end);
+          await fetchCustomerDashboard();
         }}
       />
     );
@@ -182,161 +168,174 @@ export default function MemberDetail({ ownership = false, from, customer_id }) {
 
   const RenderTaskTab = useCallback(() => {
     return (
-      <CustomerTask
-        id={UserState.value.data?.id}
-        customer_id={customer_id}
-        data={taskData}
-        onFetchData={async () => await fetchTaskData()}
-      />
+      <Card className="flex flex-1">
+        <CardContent className="flex flex-1 pt-2">
+          <CustomerTask
+            base={base}
+            id={UserState.value.data?.id}
+            customer_id={customer_id}
+            data={taskData}
+            onFetchData={async () => await fetchCustomerDashboard()}
+            height={height}
+          />
+        </CardContent>
+      </Card>
     );
   }, [taskData, customer_id]);
 
   const RenderFeedbackTabs = useCallback(() => {
     return (
       <FeedbackTab
+        base={base}
         type={data?.member ? "aftersales" : "feedback"}
         userID={UserState.value.data?.id}
         customerID={customer_id}
         data={feedback || []}
-        onRefresh={() => fetchCustomerFeedback()}
+        onRefresh={() => fetchCustomerDashboard()}
+        height={height}
       />
     );
   }, [data, feedback]);
 
   return (
-    <PageContainer>
-      <div className="w-full pb-8">
-        <div className="flex flex-1 items-center mb-8 justify-between flex-wrap">
-          <div className="flex gap-2 items-center">
-            <ProfilePicture
-              img={data?.image}
-              name={data?.name}
-              onClick={() => {
-                if (data?.id) {
-                  if (
-                    UserState.value.data?.designation === "Sales" ||
-                    UserState.value.data?.designation === "Engineer"
-                  ) {
-                    if (data?.ownership === UserState.value.data?.id) {
-                      setEditVisible(true);
-                    } else {
-                      toast({
-                        title: "You are not authorized to edit this member",
-                        variant: "destructive",
-                      });
-                    }
-                  } else {
+    <div className="flex w-full flex-col">
+      <div className="flex items-center mb-2 justify-between flex-wrap">
+        <div className="flex gap-2 items-center">
+          <ProfilePicture
+            img={data?.image}
+            name={data?.name}
+            onClick={() => {
+              if (data?.id) {
+                if (
+                  UserState.value.data?.designation === "Sales" ||
+                  UserState.value.data?.designation === "Engineer"
+                ) {
+                  if (data?.ownership === UserState.value.data?.id) {
                     setEditVisible(true);
+                  } else {
+                    toast({
+                      title: "You are not authorized to edit this member",
+                      variant: "destructive",
+                    });
                   }
+                } else {
+                  setEditVisible(true);
                 }
-              }}
-            />
-            <div className="flex flex-col">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">
-                {data?.name}
-              </h1>
-
-              <h1 className="text-sm font-medium">
-                Rating:{" "}
-                {data?.rating ? `${data.rating} out of 5` : "Not rated yet"}
-              </h1>
-              <h1 className="text-md font-bold text-primary">
-                Manager {data?.ownership_name || "NA"}
-              </h1>
-            </div>
-          </div>
-
-          <div className="flex flex-row items-center gap-2">
-            <Label className="text-sm font-bold mb-1 text-gray-700 dark:text-gray-300">
-              Overall Profile Completion
-            </Label>
-            <div className="h-[70px] w-[70px] ">
-              <CircularProgressbar
-                value={profileCompletion}
-                text={`${profileCompletion}%`}
-                styles={buildStyles({
-                  pathColor: "#4ade80",
-                  textColor: "#1f2937",
-                  trailColor: "#e5e7eb",
-                  textSize: "28px",
-                })}
-              />
-            </div>
-          </div>
-
-          <BillingInformation
-            total={data?.bill_total}
-            received={data?.bill_received}
-            balance={data?.bill_total - data?.bill_received}
+              }
+            }}
           />
+          <div className="flex flex-col">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">
+              {data?.name}
+            </h1>
+
+            <h1 className="text-sm font-medium">
+              Rating:{" "}
+              {data?.rating ? `${data.rating} out of 5` : "Not rated yet"}
+            </h1>
+            <h1 className="text-md font-bold text-primary">
+              Manager {data?.ownership_name || "NA"}
+            </h1>
+          </div>
         </div>
 
-        <Tabs defaultValue={"timeline"} className="w-full">
-          <TabsList>
-            <TabsTrigger value="timeline">Timeline</TabsTrigger>
-            <TabsTrigger value="feedback">
-              {data?.member ? "After Sales" : "Feedback"}
-            </TabsTrigger>
+        <div className="flex flex-row items-center gap-2">
+          <Label className="text-sm font-bold mb-1 text-gray-700 dark:text-gray-300">
+            Overall Profile Completion
+          </Label>
+          <div className="h-[70px] w-[70px] ">
+            <CircularProgressbar
+              value={profileCompletion}
+              text={`${profileCompletion}%`}
+              styles={buildStyles({
+                pathColor: "#4ade80",
+                textColor: "#1f2937",
+                trailColor: "#e5e7eb",
+                textSize: "28px",
+              })}
+            />
+          </div>
+        </div>
 
-            <TabsTrigger value="customers">Machines</TabsTrigger>
+        <BillingInformation
+          total={data?.bill_total}
+          received={data?.bill_received}
+          balance={data?.bill_total - data?.bill_received}
+        />
+      </div>
 
-            <TabsTrigger value="visit">Visit</TabsTrigger>
-            <TabsTrigger value="task">Task</TabsTrigger>
-            <TabsTrigger value="about">About</TabsTrigger>
-          </TabsList>
-          <TabsContent value="feedback">
-            <RenderFeedbackTabs />
-          </TabsContent>
+      <Tabs
+        className="relative flex w-full flex-1 flex-col"
+        value={activeTab}
+        onValueChange={setActiveTab}
+      >
+        <TabsList className="justify-start">
+          <TabsTrigger value="timeline">Timeline</TabsTrigger>
+          <TabsTrigger value="feedback">
+            {data?.member ? "After Sales" : "Feedback"}
+          </TabsTrigger>
 
-          <TabsContent value="task">
-            <RenderTaskTab />
-          </TabsContent>
+          <TabsTrigger value="customers">Machines</TabsTrigger>
 
-          <TabsContent value="timeline">
+          <TabsTrigger value="visit">Visit</TabsTrigger>
+          <TabsTrigger value="task">Task</TabsTrigger>
+          <TabsTrigger value="about">About</TabsTrigger>
+        </TabsList>
+
+        <div className="flex flex-1 w-full mt-2">
+          {activeTab === "timeline" && (
             <RenderTimeline
+              height={height}
               feedbackData={feedback}
               visitData={visitData}
               taskData={taskData}
               customerDetail={data}
             />
-          </TabsContent>
+          )}
 
-          <TabsContent value="about">
-            <AboutTab data={data} />
-          </TabsContent>
-          <TabsContent value="customers">
+          {activeTab === "feedback" && (
+            <ScrollArea className={`${height} w-full`}>
+              <RenderFeedbackTabs />
+            </ScrollArea>
+          )}
+
+          {activeTab === "customers" && (
             <CustomersTab
               data={data?.machines || []}
               user_id={UserState.value.data?.id}
               customer_id={customer_id}
-              onRefresh={() => fetchCustomerDetail()}
+              onRefresh={() => fetchCustomerDashboard()}
+              onReturn={onReturn}
+              route={route}
             />
-          </TabsContent>
-          <TabsContent value="visit">
-            <RenderVisitTab />
-          </TabsContent>
-        </Tabs>
-        {data && (
-          <EditCustomerDialog
-            ownership={ownership}
-            data={data}
-            visible={editVisible}
-            onClose={setEditVisible}
-            onRefresh={async () => await fetchCustomerDetail()}
-            onClickDelete={() => setShowConfirmation(true)}
-          />
-        )}
+          )}
 
-        <ConfimationDialog
-          loading={deleteLoading}
-          open={showConfirmation}
-          title={"Are you sure you want to delete?"}
-          description={"Your action will remove customer from the system"}
-          onPressYes={() => handleDelete(data?.id)}
-          onPressCancel={() => setShowConfirmation(false)}
+          {activeTab === "visit" && <RenderVisitTab />}
+          {activeTab === "task" && <RenderTaskTab />}
+          {activeTab === "about" && <AboutTab data={data} />}
+        </div>
+      </Tabs>
+      {data && (
+        <EditCustomerDialog
+          base={base}
+          ownership={ownership}
+          data={data}
+          visible={editVisible}
+          onClose={setEditVisible}
+          onRefresh={async () => await fetchCustomerDashboard()}
+          onClickDelete={() => setShowConfirmation(true)}
         />
-      </div>
-    </PageContainer>
+      )}
+
+      <ConfimationDialog
+        loading={deleteLoading}
+        open={showConfirmation}
+        title={"Are you sure you want to delete?"}
+        description={"Your action will remove customer from the system"}
+        onPressYes={() => handleDelete(data?.id)}
+        onPressCancel={() => setShowConfirmation(false)}
+      />
+    </div>
   );
 }
 
@@ -383,55 +382,65 @@ const ProfilePicture = ({ img, name, onClick }) => {
 };
 
 const ClientCard = ({ data }) => {
-  const joinedNumber = data?.number ? data.number.join(", ") : "";
+  const joinedNumber = data?.number?.join(", ") || "N/A";
+  const createdAt = data?.created_at
+    ? moment(data.created_at).format("YYYY-MM-DD hh:mm A")
+    : "N/A";
+
   return (
-    <Card className="shadow-lg rounded-2xl p-4 self-center">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold">
-          {data?.name}{" "}
-          <span className="text-gray-500 text-sm">({data?.owner})</span>
+    <Card className="shadow-xl rounded-2xl p-6 w-full bg-white dark:bg-zinc-900 text-zinc-800 dark:text-white">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-2xl font-semibold">
+          {data?.name || "Unnamed Customer"}
+          <span className="block text-sm font-normal text-muted-foreground">
+            Owner: {data?.owner || "N/A"}
+          </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <span className="font-semibold text-green-700">
+
+      <CardContent className="grid gap-4">
+        <div className="text-sm text-green-700 dark:text-green-400 font-medium">
           Lead generated by: {data?.lead_name || "NIL"}
-        </span>
-        <div className="flex items-center gap-2">
-          <Mail className="h-5 w-5 text-gray-500" />
-          <span>{data?.email}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Phone className="h-5 w-5 text-gray-500" />
-          <span>{joinedNumber}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <FaWhatsapp className="h-5 w-5 text-gray-500" />
-          <span>{data?.customer_group}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link href={data?.pin || "#"} target={data?.pin ? "_blank" : "_self"}>
-            <MapPin className="h-5 w-5 text-gray-500" />
-          </Link>
-          <span>{data?.location}</span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Factory className="h-5 w-5 text-gray-500" />
-          <span>{data?.industry || "Nil"}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-gray-500" />
-          <span>
-            {data?.created_at
-              ? moment(data.created_at).format("YYYY-MM-DD hh:mm A")
-              : "Nil"}
-          </span>
+        <div className="grid gap-2">
+          <InfoRow
+            icon={<Mail className="h-4 w-4" />}
+            label={data?.email || "N/A"}
+          />
+          <InfoRow icon={<Phone className="h-4 w-4" />} label={joinedNumber} />
+          <InfoRow
+            icon={<FaWhatsapp className="h-4 w-4" />}
+            label={data?.customer_group || "N/A"}
+          />
+          <InfoRow
+            icon={<MapPin className="h-4 w-4" />}
+            label={data?.location || "N/A"}
+            link={data?.pin}
+          />
+          <InfoRow
+            icon={<Factory className="h-4 w-4" />}
+            label={data?.industry || "N/A"}
+          />
+          <InfoRow icon={<Calendar className="h-4 w-4" />} label={createdAt} />
         </div>
       </CardContent>
     </Card>
   );
 };
+
+const InfoRow = ({ icon, label, link }) => (
+  <div className="flex items-center gap-3 text-sm">
+    <div className="text-muted-foreground">{icon}</div>
+    {link ? (
+      <Link href={link} target="_blank" className="hover:underline">
+        {label}
+      </Link>
+    ) : (
+      <span>{label}</span>
+    )}
+  </div>
+);
 
 const BillingInformation = ({ total, received, balance }) => {
   const formattedTotal = new Intl.NumberFormat("en-US", {
@@ -478,7 +487,14 @@ function AboutTab({ data }) {
   return <ClientCard data={data} />;
 }
 
-function CustomersTab({ data, customer_id, user_id, onRefresh }) {
+function CustomersTab({
+  data,
+  customer_id,
+  user_id,
+  onRefresh,
+  onReturn,
+  route,
+}) {
   const [visible, setVisible] = useState(false);
   const { state: UserState } = useContext(UserContext);
 
@@ -491,10 +507,16 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
       <AccordionItem key={machine.id} value={`customer-${machine.id}`}>
         <Card>
           <AccordionTrigger className="px-4 py-2 hover:no-underline">
-            <div className="flex justify-between items-center w-full">
+            <div className="flex justify-between items-center w-full flex-wrap gap-2">
               <Link
                 className="flex gap-4 items-center"
-                href={`/${UserState.value.data?.base_route}/member/${customer_id}/${machine.id}`}
+                // href={`/${UserState.value.data?.base_route}/member/${customer_id}/${machine.id}`}
+                href={
+                  !route
+                    ? "#"
+                    : `/${UserState.value.data?.base_route}/member/${customer_id}/${machine.id}`
+                }
+                onClick={() => onReturn(machine.id)}
               >
                 <Badge variant={"outline"}>Machine no:{index}</Badge>
                 <h3 className="font-semibold text-lg hover:underline">
@@ -563,10 +585,12 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
   };
 
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="p-4 flex flex-1 justify-end">
-          <Button onClick={() => setVisible(true)}>Add Machine</Button>
+    <Card className="flex flex-1">
+      <CardContent className="p-4 flex flex-1 flex-col">
+        <div className="p-4 flex justify-end">
+          {user_id && (
+            <Button onClick={() => setVisible(true)}>Add Machine</Button>
+          )}
           <AddMachine
             visible={visible}
             onClose={setVisible}
@@ -589,12 +613,21 @@ function CustomersTab({ data, customer_id, user_id, onRefresh }) {
   );
 }
 
-function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
+function FeedbackTab({
+  userID,
+  customerID,
+  data,
+  onRefresh,
+  type,
+  base,
+  height,
+}) {
   const [writeFeedback, setWriteFeedback] = useState("");
   const [date, setDate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedDelete, setSelectedDelete] = useState(null);
   const [satisfactory, setSatisfactory] = useState(false);
+  const { state: UserState } = useContext(UserContext);
   const [localData, setLocalData] = useState(
     data
       .filter((item) => item?.type === type)
@@ -607,7 +640,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
   async function handleDelete(id) {
     setSelectedDelete(id);
     axios
-      .delete(`/feedback/${id}`)
+      .delete(`/${UserState.value.data?.id}/feedback/${id}`)
       .then(async () => {
         await onRefresh();
       })
@@ -619,7 +652,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
   async function handleSavePost() {
     setLoading(true);
     axios
-      .post(`/feedback`, {
+      .post(`/${UserState.value.data?.id}/feedback`, {
         feedback: writeFeedback,
         next_followup: date,
         top_follow: topFollow,
@@ -649,7 +682,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full">
       <Card>
         <CardContent className="p-4">
           <h2 className="font-semibold mb-2">
@@ -696,6 +729,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
           </Button>
         </CardContent>
       </Card>
+
       {localData.map((item, index) => (
         <Card key={index}>
           <CardHeader className="p-0 flex overflow-hidden">
@@ -786,6 +820,7 @@ const RenderTimeline = ({
   visitData,
   taskData,
   customerDetail,
+  height,
 }) => {
   const [timelineData, setTimelineData] = useState([]);
 
@@ -885,9 +920,9 @@ const RenderTimeline = ({
   }, [feedbackData, visitData, taskData, customerDetail]);
 
   return (
-    <Card className="shadow-lg rounded-2xl p-4 self-center">
-      <ScrollArea className="h-[calc(100dvh-340px)]">
-        <Timeline className="mt-8">
+    <Card className="flex flex-1 shadow-lg rounded-2xl p-4 self-center">
+      <ScrollArea className={`flex flex-1 ${height}`}>
+        <Timeline className="mt-4">
           {timelineData.map((item) => (
             <TimelineItem key={item.id}>
               <TimelineHeader>

@@ -111,7 +111,7 @@ export default function POS() {
 
     const handleInvoiceBackendData = async () => {
 
-        axios.put("/pos/customer", {
+        axios.put(`/${UserState.value.data?.id}/pos/customer`, {
             name: name,
             company: companyName,
             phone: phoneNumber,
@@ -120,7 +120,7 @@ export default function POS() {
             fetchDataCustomer()
         })
 
-        axios.put(`/pos/update/${selectedSearchItem.id}`, {
+        axios.put(`/${UserState.value.data?.id}/pos/update/${selectedSearchItem.id}`, {
             olditems: selectedSearchItem,
             newitems: { name: name, company: companyName, phone: phoneNumber, address: address, manager: manager, invoicenumber: nextInvoice, fields: invoiceItems, payment: checked }
         }).finally(() => {
@@ -151,7 +151,7 @@ export default function POS() {
         const modified = stock.filter((item) => item?.modified);
 
         try {
-            const response = await axios.put("/pos", {
+            const response = await axios.put(`/${UserState.value.data?.id}/pos`, {
                 entries: modified,
                 name: name,
                 company: companyName,
@@ -175,7 +175,7 @@ export default function POS() {
     const fetchData = async () => {
         clearAll()
         return new Promise((resolve) => {
-            axios.get("/pos")
+            axios.get(`/${UserState.value.data?.id}/pos`)
                 .then((response) => {
                     if (response.data.stock.length > 0) {
                         let resultedData = [...response.data.stock]
@@ -206,7 +206,7 @@ export default function POS() {
     };
 
     const fetchDataCustomer = async () => {
-        axios.get("/pos/customer")
+        axios.get(`/${UserState.value.data?.id}/pos/customer`)
             .then((response) => {
 
                 if (response.data.customers.length > 0) {
@@ -383,7 +383,7 @@ export default function POS() {
     };
 
     async function handleItemSearch() {
-        axios.get(`/pos/search/${itemSearch}`)
+        axios.get(`/${UserState.value.data?.id}/pos/search/${itemSearch}`)
             .then((response) => {
                 if (response.data.length > 0) {
                     const resultWithTotal = response.data.map((item) => {
@@ -402,7 +402,7 @@ export default function POS() {
     }
 
     async function handleItemSearchAll() {
-        axios.get(`/pos/search`)
+        axios.get(`/${UserState.value.data?.id}/pos/search`)
             .then((response) => {
                 if (response.data.length > 0) {
                     const resultWithTotal = response.data.map((item) => {
@@ -432,7 +432,7 @@ export default function POS() {
 
     async function handlePendingPayments() {
         return new Promise((resolve) => {
-            axios.get(`/pos/search/null?pending=true`)
+            axios.get(`/${UserState.value.data?.id}/pos/search/null?pending=true`)
                 .then((response) => {
                     if (response.data.length > 0) {
                         const resultWithTotal = response.data.map((item) => {
@@ -460,7 +460,7 @@ export default function POS() {
     async function handleEngineerItems() {
         try {
             setEngineerLoading(true)
-            const response = await axios.get(`/pos/engineer`)
+            const response = await axios.get(`/${UserState.value.data?.id}/pos/engineer`)
 
             setAllEngineersData(response.data)
             setEngineersModal(true)
@@ -479,7 +479,7 @@ export default function POS() {
 
         async function handleReceivedBack() {
             setUpdateLoading(true)
-            axios.post(`/pos/engineer/${item.id}`, { field: item.fields })
+            axios.post(`/${UserState.value.data?.id}/pos/engineer/${item.id}`, { field: item.fields })
                 .then(async () => {
                     await onRefresh()
                     setUpdateLoading(false)
@@ -1073,9 +1073,12 @@ export default function POS() {
 }
 
 const RenderPaid = ({ row, onRefresh }) => {
+
+    const {state : UserState} = useContext(UserContext)
+
     async function handleUpdatePayment(checked) {
         setLocalLoading(true)
-        await axios.put(`/pos/payment/${row.original.id}`, {
+        await axios.put(`/${UserState.value.data?.id}/pos/payment/${row.original.id}`, {
             payment: checked
         }).then(async () => {
             setLocalChecked(checked)
@@ -1573,6 +1576,7 @@ const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrea
     const [threshold, setThreshold] = useState("")
     const [newOrder, setNewOrder] = useState("")
     const [buying, setBuying] = useState("")
+    const {state : UserState} = useContext(UserContext)
 
 
     useEffect(() => {
@@ -1721,7 +1725,7 @@ const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrea
                 formData.img = result
             }
 
-            axios.put(`/pos/${id}`, formData)
+            axios.put(`/${UserState.value.data?.id}/pos/${id}`, formData)
                 .catch((e) => {
                     console.log(e)
                 }).finally(() => {
@@ -1885,6 +1889,7 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
     const [threshold, setThreshold] = useState("")
     const [newOrder, setNewOrder] = useState("")
     const [buying, setBuying] = useState("")
+    const {state : UserState} = useContext(UserContext)
 
 
 
@@ -2005,7 +2010,7 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
                 formData.img = result
             }
 
-            axios.put(`/pos/${id}`, formData)
+            axios.put(`/${UserState.value.data?.id}/pos/${id}`, formData)
                 .catch((e) => {
                     console.log(e)
                 }).finally(() => {
@@ -2169,6 +2174,8 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
     const [threshold, setThreshold] = useState("")
     const [newOrder, setNewOrder] = useState("")
     const [loading, setLoading] = useState(false)
+    
+    const { state: UserState } = useContext(UserContext)
 
 
     const uploadFiles = async (item) => {
@@ -2239,7 +2246,7 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
                 formData.new_order = Number(newOrder)
             }
 
-            axios.post("/pos", formData)
+            axios.post(`/${UserState.value.data?.id}/pos`, formData)
                 .then(() => {
                     onRefresh()
                 }).catch((e) => {

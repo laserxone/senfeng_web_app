@@ -45,6 +45,7 @@ const CommissionRecord = ({ data, fetchData }) => {
   const [disapproveMsg, setDisapproveMsg] = useState("");
   const [disapproveLoading, setDisapproveLoading] = useState(false);
   const [total, setTotal] = useState(0);
+  const {state : UserState} = useContext(UserContext)
 
   useEffect(() => {
     const totalCommission = data.reduce(
@@ -61,6 +62,7 @@ const CommissionRecord = ({ data, fetchData }) => {
     const [showManual, setShowManual] = useState(false);
     const [manualNumber, setManualNumber] = useState("");
 
+
     async function handleUpdate(
       id,
       is_approved,
@@ -70,11 +72,14 @@ const CommissionRecord = ({ data, fetchData }) => {
       if (!id) return;
       setLoading(true);
       try {
-        await axios.put(`/commission/${id}`, {
-          is_approved: is_approved,
-          approval_date: approval_date,
-          commission_amount: commission_amount,
-        });
+        await axios.put(
+          `/${UserState.value.data?.id}/commission/${id}`,
+          {
+            is_approved: is_approved,
+            approval_date: approval_date,
+            commission_amount: commission_amount,
+          }
+        );
         await onRefresh();
         setShowManual(false);
         setManualNumber("");
@@ -219,14 +224,20 @@ const CommissionRecord = ({ data, fetchData }) => {
     setDisapproveLoading(true);
     try {
       await axios
-        .put(`/commission/${selectedItem?.id}`, {
-          is_approved: false,
-          owner_note: disapproveMsg,
-        })
+        .put(
+          `/${UserState.value.data?.id}/commission/${selectedItem?.id}`,
+          {
+            is_approved: false,
+            owner_note: disapproveMsg,
+          }
+        )
         .then(async () => {
-          await axios.put(`/machine/${selectedItem.sale_id}`, {
-            payment_lock: false,
-          });
+          await axios.put(
+            `/${UserState.value.data?.id}/machine/${selectedItem.sale_id}`,
+            {
+              payment_lock: false,
+            }
+          );
         });
       await fetchData();
       setVisibleDisapprove(false);
@@ -246,43 +257,42 @@ const CommissionRecord = ({ data, fetchData }) => {
         {data.length === 0 ? (
           <p>No data available.</p>
         ) : (
-         <div>
-  <Table>
-    <TableHeader>
-      <TableRow>
-        <TableHead>Request Date</TableHead>
-        <TableHead>Employee</TableHead>
-        <TableHead>Customer</TableHead>
-        <TableHead>Owner</TableHead>
-        <TableHead>Machine</TableHead>
-        <TableHead>Price</TableHead>
-        <TableHead>Commission</TableHead>
-        <TableHead>Note</TableHead>
-        <TableHead>Status</TableHead>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
-      {data.map((item) => (
-        <RenderEachRow
-          key={item.id}
-          item={item}
-          onRefresh={fetchData}
-          onDisapprove={() => {
-            setSelectedItem(item);
-            setVisibleDisapprove(true);
-          }}
-        />
-      ))}
-    </TableBody>
-  </Table>
+          <div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Request Date</TableHead>
+                  <TableHead>Employee</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Owner</TableHead>
+                  <TableHead>Machine</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Commission</TableHead>
+                  <TableHead>Note</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.map((item) => (
+                  <RenderEachRow
+                    key={item.id}
+                    item={item}
+                    onRefresh={fetchData}
+                    onDisapprove={() => {
+                      setSelectedItem(item);
+                      setVisibleDisapprove(true);
+                    }}
+                  />
+                ))}
+              </TableBody>
+            </Table>
 
-  <div className="flex justify-end mt-4">
-    <div className="bg-green-600 text-white px-6 py-2 rounded-lg shadow font-semibold text-sm">
-      ✅ Total Approved: {total}
-    </div>
-  </div>
-</div>
-
+            <div className="flex justify-end mt-4">
+              <div className="bg-green-600 text-white px-6 py-2 rounded-lg shadow font-semibold text-sm">
+                ✅ Total Approved: {total}
+              </div>
+            </div>
+          </div>
         )}
       </div>
 

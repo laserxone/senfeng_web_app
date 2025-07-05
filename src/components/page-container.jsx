@@ -3,16 +3,17 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function PageContainer({
   children,
-  scrollable = true
+  scrollable = true,
+  className
 }) {
   return (
     <>
       {scrollable ? (
         <ScrollArea className='h-[calc(100dvh-52px)] w-full'>
-          <div className='flex flex-1 px-4 pb-4 md:px-6'>{children}</div>
+          <div className={`flex flex-1 px-4 pb-4 md:px-6 ${className}`}>{children}</div>
         </ScrollArea>
       ) : (
-        <div className='flex flex-1 px-4 pb-4 md:px-6'>{children}</div>
+        <div className={`flex flex-1 px-4 pb-4 md:px-6 ${className}`}>{children}</div>
       )}
     </>
   );

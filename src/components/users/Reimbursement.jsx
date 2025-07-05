@@ -198,7 +198,7 @@ export default function Reimbursement({
         onPressYes={() => console.log("press yes")}
         onPressCancel={() => setShowConfirmation(false)}
       />
-      <div className="flex flex-1 min-h-[600px]">
+      <div className="flex flex-1">
         <PageTable
           columns={columns}
           data={data}
@@ -381,6 +381,7 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
 };
 
 const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
+
   const [selectedRadio, setSelectedRadio] = useState("customer");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -412,7 +413,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
     try {
       const name = `${id}/reimbursement/${moment().valueOf().toString()}.png`;
       const imgRef = await UploadImage(values.image, name);
-      const response = await axios.post(`/reimbursement`, {
+      const response = await axios.post(`/${id}/reimbursement`, {
         amount: values.amount,
         title: values.title,
         description: values.description,

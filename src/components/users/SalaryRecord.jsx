@@ -2,11 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { BASE_URL } from "@/constants/data";
 import { ArrowUpDown, Trash2 } from "lucide-react";
-import {
-    useContext,
-    useEffect,
-    useState
-} from "react";
+import { useContext, useEffect, useState } from "react";
 
 import PageTable from "@/components/app-table";
 import SalaryPdf from "@/components/salaryPdf";
@@ -19,20 +15,19 @@ import "react-medium-image-zoom/dist/styles.css";
 
 import { pdf } from "@react-pdf/renderer";
 
-const SalaryRecord = () => {
-  const { state: UserState } = useContext(UserContext);
+const SalaryRecord = ({ id }) => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
-      fetchData(UserState.value.data?.id);
+    if (id) {
+      fetchData(id);
     }
-  }, [UserState]);
+  }, [id]);
 
   async function fetchData(id) {
     axios
-      .get(`/user/${id}/record`)
+      .get(`/${id}/record`)
       .then((response) => {
         setData(response.data);
       })
@@ -84,7 +79,7 @@ const SalaryRecord = () => {
 
     {
       id: "actions",
-      header : "Action",
+      header: "Action",
       cell: ({ row }) => {
         const payment = row.original;
 
@@ -100,19 +95,6 @@ const SalaryRecord = () => {
     },
   ];
 
-  async function handleDelete(id) {
-    if (!id) return;
-    setLoading(true);
-    axios
-      .delete(`/record/${id}`)
-      .then(async () => {
-        await fetchData();
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }
-
   async function handleDownload(item) {
     const blob = await pdf(<SalaryPdf data={item} />).toBlob();
     const url = URL.createObjectURL(blob);
@@ -122,9 +104,9 @@ const SalaryRecord = () => {
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div className="flex flex-1 min-h-[600px]">
+      <div className="flex flex-1">
         <PageTable
-        disableInput={true}
+          disableInput={true}
           loading={loading}
           columns={columns}
           data={data}
@@ -143,4 +125,4 @@ const SalaryRecord = () => {
   );
 };
 
-export default SalaryRecord
+export default SalaryRecord;

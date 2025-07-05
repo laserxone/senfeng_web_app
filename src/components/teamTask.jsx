@@ -258,7 +258,7 @@ export default function TeamTask() {
 
   return (
     <div className="flex flex-1 flex-col pt-2">
-      <div className="flex flex-1 min-h-[600px]">
+      <div className="flex flex-1">
         <PageTable
           loading={dataLoading}
           columns={columns}

@@ -172,7 +172,7 @@ export default function Page() {
   async function fetchData() {
     return new Promise((resolve, reject) => {
       axios
-        .get(`/user`)
+        .get(`/${UserState.value.data?.id}/user`)
         .then((response) => {
           setData(response.data);
         })
@@ -236,7 +236,7 @@ export default function Page() {
 
 const AddUserDialog = ({ visible, onClose, onReturn }) => {
   const [dataLoading, setDataLoading] = useState(false);
-
+  const {state : UserState} = useContext(UserContext)
   const formSchema = z.object({
     name: z.string().min(2, { message: "Name must be at least 2 characters." }),
     email: z.string().email({ message: "Invalid email address." }),
@@ -260,7 +260,7 @@ const AddUserDialog = ({ visible, onClose, onReturn }) => {
     setDataLoading(true);
 
     axios
-      .post(`/user`, { ...values, name: values.name.toUpperCase() })
+      .post(`/${UserState.value.data?.id}/user`, { ...values, name: values.name.toUpperCase() })
       .then(async (response) => {
         onReturn(response.data);
         handleClose(false);

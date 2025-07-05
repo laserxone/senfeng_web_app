@@ -171,7 +171,7 @@ const PageTable = ({
                   </TableRow>
                 ))}
               </TableHeader>
-              <TableBody>
+              <TableBody className="bg-white dark:bg-gray-900">
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
                     <TableRow

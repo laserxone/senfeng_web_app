@@ -51,15 +51,16 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
   const [title, setTitle] = useState("");
   const { state: UserState } = useContext(UserContext);
   const [manual, setManual] = useState(false);
+  const [location, setLocation] = useState("Lahore");
 
   useEffect(() => {
-    if (visible) {
+    if (visible && UserState.value.data?.id) {
       fetchPOSInventory();
     }
-  }, [visible]);
+  }, [visible, UserState]);
 
   async function fetchPOSInventory() {
-    axios.get("/pos").then((response) => {
+    axios.get(`/${UserState.value.data?.id}/pos`).then((response) => {
       if (response.data.stock.length > 0) {
         let resultedData = [...response.data.stock];
         setExistingInventory([...resultedData]);
@@ -175,7 +176,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
                 ...item,
                 qty: 1,
                 machine_serial: (baseSerial + i).toString(),
-                name : (baseSerial + i).toString()
+                name: (baseSerial + i).toString(),
               });
             }
           } else {
@@ -196,11 +197,12 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
         status: "Order Placed",
         items: processedItems,
         title: title,
+      location : location
       };
       setLoading(true);
       try {
         const response = await axios.post(
-          `/superadmin/${UserState.value.data?.id}/neworder`,
+          `/${UserState.value.data?.id}/neworder`,
           payload
         );
         await onRefresh();
@@ -247,10 +249,28 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
             <div className="px-2">
               <Label>Shipment name</Label>
               <Input
+              className="mb-2"
                 placeholder="Enter shipment name"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
+            
+            
+              <Label>
+                Location <RequiredStar />
+              </Label>
+              <Select
+                value={location}
+                onValueChange={(val) => setLocation(val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select location" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Lahore">Lahore</SelectItem>
+                  <SelectItem value="Karachi">Karachi</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             {items.map((item, index) => (
               <div key={index} className="border p-4 rounded-md space-y-4">
@@ -610,9 +630,9 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
                                 <SelectValue placeholder="Select Power" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="1500">1500</SelectItem>
-                                <SelectItem value="3000">3000</SelectItem>
-                                <SelectItem value="6000">6000</SelectItem>
+                                <SelectItem value="1500W">1500W</SelectItem>
+                                <SelectItem value="3000W">3000W</SelectItem>
+                                <SelectItem value="6000W">6000W</SelectItem>
                               </SelectContent>
                             </Select>
                           )}

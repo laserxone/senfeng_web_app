@@ -1,50 +1,56 @@
+import axios from "@/lib/axios";
 import { UserContext } from "@/store/context/UserContext";
-import { useContext, useRef, useState, useEffect } from "react";
+import Link from "next/link";
+import { useContext, useEffect, useRef, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
   CardContent,
+  CardHeader,
+  CardTitle
 } from "./ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Label } from "./ui/label";
-import Link from "next/link";
 
-const AutoScrollMembers = ({ customers }) => {
+const AutoScrollMembers = () => {
   const { state: UserState } = useContext(UserContext);
   const [localData, setLocalData] = useState([]);
   const scrollRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    if (customers.length > 0) {
-      const temp = [...customers]
-        .filter((item) => {
-          // Check if there's at least a valid name or a valid owner
-          const hasValidName = item.name && item.name.trim() !== "";
-          const hasValidOwner = item.owner && item.owner.trim() !== "";
-          return hasValidName || hasValidOwner;
-        })
-        .map((item) => {
-          const hasValidName = item.name && item.name.trim() !== "";
-          return {
-            ...item,
-            name: hasValidName
-              ? item.name.trim()
-              : `${item.owner?.trim() || ""} ${
-                  item.location?.trim() || ""
-                }`.trim(),
-          };
-        })
-        .filter((item) => !!item.name)
-        .sort((a, b) => a.name.localeCompare(b.name));
+    async function fetchData() {
+      try {
+        const res = await axios.get(
+          `/${UserState.value.data?.id}/scroll`
+        );
+        const customers = res.data || [];
 
-      setLocalData(temp);
+        const temp = [...customers]
+          .filter((item) => item.name?.trim() || item.owner?.trim())
+          .map((item) => ({
+            ...item,
+            name:
+              item.name?.trim() ||
+              `${item.owner?.trim() || ""} ${
+                item.location?.trim() || ""
+              }`.trim(),
+          }))
+          .filter((item) => !!item.name)
+          .sort((a, b) => a.name.localeCompare(b.name));
+
+        setLocalData(temp);
+      } catch (error) {
+        console.error("Error fetching data", error);
+      }
     }
-  }, [customers]);
+
+    if (UserState.value.data?.id) {
+      fetchData();
+    }
+  }, [UserState.value.data?.id]);
 
   useEffect(() => {
+    if (localData.length === 0) return;
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
 
@@ -90,7 +96,7 @@ const AutoScrollMembers = ({ customers }) => {
       scrollContainer.removeEventListener("mouseenter", stopScrolling);
       scrollContainer.removeEventListener("mouseleave", startScrolling);
     };
-  }, [isHovered]);
+  }, [isHovered, localData]);
 
   const colors = [
     "bg-red-300",
@@ -103,39 +109,39 @@ const AutoScrollMembers = ({ customers }) => {
     "bg-orange-300",
   ];
 
+  if (localData.length == 0) return null;
+
+  const duplicatedList = [...localData, ...localData];
   return (
     <Card style={{ height: "100%" }}>
       <CardHeader>
         <CardTitle>Members</CardTitle>
       </CardHeader>
       <CardContent>
-        <div ref={scrollRef} className="h-[75vh] no-scrollbar overflow-y-auto">
-          {localData
-            .filter((item) => item.name)
-            .concat(customers)
-            .map((item, index) => {
-              const randomColor = colors[index % colors.length];
-              return (
-                <Link
-                  key={index}
-                  className="flex items-center m-2 cursor-pointer"
-                  href={`/${UserState.value.data?.base_route}/${
-                    item.member ? "member" : "customer"
-                  }/${item.id}`}
-                >
-                  <Avatar className="w-12 h-12 mr-4 ">
-                    <AvatarImage src="/" alt="Customer Picture" />
-                    <AvatarFallback className={`text-white ${randomColor}`}>
-                      {item?.name?.substring(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
+        <div ref={scrollRef} className="h-[calc(100dvh-200px)] no-scrollbar overflow-y-auto">
+          {duplicatedList.map((item, index) => {
+            const randomColor = colors[index % colors.length];
+            return (
+              <Link
+                key={index}
+                className="flex items-center m-2 cursor-pointer"
+                href={`/${UserState.value.data?.base_route}/${
+                  item.member ? "member" : "customer"
+                }/${item.id}`}
+              >
+                <Avatar className="w-12 h-12 mr-4 ">
+                  <AvatarImage src="/" alt="Customer Picture" />
+                  <AvatarFallback className={`text-white ${randomColor}`}>
+                    {item?.name?.substring(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
 
-                  <Label style={{ fontWeight: "600" }}>
-                    {item?.name?.substring(0, 20)}
-                  </Label>
-                </Link>
-              );
-            })}
+                <Label style={{ fontWeight: "600" }}>
+                  {item?.name?.substring(0, 20)}
+                </Label>
+              </Link>
+            );
+          })}
         </div>
       </CardContent>
     </Card>

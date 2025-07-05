@@ -55,7 +55,7 @@ const tableHeader = [
   },
 ];
 
-export default function CustomerMainPage() {
+export default function CustomerMainPage({base, onReturn}) {
   const [additionalFilter, setAdditionalFilter] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState([]);
@@ -70,33 +70,29 @@ export default function CustomerMainPage() {
   const [numCount, setNumCount] = useState({});
 
   useEffect(() => {
-    if (UserState.value.data?.id) fetchData();
+    if (UserState.value.data?.id) {
+
+      fetchData()}
   }, [UserState.value.data]);
 
   async function fetchData() {
+
     return new Promise((resolve, reject) => {
       axios
-        .get(`/customer/machines`)
+        .get(`/${UserState.value.data?.id}/customer`)
         .then((response) => {
           const apiData = response.data;
           const temp = apiData
             .map((item) => {
               return {
                 ...item,
-                machines: item.machines.join(", "),
                 orignalNumber: item.number,
                 number: item.number.join(", "),
                 sorting: item.owner || item.name,
               };
             })
-            .filter((item) => !item.member);
 
-          const isLimited = UserState.value.data?.limited_access;
-          const filteredData = isLimited
-            ? temp.filter((item) => item.lead === UserState.value.data?.id)
-            : temp;
-
-          setData([...filteredData]);
+          setData([...temp]);
         })
         .finally(() => {
           resolve(true);
@@ -223,23 +219,6 @@ export default function CustomerMainPage() {
       cell: ({ row }) => <div>{row.getValue("customer_group")}</div>,
     },
     {
-      accessorKey: "machines",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Machines
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div>{row.getValue("machines")}</div>,
-    },
-
-    {
       accessorKey: "created_at",
       filterFn: "includesString",
       header: ({ column }) => {
@@ -269,8 +248,7 @@ export default function CustomerMainPage() {
 
         const canDelete =
           user?.designation === "Owner" ||
-          user?.full_access === true ||
-          user?.customer_delete_access === true;
+          user?.full_access === true
 
         if (!canDelete) return null;
         return (
@@ -298,7 +276,7 @@ export default function CustomerMainPage() {
     if (!id) return;
     setDeleteLoading(true);
     try {
-      const response = await axios.delete(`/customer/${id}`);
+      const response = await axios.delete(`/${UserState.value.data?.id}customer/${id}`);
       toast({ title: "Customer Deleted" });
       await fetchData();
     } finally {
@@ -334,7 +312,7 @@ export default function CustomerMainPage() {
   }, [data]);
 
   return (
-    <PageContainer scrollable={false}>
+    <>
       <div className="flex flex-1 flex-col space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <Heading title="All Customers" description="Manage your custoners" />
@@ -408,10 +386,11 @@ export default function CustomerMainPage() {
           tableHeader={tableHeader}
           onRowClick={(val) => {
             if (val.id) {
-              startHolyLoader();
-              router.push(
-                `/${UserState.value.data?.base_route}/customer/${val.id}`
-              );
+              // startHolyLoader();
+              // router.push(
+              //   `/${UserState.value.data?.base_route}/customer/${val.id}`
+              // );
+              onReturn(val.id)
             }
           }}
         >
@@ -487,6 +466,6 @@ export default function CustomerMainPage() {
         onPressYes={() => handleDelete(selectedCustomerId)}
         onPressCancel={() => setShowConfirmation(false)}
       />
-    </PageContainer>
+    </>
   );
 }

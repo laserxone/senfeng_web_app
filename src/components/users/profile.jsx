@@ -24,7 +24,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import Spinner from "../ui/spinner";
 import { Textarea } from "../ui/textarea";
 
-export default function ProfilePage() {
+export default function ProfilePage({base}) {
   const { state: UserState, setUser } = useContext(UserContext);
 
   const [isPasswordResetVisible, setIsPasswordResetVisible] = useState(false);
@@ -125,7 +125,7 @@ export default function ProfilePage() {
         const name = `${UserState.value.data?.id}/profile/${UserState.value.data?.email}-dp.png`;
         const img = await UploadImage(URL.createObjectURL(fileList[0]), name);
         const response = await axios.put(
-          `/user/${UserState.value.data.id}`,
+          `/${UserState.value.data.id}`,
           {
             ...formData,
             dp: name,
@@ -241,7 +241,7 @@ export default function ProfilePage() {
             currentPassword: undefined,
             [type]: newFilePath,
           };
-          await axios.put(`/user/${userId}`, updatedData);
+          await axios.put(`/${userId}`, updatedData);
 
           setUser({
             ...UserState.value.data,
@@ -278,7 +278,7 @@ export default function ProfilePage() {
             currentPassword: undefined,
             [type]: "",
           };
-          await axios.put(`/user/${userId}`, updatedData);
+          await axios.put(`/${userId}`, updatedData);
 
           // Step 3: Update local state
           setUser({
@@ -378,7 +378,7 @@ export default function ProfilePage() {
 
     try {
       const response = await axios.put(
-        `/user/${UserState.value.data.id}`,
+        `/${UserState.value.data.id}`,
         {
           ...formData,
           password: undefined,

@@ -39,6 +39,7 @@ import { UserContext } from "@/store/context/UserContext";
 import { signOut } from "firebase/auth";
 import {
   collection,
+  doc,
   onSnapshot,
   orderBy,
   query,
@@ -56,8 +57,8 @@ import { usePathname } from "next/navigation";
 import NotificationBadge from "./NotificationBadge";
 import NotificationBadgeWithoutCount from "./NotificationBadgeWithoutCount";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useContext, useEffect } from "react";
-import { setUserOffice } from "@/lib/axios";
+import { useContext, useEffect, useState } from "react";
+import axios, { setUserOffice } from "@/lib/axios";
 
 export const company = {
   name: "SENFENG",
@@ -74,7 +75,7 @@ export default function AppSidebar({ office }) {
   const profileImage = useProfileImage();
   const { toggleSidebar } = useSidebar();
   const isMobile = useIsMobile();
-  
+  const [conversations, setConversations] = useState(0);
 
   useEffect(() => {
     checkSession().then((val) => {
@@ -108,6 +109,38 @@ export default function AppSidebar({ office }) {
       });
       return () => unsubscribe();
     }
+  }, [UserState]);
+
+   const fetchConversations = async () => {
+    const response = await axios.get(`/${UserState.value.data?.id}/chat`);
+     let unreadConversationsCount = 0;
+    const convs = response.data.map((c) => {
+      if (Number(c.unreadCount) > 0) {
+        unreadConversationsCount++;
+      }
+      return c;
+    });
+
+    setConversations(unreadConversationsCount);
+  };
+
+ 
+
+  
+
+  useEffect(() => {
+    if (!UserState.value.data?.id) return;
+
+    fetchConversations();
+
+    const unsub = onSnapshot(
+      doc(db, "conversations_meta", UserState.value.data?.id.toString()),
+      () => {
+        fetchConversations();
+      }
+    );
+
+    return () => unsub();
   }, [UserState]);
 
   return (
@@ -156,7 +189,8 @@ export default function AppSidebar({ office }) {
                                 <Link
                                   onClick={() => {
                                     if (isMobile) toggleSidebar();
-                                    if (subItem.title === "POS") toggleSidebar();
+                                    if (subItem.title === "POS")
+                                      toggleSidebar();
                                   }}
                                   href={`/${UserState.value.data?.base_route}${subItem.url}`}
                                 >
@@ -181,12 +215,16 @@ export default function AppSidebar({ office }) {
                       <Link
                         onClick={() => {
                           if (isMobile) toggleSidebar();
-                          
                         }}
                         href={`/${UserState.value.data?.base_route}${item.url}`}
                       >
                         <Icon />
                         <span className="text-[14px]">{item.title}</span>
+                        {item.url.includes("messages") && conversations > 0 && (
+                          <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                            {conversations}
+                          </span>
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -277,11 +315,17 @@ export default function AppSidebar({ office }) {
                   {(UserState.value.data?.designation === "Owner" ||
                     UserState.value.data?.full_access) && (
                     <Link
-                      href={`/${pathname.includes("karachi") ? "lahore" : "karachi"}/superadmin/dashboard`}
+                      href={`/${
+                        pathname.includes("karachi") ? "lahore" : "karachi"
+                      }/superadmin/dashboard`}
                     >
                       <DropdownMenuItem>
                         <CreditCard />
-                        Switch to {pathname.includes("karachi") ? "lahore" : "karachi"} Dashboard
+                        Switch to{" "}
+                        {pathname.includes("karachi")
+                          ? "lahore"
+                          : "karachi"}{" "}
+                        Dashboard
                       </DropdownMenuItem>
                     </Link>
                   )}

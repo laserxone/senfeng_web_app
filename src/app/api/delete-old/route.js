@@ -35,11 +35,11 @@ export async function GET() {
                 const file = storage.file(imageRef);
                 return file.delete();
             } else if (imageRef && imageRef.includes('http')) {
-                const refPath = getStoragePathFromUrl(imageRef);
-                if (refPath) {
-                    const file = storage.file(refPath);
-                    return file.delete();
-                }
+                // const refPath = getStoragePathFromUrl(imageRef);
+                // if (refPath) {
+                //     const file = storage.file(refPath);
+                //     return file.delete();
+                // }
             }
             return null;
         }).filter(p => p !== null)

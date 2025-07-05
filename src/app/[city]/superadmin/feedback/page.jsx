@@ -65,7 +65,7 @@ export default function Page() {
 
   useEffect(() => {
     async function fetchData() {
-      axios.get(`/feedback`).then((response) => {
+      axios.get(`/${UserState.value.data?.id}/feedback`).then((response) => {
         const temp = response.data.map((item) => {
           return {
             ...item,

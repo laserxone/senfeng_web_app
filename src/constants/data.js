@@ -152,6 +152,15 @@ export const ownerNavItems = [
     items: [] // No child items
   },
 
+   {
+    title: 'Messages',
+    url: '/messages',
+    icon: 'messages',
+    shortcut: ['m', 's', 'g'],
+    isActive: false,
+    items: [] // No child items
+  },
+
 
 
 
@@ -217,6 +226,14 @@ export const employeeNavItems = [
     isActive: false,
     items: [] // No child items
   },
+   {
+    title: 'Messages',
+    url: '/messages',
+    icon: 'messages',
+    shortcut: ['m', 's', 'g'],
+    isActive: false,
+    items: [] // No child items
+  },
 
 ];
 
@@ -260,6 +277,14 @@ export const StoreNavItem = [
     url: '/dms',
     icon: 'dms',
     shortcut: ['d', 'm', 's'],
+    isActive: false,
+    items: [] // No child items
+  },
+   {
+    title: 'Messages',
+    url: '/messages',
+    icon: 'messages',
+    shortcut: ['m', 's', 'g'],
     isActive: false,
     items: [] // No child items
   },

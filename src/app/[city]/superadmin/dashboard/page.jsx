@@ -42,7 +42,7 @@ export default function Page({params}) {
   async function fetchDashboardData() {
    
     axios
-      .get(`/superadmin/dashboard`)
+      .get(`/${debouncedUserId}/dashboard`)
       .then((response) => {
         setData(response.data);
         if (response.data?.team_task) {
@@ -85,7 +85,7 @@ export default function Page({params}) {
   async function fetchCustomerList() {
     try {
       let list1 = [];
-      axios.get(`/superadmin/customer?map=true`).then((response) => {
+      axios.get(`/${debouncedUserId}/customer?map=true`).then((response) => {
         const customerList = response.data;
         const newArray = mergeArrays(customerList, PakCities);
 

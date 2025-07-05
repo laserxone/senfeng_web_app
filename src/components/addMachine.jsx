@@ -1,10 +1,11 @@
 import axios from "@/lib/axios";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Trash } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import AppCalendar from "./appCalendar";
+import { AvailableMachines } from "./available-machines";
 import { RequiredStar } from "./RequiredStar";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
@@ -18,20 +19,9 @@ import {
   FormMessage,
 } from "./ui/form";
 import { Input } from "./ui/input";
-import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
 import Spinner from "./ui/spinner";
 import { Textarea } from "./ui/textarea";
-import { MachineSearch } from "./machine-search";
-import { AvailableMachines } from "./available-machines";
 
 const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
@@ -89,7 +79,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
 
     setLoading(true);
     axios
-      .post(`/machine?inventory=${values.order_item}`, {
+      .post(`/${user_id}/machine?inventory=${values.order_item}`, {
         customer_id: customer_id,
         type: "Machine",
         speed_money_note: values.speedMoneyNote,
@@ -251,7 +241,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                         <FormControl>
                           <Input
                             disabled
-                            placeholder="example: 3000/1500/6000"
+                            placeholder="example: 3000W/1500W/6000W"
                             {...field}
                           />
                         </FormControl>
@@ -269,22 +259,11 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                           Source <RequiredStar />
                         </FormLabel>
                         <FormControl>
-                          <Select
+                          <Input
                             disabled
-                            onValueChange={(val) => field.onChange(val)}
-                            value={field.value}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select source" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {["RAYCUS", "MAX", "IPG"].map((source) => (
-                                <SelectItem key={source} value={source}>
-                                  {source}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            placeholder="example: RAYCUS / MAX /IPG"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

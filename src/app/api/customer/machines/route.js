@@ -7,9 +7,7 @@ export async function GET(req) {
     const searchParams = req.nextUrl.searchParams
     const start_date = searchParams.get('start_date')
     const end_date = searchParams.get('end_date')
-    const user = searchParams.get("user")
-
-    console.log(start_date, end_date, user)
+    const user = searchParams.get("user") 
 
     const queryParams = []
 

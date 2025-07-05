@@ -48,7 +48,7 @@ export default function Page() {
     return new Promise((res, ) => {
       axios
         .get(
-          `/attendance?start_date=${start}&end_date=${end}&user=${user || ""}`
+          `/${UserState.value.data?.id}/attendance?start_date=${start}&end_date=${end}&user=${user || ""}`
         )
         .then((response) => {
           if (response.data.length > 0) {

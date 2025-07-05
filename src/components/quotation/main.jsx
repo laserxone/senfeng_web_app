@@ -1,40 +1,30 @@
 "use client";
 import { storage } from "@/config/firebase";
-import { pdf } from "@react-pdf/renderer";
 import axios from "@/lib/axios";
+import { pdf } from "@react-pdf/renderer";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import {
   ArrowUpDown,
   Copy,
-  Loader2,
   Minus,
   PencilIcon,
-  Plus,
+  Plus
 } from "lucide-react";
 import moment from "moment";
 import { useEffect, useRef, useState } from "react";
-import { FaGlobe, FaMinusCircle, FaPlus } from "react-icons/fa";
+import { FaGlobe, FaPlus } from "react-icons/fa";
 import { FaPhone } from "react-icons/fa6";
 import "./Button.css";
 import InvoicePDF from "./pdf";
 
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
+import { cn } from "@/lib/utils";
 import * as pdfjsLib from "pdfjs-dist";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
-import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
-import { Card } from "../ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
+import PageTable from "../app-table";
+import { CustomerSearchWithData } from "../customer-search-with-data";
 import { Button } from "../ui/button";
-import { Label } from "../ui/label";
 import {
   Dialog,
   DialogContent,
@@ -42,7 +32,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import PageTable from "../app-table";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { ScrollArea } from "../ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -50,11 +42,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { ScrollArea } from "../ui/scroll-area";
-import { BASE_URL } from "@/constants/data";
-import { CustomerSearch } from "../customer-search";
-import { CustomerSearchWithData } from "../customer-search-with-data";
-import { cn } from "@/lib/utils";
 import Spinner from "../ui/spinner";
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;

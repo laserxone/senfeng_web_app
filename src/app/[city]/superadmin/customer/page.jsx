@@ -1,9 +1,5 @@
-import CustomerMainPage from "@/components/customer-components/customer/main-page";
+import CustomerBaseComponent from "@/components/customer-components/customerBasComponent";
 
-
-export default function Page(){
-
-  return (
-    <CustomerMainPage />
-  )
+export default function Page() {
+  return <CustomerBaseComponent base={"superadmin"}/>;
 }

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/popover";
 import axios from "@/lib/axios";
 import { cn } from "@/lib/utils";
+import { UserContext } from "@/store/context/UserContext";
 
 export function AvailableMachines({
   value,
@@ -29,67 +30,82 @@ export function AvailableMachines({
 }) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState([]);
+  const { state: UserState } = React.useContext(UserContext);
 
   React.useEffect(() => {
     async function fetchData() {
-      axios.get(`/available-machines`).then((response) => {
-        if (response.data.length > 0) {
-          const apiData = response.data;
+      axios
+        .get(`/${UserState.value.data?.id}/available-machines`)
+        .then((response) => {
+          if (response.data.length > 0) {
+            const apiData = response.data;
 
-          // Step 1: Create labeled items
-          let finalData = apiData.map((item) => ({
-            ...item,
-            baseLabel: `${item.machine_model} ${item.machine_power}W ${item.machine_source}`,
-            value: item.id,
-          }));
-
-          // Step 2: Sort by label
-          finalData = finalData.sort((a, b) =>
-            a.baseLabel.localeCompare(b.baseLabel)
-          );
-
-          // Step 3: Count unique labels and assign color indexes
-          const labelColorMap = new Map();
-          const colorClasses = [
-            "bg-red-100 text-red-800",
-            "bg-blue-100 text-blue-800",
-            "bg-green-100 text-green-800",
-            "bg-yellow-100 text-yellow-800",
-            "bg-purple-100 text-purple-800",
-            "bg-pink-100 text-pink-800",
-            "bg-indigo-100 text-indigo-800",
-            "bg-teal-100 text-teal-800",
-            "bg-orange-100 text-orange-800",
-            "bg-gray-100 text-gray-800",
-          ];
-
-          let colorIndex = 0;
-
-          finalData = finalData.map((item, index) => {
-            const labelKey = item.baseLabel;
-            if (!labelColorMap.has(labelKey)) {
-              labelColorMap.set(
-                labelKey,
-                colorClasses[colorIndex % colorClasses.length]
-              );
-              colorIndex++;
-            }
-
-            const colorFlag = labelColorMap.get(labelKey);
-
-            return {
+            // Step 1: Create base label
+            let finalData = apiData.map((item) => ({
               ...item,
-              label: `${index + 1}-${item.baseLabel}`,
-              colorFlag,
-            };
-          });
+              baseLabel: `${item.machine_model} ${item.machine_power} ${item.machine_source}`,
+              value: item.id,
+            }));
 
-          setData(finalData);
-        }
-      });
+            // Step 2: Sort alphabetically by baseLabel
+            finalData = finalData.sort((a, b) =>
+              a.baseLabel.localeCompare(b.baseLabel)
+            );
+
+            // Step 3: Prepare color map and label counter
+            const labelColorMap = new Map();
+            const labelCounter = new Map();
+
+            const colorClasses = [
+              { bg: "bg-red-100", text: "text-red-800" },
+              { bg: "bg-blue-100", text: "text-blue-800" },
+              { bg: "bg-green-100", text: "text-green-800" },
+              { bg: "bg-yellow-100", text: "text-yellow-800" },
+              { bg: "bg-purple-100", text: "text-purple-800" },
+              { bg: "bg-pink-100", text: "text-pink-800" },
+              { bg: "bg-indigo-100", text: "text-indigo-800" },
+              { bg: "bg-teal-100", text: "text-teal-800" },
+              { bg: "bg-orange-100", text: "text-orange-800" },
+              { bg: "bg-gray-100", text: "text-gray-800" },
+            ];
+
+            let colorIndex = 0;
+
+            finalData = finalData.map((item) => {
+              const labelKey = item.baseLabel;
+
+              // Assign color if not already assigned
+              if (!labelColorMap.has(labelKey)) {
+                labelColorMap.set(
+                  labelKey,
+                  colorClasses[colorIndex % colorClasses.length]
+                );
+                colorIndex++;
+              }
+
+              // Count items per label
+              const count = (labelCounter.get(labelKey) || 0) + 1;
+              labelCounter.set(labelKey, count);
+
+              const color = labelColorMap.get(labelKey);
+
+              return {
+                ...item,
+                label: `${count} - ${labelKey}`,
+                colorFlag: `${color.bg} ${color.text}`,
+                bgColorClass: color.bg,
+                textColorClass: color.text,
+              };
+            });
+
+            setData(finalData);
+          }
+        });
     }
-    fetchData();
-  }, []);
+    if (UserState.value.data?.id) {
+      fetchData();
+    }
+  }, [UserState]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

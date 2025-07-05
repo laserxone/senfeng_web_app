@@ -20,14 +20,16 @@ import {
 import { BASE_URL } from "@/constants/data";
 import { cn } from "@/lib/utils";
 import axios from "@/lib/axios";
+import { UserContext } from "@/store/context/UserContext";
 
 export function CustomerSearchWithData({ value, onReturn }) {
   const [open, setOpen] = React.useState(false);
   const [customers, setCustomers] = React.useState([]);
+  const {state : UserState} = React.useContext(UserContext)
 
   React.useEffect(() => {
     async function fetchData() {
-      const response = await axios.get(`/customer?withoutsale=true`);
+      const response = await axios.get(`/${UserState.value.data?.id}/mycustomer`);
       if (response.data.length > 0) {
         const apiData = response.data
           .filter((item) => {
@@ -57,8 +59,9 @@ export function CustomerSearchWithData({ value, onReturn }) {
         setCustomers(finalData);
       }
     }
+    if(UserState.value.data?.id)
     fetchData();
-  }, []);
+  }, [UserState]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

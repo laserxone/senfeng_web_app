@@ -17,9 +17,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { BASE_URL, CountriesList } from "@/constants/data";
+import { CountriesList } from "@/constants/data";
 import { cn } from "@/lib/utils";
-import axios from "@/lib/axios";
 
 export function NumberSearch  ({ value, onReturn }) {
   const [open, setOpen] = React.useState(false);

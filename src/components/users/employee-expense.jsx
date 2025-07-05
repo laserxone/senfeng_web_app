@@ -1,5 +1,5 @@
 "use client";
-import { ArrowUpDown, Filter, Loader2 } from "lucide-react";
+import { ArrowUpDown, Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import FilterSheet from "@/components/users/filterSheet";
 import { storage } from "@/config/firebase";
+import { TIMEZONE } from "@/constants/data";
 import { toast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
@@ -44,16 +45,15 @@ import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
+import momentT from "moment-timezone";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
 import Spinner from "../ui/spinner";
-import momentT from "moment-timezone";
-import { TIMEZONE } from "@/constants/data";
 
-export default function EmployeeBranchExpenses() {
+export default function EmployeeBranchExpenses({ base }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
@@ -92,7 +92,9 @@ export default function EmployeeBranchExpenses() {
   async function fetchData(startDate, endDate) {
     return new Promise((resolve, reject) => {
       axios
-        .get(`/expenses?start_date=${startDate}&end_date=${endDate}`)
+        .get(
+          `/${UserState.value.data?.id}/expenses?start_date=${startDate}&end_date=${endDate}`
+        )
         .then((response) => {
           setData(response.data);
         })
@@ -208,7 +210,9 @@ export default function EmployeeBranchExpenses() {
       if (imageURL && imageURL?.image && !imageURL.image.includes("http")) {
         DeleteFromStorage(imageURL.image);
       }
-      const response = await axios.delete(`/expenses/${id}`);
+      const response = await axios.delete(
+        `/${UserState.value.data?.id}/expenses/${id}`
+      );
       toast({ title: "Branch Expense Deleted" });
       const startDate = momentT
         .tz(TIMEZONE)
@@ -276,8 +280,18 @@ export default function EmployeeBranchExpenses() {
           variant="destructive"
           onClick={async () => {
             setResetLoading(true);
-          const startDate = momentT.tz(TIMEZONE).startOf("month").startOf("day").utc().toISOString();
-const endDate = momentT.tz(TIMEZONE).endOf("month").endOf("day").utc().toISOString();
+            const startDate = momentT
+              .tz(TIMEZONE)
+              .startOf("month")
+              .startOf("day")
+              .utc()
+              .toISOString();
+            const endDate = momentT
+              .tz(TIMEZONE)
+              .endOf("month")
+              .endOf("day")
+              .utc()
+              .toISOString();
             await fetchData(startDate, endDate);
             setResetLoading(false);
           }}
@@ -303,7 +317,12 @@ const endDate = momentT.tz(TIMEZONE).endOf("month").endOf("day").utc().toISOStri
         user_id={UserState.value.data?.id}
         onRefresh={async () =>
           await fetchData(
-            momentT.tz(TIMEZONE).startOf("month").startOf("day").utc().toISOString(),
+            momentT
+              .tz(TIMEZONE)
+              .startOf("month")
+              .startOf("day")
+              .utc()
+              .toISOString(),
             momentT.tz(TIMEZONE).endOf("month").endOf("day").utc().toISOString()
           )
         }
@@ -316,6 +335,7 @@ const endDate = momentT.tz(TIMEZONE).endOf("month").endOf("day").utc().toISOStri
         description={imageURL?.description || null}
         submittedBy={imageURL?.submitted_by_name || null}
         onDelete={() => setShowConfirmation(true)}
+        date={imageURL?.date}
       />
     </div>
   );
@@ -329,10 +349,21 @@ const ImageSheet = ({
   description,
   onDelete,
   loading,
+  date,
 }) => {
   const [imageOpen, setImageOpen] = useState(false);
   const [localImage, setLocalImage] = useState(null);
   const { state: UserState } = useContext(UserContext);
+
+  const hasPermission =
+    UserState.value.data?.designation === "Owner" ||
+    UserState.value.data?.full_access ||
+    UserState.value.data?.branch_expenses_delete_access;
+
+  const isCurrentOrFutureMonth =
+    date && !moment(date).startOf("day").isBefore(moment().startOf("month"));
+
+  const isAllowed = hasPermission && isCurrentOrFutureMonth;
 
   useEffect(() => {
     if (img) {
@@ -382,7 +413,7 @@ const ImageSheet = ({
               style={{ flex: 1 }}
             />
           </ControlledZoom>
-          {UserState.value.data?.branch_expenses_delete_access && (
+          {isAllowed && (
             <Button variant="destructive" onClick={onDelete}>
               {loading && <Spinner />} Delete
             </Button>
@@ -395,6 +426,7 @@ const ImageSheet = ({
 
 const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
   const [loading, setLoading] = useState(false);
+  const { state: UserState } = useContext(UserContext);
   const formSchema = z.object({
     note: z.string().min(1, { message: "Note is required." }),
     amount: z
@@ -420,18 +452,24 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
       if (values.image) {
         const name = `Expenses/${moment().valueOf().toString()}.png`;
         const imgRes = await UploadImage(values.image, name);
-        const response = await axios.post(`/expenses`, {
-          ...values,
-          submitted_by: user_id,
-          image: name,
-        });
+        const response = await axios.post(
+          `/${UserState.value.data?.id}/expenses`,
+          {
+            ...values,
+            submitted_by: user_id,
+            image: name,
+          }
+        );
         await onRefresh();
         handleClose(false);
       } else {
-        const response = await axios.post(`/expenses`, {
-          ...values,
-          submitted_by: user_id,
-        });
+        const response = await axios.post(
+          `/${UserState.value.data?.id}/expenses`,
+          {
+            ...values,
+            submitted_by: user_id,
+          }
+        );
         await onRefresh();
         handleClose(false);
       }

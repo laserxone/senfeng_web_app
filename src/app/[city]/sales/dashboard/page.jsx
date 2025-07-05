@@ -3,7 +3,7 @@ import AutoScrollMembers from "@/components/autoScroll";
 import {
   FeedbackTakenCard,
   MachinesSoldCard,
-  VisitsDoneCard
+  VisitsDoneCard,
 } from "@/components/dashboardCards";
 import {
   Accordion,
@@ -43,42 +43,41 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
 import AppCalendar from "@/components/appCalendar";
 import { RequiredStar } from "@/components/RequiredStar";
+import { CustomerExtraData } from "@/components/users/ExtraData";
+import { ProfilePicture } from "@/components/users/ProfilePicture";
 
 export default function Page() {
   const [data, setData] = useState();
   const { state: UserState } = useContext(UserContext);
-  const [customers, setCustomers] = useState([]);
   const [visitData, setVisitData] = useState([]);
   const [extraData, setExtraData] = useState({});
-  const [selectedOption, setSelectedOption] = useState("");
-  const [reimbursementData, setReimbursementData] = useState([]); 
+  const [selectedOption, setSelectedOption] = useState("thisMonth");
+  const [reimbursementData, setReimbursementData] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
   const [callData, setCallData] = useState([]);
   const [machineData, setMachineData] = useState([]);
   const [visible, setVisible] = useState(false);
- 
+  const [activeTab, setActiveTab] = useState("newCustomers");
+
   useEffect(() => {
     if (UserState.value.data?.id) {
       const startDate = moment().startOf("month").toISOString();
       const endDate = moment().endOf("month").toISOString();
       fetchData();
       fetchVisitData(startDate, endDate);
-      fetchAllCustomers();
       fetchExtraCustomerOptions();
       fetchReimbursementData(startDate, endDate);
       fetchAttendanceData(startDate, endDate);
       fetchCallData(startDate, endDate);
-    
+      // fetchScrollData()
     }
   }, [UserState]);
-
- 
 
   async function fetchCallData(startDate, endDate) {
     return new Promise((resolve) => {
       axios
         .get(
-          `/user/${UserState.value.data?.id}/call?start_date=${startDate}&end_date=${endDate}`
+          `/${UserState.value.data?.id}/call?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           setCallData(response.data);
@@ -93,7 +92,7 @@ export default function Page() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/user/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+          `/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           setReimbursementData(response.data);
@@ -110,7 +109,7 @@ export default function Page() {
     return new Promise((res, rej) => {
       axios
         .get(
-          `/user/${UserState.value.data.id}/attendance?start_date=${startDate}&end_date=${endDate}`
+          `/${UserState.value.data?.id}/attendance?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           if (response.data.length > 0) {
@@ -135,7 +134,7 @@ export default function Page() {
   async function fetchData() {
     return new Promise((resolve) => {
       axios
-        .get(`/user/${UserState.value.data?.id}`)
+        .get(`/${UserState.value.data?.id}/dashboard`)
         .then((response) => {
           setData(response.data);
         })
@@ -145,17 +144,11 @@ export default function Page() {
     });
   }
 
-  async function fetchAllCustomers() {
-    axios.get(`/customer`).then((response) => {
-      setCustomers(response.data);
-    });
-  }
-
   async function fetchVisitData(start, end) {
     return new Promise((res, rej) => {
       axios
         .get(
-          `/user/${UserState.value.data.id}/visit?start_date=${start}&end_date=${end}`
+          `/${UserState.value.data.id}/visit?start_date=${start}&end_date=${end}`
         )
         .then((response) => {
           setVisitData(response.data);
@@ -168,7 +161,7 @@ export default function Page() {
 
   async function fetchExtraCustomerOptions() {
     axios
-      .get(`/user/${UserState.value.data?.id}/extra?employee=sales`)
+      .get(`/${UserState.value.data?.id}/dashboard/group`)
       .then((response) => {
         setExtraData(response.data);
       });
@@ -195,8 +188,8 @@ export default function Page() {
 
   const RenderNewCustomer = useCallback(() => {
     return (
-      <Card>
-        <CardContent className="pt-5">
+      <Card className="flex flex-1">
+        <CardContent className="pt-2 flex flex-1">
           <div className="flex flex-1 gap-5">
             <CustomerExtraData
               data={extraData || {}}
@@ -209,9 +202,7 @@ export default function Page() {
               user_id={UserState.value.data?.id}
               ownership={false}
               customer_data={
-                selectedOption
-                  ? extraData[selectedOption]
-                  : data?.customers || []
+                selectedOption && extraData ? extraData[selectedOption] : []
               }
               onRefresh={() => fetchData()}
             />
@@ -223,10 +214,13 @@ export default function Page() {
 
   const RenderMembers = useCallback(() => {
     return (
-      <Card>
-        <CardContent className="p-0">
+      <Card className="flex flex-1">
+        <CardContent className="p-0 flex flex-1">
           <CustomersTab
-            data={data?.customers.filter((customer) => customer.member) || []}
+            data={
+              data?.customers.filter((customer) => customer.sales.length > 0) ||
+              []
+            }
           />
         </CardContent>
       </Card>
@@ -235,8 +229,8 @@ export default function Page() {
 
   const RenderReimbursement = useCallback(() => {
     return (
-      <Card>
-        <CardContent className="pt-5">
+      <Card className="flex flex-1">
+        <CardContent className="pt-2 flex flex-1">
           <Reimbursement
             id={UserState.value.data?.id}
             passingData={reimbursementData || []}
@@ -252,8 +246,8 @@ export default function Page() {
 
   const RenderAttendance = useCallback(() => {
     return (
-      <Card>
-        <CardContent className="pt-2">
+      <Card className="flex flex-1">
+        <CardContent className="pt-2 flex flex-1">
           <Attendance
             passingData={attendanceData}
             onFilterReturn={async (start, end) =>
@@ -267,8 +261,8 @@ export default function Page() {
 
   const RenderCallTab = useCallback(() => {
     return (
-      <Card>
-        <CardContent className="pt-2">
+      <Card className="flex flex-1">
+        <CardContent className="pt-2 flex flex-1">
           <Calls
             data={callData}
             onRefresh={async () => {
@@ -286,7 +280,7 @@ export default function Page() {
   return (
     <div className="flex flex-1 gap-5">
       <div className="flex flex-1 flex-col">
-        <div className="flex flex-1 justify-between mb-8 flex-wrap gap-2">
+        <div className="flex justify-between mb-8 flex-wrap gap-2">
           <Link
             href={
               UserState.value.data?.base_route
@@ -314,7 +308,6 @@ export default function Page() {
             }}
           />
 
-        
           <FeedbackTakenCard
             value={data?.feedbacksTakenThisMonth || 0}
             total={data?.totalCustomersWithSale || 0}
@@ -329,54 +322,42 @@ export default function Page() {
         </div>
 
         <Tabs
-          defaultValue="newCustomers"
-          className="w-full flex flex-1 flex-col"
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex w-full flex-1 flex-col"
         >
           <TabsList className="justify-start">
             <TabsTrigger value="newCustomers">New Customers</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
             <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>
-            {/* <TabsTrigger value="commission">Commission</TabsTrigger>
-            <TabsTrigger value="salary">Salary</TabsTrigger> */}
+
             <TabsTrigger value="visit">Visit</TabsTrigger>
             <TabsTrigger value="calls">Calls</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
-            {/* <TabsTrigger value="location">Location</TabsTrigger> */}
           </TabsList>
 
-          <TabsContent value="newCustomers">
-            <RenderNewCustomer />
-          </TabsContent>
+          <div className="flex flex-1 w-full mt-2">
+            {activeTab === "newCustomers" && <RenderNewCustomer />}
+            {activeTab === "members" && <RenderMembers />}
+            {activeTab === "reimbursement" && <RenderReimbursement />}
 
-          <TabsContent value="members">
-            <RenderMembers />
-          </TabsContent>
+            {activeTab === "visit" && <RenderVisitTab />}
+            {activeTab === "calls" && <RenderCallTab />}
 
-          <TabsContent value="reimbursement">
-            <RenderReimbursement />
-          </TabsContent>
-          <TabsContent value="attendance">
-            <RenderAttendance />
-          </TabsContent>
-          <TabsContent value="visit">
-            <RenderVisitTab />
-          </TabsContent>
-
-          <TabsContent value="salary">
-            <Card>
-              <CardContent className="pt-2">
-                <SalaryRecord />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="calls">
-            <RenderCallTab />
-          </TabsContent>
+            {activeTab === "attendance" && <RenderAttendance />}
+            {activeTab === "salary" && (
+              <Card className="flex flex-1">
+                <CardContent className="pt-2 flex flex-1">
+                  <SalaryRecord id={UserState.value.data?.id} />
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </Tabs>
       </div>
 
-      {customers.length > 0 && <AutoScrollMembers customers={customers} />}
+      <AutoScrollMembers />
 
       <Dialog open={visible} onOpenChange={setVisible}>
         <DialogContent>
@@ -411,97 +392,6 @@ export default function Page() {
   );
 }
 
-const ProfilePicture = ({ img, name }) => {
-  const [localImage, setLocalImage] = useState(null);
-
-  useEffect(() => {
-    async function fetchImage() {
-      if (img?.includes("http")) {
-        setLocalImage(img);
-      } else {
-        const imgResult = await GetProfileImage(img);
-        setLocalImage(imgResult);
-      }
-    }
-
-    if (img) {
-      fetchImage();
-    }
-  }, [img]);
-
-  return (
-    <Avatar className="w-24 h-24 mr-4">
-      <AvatarImage src={localImage} alt="Profile Picture" />
-      <AvatarFallback>{name?.substring(0, 2)}</AvatarFallback>
-    </Avatar>
-  );
-};
-
-const CustomerExtraData = ({ data, option, onSelect }) => {
-  const menuItems = [
-    { key: "top", label: "Top Follow Up", dataKey: "top_followup" },
-    { key: "recent", label: "Recent Customers", dataKey: "recent_customer" },
-    { key: "weekly", label: "Weekly Follow Up", dataKey: "weekly" },
-    { key: "monthly", label: "Monthly Follow Up", dataKey: "monthly" },
-  ];
-
-  return (
-    // <Card>
-    //   <CardContent>
-    <div className="flex flex-col gap-10 mt-5">
-      <div className="py-2 px-5 bg-gray-100 rounded-lg dark:bg-gray-800">
-        <h2 className="text-2xl font-bold tracking-tight">
-          {"Customer Group"}
-        </h2>
-      </div>
-      <>
-        {menuItems.map(({ key, label, dataKey }) => (
-          <div
-            onClick={() => {
-              onSelect(option == dataKey ? "" : dataKey);
-            }}
-            key={key}
-            className={`flex items-center justify-between py-2 px-5 cursor-pointer rounded-lg transition-all duration-300
-          ${
-            option === dataKey
-              ? "bg-[hsl(180,85%,30%)] text-white"
-              : "hover:bg-[hsl(180,85%,90%)] hover:text-[hsl(180,85%,30%)]"
-          }
-        `}
-          >
-            <h1 className="text-lg font-medium">{label}</h1>
-            {data?.[dataKey]?.length > 0 && (
-              <div
-                className={`h-8 w-8 flex items-center justify-center font-semibold rounded-full shadow-md ml-2
-              ${
-                option === dataKey
-                  ? "bg-white text-[hsl(180,85%,30%)]"
-                  : "bg-[hsl(180,85%,30%)] text-white"
-              }
-            `}
-              >
-                {data?.[dataKey]?.length ?? 0}
-              </div>
-            )}
-          </div>
-        ))}
-      </>
-      {/* <div className="py-2 px-5 hover:cursor-pointer hover:bg-blue-50 hover:text-blue-500">
-          <h1 className="text-lg font-semibold " style={{ fontWeight: "500" }}>
-            City Wise
-          </h1>
-        </div>
-        <div className="py-2 px-5 hover:cursor-pointer hover:bg-blue-50 hover:text-blue-500">
-          <h1 className="text-lg font-semibold " style={{ fontWeight: "500" }}>
-            Field Wise
-          </h1>
-        </div> */}
-    </div>
-    // </CardContent>
-    // </Card>
-  );
-};
-
 function CustomersTab({ data }) {
   const { state: UserState } = useContext(UserContext);
   const [localData, setLocalData] = useState([]);
@@ -533,7 +423,7 @@ function CustomersTab({ data }) {
     );
 
     return (
-      <div className="flex justify-between items-center border-b pb-2">
+      <div className="flex justify-between items-center border-b pb-2 w-full">
         <Link
           href={`/${UserState.value.data?.base_route}/member/${customer_id}/${machine.id}`}
         >
@@ -563,8 +453,8 @@ function CustomersTab({ data }) {
   };
 
   return (
-    <div className="h-[650px]">
-      <ScrollArea className="h-[650px] p-5">
+   
+      <ScrollArea className="h-[calc(100dvh-250px)] p-5 w-full">
         <Accordion type="single" collapsible className="w-full space-y-4">
           {localData.length == 0 ? (
             <Label>No Data found</Label>
@@ -638,7 +528,7 @@ function CustomersTab({ data }) {
           )}
         </Accordion>
       </ScrollArea>
-    </div>
+   
   );
 }
 
@@ -649,12 +539,13 @@ function Calls({ data, onRefresh }) {
   const [loading, setLoading] = useState(false);
   const { state: UserState } = useContext(UserContext);
   const [satisfactory, setSatisfactory] = useState(false);
-   const [next, setNext] = useState(null);
+  const [next, setNext] = useState(null);
+  const [top, setTop] = useState(false);
 
   async function handleSaveFeedback() {
     setLoading(true);
     axios
-      .post(`/feedback`, {
+      .post(`/${UserState.value.data?.id}/feedback`, {
         feedback: feedback,
         top_follow: false,
         type: "feedback",
@@ -662,6 +553,7 @@ function Calls({ data, onRefresh }) {
         user_id: UserState.value.data?.id,
         status: satisfactory ? "Satisfactory" : "Unsatisfactory",
         next_followup: next,
+        top_follow: top,
       })
       .then(async () => {
         await onRefresh();
@@ -706,8 +598,8 @@ function Calls({ data, onRefresh }) {
   };
 
   return (
-    <div className="h-[650px]">
-      <ScrollArea className="h-[650px] p-5">
+    <div className="w-full">
+      <ScrollArea className="h-[calc(100dvh-290px)] p-5 ">
         {data.length === 0 ? (
           <Label>No calls remaining</Label>
         ) : (
@@ -723,42 +615,52 @@ function Calls({ data, onRefresh }) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Feedback</DialogTitle>
-             <div className="flex flex-1 flex-col gap-2">
-                <h1>
-                  Enter Feedback <RequiredStar />
-                </h1>
-                <Input
-                  placeholder="feedback"
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                />
+            <div className="flex flex-1 flex-col gap-2">
+              <h1>
+                Enter Feedback <RequiredStar />
+              </h1>
+              <Input
+                placeholder="feedback"
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+              />
 
-                <h1>
-                  Next Follow Up <RequiredStar />
-                </h1>
-                <AppCalendar date={next} onChange={setNext} min={new Date()} />
+              <h1>
+                Next Follow Up <RequiredStar />
+              </h1>
+              <AppCalendar date={next} onChange={setNext} min={new Date()} />
 
-                <div className="flex flex-row items-center gap-2">
-                  <h1>Satisfactory?</h1>
-                  <Checkbox
-                    checked={satisfactory}
-                    onCheckedChange={(checked) => {
-                      setSatisfactory(checked);
-                    }}
-                  />
-                </div>
-                <Button
-                  disabled={!next || !feedback}
-                  onClick={() => {
-                    handleSaveFeedback();
+              <div className="flex flex-row items-center gap-2">
+                <h1>Top Follow Up?</h1>
+                <Checkbox
+                  checked={top}
+                  onCheckedChange={(checked) => {
+                    setTop(checked);
                   }}
-                >
-                  {loading && <Spinner />} Save
-                </Button>
+                />
               </div>
+
+              <div className="flex flex-row items-center gap-2">
+                <h1>Satisfactory?</h1>
+                <Checkbox
+                  checked={satisfactory}
+                  onCheckedChange={(checked) => {
+                    setSatisfactory(checked);
+                  }}
+                />
+              </div>
+              <Button
+                disabled={!next || !feedback}
+                onClick={() => {
+                  handleSaveFeedback();
+                }}
+              >
+                {loading && <Spinner />} Save
+              </Button>
+            </div>
           </DialogHeader>
         </DialogContent>
-      </Dialog> 
+      </Dialog>
     </div>
   );
 }

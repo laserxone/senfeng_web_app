@@ -49,8 +49,8 @@ export async function GET(req, { params }) {
             }
             if (result.rows[0].branch_expenses_assigned)
                 nav_items.push(branchNavItem)
-            if (result.rows[0].inventory_assigned)
-                nav_items.push(InventoryNavItem)
+            // if (result.rows[0].inventory_assigned)
+            //     nav_items.push(InventoryNavItem)
             if (result.rows[0].pos_assigned) {
                 nav_items.push(POSNavItem)
             }

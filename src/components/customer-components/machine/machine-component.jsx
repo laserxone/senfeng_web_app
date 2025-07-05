@@ -24,6 +24,7 @@ import {
   CircleCheck,
   ClipboardList,
   EditIcon,
+  Info,
   ShieldCheck,
   Siren,
   Trash,
@@ -86,7 +87,7 @@ import { UserSearch } from "@/components/user-search";
 import { usePathname, useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 
-export default function Machine({ id }) {
+export default function Machine({ id, onLoading = () => {}, base }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState();
   const [total, setTotal] = useState(0);
@@ -104,7 +105,6 @@ export default function Machine({ id }) {
   const [editAllowed, setEditAllowed] = useState(false);
   const [zipDownloading, setZipDwonloading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const isMobile = useIsMobile();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -122,17 +122,16 @@ export default function Machine({ id }) {
   );
 
   async function fetchData(id) {
+    if (onLoading) {
+      onLoading(true);
+    }
+
     try {
-      const response = await axios.get(`/machine/${id}`);
+      const response = await axios.get(
+        `/${UserState.value.data?.id}/machine/${id}`
+      );
       const machine = response.data?.machine;
       const userData = UserState.value.data;
-
-      const isLimited = userData?.limited_access;
-      if (isLimited) {
-        if (response.data?.customer?.lead !== userData?.id) {
-          router.replace("/");
-        }
-      }
 
       if (
         response.data?.customer &&
@@ -146,6 +145,8 @@ export default function Machine({ id }) {
         setEditAllowed(true);
       } else if (userData?.designation === "Owner" || userData?.full_access) {
         setEditAllowed(true);
+      } else if (userData?.designation === "Customer Relationship Manager (After Sales)" && !userData?.limited_access) {
+        setEditAllowed(true);
       } else {
         setEditAllowed(false);
       }
@@ -155,7 +156,9 @@ export default function Machine({ id }) {
         setTotal(Number(machine.price || 0));
 
         const payments =
-          machine?.payments?.filter((p) => p.clearance_date !== null) || [];
+          machine?.payments?.filter(
+            (p) => p.clearance_date !== null && p.status === "approved"
+          ) || [];
         setPayments(machine?.payments);
         setReceived(
           payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
@@ -165,6 +168,8 @@ export default function Machine({ id }) {
       return true;
     } catch (e) {
       return null;
+    } finally {
+      if (onLoading) onLoading(false);
     }
   }
 
@@ -190,22 +195,20 @@ export default function Machine({ id }) {
           const currentItem = row.original;
           return (
             <div className="flex items-center ml-2">
-              {currentItem?.status === "rejected" && (
+              {currentItem?.status === "rejected" ? (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>
                       <div>
-                        <TriangleAlert className="text-red-600 h-5 w-5 animate-pulse-opacity" />
+                        <TriangleAlert className="text-red-600 h-5 w-5 animate-pulse-opacity mr-2" />
                       </div>
                     </TooltipTrigger>
-                    <TooltipContent className="bg-red-600 mr-2">
+                    <TooltipContent className="bg-red-600">
                       <p className="text-white">{currentItem?.comment}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              )}
-
-              {currentItem?.status === "approved" && (
+              ) : currentItem?.status === "approved" ? (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>
@@ -215,6 +218,19 @@ export default function Machine({ id }) {
                     </TooltipTrigger>
                     <TooltipContent className="bg-green-600 mr-2">
                       <p className="text-white">Payment verified</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <div>
+                        <Info className="text-orange-600 h-5 w-5 animate-pulse-opacity mr-2" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-orange-600">
+                      <p className="text-white">Need verification</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -404,23 +420,224 @@ export default function Machine({ id }) {
   async function deleteMachine() {
     if (!id) return;
     setDeleteLoading(true);
-    axios.delete(`/machine/${id}`).then(() => {
+    axios.delete(`/${UserState.value.data?.id}/machine/${id}`).then(() => {
       const trimmedUrl = pathname.split("/").slice(0, -1).join("/");
       router.replace(trimmedUrl);
     });
   }
 
+  const ClientCard = memo(({ data, payment, machine, children }) => {
+    const [showAlert, setShowAlert] = useState(false);
+    useEffect(() => {
+      if (machine) {
+        const payments = machine.payments;
+        const result = findDuplicateNotes(payments);
+        if (result.length > 0) {
+          setShowAlert(true);
+        } else {
+          setShowAlert(false);
+        }
+      }
+    }, [machine]);
+
+    function findDuplicateNotes(array) {
+      const noteMap = new Map();
+      const duplicates = [];
+
+      for (const item of array) {
+        if (noteMap.has(item.note)) {
+          duplicates.push(item.note);
+        } else {
+          noteMap.set(item.note, true);
+        }
+      }
+
+      return [...new Set(duplicates)];
+    }
+
+    return (
+      <Card className="bg-gray-100 dark:bg-gray-900 rounded-lg shadow-md p-4 w-full">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center justify-between">
+          <div className="hidden md:block" />
+          <div className="flex flex-row flex-wrap gap-2 items-center">
+            {data?.name || "Customer Name"}
+            <span className="text-gray-500 text-sm">
+              {data?.owner && `(${data.owner})`}
+            </span>
+          </div>
+          {showAlert ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <div>
+                    <Siren className="text-red-600 h-8 w-8 animate-pulse-opacity" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="bg-red-600 mr-2">
+                  <p className="text-white">Duplicate TID found</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <div />
+          )}
+        </h2>
+        <h2 className="text-md font-bold text-primary dark:text-white mb-4 flex items-center justify-center">
+          Manager {machine?.sell_by_name || "NA"}
+        </h2>
+
+        <div className="flex flex-1 gap-6">
+          <Card className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <CardContent>
+              <div className="flex gap-2 text-sm items-center">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                  Machine Information
+                </h3>
+                {machine?.status && (
+                  <div>
+                    <Badge variant={"secondary"}>{machine?.status}</Badge>
+                  </div>
+                )}
+              </div>
+              {machine ? (
+                <div className="text-gray-600 dark:text-gray-300 text-sm flex flex-col gap-2">
+                  <div className="flex items-start gap-2">
+                    <Wrench className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
+                    <span>
+                      Model:{" "}
+                      <span className="font-medium">
+                        {machine.serial_no || "N/A"}
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
+                    <span>
+                      Power:{" "}
+                      <span className="font-medium">
+                        {machine.power || "N/A"}
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
+                    <span>
+                      Source:{" "}
+                      <span className="font-medium">
+                        {machine.source || "N/A"}
+                      </span>
+                    </span>
+                  </div>
+
+                  {(machine.order_no_arr && machine.order_no_arr.length > 0
+                    ? machine.order_no_arr
+                    : ["N/A"]
+                  ).map((item, index) => (
+                    <div className="flex items-start gap-2" key={index}>
+                      <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
+                      <span>
+                        Order No: <span className="font-medium">{item}</span>
+                      </span>
+                    </div>
+                  ))}
+
+                  <div className="flex items-start gap-2">
+                    <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
+                    <span>
+                      Contract:{" "}
+                      <span className="font-medium">
+                        {machine.contract_date
+                          ? moment(machine.contract_date).format("YYYY-MM-DD")
+                          : "N/A"}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400">
+                  No machine data available
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <CardContent>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                Billing Summary
+              </h3>
+
+              <div className="flex flex-col  sm:flex-row gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 mt-2 justify-between flex-wrap">
+                <div className="flex flex-col">
+                  <p>
+                    <strong>Bill:</strong>
+                  </p>
+                  <p className="font-bold">
+                    {" "}
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "PKR",
+                    }).format(payment[0] || 0)}
+                  </p>
+                </div>
+                <div className="flex flex-col">
+                  <p>
+                    <strong>Received:</strong>
+                  </p>
+                  <p className="text-green-600 font-bold">
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "PKR",
+                    }).format(payment[1] || 0)}
+                  </p>
+                </div>
+                <div className="flex flex-col">
+                  <p>
+                    <strong>Balance:</strong>
+                  </p>
+                  <p className="text-red-600 font-bold">
+                    {" "}
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "PKR",
+                    }).format(payment[0] - payment[1] || 0)}
+                  </p>
+                </div>
+              </div>
+
+              {machine?.speed_money && (
+                <>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mt-3">
+                    Speed Money
+                  </h3>
+                  <div className="flex flex-col">
+                    <p>Amount: {machine?.speed_money_amount}</p>
+                    <p>{machine?.speed_money_note}</p>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {children}
+        </div>
+      </Card>
+    );
+  });
+
   return (
-    <PageContainer scrollable={isMobile}>
-      <div className="flex flex-1 flex-col space-y-4">
-        <ClientCard
-          data={data?.customer || null}
-          machine={data?.machine || null}
-          payment={[total, received]}
-        />
+    <div className="flex flex-1 flex-col space-y-4">
+      <ClientCard
+        data={data?.customer || null}
+        machine={data?.machine || null}
+        payment={[total, received]}
+      >
         {data && (
-          <div className="flex gap-2 flex-wrap">
+          <div className="w-[150px] shrink-0 flex flex-col gap-2">
             <Button
+              size="sm"
               onClick={() => {
                 if (!editAllowed) {
                   toast({
@@ -438,6 +655,7 @@ export default function Machine({ id }) {
 
             {data?.machine && !data?.machine?.payment_lock && (
               <Button
+                size="sm"
                 onClick={() => {
                   if (!editAllowed) {
                     toast({
@@ -458,6 +676,7 @@ export default function Machine({ id }) {
 
             {payments.length > 0 && (
               <Button
+                size="sm"
                 onClick={() => {
                   handleDownloadLedger();
                 }}
@@ -467,6 +686,7 @@ export default function Machine({ id }) {
             )}
             {editAllowed && (
               <Button
+                size="sm"
                 onClick={async () => {
                   setZipDwonloading(true);
                   await downloadCustomerZip(data);
@@ -480,277 +700,89 @@ export default function Machine({ id }) {
             {(UserState.value.data?.designation === "Owner" ||
               UserState.value.data?.full_access) &&
               !data?.machine?.payment_lock && (
-                <Button variant="destructive" onClick={deleteMachine}>
+                <Button size="sm" variant="destructive" onClick={deleteMachine}>
                   {deleteLoading && <Spinner />} Delete
                 </Button>
               )}
-
-            <AddPayment
-              customer_id={data?.customer?.id}
-              visible={addPayment}
-              onClose={setAddPayment}
-              machine_id={id}
-              onRefresh={async () => await fetchData(id)}
-            />
-            {selectedPayment && (
-              <EditPayment
-                customer_id={data?.customer?.id}
-                visible={editPayment}
-                onClose={(val) => {
-                  setEditPayment(val);
-                  setSelectedPayment(null);
-                }}
-                machine_id={id}
-                data={selectedPayment}
-                onRefresh={async () => await fetchData(id)}
-              />
-            )}
           </div>
         )}
-        <div
-          className={`flex flex-1 ${isMobile ? "min-h-[600px]" : "min-h-auto"}`}
-        >
-          <PageTable
-            columns={columns}
-            data={payments}
-            totalItems={payments.length}
-            disableInput={true}
-            onRowClick={(val) => {}}
-          />
-        </div>
-        <EditMachine
-          visible={editMachine}
-          onClose={setEditMachine}
-          machine_id={id}
-          onRefresh={async () => await fetchData(id)}
-          data={data?.machine || {}}
-        />
-        <ConfimationDialog
-          open={showConfirmation}
-          title={"Are you sure you want to delete?"}
-          description={"Your action will remove branch expense from the system"}
-          onPressYes={() => console.log("press yes")}
-          onPressCancel={() => setShowConfirmation(false)}
-        />
-        <ImageSheet
-          payment_lock={imageURL?.payment_lock}
-          editAllowed={editAllowed}
-          visible={visible}
-          onClose={() => {
-            setVisible(false);
-            setImageURL(null);
-          }}
-          img={imageURL?.image || null}
-          note={imageURL?.note || null}
-          remarks={imageURL?.remarks || null}
-          id={imageURL?.id}
-          onRefresh={async () => {
-            await fetchData(id);
-            return true;
-          }}
-        />
-        <ViewImagesSheet
-          editAllowed={editAllowed}
-          visible={imagesVisible}
-          data={data?.machine || {}}
-          customer_id={data?.customer?.id}
-          onClose={() => setImagesVisible(false)}
-          onRefresh={async () => await fetchData(id)}
+      </ClientCard>
+
+      <div className={`flex flex-1`}>
+        <PageTable
+          columns={columns}
+          data={payments}
+          totalItems={payments.length}
+          disableInput={true}
+          onRowClick={(val) => {}}
         />
       </div>
-    </PageContainer>
+      <EditMachine
+      base={base}
+        visible={editMachine}
+        onClose={setEditMachine}
+        machine_id={id}
+        onRefresh={async () => await fetchData(id)}
+        data={data?.machine || {}}
+      />
+      <ConfimationDialog
+        open={showConfirmation}
+        title={"Are you sure you want to delete?"}
+        description={"Your action will remove branch expense from the system"}
+        onPressYes={() => console.log("press yes")}
+        onPressCancel={() => setShowConfirmation(false)}
+      />
+      <ImageSheet
+        payment_lock={imageURL?.payment_lock}
+        editAllowed={editAllowed}
+        visible={visible}
+        onClose={() => {
+          setVisible(false);
+          setImageURL(null);
+        }}
+        img={imageURL?.image || null}
+        note={imageURL?.note || null}
+        remarks={imageURL?.remarks || null}
+        id={imageURL?.id}
+        onRefresh={async () => {
+          await fetchData(id);
+          return true;
+        }}
+      />
+      <ViewImagesSheet
+        editAllowed={editAllowed}
+        visible={imagesVisible}
+        data={data?.machine || {}}
+        customer_id={data?.customer?.id}
+        onClose={() => setImagesVisible(false)}
+        onRefresh={async () => await fetchData(id)}
+      />
+
+      <AddPayment
+      base={base}
+        customer_id={data?.customer?.id}
+        visible={addPayment}
+        onClose={setAddPayment}
+        machine_id={id}
+        onRefresh={async () => await fetchData(id)}
+      />
+      {selectedPayment && (
+        <EditPayment
+        base={base}
+          customer_id={data?.customer?.id}
+          visible={editPayment}
+          onClose={(val) => {
+            setEditPayment(val);
+            setSelectedPayment(null);
+          }}
+          machine_id={id}
+          data={selectedPayment}
+          onRefresh={async () => await fetchData(id)}
+        />
+      )}
+    </div>
   );
 }
-
-const ClientCard = memo(({ data, payment, machine, manager }) => {
-  const [showAlert, setShowAlert] = useState(false);
-  useEffect(() => {
-    if (machine) {
-      const payments = machine.payments;
-      const result = findDuplicateNotes(payments);
-      if (result.length > 0) {
-        setShowAlert(true);
-      } else {
-        setShowAlert(false);
-      }
-    }
-  }, [machine]);
-
-  function findDuplicateNotes(array) {
-    const noteMap = new Map();
-    const duplicates = [];
-
-    for (const item of array) {
-      if (noteMap.has(item.note)) {
-        duplicates.push(item.note);
-      } else {
-        noteMap.set(item.note, true);
-      }
-    }
-
-    return [...new Set(duplicates)];
-  }
-
-  return (
-    <Card className="bg-gray-100 dark:bg-gray-900 rounded-lg shadow-md p-4 w-full">
-      {/* Company Name */}
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center justify-between">
-        <div className="hidden md:block" />
-        <div className="flex flex-row flex-wrap gap-2 items-center">
-          {data?.name || "Customer Name"}
-          <span className="text-gray-500 text-sm">
-            {data?.owner && `(${data.owner})`}
-          </span>
-        </div>
-        {showAlert ? (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <div>
-                  <Siren className="text-red-600 h-8 w-8 animate-pulse-opacity" />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent className="bg-red-600 mr-2">
-                <p className="text-white">Duplicate TID found</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ) : (
-          <div />
-        )}
-      </h2>
-      <h2 className="text-md font-bold text-primary dark:text-white mb-4 flex items-center justify-center">
-        Manager {machine?.sell_by_name || "NA"}
-      </h2>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Machine Info */}
-        <Card className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <CardContent>
-            <div className="flex gap-2 text-sm items-center">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                Machine Information
-              </h3>
-              {machine?.status && (
-                <div>
-                  <Badge variant={"secondary"}>{machine?.status}</Badge>
-                </div>
-              )}
-            </div>
-            {machine ? (
-              <div className="text-gray-600 dark:text-gray-300 text-sm space-y-2">
-                <p>
-                  <Wrench className="inline h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-                  Model:{" "}
-                  <span className="font-medium">
-                    {machine.serial_no || "N/A"}
-                  </span>
-                </p>
-                <p>
-                  <ClipboardList className="inline h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-                  Power:{" "}
-                  <span className="font-medium">{machine.power || "N/A"}</span>
-                </p>
-                <p>
-                  <ClipboardList className="inline h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-                  Source:{" "}
-                  <span className="font-medium">{machine.source || "N/A"}</span>
-                </p>
-                {machine.order_no_arr && machine.order_no_arr.length === 0 ? (
-                  <p>
-                    <ClipboardList className="inline h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-                    Order No: <span className="font-medium">{"N/A"}</span>
-                  </p>
-                ) : (
-                  machine.order_no_arr.map((item, index) => (
-                    <p key={index}>
-                      <ClipboardList className="inline h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-                      Order No:{" "}
-                      <span className="font-medium">{item || "N/A"}</span>
-                    </p>
-                  ))
-                )}
-
-                <p>
-                  <ClipboardList className="inline h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-                  Contract Date:{" "}
-                  <span className="font-medium">
-                    {machine.contract_date
-                      ? moment(machine.contract_date).format("DD/MM/YYYY")
-                      : "N/A"}
-                  </span>
-                </p>
-              </div>
-            ) : (
-              <p className="text-gray-500 dark:text-gray-400">
-                No machine data available
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Billing Information */}
-        <Card className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <CardContent>
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Billing Summary
-            </h3>
-
-            <div className="flex flex-col  sm:flex-row gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 mt-2 justify-between flex-wrap">
-              <div className="flex flex-col">
-                <p>
-                  <strong>Bill:</strong>
-                </p>
-                <p className="font-bold">
-                  {" "}
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "PKR",
-                  }).format(payment[0] || 0)}
-                </p>
-              </div>
-              <div className="flex flex-col">
-                <p>
-                  <strong>Received:</strong>
-                </p>
-                <p className="text-green-600 font-bold">
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "PKR",
-                  }).format(payment[1] || 0)}
-                </p>
-              </div>
-              <div className="flex flex-col">
-                <p>
-                  <strong>Balance:</strong>
-                </p>
-                <p className="text-red-600 font-bold">
-                  {" "}
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "PKR",
-                  }).format(payment[0] - payment[1] || 0)}
-                </p>
-              </div>
-            </div>
-
-            {machine?.speed_money && (
-              <>
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mt-3">
-                  Speed Money
-                </h3>
-                <div className="flex flex-col">
-                  <p>Amount: {machine?.speed_money_amount}</p>
-                  <p>{machine?.speed_money_note}</p>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </Card>
-  );
-});
 
 const ImageSheet = ({
   payment_lock,
@@ -768,6 +800,7 @@ const ImageSheet = ({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
   const [rotation, setRotation] = useState(0);
+  const {state : UserState} = useContext(UserContext)
   const { toast } = useToast();
 
   useEffect(() => {
@@ -804,7 +837,7 @@ const ImageSheet = ({
         await DeleteFromStorage(img);
       }
 
-      await axios.delete(`/payment/${id}`);
+      await axios.delete(`/${UserState.value.data?.id}/payment/${id}`);
       await onRefresh(id);
       handleClose(false);
       toast({ title: "Payment Deleted" });
@@ -963,6 +996,7 @@ const ViewImagesSheet = ({
   const [contractPdfImages, setContractPdfImages] = useState([]);
   const [otherPdfImages, setOtherPdfImages] = useState([]);
   const [addImageVisible, setAddImageVisible] = useState(false);
+  const {state : UserState} = useContext(UserContext)
   const { toast } = useToast();
 
   const contractImages = useMemo(() => data?.contract_images_png || [], [data]);
@@ -1037,10 +1071,12 @@ const ViewImagesSheet = ({
   const handleDeleteImage = async (imgUrl, typeKey) => {
     try {
       if (!imgUrl || !typeKey) return;
-
-      const storagePath = imgUrl.includes("https")
-        ? getStoragePathFromUrl(imgUrl)
-        : imgUrl;
+      let storagePath = "";
+      if (imgUrl.includes("https")) {
+        storagePath = "";
+      } else {
+        storagePath = imgUrl;
+      }
 
       if (storagePath) {
         await DeleteFromStorage(storagePath);
@@ -1053,7 +1089,7 @@ const ViewImagesSheet = ({
         formData.handover_user_id = null;
       }
 
-      await axios.put(`/machine/${data.id}`, formData);
+      await axios.put(`/${UserState.value.data?.id}/machine/${data.id}`, formData);
 
       toast({ title: "Image deleted successfully." });
       await onRefresh();
@@ -1289,6 +1325,7 @@ const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }) => {
 
 const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
   const [loading, setLoading] = useState(false);
+  const {state : UserState} = useContext(UserContext)
   const formSchema = z
     .object({
       note: z.string().min(1, { message: "Type is required." }),
@@ -1363,7 +1400,7 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
     }
 
     await axios
-      .put(`/machine/${machine.id}`, formData)
+      .put(`/${UserState.value.data?.id}/machine/${machine.id}`, formData)
       .then(async (response) => {
         await onRefresh();
         handleClose(false);

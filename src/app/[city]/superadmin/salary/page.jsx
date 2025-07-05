@@ -161,11 +161,11 @@ const SalaryComponent = () => {
 
   async function handleGenerate() {
     setLoading(true);
-    const response = await axios.get("/settings");
+    const response = await axios.get(`/${UserState.value.data?.id}/settings`);
     setForm({ ...form, late_fine_per_day: response.data.late_fine * -1 });
     axios
       .get(
-        `/salary?user=${user}&start=${startDate}&end=${endDate}&month=${selectedMonth}&year=${selectedYear}`
+        `/${UserState.value.data?.id}/salary?user=${user}&start=${startDate}&end=${endDate}&month=${selectedMonth}&year=${selectedYear}`
       )
       .then((response) => {
         if (
@@ -403,7 +403,7 @@ const SalaryComponent = () => {
       monthData.push({
         date: date.format("YYYY-MM-DD"),
         day: date.format("dddd"),
-        status: "Absent", // Default status
+        status: "Absent",
         time_in: null,
         time_out: null,
       });
@@ -422,7 +422,6 @@ const SalaryComponent = () => {
           ? moment(new Date(record.time_out))
           : null;
 
-        // Check if user is late
         let isLate = checkIn.isAfter(
           moment(day.date + " 10:10", "YYYY-MM-DD HH:mm")
         );
@@ -440,6 +439,8 @@ const SalaryComponent = () => {
 
     setAttendanceData([...finalData]);
 
+    
+
     if (condition) {
       const totalPresent = finalData.filter(
         (item) => item.status === "Present" || item.status === "Late"
@@ -447,6 +448,7 @@ const SalaryComponent = () => {
       const lateCount = finalData.filter(
         (item) => item.status === "Late"
       ).length;
+
 
       setForm((prevState) => ({
         ...prevState,
@@ -460,7 +462,7 @@ const SalaryComponent = () => {
     setSaveLoading(true);
 
     axios
-      .post(`/salary`, {
+      .post(`/${UserState.value.data?.id}/salary`, {
         user_id: user,
         year: selectedYear,
         month: selectedMonth,
@@ -481,12 +483,12 @@ const SalaryComponent = () => {
         toast({ title: "Salary saved" });
         if (data?.commission) {
           data.commission.map((item) => {
-            axios.put(`/commission/${item.id}`, { commission_issued: true });
+            axios.put(`/${UserState.value.data?.id}/commission/${item.id}`, { commission_issued: true });
           });
         }
         if (data?.lead_commission) {
           data.lead_commission.map((item) => {
-            axios.put(`/commission/${item.id}`, {
+            axios.put(`/${UserState.value.data?.id}/commission/${item.id}`, {
               lead_commission_issued: true,
             });
           });
@@ -500,7 +502,7 @@ const SalaryComponent = () => {
   async function handleAccounts() {
     setAccountsLoading(true);
     axios
-      .get(`/accounts?month=${selectedMonth}&year=${selectedYear}`)
+      .get(`/${UserState.value.data?.id}/accounts?month=${selectedMonth}&year=${selectedYear}`)
       .then(async (response) => {
         const apiData = response.data;
         const totalPayments = apiData.reduce(
@@ -1551,7 +1553,7 @@ const RecordComponent = () => {
 
   async function fetchData() {
     axios
-      .get(`/record`)
+      .get(`/${UserState.value.data?.id}/record`)
       .then((response) => {
         setData(response.data);
       })
@@ -1627,7 +1629,7 @@ const RecordComponent = () => {
     if (!id) return;
     setLoading(true);
     axios
-      .delete(`/record/${id}`)
+      .delete(`/${UserState.value.data?.id}/record/${id}`)
       .then(async () => {
         await fetchData();
       })

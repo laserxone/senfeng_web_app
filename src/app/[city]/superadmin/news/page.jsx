@@ -33,7 +33,7 @@ export default function NewsPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/news");
+      const response = await axios.get(`/${UserState.value.data?.id}/news`);
       setNewsList(response.data);
     } catch (error) {
       console.error("Fetch Error:", error);
@@ -45,7 +45,7 @@ export default function NewsPage() {
   const addNews = async () => {
     setLoading(true);
     try {
-      await axios.post("/news", {
+      await axios.post(`/${UserState.value.data?.id}/news`, {
         news: newsText,
         start_date: startDate,
         end_date: endDate,
@@ -64,7 +64,7 @@ export default function NewsPage() {
 
     async function handleDelete(id) {
     try {
-      await axios.delete(`/news/${id}`);
+      await axios.delete(`/${UserState.value.data?.id}/news/${id}`);
       await fetchData();
     } catch (error) {
       console.error("Submit Error:", error);

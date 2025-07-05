@@ -182,7 +182,7 @@ export default function Attendance({ passingData, onFilterReturn, onRefresh }) {
         onPressYes={() => console.log("press yes")}
         onPressCancel={() => setShowConfirmation(false)}
       />
-      <div className="flex flex-1 min-h-[600px]">
+      <div className="flex flex-1">
         <PageTable
           
           columns={columns}

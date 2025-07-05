@@ -10,13 +10,14 @@ import { UploadImage } from "@/lib/uploadFunction";
 import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getDownloadURL, ref } from "firebase/storage";
-import { Loader2, Trash } from "lucide-react";
+import { Trash } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { RequiredStar } from "./RequiredStar";
+import AppCalendar from "./appCalendar";
 import { CitiesSearch } from "./cities-search";
 import Dropzone from "./dropzone";
 import { IndustrySearch } from "./industry-search";
@@ -44,9 +45,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { UserSearch } from "./user-search";
-import AppCalendar from "./appCalendar";
 import Spinner from "./ui/spinner";
+import { UserSearch } from "./user-search";
 
 const EditCustomerDialog = ({
   onRefresh,
@@ -55,6 +55,7 @@ const EditCustomerDialog = ({
   data,
   ownership,
   onClickDelete,
+  base,
 }) => {
   const [numbers, setNumbers] = useState([""]);
   const [numberError, setNumberError] = useState("");
@@ -65,6 +66,10 @@ const EditCustomerDialog = ({
   const [selectedNumber, setSelectedNumber] = useState(["+92"]);
   const [imageUrl, setImageUrl] = useState(null);
   const [originalUrl, setOriginalUrl] = useState(null);
+
+  const canDelete =
+    UserState.value.data?.designation === "Owner" ||
+    UserState.value.data?.full_access;
 
   const formSchema = z.object({
     company: z.string().min(1, { message: "" }), // Optional field without min(1)
@@ -212,10 +217,7 @@ const EditCustomerDialog = ({
     };
 
     try {
-      let backendRoute = `/customer/${data.id}?userid=${UserState.value.data?.id}`;
-      if (data.ownership !== values.ownership) {
-        backendRoute = `/customer/${data.id}?notify=true&userid=${UserState.value.data?.id}`;
-      }
+      let backendRoute = `/${UserState.value.data?.id}/customer/${data.id}`;
       if (data.image && !imageUrl) {
         DeleteFromStorage(data.image);
         const response = await axios.put(backendRoute, {
@@ -282,8 +284,8 @@ const EditCustomerDialog = ({
     setCustomerInfo([]);
     setChecking(true);
     try {
-      const response = await axios.post(`/check-number`, { number });
-      const finalData = response.data.filter((item) => !item.id === data.id);
+      const response = await axios.post(`/${UserState.value.data?.id}/check-number`, { number });
+      const finalData = response.data.filter((item) => item.id !== data.id);
       setCustomerInfo(finalData);
     } catch (error) {
       console.log("Error checking number:", error);
@@ -737,19 +739,18 @@ const EditCustomerDialog = ({
                   </Button>
                 </form>
               </Form>
-              {UserState.value.data &&
-                UserState.value.data?.customer_delete_access && (
-                  <Button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      onClickDelete();
-                    }}
-                    variant="destructive"
-                    className="mt-2 w-full"
-                  >
-                    Delete
-                  </Button>
-                )}
+              {canDelete && (
+                <Button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onClickDelete();
+                  }}
+                  variant="destructive"
+                  className="mt-2 w-full"
+                >
+                  Delete
+                </Button>
+              )}
             </div>
           </ScrollArea>
         </div>

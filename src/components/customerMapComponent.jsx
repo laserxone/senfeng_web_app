@@ -83,7 +83,7 @@ const CustomerMapComponent = ({ data }) => {
                         borderRadius: 5,
                       }}
                     >
-                      <div>{selectedMarker?.company}</div>
+                      <div>{selectedMarker?.name || selectedMarker?.owner}</div>
                       <div>{selectedMarker?.location}</div>
                     </div>
                   </InfoWindow>

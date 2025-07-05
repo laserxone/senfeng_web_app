@@ -48,7 +48,7 @@ export default function Page() {
   async function fetchData() {
     return new Promise((resolve, reject) => {
       axios
-        .get(`/machine-bookings`)
+        .get(`/${UserState.value.data?.id}/machine-bookings`)
         .then((response) => {
           const apiData = response.data;
           const enriched = apiData.map((item) => {
@@ -263,6 +263,7 @@ const CustomerSelectionDialog = ({
 }) => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
+  const {state : UserState} = useContext(UserContext)
 
   function handleClose(val) {
     onClose(val);
@@ -274,7 +275,7 @@ const CustomerSelectionDialog = ({
     setLoading(true);
 
     axios
-      .put(`machine-bookings/${machine_id}`, {
+      .put(`/${UserState.value.data?.id}/machine-bookings/${machine_id}`, {
         customer_id: selectedCustomer,
         status: "Booked",
         booked: true,

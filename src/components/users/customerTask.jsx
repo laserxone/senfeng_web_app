@@ -1,40 +1,17 @@
 "use client";
-import { TIMEZONE } from "@/constants/data";
 import {
   ArrowUpDown,
   BadgeCheck,
-  CircleDashed,
-  Filter,
-  Loader2,
+  CircleDashed
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useContext, useEffect, useState } from "react";
+import { useState } from "react";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import PageTable from "@/components/app-table";
-import { CustomerSearch } from "@/components/customer-search";
-import { Heading } from "@/components/ui/heading";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Sheet,
   SheetContent,
@@ -45,11 +22,7 @@ import {
 } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
-import momentT from "moment-timezone";
-import FilterSheet from "./filterSheet";
-import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
 
 const getSchema = (isClientSelected) =>
@@ -67,8 +40,7 @@ export default function CustomerTask({
   onFetchData,
   data,
 }) {
-  const { state: UserState } = useContext(UserContext);
-
+ 
   const [visible, setVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState({});
 
@@ -182,7 +154,7 @@ export default function CustomerTask({
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className={`flex flex-1 ${height}`}>
+      <div className="flex flex-1">
         <PageTable
           columns={columns}
           data={data}
@@ -216,15 +188,16 @@ const TaskDetail = ({
   onDelete,
   onMark,
   user_id,
+  base
 }) => {
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const { toast } = useToast();
-
+ 
   async function handleUpdateStatus(values) {
     setLoading(true);
     axios
-      .put(`/user/${user_id}/task/${detail.id}`, {
+      .put(`/${user_id}/task/${detail.id}`, {
         id: values.id,
         status: values.status,
       })

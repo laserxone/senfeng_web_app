@@ -1,6 +1,6 @@
 "use client";
 import AppCalendar from "@/components/appCalendar";
-import ProfilePicture from "@/components/ProfilePicture";
+import ProfilePictureTeam from "@/components/ProfilePicture";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -73,7 +73,7 @@ export default function Page({ params }) {
   async function fetchData() {
     const { id } = await params;
     axios
-      .get(`/user?user=${id}`)
+      .get(`/${UserState.value.data?.id}/user?user=${id}`)
       .then((response) => {
         if (response.data.length > 0) {
           const apiData = response.data.length > 0 ? response.data[0] : {};
@@ -149,7 +149,7 @@ export default function Page({ params }) {
     if (!employeeId) return;
     setDataLoading(true);
     axios
-      .put(`/user/${employeeId}`, {
+      .put(`/${UserState.value.data?.id}/user/${employeeId}`, {
         basic_salary: form?.basic_salary || 0,
         monthly_target: form?.monthly_target || 0,
         note: form?.note || "",
@@ -246,7 +246,7 @@ export default function Page({ params }) {
         <Card>
           <CardContent>
             <div className="flex items-center gap-4 border-b pb-4 mb-6 mt-2">
-              <ProfilePicture
+              <ProfilePictureTeam
                 img={fixedData?.dp}
                 name={fixedData?.name}
                 loading={loading}

@@ -1,13 +1,27 @@
 // components/ComplaintForm.js
 "use client";
 
-import { useContext, useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
-import { ScrollArea } from "./ui/scroll-area";
-import { Card, CardContent } from "./ui/card";
+import { Input } from "@/components/ui/input";
+import axios from "@/lib/axios";
+import { UserContext } from "@/store/context/UserContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { MapPin, MapPinOff } from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useContext, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { CustomerSearch } from "./customer-search";
+import { RequiredStar } from "./RequiredStar";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "./ui/accordion";
+import { Checkbox } from "./ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import {
   Form,
   FormControl,
@@ -16,29 +30,10 @@ import {
   FormMessage,
 } from "./ui/form";
 import { Heading } from "./ui/heading";
-import FilterSheet from "./users/filterSheet";
-import { Filter, MapPin, MapPinOff, Trash2 } from "lucide-react";
-import AppCalendar from "./appCalendar";
+import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
-import { CustomerSearch } from "./customer-search";
-import { UserContext } from "@/store/context/UserContext";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { RequiredStar } from "./RequiredStar";
-import axios from "@/lib/axios";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "./ui/accordion";
-import Link from "next/link";
 import { UserSearch } from "./user-search";
-import moment from "moment";
 import { MyImg } from "./users/addVisit";
-import { Checkbox } from "./ui/checkbox";
 
 const formSchema = z.object({
   title: z.string().min(1, "Required"),
@@ -52,7 +47,7 @@ const formSchemaEngineer = z.object({
   engineer_id: z.number({ message: "Engineer is required" }),
 });
 
-export default function ComplaintSystem() {
+export default function ComplaintSystem({ base }) {
   const [loading, setLoading] = useState(false);
 
   const { state: UserState } = useContext(UserContext);
@@ -68,9 +63,8 @@ export default function ComplaintSystem() {
   async function fetchData() {
     setLoading(true);
     axios
-      .get("/complaint")
+      .get(`/${UserState.value.data?.id}/complaint`)
       .then((response) => {
-        console.log(response.data);
         setData(response.data);
       })
       .finally(() => {
@@ -85,7 +79,7 @@ export default function ComplaintSystem() {
   async function handleCloseComplaint(id) {
     if (!id) return;
     setCloseLoading(id);
-    await axios.put(`/complaint`, {
+    await axios.put(`/${UserState.value.data?.id}/complaint`, {
       id: id,
       status: "completed",
     });
@@ -163,8 +157,8 @@ export default function ComplaintSystem() {
                           disabled={!!closeLoading}
                           onClick={() => handleCloseComplaint(complaint.id)}
                         >
-                          {closeLoading === complaint.id && <Spinner />}Close
-                          Complaint
+                          {closeLoading === complaint.id && <Spinner />}
+                          Close Complaint
                         </Button>
                       )}
                     </div>
@@ -286,6 +280,7 @@ export default function ComplaintSystem() {
         visible={visible}
         onClose={setVisible}
         onRefresh={fetchData}
+        base={base}
       />
 
       <AssignEngineerModal
@@ -293,13 +288,15 @@ export default function ComplaintSystem() {
         complaint_id={selectedComplaint}
         onClose={() => setSelectedComplaint(null)}
         onRefresh={fetchData}
+        base={base}
       />
     </div>
   );
 }
 
-const AddNewComplaint = ({ visible, onClose, onRefresh }) => {
+const AddNewComplaint = ({ visible, onClose, onRefresh, base }) => {
   const [loading, setLoading] = useState(false);
+  const { state: UserState } = useContext(UserContext);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -315,10 +312,13 @@ const AddNewComplaint = ({ visible, onClose, onRefresh }) => {
   const onSubmit = async (values) => {
     setLoading(true);
     try {
-      const response = await axios.post(`/complaint`, {
-        ...values,
-        status: "pending",
-      });
+      const response = await axios.post(
+        `/${UserState.value.data?.id}/complaint`,
+        {
+          ...values,
+          status: "pending",
+        }
+      );
       await onRefresh();
       handleClose(false);
     } finally {
@@ -453,7 +453,13 @@ const AddNewComplaint = ({ visible, onClose, onRefresh }) => {
   );
 };
 
-const AssignEngineerModal = ({ visible, onClose, onRefresh, complaint_id }) => {
+const AssignEngineerModal = ({
+  visible,
+  onClose,
+  onRefresh,
+  complaint_id,
+  base,
+}) => {
   const [loading, setLoading] = useState(false);
   const { state: UserState } = useContext(UserContext);
 
@@ -467,11 +473,14 @@ const AssignEngineerModal = ({ visible, onClose, onRefresh, complaint_id }) => {
   const onSubmit = async (values) => {
     setLoading(true);
     try {
-      const response = await axios.post(`/complaint-assignments`, {
-        ...values,
-        complaint_id: complaint_id,
-        assigned_by: UserState.value.data.id,
-      });
+      const response = await axios.post(
+        `/${UserState.value.data?.id}/complaint-assignments`,
+        {
+          ...values,
+          complaint_id: complaint_id,
+          assigned_by: UserState.value.data.id,
+        }
+      );
       await onRefresh();
       handleClose(false);
     } finally {

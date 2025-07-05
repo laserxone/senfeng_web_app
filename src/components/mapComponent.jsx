@@ -15,7 +15,7 @@ const MapComponent = () => {
 
   useEffect(() => {
     async function fetchData() {
-      axios.get(`/locations`).then((response) => {
+      axios.get(`/${UserState.value.data?.id}/locations`).then((response) => {
         setData(response.data);
       });
     }

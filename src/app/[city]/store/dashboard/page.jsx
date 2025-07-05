@@ -12,6 +12,7 @@ import moment from "moment";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
 import NewsTicker from "@/components/newsTicker";
+import { ProfilePicture } from "@/components/users/ProfilePicture";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -33,7 +34,7 @@ export default function Page() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/user/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+          `/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           setReimbursementData(response.data);
@@ -50,7 +51,7 @@ export default function Page() {
     return new Promise((res, rej) => {
       axios
         .get(
-          `/user/${UserState.value.data.id}/attendance?start_date=${startDate}&end_date=${endDate}`
+          `/${UserState.value.data.id}/attendance?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           if (response.data.length > 0) {
@@ -76,7 +77,7 @@ export default function Page() {
 
   async function fetchData() {
     axios
-      .get(`/user/${UserState.value.data?.id}`)
+      .get(`/${UserState.value.data?.id}/dashboard`)
       .then((response) => {
         setData(response.data);
       });
@@ -151,7 +152,7 @@ export default function Page() {
           <TabsContent value="salary">
             <Card>
               <CardContent className="pt-2">
-                <SalaryRecord />
+                <SalaryRecord id={UserState.value.data?.id}/>
               </CardContent>
             </Card>
           </TabsContent>
@@ -161,28 +162,4 @@ export default function Page() {
   );
 }
 
-const ProfilePicture = ({ img, name }) => {
-  const [localImage, setLocalImage] = useState(null);
 
-  useEffect(() => {
-    async function fetchImage() {
-      if (img?.includes("http")) {
-        setLocalImage(img);
-      } else {
-        const imgResult = await GetProfileImage(img);
-        setLocalImage(imgResult);
-      }
-    }
-
-    if (img) {
-      fetchImage();
-    }
-  }, [img]);
-
-  return (
-    <Avatar className="w-24 h-24 mr-4">
-      <AvatarImage src={localImage} alt="Profile Picture" />
-      <AvatarFallback>{name?.substring(0, 2)}</AvatarFallback>
-    </Avatar>
-  );
-};

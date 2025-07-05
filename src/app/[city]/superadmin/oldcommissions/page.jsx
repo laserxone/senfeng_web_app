@@ -44,7 +44,9 @@ export default function Page() {
   async function fetchData() {
     setLoading(true);
     try {
-      const response = await axios.get("/old-commissions");
+      const response = await axios.get(
+        `/${UserState.value.data?.id}/old-commissions`
+      );
       setData(response.data);
     } catch (err) {
       console.error("Failed to fetch data:", err);
@@ -109,6 +111,7 @@ export default function Page() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {customer.machines.map((machine) => (
                     <RenderEachMachine
+                      UserState={UserState}
                       machine={machine}
                       key={machine.sale_id}
                       onReturn={(machineId) => {
@@ -138,7 +141,7 @@ export default function Page() {
   );
 }
 
-const RenderEachMachine = ({ machine, onReturn }) => {
+const RenderEachMachine = ({ machine, onReturn, UserState }) => {
   const [selectedPercentage, setSelectedPercentage] = useState("2");
   const [showManual, setShowManual] = useState(false);
   const [manualNumber, setManualNumber] = useState("");
@@ -166,7 +169,6 @@ const RenderEachMachine = ({ machine, onReturn }) => {
   }, [selectedPercentage, selectedUser, machine, showManual, manualNumber]);
 
   async function handleClearCommission(machine) {
-    console.log(machine);
     setLoading(true);
     const formData = {
       sale_id: machine.sale_id,
@@ -181,7 +183,10 @@ const RenderEachMachine = ({ machine, onReturn }) => {
     };
 
     try {
-      await axios.post("/old-commissions", formData);
+      await axios.post(
+        `/${UserState.value.data?.id}/old-commissions`,
+        formData
+      );
       onReturn(machine.sale_id);
     } finally {
       setLoading(false);

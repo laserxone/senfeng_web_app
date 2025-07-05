@@ -42,6 +42,7 @@ import Spinner from "./ui/spinner";
 import { UserSearch } from "./user-search";
 
 const AddCustomerDialog = ({
+  base,
   onRefresh,
   visible,
   onClose,
@@ -133,7 +134,7 @@ const AddCustomerDialog = ({
   const debouncedSaveData = useCallback(debouncePromise(saveData, 1000), []);
 
   async function saveData(formData) {
-    const response = await axios.post(`/customer`, formData);
+    const response = await axios.post(`/${UserState.value.data?.id}/customer`, formData);
     return response;
   }
 
@@ -235,8 +236,7 @@ const AddCustomerDialog = ({
     setCustomerInfo([]);
     setChecking(true);
     try {
-      const response = await axios.post(`/check-number`, { number });
-
+      const response = await axios.post(`/${UserState.value.data?.id}/check-number`, { number });
       setCustomerInfo(response.data);
     } catch (error) {
       console.log("Error checking number:", error);

@@ -195,7 +195,7 @@ export default function Page() {
     setDataLoading(true);
     return new Promise((resolve, reject) => {
       axios
-        .get(`/task?start_date=${start_date}&end_date=${end_date}&user=${user}`)
+        .get(`/${UserState.value.data?.id}/task?start_date=${start_date}&end_date=${end_date}&user=${user}`)
         .then((response) => {
           const apiData = response.data.map((item) => {
             return { ...item, created_at_time: item.created_at };
@@ -345,7 +345,7 @@ const TaskDetail = ({
   async function handleUpdateStatus(values) {
     setLoading(true);
     axios
-      .put(`/user/${user_id}/task/${detail.id}`, {
+      .put(`/team//user/${user_id}/task/${detail.id}`, {
         id: values.id,
         status: values.status,
       })
@@ -362,7 +362,7 @@ const TaskDetail = ({
   async function handleDelete() {
     setDeleteLoading(true);
     axios
-      .delete(`/user/${user_id}/task/${detail.id}`)
+      .delete(`/${user_id}/task/${detail.id}`)
       .then(() => {
         onClose(false);
         toast({ title: "Task deleted" });
@@ -467,6 +467,7 @@ const AddTask = ({ visible, onClose, onRefresh, assigned_by }) => {
   const [selectedRadio, setSelectedRadio] = useState("office");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const {state : UserState} = useContext(UserContext)
 
   const form = useForm({
     resolver: zodResolver(getSchema(selectedRadio === "client")),
@@ -495,7 +496,7 @@ const AddTask = ({ visible, onClose, onRefresh, assigned_by }) => {
   const onSubmit = (values) => {
     setLoading(true);
     axios
-      .post(`/task`, {
+      .post(`/${UserState.value.data?.id}/task`, {
         task_name: values.task,
         type: values.radio == "office" ? "Office Task" : "Client Task",
         client: values.client,

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Skeleton } from "./ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
-const ProfilePicture = ({ img = "", name = "", loading }) => {
+const ProfilePictureTeam = ({ img = "", name = "", loading }) => {
   const [localImage, setLocalImage] = useState(null);
   
 
@@ -50,4 +50,4 @@ const ProfilePicture = ({ img = "", name = "", loading }) => {
   );
 };
 
-export default ProfilePicture
+export default ProfilePictureTeam

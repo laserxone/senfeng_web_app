@@ -1,12 +1,8 @@
 "use client";
-import {
-  ArrowUpDown
-} from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useContext, useEffect, useState } from "react";
-
-
+import { useContext, useEffect, useMemo, useState } from "react";
 
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
@@ -16,6 +12,12 @@ import { startHolyLoader } from "holy-loader";
 import moment from "moment";
 import { useRouter } from "next/navigation";
 import AddCustomerDialog from "../addCustomer";
+import Spinner from "../ui/spinner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { RequiredStar } from "../RequiredStar";
+import AppCalendar from "../appCalendar";
+import { Checkbox } from "../ui/checkbox";
+import { Input } from "../ui/input";
 
 const tableHeader = [
   {
@@ -44,7 +46,6 @@ export default function CustomerEmployee({
   id,
   customer_data,
   onRefresh,
-  user_id,
   ownership,
   totalCustomerText,
 }) {
@@ -52,33 +53,31 @@ export default function CustomerEmployee({
   const [data, setData] = useState([]);
   const [addCustomer, setAddCustomer] = useState(false);
   const { state: UserState } = useContext(UserContext);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [next, setNext] = useState(null);
+  const [top, setTop] = useState(false);
+  const [satisfactory, setSatisfactory] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    if (id) {
-      fetchData();
-    } else {
+ 
       if (customer_data && customer_data.length > 0) {
         setData(customer_data);
       }
-    }
-  }, [id, customer_data]);
+    
+  }, [customer_data]);
 
-  async function fetchData() {
-    axios.get(`/user/${id}/customer`).then((response) => {
-      const filteredCustomers = response.data.filter(
-        (customer) => !customer.member
-      );
-      setData(filteredCustomers);
-    });
-  }
 
-  const columns = [
-    {
-      accessorKey: "owner",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
+
+  const columns = useMemo(() => {
+    const baseColumns = [
+      {
+        accessorKey: "owner",
+        filterFn: "includesString",
+        header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -86,15 +85,13 @@ export default function CustomerEmployee({
             Owner
             <ArrowUpDown />
           </Button>
-        );
+        ),
+        cell: ({ row }) => <div className="ml-2">{row.getValue("owner")}</div>,
       },
-      cell: ({ row }) => <div className="ml-2">{row.getValue("owner")}</div>,
-    },
-    {
-      accessorKey: "name",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
+      {
+        accessorKey: "name",
+        filterFn: "includesString",
+        header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -102,15 +99,13 @@ export default function CustomerEmployee({
             Company
             <ArrowUpDown />
           </Button>
-        );
+        ),
+        cell: ({ row }) => <div>{row.getValue("name")}</div>,
       },
-      cell: ({ row }) => <div>{row.getValue("name")}</div>,
-    },
-    {
-      accessorKey: "industry",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
+      {
+        accessorKey: "industry",
+        filterFn: "includesString",
+        header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -118,33 +113,27 @@ export default function CustomerEmployee({
             Industry
             <ArrowUpDown />
           </Button>
-        );
+        ),
+        cell: ({ row }) => <div>{row.getValue("industry")}</div>,
       },
-      cell: ({ row }) => <div>{row.getValue("industry")}</div>,
-    },
-
-    {
-      accessorKey: "group",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
+      {
+        accessorKey: "number",
+        filterFn: "includesString",
+        header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Group
+            Number
             <ArrowUpDown />
           </Button>
-        );
+        ),
+        cell: ({ row }) => <div>{row.getValue("number")}</div>,
       },
-      cell: ({ row }) => <div>{row.getValue("group")}</div>,
-    },
-
-    {
-      accessorKey: "location",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
+      {
+        accessorKey: "location",
+        filterFn: "includesString",
+        header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -152,16 +141,13 @@ export default function CustomerEmployee({
             Location
             <ArrowUpDown />
           </Button>
-        );
+        ),
+        cell: ({ row }) => <div>{row.getValue("location")}</div>,
       },
-      cell: ({ row }) => <div>{row.getValue("location")}</div>,
-    },
-
-    {
-      accessorKey: "created_at",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
+      {
+        accessorKey: "created_at",
+        filterFn: "includesString",
+        header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -169,71 +155,80 @@ export default function CustomerEmployee({
             Added
             <ArrowUpDown />
           </Button>
-        );
+        ),
+        cell: ({ row }) => (
+          <div>
+            {moment(new Date(row.getValue("created_at"))).format("YYYY-MM-DD")}
+          </div>
+        ),
       },
-      cell: ({ row }) => (
-        <div>
-          {moment(new Date(row.getValue("created_at"))).format("YYYY-MM-DD")}
-        </div>
-      ),
-    },
+    ];
 
-    // {
-    //   id: "actions",
-    //   cell: ({ row }) => {
-    //     const currentItem = row.original;
+    if (
+      UserState.value.data?.designation === "Customer Relationship Manager" ||
+      UserState.value.data?.designation === "Social Media Manager"
+    ) {
+      baseColumns.push({
+        id: "actions",
+        cell: ({ row }) => {
+          const currentItem = row.original;
+          return (
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedCustomer(currentItem);
+                setShowFeedback(true);
+              }}
+            >
+              Take Feedback
+            </Button>
+          );
+        },
+      });
+    }
 
-    //     return (
-    //       <Link
-    //         href={`/${UserState.value.data?.base_route}/customer${currentItem.id}`}
-    //       >
-    //         <ChevronsRight />
-    //       </Link>
-    //       // <DropdownMenu>
-    //       //   <DropdownMenuTrigger asChild>
-    //       //     <Button variant="ghost" className="p-0 w-8">
-    //       //       <MoreHorizontal className="h-4 w-4" />
-    //       //     </Button>
-    //       //   </DropdownMenuTrigger>
-    //       //   <DropdownMenuContent align="end">
-    //       //     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-    //       //     <Link href={`customer${currentItem.id}`}>
-    //       //       <DropdownMenuItem className="hover:cursor-pointer">
-    //       //         View
-    //       //       </DropdownMenuItem>
-    //       //     </Link>
-    //       //     <DropdownMenuItem
-    //       //       className="hover:cursor-pointer"
-    //       //       onClick={() => setShowConfirmation(true)}
-    //       //     >
-    //       //       Delete
-    //       //     </DropdownMenuItem>
-    //       //   </DropdownMenuContent>
-    //       // </DropdownMenu>
-    //     );
-    //   },
-    // },
-  ];
+    return baseColumns;
+  }, [UserState]);
 
-
+  async function handleSaveFeedback() {
+    setLoading(true);
+    axios
+      .post(`/${UserState.value.data?.id}/feedback`, {
+        feedback: feedback,
+        top_follow: false,
+        type: "feedback",
+        customer_id: selectedCustomer?.id,
+        user_id: UserState.value.data?.id,
+        status: satisfactory ? "Satisfactory" : "Unsatisfactory",
+        next_followup: next,
+        top_follow: top,
+      })
+      .then(async () => {
+        await onRefresh();
+      })
+      .finally(() => {
+        setLoading(false);
+        setShowFeedback(false);
+      });
+  }
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex flex-1 min-h-[600px]">
+      <div className="flex flex-1">
         <PageTable
           totalCustomerText={totalCustomerText}
           totalCustomer={data.length}
-          
           columns={columns}
-          data={data} 
+          data={data}
           totalItems={data.length}
-       
           tableHeader={tableHeader}
           onRowClick={(val) => {
             if (val?.id) {
               startHolyLoader();
               router.push(
-                `/${UserState.value.data?.base_route}/${val.member ? "member" : "customer"}/${val.id}`
+                `/${UserState.value.data?.base_route}/${
+                  val.member ? "member" : "customer"
+                }/${val.id}`
               );
             }
           }}
@@ -242,8 +237,6 @@ export default function CustomerEmployee({
         >
           <div className=" flex justify-between">
             <div className="flex gap-4">
-           
-
               {UserState.value.data &&
                 UserState.value.data.customer_add_access && (
                   <Button onClick={() => setAddCustomer(true)}>
@@ -256,6 +249,7 @@ export default function CustomerEmployee({
       </div>
 
       <AddCustomerDialog
+        base={`team/user/${UserState.value.data?.id}`}
         user_id={UserState.value.data?.id}
         user_designation={UserState.value.data?.designation}
         ownership={ownership}
@@ -263,13 +257,62 @@ export default function CustomerEmployee({
         onClose={setAddCustomer}
         onRefresh={() => {
           setData([]);
-          if (id) {
-            fetchData();
-          } else {
+         
             onRefresh();
-          }
+          
         }}
       />
+
+      <Dialog open={showFeedback} onOpenChange={setShowFeedback}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Feedback</DialogTitle>
+            <div className="flex flex-1 flex-col gap-2">
+              <h1>
+                Enter Feedback <RequiredStar />
+              </h1>
+              <Input
+                placeholder="feedback"
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+              />
+
+              <h1>
+                Next Follow Up <RequiredStar />
+              </h1>
+              <AppCalendar date={next} onChange={setNext} min={new Date()} />
+
+              <div className="flex flex-row items-center gap-2">
+                <h1>Top Follow up</h1>
+                <Checkbox
+                  checked={top}
+                  onCheckedChange={(checked) => {
+                    setTop(checked);
+                  }}
+                />
+              </div>
+
+              <div className="flex flex-row items-center gap-2">
+                <h1>Satisfactory?</h1>
+                <Checkbox
+                  checked={satisfactory}
+                  onCheckedChange={(checked) => {
+                    setSatisfactory(checked);
+                  }}
+                />
+              </div>
+              <Button
+                disabled={!next || !feedback}
+                onClick={() => {
+                  handleSaveFeedback();
+                }}
+              >
+                {loading && <Spinner />} Save
+              </Button>
+            </div>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
 
       <ConfimationDialog
         open={showConfirmation}

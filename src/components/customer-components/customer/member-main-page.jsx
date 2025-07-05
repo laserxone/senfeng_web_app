@@ -55,7 +55,7 @@ const tableHeader = [
   },
 ];
 
-export default function MemberMainPage() {
+export default function MemberMainPage({ base, onReturn }) {
   const [additionalFilter, setAdditionalFilter] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState([]);
@@ -65,21 +65,27 @@ export default function MemberMainPage() {
   const router = useRouter();
   const [selectedUser, setSelectedUser] = useState(null);
   const [numCount, setNumCount] = useState({});
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true);
   const [resetLoading, setResetLoading] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
 
   useEffect(() => {
-
-    if (UserState.value.data?.id) fetchData().then(()=>{
-      setLoading(false)
-    })
+    if (UserState.value.data?.id)
+      fetchData().then(() => {
+        setLoading(false);
+      });
   }, [UserState.value.data]);
 
   async function fetchData(startDate, endDate, user) {
     return new Promise((resolve, reject) => {
       axios
-        .get(`/customer/machines?start_date=${startDate || ""}&end_date=${endDate || ""}&user=${user || ""}`)
+        .get(
+          `/${
+            UserState.value.data?.id
+          }/customer?machines=true&member=true&start_date=${
+            startDate || ""
+          }&end_date=${endDate || ""}&user=${user || ""}`
+        )
         .then((response) => {
           const apiData = response.data;
           const temp = apiData
@@ -93,13 +99,7 @@ export default function MemberMainPage() {
               };
             })
             .filter((item) => item.member);
-
-          const isLimited = UserState.value.data?.limited_access;
-          const filteredData = isLimited
-            ? temp.filter((item) => item.lead === UserState.value.data?.id)
-            : temp;
-
-          setData([...filteredData]);
+          setData([...temp]);
         })
         .finally(() => {
           resolve(true);
@@ -268,29 +268,32 @@ export default function MemberMainPage() {
       header: "Action",
       cell: ({ row }) => {
         const currentItem = row.original;
+        const user = UserState.value.data;
+
+        const canDelete =
+          user?.designation === "Owner" || user?.full_access === true;
+
+        if (!canDelete) return null;
 
         return (
-          UserState.value.data &&
-          UserState.value.data.customer_delete_access && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedCustomerId(currentItem?.id);
-                setShowConfirmation(true);
-              }}
-            >
-              <Trash2 className="h-5 w-5 text-red-500" size={16} />
-            </Button>
-          )
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedCustomerId(currentItem?.id);
+              setShowConfirmation(true);
+            }}
+          >
+            <Trash2 className="h-5 w-5 text-red-500" size={16} />
+          </Button>
         );
       },
     },
   ];
 
   function handleClear() {
-    setAdditionalFilter("")
+    setAdditionalFilter("");
     setSelectedUser(null);
   }
 
@@ -298,10 +301,12 @@ export default function MemberMainPage() {
     if (!id) return;
     setDeleteLoading(true);
     try {
-      const response = await axios.delete(`/customer/${id}`);
+      const response = await axios.delete(
+        `/${UserState.value.data?.id}/customer/${id}`
+      );
       toast({ title: "Customer Deleted" });
       await fetchData();
-    }  finally {
+    } finally {
       setDeleteLoading(false);
       setShowConfirmation(false);
       setSelectedCustomerId(null);
@@ -314,8 +319,11 @@ export default function MemberMainPage() {
         ? item.orignalNumber?.some((num) => numCount[num] > 1)
         : true
     )
-    .filter((item) => (selectedUser ? item?.ownership === selectedUser : true));
-
+    .filter((item) =>
+      selectedUser
+        ? item?.ownership === selectedUser || item?.lead === selectedUser
+        : true
+    );
   useEffect(() => {
     if (data.length > 0) {
       const numberCount = {};
@@ -330,7 +338,7 @@ export default function MemberMainPage() {
   }, [data]);
 
   return (
-    <PageContainer scrollable={false}>
+    <>
       <div className="flex flex-1 flex-col space-y-4">
         <div className="flex items-center justify-between flex-wrap">
           <Heading title="All Members" description="Manage your members" />
@@ -354,16 +362,16 @@ export default function MemberMainPage() {
           tableHeader={tableHeader}
           onRowClick={(val) => {
             if (val.id) {
-              startHolyLoader();
-              router.push(
-                `/${UserState.value.data?.base_route}/member/${val.id}`
-              );
+              // startHolyLoader();
+              // router.push(
+              //   `/${UserState.value.data?.base_route}/member/${val.id}`
+              // );
+              onReturn(val.id);
             }
           }}
         >
           <div className=" flex justify-between flex-wrap">
             <div className="flex gap-4 flex-wrap">
-            
               {(UserState.value.data?.designation === "Owner" ||
                 UserState.value.data?.full_access) && (
                 <>
@@ -418,26 +426,26 @@ export default function MemberMainPage() {
                   </Button>
                 </>
               )}
-              
-               <div className="flex gap-4">
-            <Button
-              onClick={() => setFilterVisible(true)}
-              variant="ghost"
-              className="p-0 w-8"
-            >
-              <Filter />
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={async () => {
-                setResetLoading(true);
-                await fetchData();
-                setResetLoading(false);
-              }}
-            >
-              {resetLoading && <Spinner />} Reset
-            </Button>
-          </div>
+
+              <div className="flex gap-4">
+                <Button
+                  onClick={() => setFilterVisible(true)}
+                  variant="ghost"
+                  className="p-0 w-8"
+                >
+                  <Filter />
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={async () => {
+                    setResetLoading(true);
+                    await fetchData();
+                    setResetLoading(false);
+                  }}
+                >
+                  {resetLoading && <Spinner />} Reset
+                </Button>
+              </div>
             </div>
           </div>
         </PageTable>
@@ -452,17 +460,13 @@ export default function MemberMainPage() {
         onPressCancel={() => setShowConfirmation(false)}
       />
 
-         <FilterSheet
+      <FilterSheet
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(
-            val.start,
-            val.end,
-            val.user
-          );
+          await fetchData(val.start, val.end, val.user);
         }}
       />
-    </PageContainer>
+    </>
   );
 }

@@ -22,7 +22,7 @@ export default function NewsTicker() {
   
 
   async function fetchData() {
-    axiosInstance.get("/news?expiry=true").then((response) => {
+    axiosInstance.get(`/${debouncedUserId}/news?expiry=true`).then((response) => {
       const apiData = response.data;
       setData(apiData);
     });

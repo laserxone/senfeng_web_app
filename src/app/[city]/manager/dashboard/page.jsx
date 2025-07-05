@@ -1,23 +1,21 @@
 "use client";
 import AutoScrollMembers from "@/components/autoScroll";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import TeamTask from "@/components/teamTask";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Attendance from "@/components/users/attendance";
+import { ProfilePicture } from "@/components/users/ProfilePicture";
 import Reimbursement from "@/components/users/Reimbursement";
 import SalaryRecord from "@/components/users/SalaryRecord";
 import axios from "@/lib/axios";
-import { GetProfileImage } from "@/lib/getProfileImage";
 import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
-import TeamTask from "@/components/teamTask";
 
 export default function Page() {
   const [data, setData] = useState();
   const { state: UserState } = useContext(UserContext);
-  const [customers, setCustomers] = useState([]);
   const [reimbursementData, setReimbursementData] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
 
@@ -26,7 +24,7 @@ export default function Page() {
       const startDate = moment().startOf("month").toISOString();
       const endDate = moment().endOf("month").toISOString();
       fetchData();
-      fetchAllCustomers();
+    
       fetchReimbursementData(startDate, endDate);
       fetchAttendanceData(startDate, endDate);
     }
@@ -36,7 +34,7 @@ export default function Page() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/user/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+          `/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           setReimbursementData(response.data);
@@ -53,7 +51,7 @@ export default function Page() {
     return new Promise((res, rej) => {
       axios
         .get(
-          `/user/${UserState.value.data.id}/attendance?start_date=${startDate}&end_date=${endDate}`
+          `/${UserState.value.data.id}/attendance?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           if (response.data.length > 0) {
@@ -77,17 +75,13 @@ export default function Page() {
 
   async function fetchData() {
     axios
-      .get(`/user/${UserState.value.data?.id}`)
+      .get(`/${UserState.value.data?.id}/dashboard`)
       .then((response) => {
         setData(response.data);
       });
   }
 
-  async function fetchAllCustomers() {
-    axios.get(`/customer`).then((response) => {
-      setCustomers(response.data);
-    });
-  }
+ 
  
 
   const RenderReimbursement = useCallback(() => {
@@ -153,7 +147,7 @@ export default function Page() {
           <TabsContent value="salary">
             <Card>
               <CardContent className="pt-2">
-                <SalaryRecord />
+                <SalaryRecord id={UserState.value.data?.id}/>
               </CardContent>
             </Card>
           </TabsContent>
@@ -167,34 +161,10 @@ export default function Page() {
         </Tabs>
       </div>
 
-     {customers.length > 0 && <AutoScrollMembers customers={customers} />}
+      <AutoScrollMembers />
     </div>
   );
 }
 
-const ProfilePicture = ({ img, name }) => {
-  const [localImage, setLocalImage] = useState(null);
 
-  useEffect(() => {
-    async function fetchImage() {
-      if (img?.includes("http")) {
-        setLocalImage(img);
-      } else {
-        const imgResult = await GetProfileImage(img);
-        setLocalImage(imgResult);
-      }
-    }
-
-    if (img) {
-      fetchImage();
-    }
-  }, [img]);
-
-  return (
-    <Avatar className="w-24 h-24 mr-4">
-      <AvatarImage src={localImage} alt="Profile Picture" />
-      <AvatarFallback>{name?.substring(0, 2)}</AvatarFallback>
-    </Avatar>
-  );
-};
 

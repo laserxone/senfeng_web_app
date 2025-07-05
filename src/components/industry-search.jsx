@@ -20,19 +20,23 @@ import {
 import { BASE_URL } from "@/constants/data";
 import { cn } from "@/lib/utils";
 import axios from "@/lib/axios";
+import { UserContext } from "@/store/context/UserContext";
 
 export function IndustrySearch({ value, onReturn }) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState([]);
+  const { state: UserState } = React.useContext(UserContext);
 
   React.useEffect(() => {
-    axios.get(`/settings`).then((response) => {
-      const list = response.data.industry_list.map((item) => {
-        return { value: item, label: item };
+    if (UserState.value.data?.id) {
+      axios.get(`/${UserState.value.data?.id}/settings`).then((response) => {
+        const list = response.data.industry_list.map((item) => {
+          return { value: item, label: item };
+        });
+        setData([...list]);
       });
-      setData([...list]);
-    });
-  }, []);
+    }
+  }, [UserState]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

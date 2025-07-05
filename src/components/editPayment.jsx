@@ -40,6 +40,7 @@ const EditPayment = ({
   machine_id,
   customer_id,
   data,
+  base
 }) => {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -88,7 +89,7 @@ const EditPayment = ({
   async function onSubmit(values) {
     setLoading(true);
     try {
-      const response = await axios.put(`/payment`, {
+      const response = await axios.put(`/${UserState.value.data?.id}/payment`, {
         ...values,
         machine_id: machine_id,
         id: data.id,
@@ -123,7 +124,7 @@ const EditPayment = ({
     setChecking(true);
     setError({});
     try {
-      const response = await axios.post(`/check-note`, { number });
+      const response = await axios.post(`/${UserState.value.data?.id}/check-note`, { number });
       if (Array.isArray(response.data) && response.data.length > 0) {
         const apiData = response.data[0];
         if (apiData.note !== data.note) {

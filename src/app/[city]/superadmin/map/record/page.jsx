@@ -5,6 +5,7 @@ import FilterSheet from "@/components/users/filterSheet";
 import { toast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
 import { MapProvider } from "@/providers/map-provider";
+import { UserContext } from "@/store/context/UserContext";
 import {
   GoogleMap,
   InfoWindow,
@@ -13,7 +14,7 @@ import {
 } from "@react-google-maps/api";
 import { Filter } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 
 const containerStyle = {
   width: "100%",
@@ -26,6 +27,7 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const { theme } = useTheme();
   const [filterVisible, setFilterVisible] = useState(false);
+  const { state: UserState } = useContext(UserContext);
 
   const [defaultMapOptions, setDefaultMapOptions] = useState({
     zoomControl: true,
@@ -50,18 +52,19 @@ export default function Page() {
   }, [theme]);
 
   async function fetchData(start, end, user) {
-   
     if (!start || !end || !user) {
-        toast({
-            title: "User is required",
-            variant: "destructive",
-          });
+      toast({
+        title: "User is required",
+        variant: "destructive",
+      });
       return;
     }
     return new Promise((resolve) => {
       setLoading(true);
       axios
-        .get(`/locations?start_date=${start}&end_date=${end}&user=${user}`)
+        .get(
+          `/${UserState.value.data?.id}/locations?start_date=${start}&end_date=${end}&user=${user}`
+        )
         .then((response) => {
           setData(response.data);
         })
@@ -182,12 +185,11 @@ export default function Page() {
       <div className="flex  flex-row justify-between items-center flex-wrap gap-2">
         <Heading title="Map record" description="View user locations record" />
         <div>
-        <Button
-          onClick={() => setFilterVisible(true)}
-          
-        >
-          <Filter /> Filter user and date
-        </Button>
+          {UserState.value.data?.id && (
+            <Button onClick={() => setFilterVisible(true)}>
+              <Filter /> Filter user and date
+            </Button>
+          )}
         </div>
       </div>
 
@@ -198,11 +200,7 @@ export default function Page() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(
-            val.start,
-            val.end,
-            val.user
-          );
+          await fetchData(val.start, val.end, val.user);
         }}
       />
     </div>

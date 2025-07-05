@@ -53,8 +53,9 @@ export default function VisitTab({
   onRefresh,
   disable = false,
   customer_data,
-  height = "h-[calc(100dvh-300px)]",
+  height,
   onFetchData,
+  base
 }) {
   const [loading, setLoading] = useState(false);
   const [feedbacks, setFeedbacks] = useState(data || []);
@@ -86,8 +87,8 @@ export default function VisitTab({
         const name = `${selectedCustomer?.id}/visit/${moment()
           .valueOf()
           .toString()}.png`;
-        const uploadRef = await UploadImage(values.image, name);
-        const response = await axios.post(`/user/${id}/visit`, {
+        const uploadRef = await UploadImage(values.image, name); 
+        const response = await axios.post(`/${id}/visit`, {
           ...values,
           user_id: id,
           image: name,
@@ -98,7 +99,7 @@ export default function VisitTab({
         setSelectedCustomer(null);
         setLoading(false);
       } else {
-        const response = await axios.post(`/user/${id}/visit`, {
+        const response = await axios.post(`/${id}/visit`, {
           ...values,
           user_id: id,
           customer_id: selectedCustomer?.id,
@@ -134,7 +135,7 @@ export default function VisitTab({
       setSelectedDelete(item.id);
       DeleteFromStorage(item.image);
       axios
-        .delete(`/visit/${item.id}`)
+        .delete(`/${UserState.value.data?.id}/visit/${item.id}`)
         .then(async () => {
           await onRefresh();
         })
@@ -147,7 +148,7 @@ export default function VisitTab({
   }
 
   return (
-    <ScrollArea className={`${height}`}>
+    <ScrollArea className={`${height} w-full px-4`}>
       <div className="space-y-4 w-full">
         <Card>
           <CardContent className="p-4 space-y-4">

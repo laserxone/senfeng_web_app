@@ -60,7 +60,7 @@ const getSchema = (isClientSelected) =>
       : z.number().optional().nullable(),
   });
 
-export default function TaskEmployee({ id }) {
+export default function TaskEmployee({ id, base }) {
   const { state: UserState } = useContext(UserContext);
   const [data, setData] = useState([]);
   const [visible, setVisible] = useState(false);
@@ -215,7 +215,7 @@ export default function TaskEmployee({ id }) {
     setLoading(true);
     return new Promise((resolve, reject) => {
       axios
-        .get(`/user/${id}/task?start_date=${start_date}&end_date=${end_date}`)
+        .get(`/${id}/task?start_date=${start_date}&end_date=${end_date}`)
         .then((response) => {
           const apiData = response.data.map((item) => {
             return { ...item, created_at_time: item.created_at };
@@ -252,7 +252,7 @@ export default function TaskEmployee({ id }) {
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-center justify-between">
-        <Heading title="Task Management" description="Manage team tasks" />
+        <Heading title="Task Management" description="Manage tasks" />
 
         <Button
           onClick={() => {
@@ -263,6 +263,7 @@ export default function TaskEmployee({ id }) {
         </Button>
 
         <AddTask
+         base={base}
           onRefresh={() => {
             const startDate = momentT
               .tz(TIMEZONE)
@@ -308,6 +309,7 @@ export default function TaskEmployee({ id }) {
       </PageTable>
 
       <TaskDetail
+      base={base}
         user_id={UserState.value.data?.id}
         detail={selectedTask}
         visible={visible}
@@ -356,6 +358,7 @@ const TaskDetail = ({
   onDelete,
   onMark,
   user_id,
+  base
 }) => {
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -364,7 +367,7 @@ const TaskDetail = ({
   async function handleUpdateStatus(values) {
     setLoading(true);
     axios
-      .put(`/user/${user_id}/task/${detail.id}`, {
+      .put(`/${user_id}/task/${detail.id}`, {
         id: values.id,
         status: values.status,
       })
@@ -382,7 +385,7 @@ const TaskDetail = ({
   async function handleDelete() {
     setDeleteLoading(true);
     axios
-      .delete(`/user/${user_id}/task/${detail.id}`)
+      .delete(`/${user_id}/task/${detail.id}`)
       .then(() => {
         onClose(false);
         toast({ title: "Task deleted" });
@@ -478,9 +481,10 @@ const TaskDetail = ({
   );
 };
 
-const AddTask = ({ visible, onClose, onRefresh, user_id }) => {
+const AddTask = ({ visible, onClose, onRefresh, user_id, base }) => {
   const [selectedRadio, setSelectedRadio] = useState("office");
   const [loading, setLoading] = useState(false);
+  const {state : UserState} = useContext(UserContext)
   const { toast } = useToast();
 
   const form = useForm({
@@ -509,7 +513,7 @@ const AddTask = ({ visible, onClose, onRefresh, user_id }) => {
   const onSubmit = (values) => {
     setLoading(true);
     axios
-      .post(`/task`, {
+      .post(`/${UserState.value.data?.id}/task`, {
         task_name: values.task,
         type: values.radio == "office" ? "Office Task" : "Client Visit",
         client: values.client,

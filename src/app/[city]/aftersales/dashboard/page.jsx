@@ -1,42 +1,19 @@
 "use client";
 import AddCustomerDialog from "@/components/addCustomer";
+import PageTable from "@/components/app-table";
+import AppCalendar from "@/components/appCalendar";
 import AutoScrollMembers from "@/components/autoScroll";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { RequiredStar } from "@/components/RequiredStar";
+import TeamTask from "@/components/teamTask";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Attendance from "@/components/users/attendance";
-import Reimbursement from "@/components/users/Reimbursement";
-import SalaryRecord from "@/components/users/SalaryRecord";
-import axios from "@/lib/axios";
-import { GetProfileImage } from "@/lib/getProfileImage";
-import { UserContext } from "@/store/context/UserContext";
-import { startHolyLoader } from "holy-loader";
-import { ArrowUpDown, Filter } from "lucide-react";
-import moment from "moment";
-import { useRouter } from "next/navigation";
-import { useCallback, useContext, useEffect, useState } from "react";
-import "./styles.css";
-import PageTable from "@/components/app-table";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import AppCalendar from "@/components/appCalendar";
-import Spinner from "@/components/ui/spinner";
-import { RequiredStar } from "@/components/RequiredStar";
-import FilterSheet from "@/components/users/filterSheet";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import {
   Form,
   FormControl,
@@ -45,12 +22,36 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import Spinner from "@/components/ui/spinner";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserSearch } from "@/components/user-search";
+import Attendance from "@/components/users/attendance";
+import FilterSheet from "@/components/users/filterSheet";
+import { ProfilePicture } from "@/components/users/ProfilePicture";
+import Reimbursement from "@/components/users/Reimbursement";
+import SalaryRecord from "@/components/users/SalaryRecord";
+import { toast } from "@/hooks/use-toast";
+import axios from "@/lib/axios";
+import { UserContext } from "@/store/context/UserContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { startHolyLoader } from "holy-loader";
+import { ArrowUpDown, Filter } from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
-import TeamTask from "@/components/teamTask";
+import "./styles.css";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -61,17 +62,15 @@ export default function Page() {
   const [filter, setFilter] = useState({ start: null, end: null });
   const [filterData, setFilterData] = useState();
   const [selectedOption, setSelectedOption] = useState("withoutFeedback");
+  const [activeTab, setActiveTab] = useState("newCustomers");
 
   useEffect(() => {
     if (UserState.value.data?.id) {
       const startDate = moment().startOf("month").toISOString();
       const endDate = moment().endOf("month").toISOString();
       fetchData();
-
-      // fetchAllCustomers();
-
-      // fetchReimbursementData(startDate, endDate);
-      // fetchAttendanceData(startDate, endDate);
+      fetchReimbursementData(startDate, endDate);
+      fetchAttendanceData(startDate, endDate);
     }
   }, [UserState]);
 
@@ -79,7 +78,7 @@ export default function Page() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/user/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+          `/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           setReimbursementData(response.data);
@@ -96,7 +95,7 @@ export default function Page() {
     return new Promise((res, rej) => {
       axios
         .get(
-          `/user/${UserState.value.data.id}/attendance?start_date=${startDate}&end_date=${endDate}`
+          `/${UserState.value.data.id}/attendance?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           if (response.data.length > 0) {
@@ -121,8 +120,8 @@ export default function Page() {
   async function fetchData() {
     return new Promise(async (resolve) => {
       try {
-        const response = await axios.get(`/user/${UserState.value.data?.id}`);
-
+        const response = await axios.get(`/${UserState.value.data?.id}/dashboard`);
+  
         const withFeedbackFixed = response.data.withFeedback.map((item) => {
           return { ...item, number: item?.number?.join(", ") };
         });
@@ -166,14 +165,10 @@ export default function Page() {
     }
   }, [filter, data]);
 
-  useEffect(() => {
-    console.log(filterData);
-  }, [filterData]);
-
   const RenderNewCustomer = useCallback(() => {
     return (
-      <Card>
-        <CardContent className="pt-5">
+      <Card className="flex flex-1">
+        <CardContent className="pt-5 flex flex-1">
           <div className="flex flex-1 gap-5">
             <CustomerEmployeeAfterSales
               data={filterData ? filterData : data}
@@ -195,8 +190,8 @@ export default function Page() {
 
   const RenderReimbursement = useCallback(() => {
     return (
-      <Card>
-        <CardContent className="pt-5">
+      <Card className="flex flex-1">
+        <CardContent className="pt-5 flex flex-1">
           <Reimbursement
             id={UserState.value.data?.id}
             passingData={reimbursementData || []}
@@ -212,8 +207,8 @@ export default function Page() {
 
   const RenderAttendance = useCallback(() => {
     return (
-      <Card>
-        <CardContent className="pt-2">
+      <Card className="flex flex-1">
+        <CardContent className="pt-2 flex flex-1">
           <Attendance
             passingData={attendanceData}
             onFilterReturn={async (start, end) =>
@@ -228,7 +223,7 @@ export default function Page() {
   return (
     <div className="flex flex-1 gap-5">
       <div className="flex flex-1 flex-col">
-        <div className="flex flex-1 justify-between mb-8 flex-wrap">
+        <div className="flex justify-between mb-4 flex-wrap">
           <div className="flex items-center ">
             <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
             <div>
@@ -236,90 +231,46 @@ export default function Page() {
               <p className="text-muted-foreground">{data?.user?.designation}</p>
             </div>
           </div>
-
-          {/* <MachinesSoldCard
-            value={data?.machinesSoldThisMonth || 0}
-            percentage={data?.percentageChange || 0}
-          />
-          <FeedbackTakenCard
-            value={data?.feedbacksTakenThisMonth || 0}
-            total={data?.totalCustomers || 0}
-            remaining={data?.remainingFeedbacks || 0}
-          /> */}
         </div>
 
         <Tabs
-          defaultValue="newCustomers"
-          className="w-full flex flex-1 flex-col"
+          className="relative flex w-full flex-1 flex-col"
+          value={activeTab} onValueChange={setActiveTab}
         >
           <TabsList className="justify-start">
             <TabsTrigger value="newCustomers">Members</TabsTrigger>
             <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>
-            {/* <TabsTrigger value="commission">Commission</TabsTrigger>
-            <TabsTrigger value="salary">Salary</TabsTrigger> */}
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="task">Team Task</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="newCustomers">
-            <RenderNewCustomer />
-          </TabsContent>
-
-          <TabsContent value="reimbursement">
-            <RenderReimbursement />
-          </TabsContent>
-          <TabsContent value="attendance">
-            <RenderAttendance />
-          </TabsContent>
-          <TabsContent value="salary">
-            <Card>
-              <CardContent className="pt-2">
-                <SalaryRecord />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="task">
-            <Card>
-              <CardContent className="pt-2">
-                <TeamTask />
-              </CardContent>
-            </Card>
-          </TabsContent>
+          <div className="flex flex-1 w-full mt-2">
+            {activeTab === "newCustomers" && <RenderNewCustomer />}
+            {activeTab === "reimbursement" && <RenderReimbursement />}
+            {activeTab === "attendance" && <RenderAttendance />}
+            {activeTab === "task" && (
+              <Card className="flex flex-1">
+                <CardContent className="pt-2 flex flex-1">
+                  <TeamTask />
+                </CardContent>
+              </Card>
+            )}
+            {activeTab === "salary" && (
+              <Card className="flex flex-1">
+                <CardContent className="pt-2 flex flex-1">
+                  <SalaryRecord id={UserState.value.data?.id} />
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </Tabs>
       </div>
 
-      {/* {customers.length > 0 && <AutoScrollMembers customers={customers} />} */}
+      <AutoScrollMembers />
     </div>
   );
 }
-
-const ProfilePicture = ({ img, name }) => {
-  const [localImage, setLocalImage] = useState(null);
-
-  useEffect(() => {
-    async function fetchImage() {
-      if (img?.includes("http")) {
-        setLocalImage(img);
-      } else {
-        GetProfileImage(img).then((imgResult) => {
-          setLocalImage(imgResult);
-        });
-      }
-    }
-
-    if (img) {
-      fetchImage();
-    }
-  }, [img]);
-
-  return (
-    <Avatar className="w-24 h-24 mr-4">
-      <AvatarImage src={localImage} alt="Profile Picture" />
-      <AvatarFallback>{name?.substring(0, 2)}</AvatarFallback>
-    </Avatar>
-  );
-};
 
 const CustomerEmployeeAfterSales = ({
   onRefresh,
@@ -338,6 +289,7 @@ const CustomerEmployeeAfterSales = ({
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [next, setNext] = useState(null);
+  const [top, setTop] = useState(false);
   const [satisfactory, setSatisfactory] = useState(false);
   const [loading, setLoading] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
@@ -459,7 +411,7 @@ const CustomerEmployeeAfterSales = ({
   async function handleSaveFeedback() {
     setLoading(true);
     axios
-      .post(`/feedback`, {
+      .post(`/${UserState.value.data?.id}/feedback`, {
         feedback: feedback,
         top_follow: false,
         type: "aftersales",
@@ -467,6 +419,7 @@ const CustomerEmployeeAfterSales = ({
         user_id: UserState.value.data?.id,
         status: satisfactory ? "Satisfactory" : "Unsatisfactory",
         next_followup: next,
+        top_follow: top,
       })
       .then(async () => {
         await onRefresh();
@@ -491,7 +444,7 @@ const CustomerEmployeeAfterSales = ({
           }}
         />
 
-        <div className="flex flex-1 min-h-[600px]">
+        <div className="flex flex-1">
           <PageTable
             totalCustomerText={totalCustomerText}
             totalCustomer={data?.[selectedOption]?.length || 0}
@@ -586,6 +539,16 @@ const CustomerEmployeeAfterSales = ({
                 <AppCalendar date={next} onChange={setNext} min={new Date()} />
 
                 <div className="flex flex-row items-center gap-2">
+                  <h1>Top Follow up</h1>
+                  <Checkbox
+                    checked={top}
+                    onCheckedChange={(checked) => {
+                      setTop(checked);
+                    }}
+                  />
+                </div>
+
+                <div className="flex flex-row items-center gap-2">
                   <h1>Satisfactory?</h1>
                   <Checkbox
                     checked={satisfactory}
@@ -611,11 +574,12 @@ const CustomerEmployeeAfterSales = ({
   );
 };
 
-const OldRecordSheet = ({ visible, onClose, user_id }) => {
+export const OldRecordSheet = ({ visible, onClose, user_id, crm = false }) => {
   const [loading, setLoading] = useState(false);
-
+  const [sendTo, setSendTo] = useState(null);
   const [data, setData] = useState([]);
   const { state: UserState } = useContext(UserContext);
+  const [sendLoading, setSendLoading] = useState(false);
 
   const formSchema = z.object({
     start: z.date({ required_error: "Start date is required." }),
@@ -637,9 +601,11 @@ const OldRecordSheet = ({ visible, onClose, user_id }) => {
     let end = values.end.toISOString();
 
     try {
-      const response = await axios.get(
-        `/user/${user_id}/feedback?start_date=${start}&end_date=${end}`
-      );
+      let query = `/${user_id}/feedback?start_date=${start}&end_date=${end}`;
+      if (crm) {
+        query += "&crm=true";
+      }
+      const response = await axios.get(query);
 
       setData(response.data);
     } finally {
@@ -658,6 +624,43 @@ const OldRecordSheet = ({ visible, onClose, user_id }) => {
       end: moment().endOf("month").toDate(),
     });
     setData([]);
+  }
+
+  async function handleSendReport(e) {
+    e.preventDefault();
+    setSendLoading(true);
+
+    try {
+      const response = await axios.post(
+        `/${UserState.value.data?.id}/conversations`,
+        {
+          user1: UserState.value.data?.id,
+          user2: sendTo,
+        }
+      );
+      if (response.data?.id) {
+        let formData = { type: "feedback", content: data };
+        const startDate = form.getValues("start");
+        const endDate = form.getValues("end");
+
+        await axios
+          .post(
+            `/${UserState.value.data?.id}/conversations/${response.data?.id}`,
+            {
+              senderId: UserState.value.data?.id,
+              message: `Report ${moment(startDate).format(
+                "YYYY-MM-DD"
+              )} to ${moment(endDate).format("YYYY-MM-DD")}`,
+              data: JSON.stringify(formData),
+            }
+          )
+          .then(() => {
+            toast({ title: "Report sent" });
+          });
+      }
+    } finally {
+      setSendLoading(false);
+    }
   }
 
   return (
@@ -714,6 +717,22 @@ const OldRecordSheet = ({ visible, onClose, user_id }) => {
               <Button disabled={loading} type="submit">
                 {loading && <Spinner />} Filter
               </Button>
+
+              {data.length > 0 && (
+                <div className="flex gap-2 items-center">
+                  <UserSearch
+                    className="w-[200px]"
+                    onReturn={setSendTo}
+                    value={sendTo}
+                  />
+                  <Button
+                    disabled={!sendTo || sendLoading}
+                    onClick={handleSendReport}
+                  >
+                    {sendLoading && <Spinner />}Send Report
+                  </Button>
+                </div>
+              )}
             </form>
           </Form>
           <ScrollArea className="h-[80vh] px-4">
@@ -732,6 +751,7 @@ const OldRecordSheet = ({ visible, onClose, user_id }) => {
                     <Card className="bg-background border border-border shadow-sm">
                       <CardHeader className="pb-0">
                         <div className="text-sm text-muted-foreground">
+                          <span className="mr-2">{fb?.user_name}</span>
                           {moment(fb.feedback_date).format("YYYY-MM-DD")}
                         </div>
                         <Link

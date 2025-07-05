@@ -1,11 +1,12 @@
 "use client";
 
-import { BASE_URL } from "@/constants/data";
-import { cn } from "@/lib/utils";
 import axios from "@/lib/axios";
+import { cn } from "@/lib/utils";
+import { UserContext } from "@/store/context/UserContext";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Button } from "./ui/button";
+import { Checkbox } from "./ui/checkbox";
 import {
   Command,
   CommandEmpty,
@@ -25,8 +26,6 @@ import { Input } from "./ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
-import { Checkbox } from "./ui/checkbox";
-import { UserSearch } from "./user-search";
 
 const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
   const [loading, setLoading] = useState(false);
@@ -38,15 +37,17 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
   const [batchId, setBatchId] = useState(null);
   const [batchLoading, setBatchLoading] = useState(false);
   const [batchData, setBatchData] = useState([]);
+  const {state : UserState} = useContext(UserContext)
 
   useEffect(() => {
+    if(UserState.value.data?.id)
     setLocalData(data.map((item) => ({ ...item, checked: false })));
-  }, [data]);
+  }, [data, UserState]);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await axios.get(`/user`);
+        const response = await axios.get(`/${UserState.value.data?.id}/user`);
         if (response.data.length > 0) {
           const finalData = response.data
             .filter((item) => {
@@ -72,7 +73,7 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
   const handleUpdate = async (id, ownership) => {
     setLoading(true);
     try {
-      const response = await axios.put(`/customer/${id}?notify=true`, {
+      const response = await axios.put(`/${UserState.value.data?.id}/customer/${id}?notify=true`, {
         ownership: ownership,
       });
       onRefresh(id, ownership);
@@ -132,7 +133,7 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
     try {
       const promises = batchData.map((item) =>
         axios
-          .put(`/customer/${item.id}`, {
+          .put(`/${UserState.value.data?.id}/customer/${item.id}`, {
             ownership: batchId,
           })
           .then(() => {

@@ -1,7 +1,7 @@
-import { BASE_URL } from "@/constants/data";
-import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "@/lib/axios";
-import { Loader2, Plus, Trash } from "lucide-react";
+import { UserContext } from "@/store/context/UserContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Plus, Trash } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -18,18 +18,10 @@ import {
   FormMessage,
 } from "./ui/form";
 import { Input } from "./ui/input";
-import { ScrollArea } from "./ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
-import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
+import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
-import { UserContext } from "@/store/context/UserContext";
+import { Textarea } from "./ui/textarea";
 
 const EditMachine = ({ machine_id, visible, onClose, onRefresh, data, base }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);

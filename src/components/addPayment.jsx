@@ -44,6 +44,7 @@ const AddPayment = ({
   onRefresh,
   machine_id,
   customer_id,
+  base
 }) => {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -84,7 +85,7 @@ const AddPayment = ({
           .valueOf()
           .toString()}.png`;
         const imgRef = await UploadImage(values.image, name);
-        const response = await axios.post(`/payment`, {
+        const response = await axios.post(`/${UserState.value.data?.id}/payment`, {
           ...values,
           machine_id: machine_id,
           image: name,
@@ -123,7 +124,7 @@ const AddPayment = ({
     setChecking(true);
     setError({});
     try {
-      const response = await axios.post(`/check-note`, { number });
+      const response = await axios.post(`/${UserState.value.data?.id}/check-note`, { number });
       if (Array.isArray(response.data) && response.data.length > 0) {
         
         setError(response.data[0]);
