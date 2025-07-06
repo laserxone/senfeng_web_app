@@ -1,12 +1,9 @@
 "use client";
-import { db } from "@/config/firebase";
 import axios from "@/lib/axios";
 import { UserContext } from "@/store/context/UserContext";
-import { doc, onSnapshot } from "firebase/firestore";
-import { useContext, useEffect, useState } from "react";
-import Spinner from "../ui/spinner";
-import UserChatIcon from "./chatIcon";
+import { useContext, useState } from "react";
 import Chatcomponent from "./chat-component";
+import UserChatIcon from "./chatIcon";
 
 export default function MessagePage() {
   const { state: UserState } = useContext(UserContext);

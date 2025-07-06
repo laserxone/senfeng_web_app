@@ -13,13 +13,13 @@ export async function GET(req, { params }) {
 
 export async function POST(req, { params }) {
     const { cid } = await params;
-    const { senderId, receiverId, message } = await req.json();
+    const { senderId, message, data, created_at } = await req.json();
 
     const client = await pool.connect();
     await client.query('BEGIN');
     await client.query(
-        `INSERT INTO messages (conversation_id, sender_id, receiver_id, message) VALUES ($1, $2, $3, $4)`,
-        [cid, senderId, receiverId, message]
+        `INSERT INTO messages (conversation_id, sender_id, message, data, created_at) VALUES ($1, $2, $3, $4, $5)`,
+        [cid, senderId, message, data || null, created_at || new Date()]
     );
     await client.query(
         `UPDATE conversations SET last_message = $1, last_updated = NOW() WHERE id = $2`,
@@ -29,7 +29,7 @@ export async function POST(req, { params }) {
     client.release();
 
     const db = admin.firestore();
-    await db.collection('messages_meta').doc(conversationId).set({
+    await db.collection('messages_meta').doc(cid).set({
         last_message: message,
         last_updated: Date.now(),
         by: senderId
