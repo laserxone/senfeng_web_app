@@ -23,17 +23,17 @@ export async function GET(req, { params }) {
       [userId]
     );
 
-     const countRes = await pool.query(
-    `SELECT COUNT(*) AS unread_count
+    const countRes = await pool.query(
+      `SELECT COUNT(*) AS unread_count
      FROM messages m
      JOIN conversations c ON m.conversation_id = c.id
      WHERE (c.participant_1 = $1 OR c.participant_2 = $1)
        AND m.sender_id != $1
        AND m.is_read = false`,
-    [userId]
-  );
+      [userId]
+    );
 
-  const unreadCount = parseInt(countRes.rows[0].unread_count, 10);
+    const unreadCount = parseInt(countRes.rows[0].unread_count, 10);
 
     const conversations = result.rows.map((row) => ({
       id: row.id,
@@ -53,15 +53,17 @@ export async function GET(req, { params }) {
 }
 
 
-export async function POST(req) {
+export async function POST(req, { params }) {
+
   try {
     const { user1, user2 } = await req.json();
+
+    const { uid } = await params
 
     if (!user1 || !user2) {
       return NextResponse.json({ error: "Missing user ids" }, { status: 400 });
     }
 
-    // Check if conversation already exists
     const existing = await pool.query(
       `SELECT * FROM conversations 
        WHERE (participant_1 = $1 AND participant_2 = $2) 
@@ -70,7 +72,18 @@ export async function POST(req) {
     );
 
     if (existing.rows.length > 0) {
-      return NextResponse.json(existing.rows[0], { status: 200 });
+        const conversation = existing.rows[0];
+         const otherUserId = conversation.participant_1 === uid
+      ? conversation.participant_2
+      : conversation.participant_1;
+
+    const userResult = await pool.query(
+      `SELECT id, name, dp FROM users WHERE id = $1`,
+      [otherUserId]
+    );
+
+    const otherUser = userResult.rows[0];
+      return NextResponse.json({...existing.rows[0], otherUser}, { status: 200 });
     }
 
     // Create new conversation
@@ -80,7 +93,23 @@ export async function POST(req) {
       [user1, user2]
     );
 
-    return NextResponse.json(result.rows[0], { status: 201 });
+    const conversation = result.rows[0];
+
+    const otherUserId = conversation.participant_1 === uid
+      ? conversation.participant_2
+      : conversation.participant_1;
+
+    const userResult = await pool.query(
+      `SELECT id, name, dp FROM users WHERE id = $1`,
+      [otherUserId]
+    );
+
+    const otherUser = userResult.rows[0];
+
+    return NextResponse.json({
+      ...conversation.id,
+      otherUser,
+    }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
