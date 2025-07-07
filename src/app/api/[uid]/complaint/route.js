@@ -145,6 +145,13 @@ export async function GET(req, { params }) {
       query = `
         SELECT 
           c.*,
+          c.id AS complaint_id,
+          c.title AS complaint_title,
+          c.problem AS complaint_problem,
+          c.solution AS complaint_solution,
+          c.status AS complaint_status,
+          c.created_at AS complaint_created_at,
+          c.customer_id,
           cu.name AS customer_name,
           cu.address AS customer_address,
           cu.location AS customer_location,

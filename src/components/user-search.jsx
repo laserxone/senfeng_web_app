@@ -37,7 +37,7 @@ export function UserSearch({
 
   React.useEffect(() => {
     async function fetchData() {
-      axios.get(`/user?withoutleave=true`).then((response) => {
+      axios.get(`/${UserState.value.data?.id}/user?withoutleave=true`).then((response) => {
         if (response.data.length > 0) {
           if (lead) {
             const finalData = response.data

@@ -79,7 +79,7 @@ export default function CustomerMainPage({base, onReturn}) {
 
     return new Promise((resolve, reject) => {
       axios
-        .get(`/${UserState.value.data?.id}/customer`)
+        .get(`/${UserState.value.data?.id}/customer?member=false`)
         .then((response) => {
           const apiData = response.data;
           const temp = apiData
