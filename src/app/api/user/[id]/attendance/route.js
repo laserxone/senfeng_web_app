@@ -114,7 +114,7 @@ export async function POST(req, { params }) {
         const currentDate = moment().format("YYYY-MM-DD"); // Format the date
         const timestamp = new Date(); // Current time
 
-        // Check if an attendance entry exists for the same date
+         // Check if an attendance entry exists for the same date
         const checkQuery = `
         SELECT * FROM attendance 
         WHERE user_id = $1 

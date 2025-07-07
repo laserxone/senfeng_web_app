@@ -8,7 +8,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(req, { params }) {
     try {
-        const { id } = await params
+        const { uid } = await params
         const { note, location, image, task, reason, customer_id } = await req.json();
 
         if (!note || !location || !image) {
@@ -24,8 +24,8 @@ export async function POST(req, { params }) {
         WHERE user_id = $1 
         AND DATE(time_in) = $2
       `;
-        const checkResult = await pool.query(checkQuery, [id, currentDate]);
-        const fileName = `${id}/attendance/${moment().valueOf()}.png`; // Unique file path
+        const checkResult = await pool.query(checkQuery, [uid, currentDate]);
+        const fileName = `${uid}/attendance/${moment().valueOf()}.png`; // Unique file path
 
 
         if (checkResult.rows.length === 0) {
@@ -35,14 +35,14 @@ export async function POST(req, { params }) {
           VALUES ($1, $2, $3, $4, $5, $6)
           RETURNING *;
         `;
-            const insertResult = await pool.query(insertQuery, [id, note, timestamp, location, fileName, customer_id || null]);
+            const insertResult = await pool.query(insertQuery, [uid, note, timestamp, location, fileName, customer_id || null]);
 
             await pool.query(`
             INSERT INTO task(
                 assigned_to, status, task_name, type, created_at, customer_id
             )
             VALUES ($1, $2, $3, $4, NOW(), $5) 
-        `, [id, "Pending", task, reason, customer_id || null]);
+        `, [uid, "Pending", task, reason, customer_id || null]);
 
             return NextResponse.json({ message: "Attendance marked time in", data: insertResult.rows[0] }, { status: 201 });
         }
