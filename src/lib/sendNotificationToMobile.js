@@ -4,10 +4,10 @@ import axios from "axios";
 
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
-export const sendNotificationToMobile = async (title, heading, sendTo, data, type, url) => {
+export const sendNotificationToMobile = async (title, heading, sendTo, passingdata, type, url) => {
+   
     try {
-        console.log("sending to mobile");
-
+       
         const result = await pool.query(`SELECT token FROM users WHERE id = $1`, [sendTo]);
 
         if (!result.rows.length || !result.rows[0].token) {
@@ -15,12 +15,14 @@ export const sendNotificationToMobile = async (title, heading, sendTo, data, typ
             return;
         }
 
+         console.log(passingdata, type, url)
+
         const message = {
             to: result.rows[0].token,
             sound: 'default',
             title: heading,
             body: title,
-            data: { ...data, type, url },
+            data: { ...passingdata, type, url },
         };
 
         const maxRetries = 3;

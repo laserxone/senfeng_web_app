@@ -1,5 +1,6 @@
 import pool from '@/config/db';
 import admin from '@/lib/firebaseAdmin';
+import { sendNotificationToMobile } from '@/lib/sendNotificationToMobile';
 import { NextResponse } from 'next/server';
 
 export async function GET(req, { params }) {
@@ -28,12 +29,38 @@ export async function POST(req, { params }) {
     await client.query('COMMIT');
     client.release();
 
+    sendNotificationFromMe(cid, Number(senderId), message)
+
     const db = admin.firestore();
-    await db.collection('messages_meta').doc(cid).set({
-        last_message: message,
-        last_updated: Date.now(),
-        by: senderId
-    });
+    // await db.collection('messages_meta').doc(cid).set({
+    //     last_message: message,
+    //     last_updated: Date.now(),
+    //     by: senderId
+    // });
 
     return NextResponse.json({ success: true });
 }
+
+async function sendNotificationFromMe(id, myId, message) {
+    const convQuery = await pool.query(`
+       SELECT c.*,
+       u1.name AS participant1_name,
+       u2.name AS participant2_name
+FROM conversations c
+LEFT JOIN users u1 ON c.participant_1 = u1.id
+LEFT JOIN users u2 ON c.participant_2 = u2.id
+WHERE c.id = $1
+`, [id])
+    const conv = convQuery.rows[0]
+    const otherUser = conv.participant_1 === myId
+        ? { id: conv.participant_2, name: conv.participant2_name }
+        : { id: conv.participant_1, name: conv.participant1_name };
+    const myUser = conv.participant_1 !== myId
+        ? { id: conv.participant_2, name: conv.participant2_name }
+        : { id: conv.participant_1, name: conv.participant1_name };
+    sendNotificationToMobile(message, otherUser?.name || "No name", otherUser.id, {talkingTo : myUser.id }, "message", `/dashboard/message/${myUser.id}?name=${myUser?.name || "No name"}`)
+
+
+}
+
+export const revalidate = 0

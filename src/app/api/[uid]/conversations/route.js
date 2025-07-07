@@ -73,7 +73,7 @@ export async function POST(req, { params }) {
 
     if (existing.rows.length > 0) {
         const conversation = existing.rows[0];
-         const otherUserId = conversation.participant_1 === uid
+         const otherUserId = Number(conversation.participant_1) === Number(uid)
       ? conversation.participant_2
       : conversation.participant_1;
 

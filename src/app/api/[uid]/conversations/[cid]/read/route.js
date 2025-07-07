@@ -1,4 +1,5 @@
 import pool from "@/config/db";
+import admin from "@/lib/firebaseAdmin";
 import { NextResponse } from "next/server";
 
 export async function PUT(req, { params }) {
@@ -11,11 +12,16 @@ export async function PUT(req, { params }) {
       UPDATE messages
       SET is_read = true
       WHERE conversation_id = $1
-        AND sender_id = $2
+        AND sender_id != $2
         AND is_read = false
       `,
       [conversationId, userId]
     );
+
+     const db = admin.firestore();
+     await db.collection('conversations_meta').doc(userId.toString()).set({
+        last_updated: Date.now(),
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

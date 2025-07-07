@@ -87,12 +87,10 @@ export async function GET(req, { params }) {
             }
         }
 
-        // 2. Sort users with conversation by last_updated (desc)
         usersWithConversation.sort((a, b) =>
             new Date(b.conversation.last_updated) - new Date(a.conversation.last_updated)
         );
 
-        // 3. Combine and return
         const finalUserList = [...usersWithConversation, ...usersWithoutConversation];
 
         return NextResponse.json(finalUserList, { status: 200 });
