@@ -46,7 +46,7 @@ export async function GET(req, { params }) {
          WHERE conversation_id = $1
            AND sender_id != $2
            AND is_read = false`,
-                [conv.id, userId]
+                [conv.id, Number(userId)]
             );
 
             const unreadCount = parseInt(unreadRes.rows[0].unread_count, 10);

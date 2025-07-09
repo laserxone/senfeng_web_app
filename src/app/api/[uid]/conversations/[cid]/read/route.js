@@ -3,7 +3,7 @@ import admin from "@/lib/firebaseAdmin";
 import { NextResponse } from "next/server";
 
 export async function PUT(req, { params }) {
-  const { cid: conversationId } = await params;
+  const { cid: conversationId, uid } = await params;
   const { userId } = await req.json();
 
   try {
@@ -12,10 +12,10 @@ export async function PUT(req, { params }) {
       UPDATE messages
       SET is_read = true
       WHERE conversation_id = $1
-        AND sender_id != $2
+        AND sender_id = $2
         AND is_read = false
       `,
-      [conversationId, userId]
+      [conversationId, Number(userId)]
     );
 
      const db = admin.firestore();

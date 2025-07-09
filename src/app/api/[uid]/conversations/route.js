@@ -85,8 +85,7 @@ export async function POST(req, { params }) {
     const otherUser = userResult.rows[0];
       return NextResponse.json({...existing.rows[0], otherUser}, { status: 200 });
     }
-
-    // Create new conversation
+ 
     const result = await pool.query(
       `INSERT INTO conversations (participant_1, participant_2) 
        VALUES ($1, $2) RETURNING *`,
@@ -94,14 +93,15 @@ export async function POST(req, { params }) {
     );
 
     const conversation = result.rows[0];
+    console.log(conversation)
 
-    const otherUserId = conversation.participant_1 === uid
+    const otherUserId = Number(conversation.participant_1) === Number(uid)
       ? conversation.participant_2
       : conversation.participant_1;
 
     const userResult = await pool.query(
       `SELECT id, name, dp FROM users WHERE id = $1`,
-      [otherUserId]
+      [Number(otherUserId)]
     );
 
     const otherUser = userResult.rows[0];
