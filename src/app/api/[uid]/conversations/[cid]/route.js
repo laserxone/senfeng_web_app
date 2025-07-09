@@ -32,10 +32,8 @@ export async function POST(req, { params }) {
     sendNotificationFromMe(cid, Number(senderId), message)
 
     const db = admin.firestore();
-    // await db.collection('messages_meta').doc(cid).set({
-    //     last_message: message,
-    //     last_updated: Date.now(),
-    //     by: senderId
+    // await db.collection('conversations_meta').doc(cid).set({
+    //     updated: Date.now(),
     // });
 
     return NextResponse.json({ success: true });
@@ -58,7 +56,7 @@ WHERE c.id = $1
     const myUser = conv.participant_1 !== myId
         ? { id: conv.participant_2, name: conv.participant2_name }
         : { id: conv.participant_1, name: conv.participant1_name };
-    sendNotificationToMobile(message, myUser?.name || "No name", otherUser.id, {talkingTo : myUser.id }, "message", `/dashboard/message/${myUser.id}?name=${myUser?.name || "No name"}`)
+    sendNotificationToMobile(message, myUser?.name || "No name", otherUser.id, { talkingTo: myUser.id }, "message", `/dashboard/message/${myUser.id}?name=${myUser?.name || "No name"}`)
 
 
 }

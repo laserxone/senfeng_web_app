@@ -55,7 +55,7 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
   useEffect(() => {
     if (!userId || !realMessages.length) return;
     const unreadExists = realMessages.some(
-      (msg) => msg.sender_id !== userId && !msg.is_read
+      (msg) => Number(msg.sender_id) !== Number(userId) && !msg.is_read
     );
 
     if (unreadExists) {
@@ -80,33 +80,34 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
     setTempMessages((prev) => [...prev, tempMessage]);
     setInput("");
 
-    try {
-      const res = await axios.post(`/${userId}/conversations/${id}`, {
+    axios
+      .post(`/${userId}/conversations/${id}`, {
         senderId: userId,
         message: input,
         created_at: created,
+      })
+      .then(() => {
+        if (id && user?.id) {
+          TriggerFirebase(id.toString(), user?.id?.toString());
+          TriggerFirebase("", userId.toString());
+        }
+      })
+      .catch(() => {
+        setTempMessages((prev) => prev.filter((msg) => msg.id !== tempId));
       });
-
-      TriggerFirebase(id.toString(), user?.id?.toString());
-    } catch (err) {
-      setTempMessages((prev) => prev.filter((msg) => msg.id !== tempId));
-    }
   };
 
   const markAsRead = async () => {
     try {
-      await axios.put(
-        `/${UserState.value.data?.id}/conversations/${id}/read`,
-        {
-          userId: user?.id,
-        }
-      );
+      await axios.put(`/${UserState.value.data?.id}/conversations/${id}/read`, {
+        userId: user?.id,
+      });
     } catch (err) {
       console.error("Failed to mark as read", err);
     }
 
-    TriggerFirebase(id.toString(), user?.id?.toString());
-    TriggerFirebase(id.toString(), UserState.value.data?.id?.toString());
+    // TriggerFirebase(id.toString(), user?.id?.toString());
+    // TriggerFirebase(id.toString(), UserState.value.data?.id?.toString());
   };
 
   const combinedMessages = [...realMessages, ...tempMessages];
@@ -218,7 +219,9 @@ const RenderSelectedContent = ({ visible, onClose, data }) => {
         <SheetHeader className="mb-4">
           <div className="flex items-center justify-between">
             <SheetTitle className="text-2xl">Report</SheetTitle>
-            <Label className="text-muted-foreground text-lg">Entries: {data.length}</Label>
+            <Label className="text-muted-foreground text-lg">
+              Entries: {data.length}
+            </Label>
           </div>
           <ScrollArea className="h-[90vh] px-4">
             {data.length == 0 ? (

@@ -23,7 +23,7 @@ export default function MessagePage() {
     if (response.data.id) {
       setSelectedConversation({
         id: response.data.id,
-        user: info,
+       user: response.data?.otherUser
       });
     }
   };
