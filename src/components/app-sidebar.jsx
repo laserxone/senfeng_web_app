@@ -59,6 +59,7 @@ import NotificationBadgeWithoutCount from "./NotificationBadgeWithoutCount";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useContext, useEffect, useState } from "react";
 import axios, { setUserOffice } from "@/lib/axios";
+import { ScrollArea } from "./ui/scroll-area";
 
 export const company = {
   name: "SENFENG",
@@ -111,9 +112,9 @@ export default function AppSidebar({ office }) {
     }
   }, [UserState]);
 
-   const fetchConversations = async () => {
+  const fetchConversations = async () => {
     const response = await axios.get(`/${UserState.value.data?.id}/chat`);
-     let unreadConversationsCount = 0;
+    let unreadConversationsCount = 0;
     const convs = response.data.map((c) => {
       if (Number(c.unreadCount) > 0) {
         unreadConversationsCount++;
@@ -123,10 +124,6 @@ export default function AppSidebar({ office }) {
 
     setConversations(unreadConversationsCount);
   };
-
- 
-
-  
 
   useEffect(() => {
     if (!UserState.value.data?.id) return;
@@ -154,85 +151,90 @@ export default function AppSidebar({ office }) {
           />
         </div>
       </SidebarHeader>
+
       <SidebarContent className="overflow-x-hidden">
-        <SidebarGroup>
-          <SidebarMenu>
-            {UserState.value.data?.nav_items &&
-              UserState.value.data?.nav_items.map((item) => {
-                const Icon = item.icon ? Icons[item.icon] : Icons.logo;
-                return item?.items && item?.items?.length > 0 ? (
-                  <Collapsible
-                    key={item.title}
-                    asChild
-                    defaultOpen={item.isActive}
-                    className="group/collapsible"
-                  >
-                    <SidebarMenuItem>
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuButton
-                          tooltip={item.title}
-                          isActive={pathname.includes(item.url)}
-                        >
-                          {item.icon && <Icon />}
-                          <span className="text-[12px]">{item.title}</span>
-                          <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </SidebarMenuButton>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {item.items?.map((subItem) => (
-                            <SidebarMenuSubItem key={subItem.title}>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname.includes(subItem.url)}
-                              >
-                                <Link
-                                  onClick={() => {
-                                    if (isMobile) toggleSidebar();
-                                    if (subItem.title === "POS")
-                                      toggleSidebar();
-                                  }}
-                                  href={`/${UserState.value.data?.base_route}${subItem.url}`}
-                                >
-                                  <span className="text-[12px]">
-                                    {subItem.title}
-                                  </span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    </SidebarMenuItem>
-                  </Collapsible>
-                ) : (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
+        <ScrollArea>
+          <SidebarGroup>
+            <SidebarMenu>
+              {UserState.value.data?.nav_items &&
+                UserState.value.data?.nav_items.map((item) => {
+                  const Icon = item.icon ? Icons[item.icon] : Icons.logo;
+                  return item?.items && item?.items?.length > 0 ? (
+                    <Collapsible
+                      key={item.title}
                       asChild
-                      tooltip={item.title}
-                      isActive={pathname.includes(item.url)}
+                      defaultOpen={item.isActive}
+                      className="group/collapsible"
                     >
-                      <Link
-                        onClick={() => {
-                          if (isMobile) toggleSidebar();
-                        }}
-                        href={`/${UserState.value.data?.base_route}${item.url}`}
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton
+                            tooltip={item.title}
+                            isActive={pathname.includes(item.url)}
+                          >
+                            {item.icon && <Icon />}
+                            <span className="text-[12px]">{item.title}</span>
+                            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.items?.map((subItem) => (
+                              <SidebarMenuSubItem key={subItem.title}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={pathname.includes(subItem.url)}
+                                >
+                                  <Link
+                                    onClick={() => {
+                                      if (isMobile) toggleSidebar();
+                                      if (subItem.title === "POS")
+                                        toggleSidebar();
+                                    }}
+                                    href={`/${UserState.value.data?.base_route}${subItem.url}`}
+                                  >
+                                    <span className="text-[12px]">
+                                      {subItem.title}
+                                    </span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  ) : (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        tooltip={item.title}
+                        isActive={pathname.includes(item.url)}
                       >
-                        <Icon />
-                        <span className="text-[14px]">{item.title}</span>
-                        {item.url.includes("messages") && conversations > 0 && (
-                          <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
-                            {conversations}
-                          </span>
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-          </SidebarMenu>
-        </SidebarGroup>
+                        <Link
+                          onClick={() => {
+                            if (isMobile) toggleSidebar();
+                          }}
+                          href={`/${UserState.value.data?.base_route}${item.url}`}
+                        >
+                          <Icon />
+                          <span className="text-[14px]">{item.title}</span>
+                          {item.url.includes("messages") &&
+                            conversations > 0 && (
+                              <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                                {conversations}
+                              </span>
+                            )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+            </SidebarMenu>
+          </SidebarGroup>
+        </ScrollArea>
       </SidebarContent>
+
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
