@@ -1,5 +1,6 @@
 import pool from "@/config/db";
 import { storage } from "@/config/firebase";
+import { saleFields } from "@/constants/data";
 import { addLog } from "@/lib/addLog";
 import { generateLog } from "@/lib/generateLog";
 import { deleteObject, ref } from "firebase/storage";
@@ -8,17 +9,17 @@ import { NextResponse } from "next/server";
 export async function GET(req, { params }) {
   const { id, uid } = await params; // Machine ID
 
-  
+
 
   try {
 
     const userQuery = await pool.query(`SELECT id, designation, limited_access FROM users WHERE id = $1`, [uid])
 
-  const user = userQuery.rows[0]
+    const user = userQuery.rows[0]
 
-  if (!user) {
-    return NextResponse.json({ message: "User not found" }, { status: 500 })
-  }
+    if (!user) {
+      return NextResponse.json({ message: "User not found" }, { status: 500 })
+    }
 
     // 1. Get the machine and its customer ID
     const machineQuery = `SELECT * FROM sale WHERE id = $1`;
@@ -55,7 +56,7 @@ export async function GET(req, { params }) {
         }
       }
     }
-    
+
     let sellByName = null;
     if (sellBy) {
       const sellerQuery = `SELECT name FROM users WHERE id = $1`;
@@ -84,7 +85,44 @@ export async function GET(req, { params }) {
 
     machine.status = machineStatus.rows.length > 0 ? machineStatus.rows[0].status : null
 
-    return NextResponse.json({ customer, machine }, { status: 200 });
+    let machineFilled = 0;
+    let unmatchedFields = [];
+
+    const hasContractImages =
+      (Array.isArray(machine.contract_images_pdf) && machine.contract_images_pdf.length > 0) ||
+      (Array.isArray(machine.contract_images_png) && machine.contract_images_png.length > 0);
+
+    if (hasContractImages) machineFilled++;
+
+    saleFields.forEach(field => {
+      const value = machine[field];
+      const isFilled =
+        Array.isArray(value)
+          ? value.length > 0
+          : typeof value === 'number'
+            ? ['price'].includes(field)
+              ? value !== null && !isNaN(value)
+              : true
+            : typeof value === 'string'
+              ? value.trim() !== '' && value !== 'null'
+              : value !== null && value !== undefined;
+
+      if (isFilled) {
+    machineFilled++;
+  } else {
+    unmatchedFields.push(field);
+  }
+    });
+
+    const totalFields = saleFields.length + 1;
+
+
+
+    const percentage_completion = Math.round((machineFilled / totalFields) * 100)
+
+
+
+    return NextResponse.json({ customer, machine, percentage_completion, unmatchedFields }, { status: 200 });
 
   } catch (error) {
     console.error("Error fetching data:", error);

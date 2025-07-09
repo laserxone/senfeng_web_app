@@ -1,5 +1,4 @@
 "use client";
-import PageContainer from "@/components/page-container";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,10 +20,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowUpDown,
-  CircleCheck,
   ClipboardList,
   EditIcon,
   Info,
+  InfoIcon,
   ShieldCheck,
   Siren,
   Trash,
@@ -45,10 +44,12 @@ import { z } from "zod";
 import AddPayment from "@/components/addPayment";
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
+import { downloadCustomerZip } from "@/components/downloadzip";
 import DropzoneMulti from "@/components/dropzone-multi";
 import EditMachine from "@/components/editMachine";
 import EditPayment from "@/components/editPayment";
 import InvoicePDF from "@/components/invoicepdf";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
@@ -65,9 +66,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { UserSearch } from "@/components/user-search";
 import { storage } from "@/config/firebase";
 import { Colors } from "@/constants/data";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
 import { debounce } from "@/lib/debounce";
@@ -78,14 +79,11 @@ import { pdf } from "@react-pdf/renderer";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
 import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import "pdfjs-dist/build/pdf.worker";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
-import { downloadCustomerZip } from "@/components/downloadzip";
-import { UserSearch } from "@/components/user-search";
-import { usePathname, useRouter } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
 
 export default function Machine({ id, onLoading = () => {}, base }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -107,6 +105,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const [unmatched, setUnmatched] = useState([]);
 
   useEffect(() => {
     if (id && UserState.value.data?.id) {
@@ -130,8 +129,10 @@ export default function Machine({ id, onLoading = () => {}, base }) {
       const response = await axios.get(
         `/${UserState.value.data?.id}/machine/${id}`
       );
+
       const machine = response.data?.machine;
       const userData = UserState.value.data;
+      setUnmatched(response.data.unmatchedFields);
 
       if (
         response.data?.customer &&
@@ -145,7 +146,11 @@ export default function Machine({ id, onLoading = () => {}, base }) {
         setEditAllowed(true);
       } else if (userData?.designation === "Owner" || userData?.full_access) {
         setEditAllowed(true);
-      } else if (userData?.designation === "Customer Relationship Manager (After Sales)" && !userData?.limited_access) {
+      } else if (
+        userData?.designation ===
+          "Customer Relationship Manager (After Sales)" &&
+        !userData?.limited_access
+      ) {
         setEditAllowed(true);
       } else {
         setEditAllowed(false);
@@ -465,22 +470,41 @@ export default function Machine({ id, onLoading = () => {}, base }) {
               {data?.owner && `(${data.owner})`}
             </span>
           </div>
-          {showAlert ? (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <div>
-                    <Siren className="text-red-600 h-8 w-8 animate-pulse-opacity" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent className="bg-red-600 mr-2">
-                  <p className="text-white">Duplicate TID found</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ) : (
-            <div />
-          )}
+          <div className="flex gap-2">
+            {showAlert && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div>
+                      <Siren className="text-red-600 h-8 w-8 animate-pulse-opacity" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-red-600 mr-2">
+                    <p className="text-white">Duplicate TID found</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+
+            {unmatched.length > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div>
+                      <InfoIcon className="text-red-600 h-8 w-8 animate-pulse-opacity" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-red-600 mr-2">
+                    {unmatched.map((item, index) => (
+                      <p key={index} className="text-white">
+                        {item.replace(/_/g, " ").toUpperCase()}
+                      </p>
+                    ))}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
         </h2>
         <h2 className="text-md font-bold text-primary dark:text-white mb-4 flex items-center justify-center">
           Manager {machine?.sell_by_name || "NA"}
@@ -718,7 +742,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
         />
       </div>
       <EditMachine
-      base={base}
+        base={base}
         visible={editMachine}
         onClose={setEditMachine}
         machine_id={id}
@@ -759,7 +783,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
       />
 
       <AddPayment
-      base={base}
+        base={base}
         customer_id={data?.customer?.id}
         visible={addPayment}
         onClose={setAddPayment}
@@ -768,7 +792,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
       />
       {selectedPayment && (
         <EditPayment
-        base={base}
+          base={base}
           customer_id={data?.customer?.id}
           visible={editPayment}
           onClose={(val) => {
@@ -800,7 +824,7 @@ const ImageSheet = ({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
   const [rotation, setRotation] = useState(0);
-  const {state : UserState} = useContext(UserContext)
+  const { state: UserState } = useContext(UserContext);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -996,7 +1020,7 @@ const ViewImagesSheet = ({
   const [contractPdfImages, setContractPdfImages] = useState([]);
   const [otherPdfImages, setOtherPdfImages] = useState([]);
   const [addImageVisible, setAddImageVisible] = useState(false);
-  const {state : UserState} = useContext(UserContext)
+  const { state: UserState } = useContext(UserContext);
   const { toast } = useToast();
 
   const contractImages = useMemo(() => data?.contract_images_png || [], [data]);
@@ -1089,7 +1113,10 @@ const ViewImagesSheet = ({
         formData.handover_user_id = null;
       }
 
-      await axios.put(`/${UserState.value.data?.id}/machine/${data.id}`, formData);
+      await axios.put(
+        `/${UserState.value.data?.id}/machine/${data.id}`,
+        formData
+      );
 
       toast({ title: "Image deleted successfully." });
       await onRefresh();
@@ -1325,7 +1352,7 @@ const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }) => {
 
 const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
   const [loading, setLoading] = useState(false);
-  const {state : UserState} = useContext(UserContext)
+  const { state: UserState } = useContext(UserContext);
   const formSchema = z
     .object({
       note: z.string().min(1, { message: "Type is required." }),
