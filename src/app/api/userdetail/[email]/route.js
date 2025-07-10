@@ -32,7 +32,7 @@ export async function GET(req, { params }) {
         const branchOffice = result.rows[0].office.toLowerCase()
 
         if (!result.rows[0].active) {
-            return NextResponse.json({ message: "Cannot access system" }, { status: 404 })
+            return NextResponse.json({ message: "You are not authorized to access the system" }, { status: 404 })
         }
 
 
