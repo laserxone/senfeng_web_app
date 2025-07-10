@@ -246,7 +246,7 @@ export default function Page() {
           </TabsList>
 
           <div className="flex flex-1 w-full mt-2">
-            {activeTab === "newCustomers" && <RenderNewCustomer />}
+            {activeTab === "newCustomers" && <RenderNewCustomer />} 
             {activeTab === "reimbursement" && <RenderReimbursement />}
             {activeTab === "attendance" && <RenderAttendance />}
             {activeTab === "task" && (

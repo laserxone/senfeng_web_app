@@ -19,6 +19,7 @@ export default function Page() {
   const { state: UserState } = useContext(UserContext);
   const [reimbursementData, setReimbursementData] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
+   const [activeTab, setActiveTab] = useState("attendance");
 
   useEffect(() => {
     if (UserState.value.data?.id) {
@@ -87,8 +88,8 @@ export default function Page() {
 
   const RenderReimbursement = useCallback(() => {
     return (
-      <Card>
-        <CardContent className="pt-5">
+        <Card className="flex flex-1">
+        <CardContent className="pt-2 flex flex-1">
           <Reimbursement
             id={UserState.value.data?.id}
             passingData={reimbursementData || []}
@@ -107,8 +108,8 @@ export default function Page() {
 
   const RenderAttendance = useCallback(() => {
     return (
-      <Card>
-        <CardContent className="pt-2">
+        <Card className="flex flex-1">
+        <CardContent className="pt-2 flex flex-1">
           <Attendance
             passingData={attendanceData}
             onFilterReturn={async (start, end) => {
@@ -126,7 +127,7 @@ export default function Page() {
   return (
     <div className="flex flex-1 gap-5">
       <div className="flex flex-1 flex-col">
-        <div className="flex flex-1 justify-between mb-8 flex-wrap">
+        <div className="flex justify-between mb-8 flex-wrap">
           <div className="flex items-center ">
             <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
             <div>
@@ -136,26 +137,29 @@ export default function Page() {
           </div>
         </div>
 
-        <Tabs defaultValue="attendance" className="w-full flex flex-1 flex-col">
+        <Tabs  className="relative flex w-full flex-1 flex-col"
+          value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="justify-start">
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="attendance">
-            <RenderAttendance />
-          </TabsContent>
-          <TabsContent value="reimbursement">
-            <RenderReimbursement />
-          </TabsContent>
-          <TabsContent value="salary">
-            <Card>
-              <CardContent className="pt-2">
-                <SalaryRecord id={UserState.value.data?.id}/>
-              </CardContent>
-            </Card>
-          </TabsContent>
+            <div className="flex flex-1 w-full mt-2">
+          
+            {activeTab === "reimbursement" && <RenderReimbursement />}
+            {activeTab === "attendance" && <RenderAttendance />}
+            {activeTab === "salary" && (
+              <Card className="flex flex-1">
+                <CardContent className="pt-2 flex flex-1">
+                  <SalaryRecord id={UserState.value.data?.id} />
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+
+          
         </Tabs>
       </div>
     </div>
