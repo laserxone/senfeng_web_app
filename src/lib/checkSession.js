@@ -1,6 +1,7 @@
 import { auth } from "@/config/firebase";
 import { useToast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
+import { FirebaseError } from "firebase/app";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { startHolyLoader } from "holy-loader";
 import { usePathname, useRouter } from "next/navigation";
@@ -110,10 +111,11 @@ export default function useCheckSession() {
                 return { error: "User not found" };
             }
         } catch (e) {
-
+            if (e?.message instanceof FirebaseError) {
+                toast({ title: e?.message || "Error occured", variant: "destructive" })
+            }
             signOut(auth);
-            toast({ title: e?.message || "Error occured", variant: "destructive" })
-            return { error: e?.message || "Error occured"};
+            return { error: e?.message || "Error occured" };
         }
     }
 

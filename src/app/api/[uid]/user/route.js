@@ -69,7 +69,7 @@ export async function GET(req) {
 
 
   try {
-    let query = `SELECT id, name, designation, joining_date, leaving_date, email FROM users`
+    let query = `SELECT id, name, designation, joining_date, leaving_date, email, active FROM users`
     
     let queryParams = [];
     let conditions = [];

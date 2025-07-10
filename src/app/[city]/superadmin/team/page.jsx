@@ -43,6 +43,7 @@ import { UserContext } from "@/store/context/UserContext";
 import { startHolyLoader } from "holy-loader";
 import moment from "moment";
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
 
 const columns = [
   {
@@ -140,6 +141,26 @@ const columns = [
     },
     cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
   },
+
+  {
+    accessorKey: "active",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Status
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const val = row.getValue("active");
+      return <Badge variant={val ? "default" : "destructive"}>{val ? "Active" : "Inactive"}</Badge> ;
+    },
+  },
 ];
 
 const tableHeader = [
@@ -204,9 +225,7 @@ export default function Page() {
         onRowClick={(val) => {
           if (val.id) {
             startHolyLoader();
-            router.push(
-              `/${UserState.value.data?.base_route}/team/${val.id}`
-            );
+            router.push(`/${UserState.value.data?.base_route}/team/${val.id}`);
           }
         }}
       ></PageTable>
@@ -236,7 +255,7 @@ export default function Page() {
 
 const AddUserDialog = ({ visible, onClose, onReturn }) => {
   const [dataLoading, setDataLoading] = useState(false);
-  const {state : UserState} = useContext(UserContext)
+  const { state: UserState } = useContext(UserContext);
   const formSchema = z.object({
     name: z.string().min(2, { message: "Name must be at least 2 characters." }),
     email: z.string().email({ message: "Invalid email address." }),
@@ -260,7 +279,10 @@ const AddUserDialog = ({ visible, onClose, onReturn }) => {
     setDataLoading(true);
 
     axios
-      .post(`/${UserState.value.data?.id}/user`, { ...values, name: values.name.toUpperCase() })
+      .post(`/${UserState.value.data?.id}/user`, {
+        ...values,
+        name: values.name.toUpperCase(),
+      })
       .then(async (response) => {
         onReturn(response.data);
         handleClose(false);

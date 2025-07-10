@@ -29,7 +29,7 @@ axiosInstance.interceptors.response.use(
   error => {
     const message =
       error?.response?.data?.message || error?.message || "Something went wrong"
-    
+      console.log(2)
     toast({
       title: "Error",
       description: message,

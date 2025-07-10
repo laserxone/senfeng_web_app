@@ -67,7 +67,7 @@ export default function Page({ params }) {
   useEffect(() => {
     if (UserState.value.data?.id) {
       fetchData();
-    }
+    } 
   }, [UserState]);
 
   async function fetchData() {

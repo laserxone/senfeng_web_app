@@ -32,7 +32,7 @@ export async function GET(req, { params }) {
         const branchOffice = result.rows[0].office.toLowerCase()
 
         if (!result.rows[0].active) {
-            return NextResponse.json({ message: "Cannot access system" }, { status: 500 })
+            return NextResponse.json({ message: "Cannot access system" }, { status: 404 })
         }
 
 
