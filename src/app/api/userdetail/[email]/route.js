@@ -16,7 +16,7 @@ export async function GET(req, { params }) {
 
     try {
         const query = `
-      SELECT id, customer_add_access, designation, name, limited_access, dp, full_access, email, dms_write_access, customer_delete_access, branch_expenses_assigned, branch_expenses_write_access, branch_expenses_delete_access, pos_assigned, complaint_assigned, inventory_assigned, office FROM users WHERE email = $1 LIMIT 1
+      SELECT id, customer_add_access, designation, name, limited_access, dp, full_access, email, dms_write_access, customer_delete_access, branch_expenses_assigned, branch_expenses_write_access, branch_expenses_delete_access, pos_assigned, complaint_assigned, inventory_assigned, office, active FROM users WHERE email = $1 LIMIT 1
     `;
         let base_route = ""
         const result = await pool.query(query, [email]);
@@ -31,6 +31,9 @@ export async function GET(req, { params }) {
         let nav_items = []
         const branchOffice = result.rows[0].office.toLowerCase()
 
+        if (!result.rows[0].active) {
+            return NextResponse.json({ message: "Cannot access system" }, { status: 500 })
+        }
 
 
         if (result.rows[0].full_access || result.rows[0].designation == 'Owner') {
