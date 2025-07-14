@@ -60,6 +60,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useContext, useEffect, useState } from "react";
 import axios, { setUserOffice } from "@/lib/axios";
 import { ScrollArea } from "./ui/scroll-area";
+import { OfficeContext } from "@/store/context/OfficeContext";
 
 export const company = {
   name: "SENFENG",
@@ -71,6 +72,7 @@ export default function AppSidebar({ office }) {
   const pathname = usePathname();
   const checkSession = useCheckSession();
   const { state: UserState, setUser } = useContext(UserContext);
+  const {state : OfficeState, setOffice}  = useContext(OfficeContext)
   const { state: NotificationState, setNotification } =
     useContext(NotificationContext);
   const profileImage = useProfileImage();
@@ -86,9 +88,10 @@ export default function AppSidebar({ office }) {
 
   async function updateData(val) {
     if (val?.user) {
-      // if (office) {
-      //   setUserOffice(`/${office}`);
-      // }
+      if (office) {
+        setUserOffice(`/${office}`);
+        setOffice(office)
+      }
       setUser(val.user);
     }
   }

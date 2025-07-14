@@ -84,6 +84,7 @@ import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import "pdfjs-dist/build/pdf.worker";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
+import { OfficeContext } from "@/store/context/OfficeContext";
 
 export default function Machine({ id, onLoading = () => {}, base }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -1353,6 +1354,7 @@ const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }) => {
 const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
   const [loading, setLoading] = useState(false);
   const { state: UserState } = useContext(UserContext);
+  const {state : OfficeState} = useContext(OfficeContext)
   const formSchema = z
     .object({
       note: z.string().min(1, { message: "Type is required." }),
@@ -1385,7 +1387,7 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
     let allProcessedImages = [];
     await Promise.all(
       values.images.map(async (item) => {
-        const name = `customer/${customer_id}/machine/${machine.id}/${
+        const name = `${OfficeState.value.data}/customer/${customer_id}/machine/${machine.id}/${
           values.note
         }/${moment().valueOf().toString()}.png`;
         const imageRefResult = await UploadImage(item, name);

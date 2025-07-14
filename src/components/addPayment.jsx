@@ -1,7 +1,19 @@
+import Dropzone from "@/components/dropzone";
+import { toast } from "@/hooks/use-toast";
+import axios from "@/lib/axios";
+import { debounce } from "@/lib/debounce";
+import { UploadImage } from "@/lib/uploadFunction";
+import { UserContext } from "@/store/context/UserContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import moment from "moment";
+import Link from "next/link";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import AppCalendar from "./appCalendar";
+import { RequiredStar } from "./RequiredStar";
+import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { ScrollArea } from "./ui/scroll-area";
 import {
   Form,
   FormControl,
@@ -11,9 +23,7 @@ import {
   FormMessage,
 } from "./ui/form";
 import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { RequiredStar } from "./RequiredStar";
+import { ScrollArea } from "./ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -21,22 +31,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import AppCalendar from "./appCalendar";
-import { Textarea } from "./ui/textarea";
-import Dropzone from "@/components/dropzone";
-import Image from "next/image";
-import moment from "moment";
-import { UploadImage } from "@/lib/uploadFunction";
-import axios from "@/lib/axios";
-import { useCallback, useContext, useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import { BASE_URL } from "@/constants/data";
-import { debounce } from "@/lib/debounce";
 import Spinner from "./ui/spinner";
-import { Label } from "./ui/label";
-import Link from "next/link";
-import { UserContext } from "@/store/context/UserContext";
+import { Textarea } from "./ui/textarea";
+import { OfficeContext } from "@/store/context/OfficeContext";
 
 const AddPayment = ({
   visible,
@@ -49,6 +46,7 @@ const AddPayment = ({
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const { state: UserState } = useContext(UserContext);
+  const {state : OfficeState} = useContext(OfficeContext)
   const [lockTID, setLockTID] = useState(false)
   const [error, setError] = useState({});
   const formSchema = z.object({
@@ -81,7 +79,7 @@ const AddPayment = ({
     setLoading(true);
     try {
       if (values.image) {
-        const name = `customer/${customer_id}/machine/${machine_id}/payment/${moment()
+        const name = `${OfficeState.value.data}/customer/${customer_id}/machine/${machine_id}/payment/${moment()
           .valueOf()
           .toString()}.png`;
         const imgRef = await UploadImage(values.image, name);

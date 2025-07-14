@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 
 export async function middleware(req) {
   const { pathname, origin } = req.nextUrl;
-  
+
+ 
   if (req.method === 'OPTIONS') {
     const res = NextResponse.next();
     res.headers.append('Access-Control-Allow-Credentials', 'true');
@@ -18,7 +19,9 @@ export async function middleware(req) {
   const match = pathname.match(/^\/api\/([^\/]+)\//);
   const uid = match?.[1];
 
-  if (uid && !isNaN(uid)) {
+  const res = NextResponse.next();
+
+  if (uid && !isNaN(Number(uid))) {
     try {
       const check = await fetch(`${origin}/api/checkuser?uid=${uid}`, {
         method: 'GET',
@@ -35,19 +38,22 @@ export async function middleware(req) {
       }
 
       const data = await check.json();
+
       if (!data.active) {
         return NextResponse.json(
           { message: 'You are not authorized to access the system' },
           { status: 403 }
         );
       }
+
+      res.headers.set('x-user-office', data.office);
     } catch (err) {
       console.error('Middleware error:', err);
       return NextResponse.json({ message: 'Error validating user.' }, { status: 500 });
     }
   }
 
-  return NextResponse.next();
+  return res;
 }
 
 

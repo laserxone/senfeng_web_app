@@ -52,6 +52,7 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
 import Spinner from "../ui/spinner";
+import { OfficeContext } from "@/store/context/OfficeContext";
 
 export default function EmployeeBranchExpenses({ base }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -427,6 +428,7 @@ const ImageSheet = ({
 const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
   const [loading, setLoading] = useState(false);
   const { state: UserState } = useContext(UserContext);
+  const {state : OfficeState} = useContext(OfficeContext)
   const formSchema = z.object({
     note: z.string().min(1, { message: "Note is required." }),
     amount: z
@@ -450,7 +452,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
     setLoading(true);
     try {
       if (values.image) {
-        const name = `Expenses/${moment().valueOf().toString()}.png`;
+        const name = `${OfficeState.value.data}/Expenses/${moment().valueOf().toString()}.png`;
         const imgRes = await UploadImage(values.image, name);
         const response = await axios.post(
           `/${UserState.value.data?.id}/expenses`,

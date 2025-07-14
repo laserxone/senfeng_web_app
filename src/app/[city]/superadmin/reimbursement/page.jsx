@@ -14,7 +14,9 @@ import {
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
 import AppCalendar from "@/components/appCalendar";
+import { CustomerSearchWithData } from "@/components/customer-search-with-data";
 import Dropzone from "@/components/dropzone";
+import { RequiredStar } from "@/components/RequiredStar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -31,6 +33,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Heading } from "@/components/ui/heading";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
@@ -43,6 +47,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserSearch } from "@/components/user-search";
 import FilterSheet from "@/components/users/filterSheet";
 import { storage } from "@/config/firebase";
+import { TIMEZONE } from "@/constants/data";
 import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import exportToExcel from "@/lib/exportToExcel";
@@ -51,17 +56,12 @@ import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
+import momentT from "moment-timezone";
 import { useForm } from "react-hook-form";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
-import { getStoragePathFromUrl } from "@/components/customer-components/machine/machine-component";
-import { TIMEZONE } from "@/constants/data";
-import momentT from "moment-timezone";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { CustomerSearchWithData } from "@/components/customer-search-with-data";
-import { RequiredStar } from "@/components/RequiredStar";
+import { OfficeContext } from "@/store/context/OfficeContext";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -452,10 +452,6 @@ const ImageSheet = ({
   async function handleDelete() {
     if (img) {
       if (img.includes("https")) {
-        // const storagePath = getStoragePathFromUrl(img);
-        // if (storagePath) {
-        //   DeleteFromStorage(storagePath);
-        // }
       } else {
         DeleteFromStorage(img);
       }
@@ -534,6 +530,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedRadio, setSelectedRadio] = useState("customer");
   const {state : UserState} = useContext(UserContext)
+   const {state : OfficeState} = useContext(OfficeContext)
 
   const formSchema = z.object({
     title: z.string().min(1, { message: "Title is required." }),
@@ -563,7 +560,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
   async function onSubmit(values) {
     setLoading(true);
     try {
-      const name = `${values.submitted_by}/reimbursement/${moment()
+      const name = `${OfficeState.value.data}/${values.submitted_by}/reimbursement/${moment()
         .valueOf()
         .toString()}.png`;
       const imgRef = await UploadImage(values.image, name);

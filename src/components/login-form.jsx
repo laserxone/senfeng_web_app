@@ -13,7 +13,7 @@ import { auth, provider } from "@/config/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import Spinner from "./ui/spinner";
 

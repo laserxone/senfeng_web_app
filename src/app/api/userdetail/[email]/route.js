@@ -1,4 +1,4 @@
-import pool from "@/config/db";
+import pool, { karachi_pool } from "@/config/db";
 import { branchNavItem, complaintItem, employeeNavItems, InventoryNavItem, ownerNavItems, POSNavItem, StoreNavItem, Tools } from "@/constants/data";
 import { NextResponse } from "next/server";
 
@@ -16,76 +16,78 @@ export async function GET(req, { params }) {
 
     try {
         const query = `
-      SELECT id, customer_add_access, designation, name, limited_access, dp, full_access, email, dms_write_access, customer_delete_access, branch_expenses_assigned, branch_expenses_write_access, branch_expenses_delete_access, pos_assigned, complaint_assigned, inventory_assigned, office, active FROM users WHERE email = $1 LIMIT 1
+      SELECT * FROM users WHERE email = $1 LIMIT 1
     `;
         let base_route = ""
-        const result = await pool.query(query, [email]);
+        let result = await pool.query(query, [email]);
+        if (result.rows.length === 0) {
+            result = await karachi_pool.query(query, [email]);
+        }
+        const user = result.rows[0];
+
 
         const versionResult = await pool.query(`SELECT version_code, url FROM settings`)
-        const version_code = versionResult.rows[0].version_code
-        const route_url = versionResult.rows[0].url
+        const versionRow = versionResult.rows[0] || {};
+        const version_code = versionRow.version_code || "";
+        const route_url = versionRow.url || "";
 
-        if (result.rows.length == 0) {
+        if (!user) {
             return NextResponse.json({ message: "User not found, contact your manager" }, { status: 404 })
         }
         let nav_items = []
-        const branchOffice = result.rows[0].office.toLowerCase()
+        const branchOffice = (user.office || '').toLowerCase();
 
-        if (!result.rows[0].active) {
+        if (!user.active) {
             return NextResponse.json({ message: "You are not authorized to access the system" }, { status: 404 })
         }
 
 
-        if (result.rows[0].full_access || result.rows[0].designation == 'Owner') {
+        if (user.full_access || user.designation == 'Owner') {
 
             nav_items = [...ownerNavItems]
             nav_items.push(POSNavItem)
             nav_items.push(Tools)
             base_route = `${city ? city : branchOffice}/superadmin`
         } else {
-            if (result.rows[0].designation == 'Store Manager') {
+            if (user.designation == 'Store Manager') {
                 base_route = `${branchOffice}/store`
                 nav_items = [...StoreNavItem]
                 nav_items.push(POSNavItem)
             } else {
                 nav_items = [...employeeNavItems]
             }
-            if (result.rows[0].branch_expenses_assigned)
+            if (user.branch_expenses_assigned)
                 nav_items.push(branchNavItem)
-            // if (result.rows[0].inventory_assigned)
+            // if (user.inventory_assigned)
             //     nav_items.push(InventoryNavItem)
-            if (result.rows[0].pos_assigned) {
+            if (user.pos_assigned) {
                 nav_items.push(POSNavItem)
             }
-            if (result.rows[0].complaint_assigned) {
+            if (user.complaint_assigned) {
                 nav_items.push(complaintItem)
             }
-            if (result.rows[0].designation == 'Engineer') {
+            if (user.designation == 'Engineer') {
                 base_route = `${branchOffice}/engineer`
             }
-            if (result.rows[0].designation == 'Sales') {
+            if (user.designation == 'Sales') {
                 base_route = `${branchOffice}/sales`
             }
-            if (result.rows[0].designation == 'Customer Relationship Manager') {
+            if (user.designation == 'Customer Relationship Manager') {
                 base_route = `${branchOffice}/crm`
             }
-            if (result.rows[0].designation == 'Customer Relationship Manager (After Sales)') {
+            if (user.designation == 'Customer Relationship Manager (After Sales)') {
                 base_route = `${branchOffice}/aftersales`
             }
-            if (result.rows[0].designation == 'Social Media Manager') {
+            if (user.designation == 'Social Media Manager') {
                 base_route = `${branchOffice}/smm`
             }
-            if (result.rows[0].designation == 'Manager') {
+            if (user.designation == 'Manager') {
                 base_route = `${branchOffice}/manager`
             }
 
-
-
-
         }
 
-
-        return NextResponse.json({ ...result.rows[0], nav_items: nav_items, base_route: base_route, version_code: version_code, route_url: route_url }, { status: 200 })
+        return NextResponse.json({ ...user, nav_items: nav_items, base_route: base_route, version_code: version_code, route_url: route_url }, { status: 200 })
 
     } catch (error) {
         console.error('Error inserting data: ', error);

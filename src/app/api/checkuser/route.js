@@ -1,4 +1,4 @@
-import pool from "@/config/db";
+import pool, { karachi_pool } from "@/config/db";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
@@ -11,11 +11,20 @@ export async function GET(req) {
         }
 
         const result = await pool.query(
-            `SELECT id, active FROM users WHERE id = $1`,
+            `SELECT id, active, office FROM users WHERE id = $1`,
             [uid]
         );
 
-        const user = result.rows[0];
+        let user = result.rows[0];
+
+        if (!user) {
+            const karachiResult = await karachi_pool.query(
+                `SELECT id, active, office FROM users WHERE id = $1`,
+                [uid]
+            );
+            user = karachiResult.rows[0]
+        }
+
 
         if (!user || !user.active) {
             return NextResponse.json(
@@ -24,7 +33,7 @@ export async function GET(req) {
             );
         }
 
-        return NextResponse.json({ active: true }, { status: 200 });
+        return NextResponse.json({ active: true, office: user.office }, { status: 200 });
     } catch (err) {
         console.error("DB Error:", err);
         return NextResponse.json({ message: "Server error" }, { status: 500 });

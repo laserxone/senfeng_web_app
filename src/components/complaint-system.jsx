@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import axios from "@/lib/axios";
 import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { MapPin, MapPinOff } from "lucide-react";
+import { Filter, MapPin, MapPinOff } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useContext, useEffect, useState } from "react";
@@ -34,6 +34,7 @@ import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
 import { UserSearch } from "./user-search";
 import { MyImg } from "./users/addVisit";
+import FilterSheet from "./users/filterSheet";
 
 const formSchema = z.object({
   title: z.string().min(1, "Required"),
@@ -55,15 +56,26 @@ export default function ComplaintSystem({ base }) {
   const [data, setData] = useState([]);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [closeLoading, setCloseLoading] = useState(null);
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [dates, setDates] = useState({
+    start: moment().startOf("month").toDate(),
+    end: moment().endOf("month").toDate(),
+  });
 
   useEffect(() => {
-    if (UserState.value.data?.id) fetchData();
+    if (UserState.value.data?.id) {
+      fetchData(dates.start.toISOString(), dates.end.toISOString());
+    }
   }, [UserState]);
 
-  async function fetchData() {
+  async function fetchData(startDate, endDate) {
     setLoading(true);
     axios
-      .get(`/${UserState.value.data?.id}/complaint`)
+      .get(
+        `/${UserState.value.data?.id}/complaint?start_date=${startDate}&end_date=${endDate}`
+      )
       .then((response) => {
         setData(response.data);
       })
@@ -83,9 +95,20 @@ export default function ComplaintSystem({ base }) {
       id: id,
       status: "completed",
     });
-    await fetchData();
+    await fetchData(dates.start.toISOString(), dates.end.toISOString());
     setCloseLoading(null);
   }
+
+  const filteredData = data.filter((item) => {
+    if (!search) return true;
+    const searchLower = search.toLowerCase();
+    return (
+      item.title.toLowerCase().includes(searchLower) ||
+      item.customer_name.toLowerCase().includes(searchLower) ||
+      item.customer_owner.toLowerCase().includes(searchLower) ||
+      item?.customer_ownership_name.toLowerCase().includes(searchLower)
+    );
+  });
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -97,14 +120,51 @@ export default function ComplaintSystem({ base }) {
         <Button onClick={() => setVisible(true)}>Register</Button>
       </div>
 
-      <ScrollArea className="h-[calc(100dvh-180px)]">
+      <div className="flex w-full flex-wrap gap-4 items-center ">
+        <Input
+          value={search}
+          placeholder={`Search...`}
+          onChange={(event) => {
+            setSearch(event.target.value);
+          }}
+          className="w-[60vw] max-w-sm"
+        />
+
+        <Button
+          onClick={() => setFilterVisible(true)}
+          variant="ghost"
+          className="p-0 w-8"
+        >
+          <Filter />
+        </Button>
+
+        <Button
+          variant="destructive"
+          onClick={async () => {
+            setResetLoading(true);
+            const startDate = moment().startOf("month").toISOString();
+            const endDate = moment().endOf("month").toISOString();
+            setDates({
+              state: moment().startOf("month").toDate(),
+              end: moment().endOf("month").toDate(),
+            });
+            setSearch("");
+            await fetchData(startDate, endDate);
+            setResetLoading(false);
+          }}
+        >
+          {resetLoading && <Spinner />} Reset
+        </Button>
+      </div>
+
+      <ScrollArea className="h-[calc(100dvh-220px)]">
         {loading ? (
           <div className="flex flex-1 items-center justify-center">
             <Spinner />
           </div>
         ) : (
           <Accordion type="single" className="w-full space-y-4">
-            {data.map((complaint) => {
+            {filteredData.map((complaint) => {
               const statusColor = {
                 pending: "bg-red-100 text-red-800",
                 assigned: "bg-blue-100 text-blue-800",
@@ -190,7 +250,8 @@ export default function ComplaintSystem({ base }) {
                         <strong>Location:</strong> {complaint.customer_location}
                       </p>
                       <p>
-                        <strong>Contact:</strong> {complaint.customer_number}
+                        <strong>Contact:</strong>{" "}
+                        {complaint.customer_number.join(", ")}
                       </p>
                       <p>
                         <strong>Manager:</strong>{" "}
@@ -276,10 +337,25 @@ export default function ComplaintSystem({ base }) {
         )}
       </ScrollArea>
 
+      <FilterSheet
+      user={false}
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        onReturn={async (val) => {
+          await fetchData(val.start, val.end);
+          setDates({
+            start: moment(val.start).toDate(),
+            end: moment(val.end).toDate(),
+          });
+        }}
+      />
+
       <AddNewComplaint
         visible={visible}
         onClose={setVisible}
-        onRefresh={fetchData}
+        onRefresh={() =>
+          fetchData(dates.start.toISOString(), dates.end.toISOString())
+        }
         base={base}
       />
 
@@ -287,7 +363,9 @@ export default function ComplaintSystem({ base }) {
         visible={!!selectedComplaint}
         complaint_id={selectedComplaint}
         onClose={() => setSelectedComplaint(null)}
-        onRefresh={fetchData}
+        onRefresh={() =>
+          fetchData(dates.start.toISOString(), dates.end.toISOString())
+        }
         base={base}
       />
     </div>

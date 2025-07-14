@@ -40,6 +40,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { OfficeContext } from "@/store/context/OfficeContext";
 
 const formSchema = z.object({
   note: z.string().min(1, "Note cannot be empty"),
@@ -62,6 +63,7 @@ export default function VisitTab({
   const [addCustomer, setAddCustomer] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const { state: UserState } = useContext(UserContext);
+  const {state : OfficeState} = useContext(OfficeContext)
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedDelete, setSelectedDelete] = useState(null);
   const [selectedSignature, setSelectedSignature] = useState(null);
@@ -84,7 +86,7 @@ export default function VisitTab({
     setLoading(true);
     try {
       if (values.image) {
-        const name = `${selectedCustomer?.id}/visit/${moment()
+        const name = `${OfficeState.value.data}/${selectedCustomer?.id}/visit/${moment()
           .valueOf()
           .toString()}.png`;
         const uploadRef = await UploadImage(values.image, name); 

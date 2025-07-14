@@ -23,10 +23,11 @@ import {
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import Spinner from "../ui/spinner";
 import { Textarea } from "../ui/textarea";
+import { OfficeContext } from "@/store/context/OfficeContext";
 
 export default function ProfilePage({base}) {
   const { state: UserState, setUser } = useContext(UserContext);
-
+const {state : OfficeState} = useContext(OfficeContext)
   const [isPasswordResetVisible, setIsPasswordResetVisible] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -122,7 +123,7 @@ export default function ProfilePage({base}) {
       setLoading(true);
       try {
         const fileList = Array.from(event.target.files);
-        const name = `${UserState.value.data?.id}/profile/${UserState.value.data?.email}-dp.png`;
+        const name = `${OfficeState.value.data}/${UserState.value.data?.id}/profile/${UserState.value.data?.email}-dp.png`;
         const img = await UploadImage(URL.createObjectURL(fileList[0]), name);
         const response = await axios.put(
           `/${UserState.value.data.id}`,
@@ -217,7 +218,7 @@ export default function ProfilePage({base}) {
         setLoading(true);
         try {
           const extension = file.name.split(".").pop();
-          const newFilePath = `${userId}/profile/${type}.${extension}`;
+          const newFilePath = `${OfficeState.value.data}/${userId}/profile/${type}.${extension}`;
 
           // Step 1: Delete old file if exists
           if (docsData?.[type] && !docsData[type].includes("http")) {

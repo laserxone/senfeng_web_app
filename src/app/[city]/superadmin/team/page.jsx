@@ -142,6 +142,23 @@ const columns = [
     cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
   },
 
+   {
+    accessorKey: "office",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Office
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => <div className="uppercase">{row.getValue("office")}</div>,
+  },
+
   {
     accessorKey: "active",
     filterFn: "includesString",
@@ -163,20 +180,6 @@ const columns = [
   },
 ];
 
-const tableHeader = [
-  {
-    value: "Name",
-    label: "Name",
-  },
-  {
-    value: "Email",
-    label: "Email",
-  },
-  {
-    value: "Designation",
-    label: "Designation",
-  },
-];
 
 export default function Page() {
   const [open, setOpen] = useState(false);
@@ -221,7 +224,6 @@ export default function Page() {
         columns={columns}
         data={data}
         totalItems={data.length}
-        tableHeader={tableHeader}
         onRowClick={(val) => {
           if (val.id) {
             startHolyLoader();

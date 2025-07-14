@@ -27,7 +27,7 @@ import momentT from "moment-timezone";
 import { TIMEZONE } from "@/constants/data";
 import Spinner from "../ui/spinner";
 
-const FilterSheet = ({ visible, onClose, onReturn }) => {
+const FilterSheet = ({ visible, onClose, onReturn, user = true }) => {
   const [loading, setLoading] = useState(false);
   const { state: UserState } = useContext(UserContext);
   const formSchema = z.object({
@@ -84,7 +84,7 @@ const FilterSheet = ({ visible, onClose, onReturn }) => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {(UserState.value.data?.designation === "Owner" ||
-              UserState.value.data?.full_access) && (
+              UserState.value.data?.full_access) && user && (
               <FormField
                 control={form.control}
                 name="user"

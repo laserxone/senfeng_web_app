@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowUpDown, Filter, Loader2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
@@ -48,6 +48,7 @@ import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
 import { RequiredStar } from "../RequiredStar";
+import { OfficeContext } from "@/store/context/OfficeContext";
 
 export default function Reimbursement({
   id,
@@ -384,6 +385,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
 
   const [selectedRadio, setSelectedRadio] = useState("customer");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const {state : OfficeState} = useContext(OfficeContext)
   const [loading, setLoading] = useState(false);
   const formSchema = z.object({
     title: z.string().min(1, { message: "Title is required." }),
@@ -411,7 +413,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
   async function onSubmit(values) {
     setLoading(true);
     try {
-      const name = `${id}/reimbursement/${moment().valueOf().toString()}.png`;
+      const name = `${OfficeState.value.data}/${id}/reimbursement/${moment().valueOf().toString()}.png`;
       const imgRef = await UploadImage(values.image, name);
       const response = await axios.post(`/${id}/reimbursement`, {
         amount: values.amount,

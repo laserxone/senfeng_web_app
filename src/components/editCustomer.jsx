@@ -47,6 +47,7 @@ import {
 } from "./ui/select";
 import Spinner from "./ui/spinner";
 import { UserSearch } from "./user-search";
+import { OfficeContext } from "@/store/context/OfficeContext";
 
 const EditCustomerDialog = ({
   onRefresh,
@@ -66,6 +67,7 @@ const EditCustomerDialog = ({
   const [selectedNumber, setSelectedNumber] = useState(["+92"]);
   const [imageUrl, setImageUrl] = useState(null);
   const [originalUrl, setOriginalUrl] = useState(null);
+  const {state : OfficeState} = useContext(OfficeContext)
 
   const canDelete =
     UserState.value.data?.designation === "Owner" ||
@@ -225,7 +227,7 @@ const EditCustomerDialog = ({
           image: null,
         });
       } else if (imageUrl && !data.image) {
-        const name = `customer/${data.id}/profile/${moment()
+        const name = `${OfficeState.value.data}/customer/${data.id}/profile/${moment()
           .valueOf()
           .toString()}.png`;
         const uploadRef = await UploadImage(imageUrl, name);
