@@ -50,7 +50,7 @@ export async function GET(req) {
 
         if (!user) {
             const query = `
-        SELECT l.*, u.id AS user_id, u.name AS user_name
+        SELECT l.*, u.id AS user_id, u.name AS user_name, u.dp AS user_dp
         FROM locations l
         INNER JOIN (
             SELECT user_id, MAX(created_at) AS latest_created_at
@@ -65,7 +65,7 @@ export async function GET(req) {
             return NextResponse.json(result.rows, { status: 200 });
         } else {
            let query = `
-            SELECT l.*, u.id AS user_id, u.name AS user_name
+            SELECT l.*, u.id AS user_id, u.name AS user_name, u.dp AS user_dp
             FROM locations l
             INNER JOIN users u ON l.user_id = u.id
             WHERE l.created_at BETWEEN $1 AND $2

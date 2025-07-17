@@ -28,7 +28,7 @@ export async function GET(req, { params }) {
 
         const versionResult = await pool.query(`SELECT version_code, url FROM settings`)
         const versionRow = versionResult.rows[0] || {};
-        const version_code = versionRow.version_code || "";
+        const version_code = versionRow.version_code || 0;
         const route_url = versionRow.url || "";
 
         if (!user) {
