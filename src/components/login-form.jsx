@@ -16,6 +16,7 @@ import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import Spinner from "./ui/spinner";
+import { useRouter } from "next/navigation";
 
 export function LoginForm({ className, ...props }) {
   const { toast } = useToast();
@@ -23,6 +24,7 @@ export function LoginForm({ className, ...props }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter()
 
   async function handleGoogleLogin() {
     setLoading(true);
@@ -47,23 +49,45 @@ export function LoginForm({ className, ...props }) {
   async function handleEmailLogin(event) {
     setLoading(true);
     event.preventDefault();
-    await signInWithEmailAndPassword(auth, email, password)
-      .then(() => {
-        toast({
-          description: "Login successful",
-        });
-      })
-      .catch((err) => {
-        console.log(err.message);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: err?.message || "Error login",
-        });
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    // await signInWithEmailAndPassword(auth, email, password)
+    //   .then(() => {
+    //     toast({
+    //       description: "Login successful",
+    //     });
+    //   })
+    //   .catch((err) => {
+    //     console.log(err.message);
+    //     toast({
+    //       variant: "destructive",
+    //       title: "Error",
+    //       description: err?.message || "Error login",
+    //     });
+    //   })
+    //   .finally(() => {
+    //     setLoading(false);
+    //   });
+
+     setLoading(true);
+
+  try {
+    // Save credentials to localStorage
+    localStorage.setItem('user_email', email);
+
+    toast({
+      description: "Login successful",
+    });
+
+    // Optional: redirect user to dashboard or homepage
+    router.replace("/") // adjust path as needed
+  } catch (err) {
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "Login failed",
+    });
+  } finally {
+    setLoading(false);
+  }
   }
 
   return (

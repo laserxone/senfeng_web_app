@@ -42,19 +42,19 @@ export const ownerNavItems = [
         url: '/feedback',
         icon: 'login'
       },
-      {
-        title: 'Quotation',
-        url: '/quotation',
-        icon: 'quotation',
-        shortcut: ['q', 'u', 'o'],
-      },
-      {
-        title: 'Contract',
-        url: '/contract',
-        icon: 'contract',
-        shortcut: ['c', 'o', 'n'],
+      // {
+      //   title: 'Quotation',
+      //   url: '/quotation',
+      //   icon: 'quotation',
+      //   shortcut: ['q', 'u', 'o'],
+      // },
+      // {
+      //   title: 'Contract',
+      //   url: '/contract',
+      //   icon: 'contract',
+      //   shortcut: ['c', 'o', 'n'],
 
-      },
+      // },
     ]
   },
 
@@ -336,23 +336,23 @@ export const Tools = {
       url: '/oldcommissions',
       icon: 'login'
     },
-    {
-      title: 'Multiple TID',
-      url: '/multipletid',
-      shortcut: ['m', 'u', 't']
-    },
-    {
-      title: 'Multiple Customers',
-      shortcut: ['m', 'u', 'c', 'u'],
-      url: '/multiplecustomers',
-      icon: 'login'
-    },
+    // {
+    //   title: 'Multiple TID',
+    //   url: '/multipletid',
+    //   shortcut: ['m', 'u', 't']
+    // },
+    // {
+    //   title: 'Multiple Customers',
+    //   shortcut: ['m', 'u', 'c', 'u'],
+    //   url: '/multiplecustomers',
+    //   icon: 'login'
+    // },
 
-    {
-      title: 'Logs',
-      url: '/logs',
-      shortcut: ['l', 'o', 'g'],
-    },
+    // {
+    //   title: 'Logs',
+    //   url: '/logs',
+    //   shortcut: ['l', 'o', 'g'],
+    // },
   ]
 }
 

@@ -53,7 +53,7 @@ import {
   LogOut,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import NotificationBadge from "./NotificationBadge";
 import NotificationBadgeWithoutCount from "./NotificationBadgeWithoutCount";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -72,13 +72,14 @@ export default function AppSidebar({ office }) {
   const pathname = usePathname();
   const checkSession = useCheckSession();
   const { state: UserState, setUser } = useContext(UserContext);
-  const {state : OfficeState, setOffice}  = useContext(OfficeContext)
+  const { state: OfficeState, setOffice } = useContext(OfficeContext);
   const { state: NotificationState, setNotification } =
     useContext(NotificationContext);
   const profileImage = useProfileImage();
   const { toggleSidebar } = useSidebar();
   const isMobile = useIsMobile();
   const [conversations, setConversations] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
     checkSession().then((val) => {
@@ -90,7 +91,7 @@ export default function AppSidebar({ office }) {
     if (val?.user) {
       if (office) {
         setUserOffice(`/${office}`);
-        setOffice(office)
+        setOffice(office);
       }
       setUser(val.user);
     }
@@ -336,7 +337,13 @@ export default function AppSidebar({ office }) {
                   )}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut(auth)}>
+                <DropdownMenuItem
+                  onClick={() => {
+                    // signOut(auth)
+                    localStorage.removeItem("user_email");
+                    router.replace("/login");
+                  }}
+                >
                   <LogOut />
                   Log out
                 </DropdownMenuItem>

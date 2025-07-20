@@ -42,68 +42,6 @@ export default function useCheckSession() {
                     }
                 }
 
-
-
-
-
-                // else if (userData.designation === 'Owner') {
-                //     if (!pathname.includes("superadmin")) {
-                //         startHolyLoader()
-                //         router.push(`/${userData.office}/superadmin/dashboard`)
-                //     }
-                // }
-                // else if (userData.designation === 'Social Media Manager') {
-                //     if (!pathname.includes("smm")) {
-                //         startHolyLoader()
-                //         router.push(`/${userData.office}/smm/dashboard`)
-                //     }
-                // }
-
-                // else if (userData.designation === 'Sales') {
-                //     if (!pathname.includes("sales")) {
-                //         startHolyLoader()
-                //         router.push(`/${userData.office}/sales/dashboard`)
-                //     }
-                // }
-
-                // else if (userData.designation === 'Engineer') {
-                //     if (!pathname.includes("engineer")) {
-                //         startHolyLoader()
-                //         router.push(`/${userData.office}/engineer/dashboard`)
-                //     }
-                // }
-
-                // else if (userData.designation === 'Manager') {
-                //     if (!pathname.includes("manager")) {
-                //         startHolyLoader()
-                //         router.push(`/${userData.office}/manager/dashboard`)
-                //     }
-                // }
-
-                // else if (userData.designation === 'Customer Relationship Manager') {
-                //     if (!pathname.includes("crm")) {
-                //         startHolyLoader()
-                //         router.push(`/${userData.office}/crm/dashboard`)
-                //     }
-                // }
-
-                // else if (userData.designation === 'Customer Relationship Manager (After Sales)') {
-                //     if (!pathname.includes("aftersales")) {
-                //         startHolyLoader()
-                //         router.push(`/${userData.office}/aftersales/dashboard`)
-                //     }
-                // }
-                // else if (userData.designation === 'Store Manager') {
-                //     if (!pathname.includes("store")) {
-                //         startHolyLoader()
-                //         router.push(`/${userData.office}/store/dashboard`)
-                //     }
-                // }
-                // else {
-
-                //     signOut(auth);
-                // }
-
                 return { user: { ...userData, ...user } };
             } else {
                 toast({ title: "User does not exist in the system", variant: "destructive" })
@@ -119,29 +57,55 @@ export default function useCheckSession() {
         }
     }
 
+    // const checkSession = useCallback(async () => {
+    //     if (isCheckingSession) return { status: false };
+
+    //     return new Promise((resolve) => {
+    //         setIsCheckingSession(true);
+
+    //         const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    //             if (user && user.email) {
+    //                 const result = await debouncedData(user);
+    //                 resolve(result);
+    //             } else {
+    //                 if (!pathname.includes('login') && !pathname.includes('signup') && !pathname.includes('forgetpassword')) {
+    //                     router.push('/login');
+    //                 }
+    //                 resolve({ status: false });
+    //             }
+    //             setIsCheckingSession(false);
+    //         });
+
+    //         unsubscribeRef.current = unsubscribe;
+    //     });
+    // }, [isCheckingSession, debouncedData, pathname, router]);
+
     const checkSession = useCallback(async () => {
-        if (isCheckingSession) return { status: false };
+    if (isCheckingSession) return { status: false };
 
-        return new Promise((resolve) => {
-            setIsCheckingSession(true);
+    setIsCheckingSession(true);
 
-            const unsubscribe = onAuthStateChanged(auth, async (user) => {
-                if (user && user.email) {
-                    const result = await debouncedData(user);
-                    resolve(result);
-                } else {
-                    if (!pathname.includes('login') && !pathname.includes('signup') && !pathname.includes('forgetpassword')) {
-                        router.push('/login');
-                    }
-                    resolve({ status: false });
-                }
-                setIsCheckingSession(false);
-            });
+    try {
+        // Read from localStorage (or cookies if needed)
+        const email = localStorage.getItem('user_email');
+      
 
-            unsubscribeRef.current = unsubscribe;
-        });
-    }, [isCheckingSession, debouncedData, pathname, router]);
+        if (email) {
+            // Send to backend to verify session
+            const result = await debouncedData({ email });
+            return result;
+        } else {
+            if (!pathname.includes('login') && !pathname.includes('signup') && !pathname.includes('forgetpassword')) {
+                router.push('/login');
+            }
+            return { status: false };
+        }
+    } finally {
+        setIsCheckingSession(false);
+    }
+}, [isCheckingSession, debouncedData, pathname, router]);
 
+    
     useEffect(() => {
         return () => {
             if (unsubscribeRef.current) {

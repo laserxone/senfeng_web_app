@@ -66,7 +66,11 @@ export function UserNav() {
           </Link>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut(auth)}>
+        <DropdownMenuItem onClick={() => {
+          // signOut(auth)
+          localStorage.removeItem('user_email');
+          router.replace("/login")
+          }}>
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>
