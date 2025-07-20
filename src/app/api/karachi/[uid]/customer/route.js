@@ -12,9 +12,6 @@ export async function POST(req, { params }) {
 
     const { uid } = await params
 
-
-
-
     try {
         const data = await req.json();
 
@@ -88,7 +85,7 @@ export async function GET(req, { params }) {
     const member = searchParams.get("member")
 
     try {
-  const isAdmin = await checkSuperadmin(uid)
+        const isAdmin = await checkSuperadmin(uid)
 
         if (isAdmin) {
             if (mapQuery) {
@@ -175,7 +172,7 @@ export async function GET(req, { params }) {
                 const customers = customerQuery.rows;
 
                 if (customers.length === 0) {
-                    return NextResponse.json([] , { status: 200 });
+                    return NextResponse.json([], { status: 200 });
                 }
 
                 const customerIds = customers.map((customer) => customer.id);
@@ -241,7 +238,7 @@ export async function GET(req, { params }) {
 
             if (member && member === 'true') {
                 whereClauses.push("c.member IS TRUE");
-            } else if(member && member === 'false') {
+            } else if (member && member === 'false') {
                 whereClauses.push("c.member IS FALSE");
             }
 

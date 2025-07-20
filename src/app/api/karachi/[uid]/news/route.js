@@ -5,7 +5,8 @@ export async function GET(req, {params}) {
 
     const searchParams = req.nextUrl.searchParams;
     const expiry = searchParams.get('expiry');
-   
+    const office = req.headers.get('x-user-office');
+
     const queryParams = [];
     let conditions = [];
 
@@ -13,7 +14,11 @@ export async function GET(req, {params}) {
         conditions.push(`now() BETWEEN start_date AND end_date`);
     }
 
-   
+    if (office) {
+        queryParams.push(office);
+        conditions.push(`office = $${queryParams.length}`);
+    }
+
     let query = `SELECT * FROM news`;
     if (conditions.length > 0) {
         query += ` WHERE ` + conditions.join(' AND ');

@@ -18,7 +18,7 @@ export async function POST(req) {
 
         if (data.signature) {
             const customerId = data.image.split('/')[0];
-            const fileName = `karachi/${customerId}/complaint/signature/${moment().valueOf().toString()}.png`;
+            const fileName = `lahore/${customerId}/complaint/signature/${moment().valueOf().toString()}.png`;
             await UploadImageForMobile(data.signature, fileName);
             data.signature = fileName;
         }

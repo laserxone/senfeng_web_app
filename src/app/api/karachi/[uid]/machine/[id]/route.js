@@ -2,127 +2,226 @@ import {karachi_pool as pool} from "@/config/db";
 import { storage } from "@/config/firebase";
 import { saleFields } from "@/constants/data";
 import { addLog } from "@/lib/addLog";
+import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { generateLog } from "@/lib/generateLog";
 import { deleteObject, ref } from "firebase/storage";
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
-  const { id, uid } = await params;
+  const { id, uid } = await params; // Machine ID
 
 
 
   try {
 
-    const userQuery = await pool.query(`SELECT id, designation, limited_access FROM users WHERE id = $1`, [uid])
+    const isAdmin = await checkSuperadmin(uid)
 
-    const user = userQuery.rows[0]
+    if (isAdmin) {
 
-    if (!user) {
-      return NextResponse.json({ message: "User not found" }, { status: 500 })
-    }
 
-    // 1. Get the machine and its customer ID
-    const machineQuery = `SELECT * FROM sale WHERE id = $1`;
-    const machineResult = await pool.query(machineQuery, [id]);
+      // 1. Get the machine and its customer ID
+      const machineQuery = `SELECT * FROM sale WHERE id = $1`;
+      const machineResult = await pool.query(machineQuery, [id]);
 
-    if (machineResult.rows.length === 0) {
-      return NextResponse.json({ message: "Machine not found" }, { status: 404 });
-    }
+      if (machineResult.rows.length === 0) {
+        return NextResponse.json({ message: "Machine not found" }, { status: 404 });
+      }
 
-    const machine = machineResult.rows[0];
-    const customerId = machine.customer_id;
-    const sellBy = machine.sell_by; // Get sell_by ID
+      const machine = machineResult.rows[0];
+      const customerId = machine.customer_id;
+      const sellBy = machine.sell_by; // Get sell_by ID
 
-    // 2. Get customer details
-    const customerQuery = `SELECT * FROM customer WHERE id = $1`;
-    const customerResult = await pool.query(customerQuery, [customerId]);
+      // 2. Get customer details
+      const customerQuery = `SELECT * FROM customer WHERE id = $1`;
+      const customerResult = await pool.query(customerQuery, [customerId]);
 
-    if (customerResult.rows.length === 0) {
-      return NextResponse.json({ message: "Customer not found" }, { status: 404 });
-    }
+      if (customerResult.rows.length === 0) {
+        return NextResponse.json({ message: "Customer not found" }, { status: 404 });
+      }
 
-    const customer = customerResult.rows[0];
+      const customer = customerResult.rows[0];
 
-    if (user.limited_access) {
-      if (user.designation === 'Social Media Manager' || user.designation === 'Customer Relationship Manager') {
-        if (user.id !== customer.lead) {
-          return NextResponse.json({ message: "You don't have access to this page" }, { status: 500 })
+      let sellByName = null;
+      if (sellBy) {
+        const sellerQuery = `SELECT name FROM users WHERE id = $1`;
+        const sellerResult = await pool.query(sellerQuery, [sellBy]);
+
+        if (sellerResult.rows.length > 0) {
+          sellByName = sellerResult.rows[0].name;
         }
       }
 
-      if (user.designation === 'Sales') {
-        if (user.id !== customer.ownership) {
-          return NextResponse.json({ message: "You don't have access to this page" }, { status: 500 })
+      // 4. Get all payments related to this machine, ordered by transaction_date
+      const paymentsQuery = `SELECT * FROM payment WHERE machine_id = $1 ORDER BY transaction_date ASC`;
+      const paymentsResult = await pool.query(paymentsQuery, [id]);
+
+      // 5. Add track number to each payment
+      const payments = paymentsResult.rows.map((payment, index) => ({
+        ...payment,
+        track: index + 1, // Starts from 1
+      }));
+
+      // 6. Attach payments and sell_by_name to the machine object
+      machine.payments = payments;
+      machine.sell_by_name = sellByName; // Attach seller's name
+
+      const machineStatus = await pool.query(`SELECT status FROM order_items WHERE machine_id = $1`, [id])
+
+      machine.status = machineStatus.rows.length > 0 ? machineStatus.rows[0].status : null
+
+      let machineFilled = 0;
+      let unmatchedFields = [];
+
+      const hasContractImages =
+        (Array.isArray(machine.contract_images_pdf) && machine.contract_images_pdf.length > 0) ||
+        (Array.isArray(machine.contract_images_png) && machine.contract_images_png.length > 0);
+
+      if (hasContractImages) machineFilled++;
+
+      saleFields.forEach(field => {
+        const value = machine[field];
+        const isFilled =
+          Array.isArray(value)
+            ? value.length > 0
+            : typeof value === 'number'
+              ? ['price'].includes(field)
+                ? value !== null && !isNaN(value)
+                : true
+              : typeof value === 'string'
+                ? value.trim() !== '' && value !== 'null'
+                : value !== null && value !== undefined;
+
+        if (isFilled) {
+          machineFilled++;
+        } else {
+          unmatchedFields.push(field);
+        }
+      });
+
+      const totalFields = saleFields.length + 1;
+
+
+
+      const percentage_completion = Math.round((machineFilled / totalFields) * 100)
+
+
+
+      return NextResponse.json({ customer, machine, percentage_completion, unmatchedFields }, { status: 200 });
+
+    } else {
+      const userQuery = await pool.query(`SELECT id, designation, limited_access FROM users WHERE id = $1`, [uid])
+
+      const user = userQuery.rows[0]
+
+      if (!user) {
+        return NextResponse.json({ message: "User not found" }, { status: 500 })
+      }
+
+      // 1. Get the machine and its customer ID
+      const machineQuery = `SELECT * FROM sale WHERE id = $1`;
+      const machineResult = await pool.query(machineQuery, [id]);
+
+      if (machineResult.rows.length === 0) {
+        return NextResponse.json({ message: "Machine not found" }, { status: 404 });
+      }
+
+      const machine = machineResult.rows[0];
+      const customerId = machine.customer_id;
+      const sellBy = machine.sell_by; // Get sell_by ID
+
+      // 2. Get customer details
+      const customerQuery = `SELECT * FROM customer WHERE id = $1`;
+      const customerResult = await pool.query(customerQuery, [customerId]);
+
+      if (customerResult.rows.length === 0) {
+        return NextResponse.json({ message: "Customer not found" }, { status: 404 });
+      }
+
+      const customer = customerResult.rows[0];
+
+      if (user.limited_access) {
+        if (user.designation === 'Social Media Manager' || user.designation === 'Customer Relationship Manager') {
+          if (user.id !== customer.lead) {
+            return NextResponse.json({ message: "You don't have access to this page" }, { status: 500 })
+          }
+        }
+
+        if (user.designation === 'Sales') {
+          if (user.id !== customer.ownership) {
+            return NextResponse.json({ message: "You don't have access to this page" }, { status: 500 })
+          }
         }
       }
-    }
 
-    let sellByName = null;
-    if (sellBy) {
-      const sellerQuery = `SELECT name FROM users WHERE id = $1`;
-      const sellerResult = await pool.query(sellerQuery, [sellBy]);
+      let sellByName = null;
+      if (sellBy) {
+        const sellerQuery = `SELECT name FROM users WHERE id = $1`;
+        const sellerResult = await pool.query(sellerQuery, [sellBy]);
 
-      if (sellerResult.rows.length > 0) {
-        sellByName = sellerResult.rows[0].name;
+        if (sellerResult.rows.length > 0) {
+          sellByName = sellerResult.rows[0].name;
+        }
       }
+
+      // 4. Get all payments related to this machine, ordered by transaction_date
+      const paymentsQuery = `SELECT * FROM payment WHERE machine_id = $1 ORDER BY transaction_date ASC`;
+      const paymentsResult = await pool.query(paymentsQuery, [id]);
+
+      // 5. Add track number to each payment
+      const payments = paymentsResult.rows.map((payment, index) => ({
+        ...payment,
+        track: index + 1, // Starts from 1
+      }));
+
+      // 6. Attach payments and sell_by_name to the machine object
+      machine.payments = payments;
+      machine.sell_by_name = sellByName; // Attach seller's name
+
+      const machineStatus = await pool.query(`SELECT status FROM order_items WHERE machine_id = $1`, [id])
+
+      machine.status = machineStatus.rows.length > 0 ? machineStatus.rows[0].status : null
+
+      let machineFilled = 0;
+      let unmatchedFields = [];
+
+      const hasContractImages =
+        (Array.isArray(machine.contract_images_pdf) && machine.contract_images_pdf.length > 0) ||
+        (Array.isArray(machine.contract_images_png) && machine.contract_images_png.length > 0);
+
+      if (hasContractImages) machineFilled++;
+
+      saleFields.forEach(field => {
+        const value = machine[field];
+        const isFilled =
+          Array.isArray(value)
+            ? value.length > 0
+            : typeof value === 'number'
+              ? ['price'].includes(field)
+                ? value !== null && !isNaN(value)
+                : true
+              : typeof value === 'string'
+                ? value.trim() !== '' && value !== 'null'
+                : value !== null && value !== undefined;
+
+        if (isFilled) {
+          machineFilled++;
+        } else {
+          unmatchedFields.push(field);
+        }
+      });
+
+      const totalFields = saleFields.length + 1;
+
+
+
+      const percentage_completion = Math.round((machineFilled / totalFields) * 100)
+
+
+
+      return NextResponse.json({ customer, machine, percentage_completion, unmatchedFields }, { status: 200 });
+
     }
 
-    // 4. Get all payments related to this machine, ordered by transaction_date
-    const paymentsQuery = `SELECT * FROM payment WHERE machine_id = $1 ORDER BY transaction_date ASC`;
-    const paymentsResult = await pool.query(paymentsQuery, [id]);
-
-    // 5. Add track number to each payment
-    const payments = paymentsResult.rows.map((payment, index) => ({
-      ...payment,
-      track: index + 1, // Starts from 1
-    }));
-
-    // 6. Attach payments and sell_by_name to the machine object
-    machine.payments = payments;
-    machine.sell_by_name = sellByName; // Attach seller's name
-
-    const machineStatus = await pool.query(`SELECT status FROM order_items WHERE machine_id = $1`, [id])
-
-    machine.status = machineStatus.rows.length > 0 ? machineStatus.rows[0].status : null
-
-    let machineFilled = 0;
-    let unmatchedFields = [];
-
-    const hasContractImages =
-      (Array.isArray(machine.contract_images_pdf) && machine.contract_images_pdf.length > 0) ||
-      (Array.isArray(machine.contract_images_png) && machine.contract_images_png.length > 0);
-
-    if (hasContractImages) machineFilled++;
-
-    saleFields.forEach(field => {
-      const value = machine[field];
-      const isFilled =
-        Array.isArray(value)
-          ? value.length > 0
-          : typeof value === 'number'
-            ? ['price'].includes(field)
-              ? value !== null && !isNaN(value)
-              : true
-            : typeof value === 'string'
-              ? value.trim() !== '' && value !== 'null'
-              : value !== null && value !== undefined;
-
-      if (isFilled) {
-    machineFilled++;
-  } else {
-    unmatchedFields.push(field);
-  }
-    });
-
-    const totalFields = saleFields.length + 1;
-
-
-
-    const percentage_completion = Math.round((machineFilled / totalFields) * 100)
-
-
-
-    return NextResponse.json({ customer, machine, percentage_completion, unmatchedFields }, { status: 200 });
 
   } catch (error) {
     console.error("Error fetching data:", error);

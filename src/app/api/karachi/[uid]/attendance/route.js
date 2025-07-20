@@ -25,7 +25,7 @@ export async function POST(req, { params }) {
         AND DATE(time_in) = $2
       `;
         const checkResult = await pool.query(checkQuery, [uid, currentDate]);
-        const fileName = `karachi/${uid}/attendance/${moment().valueOf()}.png`; // Unique file path
+        const fileName = `lahore/${uid}/attendance/${moment().valueOf()}.png`; // Unique file path
 
 
         if (checkResult.rows.length === 0) {

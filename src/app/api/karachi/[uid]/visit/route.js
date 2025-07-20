@@ -62,7 +62,7 @@ export async function POST(req, { params }) {
     }
 
     if (data.signature) {
-      const fileName = `karachi/${uid}/signature/${Date.now()}.png`;
+      const fileName = `lahore/${uid}/signature/${Date.now()}.png`;
       await UploadImageForMobile(data.signature, fileName);
       data.signature = fileName;
     }

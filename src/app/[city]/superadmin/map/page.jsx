@@ -8,6 +8,7 @@ import { useContext } from "react";
 
 export default function Page() {
   const { state: UserState } = useContext(UserContext);
+  
   return (
     <div className="flex flex-1 relative">
       <MapProvider>

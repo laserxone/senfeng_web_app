@@ -24,7 +24,7 @@ export function LoginForm({ className, ...props }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
 
   async function handleGoogleLogin() {
     setLoading(true);
@@ -49,45 +49,44 @@ export function LoginForm({ className, ...props }) {
   async function handleEmailLogin(event) {
     setLoading(true);
     event.preventDefault();
-    // await signInWithEmailAndPassword(auth, email, password)
-    //   .then(() => {
-    //     toast({
-    //       description: "Login successful",
-    //     });
-    //   })
-    //   .catch((err) => {
-    //     console.log(err.message);
-    //     toast({
-    //       variant: "destructive",
-    //       title: "Error",
-    //       description: err?.message || "Error login",
-    //     });
-    //   })
-    //   .finally(() => {
-    //     setLoading(false);
+    await signInWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        toast({
+          description: "Login successful",
+        });
+      })
+      .catch((err) => {
+        console.log(err.message);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: err?.message || "Error login",
+        });
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+
+    // setLoading(true);
+
+    // try {
+
+    //   localStorage.setItem('user_email', email);
+
+    //   toast({
+    //     description: "Login successful",
     //   });
 
-     setLoading(true);
-
-  try {
-    // Save credentials to localStorage
-    localStorage.setItem('user_email', email);
-
-    toast({
-      description: "Login successful",
-    });
-
-    // Optional: redirect user to dashboard or homepage
-    router.replace("/") // adjust path as needed
-  } catch (err) {
-    toast({
-      variant: "destructive",
-      title: "Error",
-      description: "Login failed",
-    });
-  } finally {
-    setLoading(false);
-  }
+    //   router.replace("/") // adjust path as needed
+    // } catch (err) {
+    //   toast({
+    //     variant: "destructive",
+    //     title: "Error",
+    //     description: "Login failed",
+    //   });
+    // } finally {
+    //   setLoading(false);
+    // }
   }
 
   return (
@@ -153,7 +152,6 @@ export function LoginForm({ className, ...props }) {
                       className="pr-10" // padding to the right for the icon
                     />
                     <div
-                    
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-2 top-1/2 -translate-y-1/2 p-0 h-auto w-auto cursor-pointer"
                       tabIndex={-1}

@@ -19,6 +19,13 @@ export async function GET(req, { params }) {
       query = `
         SELECT 
           c.*,
+          c.id AS complaint_id,
+          c.title AS complaint_title,
+          c.problem AS complaint_problem,
+          c.solution AS complaint_solution,
+          c.status AS complaint_status,
+          c.created_at AS complaint_created_at,
+          c.customer_id,
           cu.name AS customer_name,
           cu.address AS customer_address,
           cu.location AS customer_location,
@@ -48,10 +55,11 @@ export async function GET(req, { params }) {
         LEFT JOIN complaint_assignments ca ON ca.complaint_id = c.id
         LEFT JOIN users engineer ON ca.engineer_id = engineer.id
         LEFT JOIN users assigned_by_user ON ca.assigned_by = assigned_by_user.id
+        WHERE c.customer_id IS NOT NULL
       `;
 
       if (start_date && end_date) {
-        query += ` WHERE c.created_at BETWEEN $1 AND $2`;
+        query += ` AND c.created_at BETWEEN $1 AND $2`;
         queryParams.push(start_date, end_date);
       }
 
@@ -120,7 +128,7 @@ export async function GET(req, { params }) {
           engineer.name AS engineer_name,
           ca.assigned_by,
           assigned_by_user.name AS assigned_by_name,
-          ca.created_at AS assignment_created_at
+          ca.created_at AS assignment_created_at 
         FROM complaints c
         LEFT JOIN customer cu ON c.customer_id = cu.id
         LEFT JOIN users owner_user ON cu.ownership = owner_user.id
