@@ -203,7 +203,8 @@ ORDER BY
                             [sale.id]
                         );
                         const payments = (paymentResult.rows || []).filter(
-                            (payment) => payment.clearance_date !== null && payment.status === 'approved'
+                            (payment) => payment.clearance_date !== null 
+                            // && payment.status === 'approved'
                         );
 
                         const paid_amount = payments.reduce((sum, payment) => {

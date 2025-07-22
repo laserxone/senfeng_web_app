@@ -71,7 +71,8 @@ const EditCustomerDialog = ({
 
   const canDelete =
     UserState.value.data?.designation === "Owner" ||
-    UserState.value.data?.full_access;
+    UserState.value.data?.full_access ||
+    UserState.value.data?.customer_delete_access;
 
   const formSchema = z.object({
     company: z.string().min(1, { message: "" }), // Optional field without min(1)

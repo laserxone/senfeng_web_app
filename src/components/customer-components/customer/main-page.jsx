@@ -55,7 +55,7 @@ const tableHeader = [
   },
 ];
 
-export default function CustomerMainPage({base, onReturn}) {
+export default function CustomerMainPage({ base, onReturn }) {
   const [additionalFilter, setAdditionalFilter] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState([]);
@@ -71,26 +71,24 @@ export default function CustomerMainPage({base, onReturn}) {
 
   useEffect(() => {
     if (UserState.value.data?.id) {
-
-      fetchData()}
+      fetchData();
+    }
   }, [UserState.value.data]);
 
   async function fetchData() {
-
     return new Promise((resolve, reject) => {
       axios
         .get(`/${UserState.value.data?.id}/customer?member=false`)
         .then((response) => {
           const apiData = response.data;
-          const temp = apiData
-            .map((item) => {
-              return {
-                ...item,
-                orignalNumber: item.number,
-                number: item.number.join(", "),
-                sorting: item.owner || item.name,
-              };
-            })
+          const temp = apiData.map((item) => {
+            return {
+              ...item,
+              orignalNumber: item.number,
+              number: item.number.join(", "),
+              sorting: item.owner || item.name,
+            };
+          });
 
           setData([...temp]);
         })
@@ -248,7 +246,8 @@ export default function CustomerMainPage({base, onReturn}) {
 
         const canDelete =
           user?.designation === "Owner" ||
-          user?.full_access === true
+          user?.full_access === true ||
+          user?.customer_delete_access;
 
         if (!canDelete) return null;
         return (
@@ -276,7 +275,9 @@ export default function CustomerMainPage({base, onReturn}) {
     if (!id) return;
     setDeleteLoading(true);
     try {
-      const response = await axios.delete(`/${UserState.value.data?.id}customer/${id}`);
+      const response = await axios.delete(
+        `/${UserState.value.data?.id}customer/${id}`
+      );
       toast({ title: "Customer Deleted" });
       await fetchData();
     } finally {
@@ -342,7 +343,7 @@ export default function CustomerMainPage({base, onReturn}) {
               UserState.value.data?.designation ===
                 "Customer Relationship Manager (After Sales)"
             }
-            user_designation = {UserState.value.data?.designation}
+            user_designation={UserState.value.data?.designation}
             visible={addCustomer}
             onClose={setAddCustomer}
             onRefresh={async () => {
@@ -390,13 +391,12 @@ export default function CustomerMainPage({base, onReturn}) {
               // router.push(
               //   `/${UserState.value.data?.base_route}/customer/${val.id}`
               // );
-              onReturn(val.id)
+              onReturn(val.id);
             }
           }}
         >
           <div className=" flex justify-between flex-wrap gap-2">
             <div className="flex gap-4 flex-wrap">
-
               {(UserState.value.data?.designation === "Owner" ||
                 UserState.value.data?.full_access) && (
                 <div className="w-[300px]">

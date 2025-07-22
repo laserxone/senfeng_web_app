@@ -271,7 +271,9 @@ export default function MemberMainPage({ base, onReturn }) {
         const user = UserState.value.data;
 
         const canDelete =
-          user?.designation === "Owner" || user?.full_access === true;
+          user?.designation === "Owner" ||
+          user?.full_access === true ||
+          user?.customer_delete_access === true;
 
         if (!canDelete) return null;
 
