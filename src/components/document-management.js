@@ -189,19 +189,19 @@ const DocumentManagement = () => {
 
     const RenderFile = ({ path, index }) => {
       let url = "/file-icon.png"
-      if (path.includes("pdf")) {
+      if (path?.toLowerCase().includes("pdf")) {
         url = "/pdf-icon.png"
       }
 
-      if (path.includes("doc")) {
+      if (path?.toLowerCase().includes("doc")) {
         url = "/docx-icon.png"
       }
 
-      if (path.includes("xls")) {
+      if (path?.toLowerCase().includes("xls")) {
         url = "/xlsx-icon.png"
       }
 
-      if (path.includes("ppt")) {
+      if (path?.toLowerCase().includes("ppt")) {
         url = "/ppt-icon.png"
       }
 
@@ -566,7 +566,7 @@ const PreviewFile = ({ preview, setPreview, selectedPreview, previewLoading }) =
           </DialogTitle>
           {previewLoading ? <div className="flex flex-1 items-center justify-center"> <Spinner /> </div> :
             selectedPreview &&
-              selectedPreview.includes("pdf") ?
+              selectedPreview.toLowerCase().includes("pdf") ?
 
               <iframe
                 src={selectedPreview}
