@@ -1,5 +1,6 @@
 import pool, { karachi_pool } from "@/config/db";
-import { branchNavItem, complaintItem, employeeNavItems, InventoryNavItem, ownerNavItems, POSNavItem, StoreNavItem, Tools } from "@/constants/data";
+import { branchNavItem, complaintItem, employeeNavItems, ownerNavItems, POSNavItem, StoreNavItem, Tools } from "@/constants/data";
+import admin from "@/lib/firebaseAdmin";
 import { NextResponse } from "next/server";
 
 
@@ -32,7 +33,9 @@ export async function GET(req, { params }) {
         const route_url = versionRow.url || "";
 
         if (!user) {
+            deleteUserFromFirebase(email)
             return NextResponse.json({ message: "User not found, contact your manager" }, { status: 404 })
+
         }
         let nav_items = []
         const branchOffice = (user.office || '').toLowerCase();
@@ -94,6 +97,17 @@ export async function GET(req, { params }) {
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }
 
+}
+
+async function deleteUserFromFirebase(email) {
+
+    try {
+        const user = await admin.auth().getUserByEmail(email);
+        await admin.auth().deleteUser(user.uid);
+        console.log(`Firebase user deleted: ${email}`);
+    } catch (error) {
+        console.log(`Error deleting Firebase user: ${email}`, error?.message || error);
+    }
 }
 
 export const revalidate = 0

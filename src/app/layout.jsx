@@ -1,12 +1,11 @@
+import MaintenanceWrapper from "@/components/maintenance-wrapper";
 import Providers from "@/components/providers";
+import SenfengLogoLoader from "@/components/senfengLogoLoader";
 import { Toaster } from "@/components/ui/toaster";
 import HolyLoader from "holy-loader";
-import { Loader2 } from "lucide-react";
 import { Lato } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
-import SenfengLogoLoader from "@/components/senfengLogoLoader";
-import MaintenanceWrapper from "@/components/maintenance-wrapper";
 
 export const metadata = {
   title: "SENFENG",
