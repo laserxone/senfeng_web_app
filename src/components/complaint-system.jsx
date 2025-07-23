@@ -48,6 +48,10 @@ const formSchemaEngineer = z.object({
   engineer_id: z.number({ message: "Engineer is required" }),
 });
 
+const formSchemaClosing = z.object({
+  status: z.string().min(1, "Required"),
+});
+
 export default function ComplaintSystem({ base }) {
   const [loading, setLoading] = useState(false);
 
@@ -63,6 +67,8 @@ export default function ComplaintSystem({ base }) {
     start: moment().startOf("month").toDate(),
     end: moment().endOf("month").toDate(),
   });
+  const [selectedComplaintForClose, setSelectedComplaintForClose] =
+    useState(null);
 
   useEffect(() => {
     if (UserState.value.data?.id) {
@@ -99,16 +105,17 @@ export default function ComplaintSystem({ base }) {
     setCloseLoading(null);
   }
 
-  const filteredData = data.filter((item) => {
-    if (!search) return true;
-    const searchLower = search.toLowerCase();
-    return (
-      item.title.toLowerCase().includes(searchLower) ||
-      item.customer_name.toLowerCase().includes(searchLower) ||
-      item.customer_owner.toLowerCase().includes(searchLower) ||
-      item?.customer_ownership_name.toLowerCase().includes(searchLower)
-    );
-  });
+ const filteredData = data.filter((item) => {
+  if (!search) return true;
+  const searchLower = search.toLowerCase();
+  return (
+    (item?.title || "").toLowerCase().includes(searchLower) ||
+    (item?.customer_name || "").toLowerCase().includes(searchLower) ||
+    (item?.customer_owner || "").toLowerCase().includes(searchLower) ||
+    (item?.customer_ownership_name || "").toLowerCase().includes(searchLower)
+  );
+});
+
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -215,9 +222,12 @@ export default function ComplaintSystem({ base }) {
                         <Button
                           size="sm"
                           disabled={!!closeLoading}
-                          onClick={() => handleCloseComplaint(complaint.id)}
+                          onClick={() =>
+                            // handleCloseComplaint(complaint.id)
+                            setSelectedComplaintForClose(complaint.id)
+                          }
                         >
-                          {closeLoading === complaint.id && <Spinner />}
+                          {/* {closeLoading === complaint.id && <Spinner />} */}
                           Close Complaint
                         </Button>
                       )}
@@ -338,7 +348,7 @@ export default function ComplaintSystem({ base }) {
       </ScrollArea>
 
       <FilterSheet
-      user={false}
+        user={false}
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
@@ -363,6 +373,16 @@ export default function ComplaintSystem({ base }) {
         visible={!!selectedComplaint}
         complaint_id={selectedComplaint}
         onClose={() => setSelectedComplaint(null)}
+        onRefresh={() =>
+          fetchData(dates.start.toISOString(), dates.end.toISOString())
+        }
+        base={base}
+      />
+
+      <CloseComplaint
+        visible={!!selectedComplaintForClose}
+        complaint_id={selectedComplaintForClose}
+        onClose={() => setSelectedComplaintForClose(null)}
         onRefresh={() =>
           fetchData(dates.start.toISOString(), dates.end.toISOString())
         }
@@ -595,6 +615,90 @@ const AssignEngineerModal = ({
                   </FormLabel>
                   <FormControl>
                     <UserSearch value={field.value} onReturn={field.onChange} />
+                  </FormControl>
+                  <FormMessage />
+                </div>
+              )}
+            />
+
+            <Button disabled={loading} type="submit" className="mt-2 w-full">
+              {loading && <Spinner />} Save
+            </Button>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const CloseComplaint = ({
+  visible,
+  onClose,
+  onRefresh,
+  complaint_id,
+  base,
+}) => {
+  const [loading, setLoading] = useState(false);
+  const { state: UserState } = useContext(UserContext);
+
+  const form = useForm({
+    resolver: zodResolver(formSchemaClosing),
+    defaultValues: {
+      status: "",
+    },
+  });
+
+  const onSubmit = async (values) => {
+    setLoading(true);
+    try {
+        const responseLog = await axios.post(`/${UserState.value.data?.id}/complaint-logs`, 
+          {remark : values.status, 
+            engineer_id : UserState.value.data?.id,   
+            complaint_id: complaint_id,
+          })
+      const response = await axios.put(
+        `/${UserState.value.data?.id}/complaint`,
+        {
+          status : "completed",
+          id: complaint_id,
+        }
+      );
+      await onRefresh();
+      handleClose(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  function handleClose(val) {
+    onClose(val);
+    form.reset();
+  }
+
+  return (
+    <Dialog open={visible} onOpenChange={handleClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Close Complaint</DialogTitle>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit, (err) => {
+              console.log("Validation Errors", err);
+            })}
+            className="space-y-3"
+          >
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <div>
+                  <FormLabel>
+                    Closing Remarks <RequiredStar />
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </div>
