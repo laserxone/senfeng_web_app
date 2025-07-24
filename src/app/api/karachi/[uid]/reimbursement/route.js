@@ -1,15 +1,20 @@
 import {karachi_pool as pool} from "@/config/db";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
+import UploadImageForMobile from "@/lib/uploadImageForMobile";
 import { NextResponse } from "next/server"
 
 
 export async function POST(req) {
 
     try {
-        const data = await req.json();
+        const { image_base64, ...data } = await req.json();
 
         if (!data || Object.keys(data).length === 0) {
             return NextResponse.json({ message: "No data provided for insertion" }, { status: 400 });
+        }
+
+        if (image_base64) {
+            UploadImageForMobile(image_base64, data.image);
         }
 
         const fields = Object.keys(data);
@@ -41,7 +46,7 @@ export async function POST(req) {
 }
 
 
-export async function GET(req, {params}) {
+export async function GET(req, { params }) {
 
     const { uid } = await params
     const searchParams = req.nextUrl.searchParams

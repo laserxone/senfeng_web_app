@@ -33,7 +33,7 @@ export async function GET(req, { params }) {
         const route_url = versionRow.url || "";
 
         if (!user) {
-            deleteUserFromFirebase(email)
+            // deleteUserFromFirebase(email)
             return NextResponse.json({ message: "User not found, contact your manager" }, { status: 404 })
 
         }

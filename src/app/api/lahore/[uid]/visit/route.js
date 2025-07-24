@@ -1,6 +1,5 @@
 import pool from "@/config/db";
-import { storage } from "@/config/firebase";
-import { ref, uploadString } from "firebase/storage";
+import UploadImageForMobile from "@/lib/uploadImageForMobile";
 import { NextResponse } from "next/server";
 
 
@@ -54,7 +53,7 @@ export async function POST(req, { params }) {
   try {
     const searchParams = req.nextUrl.searchParams
     const saveLocation = searchParams.get('savelocation')
-    const data = await req.json();
+    const { image_base64, ...data } = await req.json();
     const { uid } = await params;
 
     if (!data || Object.keys(data).length === 0) {
@@ -63,8 +62,12 @@ export async function POST(req, { params }) {
 
     if (data.signature) {
       const fileName = `lahore/${uid}/signature/${Date.now()}.png`;
-      await UploadImageForMobile(data.signature, fileName);
+      UploadImageForMobile(data.signature, fileName);
       data.signature = fileName;
+    }
+
+    if (image_base64) {
+      UploadImageForMobile(image_base64, data.image);
     }
 
     const fields = Object.keys(data);
@@ -85,8 +88,8 @@ export async function POST(req, { params }) {
     const userResult = await pool.query(userQuery, [uid]);
     const user_name = userResult.rows.length > 0 ? userResult.rows[0].name : null;
 
-    if(saveLocation){
-      const {location, customer_id} = data
+    if (saveLocation) {
+      const { location, customer_id } = data
       const url = `https://www.google.com/maps/search/?api=1&query=${location[0]},${location[1]}`
       await pool.query(`
         UPDATE customer SET pin = $1 WHERE id = $2`, [url, customer_id])
@@ -101,22 +104,6 @@ export async function POST(req, { params }) {
 }
 
 
-async function UploadImageForMobile(image, fileName) {
-  const base64 = image.replace(/^data:image\/(png|jpg|jpeg);base64,/, '');
-  return new Promise(async (resolve, reject) => {
-    try {
 
-      const storageRef = ref(storage, fileName);
-
-      await uploadString(storageRef, base64, "base64", { contentType: "image/png" });
-      resolve(true);
-    } catch (error) {
-      console.log(error)
-      reject(null)
-    }
-
-  })
-
-}
 
 export const revalidate = 0

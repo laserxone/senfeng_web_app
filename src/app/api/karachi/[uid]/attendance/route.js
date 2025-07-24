@@ -1,8 +1,7 @@
-import {karachi_pool as pool} from "@/config/db";
-import { storage } from "@/config/firebase";
+import { karachi_pool as pool } from "@/config/db";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import admin from "@/lib/firebaseAdmin";
-import { ref, uploadString } from "firebase/storage";
+import UploadImageForMobile from "@/lib/uploadImageForMobile";
 import moment from "moment";
 import { NextResponse } from "next/server";
 
@@ -25,11 +24,11 @@ export async function POST(req, { params }) {
         AND DATE(time_in) = $2
       `;
         const checkResult = await pool.query(checkQuery, [uid, currentDate]);
-        const fileName = `lahore/${uid}/attendance/${moment().valueOf()}.png`; // Unique file path
+        const fileName = `karachi/${uid}/attendance/${moment().valueOf()}.png`; // Unique file path
 
 
         if (checkResult.rows.length === 0) {
-            await UploadImageForMobile(image, fileName)
+            UploadImageForMobile(image, fileName)
             const insertQuery = `
           INSERT INTO attendance (user_id, note_time_in, time_in, location_time_in, image_time_in, customer_id)
           VALUES ($1, $2, $3, $4, $5, $6)
@@ -50,7 +49,7 @@ export async function POST(req, { params }) {
         const existingAttendance = checkResult.rows[0];
 
         if (!existingAttendance.time_out) {
-            await UploadImageForMobile(image, fileName)
+            UploadImageForMobile(image, fileName)
             const updateQuery = `
           UPDATE attendance 
           SET note_time_out = $1, time_out = $2, location_time_out = $3, image_time_out = $4
@@ -285,23 +284,7 @@ WHERE u.id = $1
 }
 
 
-async function UploadImageForMobile(image, fileName) {
-    return new Promise(async (resolve, reject) => {
-        try {
 
-            const storageRef = ref(storage, fileName);
-
-            await uploadString(storageRef, image, "base64", { contentType: "image/png" });
-
-            resolve(true);
-        } catch (error) {
-            console.log(error)
-            reject(null)
-        }
-
-    })
-
-}
 
 
 export const revalidate = 0

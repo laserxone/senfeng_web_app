@@ -1,14 +1,15 @@
 import pool from "@/config/db";
+import UploadImageForMobile from "@/lib/uploadImageForMobile";
 import moment from "moment";
 import { NextResponse } from "next/server";
-import { storage } from "@/config/firebase";
-import { ref, uploadString } from "firebase/storage";
 
 
 
 
 export async function POST(req) {
-    const data = await req.json()
+    const { image_base64, ...data } = await req.json()
+
+
 
     try {
 
@@ -19,8 +20,12 @@ export async function POST(req) {
         if (data.signature) {
             const customerId = data.image.split('/')[0];
             const fileName = `lahore/${customerId}/complaint/signature/${moment().valueOf().toString()}.png`;
-            await UploadImageForMobile(data.signature, fileName);
+            UploadImageForMobile(data.signature, fileName);
             data.signature = fileName;
+        }
+
+        if (image_base64) {
+            UploadImageForMobile(image_base64, data.image);
         }
 
         const fields = Object.keys(data);
@@ -82,22 +87,6 @@ export async function PUT(req) {
     }
 }
 
-async function UploadImageForMobile(image, fileName) {
-    const base64 = image.replace(/^data:image\/(png|jpg|jpeg);base64,/, '');
-    return new Promise(async (resolve, reject) => {
-        try {
 
-            const storageRef = ref(storage, fileName);
-
-            await uploadString(storageRef, base64, "base64", { contentType: "image/png" });
-            resolve(true);
-        } catch (error) {
-            console.log(error)
-            reject(null)
-        }
-
-    })
-
-}
 
 export const revalidate = 0
