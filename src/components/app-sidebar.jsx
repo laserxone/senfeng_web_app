@@ -339,9 +339,9 @@ export default function AppSidebar({ office }) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => {
-                    // signOut(auth)
-                    localStorage.removeItem("user_email");
-                    router.replace("/login");
+                    signOut(auth)
+                    // localStorage.removeItem("user_email");
+                    // router.replace("/login");
                   }}
                 >
                   <LogOut />

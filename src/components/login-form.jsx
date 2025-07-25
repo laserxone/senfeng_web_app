@@ -49,42 +49,42 @@ export function LoginForm({ className, ...props }) {
   async function handleEmailLogin(event) {
     setLoading(true);
     event.preventDefault();
-    // await signInWithEmailAndPassword(auth, email, password)
-    //   .then(() => {
-    //     toast({
-    //       description: "Login successful",
-    //     });
-    //   })
-    //   .catch((err) => {
-    //     console.log(err.message);
-    //     toast({
-    //       variant: "destructive",
-    //       title: "Error",
-    //       description: err?.message || "Error login",
-    //     });
-    //   })
-    //   .finally(() => {
-    //     setLoading(false);
+    await signInWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        toast({
+          description: "Login successful",
+        });
+      })
+      .catch((err) => {
+        console.log(err.message);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: err?.message || "Error login",
+        });
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+
+    // try {
+
+    //   localStorage.setItem('user_email', email);
+
+    //   toast({
+    //     description: "Login successful",
     //   });
 
-    try {
-
-      localStorage.setItem('user_email', email);
-
-      toast({
-        description: "Login successful",
-      });
-
-      router.replace("/")
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Login failed",
-      });
-    } finally {
-      setLoading(false);
-    }
+    //   router.replace("/")
+    // } catch (err) {
+    //   toast({
+    //     variant: "destructive",
+    //     title: "Error",
+    //     description: "Login failed",
+    //   });
+    // } finally {
+    //   setLoading(false);
+    // }
   }
 
   return (
