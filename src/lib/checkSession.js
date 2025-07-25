@@ -57,53 +57,53 @@ export default function useCheckSession() {
         }
     }
 
+    // const checkSession = useCallback(async () => {
+    //     if (isCheckingSession) return { status: false };
+
+    //     return new Promise((resolve) => {
+    //         setIsCheckingSession(true);
+
+    //         const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    //             if (user && user.email) {
+    //                 const result = await debouncedData(user);
+    //                 resolve(result);
+    //             } else {
+    //                 if (!pathname.includes('login') && !pathname.includes('signup') && !pathname.includes('forgetpassword')) {
+    //                     router.push('/login');
+    //                 }
+    //                 resolve({ status: false });
+    //             }
+    //             setIsCheckingSession(false);
+    //         });
+
+    //         unsubscribeRef.current = unsubscribe;
+    //     });
+    // }, [isCheckingSession, debouncedData, pathname, router]);
+
     const checkSession = useCallback(async () => {
-        if (isCheckingSession) return { status: false };
+    if (isCheckingSession) return { status: false };
 
-        return new Promise((resolve) => {
-            setIsCheckingSession(true);
+    setIsCheckingSession(true);
 
-            const unsubscribe = onAuthStateChanged(auth, async (user) => {
-                if (user && user.email) {
-                    const result = await debouncedData(user);
-                    resolve(result);
-                } else {
-                    if (!pathname.includes('login') && !pathname.includes('signup') && !pathname.includes('forgetpassword')) {
-                        router.push('/login');
-                    }
-                    resolve({ status: false });
-                }
-                setIsCheckingSession(false);
-            });
-
-            unsubscribeRef.current = unsubscribe;
-        });
-    }, [isCheckingSession, debouncedData, pathname, router]);
-
-//     const checkSession = useCallback(async () => {
-//     if (isCheckingSession) return { status: false };
-
-//     setIsCheckingSession(true);
-
-//     try {
-//         // Read from localStorage (or cookies if needed)
-//         const email = localStorage.getItem('user_email');
+    try {
+        // Read from localStorage (or cookies if needed)
+        const email = localStorage.getItem('user_email');
       
 
-//         if (email) {
-//             // Send to backend to verify session
-//             const result = await debouncedData({ email });
-//             return result;
-//         } else {
-//             if (!pathname.includes('login') && !pathname.includes('signup') && !pathname.includes('forgetpassword')) {
-//                 router.push('/login');
-//             }
-//             return { status: false };
-//         }
-//     } finally {
-//         setIsCheckingSession(false);
-//     }
-// }, [isCheckingSession, debouncedData, pathname, router]);
+        if (email) {
+            // Send to backend to verify session
+            const result = await debouncedData({ email });
+            return result;
+        } else {
+            if (!pathname.includes('login') && !pathname.includes('signup') && !pathname.includes('forgetpassword')) {
+                router.push('/login');
+            }
+            return { status: false };
+        }
+    } finally {
+        setIsCheckingSession(false);
+    }
+}, [isCheckingSession, debouncedData, pathname, router]);
 
     
     useEffect(() => {
