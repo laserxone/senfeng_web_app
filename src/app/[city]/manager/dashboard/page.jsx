@@ -12,6 +12,7 @@ import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./styles.css";
+import TeamAttendance from "@/components/team-attendance";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -138,6 +139,7 @@ export default function Page() {
             <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>  
              <TabsTrigger value="task">Team Task</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
+             <TabsTrigger value="teamattendance">Team Attendance</TabsTrigger>
           </TabsList>
 
            <div className="flex flex-1 w-full mt-2">
@@ -155,6 +157,14 @@ export default function Page() {
               <Card className="flex flex-1">
                 <CardContent className="pt-2 flex flex-1">
                   <SalaryRecord id={UserState.value.data?.id} />
+                </CardContent>
+              </Card>
+            )}
+
+             {activeTab === "teamattendance" && (
+              <Card className="flex flex-1">
+                <CardContent className="pt-2 flex flex-1">
+                  <TeamAttendance id={UserState.value.data?.id} />
                 </CardContent>
               </Card>
             )}
