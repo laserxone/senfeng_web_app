@@ -15,7 +15,6 @@ import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { UploadImage } from "@/lib/uploadFunction";
 import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { getDownloadURL, ref } from "firebase/storage";
 import {
   Filter,
   Loader2,
@@ -41,6 +40,7 @@ import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { OfficeContext } from "@/store/context/OfficeContext";
+import { getDownloadURL, ref } from "firebase/storage";
 
 const formSchema = z.object({
   note: z.string().min(1, "Note cannot be empty"),
@@ -86,7 +86,7 @@ export default function VisitTab({
     setLoading(true);
     try {
       if (values.image) {
-        const name = `${OfficeState.value.data}/${selectedCustomer?.id}/visit/${moment()
+        const name = `${OfficeState.value.data}/customer/${selectedCustomer?.id}/visit/${moment()
           .valueOf()
           .toString()}.png`;
         const uploadRef = await UploadImage(values.image, name); 
@@ -290,7 +290,7 @@ export default function VisitTab({
                   )}
                 />
 
-                <Button type="submit" className="mt-2 w-full">
+                <Button disabled={!selectedCustomer?.id} type="submit" className="mt-2 w-full">
                   {loading && <Spinner />} Post
                 </Button>
               </form>
@@ -461,9 +461,11 @@ export const MyImg = ({ img }) => {
     } else {
       getDownloadURL(ref(storage, img))
         .then((url) => {
+          console.log(url)
           setLocalImage(url);
         })
-        .catch(() => {
+        .catch((e) => {
+          console.log("error loading image",e)
           setError(true);
           setLocalImage(null);
         })
@@ -474,7 +476,8 @@ export const MyImg = ({ img }) => {
   }, [img]);
 
   if (loading) return <Spinner />;
-  if (!img || error || !localImage) return <p>No image</p>;
+  if (!img && !localImage) return <p>No image</p>;
+  if (error) return <p>Failed to load image</p>
 
   return (
     <Zoom>

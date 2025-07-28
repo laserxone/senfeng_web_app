@@ -28,7 +28,9 @@ export function UploadImage(image, name, contentType = "image/png") {
             console.log("Upload is running");
           }
         },
-        (error) => reject(error), // Reject on error
+        (error) => {
+          console.log("error:", error)
+          reject(error)}, // Reject on error
         async () => {
           try {
             console.log(uploadTask.snapshot.ref)

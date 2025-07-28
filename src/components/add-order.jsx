@@ -472,7 +472,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                       <div className="flex items-center gap-2 mt-2">
                         <Switch
                           checked={manual}
-                          onCheckedChange={(val) => setManual(true)}
+                          onCheckedChange={(val) => setManual(val)}
                         />
                         <Label>Manual?</Label>
                       </div>
