@@ -198,7 +198,6 @@ export default function Page() {
 
           setData(updatedData);
 
-          console.log(updatedData);
           resolve(true);
         })
         .catch((e) => {
@@ -303,7 +302,6 @@ export default function Page() {
                               <Button
                                 size="icon"
                                 onClick={() => {
-                                  console.log("pressed");
                                   setSelectedOrder(order.id);
                                 }}
                               >
