@@ -184,7 +184,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data, base }) =>
                       <FormItem>
                         <FormLabel>Power</FormLabel>
                         <FormControl>
-                          <Input disabled={true} placeholder="Enter power" {...field} />
+                          <Input  placeholder="Enter power" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -198,7 +198,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data, base }) =>
                       <FormItem>
                         <FormLabel>Source</FormLabel>
                         <FormControl>
-                           <Input disabled={true} placeholder="Enter source" {...field} />
+                           <Input  placeholder="Enter source" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
