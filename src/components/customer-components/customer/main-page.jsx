@@ -276,7 +276,7 @@ export default function CustomerMainPage({ base, onReturn }) {
     setDeleteLoading(true);
     try {
       const response = await axios.delete(
-        `/${UserState.value.data?.id}customer/${id}`
+        `/${UserState.value.data?.id}/customer/${id}`
       );
       toast({ title: "Customer Deleted" });
       await fetchData();
