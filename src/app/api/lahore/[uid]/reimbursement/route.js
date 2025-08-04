@@ -60,13 +60,13 @@ export async function GET(req, { params }) {
 
         if (isAdmin) {
             let query = `
-        SELECT 
-          r.*, 
-          u.id AS user_id, 
-          u.name AS submitted_by_name
-        FROM reimbursement r
-        INNER JOIN users u ON r.submitted_by = u.id
-      `;
+    SELECT 
+      r.*, 
+      u.id AS user_id, 
+      u.name AS submitted_by_name
+    FROM reimbursement r
+    INNER JOIN users u ON r.submitted_by = u.id
+  `;
 
             const queryParams = [];
 
@@ -76,16 +76,57 @@ export async function GET(req, { params }) {
             }
 
             if (user) {
-                query += ` AND submitted_by = $3`;
+                query += queryParams.length ? ` AND` : ` WHERE`;
+                query += ` submitted_by = $${queryParams.length + 1}`;
                 queryParams.push(user);
             }
-
 
             query += ` ORDER BY r.date DESC;`;
 
             const result = await pool.query(query, queryParams);
-            return NextResponse.json(result.rows, { status: 200 });
-        } else {
+            const reimbursements = result.rows;
+
+           
+
+            // Now enhance each reimbursement with customer_id, ownership_id, ownership_name
+            for (const reimbursement of reimbursements) {
+                const title = reimbursement.title;
+
+                // Search customer table using ILIKE
+                const customerQuery = `
+      SELECT id, ownership, member 
+      FROM customer 
+      WHERE name ILIKE $1 OR owner ILIKE $1
+      LIMIT 1;
+    `;
+                const customerRes = await pool.query(customerQuery, [`%${title}%`]);
+
+                if (customerRes.rows.length > 0) {
+                    const customer = customerRes.rows[0];
+                    reimbursement.customer_id = customer.id;
+                    reimbursement.customer_member = customer.member
+                    reimbursement.customer = reimbursement.title
+                    reimbursement.ownership_id = customer.ownership;
+
+                    // Now fetch ownership_name from users table
+                    const ownerQuery = `SELECT name FROM users WHERE id = $1 LIMIT 1;`;
+                    const ownerRes = await pool.query(ownerQuery, [customer.ownership]);
+
+                    if (ownerRes.rows.length > 0) {
+                        reimbursement.ownership_name = ownerRes.rows[0].name;
+                    } else {
+                        reimbursement.ownership_name = null;
+                    }
+                } else {
+                    reimbursement.customer_id = null;
+                    reimbursement.ownership_id = null;
+                    reimbursement.ownership_name = null;
+                }
+            }
+
+            return NextResponse.json(reimbursements, { status: 200 });
+        }
+        else {
             let query = `
         SELECT 
           r.*, 

@@ -1,7 +1,13 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowUpDown, Filter, Loader2, Trash } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronsRight,
+  Filter,
+  Loader2,
+  Trash,
+} from "lucide-react";
 import {
   useCallback,
   useContext,
@@ -62,12 +68,14 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
 import { OfficeContext } from "@/store/context/OfficeContext";
+import { startHolyLoader } from "holy-loader";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
-  const [filterValues, setFilterValues] = useState(null);
   const [imageURL, setImageURL] = useState(null);
   const [visible, setVisible] = useState(false);
   const [reimbursementVisible, setReimbursementVisible] = useState(false);
@@ -75,6 +83,7 @@ export default function Page() {
   const { state: UserState } = useContext(UserContext);
   const [resetLoading, setResetLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     if (UserState.value.data?.id) {
@@ -98,7 +107,9 @@ export default function Page() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${
+          `/${
+            UserState.value.data?.id
+          }/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${
             user || ""
           }`
         )
@@ -149,12 +160,70 @@ export default function Page() {
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
+            Title
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const currentItem = row.original;
+        if (!currentItem.customer_id)
+          return <div className="ml-2">{row.getValue("title")}</div>;
+      },
+    },
+
+    {
+      accessorKey: "customer",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
             Customer
             <ArrowUpDown />
           </Button>
         );
       },
-      cell: ({ row }) => <div className="ml-2">{row.getValue("title")}</div>,
+      cell: ({ row }) => {
+        const currentItem = row.original;
+        if (currentItem.customer_id)
+          return (
+            <Link
+              href={`/${UserState.value.data.base_route}/${
+                currentItem.customer_member ? "member" : "customer"
+              }/${currentItem.customer_id}`}
+              target="blank"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="ml-2 hover:underline">
+                {row.getValue("customer")}
+              </div>
+            </Link>
+          );
+      },
+    },
+
+    {
+      accessorKey: "ownership_name",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Manager
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const currentItem = row.original;
+        if (currentItem.ownership_id)
+          return <div className="ml-2">{row.getValue("ownership_name")}</div>;
+      },
     },
 
     {
@@ -226,22 +295,26 @@ export default function Page() {
       cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
 
-    // {
-    //   id: "actions",
-    //   cell: ({ row }) => {
-    //     const currentItem = row.original;
-
-    //     return (
-    //       <ChevronsRight
-    //         className="hover:cursor-pointer"
-    //         onClick={() => {
-    //           setImageURL(currentItem);
-    //           setVisible(true);
-    //         }}
-    //       />
-    //     );
-    //   },
-    // },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const currentItem = row.original;
+        if (currentItem.customer_id)
+          return (
+            <Link
+              href={`/${UserState.value.data.base_route}/customer/${currentItem.customer_id}`}
+              target="blank"
+            >
+              <ChevronsRight
+                className="hover:cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              />
+            </Link>
+          );
+      },
+    },
   ];
 
   function handleDownload() {
@@ -406,7 +479,7 @@ const ImageSheet = ({
   const [isZoomed, setIsZoomed] = useState(false);
   const isMountedRef = useRef(true);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const {state : UserState} = useContext(UserContext)
+  const { state: UserState } = useContext(UserContext);
 
   const fetchImage = useCallback(async () => {
     if (!img) return;
@@ -456,11 +529,13 @@ const ImageSheet = ({
         DeleteFromStorage(img);
       }
     }
-    axios.delete(`/${UserState.value.data?.id}/reimbursement/${id}`).then(async () => {
-      await onRefresh(id);
-      setDeleteLoading(false);
-      handleClose(false);
-    });
+    axios
+      .delete(`/${UserState.value.data?.id}/reimbursement/${id}`)
+      .then(async () => {
+        await onRefresh(id);
+        setDeleteLoading(false);
+        handleClose(false);
+      });
   }
 
   return (
@@ -529,8 +604,8 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
   const [loading, setLoading] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedRadio, setSelectedRadio] = useState("customer");
-  const {state : UserState} = useContext(UserContext)
-   const {state : OfficeState} = useContext(OfficeContext)
+  const { state: UserState } = useContext(UserContext);
+  const { state: OfficeState } = useContext(OfficeContext);
 
   const formSchema = z.object({
     title: z.string().min(1, { message: "Title is required." }),
@@ -560,19 +635,22 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
   async function onSubmit(values) {
     setLoading(true);
     try {
-      const name = `${OfficeState.value.data}/${values.submitted_by}/reimbursement/${moment()
-        .valueOf()
-        .toString()}.png`;
+      const name = `${OfficeState.value.data}/${
+        values.submitted_by
+      }/reimbursement/${moment().valueOf().toString()}.png`;
       const imgRef = await UploadImage(values.image, name);
-      const response = await axios.post(`/${UserState.value.data?.id}/reimbursement`, {
-        amount: values.amount,
-        title: values.title,
-        description: values.description,
-        city: values.city,
-        image: name,
-        date: values.date,
-        submitted_by: values.submitted_by,
-      });
+      const response = await axios.post(
+        `/${UserState.value.data?.id}/reimbursement`,
+        {
+          amount: values.amount,
+          title: values.title,
+          description: values.description,
+          city: values.city,
+          image: name,
+          date: values.date,
+          submitted_by: values.submitted_by,
+        }
+      );
       onRefresh(response.data.reimbursement);
       form.reset();
       onClose(false);
@@ -624,7 +702,8 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        {selectedRadio == "customer" ? "Customer" : "Other"} <RequiredStar />
+                        {selectedRadio == "customer" ? "Customer" : "Other"}{" "}
+                        <RequiredStar />
                       </FormLabel>
                       <FormControl>
                         {selectedRadio === "other" ? (
@@ -652,7 +731,9 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="city"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>City <RequiredStar /></FormLabel>
+                      <FormLabel>
+                        City <RequiredStar />
+                      </FormLabel>
                       <FormControl>
                         <Input placeholder="Enter city" {...field} />
                       </FormControl>
@@ -666,7 +747,9 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Purpose <RequiredStar /></FormLabel>
+                      <FormLabel>
+                        Purpose <RequiredStar />
+                      </FormLabel>
                       <FormControl>
                         <Textarea placeholder="Enter description" {...field} />
                       </FormControl>
@@ -680,7 +763,9 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Amount <RequiredStar /></FormLabel>
+                      <FormLabel>
+                        Amount <RequiredStar />
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -703,7 +788,9 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="date"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date <RequiredStar /></FormLabel>
+                      <FormLabel>
+                        Date <RequiredStar />
+                      </FormLabel>
                       <FormControl>
                         <AppCalendar
                           date={field.value}
@@ -720,7 +807,9 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="submitted_by"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Select User <RequiredStar /></FormLabel>
+                      <FormLabel>
+                        Select User <RequiredStar />
+                      </FormLabel>
                       <FormControl>
                         <UserSearch
                           value={field.value}
@@ -737,7 +826,9 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="image"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Image <RequiredStar /></FormLabel>
+                      <FormLabel>
+                        Image <RequiredStar />
+                      </FormLabel>
                       <FormControl>
                         <div className="flex flex-1 items-center justify-center">
                           <Dropzone
