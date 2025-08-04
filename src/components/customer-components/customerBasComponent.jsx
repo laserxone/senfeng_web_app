@@ -133,7 +133,7 @@ const MemoizedCustomerTab = ({ customerId, onReturn, onLoading, base }) => {
         <MemberDetail
         height={"h-[calc(100dvh-350px)]"}
           onReturn={onReturn}
-          from="member"
+          from="customer"
           ownership={true}
           customer_id={customerId}
           base={base}

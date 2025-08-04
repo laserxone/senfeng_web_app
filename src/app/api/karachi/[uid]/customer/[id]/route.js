@@ -286,7 +286,7 @@ export async function DELETE(req, { params }) {
 
     const { uid } = await params
 
-    const isAdmin = await checkSuperadmin(uid)
+    const isAdmin = await checkDeleteUser(uid)
 
     if (!isAdmin) {
       return NextResponse.json({ message: "You are not allowed to perform this action" }, { status: 500 });
@@ -348,6 +348,34 @@ export async function DELETE(req, { params }) {
     return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
 }
+
+
+
+
+async function checkDeleteUser(id) {
+
+    if (!id) throw new Error("User ID is missing");
+
+    const userQuery = await pool.query(
+        `SELECT id, designation, full_access, customer_delete_access FROM users WHERE id = $1`,
+        [id]
+    );
+
+
+    let user = userQuery.rows[0];
+    if (!user) {
+        const karachiQuery = await karachi_pool.query(
+            `SELECT id, designation, full_access, customer_delete_access FROM users WHERE id = $1`,
+            [id]
+        );
+        user = karachiQuery.rows[0]
+
+    }
+    if (!user) throw new Error("User not found");
+
+    return user.designation === "Owner" || user.full_access === true || user.customer_delete_access === true;
+}
+
 
 export const revalidate = 0;
 
