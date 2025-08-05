@@ -71,7 +71,11 @@ export default function EmployeeBranchExpenses({ base }) {
 
   useEffect(() => {
     if (UserState.value.data?.id) {
-      if (!UserState.value.data?.branch_expenses_assigned) {
+      const allowed =
+        UserState.value.data?.branch_expenses_assigned ||
+        UserState.value.data?.full_access ||
+        UserState.value.data?.designation === "Owner";
+      if (!allowed) {
         router.push("/not-allowed");
       }
       const startDate = momentT
@@ -428,7 +432,7 @@ const ImageSheet = ({
 const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
   const [loading, setLoading] = useState(false);
   const { state: UserState } = useContext(UserContext);
-  const {state : OfficeState} = useContext(OfficeContext)
+  const { state: OfficeState } = useContext(OfficeContext);
   const formSchema = z.object({
     note: z.string().min(1, { message: "Note is required." }),
     amount: z
@@ -452,7 +456,9 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
     setLoading(true);
     try {
       if (values.image) {
-        const name = `${OfficeState.value.data}/Expenses/${moment().valueOf().toString()}.png`;
+        const name = `${OfficeState.value.data}/Expenses/${moment()
+          .valueOf()
+          .toString()}.png`;
         const imgRes = await UploadImage(values.image, name);
         const response = await axios.post(
           `/${UserState.value.data?.id}/expenses`,
