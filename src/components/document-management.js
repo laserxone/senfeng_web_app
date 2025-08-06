@@ -63,7 +63,10 @@ const DocumentManagement = () => {
   const [preview, setPreview] = useState(false)
 
   useEffect(() => {
-    if (UserState.value.data?.id) fetchFiles();
+    if (UserState.value.data?.id) {
+      fetchFiles()
+    }
+
   }, [UserState]);
 
   const fetchFiles = async () => {
@@ -238,7 +241,7 @@ const DocumentManagement = () => {
             }}
           >
             {(downloadLoading || deleteLoading) ? <Spinner /> :
-              <RenderFile path={item.path} index={index}/>
+              <RenderFile path={item.path} index={index} />
             }
           </div>
         </ContextMenuTrigger>
@@ -304,87 +307,7 @@ const DocumentManagement = () => {
     );
   };
 
-  const RenderEachFolder = ({ item, index, view }) => {
 
-    const [deleteLoading, setDeleteLoading] = useState(false)
-
-    async function handleDeleteFolder(id) {
-      try {
-        setDeleteLoading(true)
-        await axios.delete(`/${UserState.value.data?.id}/folder/${id}`)
-        await fetchFiles()
-      } finally {
-        setDeleteLoading(false)
-      }
-
-    }
-
-    return (
-      <ContextMenu>
-        <ContextMenuTrigger
-          onDoubleClick={() => {
-            setFolderBread((prev) => [
-              ...prev,
-              { name: item.name, id: item.id },
-            ]);
-            setCurrentFolder({ name: item.name, id: item.id });
-          }}>
-          <div
-            className={`flex ${view ? "flex-row items-center gap-4" : "flex-col items-center justify-center"} ${view ? "p-0" : "p-2"} rounded cursor-pointer ${view ? "w-full" : "max-w-[150px]"} ${view ? "h-auto" : "min-h-[120px]"} `}
-            style={{
-              border:
-                "1px solid transparent",
-              backgroundColor:
-                "transparent",
-            }}
-          >
-            {deleteLoading ? <Spinner /> :
-              <>
-                <Image
-                  src="/folder-icon.png"
-                  height={view ? 40 : 100}
-                  width={view ? 40 : 100}
-                  alt={`${index}-folder`}
-                />
-                <Label className={view ? "text-left" : "text-center"}>{item.name}</Label>
-              </>
-            }
-          </div>
-        </ContextMenuTrigger>
-        <ContextMenuContent>
-          <ContextMenuItem
-            onClick={() => {
-              setFolderBread((prev) => [
-                ...prev,
-                { name: item.name, id: item.id },
-              ])
-              setCurrentFolder({ name: item.name, id: item.id })
-            }}
-          >
-            Open
-          </ContextMenuItem>
-
-          <ContextMenuItem
-            onClick={() => {
-              setSelectedFolder(item)
-              setNewName(item.name)
-            }}
-          >
-            Rename
-          </ContextMenuItem>
-
-          <ContextMenuItem
-            onClick={() => handleDeleteFolder(item.id)}
-          >
-            Delete
-          </ContextMenuItem>
-
-
-
-        </ContextMenuContent>
-      </ContextMenu>
-    )
-  }
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -433,7 +356,7 @@ const DocumentManagement = () => {
         ) : (
           <div className={view ? "flex flex-col gap-2" : "flex flex-row gap-4 flex-wrap"}>
             {allFolders.map((item, index) => (
-              <RenderEachFolder key={index} item={item} index={index} view={view} />
+              <RenderEachFolder key={index} item={item} index={index} view={view} setCurrentFolder={setCurrentFolder} setFolderBread={setFolderBread} setNewName={setNewName} setSelectedFolder={setSelectedFolder} fetchFiles={fetchFiles} />
             ))}
 
             {allDocuments.map((item, index) => (
@@ -511,6 +434,84 @@ const DocumentManagement = () => {
     </div>
   );
 };
+
+
+const RenderEachFolder = ({ item, index, view, setFolderBread, setCurrentFolder, setSelectedFolder, setNewName, fetchFiles }) => {
+
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const { state: UserState } = useContext(UserContext)
+
+  async function handleDeleteFolder(id) {
+    try {
+      setDeleteLoading(true)
+      await axios.delete(`/${UserState.value.data?.id}/folder/${id}`)
+      await fetchFiles()
+    } finally {
+      setDeleteLoading(false)
+    }
+
+  }
+
+  const openFolder = () => {
+  setFolderBread((prev) => [...prev, { name: item.name, id: item.id }]);
+  setCurrentFolder({ name: item.name, id: item.id });
+}
+  
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger
+        onDoubleClick={openFolder}>
+        <div
+          className={`flex ${view ? "flex-row items-center gap-4" : "flex-col items-center justify-center"} ${view ? "p-0" : "p-2"} rounded cursor-pointer ${view ? "w-full" : "max-w-[150px]"} ${view ? "h-auto" : "min-h-[120px]"} `}
+          style={{
+            border:
+              "1px solid transparent",
+            backgroundColor:
+              "transparent",
+          }}
+        >
+          {deleteLoading ? <Spinner /> :
+            <>
+              <Image
+                src="/folder-icon.png"
+                height={view ? 40 : 100}
+                width={view ? 40 : 100}
+                alt={`${index}-folder`}
+              />
+              <Label className={view ? "text-left" : "text-center"}>{item.name}</Label>
+            </>
+          }
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem
+          onClick={openFolder}
+        >
+          Open
+        </ContextMenuItem>
+
+        <ContextMenuItem
+          onClick={() => {
+            setSelectedFolder(item)
+            setNewName(item.name)
+          }}
+        >
+          Rename
+        </ContextMenuItem>
+
+        <ContextMenuItem
+          onClick={() => handleDeleteFolder(item.id)}
+        >
+          Delete
+        </ContextMenuItem>
+
+
+
+      </ContextMenuContent>
+    </ContextMenu>
+  )
+}
 
 const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
   return (
