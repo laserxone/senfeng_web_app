@@ -32,9 +32,12 @@ import {
 
 import { Icons } from "@/components/icons";
 import { auth, db } from "@/config/firebase";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfileImage } from "@/hooks/use-profile-image";
+import axios, { setUserOffice } from "@/lib/axios";
 import useCheckSession from "@/lib/checkSession";
 import { NotificationContext } from "@/store/context/NotificationContext";
+import { OfficeContext } from "@/store/context/OfficeContext";
 import { UserContext } from "@/store/context/UserContext";
 import { signOut } from "firebase/auth";
 import {
@@ -53,14 +56,11 @@ import {
   LogOut,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useContext, useEffect, useState } from "react";
 import NotificationBadge from "./NotificationBadge";
 import NotificationBadgeWithoutCount from "./NotificationBadgeWithoutCount";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useContext, useEffect, useState } from "react";
-import axios, { setUserOffice } from "@/lib/axios";
 import { ScrollArea } from "./ui/scroll-area";
-import { OfficeContext } from "@/store/context/OfficeContext";
 
 export const company = {
   name: "SENFENG",
@@ -79,7 +79,6 @@ export default function AppSidebar({ office }) {
   const { toggleSidebar } = useSidebar();
   const isMobile = useIsMobile();
   const [conversations, setConversations] = useState(0);
-  const router = useRouter();
 
   useEffect(() => {
     checkSession().then((val) => {
@@ -321,9 +320,11 @@ export default function AppSidebar({ office }) {
                   {(UserState.value.data?.designation === "Owner" ||
                     UserState.value.data?.full_access) && (
                     <Link
-                      href={`/${
-                        pathname.includes("karachi") ? "lahore" : "karachi"
-                      }/superadmin/dashboard`}
+                      href={`${
+                        pathname.includes("karachi")
+                          ? pathname.replace("karachi", "lahore")
+                          : pathname.replace("lahore", "karachi")
+                      }`}
                     >
                       <DropdownMenuItem>
                         <CreditCard />
@@ -339,7 +340,7 @@ export default function AppSidebar({ office }) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => {
-                    signOut(auth)
+                    signOut(auth);
                     // localStorage.removeItem("user_email");
                     // router.replace("/login");
                   }}

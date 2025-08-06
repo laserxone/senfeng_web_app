@@ -151,19 +151,22 @@ export const ownerNavItems = [
     isActive: false,
     items: [] // No child items
   },
-
-   {
+  {
     title: 'Messages',
     url: '/messages',
     icon: 'messages',
     shortcut: ['m', 's', 'g'],
     isActive: false,
-    items: [] // No child items
+    items: []
   },
-
-
-
-
+  {
+    title: 'My Cloud',
+    url: '/cloud',
+    icon: 'cloud',
+    shortcut: ['c', 'l', 'o'],
+    isActive: false,
+    items: [] 
+  },
 ];
 
 export const complaintItem = {
@@ -226,7 +229,7 @@ export const employeeNavItems = [
     isActive: false,
     items: [] // No child items
   },
-   {
+  {
     title: 'Messages',
     url: '/messages',
     icon: 'messages',
@@ -280,7 +283,7 @@ export const StoreNavItem = [
     isActive: false,
     items: [] // No child items
   },
-   {
+  {
     title: 'Messages',
     url: '/messages',
     icon: 'messages',

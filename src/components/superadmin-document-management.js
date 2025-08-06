@@ -40,8 +40,9 @@ import {
   useState
 } from "react";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "./ui/context-menu";
+import { OfficeContext } from "@/store/context/OfficeContext";
 
-const DocumentManagement = () => {
+const SuperadminDocumentManagement = () => {
   const [selectedFile, setSelectedFile] = useState([]);
   const [loading, setLoading] = useState(true);
   const { state: UserState } = useContext(UserContext);
@@ -75,7 +76,7 @@ const DocumentManagement = () => {
     return new Promise(async (resolve) => {
       try {
         const response = await axios.get(
-          `/${UserState.value.data?.id}/folder?folder=${currentFolder?.id || null}`
+          `/${UserState.value.data?.id}/cloud/folder?folder=${currentFolder?.id || null}`
         );
         setAllDocuments(response.data.documents);
         setAllFolders(response.data.folders);
@@ -108,7 +109,7 @@ const DocumentManagement = () => {
     for (const file of selectedFile) {
       const filePath = `${file.name}`;
       const { error } = await supabase.storage
-        .from("documents")
+        .from("superadmin.documents")
         .upload(filePath, file);
 
       if (error) {
@@ -119,7 +120,7 @@ const DocumentManagement = () => {
         continue;
       }
 
-      await axios.post(`/${UserState.value.data?.id}/document`, {
+      await axios.post(`/${UserState.value.data?.id}/cloud/document`, {
         added_by: UserState.value.data?.name || UserState.value.data?.email,
         path: filePath,
         folder_id: currentFolder ? currentFolder.id : undefined,
@@ -139,7 +140,7 @@ const DocumentManagement = () => {
   async function handleCreateFolder() {
     setFolderLoading(true)
     axios
-      .post(`/${UserState.value.data?.id}/folder`, {
+      .post(`/${UserState.value.data?.id}/cloud/folder`, {
         name: folderName,
         parent_folder: currentFolder ? currentFolder?.id : undefined,
       })
@@ -157,7 +158,7 @@ const DocumentManagement = () => {
     if (!selectedFolder) return
     setFolderLoading(true)
     axios
-      .put(`/${UserState.value.data?.id}/folder/${selectedFolder?.id}`, {
+      .put(`/${UserState.value.data?.id}/cloud/folder/${selectedFolder?.id}`, {
         name: newName,
       })
       .then(async () => {
@@ -169,6 +170,8 @@ const DocumentManagement = () => {
       })
   }
 
+
+
   const RenderEachFile = ({ item, index, view, onPreview }) => {
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [downloadLoading, setDownloadLoading] = useState(false);
@@ -177,9 +180,9 @@ const DocumentManagement = () => {
     async function handleDelete(file) {
       const id = file.id;
       await axios
-        .delete(`/${UserState.value.data?.id}/document/${id}`)
+        .delete(`/${UserState.value.data?.id}/cloud/document/${id}`)
         .then(async () => {
-          await supabase.storage.from("documents").remove([file.path]);
+          await supabase.storage.from("superadmin.documents").remove([file.path]);
           await fetchFiles();
         })
         .finally(() => {
@@ -257,7 +260,7 @@ const DocumentManagement = () => {
             onClick={async () => {
               setDownloadLoading(true);
               const { data, error } = await supabase.storage
-                .from("documents")
+                .from("superadmin.documents")
                 .download(item.path);
               if (error) {
                 console.error("Error downloading file", error);
@@ -304,16 +307,17 @@ const DocumentManagement = () => {
     );
   };
 
+  const writeAccess = UserState.value.data?.designation === 'Owner' || UserState.value.data?.full_access || UserState.value.data?.dms_write_access
 
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex flex-col space-y-4">
         <Heading
-          title="Documents Management"
-          description="Manage office documents"
+          title="Superadmin Cloud"
+          description="Manage personal documents"
         />
-        {UserState.value.data && UserState.value.data?.dms_write_access && (
+        {writeAccess && (
           <div className="flex justify-between mb-4 gap-2 flex-wrap">
             <div className="flex gap-2 items-center">
               <input
@@ -362,7 +366,7 @@ const DocumentManagement = () => {
                 setPreview(true)
                 try {
                   const { data, error } = await supabase.storage
-                    .from("documents")
+                    .from("superadmin.documents")
                     .getPublicUrl(path)
                   if (error) {
                     console.error("Error downloading file", error);
@@ -441,7 +445,7 @@ const RenderEachFolder = ({ item, index, view, setFolderBread, setCurrentFolder,
   async function handleDeleteFolder(id) {
     try {
       setDeleteLoading(true)
-      await axios.delete(`/${UserState.value.data?.id}/folder/${id}`)
+      await axios.delete(`/${UserState.value.data?.id}/cloud/folder/${id}`)
       await fetchFiles()
     } finally {
       setDeleteLoading(false)
@@ -584,4 +588,4 @@ const PreviewFile = ({ preview, setPreview, selectedPreview, previewLoading }) =
   )
 }
 
-export default DocumentManagement;
+export default SuperadminDocumentManagement;

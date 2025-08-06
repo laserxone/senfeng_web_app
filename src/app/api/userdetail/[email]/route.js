@@ -44,7 +44,6 @@ export async function GET(req, { params }) {
             return NextResponse.json({ message: "You are not authorized to access the system" }, { status: 404 })
         }
 
-
         if (user.full_access || user.designation == 'Owner') {
 
             nav_items = [...ownerNavItems]

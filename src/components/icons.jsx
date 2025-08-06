@@ -48,6 +48,7 @@ import {
   Hammer,
   AlertCircle,
   MessageSquare,
+  Cloud,
 } from 'lucide-react';
 
 
@@ -100,6 +101,7 @@ export const Icons = {
   tools : Hammer,
   complaint : AlertCircle,
   messages : MessageSquare,
+  cloud : Cloud,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden='true'
