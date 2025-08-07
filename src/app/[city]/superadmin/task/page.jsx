@@ -160,8 +160,8 @@ const getSchema = (isClientSelected) =>
     task: z.string().min(5, { message: "Task must be at least 5 characters." }),
     user: z.number({ required_error: "User is required." }),
     client: isClientSelected
-      ? z.number({ required_error: "Client is required." }) // Required when client is selected
-      : z.number().optional(), // Optional when office is selected
+      ? z.number({ required_error: "Client is required." })
+      : z.number().optional().nullable(),
   });
 
 export default function Page() {
@@ -195,7 +195,9 @@ export default function Page() {
     setDataLoading(true);
     return new Promise((resolve, reject) => {
       axios
-        .get(`/${UserState.value.data?.id}/task?start_date=${start_date}&end_date=${end_date}&user=${user}`)
+        .get(
+          `/${UserState.value.data?.id}/task?start_date=${start_date}&end_date=${end_date}&user=${user}`
+        )
         .then((response) => {
           const apiData = response.data.map((item) => {
             return { ...item, created_at_time: item.created_at };
@@ -345,7 +347,7 @@ const TaskDetail = ({
   async function handleUpdateStatus(values) {
     setLoading(true);
     axios
-      .put(`/team//user/${user_id}/task/${detail.id}`, {
+      .put(`/${user_id}/task/${detail.id}`, {
         id: values.id,
         status: values.status,
       })
@@ -382,8 +384,9 @@ const TaskDetail = ({
       onMark={onMark}
     >
       <SheetContent
-      className="w-[50vw] max-w-[50vw]"
-        style={{ width: "100%", maxWidth: "50vw" }}>
+        className="w-[50vw] max-w-[50vw]"
+        style={{ width: "100%", maxWidth: "50vw" }}
+      >
         <SheetHeader>
           <SheetTitle>Task Detail</SheetTitle>
           <SheetDescription>Check task details</SheetDescription>
@@ -428,7 +431,7 @@ const TaskDetail = ({
                 {detail?.task_name}
               </Label>
 
-                {detail?.problem && (
+              {detail?.problem && (
                 <>
                   <Label htmlFor="problem" className="text-sm text-gray-800">
                     {detail?.problem}
@@ -467,7 +470,7 @@ const AddTask = ({ visible, onClose, onRefresh, assigned_by }) => {
   const [selectedRadio, setSelectedRadio] = useState("office");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const {state : UserState} = useContext(UserContext)
+  const { state: UserState } = useContext(UserContext);
 
   const form = useForm({
     resolver: zodResolver(getSchema(selectedRadio === "client")),
@@ -485,7 +488,7 @@ const AddTask = ({ visible, onClose, onRefresh, assigned_by }) => {
     reset(
       {
         ...getValues(),
-        client: selectedRadio === "client" ? getValues().client : null, // Ensure null
+        client: selectedRadio === "client" ? getValues().client : null,
       },
       {
         resolver: zodResolver(getSchema(selectedRadio === "client")),
