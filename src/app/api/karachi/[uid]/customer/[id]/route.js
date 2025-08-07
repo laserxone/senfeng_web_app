@@ -1,13 +1,13 @@
-import {karachi_pool as pool} from "@/config/db";
-import admin from "@/lib/firebaseAdmin";
-import { NextResponse } from "next/server";
+import { karachi_pool as pool } from "@/config/db";
 import { profileFields, saleFields } from "@/constants/data";
-import { sendNotificationToSMM } from "@/lib/sendNotificationToSMM";
-import { sendNotification } from "@/lib/sendNotification";
-import { generateLog } from "@/lib/generateLog";
 import { addLog } from "@/lib/addLog";
-import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
+import admin from "@/lib/firebaseAdmin";
+import { generateLog } from "@/lib/generateLog";
+import { sendNotification } from "@/lib/sendNotification";
+import { sendNotificationToMobileKarachi } from "@/lib/sendNotificationToMobileKarachi";
+import { sendNotificationToSMMKarachi } from "@/lib/sendNotificationToSMMKarachi";
+import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
   const { id } = await params;
@@ -254,12 +254,12 @@ export async function PUT(req, { params }) {
 
     if (result.rows[0].ownership !== uid) {
       if (result.rows[0].lead) {
-        sendNotificationToSMM(result.rows[0].lead, `${result.rows[0]?.name || result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
+        sendNotificationToSMMKarachi(result.rows[0].lead, `${result.rows[0]?.name || result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
       }
 
       if (result.rows[0].ownership) {
         sendNotification(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
-        sendNotificationToMobile(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, "Customer", result.rows[0].ownership, result.rows[0], "client", `/dashboard/customer/${result.rows[0].id}`)
+        sendNotificationToMobileKarachi(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, "Customer", result.rows[0].ownership, result.rows[0], "client", `/dashboard/customer/${result.rows[0].id}`)
       }
     }
 

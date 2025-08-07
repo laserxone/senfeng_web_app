@@ -2,7 +2,7 @@ import pool from "@/config/db";
 import { auth } from "@/config/firebase";
 import admin from "@/lib/firebaseAdmin";
 import { sendPasswordResetEmail } from "firebase/auth";
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
 
 
 export async function POST(req) {

@@ -1,10 +1,10 @@
-import pool from "@/config/db";
+import { karachi_pool as pool } from "@/config/db";
 import axios from "axios";
 
 
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
-export const sendNotificationToMobile = async (title, heading, sendTo, passingdata, type, url) => {
+export const sendNotificationToMobileKarachi = async (title, heading, sendTo, passingdata, type, url) => {
    
     try {
        

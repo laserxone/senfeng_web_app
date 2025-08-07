@@ -1,7 +1,7 @@
-import {karachi_pool as pool} from "@/config/db";
+import { karachi_pool as pool } from "@/config/db";
 import { addLog } from "@/lib/addLog";
 import { generateLog } from "@/lib/generateLog";
-import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
+import { sendNotificationToOwnerKarachi } from "@/lib/sendNotificationToOwnerKarachi";
 import { NextResponse } from "next/server";
 
 
@@ -34,7 +34,7 @@ export async function POST(req) {
             JOIN customer c ON s.customer_id = c.id
             WHERE p.id = $1`, [result.rows[0].id])
 
-        sendNotificationToOwner(`New payment added for ${customerResult.rows[0].customer_name}`, `member/${customerResult.rows[0].customer_id}/${result.rows[0].machine_id}`)
+        sendNotificationToOwnerKarachi(`New payment added for ${customerResult.rows[0].customer_name}`, `member/${customerResult.rows[0].customer_id}/${result.rows[0].machine_id}`)
 
       
             try {

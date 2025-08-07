@@ -1,8 +1,8 @@
-import {karachi_pool as pool} from "@/config/db";
+import { karachi_pool as pool } from "@/config/db";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { sendNotification } from "@/lib/sendNotification";
-import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
-import { NextResponse } from "next/server"
+import { sendNotificationToMobileKarachi } from "@/lib/sendNotificationToMobileKarachi";
+import { NextResponse } from "next/server";
 
 
 
@@ -34,9 +34,9 @@ export async function POST(req) {
 
                     const engineerName = await pool.query(`SELECT id, name FROM users WHERE id = $1`, [assigned_to])
 
-                    sendNotificationToMobile(`Task assigned: ${taskName}`, "Task", assigned_to, newTask.rows[0], "task", "/dashboard/task")
+                    sendNotificationToMobileKarachi(`Task assigned: ${taskName}`, "Task", assigned_to, newTask.rows[0], "task", "/dashboard/task")
 
-                    sendNotificationToMobile(`Task: ${taskName} to ${engineerName.rows[0].name}`, "Task for engineer", clientResult.rows[0].ownership, {}, "task", "/dashboard")
+                    sendNotificationToMobileKarachi(`Task: ${taskName} to ${engineerName.rows[0].name}`, "Task for engineer", clientResult.rows[0].ownership, {}, "task", "/dashboard")
                 }
 
                 return NextResponse.json({ message: "Task created successfully" }, { status: 201 });
@@ -65,8 +65,8 @@ export async function POST(req) {
 
 
     } catch (error) {
-        console.error("Error inserting task data:", error);
-        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+        console.log("Error inserting task data:", error);
+        return NextResponse.json({ message: error?.message ||  "Internal Server Error" }, { status: 500 });
     }
 }
 

@@ -1,11 +1,11 @@
-import {karachi_pool as pool} from "@/config/db";
+import { karachi_pool as pool } from "@/config/db";
 import { addLog } from "@/lib/addLog";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { generateLog } from "@/lib/generateLog";
 import { sendNotification } from "@/lib/sendNotification";
-import { sendNotificationToCRM, sendNotificationToCRMWithoutLead } from "@/lib/sendNotificationToCRM";
-import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
-import { NextResponse } from "next/server"
+import { sendNotificationToCRMKarachi, sendNotificationToCRMWithoutLeadKarachi } from "@/lib/sendNotificationToCRMKarachi";
+import { sendNotificationToMobileKarachi } from "@/lib/sendNotificationToMobileKarachi";
+import { NextResponse } from "next/server";
 
 
 export async function POST(req, { params }) {
@@ -37,16 +37,16 @@ export async function POST(req, { params }) {
 
 
         if (result.rows[0].lead) {
-            sendNotificationToCRM(result.rows[0].lead, `${result.rows[0]?.name}-${result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`)
+            sendNotificationToCRMKarachi(result.rows[0].lead, `${result.rows[0]?.name}-${result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`)
         }
 
         if (result.rows[0]?.lead !== result.rows[0].created_by) {
-            sendNotificationToCRMWithoutLead(`${result.rows[0]?.name}-${result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`)
+            sendNotificationToCRMWithoutLeadKarachi(`${result.rows[0]?.name}-${result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`)
         }
 
         if (result.rows[0].ownership) {
             sendNotification(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
-            sendNotificationToMobile(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, "Customer", result.rows[0].ownership, result.rows[0], "client", `/dashboard/customer/${result.rows[0].id}`)
+            sendNotificationToMobileKarachi(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, "Customer", result.rows[0].ownership, result.rows[0], "client", `/dashboard/customer/${result.rows[0].id}`)
         }
 
         try {
