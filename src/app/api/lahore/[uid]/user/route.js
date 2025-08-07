@@ -50,7 +50,7 @@ export async function POST(req) {
     const newUser = rows[0];
 
     sendPasswordResetEmail(auth, email, {
-      url: "https://senfeng-web.vercel.app/login"
+      url: "https://app.senfenglaserpk.com/login"
     })
 
     return NextResponse.json(newUser, { status: 200 });
