@@ -105,17 +105,16 @@ export default function ComplaintSystem({ base }) {
     setCloseLoading(null);
   }
 
- const filteredData = data.filter((item) => {
-  if (!search) return true;
-  const searchLower = search.toLowerCase();
-  return (
-    (item?.title || "").toLowerCase().includes(searchLower) ||
-    (item?.customer_name || "").toLowerCase().includes(searchLower) ||
-    (item?.customer_owner || "").toLowerCase().includes(searchLower) ||
-    (item?.customer_ownership_name || "").toLowerCase().includes(searchLower)
-  );
-});
-
+  const filteredData = data.filter((item) => {
+    if (!search) return true;
+    const searchLower = search.toLowerCase();
+    return (
+      (item?.title || "").toLowerCase().includes(searchLower) ||
+      (item?.customer_name || "").toLowerCase().includes(searchLower) ||
+      (item?.customer_owner || "").toLowerCase().includes(searchLower) ||
+      (item?.customer_ownership_name || "").toLowerCase().includes(searchLower)
+    );
+  });
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -124,7 +123,9 @@ export default function ComplaintSystem({ base }) {
           title="Complaint & Installation System"
           description="Manage complaints and machine installations"
         />
-        <Button onClick={() => setVisible(true)}>Register</Button>
+        {UserState.value.data?.complaint_assigned && (
+          <Button onClick={() => setVisible(true)}>Register</Button>
+        )}
       </div>
 
       <div className="flex w-full flex-wrap gap-4 items-center ">
@@ -651,15 +652,18 @@ const CloseComplaint = ({
   const onSubmit = async (values) => {
     setLoading(true);
     try {
-        const responseLog = await axios.post(`/${UserState.value.data?.id}/complaint-logs`, 
-          {remark : values.status, 
-            engineer_id : UserState.value.data?.id,   
-            complaint_id: complaint_id,
-          })
+      const responseLog = await axios.post(
+        `/${UserState.value.data?.id}/complaint-logs`,
+        {
+          remark: values.status,
+          engineer_id: UserState.value.data?.id,
+          complaint_id: complaint_id,
+        }
+      );
       const response = await axios.put(
         `/${UserState.value.data?.id}/complaint`,
         {
-          status : "completed",
+          status: "completed",
           id: complaint_id,
         }
       );
