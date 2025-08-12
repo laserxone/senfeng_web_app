@@ -163,7 +163,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
 
         const payments =
           machine?.payments?.filter(
-            (p) => p.clearance_date !== null && p.status === "approved"
+            (p) => p.clearance_date !== null
           ) || [];
         setPayments(machine?.payments);
         setReceived(
