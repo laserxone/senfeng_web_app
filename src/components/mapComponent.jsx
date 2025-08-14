@@ -1,24 +1,25 @@
 "use client";
 
-import { UserContext } from "@/store/context/UserContext";
+import { storage } from "@/config/firebase";
 import axios from "@/lib/axios";
+import { UserContext } from "@/store/context/UserContext";
 import {
   GoogleMap,
   InfoWindow,
-  Marker,
-  OverlayView,
+  OverlayView
 } from "@react-google-maps/api";
+import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import { useTheme } from "next-themes";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@/config/firebase";
 
 const MapComponent = () => {
   const { state: UserState } = useContext(UserContext);
   const [data, setData] = useState([]);
   const { theme } = useTheme();
+  const { city } = useParams();
 
   useEffect(() => {
     async function fetchData() {
@@ -51,10 +52,18 @@ const MapComponent = () => {
     borderRadius: "15px 0px 0px 15px",
   };
 
-  const defaultMapCenter = {
-    lat: 31.4868877,
-    lng: 74.3129694,
-  };
+  const defaultMapCenter = useMemo(() => {
+    switch (city) {
+      case "lahore":
+        return { lat: 31.4868877, lng: 74.3129694 };
+      case "karachi":
+        return { lat: 24.8607, lng: 67.0011 };
+      case "islamabad":
+        return { lat: 33.6844, lng: 73.0479 };
+      default:
+        return { lat: 31.4868877, lng: 74.3129694 };
+    }
+  }, [city]);
   const defaultMapZoom = 11.65;
 
   const [defaultMapOptions, setDefaultMapOptions] = useState({
@@ -100,12 +109,11 @@ const MapComponent = () => {
                 mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
               >
                 <div className="flex flex-col items-center justify-center gap-2">
-                   {selectedMarker && selectedMarker.id === item.id && (
+                  {selectedMarker && selectedMarker.id === item.id && (
                     <InfoWindow
                       options={{
                         headerDisabled: true,
                       }}
-                      onCloseClick={() => console.log("ub")}
                       position={{
                         lat: parseFloat(selectedMarker.location[0]),
                         lng: parseFloat(selectedMarker.location[1]),
@@ -136,59 +144,14 @@ const MapComponent = () => {
                     }
                     className="h-10 w-10 cursor-pointer"
                   >
-                    <AvatarImage  src={item.user_dp} alt={"User-dp"} />
-                    <AvatarFallback  className="rounded-lg bg-gray-700 text-white dark:bg-gray-100 dark:text-black">
+                    <AvatarImage src={item.user_dp} alt={"User-dp"} />
+                    <AvatarFallback className="rounded-lg bg-gray-700 text-white dark:bg-gray-100 dark:text-black">
                       {item?.user_name.substring(0, 2)}
                     </AvatarFallback>
                   </Avatar>
-                 
                 </div>
               </OverlayView>
             );
-            // ) : (
-            //   <Marker
-            //     key={index}
-            //     icon={null}
-            //     onClick={() =>
-            //       setSelectedMarker(
-            //         item?.id == selectedMarker?.id ? null : item
-            //       )
-            //     }
-            //     position={{
-            //       lat: parseFloat(item.location[0]),
-            //       lng: parseFloat(item.location[1]),
-            //     }}
-            //   >
-            //     {selectedMarker && selectedMarker.id === item.id && (
-            //       <InfoWindow
-            //         options={{
-            //           headerDisabled: true,
-            //         }}
-            //         onCloseClick={() => console.log("ub")}
-            //         position={{
-            //           lat: parseFloat(selectedMarker.location[0]),
-            //           lng: parseFloat(selectedMarker.location[1]),
-            //         }}
-            //       >
-            //         <div
-            //           style={{
-            //             backgroundColor: `white`,
-            //             padding: `5px`,
-            //             borderRadius: 5,
-            //           }}
-            //         >
-            //           <div>{selectedMarker?.user_name}</div>
-            //           <div>
-            //             Last update:{" "}
-            //             {moment(selectedMarker?.created_at).format(
-            //               "YYYY-MM-DD hh:mm A"
-            //             )}
-            //           </div>
-            //         </div>
-            //       </InfoWindow>
-            //     )}
-            //   </Marker>
-            // );
           })}
         </GoogleMap>
       );
@@ -204,3 +167,4 @@ const MapComponent = () => {
 };
 
 export { MapComponent };
+
