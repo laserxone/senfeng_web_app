@@ -1,21 +1,70 @@
-import React from "react";
-import { Badge } from "./ui/badge";
+import { Bell } from "lucide-react";
+import { Button } from "./ui/button";
 
-
-
-const NotificationBadge = ({ count }) => {
-  if (count === 0) return null;
+export default function NotificationBadge({ count, max = 99 }) {
+  const display = count > max ? `${max}+` : count;
 
   return (
-    <div className="relative">
-      {/* <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white text-xs font-bold">
-        {count}
-      </span> */}
-      <Badge variant={"destructive"} className={"text-sm font-medium"}>
-        {count}
-      </Badge>
+    <span
+      className="
+        inline-flex items-center justify-center
+        px-2 py-0.5 
+        text-xs font-bold text-white
+        bg-red-600 rounded-full
+        min-w-[1.5rem] 
+        max-w-[3.25rem] truncate
+        shadow-sm
+      "
+      title={String(display)}
+    >
+      {display}
+    </span>
+  );
+}
+
+export function BellNotification({ count = 0 }) {
+  return (
+    <BadgeCount count={count} max={99}>
+      <Button size="icon"  
+       variant='outline'
+        >
+        <Bell  />
+      </Button>
+    </BadgeCount>
+  );
+}
+
+export function BadgeCount({
+  children,
+  count = 0,
+  max = 99,
+  showZero = false,
+  dot = false,
+  className = "",
+  badgeClassName = "",
+  offset = { top: -4, right: -4 },
+}) {
+  const display = typeof count === "number" && count > max ? `${max}+` : count;
+  const shouldShow = dot || !!count || (count === 0 && showZero);
+  return (
+    <div className={`relative inline-flex ${className}`}>
+      {children}
+      {shouldShow && (
+        <span
+          className={`absolute select-none ${
+            dot
+              ? "h-2 w-2 rounded-full bg-red-500"
+              : "min-w-4 max-w-[3.25rem] truncate rounded-full bg-red-600 px-1.5 py-[2px] text-[10px] font-semibold leading-none text-white shadow-sm flex items-center justify-center animate-pulse-opacity"
+          } ${badgeClassName}`}
+          style={{ top: offset.top, right: offset.right }}
+          aria-label={dot ? "notifications" : `notifications: ${display}`}
+          title={dot ? "" : String(display)}
+        >
+          {!dot && (
+            <span className="inline-block align-middle">{String(display)}</span>
+          )}
+        </span>
+      )}
     </div>
   );
-};
-
-export default NotificationBadge;
+}

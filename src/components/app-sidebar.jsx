@@ -49,18 +49,16 @@ import {
   where,
 } from "firebase/firestore";
 import {
-  Bell,
   ChevronRight,
   ChevronsUpDown,
   CreditCard,
-  LogOut,
+  LogOut
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
-import NotificationBadge from "./NotificationBadge";
-import NotificationBadgeWithoutCount from "./NotificationBadgeWithoutCount";
 import { ScrollArea } from "./ui/scroll-area";
+import { BadgeCount } from "./NotificationBadge";
 
 export const company = {
   name: "SENFENG",
@@ -221,13 +219,16 @@ export default function AppSidebar({ office }) {
                           href={`/${UserState.value.data?.base_route}${item.url}`}
                         >
                           <Icon />
-                          <span className="text-[14px]">{item.title}</span>
-                          {item.url.includes("messages") &&
-                            conversations > 0 && (
-                              <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
-                                {conversations}
-                              </span>
-                            )}
+                          {item.url.includes("messages") ? (
+                            <BadgeCount
+                              count={conversations}
+                              offset={{ top: -6, right: -15 }}
+                            >
+                              <span className="text-[14px]">{item.title}</span>
+                            </BadgeCount>
+                          ) : (
+                            <span className="text-[14px]">{item.title}</span>
+                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -247,20 +248,19 @@ export default function AppSidebar({ office }) {
                   size="lg"
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
-                  <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage src={profileImage} alt={"User-dp"} />
-                    <AvatarFallback className="rounded-lg">
-                      {UserState.value.data?.name.substring(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <BadgeCount dot={NotificationState?.value?.data?.length}>
+                    <Avatar className="h-8 w-8 rounded-lg">
+                      <AvatarImage src={profileImage} alt={"User-dp"} />
+                      <AvatarFallback className="rounded-lg">
+                        {UserState.value.data?.name.substring(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </BadgeCount>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <div className="flex flex-row gap-2 items-center">
                       <span className="truncate font-semibold">
                         {UserState.value.data?.name}
                       </span>
-                      <NotificationBadgeWithoutCount
-                        count={NotificationState?.value?.data?.length}
-                      />
                     </div>
 
                     <span className="truncate text-xs">
@@ -303,17 +303,6 @@ export default function AppSidebar({ office }) {
                     <DropdownMenuItem>
                       <CreditCard />
                       Profile
-                    </DropdownMenuItem>
-                  </Link>
-                  <Link
-                    href={`/${UserState.value.data?.base_route}/notification`}
-                  >
-                    <DropdownMenuItem>
-                      <Bell />
-                      Notifications
-                      <NotificationBadge
-                        count={NotificationState?.value?.data.length}
-                      />
                     </DropdownMenuItem>
                   </Link>
 
