@@ -18,7 +18,6 @@ import { signOut } from "firebase/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useContext } from "react";
-import { BadgeCount, BellNotification } from "./NotificationBadge";
 import NotificationDropdown from "./notification-dropdown";
 export function UserNav() {
   const { state: UserState } = useContext(UserContext);
@@ -30,14 +29,12 @@ export function UserNav() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-            <BadgeCount dot={NotificationState?.value?.data?.length}>
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={profileImage} alt={"user-dp"} />
-                <AvatarFallback>
-                  {UserState.value.data?.name.substring(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-            </BadgeCount>
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={profileImage} alt={"user-dp"} />
+              <AvatarFallback>
+                {UserState.value.data?.name.substring(0, 2)}
+              </AvatarFallback>
+            </Avatar>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" forceMount>
@@ -72,7 +69,10 @@ export function UserNav() {
       {/* <Link href={`/${UserState.value.data?.base_route}/notification`}>
         <BellNotification count={NotificationState?.value?.data?.length} />
       </Link> */}
-      <NotificationDropdown NotificationState={NotificationState} UserState={UserState}/>
+      <NotificationDropdown
+        NotificationState={NotificationState}
+        UserState={UserState}
+      />
     </div>
   );
 }

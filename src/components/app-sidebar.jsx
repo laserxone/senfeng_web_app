@@ -48,17 +48,12 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import {
-  ChevronRight,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut
-} from "lucide-react";
+import { ChevronRight, ChevronsUpDown, CreditCard, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
-import { ScrollArea } from "./ui/scroll-area";
 import { BadgeCount } from "./NotificationBadge";
+import { ScrollArea } from "./ui/scroll-area";
 
 export const company = {
   name: "SENFENG",
@@ -248,14 +243,12 @@ export default function AppSidebar({ office }) {
                   size="lg"
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
-                  <BadgeCount dot={NotificationState?.value?.data?.length}>
-                    <Avatar className="h-8 w-8 rounded-lg">
-                      <AvatarImage src={profileImage} alt={"User-dp"} />
-                      <AvatarFallback className="rounded-lg">
-                        {UserState.value.data?.name.substring(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-                  </BadgeCount>
+                  <Avatar className="h-8 w-8 rounded-lg">
+                    <AvatarImage src={profileImage} alt={"User-dp"} />
+                    <AvatarFallback className="rounded-lg">
+                      {UserState.value.data?.name.substring(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <div className="flex flex-row gap-2 items-center">
                       <span className="truncate font-semibold">
