@@ -1570,7 +1570,6 @@ const OrderStockDialog = ({ dialogVisible, onCloseDialog, stock }) => {
                             Export
                         </Button>
                             :
-
                             <div className="flex gap-2 items-center">
                                 <UserSearch
                                     className="w-[200px]"
