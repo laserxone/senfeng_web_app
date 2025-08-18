@@ -14,6 +14,7 @@ import Spinner from "../ui/spinner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import Link from "next/link";
+import exportToExcel from "@/lib/exportToExcel";
 
 const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
   const { state: UserState } = useContext(UserContext);
@@ -204,87 +205,183 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
         visible={!!selectedContent}
         data={selectedContent ? selectedContent?.content : []}
         onClose={() => setSelectedContent(null)}
+        type={selectedContent ? selectedContent?.type : ""}
       />
     </div>
   );
 };
 
-const RenderSelectedContent = ({ visible, onClose, data }) => {
+const RenderSelectedContent = ({ visible, onClose, data, type }) => {
   const { state: UserState } = useContext(UserContext);
-  return (
-    <Sheet open={visible} onOpenChange={onClose}>
-      <SheetContent
-        style={{ width: "100%", maxWidth: "95vw", alignItems: "flex-start" }}
-      >
-        <SheetHeader className="mb-4">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="text-2xl">Report</SheetTitle>
-            <Label className="text-muted-foreground text-lg">
-              Entries: {data.length}
-            </Label>
-          </div>
-          <ScrollArea className="h-[90vh] px-4">
-            {data.length == 0 ? (
-              <div className="flex flex-1 flex-col gap-2">
-                <p>No data to display</p>
-              </div>
-            ) : (
-              <div className="px-4 py-6 space-y-2 border-l-2 border-muted relative">
-                {data.map((fb, index) => (
-                  <div key={fb.id} className="relative pl-6">
-                    {/* Dot on the timeline */}
-                    <div className="absolute left-[-9px] top-2 w-3 h-3 bg-primary rounded-full border-2 border-background shadow-md" />
+  const [loading, setLoading] = useState(false);
 
-                    {/* Card content */}
-                    <Card className="bg-background border border-border shadow-sm">
-                      <CardHeader className="pb-0">
-                        <div className="text-sm text-muted-foreground">
-                          <span className="mr-2">{fb?.user_name}</span>
-                          {moment(fb.feedback_date).format("YYYY-MM-DD")}
-                        </div>
-                        <Link
-                          target="blank"
-                          href={`/${UserState.value.data?.base_route}/member/${fb.customer_id}`}
-                        >
-                          <div className="text-base font-semibold text-foreground hover:underline">
-                            {`${fb.name} - ${fb.owner} - ${fb.location}`}
+  async function handleCreateExcel() {
+    setLoading(true);
+
+    const headers = [
+      "Name",
+      "English Name",
+      "New Order",
+      "Buying Price",
+      "Image",
+    ];
+
+    try {
+      if (data.length === 0) {
+        toast({
+          title: "No items selected",
+          description: "Please select items first.",
+        });
+        return;
+      }
+      await exportToExcel(
+        headers,
+        data.map((item) => [
+          item.chinese_name,
+          item.name,
+          item.new_order,
+          item.buying,
+          item.img,
+        ]),
+        "New Order.xlsx",
+        true
+      );
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error || "Error creating excel",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (type === "feedback")
+    return (
+      <Sheet open={visible} onOpenChange={onClose}>
+        <SheetContent
+          style={{ width: "100%", maxWidth: "95vw", alignItems: "flex-start" }}
+        >
+          <SheetHeader className="mb-4">
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-2xl">Report</SheetTitle>
+              <Label className="text-muted-foreground text-lg">
+                Entries: {data.length}
+              </Label>
+            </div>
+            <ScrollArea className="h-[90vh] px-4">
+              {data.length == 0 ? (
+                <div className="flex flex-1 flex-col gap-2">
+                  <p>No data to display</p>
+                </div>
+              ) : (
+                <div className="px-4 py-6 space-y-2 border-l-2 border-muted relative">
+                  {data.map((fb, index) => (
+                    <div key={fb.id} className="relative pl-6">
+                      {/* Dot on the timeline */}
+                      <div className="absolute left-[-9px] top-2 w-3 h-3 bg-primary rounded-full border-2 border-background shadow-md" />
+
+                      {/* Card content */}
+                      <Card className="bg-background border border-border shadow-sm">
+                        <CardHeader className="pb-0">
+                          <div className="text-sm text-muted-foreground">
+                            <span className="mr-2">{fb?.user_name}</span>
+                            {moment(fb.feedback_date).format("YYYY-MM-DD")}
                           </div>
-                        </Link>
-                      </CardHeader>
+                          <Link
+                            target="blank"
+                            href={`/${UserState.value.data?.base_route}/member/${fb.customer_id}`}
+                          >
+                            <div className="text-base font-semibold text-foreground hover:underline">
+                              {`${fb.name} - ${fb.owner} - ${fb.location}`}
+                            </div>
+                          </Link>
+                        </CardHeader>
 
-                      <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-sm">
-                        <div>
-                          <span className="font-medium text-foreground">
-                            Number:
-                          </span>{" "}
-                          {fb.number}
-                        </div>
-                        <div>
-                          <span className="font-medium text-foreground">
-                            Status:
-                          </span>{" "}
-                          {fb.status}
-                        </div>
+                        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-sm">
+                          <div>
+                            <span className="font-medium text-foreground">
+                              Number:
+                            </span>{" "}
+                            {fb.number}
+                          </div>
+                          <div>
+                            <span className="font-medium text-foreground">
+                              Status:
+                            </span>{" "}
+                            {fb.status}
+                          </div>
 
-                        <div className="col-span-full pt-2 border-t mt-2 text-foreground whitespace-pre-line">
-                          <p className="mt-2">
-                            {fb.feedback || (
-                              <em className="text-muted-foreground">
-                                No feedback provided.
-                              </em>
-                            )}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </SheetHeader>
-      </SheetContent>
-    </Sheet>
+                          <div className="col-span-full pt-2 border-t mt-2 text-foreground whitespace-pre-line">
+                            <p className="mt-2">
+                              {fb.feedback || (
+                                <em className="text-muted-foreground">
+                                  No feedback provided.
+                                </em>
+                              )}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </SheetHeader>
+        </SheetContent>
+      </Sheet>
+    );
+  if (type === "neworder")
+    return (
+      <Sheet open={visible} onOpenChange={onClose}>
+        <SheetContent
+          style={{ width: "100%", maxWidth: "95vw", alignItems: "flex-start" }}
+        >
+          <SheetHeader className="mb-4">
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-2xl">New Stock Order</SheetTitle>
+              <Label className="text-muted-foreground text-lg">
+                Entries: {data.length}
+              </Label>
+              <Button disabled={data.length === 0} onClick={handleCreateExcel}>
+                {loading && <Spinner className="mr-2" />}
+                Export
+              </Button>
+            </div>
+            <ScrollArea className="h-[90vh] px-4">
+              {data.length == 0 ? (
+                <div className="flex flex-1 flex-col gap-2">
+                  <p>No data to display</p>
+                </div>
+              ) : (
+                <div className="px-4 py-6 space-y-2 border-l-2 border-muted relative">
+                  {data.map((item, index) => (
+                    <RenderOtherStockItems index={index} item={item} />
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </SheetHeader>
+        </SheetContent>
+      </Sheet>
+    );
+};
+
+const RenderOtherStockItems = ({ item, index }) => {
+  return (
+    <div
+      className={`w-full border border-gray-300 rounded-lg shadow-md p-5 flex flex-col`}
+    >
+      <div className="flex flex-1 flex-row justify-between">
+        <div className="w-1/3">
+          <p>{item.name}</p>
+          <p>{item.chinese_name}</p>
+        </div>
+        <p className="w-1/3">New order: {item.new_order}</p>
+        <p className="w-1/3">Buying ¥: {item.buying}</p>
+      </div>
+    </div>
   );
 };
 

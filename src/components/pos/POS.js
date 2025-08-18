@@ -36,6 +36,12 @@ import { UserSearch } from '../user-search';
 import NotificationBadge from './NotificationBadge';
 import { CustomerSearchWithData } from '../customer-search-with-data';
 import { toast } from '@/hooks/use-toast';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -1074,7 +1080,7 @@ export default function POS() {
 
 const RenderPaid = ({ row, onRefresh }) => {
 
-    const {state : UserState} = useContext(UserContext)
+    const { state: UserState } = useContext(UserContext)
 
     async function handleUpdatePayment(checked) {
         setLocalLoading(true)
@@ -1447,71 +1453,138 @@ const AddItemDialog = ({ designation, visible, onClose, handleDecrease, showOthe
 
 const OrderStockDialog = ({ dialogVisible, onCloseDialog, stock }) => {
 
-
-
     const [search, setSearch] = useState("")
     const [loading, setLoading] = useState(false)
+    const [selectedItems, setSelectedItems] = useState([]);
+    const { state: UserState } = useContext(UserContext)
+      const [sendTo, setSendTo] = useState(null);
 
+    const isSuper = UserState.value.data?.designation === 'Owner' || UserState.value.data?.full_access
 
-    async function handleCreatePDF() {
-        setLoading(true)
-        // try {
-        //     const blob = await pdf(<OrderStockPDF stock={stock} />).toBlob();
-        //     const url = URL.createObjectURL(blob);
-        //     window.open(url, "_blank");
-        //     setTimeout(() => URL.revokeObjectURL(url), 600000);
+    const toggleItem = (id) => {
+        setSelectedItems((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+        );
+    };
 
+    const selectAll = () => {
+        setSelectedItems(stock.map((item) => item.id)); // assuming item.id exists
+    };
 
-        // } catch (error) {
-        //     console.log(error)
-        // } finally {
-        //     setLoading(false)
-        // }
+    const deselectAll = () => {
+        setSelectedItems([]);
+    };
 
-        const headers = [
-            "Name",
-            "English Name",
-            "New Order",
-            "Buying Price",
-            "Image"
-        ];
+    async function handleCreateExcel() {
+        setLoading(true);
 
-        const formattedData = [...stock].map((item) => [
-            item.chinese_name,
-            item.name,
-            item.new_order,
-            item.buying,
-            item.img
-        ]);
+        const headers = ["Name", "English Name", "New Order", "Buying Price", "Image"];
+
+        const formattedData = stock
+            .filter((item) => selectedItems.includes(item.id)) // only selected
+            .map((item) => [
+                item.chinese_name,
+                item.name,
+                item.new_order,
+                item.buying,
+                item.img,
+            ]);
 
         try {
+            if (formattedData.length === 0) {
+                toast({ title: "No items selected", description: "Please select items first." });
+                return;
+            }
             await exportToExcel(headers, formattedData, "New Order.xlsx", true);
         } catch (error) {
-            toast({ title: 'Error', description: error || "Error creating excel" })
+            toast({
+                title: "Error",
+                description: error || "Error creating excel",
+            });
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-
-
-
-
-
     }
 
+    const filteredStock = stock.filter((item) =>
+        item?.name?.toLowerCase().includes(search.toLowerCase())
+    );
+
+    async function handleShare() {
+        setLoading(true)
+
+        const formattedData = stock
+            .filter((item) => selectedItems.includes(item.id))
+
+        try {
+            const response = await axios.post(
+                `/${UserState.value.data?.id}/conversations`,
+                {
+                    user1: UserState.value.data?.id,
+                    user2: sendTo,
+                }
+            );
+            if (response.data?.id) {
+                let formData = { type: "neworder", content: formattedData };
+
+
+                await axios
+                    .post(
+                        `/${UserState.value.data?.id}/conversations/${response.data?.id}`,
+                        {
+                            senderId: UserState.value.data?.id,
+                            message: `New stock order generated ${moment().format(
+                                "YYYY-MM-DD"
+                            )}`,
+                            data: JSON.stringify(formData),
+                        }
+                    )
+                    .then(() => {
+                        toast({ title: "Report sent" });
+                    });
+            }
+        } finally {
+            setLoading(false);
+        }
+    }
 
     return (
         <Dialog open={dialogVisible} onOpenChange={onCloseDialog}>
-
             <DialogContent className="w-full sm:max-w-[90vw]">
                 <DialogHeader>
-                    <DialogTitle>Order new stock
-                    </DialogTitle>
+                    <DialogTitle>Order new stock</DialogTitle>
 
-                    <div className='flex flex-1 justify-end gap-4 items-center'>
+                    <div className="flex flex-1 justify-end gap-4 items-center">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">Bulk Actions</Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem onClick={selectAll}>Select All</DropdownMenuItem>
+                                <DropdownMenuItem onClick={deselectAll}>Deselect All</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
 
-                        <Button onClick={handleCreatePDF}>{loading && <Spinner />}Export</Button>
+                        {isSuper ? <Button disabled={selectedItems.length === 0} onClick={handleCreateExcel}>
+                            {loading && <Spinner className="mr-2" />}
+                            Export
+                        </Button>
+                            :
 
-
+                            <div className="flex gap-2 items-center">
+                                <UserSearch
+                                    className="w-[200px]"
+                                    onReturn={setSendTo}
+                                    value={sendTo}
+                                />
+                                <Button
+                                    disabled={!sendTo || loading || selectedItems.length === 0}
+                                    onClick={handleShare}
+                                >
+                                    {loading && <Spinner />}Send Report
+                                </Button>
+                            </div>
+                        }
                     </div>
                 </DialogHeader>
 
@@ -1523,27 +1596,25 @@ const OrderStockDialog = ({ dialogVisible, onCloseDialog, stock }) => {
 
                 <ScrollArea className="h-[70vh]">
                     <div className="flex flex-col gap-5 p-4">
-
-                        <div className="flex flex-wrap gap-2 justify-center">
-                            {stock.filter((item) => item?.name?.toLowerCase().includes(search.toLowerCase())).map((item, index) =>
-
-                                <RenderOtherStockItems key={index} index={index} item={item} />
-
-                            )}
+                        <div className="flex flex-wrap gap-4 w-full">
+                            {filteredStock.map((item, index) => (
+                                <div key={item.id || index} className="flex items-center gap-2 w-full">
+                                    <Checkbox
+                                        checked={selectedItems.includes(item.id)}
+                                        onCheckedChange={() => toggleItem(item.id)}
+                                    />
+                                    <RenderOtherStockItems index={index} item={item} UserState={UserState} />
+                                </div>
+                            ))}
                         </div>
-
-
                     </div>
-
                 </ScrollArea>
-
-
             </DialogContent>
         </Dialog>
     );
 }
 
-const RenderOtherStockItems = ({ item, index }) => {
+const RenderOtherStockItems = ({ item, UserState }) => {
 
 
     return (
@@ -1555,7 +1626,8 @@ const RenderOtherStockItems = ({ item, index }) => {
                     <p >{item.chinese_name}</p>
                 </div>
                 <p className='w-1/3'>New order: {item.new_order}</p>
-                <p className='w-1/3'>Buying ¥: {item.buying}</p>
+                {(UserState.value.data?.designation === 'Owner' || UserState.value.data?.full_access) && <p className='w-1/3'>Buying ¥: {item.buying}</p>
+                }
             </div>
 
 
@@ -1576,7 +1648,7 @@ const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrea
     const [threshold, setThreshold] = useState("")
     const [newOrder, setNewOrder] = useState("")
     const [buying, setBuying] = useState("")
-    const {state : UserState} = useContext(UserContext)
+    const { state: UserState } = useContext(UserContext)
 
 
     useEffect(() => {
@@ -1627,39 +1699,39 @@ const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrea
                     resolve(null)
                 }
             } else {
- const metadata = {
-                contentType: "image/png",
-            };
-            const storageRef = ref(
-                storage,
-                `products/` + name
-            );
-            const uploadTask = uploadBytesResumable(storageRef, item, metadata);
-            uploadTask.on(
-                "state_changed",
-                (snapshot) => {
-                    const progress =
-                        (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    console.log("Upload is " + progress + "% done");
-                    switch (snapshot.state) {
-                        case "paused":
-                            console.log("Upload is paused");
-                            break;
-                        case "running":
-                            console.log("Upload is running");
-                            break;
+                const metadata = {
+                    contentType: "image/png",
+                };
+                const storageRef = ref(
+                    storage,
+                    `products/` + name
+                );
+                const uploadTask = uploadBytesResumable(storageRef, item, metadata);
+                uploadTask.on(
+                    "state_changed",
+                    (snapshot) => {
+                        const progress =
+                            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        console.log("Upload is " + progress + "% done");
+                        switch (snapshot.state) {
+                            case "paused":
+                                console.log("Upload is paused");
+                                break;
+                            case "running":
+                                console.log("Upload is running");
+                                break;
+                        }
+                    },
+                    () => {
+                        setLoading(false);
+                        reject(null)
+                    },
+                    () => {
+                        resolve(name)
                     }
-                },
-                () => {
-                    setLoading(false);
-                    reject(null)
-                },
-                () => {
-                    resolve(name)
-                }
-            );
+                );
             }
-           
+
         })
 
     };
@@ -1667,27 +1739,27 @@ const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrea
     async function handleSave(id, imgRef) {
 
         if (localPrice && isNaN(Number(localPrice))) {
-            toast({ title: 'Error', description: "Price must be a number",variant : "destructive" })
+            toast({ title: 'Error', description: "Price must be a number", variant: "destructive" })
             return
         }
 
         if (localQty && isNaN(Number(localQty))) {
-            toast({ title: 'Error', description: "Quantity must be a number",variant : "destructive" })
+            toast({ title: 'Error', description: "Quantity must be a number", variant: "destructive" })
             return
         }
 
         if (threshold && isNaN(Number(threshold))) {
-            toast({ title: 'Error', description: "Threshold must be a number",variant : "destructive" })
+            toast({ title: 'Error', description: "Threshold must be a number", variant: "destructive" })
             return
         }
 
         if (newOrder && isNaN(Number(newOrder))) {
-            toast({ title: 'Error', description: "New order must be a number",variant : "destructive" })
+            toast({ title: 'Error', description: "New order must be a number", variant: "destructive" })
             return
         }
 
         if (buying && isNaN(Number(buying))) {
-            toast({ title: 'Error', description: "Buying price must be a number",variant : "destructive" })
+            toast({ title: 'Error', description: "Buying price must be a number", variant: "destructive" })
             return
         }
 
@@ -1889,7 +1961,7 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
     const [threshold, setThreshold] = useState("")
     const [newOrder, setNewOrder] = useState("")
     const [buying, setBuying] = useState("")
-    const {state : UserState} = useContext(UserContext)
+    const { state: UserState } = useContext(UserContext)
 
 
 
@@ -1910,40 +1982,40 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
                     resolve(null)
                 }
             } else {
- const metadata = {
-                contentType: "image/png",
-            };
-            const storageRef = ref(
-                storage,
-                `products/` + name
-            );
-            const uploadTask = uploadBytesResumable(storageRef, item, metadata);
-            uploadTask.on(
-                "state_changed",
-                (snapshot) => {
-                    const progress =
-                        (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    console.log("Upload is " + progress + "% done");
-                    switch (snapshot.state) {
-                        case "paused":
-                            console.log("Upload is paused");
-                            break;
-                        case "running":
-                            console.log("Upload is running");
-                            break;
+                const metadata = {
+                    contentType: "image/png",
+                };
+                const storageRef = ref(
+                    storage,
+                    `products/` + name
+                );
+                const uploadTask = uploadBytesResumable(storageRef, item, metadata);
+                uploadTask.on(
+                    "state_changed",
+                    (snapshot) => {
+                        const progress =
+                            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        console.log("Upload is " + progress + "% done");
+                        switch (snapshot.state) {
+                            case "paused":
+                                console.log("Upload is paused");
+                                break;
+                            case "running":
+                                console.log("Upload is running");
+                                break;
+                        }
+                    },
+                    () => {
+                        setLoading(false);
+                        reject(null)
+                    },
+                    () => {
+                        resolve(name)
                     }
-                },
-                () => {
-                    setLoading(false);
-                    reject(null)
-                },
-                () => {
-                    resolve(name)
-                }
-            );
+                );
             }
 
-           
+
 
 
         })
@@ -1953,27 +2025,27 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
     async function handleSave(id, imgRef) {
 
         if (localPrice && isNaN(Number(localPrice))) {
-            toast({ title: 'Error', description: "Price must be a number",variant : "destructive" })
+            toast({ title: 'Error', description: "Price must be a number", variant: "destructive" })
             return
         }
 
         if (localQty && isNaN(Number(localQty))) {
-            toast({ title: 'Error', description: "Quantity must be a number" ,variant : "destructive" })
+            toast({ title: 'Error', description: "Quantity must be a number", variant: "destructive" })
             return
         }
 
         if (threshold && isNaN(Number(threshold))) {
-            toast({ title: 'Error', description: "Threshold must be a number",variant : "destructive" })
+            toast({ title: 'Error', description: "Threshold must be a number", variant: "destructive" })
             return
         }
 
         if (newOrder && isNaN(Number(newOrder))) {
-            toast({ title: 'Error', description: "New order must be a number",variant : "destructive" })
+            toast({ title: 'Error', description: "New order must be a number", variant: "destructive" })
             return
         }
 
         if (buying && isNaN(Number(buying))) {
-            toast({ title: 'Error', description: "Buying price must be a number",variant : "destructive" })
+            toast({ title: 'Error', description: "Buying price must be a number", variant: "destructive" })
             return
         }
 
@@ -2174,7 +2246,7 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
     const [threshold, setThreshold] = useState("")
     const [newOrder, setNewOrder] = useState("")
     const [loading, setLoading] = useState(false)
-    
+
     const { state: UserState } = useContext(UserContext)
 
 
@@ -2225,7 +2297,7 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
             (newOrder !== undefined && newOrder !== "" && isNaN(Number(newOrder)))
         ) {
 
-            toast({ title: 'Error', description: "Price, Quantity, Threshold and New Order must be numbers",variant : "destructive" })
+            toast({ title: 'Error', description: "Price, Quantity, Threshold and New Order must be numbers", variant: "destructive" })
             return
         }
 
