@@ -15,7 +15,7 @@ export default function NotificationDropdown({ UserState, NotificationState }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative w-0">
+        <Button size="icon" variant="outline" className="relative">
           <BellNotification count={NotificationState?.value?.data?.length} />
         </Button>
       </DropdownMenuTrigger>

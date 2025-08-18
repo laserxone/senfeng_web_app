@@ -14,9 +14,9 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Spinner from "./ui/spinner";
-import { useRouter } from "next/navigation";
 
 export function LoginForm({ className, ...props }) {
   const { toast } = useToast();
@@ -111,6 +111,7 @@ export function LoginForm({ className, ...props }) {
                   </svg>
                   Login with Google
                 </Button>
+               
               </div>
               <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
                 <span className="relative z-10 bg-background px-2 text-muted-foreground">

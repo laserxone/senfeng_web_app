@@ -6,10 +6,12 @@ import HolyLoader from "holy-loader";
 import { Lato } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
+import PwaInstallButton from "@/components/install-pwa";
 
 export const metadata = {
   title: "SENFENG",
   description: "SENFENG APP",
+  manifest: '/manifest.json',
 };
 
 const lato = Lato({
@@ -20,20 +22,24 @@ const lato = Lato({
 
 export default async function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${lato.className}`} suppressHydrationWarning>
-      <body className={"overflow-hidden"}>
-        {/* <NextTopLoader showSpinner={false} /> */}
+    
+      <html lang="en" className={`${lato.className}`} suppressHydrationWarning>
+        <body className={"overflow-hidden"}>
+          {/* <NextTopLoader showSpinner={false} /> */}
 
-        <HolyLoader />
-        <Suspense fallback={<SenfengLogoLoader />}>
-          <Providers>
-            {/* <MobileScreenWrapper> */}
-            <MaintenanceWrapper>{children}</MaintenanceWrapper>
-            {/* </MobileScreenWrapper> */}
-          </Providers>
-        </Suspense>
-        <Toaster />
-      </body>
-    </html>
+          <HolyLoader />
+          <Suspense fallback={<SenfengLogoLoader />}>
+            <Providers>
+              {/* <MobileScreenWrapper> */}
+              <MaintenanceWrapper>{children}</MaintenanceWrapper>
+              {/* </MobileScreenWrapper> */}
+                <PwaInstallButton />
+            </Providers>
+          </Suspense>
+       
+          <Toaster />
+        </body>
+      </html>
+    
   );
 }

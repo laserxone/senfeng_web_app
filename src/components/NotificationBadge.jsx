@@ -24,12 +24,10 @@ export default function NotificationBadge({ count, max = 99 }) {
 
 export function BellNotification({ count = 0 }) {
   return (
-    <BadgeCount count={count} max={99}>
-      <Button size="icon"  
-       variant='outline'
-        >
-        <Bell  />
-      </Button>
+    <BadgeCount count={count} max={99} offset={{ right: -8, top: -6 }}>
+      <div className="relative h-8 w-4 flex items-center justify-center">
+        <Bell />
+      </div>
     </BadgeCount>
   );
 }

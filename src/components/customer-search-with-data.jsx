@@ -17,51 +17,91 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { BASE_URL } from "@/constants/data";
-import { cn } from "@/lib/utils";
 import axios from "@/lib/axios";
+import { cn } from "@/lib/utils";
 import { UserContext } from "@/store/context/UserContext";
+import { Input } from "./ui/input";
+import { useDebounce } from "@/hooks/use-debounce";
+
 
 export function CustomerSearchWithData({ value, onReturn }) {
   const [open, setOpen] = React.useState(false);
   const [customers, setCustomers] = React.useState([]);
-  const {state : UserState} = React.useContext(UserContext)
+  const { state: UserState } = React.useContext(UserContext);
+  const [search, setSearch] = React.useState("");
 
   React.useEffect(() => {
     async function fetchData() {
-      const response = await axios.get(`/${UserState.value.data?.id}/mycustomer`);
+      const response = await axios.get(
+        `/${UserState.value.data?.id}/mycustomer`
+      );
       if (response.data.length > 0) {
         const apiData = response.data
           .filter((item) => {
-            // Check if there's at least a valid name or a valid owner
+          
             const hasValidName = item.name && item.name.trim() !== "";
             const hasValidOwner = item.owner && item.owner.trim() !== "";
             return hasValidName || hasValidOwner;
           })
           .map((item) => {
             const hasValidName = item.name && item.name.trim() !== "";
+
+            // normalize numbers: always an array
+            const numbers = Array.isArray(item.number)
+              ? item.number
+              : item.number
+              ? [item.number]
+              : [];
+
             return {
               ...item,
               label: hasValidName
-                ? item.name.trim()
+                ? item.name.trim() + " " + numbers.join(" ")
                 : `${item.owner?.trim() || ""} ${
                     item.location?.trim() || ""
-                  }`.trim(),
+                  }`.trim() +
+                  " " +
+                  numbers.join(" "),
             };
           })
-          .filter((item) => !!item.label) 
+          .filter((item) => !!item.label)
           .sort((a, b) => a.label.localeCompare(b.label));
 
         const finalData = apiData.map((item) => {
-          return { ...item, search: item.label };
+          const numbers = Array.isArray(item.number)
+            ? item.number
+            : item.number
+            ? [item.number]
+            : [];
+          return {
+            ...item,
+            search: [
+              item.name,
+              item.owner,
+              item.location,
+              ...numbers, // safe now
+            ]
+              .filter(Boolean)
+              .join(" ")
+              .trim(),
+          };
         });
 
         setCustomers(finalData);
       }
     }
-    if(UserState.value.data?.id)
-    fetchData();
+    if (UserState.value.data?.id) fetchData();
   }, [UserState]);
+
+   const debouncedSearch = useDebounce(search, 500);
+
+   const filteredCustomers = React.useMemo(() => {
+    if (!debouncedSearch) return customers;
+    return customers.filter((item) =>
+      item.search.toLowerCase().includes(debouncedSearch.toLowerCase())
+    );
+  }, [customers, debouncedSearch]);
+
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -70,28 +110,32 @@ export function CustomerSearchWithData({ value, onReturn }) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className="w-full justify-between overflow-hidden"
         >
-          {value ? value?.search : "Select customer..."}
+          {value ? value?.label : "Select customer..."}
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="py-2 px-0">
         <Command>
-          <CommandInput placeholder="Search customer..." className="h-9" />
+          <Input value={search}
+            onChange={(e) => setSearch(e.target.value)}
+             placeholder="Search customer..."
+            className="h-9 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
           <CommandList>
             <CommandEmpty>No customer found.</CommandEmpty>
             <CommandGroup>
-              {customers.map((item, index) => (
+              {filteredCustomers.map((item, index) => (
                 <CommandItem
                   key={index}
                   value={item.search}
                   onSelect={() => {
-                    onReturn(item); // return full object
+                    onReturn(item);
                     setOpen(false);
                   }}
                 >
-                  {item.search}
+                  <span>{item.label}</span>
                   <Check
                     className={cn(
                       "ml-auto",
