@@ -44,6 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Spinner from "./ui/spinner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const PageTable = ({
   children,
@@ -137,6 +138,7 @@ const PageTable = ({
     filteredData.length
   );
 
+  const isMobile = useIsMobile()
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -154,7 +156,7 @@ const PageTable = ({
         {children}
       </div>
 
-      <div className="relative flex flex-1 flex-col">
+      <div className={`relative flex flex-1 flex-col ${isMobile && "min-h-[500px]"}`}>
         <div className="absolute bottom-0 left-0 right-0 top-0 flex overflow-scroll rounded-md border md:overflow-auto">
           <ScrollArea className="flex-1">
             <Table className="relative">

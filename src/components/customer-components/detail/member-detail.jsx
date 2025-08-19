@@ -86,30 +86,32 @@ export default function MemberDetail({
   }, [UserState, customer_id]);
 
   const debouncedFetchCustomerData = debounce(() => {
-   
     fetchCustomerTask();
     fetchCustomerVisit();
     fetchCustomerFeedback();
-     fetchCustomerDashboard();
+    fetchCustomerDashboard();
   }, 500);
 
   async function fetchCustomerTask() {
-    axios.get(`/${UserState.value.data?.id}/customer/${customer_id}/task`)
-     .then((response)=>{
-      setTaskData(response.data)
-     })
+    axios
+      .get(`/${UserState.value.data?.id}/customer/${customer_id}/task`)
+      .then((response) => {
+        setTaskData(response.data);
+      });
   }
   async function fetchCustomerVisit() {
-     axios.get(`/${UserState.value.data?.id}/customer/${customer_id}/visit`)
-      .then((response)=>{
-      setVisitData(response.data)
-     })
+    axios
+      .get(`/${UserState.value.data?.id}/customer/${customer_id}/visit`)
+      .then((response) => {
+        setVisitData(response.data);
+      });
   }
   async function fetchCustomerFeedback() {
-     axios.get(`/${UserState.value.data?.id}/customer/${customer_id}/feedback`)
-     .then((response)=>{
-      setFeedback(response.data)
-     })
+    axios
+      .get(`/${UserState.value.data?.id}/customer/${customer_id}/feedback`)
+      .then((response) => {
+        setFeedback(response.data);
+      });
   }
 
   async function fetchCustomerDashboard() {
@@ -292,14 +294,20 @@ export default function MemberDetail({
       >
         <TabsList className="justify-start">
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
-          <TabsTrigger value="feedback">
-            {data?.member ? "After Sales" : "Feedback"}
-          </TabsTrigger>
+          {UserState.value.data?.designation !== "Dealer" && (
+            <TabsTrigger value="feedback">
+              {data?.member ? "After Sales" : "Feedback"}
+            </TabsTrigger>
+          )}
 
           <TabsTrigger value="customers">Machines</TabsTrigger>
 
-          <TabsTrigger value="visit">Visit</TabsTrigger>
-          <TabsTrigger value="task">Task</TabsTrigger>
+          {UserState.value.data?.designation !== "Dealer" && (
+            <TabsTrigger value="visit">Visit</TabsTrigger>
+          )}
+          {UserState.value.data?.designation !== "Dealer" && (
+            <TabsTrigger value="task">Task</TabsTrigger>
+          )}
           <TabsTrigger value="about">About</TabsTrigger>
         </TabsList>
 
@@ -307,9 +315,15 @@ export default function MemberDetail({
           {activeTab === "timeline" && (
             <RenderTimeline
               height={height}
-              feedbackData={feedback}
-              visitData={visitData}
-              taskData={taskData}
+              feedbackData={
+                UserState.value.data?.designation !== "Dealer" ? feedback : []
+              }
+              visitData={
+                UserState.value.data?.designation !== "Dealer" ? visitData : []
+              }
+              taskData={
+                UserState.value.data?.designation !== "Dealer" ? taskData : []
+              }
               customerDetail={data}
             />
           )}

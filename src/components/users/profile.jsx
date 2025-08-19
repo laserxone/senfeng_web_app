@@ -13,21 +13,17 @@ import { UserContext } from "@/store/context/UserContext";
 import {
   EmailAuthProvider,
   reauthenticateWithCredential,
-  updatePassword
+  updatePassword,
 } from "firebase/auth";
-import {
-  deleteObject,
-  getDownloadURL,
-  ref
-} from "firebase/storage";
+import { deleteObject, getDownloadURL, ref } from "firebase/storage";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import Spinner from "../ui/spinner";
 import { Textarea } from "../ui/textarea";
 import { OfficeContext } from "@/store/context/OfficeContext";
 
-export default function ProfilePage({base}) {
+export default function ProfilePage() {
   const { state: UserState, setUser } = useContext(UserContext);
-const {state : OfficeState} = useContext(OfficeContext)
+  const { state: OfficeState } = useContext(OfficeContext);
   const [isPasswordResetVisible, setIsPasswordResetVisible] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -125,16 +121,13 @@ const {state : OfficeState} = useContext(OfficeContext)
         const fileList = Array.from(event.target.files);
         const name = `${OfficeState.value.data}/${UserState.value.data?.id}/profile/${UserState.value.data?.email}-dp.png`;
         const img = await UploadImage(URL.createObjectURL(fileList[0]), name);
-        const response = await axios.put(
-          `/${UserState.value.data.id}`,
-          {
-            ...formData,
-            dp: name,
-            password: undefined,
-            confirmPassword: undefined,
-            currentPassword: undefined,
-          }
-        );
+        const response = await axios.put(`/${UserState.value.data.id}`, {
+          ...formData,
+          dp: name,
+          password: undefined,
+          confirmPassword: undefined,
+          currentPassword: undefined,
+        });
         setUser({
           ...UserState.value.data,
           ...formData,
@@ -378,15 +371,12 @@ const {state : OfficeState} = useContext(OfficeContext)
     setFormLoading(true);
 
     try {
-      const response = await axios.put(
-        `/${UserState.value.data.id}`,
-        {
-          ...formData,
-          password: undefined,
-          confirmPassword: undefined,
-          currentPassword: undefined,
-        }
-      );
+      const response = await axios.put(`/${UserState.value.data.id}`, {
+        ...formData,
+        password: undefined,
+        confirmPassword: undefined,
+        currentPassword: undefined,
+      });
       setUser({
         ...UserState.value.data,
         ...formData,
@@ -625,21 +615,23 @@ const {state : OfficeState} = useContext(OfficeContext)
           </CardContent>
         </Card>
       </div>
-      <Card className="mt-5">
-        <CardHeader>
-          <CardTitle>Documents</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-1 flex-col space-y-4">
-            <DocumentCard type={"cnic"} />
-            <DocumentCard type={"father_cnic"} />
-            <DocumentCard type={"police"} />
-            <DocumentCard type={"education"} />
-            <DocumentCard type={"resume"} />
-            <DocumentCard type={"appointment_letter"} />
-          </div>
-        </CardContent>
-      </Card>
+      {UserState.value.data?.designation !== "Dealer" && (
+        <Card className="mt-5">
+          <CardHeader>
+            <CardTitle>Documents</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-1 flex-col space-y-4">
+              <DocumentCard type={"cnic"} />
+              <DocumentCard type={"father_cnic"} />
+              <DocumentCard type={"police"} />
+              <DocumentCard type={"education"} />
+              <DocumentCard type={"resume"} />
+              <DocumentCard type={"appointment_letter"} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

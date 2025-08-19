@@ -1,4 +1,4 @@
-import {karachi_pool as pool} from "@/config/db";
+import { karachi_pool as pool } from "@/config/db";
 import { profileFields, saleFields } from "@/constants/data";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { NextResponse } from "next/server";
@@ -165,16 +165,22 @@ export async function GET(req, { params }) {
                 return NextResponse.json({ message: "User not found" }, { status: 500 })
             }
 
+            if (user.designation === 'Dealer') {
+                if (user.id !== customer.ownership) {
+                    return NextResponse.json({ message: "You don't have access to this page" }, { status: 404 })
+                }
+            }
+
             if (user.limited_access) {
                 if (user.designation === 'Social Media Manager' || user.designation === 'Customer Relationship Manager') {
                     if (user.id !== customer.lead) {
-                        return NextResponse.json({ message: "You don't have access to this page" }, { status: 500 })
+                        return NextResponse.json({ message: "You don't have access to this page" }, { status: 404 })
                     }
                 }
 
                 if (user.designation === 'Sales') {
                     if (user.id !== customer.ownership) {
-                        return NextResponse.json({ message: "You don't have access to this page" }, { status: 500 })
+                        return NextResponse.json({ message: "You don't have access to this page" }, { status: 404 })
                     }
                 }
             }

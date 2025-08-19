@@ -5,6 +5,8 @@ import Machine from "@/components/customer-components/machine/machine-component"
 import TabManager from "@/components/tabManager";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { UserContext } from "@/store/context/UserContext";
+import { startHolyLoader } from "holy-loader";
+import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 export default function CustomerBaseComponent({base}) {
@@ -13,6 +15,7 @@ export default function CustomerBaseComponent({base}) {
   const [loading, setLoading] = useState([]);
   const isMobile = useIsMobile();
   const { state: UserState } = useContext(UserContext);
+  const router = useRouter();
 
   const openTab = useCallback((tab) => {
     setTabs((prev) => {
@@ -25,7 +28,6 @@ export default function CustomerBaseComponent({base}) {
   const dashboardComponent = useMemo(() => {
     return (
       <CustomerMainPage
-        base={base}
         onReturn={(cid) => {
           if (isMobile) {
             startHolyLoader();

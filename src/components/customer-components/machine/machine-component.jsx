@@ -85,6 +85,7 @@ import "pdfjs-dist/build/pdf.worker";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { OfficeContext } from "@/store/context/OfficeContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Machine({ id, onLoading = () => {}, base }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -445,6 +446,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
   }
 
   const ClientCard = memo(({ data, payment, machine, children }) => {
+    const isMobile = useIsMobile();
     const [showAlert, setShowAlert] = useState(false);
     useEffect(() => {
       if (machine) {
@@ -474,7 +476,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
     }
 
     return (
-      <Card className="bg-gray-100 dark:bg-gray-900 rounded-lg shadow-md p-4 w-full">
+      <Card className={`bg-gray-100 dark:bg-gray-900 rounded-lg shadow-md p-4 w-full`}>
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center justify-between">
           <div className="hidden md:block" />
           <div className="flex flex-row flex-wrap gap-2 items-center">
@@ -523,7 +525,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
           Manager {machine?.sell_by_name || "NA"}
         </h2>
 
-        <div className="flex flex-1 gap-6">
+        <div className="flex flex-1 gap-6 flex-wrap">
           <Card className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
             <CardContent>
               <div className="flex gap-2 text-sm items-center">
@@ -745,7 +747,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
         )}
       </ClientCard>
 
-      <div className={`flex flex-1`}>
+      <div className={`flex flex-1 min-h-[500px]`}>
         <PageTable
           columns={columns}
           data={payments}

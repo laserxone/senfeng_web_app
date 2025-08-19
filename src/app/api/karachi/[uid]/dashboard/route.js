@@ -561,6 +561,142 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
       WHERE ca.engineer_id = $1 AND c.status != 'completed'
         `, [uid])
                 return NextResponse.json({ user, allTasks: allTasksQueryResult.rows.length, allComplaints: allComplaintsQueryResult.rows[0].total }, { status: 200 })
+            } else if (user?.designation === 'Dealer') {
+                const [customersQuery] = await Promise.all([
+                    pool.query("SELECT * FROM customer WHERE ownership = $1", [uid]),
+
+                ]);
+
+                const customersWithSale = customersQuery.rows;
+                const totalCustomersWithSale = customersWithSale.length;
+
+
+                const saleCustomerIds = customersWithSale.map(c => c.id);
+
+                let sales = [];
+                let payments = [];
+
+                if (saleCustomerIds.length > 0) {
+                    const salesQuery = await pool.query(`SELECT * FROM sale WHERE customer_id = ANY($1)`, [saleCustomerIds]);
+                    sales = salesQuery.rows;
+
+                    if (sales.length > 0) {
+                        const machineIds = sales.map(s => s.id);
+                        const paymentsQuery = await pool.query(`SELECT id, amount, machine_id FROM payment WHERE machine_id = ANY($1)`, [machineIds]);
+                        payments = paymentsQuery.rows;
+                    }
+                }
+
+
+
+                const machinesSoldQuery = `
+      SELECT COUNT(*) AS total 
+      FROM sale 
+      WHERE contract_date BETWEEN $1 AND $2 AND sell_by = $3
+    `;
+
+                const [
+                    currentMonthSalesResult,
+                    lastMonthSalesResult,
+                    saleDetailsQueryResult,
+                  
+                ] = await Promise.all([
+                    pool.query(machinesSoldQuery, [currentMonthStart, currentMonthEnd, uid]),
+                    pool.query(machinesSoldQuery, [lastMonthStart, lastMonthEnd, uid]),
+                    pool.query(`
+        SELECT 
+          s.id, s.customer_id, s.contract_date, s.serial_no, s.price, 
+          c.name AS customer_name, c.owner AS customer_owner 
+        FROM sale s 
+        LEFT JOIN customer c ON s.customer_id = c.id 
+        WHERE s.contract_date BETWEEN $1 AND $2 
+        AND s.sell_by = $3`, [currentMonthStart, currentMonthEnd, uid]),
+                   
+                ]);
+
+                const machinesSoldThisMonth = parseInt(currentMonthSalesResult.rows[0].total, 10) || 0;
+                const machinesSoldLastMonth = parseInt(lastMonthSalesResult.rows[0].total, 10) || 0;
+                const percentageChange =
+                    machinesSoldLastMonth === 0
+                        ? machinesSoldThisMonth > 0 ? 100 : 0
+                        : ((machinesSoldThisMonth - machinesSoldLastMonth) / machinesSoldLastMonth) * 100;
+              
+                const enrichedCustomers = customersWithSale.map((customer) => {
+                    const filledCount = profileFields.reduce((count, field) => {
+                        const value = customer[field];
+                        const filled =
+                            field === "rating"
+                                ? typeof value === "number" && value > 0
+                                : Array.isArray(value)
+                                    ? value.length > 0
+                                    : typeof value === "string"
+                                        ? value.trim() !== "" && value !== "null"
+                                        : value !== null && value !== undefined;
+                        return filled ? count + 1 : count;
+                    }, 0);
+
+                    const customerSales = sales
+                        .filter(s => s.customer_id === customer.id)
+                        .map(sale => {
+                            let machineFilled = 0;
+
+                            const hasContractImages =
+                                (Array.isArray(sale.contract_images_pdf) && sale.contract_images_pdf.length > 0) ||
+                                (Array.isArray(sale.contract_images_png) && sale.contract_images_png.length > 0);
+
+                            if (hasContractImages) machineFilled++;
+
+                            saleFields.forEach(field => {
+                                const value = sale[field];
+                                const filled =
+                                    Array.isArray(value)
+                                        ? value.length > 0
+                                        : typeof value === "string"
+                                            ? value.trim() !== "" && value !== "null"
+                                            : typeof value === "number"
+                                                ? !isNaN(value)
+                                                : value !== null && value !== undefined;
+
+                                if (filled) machineFilled++;
+                            });
+
+                            const totalFields = saleFields.length + 1;
+                            const completion = Math.round((machineFilled / totalFields) * 100);
+
+                            return {
+                                id: sale.id,
+                                serial_no: sale.serial_no,
+                                payments: payments.filter(p => p.machine_id === sale.id),
+                                percentage_completion: completion,
+                            };
+                        });
+
+                    return {
+
+                        profile_completion: Math.round((filledCount / profileFields.length) * 100),
+                        sales: customerSales,
+                        id: customer.id,
+                        name: customer.name,
+                        owner: customer.owner,
+                        industry: customer.industry,
+                        number: customer.number.join(", "),
+                        location: customer.location,
+                        created_at: customer.created_at,
+                        member: customer.member
+                    };
+                });
+
+
+
+                return NextResponse.json({
+                    user,
+                    totalCustomersWithSale,
+                    machinesSoldThisMonth,
+                    machinesSoldLastMonth,
+                    machinesSoldThisMonthDetail: saleDetailsQueryResult.rows,
+                    percentageChange: percentageChange.toFixed(2),
+                    customers: enrichedCustomers,
+                });
             } else {
                 return NextResponse.json({ user }, { status: 200 })
             }

@@ -1,5 +1,5 @@
 import pool, { karachi_pool } from "@/config/db";
-import { branchNavItem, complaintItem, employeeNavItems, ownerNavItems, POSNavItem, StoreNavItem, Tools } from "@/constants/data";
+import { branchNavItem, complaintItem, employeeNavItems, ownerNavItems, POSNavItem, StoreNavItem, Tools, dealerNavItems } from "@/constants/data";
 import admin from "@/lib/firebaseAdmin";
 import { NextResponse } from "next/server";
 
@@ -55,13 +55,15 @@ export async function GET(req, { params }) {
                 base_route = `${branchOffice}/store`
                 nav_items = [...StoreNavItem]
                 nav_items.push(POSNavItem)
+            } else if (user.designation === 'Dealer') {
+                nav_items = [...dealerNavItems]
+                base_route = `${branchOffice}/dealer`
             } else {
                 nav_items = [...employeeNavItems]
             }
-            if (user.branch_expenses_assigned)
+            if (user.branch_expenses_assigned) {
                 nav_items.push(branchNavItem)
-            // if (user.inventory_assigned)
-            //     nav_items.push(InventoryNavItem)
+            }
             if (user.pos_assigned) {
                 nav_items.push(POSNavItem)
             }

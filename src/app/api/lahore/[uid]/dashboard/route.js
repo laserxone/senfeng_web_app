@@ -300,17 +300,24 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
 
 
             // Calculate percentage changes
-            const paymentChangePercentage = totalPaymentLastMonth === 0
-                ? 0
-                : ((totalPaymentThisMonth - totalPaymentLastMonth) / totalPaymentLastMonth) * 100;
+            const paymentLast = Number(totalPaymentLastMonth) || 0;
+                const paymentThis = Number(totalPaymentThisMonth) || 0;
+                const machinesLast = Number(totalMachinesSoldLastMonth) || 0;
+                const machinesThis = Number(totalMachinesSoldThisMonth) || 0;
+                const customersLast = Number(totalNewCustomersLastMonth) || 0;
+                const customersThis = Number(totalNewCustomersThisMonth) || 0;
 
-            const machinesSoldChangePercentage = totalMachinesSoldLastMonth === 0
-                ? 0
-                : ((totalMachinesSoldThisMonth - totalMachinesSoldLastMonth) / totalMachinesSoldLastMonth) * 100;
+                const paymentChangePercentage = paymentLast === 0
+                    ? 0
+                    : ((paymentThis - paymentLast) / paymentLast) * 100;
 
-            const newCustomerChangePercentage = totalNewCustomersLastMonth === 0
-                ? 0
-                : ((totalNewCustomersThisMonth - totalNewCustomersLastMonth) / totalNewCustomersLastMonth) * 100;
+                const machinesSoldChangePercentage = machinesLast === 0
+                    ? 0
+                    : ((machinesThis - machinesLast) / machinesLast) * 100;
+
+                const newCustomerChangePercentage = customersLast === 0
+                    ? 0
+                    : ((customersThis - customersLast) / customersLast) * 100;
 
             // Prepare the response data
             const responseData = {
@@ -356,8 +363,224 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
             }
 
             const user = userResult.rows[0];
+            console.log(user.designation)
 
-            if (user?.designation === 'Sales') {
+            if (user?.designation === 'Dealer') {
+
+                const TIMEZONE = 'Asia/Karachi';
+                const currentDate = momentT.tz(TIMEZONE);
+
+                const firstCurrentMonth = currentDate.clone().startOf('month').startOf('day');
+                const lastCurrentMonth = currentDate.clone().endOf('month').endOf('day');
+
+                const firstLastMonth = currentDate.clone().subtract(1, 'month').startOf('month').startOf('day');
+                const lastLastMonth = currentDate.clone().subtract(1, 'month').endOf('month').endOf('day');
+
+                const firstThreeMonthsAgo = currentDate.clone().subtract(2, 'month').startOf('month').startOf('day');
+
+                const firstDayOfCurrentMonth = firstCurrentMonth.clone().utc().toISOString();
+                const lastDayOfCurrentMonth = lastCurrentMonth.clone().utc().toISOString();
+
+                const firstDayOfLastMonth = firstLastMonth.clone().utc().toISOString();
+                const lastDayOfLastMonth = lastLastMonth.clone().utc().toISOString();
+
+                const firstDayOfThreeMonthsAgo = firstThreeMonthsAgo.clone().utc().toISOString();
+
+                const startOfYesterday = currentDate.clone().subtract(1, 'day').startOf('day');
+                const startOfYesterdayUTC = startOfYesterday.clone().utc().toISOString();
+
+
+                const endOfToday = currentDate.clone().endOf('day');
+                const endOfTodayUTC = endOfToday.clone().utc().toISOString();
+
+
+                const machinesSoldLast3MonthsQuery = `
+    SELECT 
+        s.contract_date AS sale_date,
+        COUNT(*) AS total_machines_sold 
+    FROM 
+        sale s 
+    WHERE 
+        s.contract_date BETWEEN $1 AND $2 AND s.sell_by = $3
+    GROUP BY sale_date
+    ORDER BY sale_date;
+`;
+
+                const machinesSoldLast3MonthsResult = await pool.query(machinesSoldLast3MonthsQuery, [
+                    firstDayOfThreeMonthsAgo,
+                    lastDayOfCurrentMonth,
+                    uid
+                ]);
+
+                const salesMap = new Map(
+                    machinesSoldLast3MonthsResult.rows.map(row => [
+                        moment(row.sale_date).format('YYYY-MM-DD'),
+                        Number(row.total_machines_sold)
+                    ])
+                );
+
+                const dateArray = [];
+                let tempDate = moment.utc(firstDayOfThreeMonthsAgo);
+                const endDate = moment.utc(lastDayOfCurrentMonth);
+
+                while (tempDate.isSameOrBefore(endDate)) {
+                    const formattedDate = tempDate.format('YYYY-MM-DD');
+                    dateArray.push({
+                        date: formattedDate,
+                        total_machines_sold: salesMap.get(formattedDate) || 0
+                    });
+                    tempDate.add(1, 'day');
+                }
+
+                const paymentQuery = `
+    SELECT 
+        SUM(p.amount) AS total_payment
+    FROM 
+        payment p
+    INNER JOIN 
+        sale s ON p.machine_id = s.id
+    WHERE 
+        p.transaction_date BETWEEN $1 AND $2
+        AND s.sell_by = $3
+`;
+
+
+                const machinesSoldQuery = `
+            SELECT 
+                COUNT(*) AS total_machines_sold
+            FROM 
+                sale s
+            WHERE 
+                s.contract_date BETWEEN $1 AND $2 AND s.sell_by = $3
+        `;
+
+                // Query to get new customers added this month
+                const newCustomersQuery = `
+            SELECT 
+                COUNT(*) AS total_new_customers
+            FROM 
+                customer c
+            WHERE 
+                c.created_at BETWEEN $1 AND $2 AND c.ownership = $3
+        `;
+
+
+
+                const recentSalesQuery = `
+        SELECT 
+        s.price,
+        s.contract_date,
+        u.name AS seller_name,
+        u.email AS seller_email,
+        u.dp AS seller_dp,
+        c.id AS customer_id,
+        c.name AS customer_name,
+        c.owner AS customer_owner
+        FROM 
+        sale s
+        JOIN 
+        users u ON u.id = s.sell_by
+        JOIN 
+        customer c ON c.id = s.customer_id
+        WHERE s.sell_by = $1
+        ORDER BY 
+        s.contract_date DESC
+        LIMIT 5;
+`;
+
+
+                const industryCount = `
+       SELECT 
+  CASE 
+    WHEN industry IS NULL OR industry = '' THEN 'No industry'
+    ELSE industry
+  END AS industry,
+  COUNT(*) AS customer_count
+FROM customer
+WHERE ownership = $1
+GROUP BY 
+  CASE 
+    WHEN industry IS NULL OR industry = '' THEN 'No industry'
+    ELSE industry
+  END;
+        `
+
+
+                const [
+                    paymentResult,
+                    machinesSoldResult,
+                    newCustomersResult,
+                    recentSalesResult,
+                    industryCountResult,
+                ] = await Promise.all([
+                    pool.query(paymentQuery, [firstDayOfCurrentMonth, lastDayOfCurrentMonth, uid]),
+                    pool.query(machinesSoldQuery, [firstDayOfCurrentMonth, lastDayOfCurrentMonth, uid]),
+                    pool.query(newCustomersQuery, [firstDayOfCurrentMonth, lastDayOfCurrentMonth, uid]),
+                    pool.query(recentSalesQuery, [uid]),
+                    pool.query(industryCount, [uid]),
+                ]);
+
+
+                // Get the payment for last month
+                const lastMonthPaymentResult = await pool.query(paymentQuery, [firstDayOfLastMonth, lastDayOfLastMonth, uid]);
+                const totalPaymentThisMonth = paymentResult.rows[0].total_payment || 0;
+                const totalPaymentLastMonth = lastMonthPaymentResult.rows[0].total_payment || 0;
+
+                // Get the total machines sold last month
+                const lastMonthMachinesSoldResult = await pool.query(machinesSoldQuery, [firstDayOfLastMonth, lastDayOfLastMonth, uid]);
+                const totalMachinesSoldThisMonth = machinesSoldResult.rows[0].total_machines_sold || 0;
+                const totalMachinesSoldLastMonth = lastMonthMachinesSoldResult.rows[0].total_machines_sold || 0;
+
+                // Get the new customers added last month
+                const lastMonthNewCustomersResult = await pool.query(newCustomersQuery, [firstDayOfLastMonth, lastDayOfLastMonth, uid]);
+                const totalNewCustomersThisMonth = newCustomersResult.rows[0].total_new_customers || 0;
+                const totalNewCustomersLastMonth = lastMonthNewCustomersResult.rows[0].total_new_customers || 0;
+
+
+                const paymentLast = Number(totalPaymentLastMonth) || 0;
+                const paymentThis = Number(totalPaymentThisMonth) || 0;
+                const machinesLast = Number(totalMachinesSoldLastMonth) || 0;
+                const machinesThis = Number(totalMachinesSoldThisMonth) || 0;
+                const customersLast = Number(totalNewCustomersLastMonth) || 0;
+                const customersThis = Number(totalNewCustomersThisMonth) || 0;
+
+                const paymentChangePercentage = paymentLast === 0
+                    ? 0
+                    : ((paymentThis - paymentLast) / paymentLast) * 100;
+
+                const machinesSoldChangePercentage = machinesLast === 0
+                    ? 0
+                    : ((machinesThis - machinesLast) / machinesLast) * 100;
+
+                const newCustomerChangePercentage = customersLast === 0
+                    ? 0
+                    : ((customersThis - customersLast) / customersLast) * 100;
+
+                // Prepare the response data
+                const responseData = {
+                    total_payment_this_month: totalPaymentThisMonth,
+                    payment_change_percentage: paymentChangePercentage.toFixed(2), // rounded to 2 decimal places
+                    total_machines_sold_this_month: totalMachinesSoldThisMonth,
+                    machines_sold_change_percentage: machinesSoldChangePercentage.toFixed(2),
+                    total_new_customers_this_month: totalNewCustomersThisMonth,
+                    new_customer_change_percentage: newCustomerChangePercentage.toFixed(2),
+                    recent_sales: recentSalesResult.rows.map(sale => ({
+                        price: sale.price,
+                        contract_date: sale.contract_date,
+                        seller_name: sale.seller_name,
+                        seller_email: sale.seller_email,
+                        seller_dp: sale.seller_dp,
+                        customer_id: sale.customer_id,
+                        customer_name: sale.customer_name,
+                        customer_owner: sale.customer_owner
+                    })),
+                    industry_count: industryCountResult.rows,
+                    machines_sold_last_3_months: dateArray,
+                };
+
+                return NextResponse.json(responseData, { status: 200 });
+
+            } else if (user?.designation === 'Sales') {
                 const [customersQuery] = await Promise.all([
                     pool.query("SELECT * FROM customer WHERE ownership = $1", [uid]),
 

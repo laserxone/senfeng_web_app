@@ -139,16 +139,22 @@ export async function GET(req, { params }) {
 
       const customer = customerResult.rows[0];
 
+      if (user.designation === 'Dealer') {
+        if (user.id !== customer.ownership) {
+          return NextResponse.json({ message: "You don't have access to this page" }, { status: 404 })
+        }
+      }
+
       if (user.limited_access) {
         if (user.designation === 'Social Media Manager' || user.designation === 'Customer Relationship Manager') {
           if (user.id !== customer.lead) {
-            return NextResponse.json({ message: "You don't have access to this page" }, { status: 500 })
+            return NextResponse.json({ message: "You don't have access to this page" }, { status: 404 })
           }
         }
 
         if (user.designation === 'Sales') {
           if (user.id !== customer.ownership) {
-            return NextResponse.json({ message: "You don't have access to this page" }, { status: 500 })
+            return NextResponse.json({ message: "You don't have access to this page" }, { status: 404 })
           }
         }
       }

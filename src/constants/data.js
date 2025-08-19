@@ -240,6 +240,36 @@ export const employeeNavItems = [
 
 ];
 
+export const dealerNavItems = [
+  {
+    title: 'Dashboard',
+    url: '/dashboard',
+    icon: 'dashboard',
+    isActive: false,
+    shortcut: ['d', 'a', 's', 'h'],
+    items: []
+  },
+  {
+    title: 'Customers',
+    url: '/customer',
+    icon: 'customer',
+    isActive: false,
+    icon: 'userPen',
+    shortcut: ['c', 'u', 's'],
+    items: []
+  },
+  {
+    title: 'Members',
+    url: '/member',
+    isActive: false,
+    icon: 'member',
+    shortcut: ['m', 'e', 'm'],
+    items: []
+  },
+
+
+];
+
 export const branchNavItem = {
   title: 'Office Expense',
   url: '/expense',

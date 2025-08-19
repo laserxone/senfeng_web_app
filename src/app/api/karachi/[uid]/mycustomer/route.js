@@ -53,6 +53,10 @@ export async function GET(req, { params }) {
                     queryParams.push(uid);
                 }
             }
+            if(user.designation === 'Dealer') {
+                query += ` WHERE c.ownership = $1`;
+                queryParams.push(uid);
+            }
         }
 
         const result = await pool.query(query, queryParams);
@@ -62,6 +66,7 @@ export async function GET(req, { params }) {
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 });
     }
 }
+
 
 export const revalidate = 0
 

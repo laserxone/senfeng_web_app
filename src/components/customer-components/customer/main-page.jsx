@@ -55,7 +55,7 @@ const tableHeader = [
   },
 ];
 
-export default function CustomerMainPage({ base, onReturn }) {
+export default function CustomerMainPage({ onReturn }) {
   const [additionalFilter, setAdditionalFilter] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState([]);

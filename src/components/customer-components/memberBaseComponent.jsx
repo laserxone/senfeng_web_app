@@ -5,14 +5,17 @@ import Machine from "@/components/customer-components/machine/machine-component"
 import TabManager from "@/components/tabManager";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { UserContext } from "@/store/context/UserContext";
+import { startHolyLoader } from "holy-loader";
+import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-export default function MemberBaseComponent({base}) {
+export default function MemberBaseComponent({ base }) {
   const [tabs, setTabs] = useState([]);
   const [activeTabId, setActiveTabId] = useState("dashboard");
   const [loading, setLoading] = useState([]);
   const isMobile = useIsMobile();
   const { state: UserState } = useContext(UserContext);
+  const router = useRouter();
 
   const openTab = useCallback((tab) => {
     setTabs((prev) => {
@@ -38,7 +41,7 @@ export default function MemberBaseComponent({base}) {
               closable: true,
               component: (
                 <MemoizedCustomerTab
-                base={base}
+                  base={base}
                   onLoading={(val) => {
                     if (val) {
                       setLoading((prevState) => {
@@ -70,7 +73,7 @@ export default function MemberBaseComponent({base}) {
                         closable: true,
                         component: (
                           <MemoizedMachineTab
-                          base={base}
+                            base={base}
                             machineId={mid}
                             onLoading={(val) => {
                               if (val) {
@@ -131,8 +134,8 @@ const MemoizedCustomerTab = ({ customerId, onReturn, onLoading, base }) => {
     return (
       <div className="flex flex-1 w-full">
         <MemberDetail
-        height={"h-[calc(100dvh-350px)]"}
-        route={false}
+          height={"h-[calc(100dvh-350px)]"}
+          route={false}
           onReturn={onReturn}
           from="member"
           ownership={true}

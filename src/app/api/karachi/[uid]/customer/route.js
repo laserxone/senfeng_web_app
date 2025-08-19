@@ -235,6 +235,10 @@ export async function GET(req, { params }) {
                     queryParams.push(uid);
                 }
             }
+            if (user.designation === 'Dealer') {
+                whereClauses.push(`c.ownership = $${queryParams.length + 1}`);
+                queryParams.push(uid);
+            }
 
             if (member && member === 'true') {
                 whereClauses.push("c.member IS TRUE");
