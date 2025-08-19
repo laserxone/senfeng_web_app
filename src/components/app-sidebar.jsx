@@ -54,6 +54,7 @@ import { usePathname } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import { BadgeCount } from "./NotificationBadge";
 import { ScrollArea } from "./ui/scroll-area";
+import { useMessagesNotification } from "@/hooks/use-message-notification";
 
 export const company = {
   name: "SENFENG",
@@ -71,7 +72,6 @@ export default function AppSidebar({ office }) {
   const profileImage = useProfileImage();
   const { toggleSidebar } = useSidebar();
   const isMobile = useIsMobile();
-  const [conversations, setConversations] = useState(0);
 
   useEffect(() => {
     checkSession().then((val) => {
@@ -106,34 +106,6 @@ export default function AppSidebar({ office }) {
       });
       return () => unsubscribe();
     }
-  }, [UserState]);
-
-  const fetchConversations = async () => {
-    const response = await axios.get(`/${UserState.value.data?.id}/chat`);
-    let unreadConversationsCount = 0;
-    const convs = response.data.map((c) => {
-      if (Number(c.unreadCount) > 0) {
-        unreadConversationsCount++;
-      }
-      return c;
-    });
-
-    setConversations(unreadConversationsCount);
-  };
-
-  useEffect(() => {
-    if (!UserState.value.data?.id) return;
-
-    fetchConversations();
-
-    const unsub = onSnapshot(
-      doc(db, "conversations_meta", UserState.value.data?.id.toString()),
-      () => {
-        fetchConversations();
-      }
-    );
-
-    return () => unsub();
   }, [UserState]);
 
   return (
@@ -214,16 +186,16 @@ export default function AppSidebar({ office }) {
                           href={`/${UserState.value.data?.base_route}${item.url}`}
                         >
                           <Icon />
-                          {item.url.includes("messages") ? (
+                          {/* {item.url.includes("messages") ? (
                             <BadgeCount
                               count={conversations}
                               offset={{ top: -6, right: -15 }}
                             >
                               <span className="text-[14px]">{item.title}</span>
                             </BadgeCount>
-                          ) : (
+                          ) : ( */}
                             <span className="text-[14px]">{item.title}</span>
-                          )}
+                          {/* )} */}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

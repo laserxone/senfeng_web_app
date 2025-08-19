@@ -3,7 +3,7 @@ import { useMessages } from "@/hooks/use-messages";
 import axios from "@/lib/axios";
 import { TriggerFirebase } from "@/lib/triggerFirebase";
 import { UserContext } from "@/store/context/UserContext";
-import { Clock, Send } from "lucide-react";
+import { ArrowLeft, Clock, Send, X } from "lucide-react";
 import moment from "moment";
 import { useContext, useEffect, useRef, useState } from "react";
 import { Input } from "../ui/input";
@@ -115,18 +115,32 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
 
   return (
     <div className="flex flex-col w-full h-full bg-muted/40 ">
-      <div className="flex items-center justify-between px-5 py-4 bg-background border-b">
+      {/* <div className="flex items-center justify-between px-4 py-2 bg-background border-b">
         <div className="flex items-center gap-3">
-          <ProfilePicture
+           <Button
+            variant="icon"
+            onClick={onBackClick}
+            className="p-1 rounded hover:bg-muted"
+          >
+            <ArrowLeft size={18} />
+          </Button> 
+           <ProfilePicture
             img={user?.dp}
             name={user?.name}
             className="h-10 w-10"
-          />
-          <div className="flex flex-col">
+          /> 
+           <div className="flex flex-col">
             <Label className="text-base font-semibold">{user?.name}</Label>
-          </div>
+          </div> 
         </div>
-      </div>
+          <Button
+            variant="icon"
+            onClick={onXClick}
+            className="p-1 rounded hover:bg-muted"
+          >
+            <X size={18} />
+          </Button>
+      </div> */}
       {stateLoading ? (
         <div className="flex-1 flex items-center justify-center text-muted-foreground">
           <Spinner />
@@ -357,7 +371,7 @@ const RenderSelectedContent = ({ visible, onClose, data, type }) => {
               ) : (
                 <div className="px-4 py-6 space-y-2 border-l-2 border-muted relative">
                   {data.map((item, index) => (
-                    <RenderOtherStockItems index={index} item={item} />
+                    <RenderOtherStockItems key={index} item={item} />
                   ))}
                 </div>
               )}
@@ -368,7 +382,7 @@ const RenderSelectedContent = ({ visible, onClose, data, type }) => {
     );
 };
 
-const RenderOtherStockItems = ({ item, index }) => {
+const RenderOtherStockItems = ({ item }) => {
   return (
     <div
       className={`w-full border border-gray-300 rounded-lg shadow-md p-5 flex flex-col`}
