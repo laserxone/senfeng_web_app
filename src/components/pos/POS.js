@@ -700,7 +700,10 @@ export default function POS() {
 
 
                                 <OrderStockDialog dialogVisible={orderStockVisible} onCloseDialog={setOrderStockVisible} stock={stock.filter((item) => item.threshold != null && item.threshold !== undefined && item.qty <= item.threshold)}
-
+                                    onRefresh={() => {
+                                        setStock([])
+                                        fetchData()
+                                    }}
                                 />
 
 
@@ -1451,7 +1454,7 @@ const AddItemDialog = ({ designation, visible, onClose, handleDecrease, showOthe
     );
 }
 
-const OrderStockDialog = ({ dialogVisible, onCloseDialog, stock }) => {
+const OrderStockDialog = ({ dialogVisible, onCloseDialog, stock, onRefresh }) => {
 
     const [search, setSearch] = useState("")
     const [loading, setLoading] = useState(false)
@@ -1602,7 +1605,7 @@ const OrderStockDialog = ({ dialogVisible, onCloseDialog, stock }) => {
                                         checked={selectedItems.includes(item.id)}
                                         onCheckedChange={() => toggleItem(item.id)}
                                     />
-                                    <RenderOtherStockItems index={index} item={item} UserState={UserState} />
+                                    <RenderOtherStockItems index={index} item={item} UserState={UserState} onRefresh={onRefresh} />
                                 </div>
                             ))}
                         </div>
@@ -1613,7 +1616,7 @@ const OrderStockDialog = ({ dialogVisible, onCloseDialog, stock }) => {
     );
 }
 
-const RenderOtherStockItems = ({ item, UserState, onRefresh = () => { } }) => {
+const RenderOtherStockItems = ({ item, UserState, onRefresh }) => {
 
     const [localName, setLocalName] = useState("")
     const [localChineseName, setLocalChineseName] = useState("")
