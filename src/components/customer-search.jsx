@@ -33,7 +33,6 @@ export function CustomerSearch({ value, onReturn }) {
           if (response.data.length > 0) {
             const apiData = response.data
               .filter((item) => {
-                // Check if there's at least a valid name or a valid owner
                 const hasValidName = item.name && item.name.trim() !== "";
                 const hasValidOwner = item.owner && item.owner.trim() !== "";
                 return hasValidName || hasValidOwner;

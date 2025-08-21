@@ -42,13 +42,13 @@ import Spinner from "./ui/spinner";
 import { UserSearch } from "./user-search";
 
 const AddCustomerDialog = ({
-  base,
   onRefresh,
   visible,
   onClose,
   user_id,
   ownership,
   user_designation = null,
+  office = "islamabad",
 }) => {
   const [numbers, setNumbers] = useState([""]);
   const [numberError, setNumberError] = useState("");
@@ -75,6 +75,7 @@ const AddCustomerDialog = ({
     member: z.boolean().optional(),
     ownership: z.number().nullable().optional(),
     created_at: z.date().nullable().optional(),
+    office: z.string().min(1, { message: "" }),
   });
 
   const form = useForm({
@@ -96,6 +97,7 @@ const AddCustomerDialog = ({
       member: false,
       ownership: null,
       created_at: null,
+      office: office,
     },
   });
 
@@ -118,6 +120,7 @@ const AddCustomerDialog = ({
         member: false,
         ownership: null,
         created_at: null,
+        office: office,
       });
     }
   }, [user_designation, user_id]);
@@ -191,6 +194,7 @@ const AddCustomerDialog = ({
             : undefined,
         created_by: UserState.value.data?.id,
         created_at: values.created_at || undefined,
+        office: values.office,
       };
 
       const response = await debouncedSaveData(formData);
@@ -437,7 +441,10 @@ const AddCustomerDialog = ({
                         )}
                       />
                     )}
-                    {user_designation === "Sales" ? null : (
+                    {!(
+                      user_designation === "Sales" ||
+                      user_designation === "Dealer"
+                    ) && (
                       <FormField
                         control={control}
                         name="lead"
@@ -461,6 +468,44 @@ const AddCustomerDialog = ({
                                   }
                                 }}
                               />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {!(
+                      user_designation === "Sales" ||
+                      user_designation === "Dealer"
+                    ) && (
+                      <FormField
+                        control={control}
+                        name="office"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Office branch <RequiredStar />
+                            </FormLabel>
+                            <FormControl>
+                              <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select office" />
+                                </SelectTrigger>
+
+                                <SelectContent>
+                                  <SelectGroup>
+                                    {["lahore", "karachi"].map((item) => (
+                                      <SelectItem key={item} value={item}>
+                                        {item}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectGroup>
+                                </SelectContent>
+                              </Select>
                             </FormControl>
                             <FormMessage />
                           </FormItem>

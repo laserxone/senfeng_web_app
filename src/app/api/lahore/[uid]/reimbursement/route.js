@@ -66,12 +66,13 @@ export async function GET(req, { params }) {
       u.name AS submitted_by_name
     FROM reimbursement r
     INNER JOIN users u ON r.submitted_by = u.id
+    WHERE u.office = 'lahore'
   `;
 
             const queryParams = [];
 
             if (start_date && end_date) {
-                query += ` WHERE r.date BETWEEN $1 AND $2`;
+                query += ` AND r.date BETWEEN $1 AND $2`;
                 queryParams.push(start_date, end_date);
             }
 
@@ -86,7 +87,7 @@ export async function GET(req, { params }) {
             const result = await pool.query(query, queryParams);
             const reimbursements = result.rows;
 
-           
+
 
             // Now enhance each reimbursement with customer_id, ownership_id, ownership_name
             for (const reimbursement of reimbursements) {
@@ -134,7 +135,7 @@ export async function GET(req, { params }) {
           u.name AS submitted_by_name
         FROM reimbursement r
         INNER JOIN users u ON r.submitted_by = u.id
-        WHERE u.id = $1
+        WHERE u.id = $1 AND u.office = 'lahore'
       `;
 
             const queryParams = [uid];

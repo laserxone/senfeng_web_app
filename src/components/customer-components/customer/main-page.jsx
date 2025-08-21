@@ -336,6 +336,7 @@ export default function CustomerMainPage({ onReturn }) {
 
           <AddCustomerDialog
             user_id={UserState.value.data?.id}
+             office={UserState.value.data?.office}
             ownership={
               UserState.value.data?.designation === "Owner" ||
               UserState.value.data?.designation ===

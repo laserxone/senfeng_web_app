@@ -100,7 +100,7 @@ export default function Page() {
         .utc()
         .toISOString();
       fetchData(startDate, endDate);
-    }
+    } 
   }, [UserState]);
 
   async function fetchData(startDate, endDate, user = null) {

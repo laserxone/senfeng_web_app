@@ -250,6 +250,7 @@ export default function CustomerEmployee({
 
       <AddCustomerDialog
         base={`team/user/${UserState.value.data?.id}`}
+         office={UserState.value.data?.office}
         user_id={UserState.value.data?.id}
         user_designation={UserState.value.data?.designation}
         ownership={ownership}

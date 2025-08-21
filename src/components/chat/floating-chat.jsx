@@ -35,7 +35,7 @@ export default function FloatingChat() {
 
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-50">
+      <div >
         <BadgeCount count={conversations} offset={{ top: 0, right: 0 }}>
           <div
             onClick={() => setOpen((prev) => !prev)}

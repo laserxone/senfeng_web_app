@@ -3,7 +3,7 @@ import { ArrowUpDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import {
   Dialog,
@@ -26,6 +26,7 @@ import { z } from "zod";
 import PageTable from "@/components/app-table";
 import AppCalendar from "@/components/appCalendar";
 import { RequiredStar } from "@/components/RequiredStar";
+import { Badge } from "@/components/ui/badge";
 import { Heading } from "@/components/ui/heading";
 import {
   Select,
@@ -43,7 +44,6 @@ import { UserContext } from "@/store/context/UserContext";
 import { startHolyLoader } from "holy-loader";
 import moment from "moment";
 import { useRouter } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
 
 const columns = [
   {
@@ -142,7 +142,7 @@ const columns = [
     cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
   },
 
-   {
+  {
     accessorKey: "office",
     filterFn: "includesString",
     header: ({ column }) => {
@@ -156,7 +156,9 @@ const columns = [
         </Button>
       );
     },
-    cell: ({ row }) => <div className="uppercase">{row.getValue("office")}</div>,
+    cell: ({ row }) => (
+      <div className="uppercase">{row.getValue("office")}</div>
+    ),
   },
 
   {
@@ -175,11 +177,14 @@ const columns = [
     },
     cell: ({ row }) => {
       const val = row.getValue("active");
-      return <Badge variant={val ? "default" : "destructive"}>{val ? "Active" : "Inactive"}</Badge> ;
+      return (
+        <Badge variant={val ? "default" : "destructive"}>
+          {val ? "Active" : "Inactive"}
+        </Badge>
+      );
     },
   },
 ];
-
 
 export default function Page() {
   const [open, setOpen] = useState(false);
@@ -235,6 +240,7 @@ export default function Page() {
       <AddUserDialog
         visible={open}
         onClose={setOpen}
+        office={UserState.value.data?.office}
         onReturn={(newUser) => {
           let temp = [...data];
           temp.push(newUser);
@@ -255,7 +261,12 @@ export default function Page() {
   );
 }
 
-const AddUserDialog = ({ visible, onClose, onReturn }) => {
+const AddUserDialog = ({
+  visible,
+  onClose,
+  onReturn,
+  office = "islamabad",
+}) => {
   const [dataLoading, setDataLoading] = useState(false);
   const { state: UserState } = useContext(UserContext);
   const formSchema = z.object({
@@ -263,6 +274,7 @@ const AddUserDialog = ({ visible, onClose, onReturn }) => {
     email: z.string().email({ message: "Invalid email address." }),
     designation: z.string().min(1, { message: "Designation missing" }),
     joining_date: z.date({ required_error: "Joining date is required." }),
+    office: z.string().min(1, { message: "" }),
     note: z.string().optional(),
   });
 
@@ -274,6 +286,7 @@ const AddUserDialog = ({ visible, onClose, onReturn }) => {
       designation: "",
       joining_date: "",
       note: "",
+      office: office,
     },
   });
 
@@ -390,6 +403,42 @@ const AddUserDialog = ({ visible, onClose, onReturn }) => {
                                 value={framework.value}
                               >
                                 {framework.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                 control={form.control}
+                name="office"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Office branch <RequiredStar />
+                    </FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder="Select office"
+                            className="w-full"
+                          />
+                        </SelectTrigger>
+
+                        <SelectContent>
+                          <SelectGroup>
+                            {["lahore", "karachi"].map((item) => (
+                              <SelectItem key={item} value={item}>
+                                {item}
                               </SelectItem>
                             ))}
                           </SelectGroup>

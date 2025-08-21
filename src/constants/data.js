@@ -151,14 +151,7 @@ export const ownerNavItems = [
     isActive: false,
     items: [] // No child items
   },
-  // {
-  //   title: 'Messages',
-  //   url: '/messages',
-  //   icon: 'messages',
-  //   shortcut: ['m', 's', 'g'],
-  //   isActive: false,
-  //   items: []
-  // },
+
   {
     title: 'My Cloud',
     url: '/cloud',

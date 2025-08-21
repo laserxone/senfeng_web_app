@@ -84,6 +84,8 @@ export async function GET(req) {
       conditions.push(`(leaving_date IS NULL OR leaving_date > now())`);
     }
 
+    conditions.push(`office = 'lahore'`);
+
     if (conditions.length > 0) {
       query += ` WHERE ` + conditions.join(" AND ");
     }

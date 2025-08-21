@@ -298,8 +298,6 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
                 };
             });
 
-
-            // Calculate percentage changes
             const paymentLast = Number(totalPaymentLastMonth) || 0;
                 const paymentThis = Number(totalPaymentThisMonth) || 0;
                 const machinesLast = Number(totalMachinesSoldLastMonth) || 0;

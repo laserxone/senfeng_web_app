@@ -556,7 +556,7 @@ export default function POS() {
             :
             <PageContainer scrollable={true}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                    <div className='flex flex-1 p-2 flex-col p-6 border rounded-lg shadow-lg bg-gray-50 gap-4'>
+                    <div className='flex flex-1 p-2 flex-col p-6 border rounded-lg shadow-lg gap-4 '>
 
                         <RadioGroup
                             defaultValue={selectedRadio}
@@ -656,7 +656,7 @@ export default function POS() {
                             <Label className="text-base font-semibold w-[100px]">Manager:</Label>
                             <Input placeholder="Manager" value={manager} onChange={(e) => setManager(e.target.value)} />
                         </div>
-                        <Card className="p-5 bg-gray-100 rounded-md shadow-sm">
+                        <Card className="p-5 bg-gray-100 dark:bg-gray-900 rounded-md shadow-sm">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -731,8 +731,8 @@ export default function POS() {
 
                             </div>
                             <div className="w-72 flex border rounded-md overflow-hidden">
-                                <div className="flex-1 bg-gray-200 p-3 font-bold text-center">Total Amount</div>
-                                <div className="flex-1 bg-white p-3 font-bold text-center">{totalAmount ? `${totalAmount}` : "0"}</div>
+                                <div className="flex-1 bg-gray-200 dark:bg-gray-900 p-3 font-bold text-center">Total Amount</div>
+                                <div className="flex-1 bg-white dark:bg-gray-800 p-3 font-bold text-center">{totalAmount ? `${totalAmount}` : "0"}</div>
                             </div>
                         </div>
                         <div className='flex flex-row flex-wrap gap-2 w-full'>
@@ -860,25 +860,25 @@ export default function POS() {
                                         <tbody>
                                             {invoiceItems.map((item, i) => (
                                                 <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "#f1f1f1" : "white", fontSize: 14, height: 30 }}>
-                                                    <td style={{ border: '1px solid #D1D5DB', paddingLeft: 5, }}><Label>{i + 1}</Label></td>
+                                                    <td style={{ border: '1px solid #D1D5DB', paddingLeft: 5, }}><Label className="text-black">{i + 1}</Label></td>
                                                     <td style={{ border: '1px solid #D1D5DB', paddingLeft: 5, width: '400px', }}>
                                                         <div style={{ width: '100%', backgroundColor: 'transparent', border: 'none' }}>
-                                                            <Label>{item?.description}</Label>
+                                                            <Label className="text-black">{item?.description}</Label>
                                                         </div>
                                                     </td>
                                                     <td style={{ border: '1px solid #D1D5DB', paddingLeft: 5, }}>
                                                         <div style={{ width: '100%', backgroundColor: 'transparent', border: 'none' }}>
-                                                            <Label>{item?.qty}</Label>
+                                                            <Label className="text-black">{item?.qty}</Label>
                                                         </div>
                                                     </td>
                                                     <td style={{ border: '1px solid #D1D5DB', paddingLeft: 5, }}>
                                                         <div style={{ width: '100%', backgroundColor: 'transparent', border: 'none' }}>
-                                                            <Label>{item?.price}</Label>
+                                                            <Label className="text-black">{item?.price}</Label>
                                                         </div>
                                                     </td>
                                                     <td style={{ border: '1px solid #D1D5DB', paddingLeft: 5, }}>
                                                         <div style={{ width: '100%', backgroundColor: 'transparent', border: 'none' }}>
-                                                            <Label>{item?.total}</Label>
+                                                            <Label className="text-black">{item?.total}</Label>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -887,7 +887,7 @@ export default function POS() {
                                                 !warranty
                                                 && invoiceItems.length <= 10 && [...Array(10 - invoiceItems.length)].map((_, i) => (
                                                     <tr key={i} style={{ fontSize: 14, height: 30 }}>
-                                                        <td className="border border-gray-300 " style={{ paddingLeft: 5, }}><Label>{i + invoiceItems.length + 1}</Label></td>
+                                                        <td className="border border-gray-300 " style={{ paddingLeft: 5, }}><Label className="text-black">{i + invoiceItems.length + 1}</Label></td>
                                                         <td className="border border-gray-300 " style={{ paddingLeft: 5, }}>
 
                                                         </td>
@@ -948,7 +948,7 @@ export default function POS() {
                                             Terms and Conditions:
                                         </div>
 
-                                        <div style={{ marginTop: '0.5rem', fontSize: '12px' }}>
+                                        <div className="text-black" style={{ marginTop: '0.5rem', fontSize: '12px' }}>
                                             Equipment can only be used after full payments only and broken seals are not acceptable for any return or warranties. Sensitive repair and maintenance can only be done by Raycus/MAX China within warranty time. Customer will send and receive the equipment to manufacturer by himself.
                                         </div>
                                     </div>
@@ -2414,23 +2414,23 @@ const BankDetail = () => {
             <table className="w-full border-collapse">
                 <tbody style={{ fontSize: 14 }}>
                     <tr style={{ height: 40 }}>
-                        <td className="border border-gray-300 w-50" style={{ paddingLeft: 5 }}><Label>Bank</Label></td>
+                        <td className="border border-gray-300 w-50" style={{ paddingLeft: 5 }}><Label className="text-black">Bank</Label></td>
                         <td style={{ color: '#0072BC', fontWeight: '700', paddingLeft: 5 }} className="border border-gray-300"><Label>United Bank Limited (UBL)</Label></td>
                     </tr>
                     <tr className="bg-[#FFE4E1]" style={{ height: 40 }}>
-                        <td className="border border-gray-300"><Label style={{ paddingLeft: 5 }}>Account Title</Label></td>
+                        <td className="border border-gray-300"><Label className="text-black" style={{ paddingLeft: 5 }}>Account Title</Label></td>
                         <td style={{ color: '#0072BC', fontWeight: '700', paddingLeft: 5 }} className="border border-gray-300 "><Label>SENFENG PAKISTAN</Label></td>
                     </tr>
                     <tr style={{ height: 40 }}>
-                        <td className="border border-gray-300"><Label style={{ paddingLeft: 5 }}>Account Number</Label></td>
+                        <td className="border border-gray-300"><Label className="text-black" style={{ paddingLeft: 5 }}>Account Number</Label></td>
                         <td style={{ color: '#0072BC', fontWeight: '700', paddingLeft: 5 }} className="border border-gray-300 "><Label>321618245</Label></td>
                     </tr>
                     <tr className="bg-[#FFE4E1]" style={{ height: 40 }}>
-                        <td className="border border-gray-300"><Label style={{ paddingLeft: 5 }}>IBAN</Label></td>
+                        <td className="border border-gray-300"><Label className="text-black" style={{ paddingLeft: 5 }}>IBAN</Label></td>
                         <td style={{ color: '#0072BC', fontWeight: '700', paddingLeft: 5 }} className="border border-gray-300 "><Label>PK33UNIL0109000321618245</Label></td>
                     </tr>
                     <tr style={{ height: 40 }}>
-                        <td className="border border-gray-300"><Label style={{ paddingLeft: 5 }}>Branch Code</Label></td>
+                        <td className="border border-gray-300"><Label className="text-black" style={{ paddingLeft: 5 }}>Branch Code</Label></td>
                         <td style={{ color: '#0072BC', fontWeight: '700', paddingLeft: 5 }} className="border border-gray-300 "><Label>0508</Label></td>
                     </tr>
                 </tbody>
@@ -2446,7 +2446,7 @@ const FormField = ({ phoneNumber, address, companyName, name, manager, inv, sele
                 <div key={label} style={{ display: 'flex', flexDirection: 'column' }}>
                     <label style={{ color: '#7F7F7FFF', marginLeft: 10, fontWeight: '600' }}>{label}:</label>
                     <div style={{ backgroundColor: '#dce4f1', paddingLeft: 10, border: '1px solid #E5E7EB', maxWidth: '600px', height: 30, fontSize: 18, display: 'flex', alignItems: 'center' }}>
-                        <Label>
+                        <Label className="text-black">
                             {index == 0 ? companyName : index == 1 ? name : index == 2 ? phoneNumber : index == 3 ? address : index == 4 ? manager : index == 5 ? selectedUser?.id ? selectedUser?.label : inv : ""}
                         </Label>
                     </div>
@@ -2481,7 +2481,7 @@ const Header = ({ onClick }) => {
                         INVOICE
                     </p>
                 </div>
-                <Copy onClick={onClick} className='ml-4 hover:cursor-pointer' />
+                <Copy onClick={onClick} className='ml-4 hover:cursor-pointer text-black' />
             </div>
 
 

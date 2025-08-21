@@ -3,7 +3,7 @@ import { ArrowUpDown, Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
@@ -17,15 +17,15 @@ import { Heading } from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import FilterSheet from "@/components/users/filterSheet";
-import { BASE_URL, TIMEZONE } from "@/constants/data";
+import { TIMEZONE } from "@/constants/data";
+import axios from "@/lib/axios";
+import { GetProfileImage } from "@/lib/getProfileImage";
 import { MapProvider } from "@/providers/map-provider";
 import { UserContext } from "@/store/context/UserContext";
 import { GoogleMap, Marker } from "@react-google-maps/api";
-import axios from "@/lib/axios";
 import moment from "moment";
-import { useTheme } from "next-themes";
-import { GetProfileImage } from "@/lib/getProfileImage";
 import momentT from "moment-timezone";
+import { useTheme } from "next-themes";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);

@@ -108,6 +108,10 @@ export default function AppSidebar({ office }) {
     }
   }, [UserState]);
 
+  function recursive (){
+    
+  }
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -125,7 +129,7 @@ export default function AppSidebar({ office }) {
           <SidebarGroup>
             <SidebarMenu>
               {UserState.value.data?.nav_items &&
-                UserState.value.data?.nav_items.map((item) => {
+                UserState.value.data?.nav_items.map((item, index) => {
                   const Icon = item.icon ? Icons[item.icon] : Icons.logo;
                   return item?.items && item?.items?.length > 0 ? (
                     <Collapsible
@@ -186,16 +190,7 @@ export default function AppSidebar({ office }) {
                           href={`/${UserState.value.data?.base_route}${item.url}`}
                         >
                           <Icon />
-                          {/* {item.url.includes("messages") ? (
-                            <BadgeCount
-                              count={conversations}
-                              offset={{ top: -6, right: -15 }}
-                            >
-                              <span className="text-[14px]">{item.title}</span>
-                            </BadgeCount>
-                          ) : ( */}
-                            <span className="text-[14px]">{item.title}</span>
-                          {/* )} */}
+                          <span className="text-[14px]">{item.title}</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

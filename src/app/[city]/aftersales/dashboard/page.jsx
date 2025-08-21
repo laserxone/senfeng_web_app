@@ -496,6 +496,7 @@ const CustomerEmployeeAfterSales = ({
 
         <AddCustomerDialog
           user_designation={UserState.value.data?.designation}
+          office={UserState.value.data?.office}
           user_id={user_id}
           ownership={true}
           visible={addCustomer}

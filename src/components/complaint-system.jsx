@@ -70,6 +70,10 @@ export default function ComplaintSystem({ base }) {
   const [selectedComplaintForClose, setSelectedComplaintForClose] =
     useState(null);
 
+  const isAdmin =
+    UserState.value.data?.designation === "Owner" ||
+    UserState.value.data?.full_access;
+
   useEffect(() => {
     if (UserState.value.data?.id) {
       fetchData(dates.start.toISOString(), dates.end.toISOString());
@@ -123,7 +127,7 @@ export default function ComplaintSystem({ base }) {
           title="Complaint & Installation System"
           description="Manage complaints and machine installations"
         />
-        {UserState.value.data?.complaint_assigned && (
+        {(UserState.value.data?.complaint_assigned || isAdmin) && (
           <Button onClick={() => setVisible(true)}>Register</Button>
         )}
       </div>

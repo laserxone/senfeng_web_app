@@ -7,6 +7,14 @@ import SalesTeamProgressChart from "@/components/charts/sales_progress/page";
 import { CustomerMapComponent } from "@/components/customerMapComponent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PakCities } from "@/constants/data";
@@ -17,8 +25,7 @@ import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
 import { useContext, useEffect, useState } from "react";
 
-export default function Page({params}) {
-  
+export default function Page({ params }) {
   const [customers, setCustomers] = useState([]);
   const [data, setData] = useState();
   const [loading, setLoading] = useState(true);
@@ -26,8 +33,7 @@ export default function Page({params}) {
   const [userTaskData, setUserTaskData] = useState([]);
   const userId = UserState.value.data?.id;
   const debouncedUserId = useDebounce(userId, 1000);
-
-  
+  const [selectedOffice, setSelectedOffice] = useState("lahore");
 
   useEffect(() => {
     if (debouncedUserId) {
@@ -35,14 +41,12 @@ export default function Page({params}) {
     }
   }, [debouncedUserId]);
 
-
   function fetchData() {
     fetchCustomerList();
     fetchDashboardData();
   }
 
   async function fetchDashboardData() {
-   
     axios
       .get(`/${debouncedUserId}/dashboard`)
       .then((response) => {
@@ -101,7 +105,9 @@ export default function Page({params}) {
   function mergeArrays(array1, array2) {
     return array1
       .map((obj1) => {
-        const matchingCity = array2.find((obj2) => obj2?.name === obj1?.location);
+        const matchingCity = array2.find(
+          (obj2) => obj2?.name === obj1?.location
+        );
 
         if (matchingCity) {
           return {
@@ -122,6 +128,19 @@ export default function Page({params}) {
         <h2 className="text-2xl font-bold tracking-tight">
           Hi, Welcome back 👋
         </h2>
+        <div className="w-[200px]">
+        <Select onValueChange={setSelectedOffice} value={selectedOffice}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select office" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value="lahore">lahore</SelectItem>
+              <SelectItem value="karachi">karachi</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        </div>
       </div>
       <div className="flex flex-row justify-between flex-wrap gap-4">
         <Card className="w-full sm:w-auto sm:min-w-[350px]">

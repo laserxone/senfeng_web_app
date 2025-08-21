@@ -102,12 +102,13 @@ export async function GET(req, { params }) {
             u.email AS user_email
         FROM attendance t
         INNER JOIN users u ON t.user_id = u.id
+        WHERE u.office = 'lahore'
     `;
 
             const queryParams = [];
 
             if (start_date && end_date) {
-                query += ` WHERE t.time_in BETWEEN $1 AND $2`;
+                query += ` AND t.time_in BETWEEN $1 AND $2`;
                 queryParams.push(start_date, end_date);
             }
 
