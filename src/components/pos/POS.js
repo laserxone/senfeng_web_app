@@ -1703,9 +1703,9 @@ const RenderOtherStockItems = ({ item, UserState, onRefresh }) => {
                                 break;
                         }
                     },
-                    () => {
+                    (error) => {
                         setLoading(false);
-                        reject(null)
+                        reject(error)
                     },
                     () => {
                         resolve(name)
@@ -1778,16 +1778,12 @@ const RenderOtherStockItems = ({ item, UserState, onRefresh }) => {
                 formData.img = result
             }
 
-            axios.put(`/${UserState.value.data?.id}/pos/${id}`, formData)
-                .catch((e) => {
-                    console.log(e)
-                }).finally(() => {
-                    setLoading(false)
-                    onRefresh()
-
-                })
+            await axios.put(`/${UserState.value.data?.id}/pos/${id}`, formData)
+            onRefresh()
         } catch (error) {
-            console.log(error)
+            toast({ title: 'Error', description: "Failed to upload image or data. Try again", variant: "destructive" })
+
+        } finally {
             setLoading(false)
         }
 
@@ -1991,9 +1987,9 @@ const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrea
                                 break;
                         }
                     },
-                    () => {
+                    (error) => {
                         setLoading(false);
-                        reject(null)
+                        reject(error)
                     },
                     () => {
                         resolve(name)
@@ -2066,16 +2062,13 @@ const RenderStockItems = ({ designation, item, index, invoiceItems, handleDecrea
                 formData.img = result
             }
 
-            axios.put(`/${UserState.value.data?.id}/pos/${id}`, formData)
-                .catch((e) => {
-                    console.log(e)
-                }).finally(() => {
-                    setLoading(false)
-                    onRefresh()
+            await axios.put(`/${UserState.value.data?.id}/pos/${id}`, formData)
 
-                })
+            onRefresh()
         } catch (error) {
-            console.log(error)
+            toast({ title: 'Error', description: "Failed to upload image or data. Try again", variant: "destructive" })
+
+        } finally {
             setLoading(false)
         }
 
@@ -2274,9 +2267,9 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
                                 break;
                         }
                     },
-                    () => {
+                    (error) => {
                         setLoading(false);
-                        reject(null)
+                        reject(error)
                     },
                     () => {
                         resolve(name)
@@ -2351,16 +2344,12 @@ const RenderStockItemsOtherView = ({ designation, item, index, invoiceItems, han
                 formData.img = result
             }
 
-            axios.put(`/${UserState.value.data?.id}/pos/${id}`, formData)
-                .catch((e) => {
-                    console.log(e)
-                }).finally(() => {
-                    setLoading(false)
-                    onRefresh()
+            await axios.put(`/${UserState.value.data?.id}/pos/${id}`, formData)
 
-                })
+            onRefresh()
         } catch (error) {
-            console.log(error)
+            toast({ title: 'Error', description: "Failed to upload image or data. Try again", variant: "destructive" })
+        } finally {
             setLoading(false)
         }
 
@@ -2545,9 +2534,9 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
                             break;
                     }
                 },
-                () => {
+                (error) => {
                     setLoading(false);
-                    reject(null)
+                    reject(error)
                 },
                 () => {
                     resolve(name)
@@ -2587,16 +2576,12 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
                 formData.new_order = Number(newOrder)
             }
 
-            axios.post(`/${UserState.value.data?.id}/pos`, formData)
-                .then(() => {
-                    onRefresh()
-                }).catch((e) => {
-                    console.log(e)
-                }).finally(() => {
-                    setLoading(false)
-                })
+            await axios.post(`/${UserState.value.data?.id}/pos`, formData)
+            onRefresh()
         } catch (error) {
-            console.log(error)
+            toast({ title: 'Error', description: "Failed to upload image or data. Try again", variant: "destructive" })
+            setLoading(false)
+        } finally {
             setLoading(false)
         }
 
