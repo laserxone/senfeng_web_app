@@ -171,6 +171,12 @@ export default function FloatingTodo() {
               onChange={(e) => setNewTask(e.target.value)}
               placeholder="New Task..."
               className="flex-1"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addTask();
+                }
+              }}
             />
             <Button onClick={addTask}>Add</Button>
           </div>
