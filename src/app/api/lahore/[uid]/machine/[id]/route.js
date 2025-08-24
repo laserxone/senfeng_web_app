@@ -104,9 +104,11 @@ export async function GET(req, { params }) {
 
       const percentage_completion = Math.round((machineFilled / totalFields) * 100)
 
+      const installmentQuery = await pool.query(`SELECT * FROM machine_installments WHERE sale_id = $1 ORDER BY date ASC`, [id])
 
+      const installments = installmentQuery.rows
 
-      return NextResponse.json({ customer, machine, percentage_completion, unmatchedFields }, { status: 200 });
+      return NextResponse.json({ customer, machine, percentage_completion, unmatchedFields, installments }, { status: 200 });
 
     } else {
       const userQuery = await pool.query(`SELECT id, designation, limited_access FROM users WHERE id = $1`, [uid])
@@ -221,10 +223,12 @@ export async function GET(req, { params }) {
 
 
       const percentage_completion = Math.round((machineFilled / totalFields) * 100)
+      const installmentQuery = await pool.query(`SELECT * FROM machine_installments WHERE sale_id = $1 ORDER BY date ASC`, [id])
+
+      const installments = installmentQuery.rows
 
 
-
-      return NextResponse.json({ customer, machine, percentage_completion, unmatchedFields }, { status: 200 });
+      return NextResponse.json({ customer, machine, percentage_completion, unmatchedFields, installments }, { status: 200 });
 
     }
 

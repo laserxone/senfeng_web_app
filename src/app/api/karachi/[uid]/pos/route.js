@@ -1,5 +1,5 @@
 
-import pool from '@/config/db';
+import {karachi_pool as pool} from '@/config/db';
 import moment from 'moment';
 import { NextResponse } from 'next/server';
 
@@ -82,6 +82,8 @@ export async function PUT(req) {
             customer_id
         } = await req.json();
 
+        let returning_id = null
+
         let generatedInvoiceNumber = ""
 
         if (selecteduser?.id) {
@@ -97,13 +99,14 @@ export async function PUT(req) {
             const lastIdResult = await pool.query("SELECT MAX(id) AS last_id FROM savedinvoices");
             const invoicenumber = Number(lastIdResult.rows[0]?.last_id || 0) + 1
             generatedInvoiceNumber = `${moment().format("YYYYMMDD")}-${invoicenumber}`
-            await pool.query(
+           const result =  await pool.query(
                 `INSERT INTO savedinvoices 
             (name, company, phone, address, manager, invoicenumber, fields, payment, customer_id) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            RETURNING id`,
                 [name, company, phone, address, manager, generatedInvoiceNumber, JSON.stringify(fields), payment, customer_id]
             );
-
+            returning_id = result.rows[0].id
         }
 
 
@@ -133,7 +136,7 @@ export async function PUT(req) {
             );
         }
 
-        return NextResponse.json({ nextinvoice: generatedInvoiceNumber }, { status: 200 });
+        return NextResponse.json({ nextinvoice: generatedInvoiceNumber, returning_id }, { status: 200 });
 
     } catch (error) {
         console.log(error)

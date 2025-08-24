@@ -86,6 +86,8 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Input } from "@/components/ui/input";
+import useUserDetail from "@/hooks/use-user-detail";
 
 export default function Machine({ id, onLoading = () => {}, base }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -108,6 +110,8 @@ export default function Machine({ id, onLoading = () => {}, base }) {
   const router = useRouter();
   const pathname = usePathname();
   const [unmatched, setUnmatched] = useState([]);
+  const [installments, setInstallments] = useState([]);
+  const [installmentVisible, setInstallmentVisible] = useState(false);
 
   useEffect(() => {
     if (id && UserState.value.data?.id) {
@@ -134,6 +138,10 @@ export default function Machine({ id, onLoading = () => {}, base }) {
 
       const machine = response.data?.machine;
       const userData = UserState.value.data;
+      if (response.data?.installments) {
+        console.log(response.data.installments);
+        setInstallments(response.data?.installments);
+      }
       setUnmatched(response.data.unmatchedFields);
 
       if (
@@ -163,9 +171,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
         setTotal(Number(machine.price || 0));
 
         const payments =
-          machine?.payments?.filter(
-            (p) => p.clearance_date !== null
-          ) || [];
+          machine?.payments?.filter((p) => p.clearance_date !== null) || [];
         setPayments(machine?.payments);
         setReceived(
           payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
@@ -476,7 +482,9 @@ export default function Machine({ id, onLoading = () => {}, base }) {
     }
 
     return (
-      <Card className={`bg-gray-100 dark:bg-gray-900 rounded-lg shadow-md p-4 w-full`}>
+      <Card
+        className={`bg-gray-100 dark:bg-gray-900 rounded-lg shadow-md p-4 w-full`}
+      >
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center justify-between">
           <div className="hidden md:block" />
           <div className="flex flex-row flex-wrap gap-2 items-center">
@@ -743,6 +751,17 @@ export default function Machine({ id, onLoading = () => {}, base }) {
                   {deleteLoading && <Spinner />} Delete
                 </Button>
               )}
+
+            {installments.length > 0 && (
+              <Button
+                size="sm"
+                onClick={() => {
+                  setInstallmentVisible(true);
+                }}
+              >
+                Installments
+              </Button>
+            )}
           </div>
         )}
       </ClientCard>
@@ -795,6 +814,19 @@ export default function Machine({ id, onLoading = () => {}, base }) {
         customer_id={data?.customer?.id}
         onClose={() => setImagesVisible(false)}
         onRefresh={async () => await fetchData(id)}
+      />
+
+      <InstallmentSheet
+        visible={installmentVisible}
+        data={installments}
+        updateData={(id, val) => {
+          setInstallments((prevState) =>
+            prevState.map((item) =>
+              item.id === id ? { ...item, pending: val } : item
+            )
+          );
+        }}
+        onClose={() => setInstallmentVisible(false)}
       />
 
       <AddPayment
@@ -1013,15 +1045,162 @@ const ImageSheet = ({
   );
 };
 
-export function getStoragePathFromUrl(url) {
-  try {
-    const match = url.match(/\/o\/(.*?)\?alt=media/);
-    if (match && match[1]) return decodeURIComponent(match[1]);
-    return null;
-  } catch {
-    return null;
-  }
-}
+const InstallmentSheet = ({ visible, onClose, data, updateData }) => {
+  const [imageOpen, setImageOpen] = useState(false);
+  const { toast } = useToast();
+  const { isAdmin, userID } = useUserDetail();
+
+  const handleClose = useCallback(() => {
+    if (!imageOpen) {
+      onClose();
+    }
+  }, [imageOpen, onClose]);
+
+  const RenderEachRow = ({ item }) => {
+    const [loading, setLoading] = useState(false);
+
+    async function handlePaid(id) {
+      if (!id || !userID) return;
+
+      setLoading(true);
+
+      try {
+        await axios.put(`/${userID}/reminders/${id}`, {
+          pending: false,
+        });
+        updateData(id, false);
+      } catch (error) {
+        toast({
+          title: "Failed to update statud",
+          description: error.message || "An error occurred",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    return (
+      <div className="grid grid-cols-5 items-center gap-4 p-3 rounded-xl border shadow-sm bg-white dark:bg-neutral-900 hover:shadow-md transition">
+        {/* Status */}
+        <div>
+          {item.pending ? (
+            <Badge variant="destructive">Pending</Badge>
+          ) : (
+            <Badge variant="secondary">Paid</Badge>
+          )}
+        </div>
+
+        {/* Date */}
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs text-muted-foreground">Date</Label>
+          <Input
+            value={moment(item.date).format("YYYY-MM-DD")}
+            readOnly
+            className="h-8 text-sm"
+          />
+        </div>
+
+        {/* Amount */}
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs text-muted-foreground">Amount</Label>
+          <Input value={item.amount} readOnly className="h-8 text-sm" />
+        </div>
+
+        {/* Image */}
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs text-muted-foreground">Image</Label>
+          <RenderInstallmentImage
+            img={item.image}
+            setImageOpen={setImageOpen}
+          />
+        </div>
+
+        {/* Action */}
+        <div className="flex justify-end">
+          {isAdmin && item?.pending && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-2"
+              onClick={() => handlePaid(item.id)}
+              disabled={loading}
+            >
+              {loading && <Spinner className="h-4 w-4 animate-spin" />}
+              Mark Paid
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <Sheet open={visible} onOpenChange={handleClose}>
+      <SheetContent style={{maxWidth: "50vw"}}>
+        <SheetHeader className="mb-6">
+          <SheetTitle className="text-2xl font-semibold">
+            Installments
+          </SheetTitle>
+        </SheetHeader>
+
+        <ScrollArea className="h-[80vh] px-1">
+          <div className="flex flex-1 flex-col gap-3">
+            {data.length > 0 ? (
+              data.map((item, index) => (
+                <RenderEachRow key={index} item={item} />
+              ))
+            ) : (
+              <div className="flex items-center justify-center h-40 text-muted-foreground">
+                No installments found
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+const RenderInstallmentImage = memo(({ img, type, setImageOpen }) => {
+  const [localImage, setLocalImage] = useState(null);
+  const [isZoomed, setIsZoomed] = useState(false);
+
+  const handleZoomChange = useCallback((shouldZoom) => {
+    setIsZoomed(shouldZoom);
+    setImageOpen(shouldZoom);
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (type) {
+      setLocalImage(img);
+    } else if (img) {
+      if (img.includes("http")) {
+        setLocalImage(img);
+      } else {
+        getDownloadURL(ref(storage, img)).then((url) => {
+          if (isMounted) setLocalImage(url);
+        });
+      }
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [img, type]);
+
+  return (
+    <div className="space-y-2">
+      <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
+        <img
+          src={localImage}
+          alt="payment-img"
+          className="h-[150px] w-auto object-contain"
+        />
+      </ControlledZoom>
+    </div>
+  );
+});
 
 const ViewImagesSheet = ({
   editAllowed,

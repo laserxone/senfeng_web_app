@@ -55,6 +55,7 @@ import Link from "next/link";
 import { useContext } from "react";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import InvoiceDetails from "./invoice-details";
 
 export default function MemberDetail({
   ownership = false,
@@ -123,6 +124,7 @@ export default function MemberDetail({
       .get(`/${UserState.value.data?.id}/customer/${customer_id}/dashboard`)
       .then((response) => {
         const data = response.data.customer;
+        console.log(data?.parts);
         setData(data);
 
         const customerCompletion = Number(data.profile_completion) || 0;
@@ -300,7 +302,9 @@ export default function MemberDetail({
             </TabsTrigger>
           )}
 
-          <TabsTrigger value="customers">Machines</TabsTrigger>
+          <TabsTrigger value="machines">Machines</TabsTrigger>
+
+          <TabsTrigger value="parts">Parts</TabsTrigger>
 
           {UserState.value.data?.designation !== "Dealer" && (
             <TabsTrigger value="visit">Visit</TabsTrigger>
@@ -334,7 +338,7 @@ export default function MemberDetail({
             </ScrollArea>
           )}
 
-          {activeTab === "customers" && (
+          {activeTab === "machines" && (
             <CustomersTab
               data={data?.machines || []}
               user_id={UserState.value.data?.id}
@@ -343,6 +347,10 @@ export default function MemberDetail({
               onReturn={onReturn}
               route={route}
             />
+          )}
+
+          {activeTab === "parts" && (
+            <PartsTab data={data?.parts || []} height={height} />
           )}
 
           {activeTab === "visit" && <RenderVisitTab />}
@@ -992,5 +1000,18 @@ const RenderTimeline = ({
         </Timeline>
       </ScrollArea>
     </Card>
+  );
+};
+
+const PartsTab = ({ data, height }) => {
+  return (
+   <Card className="flex flex-1 shadow-lg rounded-2xl p-4 self-center">
+  <ScrollArea className={`flex flex-col flex-1 ${height} gap-2`}>
+    {data.map((item, index) => (
+      <InvoiceDetails key={index} invoice={item} />
+    ))}
+  </ScrollArea>
+</Card>
+
   );
 };

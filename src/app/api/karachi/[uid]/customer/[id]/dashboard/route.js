@@ -1,4 +1,4 @@
-import { karachi_pool as pool } from "@/config/db";
+import {karachi_pool as pool} from "@/config/db";
 import { profileFields, saleFields } from "@/constants/data";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { NextResponse } from "next/server";
@@ -46,13 +46,16 @@ export async function GET(req, { params }) {
             });
 
             const machinesQuery = `SELECT * FROM sale WHERE customer_id = $1 ORDER BY contract_date ASC`;
+            const partsQuery = `SELECT * FROM savedinvoices WHERE customer_id = $1 ORDER BY id ASC`;
             const machinesResult = await pool.query(machinesQuery, [id]);
+            const partsResult = await pool.query(partsQuery, [id]);
             let machines = machinesResult.rows;
-
+            let parts = partsResult.rows;
             let saleFilledCount = 0;
             const customerTotalFields = profileFields.length;
 
             const machineIds = machines.map((m) => m.id);
+            const partsIds = parts.map((p) => p.id)
 
             // Fetch order item statuses for all machines in one query
             let orderItemsMap = new Map();
@@ -128,10 +131,23 @@ export async function GET(req, { params }) {
 
             const billTotal = machines.reduce((sum, machine) => sum + (Number(machine.price) || 0), 0);
 
+
+            if (partsIds.length > 0) {
+                const paymentsQuery = `SELECT * FROM customer_parts WHERE part_id = ANY($1)`;
+                const paymentsResult = await pool.query(paymentsQuery, [partsIds]);
+                payments = paymentsResult.rows;
+            }
+
+            parts = parts.map(part => ({
+                ...part,
+                payments: payments.filter(payment => payment.part_id === part.id)
+            }));
+
             customer.machines = machines;
             customer.bill_received = parseFloat(billReceived);
             customer.bill_total = parseFloat(billTotal);
             customer.profile_completion = overallCompletion;
+            customer.parts = parts
 
 
 
@@ -202,13 +218,16 @@ export async function GET(req, { params }) {
             });
 
             const machinesQuery = `SELECT * FROM sale WHERE customer_id = $1 ORDER BY contract_date ASC`;
+            const partsQuery = `SELECT * FROM savedinvoices WHERE customer_id = $1 ORDER BY id ASC`;
             const machinesResult = await pool.query(machinesQuery, [id]);
+            const partsResult = await pool.query(partsQuery, [id]);
             let machines = machinesResult.rows;
-
+            let parts = partsResult.rows;
             let saleFilledCount = 0;
             const customerTotalFields = profileFields.length;
 
             const machineIds = machines.map((m) => m.id);
+            const partsIds = parts.map((p) => p.id)
 
             // Fetch order item statuses for all machines in one query
             let orderItemsMap = new Map();
@@ -284,11 +303,22 @@ export async function GET(req, { params }) {
 
             const billTotal = machines.reduce((sum, machine) => sum + (Number(machine.price) || 0), 0);
 
+            if (partsIds.length > 0) {
+                const paymentsQuery = `SELECT * FROM customer_parts WHERE part_id = ANY($1)`;
+                const paymentsResult = await pool.query(paymentsQuery, [partsIds]);
+                payments = paymentsResult.rows;
+            }
+
+            parts = parts.map(part => ({
+                ...part,
+                payments: payments.filter(payment => payment.part_id === part.id)
+            }));
+
             customer.machines = machines;
             customer.bill_received = parseFloat(billReceived);
             customer.bill_total = parseFloat(billTotal);
             customer.profile_completion = overallCompletion;
-
+            customer.parts = parts
 
 
             return NextResponse.json({
