@@ -10,13 +10,16 @@ import { Checkbox } from "./ui/checkbox";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
+import useUserDetail from "@/hooks/use-user-detail";
+import { useToast } from "@/hooks/use-toast";
+import Spinner from "./ui/spinner";
 
 function FloatingTodoButton({ onClick, pending }) {
   return (
     <div>
       <BadgeCount count={pending} offset={{ top: 0, right: 0 }}>
         <div
-          onClick={onClick} 
+          onClick={onClick}
           className="cursor-pointer
     bg-gradient-to-br from-blue-500 via-cyan-500 to-teal-500
     text-white h-[50px] w-[50px] shadow-2xl flex items-center justify-center
@@ -34,33 +37,31 @@ export default function FloatingTodo() {
   const [isOpen, setIsOpen] = useState(false);
   const { tasks, setTasks, fetchTasks } = useTodos();
   const [newTask, setNewTask] = useState("");
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (UserState.value.data?.id) fetchTasks();
-  }, [UserState]);
+    if (userID) fetchTasks();
+  }, [userID]);
 
   const addTask = async () => {
     if (!newTask.trim()) return;
 
-    // 1. Optimistically update frontend
-    const tempId = Date.now(); // temporary ID
+    const tempId = Date.now();
     const optimisticTask = { id: tempId, title: newTask, is_done: false };
     setTasks((prev) => [...prev, optimisticTask]);
     setNewTask("");
 
     try {
-      // 2. Send to backend
-      const response = await axios.post(`/${UserState.value.data?.id}/todo`, {
+      const response = await axios.post(`/${userID}/todo`, {
         title: newTask,
       });
 
-      // 3. Replace temp task with actual saved one
       setTasks((prev) =>
         prev.map((t) => (t.id === tempId ? response.data : t))
       );
     } catch (err) {
-      // 4. Rollback on error
       setTasks((prev) => prev.filter((t) => t.id !== tempId));
       console.error("Failed to add task:", err);
     }
@@ -73,7 +74,7 @@ export default function FloatingTodo() {
     );
 
     try {
-      await axios.put(`/${UserState.value.data?.id}/todo/${id}`, {
+      await axios.put(`/${userID}/todo/${id}`, {
         is_done: done,
       });
     } catch (err) {
@@ -83,6 +84,22 @@ export default function FloatingTodo() {
       console.error("Failed to update task:", err);
     }
   };
+
+  async function handleClear() {
+    setLoading(true);
+    try {
+      await axios.get(`/${userID}/todo/clear`);
+      await fetchTasks();
+    } catch (error) {
+      toast({
+        title: "Failed to clear",
+        description: error.message || "An error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <>
@@ -100,13 +117,15 @@ export default function FloatingTodo() {
           <div className="flex items-center gap-2">
             <p className="font-semibold text-sm">My Todo List</p>
           </div>
-          <div
-            className="cursor-pointer hover:text-red-500"
-            onClick={() => {
-              setIsOpen(!isOpen);
-            }}
-          >
-            <X size={18} />
+          <div className="flex items-center gap-2">
+            <div
+              className="cursor-pointer hover:text-red-500"
+              onClick={() => {
+                setIsOpen(!isOpen);
+              }}
+            >
+              <X size={18} />
+            </div>
           </div>
         </div>
 
@@ -138,9 +157,22 @@ export default function FloatingTodo() {
               </div>
 
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">
-                  Completed
-                </Label>
+                <div className="flex w-full justify-between items-center">
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Completed
+                  </Label>
+
+                  {tasks.filter((item) => item.is_done).length > 0 && (
+                    <Button
+                      disabled={loading}
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleClear}
+                    >
+                      {loading && <Spinner />} Clear
+                    </Button>
+                  )}
+                </div>
                 <ul className="mt-2 space-y-2">
                   {tasks
                     .filter((item) => item.is_done)

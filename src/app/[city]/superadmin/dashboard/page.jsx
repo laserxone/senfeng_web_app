@@ -129,7 +129,7 @@ export default function Page({ params }) {
           Hi, Welcome back 👋
         </h2>
         <div className="w-[200px]">
-        <Select onValueChange={setSelectedOffice} value={selectedOffice}>
+        {/* <Select onValueChange={setSelectedOffice} value={selectedOffice}>
           <SelectTrigger>
             <SelectValue placeholder="Select office" />
           </SelectTrigger>
@@ -139,7 +139,7 @@ export default function Page({ params }) {
               <SelectItem value="karachi">karachi</SelectItem>
             </SelectGroup>
           </SelectContent>
-        </Select>
+        </Select> */}
         </div>
       </div>
       <div className="flex flex-row justify-between flex-wrap gap-4">

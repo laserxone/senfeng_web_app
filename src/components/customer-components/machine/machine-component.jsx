@@ -1071,7 +1071,7 @@ const InstallmentSheet = ({ visible, onClose, data, updateData }) => {
         updateData(id, false);
       } catch (error) {
         toast({
-          title: "Failed to update statud",
+          title: "Failed to update status",
           description: error.message || "An error occurred",
           variant: "destructive",
         });
