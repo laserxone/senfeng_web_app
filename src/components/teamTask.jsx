@@ -221,7 +221,7 @@ export default function TeamTask() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/task?start_date=${start_date}&end_date=${end_date}&by=true`
+          `/${userID}/task?start_date=${start_date}&end_date=${end_date}&by=true`
         )
         .then((response) => {
           const apiData = response.data.map((item) => {
