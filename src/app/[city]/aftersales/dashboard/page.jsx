@@ -62,7 +62,7 @@ export default function Page() {
   const [filterData, setFilterData] = useState();
   const [selectedOption, setSelectedOption] = useState("withoutFeedback");
   const [activeTab, setActiveTab] = useState("newCustomers");
-  const { userID, base_route } = useUserDetail();
+  const { userID } = useUserDetail();
 
   useEffect(() => {
     if (userID) {
@@ -413,12 +413,12 @@ const CustomerEmployeeAfterSales = ({
   async function handleSaveFeedback() {
     setLoading(true);
     axios
-      .post(`/${userID}/feedback`, {
+      .post(`/${user_id}/feedback`, {
         feedback: feedback,
         top_follow: false,
         type: "aftersales",
         customer_id: selectedCustomer?.id,
-        user_id: userID,
+        user_id: user_id,
         status: satisfactory ? "Satisfactory" : "Unsatisfactory",
         next_followup: next,
         top_follow: top,
@@ -521,7 +521,7 @@ const CustomerEmployeeAfterSales = ({
         <OldRecordSheet
           visible={oldRecordVisible}
           onClose={setOldRecordVisible}
-          user_id={userID}
+          user_id={user_id}
         />
 
         <Dialog open={showFeedback} onOpenChange={setShowFeedback}>

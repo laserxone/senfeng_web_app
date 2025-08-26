@@ -475,7 +475,6 @@ const TaskDetail = ({
 const AddTask = ({ visible, onClose, onRefresh, user_id, base }) => {
   const [selectedRadio, setSelectedRadio] = useState("office");
   const [loading, setLoading] = useState(false);
-  const { userID } = useUserDetail();
   const { toast } = useToast();
 
   const form = useForm({
@@ -504,7 +503,7 @@ const AddTask = ({ visible, onClose, onRefresh, user_id, base }) => {
   const onSubmit = (values) => {
     setLoading(true);
     axios
-      .post(`/${userID}/task`, {
+      .post(`/${user_id}/task`, {
         task_name: values.task,
         type: values.radio == "office" ? "Office Task" : "Client Visit",
         client: values.client,

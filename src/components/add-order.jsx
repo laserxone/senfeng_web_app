@@ -48,18 +48,17 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
   const [errors, setErrors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [existingInventory, setExistingInventory] = useState([]);
-  const [title, setTitle] = useState("");
-  const {userID} = useUserDetail()
+  
   const [manual, setManual] = useState(false);
 
   useEffect(() => {
-    if (visible && userID) {
+    if (visible && user_id) {
       fetchPOSInventory();
     }
-  }, [visible, userID]);
+  }, [visible, user_id]);
 
   async function fetchPOSInventory() {
-    axios.get(`/${userID}/pos`).then((response) => {
+    axios.get(`/${user_id}/pos`).then((response) => {
       if (response.data.stock.length > 0) {
         let resultedData = [...response.data.stock];
         setExistingInventory([...resultedData]);
@@ -215,12 +214,11 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
         user_id: user_id,
         status: "Order Placed",
         items: processedItems,
-        title: title,
       };
       setLoading(true);
       try {
         const response = await axios.post(
-          `/${userID}/neworder/${id}`,
+          `/${user_id}/neworder/${id}`,
           payload
         );
         await onRefresh();

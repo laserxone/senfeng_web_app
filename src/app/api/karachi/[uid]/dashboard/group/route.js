@@ -69,7 +69,7 @@ export async function GET(req, { params }) {
                 const fbList = feedbackMap.get(customer.id);
 
                 if (!fbList || fbList.length === 0) {
-                    withoutFeedback.push({...customer, number : customer.number.join(", ")});
+                    withoutFeedback.push({ ...customer, number: customer.number.join(", ") });
                     return;
                 }
 
@@ -82,16 +82,16 @@ export async function GET(req, { params }) {
 
                 // Category: This Month
                 if (!nextFollow || nextFollow.isSameOrBefore(endOfThisMonth)) {
-                    thisMonth.push({...customer, number : customer.number.join(", ")});
+                    thisMonth.push({ ...customer, number: customer.number.join(", ") });
                 }
                 // Category: Next Month
                 else if (nextFollow.isBetween(startOfNextMonth, endOfNextMonth, null, "[]")) {
-                    nextMonth.push({...customer, number : customer.number.join(", ")});
+                    nextMonth.push({ ...customer, number: customer.number.join(", ") });
                 }
 
                 // Top Follow based on latest only
                 if (latest.top_followup === true) {
-                    topFollow.push({...customer, number : customer.number.join(", ")});
+                    topFollow.push({ ...customer, number: customer.number.join(", ") });
                 }
             });
 
@@ -158,7 +158,7 @@ export async function GET(req, { params }) {
                 const fbList = feedbackMap.get(customer.id);
 
                 if (!fbList || fbList.length === 0) {
-                    withoutFeedback.push({...customer, number : customer.number.join(", ")});
+                    withoutFeedback.push({ ...customer, number: customer.number.join(", ") });
                     return;
                 }
 
@@ -171,16 +171,16 @@ export async function GET(req, { params }) {
 
                 // Category: This Month
                 if (!nextFollow || nextFollow.isSameOrBefore(endOfThisMonth)) {
-                    thisMonth.push({...customer, number : customer.number.join(", ")});
+                    thisMonth.push({ ...customer, number: customer.number.join(", ") });
                 }
                 // Category: Next Month
                 else if (nextFollow.isBetween(startOfNextMonth, endOfNextMonth, null, "[]")) {
-                    nextMonth.push({...customer, number : customer.number.join(", ")});
+                    nextMonth.push({ ...customer, number: customer.number.join(", ") });
                 }
 
                 // Top Follow based on latest only
                 if (latest.top_follow === true) {
-                    topFollow.push({...customer, number : customer.number.join(", ")});
+                    topFollow.push({ ...customer, number: customer.number.join(", ") });
                 }
             });
 
@@ -241,7 +241,7 @@ export async function GET(req, { params }) {
                 const fbList = feedbackMap.get(customer.id);
 
                 if (!fbList || fbList.length === 0) {
-                    withoutFeedback.push({...customer, number : customer.number.join(", ")});
+                    withoutFeedback.push({ ...customer, number: customer.number.join(", ") });
                     return;
                 }
 
@@ -254,16 +254,16 @@ export async function GET(req, { params }) {
 
                 // Category: This Month
                 if (!nextFollow || nextFollow.isSameOrBefore(endOfThisMonth)) {
-                    thisMonth.push({...customer, number : customer.number.join(", ")});
+                    thisMonth.push({ ...customer, number: customer.number.join(", ") });
                 }
                 // Category: Next Month
                 else if (nextFollow.isBetween(startOfNextMonth, endOfNextMonth, null, "[]")) {
-                    nextMonth.push({...customer, number : customer.number.join(", ")});
+                    nextMonth.push({ ...customer, number: customer.number.join(", ") });
                 }
 
                 // Top Follow based on latest only
                 if (latest.top_followup === true) {
-                    topFollow.push({...customer, number : customer.number.join(", ")});
+                    topFollow.push({ ...customer, number: customer.number.join(", ") });
                 }
             });
 
@@ -280,7 +280,7 @@ export async function GET(req, { params }) {
 
 
         }
-
+        return NextResponse.json({}, { status: 200 })
 
     } catch (error) {
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })

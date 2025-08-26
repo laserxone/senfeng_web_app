@@ -443,7 +443,7 @@ export default function Page() {
       />
 
       <AddReimbursementDialog
-        id={0}
+        
         visible={reimbursementVisible}
         onClose={setReimbursementVisible}
         onRefresh={(val) => {
@@ -593,7 +593,7 @@ const ImageSheet = ({
   );
 };
 
-const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
+const AddReimbursementDialog = ({ visible, onClose, onRefresh,}) => {
   const [loading, setLoading] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedRadio, setSelectedRadio] = useState("customer");

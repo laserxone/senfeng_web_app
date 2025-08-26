@@ -53,7 +53,7 @@ const AddCustomerDialog = ({
   const [numbers, setNumbers] = useState([""]);
   const [numberError, setNumberError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { userID, designation, full_access, base_route } = useUserDetail();
+  const { designation, full_access, base_route } = useUserDetail();
   const [checking, setChecking] = useState(false);
   const [customerInfo, setCustomerInfo] = useState([]);
   const [selectedNumber, setSelectedNumber] = useState(["+92"]);
@@ -137,7 +137,7 @@ const AddCustomerDialog = ({
   const debouncedSaveData = useCallback(debouncePromise(saveData, 1000), []);
 
   async function saveData(formData) {
-    const response = await axios.post(`/${userID}/customer`, formData);
+    const response = await axios.post(`/${user_id}/customer`, formData);
     return response;
   }
 
@@ -183,13 +183,13 @@ const AddCustomerDialog = ({
         pin: values.pin,
         ownership:
           designation == "Sales"
-            ? userID
+            ? user_id
             : designation == "Dealer"
-            ? userID
+            ? user_id
             : ownership
             ? values.ownership
             : undefined,
-        created_by: userID,
+        created_by: user_id,
         created_at: values.created_at || undefined,
         office: values.office,
       };
@@ -242,7 +242,7 @@ const AddCustomerDialog = ({
     setCustomerInfo([]);
     setChecking(true);
     try {
-      const response = await axios.post(`/${userID}/check-number`, { number });
+      const response = await axios.post(`/${user_id}/check-number`, { number });
       setCustomerInfo(response.data);
     } catch (error) {
       console.log("Error checking number:", error);

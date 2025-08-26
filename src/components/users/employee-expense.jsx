@@ -424,7 +424,6 @@ const ImageSheet = ({
 
 const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
   const [loading, setLoading] = useState(false);
-  const { userID } = useUserDetail();
   const { state: OfficeState } = useContext(OfficeContext);
   const formSchema = z.object({
     note: z.string().min(1, { message: "Note is required." }),
@@ -453,7 +452,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
           .valueOf()
           .toString()}.png`;
         const imgRes = await UploadImage(values.image, name);
-        const response = await axios.post(`/${userID}/expenses`, {
+        const response = await axios.post(`/${user_id}/expenses`, {
           ...values,
           submitted_by: user_id,
           image: name,
@@ -461,7 +460,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
         await onRefresh();
         handleClose(false);
       } else {
-        const response = await axios.post(`/${userID}/expenses`, {
+        const response = await axios.post(`/${user_id}/expenses`, {
           ...values,
           submitted_by: user_id,
         });
