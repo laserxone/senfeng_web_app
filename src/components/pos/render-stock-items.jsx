@@ -346,7 +346,7 @@ const RenderStockItems = ({
             />
           </div>
 
-          {designation && designation === "Owner" && (
+          {designation === "Owner" && (
             <div className="flex justify-between">
               <div className="text-[14px]">Buying ¥</div>
               <input

@@ -53,7 +53,7 @@ const AddCustomerDialog = ({
   const [numbers, setNumbers] = useState([""]);
   const [numberError, setNumberError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { designation, full_access, base_route } = useUserDetail();
+  const { designation, base_route, isAdmin } = useUserDetail();
   const [checking, setChecking] = useState(false);
   const [customerInfo, setCustomerInfo] = useState([]);
   const [selectedNumber, setSelectedNumber] = useState(["+92"]);
@@ -653,8 +653,7 @@ const AddCustomerDialog = ({
                           </FormItem>
                         )}
                       />
-                      {(designation === "Owner" ||
-                        full_access ||
+                      {(isAdmin || 
                         designation === "Customer Relationship Manager") && (
                         <FormField
                           control={form.control}

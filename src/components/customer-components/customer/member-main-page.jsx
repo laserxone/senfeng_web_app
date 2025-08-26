@@ -266,8 +266,7 @@ export default function MemberMainPage({  onReturn }) {
         const currentItem = row.original;
        
         const canDelete =
-          designation === "Owner" ||
-          full_access === true ||
+          isAdmin ||
           customer_delete_access === true;
 
         if (!canDelete) return null;
