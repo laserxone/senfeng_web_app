@@ -1,4 +1,4 @@
-import {karachi_pool  as pool} from "@/config/db";
+import pool from "@/config/db";
 import { addLog } from "@/lib/addLog";
 import { generateLog } from "@/lib/generateLog";
 import moment from "moment";

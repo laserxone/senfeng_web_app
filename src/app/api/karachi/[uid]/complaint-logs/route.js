@@ -1,7 +1,9 @@
-import { karachi_pool as pool } from "@/config/db";
+import pool from "@/config/db";
 import UploadImageForMobile from "@/lib/uploadImageForMobile";
 import moment from "moment";
 import { NextResponse } from "next/server";
+
+
 
 
 export async function POST(req) {

@@ -1,8 +1,8 @@
-import {karachi_pool as pool} from "@/config/db";
+import pool from "@/config/db";
 import { auth } from "@/config/firebase";
 import admin from "@/lib/firebaseAdmin";
 import { sendPasswordResetEmail } from "firebase/auth";
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
 
 
 export async function POST(req) {
@@ -50,7 +50,7 @@ export async function POST(req) {
     const newUser = rows[0];
 
     sendPasswordResetEmail(auth, email, {
-      url: "https://senfeng-web.vercel.app/login"
+      url: "https://app.senfenglaserpk.com/login"
     })
 
     return NextResponse.json(newUser, { status: 200 });
@@ -83,6 +83,8 @@ export async function GET(req) {
     if (withoutleave) {
       conditions.push(`(leaving_date IS NULL OR leaving_date > now())`);
     }
+
+    conditions.push(`office = 'karachi'`);
 
     if (conditions.length > 0) {
       query += ` WHERE ` + conditions.join(" AND ");

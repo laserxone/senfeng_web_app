@@ -1,4 +1,4 @@
-import {karachi_pool as pool} from "@/config/db";
+import pool from "@/config/db";
 import { profileFields, saleFields } from "@/constants/data";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import admin from "@/lib/firebaseAdmin";

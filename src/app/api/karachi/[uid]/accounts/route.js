@@ -1,5 +1,5 @@
 
-import {karachi_pool as pool} from "@/config/db";
+import pool from "@/config/db";
 import { NextResponse } from "next/server"
 
 export async function GET(req) {

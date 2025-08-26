@@ -1,4 +1,4 @@
-import {karachi_pool as pool} from "@/config/db";
+import pool from "@/config/db";
 import moment from "moment";
 import { NextResponse } from "next/server"
 

@@ -1,4 +1,4 @@
-import {karachi_pool as pool} from "@/config/db";
+import pool from "@/config/db";
 import { sendNotification } from "@/lib/sendNotification";
 import { NextResponse } from "next/server";
 

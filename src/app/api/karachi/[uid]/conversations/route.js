@@ -93,7 +93,6 @@ export async function POST(req, { params }) {
     );
 
     const conversation = result.rows[0];
-    console.log(conversation)
 
     const otherUserId = Number(conversation.participant_1) === Number(uid)
       ? conversation.participant_2

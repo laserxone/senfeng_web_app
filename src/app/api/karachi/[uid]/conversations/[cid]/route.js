@@ -1,6 +1,6 @@
 import pool from '@/config/db';
 import admin from '@/lib/firebaseAdmin';
-import { sendNotificationToMobileKarachi } from '@/lib/sendNotificationToMobileKarachi';
+import { sendNotificationToMobile } from '@/lib/sendNotificationToMobile';
 import { NextResponse } from 'next/server';
 
 export async function GET(req, { params }) {
@@ -56,7 +56,7 @@ WHERE c.id = $1
     const myUser = conv.participant_1 !== myId
         ? { id: conv.participant_2, name: conv.participant2_name }
         : { id: conv.participant_1, name: conv.participant1_name };
-    sendNotificationToMobileKarachi(message, myUser?.name || "No name", otherUser.id, { talkingTo: myUser.id }, "message", `/dashboard/message/${myUser.id}?name=${myUser?.name || "No name"}`)
+    sendNotificationToMobile(message, myUser?.name || "No name", otherUser.id, { talkingTo: myUser.id }, "message", `/dashboard/message/${myUser.id}?name=${myUser?.name || "No name"}`)
 
 
 }

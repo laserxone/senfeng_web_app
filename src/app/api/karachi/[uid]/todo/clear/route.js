@@ -1,4 +1,4 @@
-import { karachi_pool as pool } from "@/config/db"
+import pool from "@/config/db"
 import { NextResponse } from "next/server"
 
 
@@ -6,7 +6,7 @@ export async function GET(req, { params }) {
     const { uid } = await params
 
     try {
-        await pool.query("DELETE FROM todos WHERE user_id = $1 AND is_done = $2", [uid, true])
+        await pool.query("DELETE FROM todos WHERE user_id = $1 AND is_done = $2", [ uid, true])
         return NextResponse.json({ message: "Done" }, { status: 200 })
     } catch (error) {
         console.log(error)

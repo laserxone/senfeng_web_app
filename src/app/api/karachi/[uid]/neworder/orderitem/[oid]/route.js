@@ -1,4 +1,4 @@
-import {karachi_pool as pool} from "@/config/db"
+import pool from "@/config/db"
 import { NextResponse } from "next/server"
 
 
@@ -25,7 +25,7 @@ export async function PUT(req, {params}) {
         machine_source = null,
         machine_power = null,
         inventory_id = null,
-        location = "Lahore"
+        location = "karachi"
     } = item;
 
    

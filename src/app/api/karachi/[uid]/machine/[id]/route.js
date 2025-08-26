@@ -1,4 +1,4 @@
-import {karachi_pool as pool} from "@/config/db";
+import pool from "@/config/db";
 import { storage } from "@/config/firebase";
 import { saleFields } from "@/constants/data";
 import { addLog } from "@/lib/addLog";

@@ -1,5 +1,5 @@
-import { karachi_pool as pool } from "@/config/db";
-import { sendNotificationToMobileKarachi } from "@/lib/sendNotificationToMobileKarachi";
+import pool from "@/config/db";
+import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
 import { NextResponse } from "next/server";
 
 
@@ -61,7 +61,7 @@ export async function POST(req) {
 
         await pool.query(`UPDATE complaints SET status = 'assigned' WHERE id = $1`, [data.complaint_id]);
 
-        sendNotificationToMobileKarachi("New Complaint", `Complaint assigned to you`, data.engineer_id, data, "complaint", `/dashboard/complaint/${data.complaint_id}`)
+        sendNotificationToMobile("New Complaint", `Complaint assigned to you`, data.engineer_id, data, "complaint", `/dashboard/complaint/${data.complaint_id}`)
 
         return NextResponse.json({message : "Data inserted"}, { status: 200 });
     } catch (error) {

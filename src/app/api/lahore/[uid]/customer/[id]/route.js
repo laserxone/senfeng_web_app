@@ -1,13 +1,13 @@
 import pool from "@/config/db";
-import admin from "@/lib/firebaseAdmin";
-import { NextResponse } from "next/server";
 import { profileFields, saleFields } from "@/constants/data";
-import { sendNotificationToSMM } from "@/lib/sendNotificationToSMM";
-import { sendNotification } from "@/lib/sendNotification";
-import { generateLog } from "@/lib/generateLog";
 import { addLog } from "@/lib/addLog";
-import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
+import admin from "@/lib/firebaseAdmin";
+import { generateLog } from "@/lib/generateLog";
+import { sendNotification } from "@/lib/sendNotification";
+import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
+import { sendNotificationToSMM } from "@/lib/sendNotificationToSMM";
+import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
   const { id } = await params;
@@ -363,14 +363,7 @@ async function checkDeleteUser(id) {
 
 
     let user = userQuery.rows[0];
-    if (!user) {
-        const karachiQuery = await karachi_pool.query(
-            `SELECT id, designation, full_access, customer_delete_access FROM users WHERE id = $1`,
-            [id]
-        );
-        user = karachiQuery.rows[0]
-
-    }
+   
     if (!user) throw new Error("User not found");
 
     return user.designation === "Owner" || user.full_access === true || user.customer_delete_access === true;

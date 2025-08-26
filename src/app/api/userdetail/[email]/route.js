@@ -1,5 +1,5 @@
-import pool, { karachi_pool } from "@/config/db";
-import { branchNavItem, complaintItem, employeeNavItems, ownerNavItems, POSNavItem, StoreNavItem, Tools, dealerNavItems } from "@/constants/data";
+import pool from "@/config/db";
+import { branchNavItem, complaintItem, dealerNavItems, employeeNavItems, ownerNavItems, POSNavItem, StoreNavItem, Tools } from "@/constants/data";
 import admin from "@/lib/firebaseAdmin";
 import { NextResponse } from "next/server";
 
@@ -21,22 +21,20 @@ export async function GET(req, { params }) {
     `;
         let base_route = ""
         let result = await pool.query(query, [email]);
-        if (result.rows.length === 0) {
-            result = await karachi_pool.query(query, [email]);
-        }
         const user = result.rows[0];
-
-
-        const versionResult = await pool.query(`SELECT version_code, url FROM settings`)
-        const versionRow = versionResult.rows[0] || {};
-        const version_code = versionRow.version_code || 0;
-        const route_url = versionRow.url || "";
 
         if (!user) {
             // deleteUserFromFirebase(email)
             return NextResponse.json({ message: "User not found, contact your manager" }, { status: 404 })
 
         }
+
+        const versionResult = await pool.query(`SELECT version_code, url FROM settings`)
+        const versionRow = versionResult.rows[0] || {};
+        const version_code = versionRow.version_code || 0;
+        const route_url = versionRow.url || "";
+
+
         let nav_items = []
         const branchOffice = (user.office || '').toLowerCase();
 

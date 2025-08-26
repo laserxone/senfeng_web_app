@@ -1,12 +1,12 @@
-import { karachi_pool as pool } from "@/config/db";
+import pool from "@/config/db";
 import { profileFields, saleFields } from "@/constants/data";
 import { addLog } from "@/lib/addLog";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import admin from "@/lib/firebaseAdmin";
 import { generateLog } from "@/lib/generateLog";
 import { sendNotification } from "@/lib/sendNotification";
-import { sendNotificationToMobileKarachi } from "@/lib/sendNotificationToMobileKarachi";
-import { sendNotificationToSMMKarachi } from "@/lib/sendNotificationToSMMKarachi";
+import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
+import { sendNotificationToSMM } from "@/lib/sendNotificationToSMM";
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
@@ -254,12 +254,12 @@ export async function PUT(req, { params }) {
 
     if (result.rows[0].ownership !== uid) {
       if (result.rows[0].lead) {
-        sendNotificationToSMMKarachi(result.rows[0].lead, `${result.rows[0]?.name || result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
+        sendNotificationToSMM(result.rows[0].lead, `${result.rows[0]?.name || result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
       }
 
       if (result.rows[0].ownership) {
         sendNotification(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
-        sendNotificationToMobileKarachi(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, "Customer", result.rows[0].ownership, result.rows[0], "client", `/dashboard/customer/${result.rows[0].id}`)
+        sendNotificationToMobile(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, "Customer", result.rows[0].ownership, result.rows[0], "client", `/dashboard/customer/${result.rows[0].id}`)
       }
     }
 
@@ -363,21 +363,10 @@ async function checkDeleteUser(id) {
 
 
     let user = userQuery.rows[0];
-    if (!user) {
-        const karachiQuery = await karachi_pool.query(
-            `SELECT id, designation, full_access, customer_delete_access FROM users WHERE id = $1`,
-            [id]
-        );
-        user = karachiQuery.rows[0]
-
-    }
+   
     if (!user) throw new Error("User not found");
 
     return user.designation === "Owner" || user.full_access === true || user.customer_delete_access === true;
 }
-
-
-export const revalidate = 0;
-
 
 

@@ -1,4 +1,4 @@
-import {karachi_pool as pool} from "@/config/db"
+import pool from "@/config/db"
 import { checkSuperadmin } from "@/lib/checkSuperadmin"
 import { NextResponse } from "next/server"
 

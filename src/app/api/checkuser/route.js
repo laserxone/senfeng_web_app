@@ -1,4 +1,4 @@
-import pool, { karachi_pool } from "@/config/db";
+import pool from "@/config/db";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
@@ -16,15 +16,6 @@ export async function GET(req) {
         );
 
         let user = result.rows[0];
-
-        if (!user) {
-            const karachiResult = await karachi_pool.query(
-                `SELECT id, active, office FROM users WHERE id = $1`,
-                [uid]
-            );
-            user = karachiResult.rows[0]
-        }
-
 
         if (!user || !user.active) {
             return NextResponse.json(

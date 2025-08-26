@@ -1,4 +1,4 @@
-import {karachi_pool as pool} from "@/config/db"
+import pool from "@/config/db"
 import { auth } from "@/config/firebase";
 import admin from "@/lib/firebaseAdmin";
 import { sendPasswordResetEmail } from "firebase/auth";
