@@ -266,7 +266,7 @@ export default function AppSidebar({ office }) {
                     </DropdownMenuItem>
                   </Link>
 
-                  {isAdmin && (
+                  {/* {isAdmin && (
                     <Link
                       href={`${
                         pathname.includes("karachi")
@@ -283,7 +283,7 @@ export default function AppSidebar({ office }) {
                         Dashboard
                       </DropdownMenuItem>
                     </Link>
-                  )}
+                  )} */}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
