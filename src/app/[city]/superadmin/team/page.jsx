@@ -201,7 +201,7 @@ export default function Page() {
   async function fetchData() {
     return new Promise((resolve, reject) => {
       axios
-        .get(`/${userID}/user`)
+        .get(`/${userID}/user?withbranch=true`)
         .then((response) => {
           setData(response.data);
         })

@@ -1,7 +1,6 @@
 import pool from "@/config/db";
-import { auth } from "@/config/firebase";
 import admin from "@/lib/firebaseAdmin";
-import { sendPasswordResetEmail } from "firebase/auth";
+import sendPasswordReset from "@/lib/password-reset";
 import { NextResponse } from "next/server";
 
 
@@ -49,9 +48,7 @@ export async function POST(req) {
     const { rows } = await pool.query(query, values);
     const newUser = rows[0];
 
-    sendPasswordResetEmail(auth, email, {
-      url: "https://app.senfenglaserpk.com/login"
-    })
+    sendPasswordReset(email)
 
     return NextResponse.json(newUser, { status: 200 });
 
@@ -66,11 +63,12 @@ export async function GET(req) {
   const searchParams = req.nextUrl.searchParams
   const user = searchParams.get('user')
   const withoutleave = searchParams.get('withoutleave')
+  const withBranch = searchParams.get("withbranch")
 
 
   try {
     let query = `SELECT id, name, designation, joining_date, leaving_date, email, active, office FROM users`
-    
+
     let queryParams = [];
     let conditions = [];
 
@@ -84,7 +82,11 @@ export async function GET(req) {
       conditions.push(`(leaving_date IS NULL OR leaving_date > now())`);
     }
 
-    conditions.push(`office = 'lahore'`);
+    if (withBranch) {
+      conditions.push(`office = 'lahore'`);
+    }
+
+
 
     if (conditions.length > 0) {
       query += ` WHERE ` + conditions.join(" AND ");
@@ -102,6 +104,8 @@ export async function GET(req) {
   }
 
 }
+
+
 
 
 export const revalidate = 0

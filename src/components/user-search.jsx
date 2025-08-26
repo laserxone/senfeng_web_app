@@ -17,10 +17,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { cn } from "@/lib/utils";
-import { UserContext } from "@/store/context/UserContext";
-import useUserDetail from "@/hooks/use-user-detail";
 
 export function UserSearch({
   value,
