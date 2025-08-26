@@ -41,11 +41,12 @@ import {
 } from "react";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "./ui/context-menu";
 import { OfficeContext } from "@/store/context/OfficeContext";
+import useUserDetail from "@/hooks/use-user-detail";
 
 const SuperadminDocumentManagement = () => {
   const [selectedFile, setSelectedFile] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { state: UserState } = useContext(UserContext);
+  const { userID, name, email } = useUserDetail()
   const { toast } = useToast();
   const [uploadLoading, setUploadLoading] = useState(false);
   const fileInputRef = useRef(null);
@@ -65,18 +66,18 @@ const SuperadminDocumentManagement = () => {
 
   useEffect(() => {
 
-    if (UserState.value.data?.id) {
+    if (userID) {
       setLoading(true)
       fetchFiles()
     }
 
-  }, [UserState, currentFolder]);
+  }, [userID, currentFolder]);
 
   const fetchFiles = async () => {
     return new Promise(async (resolve) => {
       try {
         const response = await axios.get(
-          `/${UserState.value.data?.id}/cloud/folder?folder=${currentFolder?.id || null}`
+          `/${userID}/cloud/folder?folder=${currentFolder?.id || null}`
         );
         setAllDocuments(response.data.documents);
         setAllFolders(response.data.folders);
@@ -120,8 +121,8 @@ const SuperadminDocumentManagement = () => {
         continue;
       }
 
-      await axios.post(`/${UserState.value.data?.id}/cloud/document`, {
-        added_by: UserState.value.data?.name || UserState.value.data?.email,
+      await axios.post(`/${userID}/cloud/document`, {
+        added_by: name || email,
         path: filePath,
         folder_id: currentFolder ? currentFolder.id : undefined,
       });
@@ -140,7 +141,7 @@ const SuperadminDocumentManagement = () => {
   async function handleCreateFolder() {
     setFolderLoading(true)
     axios
-      .post(`/${UserState.value.data?.id}/cloud/folder`, {
+      .post(`/${userID}/cloud/folder`, {
         name: folderName,
         parent_folder: currentFolder ? currentFolder?.id : undefined,
       })
@@ -158,7 +159,7 @@ const SuperadminDocumentManagement = () => {
     if (!selectedFolder) return
     setFolderLoading(true)
     axios
-      .put(`/${UserState.value.data?.id}/cloud/folder/${selectedFolder?.id}`, {
+      .put(`/${userID}/cloud/folder/${selectedFolder?.id}`, {
         name: newName,
       })
       .then(async () => {
@@ -180,7 +181,7 @@ const SuperadminDocumentManagement = () => {
     async function handleDelete(file) {
       const id = file.id;
       await axios
-        .delete(`/${UserState.value.data?.id}/cloud/document/${id}`)
+        .delete(`/${userID}/cloud/document/${id}`)
         .then(async () => {
           await supabase.storage.from("superadmin.documents").remove([file.path]);
           await fetchFiles();
@@ -277,18 +278,16 @@ const SuperadminDocumentManagement = () => {
           >
             Download
           </ContextMenuItem>
-          {UserState.value.data &&
-            (UserState.value.data.designation === "Owner" ||
-              UserState.value.data.full_access) && (
-              <ContextMenuItem
-                onClick={async () => {
-                  setDeleteLoading(true);
-                  await handleDelete(item);
-                }}
-              >
-                Delete
-              </ContextMenuItem>
-            )}
+
+          <ContextMenuItem
+            onClick={async () => {
+              setDeleteLoading(true);
+              await handleDelete(item);
+            }}
+          >
+            Delete
+          </ContextMenuItem>
+
 
           <ContextMenuItem className="hover:none">
             <div className="flex flex-1 flex-col">
@@ -307,8 +306,6 @@ const SuperadminDocumentManagement = () => {
     );
   };
 
-  const writeAccess = UserState.value.data?.designation === 'Owner' || UserState.value.data?.full_access || UserState.value.data?.dms_write_access
-
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -317,27 +314,27 @@ const SuperadminDocumentManagement = () => {
           title="Superadmin Cloud"
           description="Manage personal documents"
         />
-        {writeAccess && (
-          <div className="flex justify-between mb-4 gap-2 flex-wrap">
-            <div className="flex gap-2 items-center">
-              <input
-                type="file"
-                multiple
-                ref={fileInputRef}
-                onChange={(e) => setSelectedFile(Array.from(e.target.files))}
-                className="border p-2 rounded-md w-72"
-              />
-              {selectedFile.length > 0 && (
-                <Button disabled={uploadLoading} onClick={uploadFile}>
-                  {uploadLoading && <Spinner />} Upload Files
-                </Button>
-              )}
-            </div>
-            <Button onClick={() => setVisible(true)}>
-              Create new folder
-            </Button>
+
+        <div className="flex justify-between mb-4 gap-2 flex-wrap">
+          <div className="flex gap-2 items-center">
+            <input
+              type="file"
+              multiple
+              ref={fileInputRef}
+              onChange={(e) => setSelectedFile(Array.from(e.target.files))}
+              className="border p-2 rounded-md w-72"
+            />
+            {selectedFile.length > 0 && (
+              <Button disabled={uploadLoading} onClick={uploadFile}>
+                {uploadLoading && <Spinner />} Upload Files
+              </Button>
+            )}
           </div>
-        )}
+          <Button onClick={() => setVisible(true)}>
+            Create new folder
+          </Button>
+        </div>
+
       </div>
 
 
@@ -440,12 +437,12 @@ const SuperadminDocumentManagement = () => {
 const RenderEachFolder = ({ item, index, view, setFolderBread, setCurrentFolder, setSelectedFolder, setNewName, fetchFiles }) => {
 
   const [deleteLoading, setDeleteLoading] = useState(false)
-  const { state: UserState } = useContext(UserContext)
+  const { userID } = useUserDetail()
 
   async function handleDeleteFolder(id) {
     try {
       setDeleteLoading(true)
-      await axios.delete(`/${UserState.value.data?.id}/cloud/folder/${id}`)
+      await axios.delete(`/${userID}/cloud/folder/${id}`)
       await fetchFiles()
     } finally {
       setDeleteLoading(false)

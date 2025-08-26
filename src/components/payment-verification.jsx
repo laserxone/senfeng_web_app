@@ -1,9 +1,6 @@
 "use client";
 
-import { Heading } from "@/components/ui/heading";
-import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
-import { useContext, useEffect, useRef, useState } from "react";
+import { RequiredStar } from "@/components/RequiredStar";
 import {
   Accordion,
   AccordionContent,
@@ -11,25 +8,28 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import Spinner from "@/components/ui/spinner";
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@/config/firebase";
-import Zoom from "react-medium-image-zoom";
-import "react-medium-image-zoom/dist/styles.css";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { RequiredStar } from "@/components/RequiredStar";
+import { Heading } from "@/components/ui/heading";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Spinner from "@/components/ui/spinner";
+import { storage } from "@/config/firebase";
 import { toast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
+import { useEffect, useRef, useState } from "react";
+import Zoom from "react-medium-image-zoom";
+import "react-medium-image-zoom/dist/styles.css";
 
-export default function PaymentVerification({base}) {
-  const { state: UserState } = useContext(UserContext);
+export default function PaymentVerification() {
+  const { userID } = useUserDetail();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const hasFetched = useRef(false);
@@ -41,19 +41,17 @@ export default function PaymentVerification({base}) {
   const [rejectionLoading, setRejectionLoading] = useState(false);
   const [machineApproveLoadingId, setMachineApproveLoadingId] = useState(null);
 
-  const userId = UserState.value.data?.id;
-
   useEffect(() => {
-    if (userId && !hasFetched.current) {
+    if (userID && !hasFetched.current) {
       hasFetched.current = true;
       fetchData();
     }
-  }, [userId]);
+  }, [userID]);
 
   async function fetchData() {
     setLoading(true);
     try {
-      const response = await axios.get(`/${UserState.value.data?.id}/payment-verification`);
+      const response = await axios.get(`/${userID}/payment-verification`);
       setData(response.data);
     } catch (err) {
       console.error("Failed to fetch data:", err);
@@ -64,7 +62,7 @@ export default function PaymentVerification({base}) {
 
   const handleApprove = async (paymentId, machineId) => {
     try {
-      await axios.put(`/${UserState.value.data?.id}/payment-verification/${paymentId}`, {
+      await axios.put(`/${userID}/payment-verification/${paymentId}`, {
         status: "approved",
         payment_lock: true,
       });
@@ -124,7 +122,7 @@ export default function PaymentVerification({base}) {
   const handleReject = async (paymentId) => {
     setRejectionLoading(true);
     try {
-      await axios.put(`/${UserState.value.data?.id}/payment-verification/${paymentId}`, {
+      await axios.put(`/${userID}/payment-verification/${paymentId}`, {
         status: "rejected",
         comment: comment,
       });

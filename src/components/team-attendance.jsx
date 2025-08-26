@@ -3,7 +3,7 @@ import { ArrowUpDown, Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import PageTable from "@/components/app-table";
 import {
@@ -16,10 +16,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import FilterSheet from "@/components/users/filterSheet";
 import { TIMEZONE } from "@/constants/data";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { GetProfileImage } from "@/lib/getProfileImage";
 import { MapProvider } from "@/providers/map-provider";
-import { UserContext } from "@/store/context/UserContext";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import moment from "moment";
 import momentT from "moment-timezone";
@@ -27,14 +27,14 @@ import { useTheme } from "next-themes";
 
 export default function TeamAttendance() {
   const [filterVisible, setFilterVisible] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+  const {userID} = useUserDetail()
   const [data, setData] = useState([]);
   const [visible, setVisible] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState(null);
   const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       const start_date = momentT
         .tz(TIMEZONE)
         .startOf("month")
@@ -49,14 +49,14 @@ export default function TeamAttendance() {
         .toISOString();
       fetchData(start_date, end_date);
     }
-  }, [UserState.value.data]);
+  }, [userID]);
 
   async function fetchData(start, end, user = null) {
     return new Promise((res) => {
       axios
         .get(
           `/${
-            UserState.value.data?.id
+            userID
           }/teamattendance?start_date=${start}&end_date=${end}&user=${
             user || ""
           }`
@@ -325,7 +325,7 @@ export default function TeamAttendance() {
         data={data}
         totalItems={data.length}
         tableHeader={tableHeader}
-        onRowClick={(val) => {
+        onRowClick={(val, e) => {
           setSelectedAttendance(val);
           setVisible(true);
         }}

@@ -1,12 +1,9 @@
 "use client";
-import { ArrowUpDown, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useContext, useEffect, useState } from "react";
 import AddCustomerDialog from "@/components/addCustomer";
 import AddQuickAction from "@/components/addQuickAction";
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
-import PageContainer from "@/components/page-container";
+import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
   Select,
@@ -18,11 +15,11 @@ import {
 } from "@/components/ui/select";
 import { UserSearch } from "@/components/user-search";
 import { toast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
-import { startHolyLoader } from "holy-loader";
+import { ArrowUpDown, Trash2 } from "lucide-react";
 import moment from "moment";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const tableHeader = [
   {
@@ -60,25 +57,23 @@ export default function CustomerMainPage({ onReturn }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState([]);
   const [addCustomer, setAddCustomer] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+  const {userID, isAdmin, designation, customer_add_access, customer_delete_access, office} = useUserDetail()
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [member, setMember] = useState(false);
-  const router = useRouter();
   const [quickAction, setQuickAction] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [numCount, setNumCount] = useState({});
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       fetchData();
     }
-  }, [UserState.value.data]);
+  }, [userID]);
 
   async function fetchData() {
     return new Promise((resolve, reject) => {
       axios
-        .get(`/${UserState.value.data?.id}/customer?member=false`)
+        .get(`/${userID}/customer?member=false`)
         .then((response) => {
           const apiData = response.data;
           const temp = apiData.map((item) => {
@@ -242,12 +237,11 @@ export default function CustomerMainPage({ onReturn }) {
       header: "Action",
       cell: ({ row }) => {
         const currentItem = row.original;
-        const user = UserState.value.data;
+        
 
         const canDelete =
-          user?.designation === "Owner" ||
-          user?.full_access === true ||
-          user?.customer_delete_access;
+          isAdmin ||
+          customer_delete_access;
 
         if (!canDelete) return null;
         return (
@@ -276,7 +270,7 @@ export default function CustomerMainPage({ onReturn }) {
     setDeleteLoading(true);
     try {
       const response = await axios.delete(
-        `/${UserState.value.data?.id}/customer/${id}`
+        `/${userID}/customer/${id}`
       );
       toast({ title: "Customer Deleted" });
       await fetchData();
@@ -319,15 +313,12 @@ export default function CustomerMainPage({ onReturn }) {
           <Heading title="All Customers" description="Manage your custoners" />
 
           <div className="flex gap-2">
-            {UserState.value.data &&
-              (UserState.value.data?.designation == "Owner" ||
-                UserState.value.data?.full_access) && (
+            {isAdmin && (
                 <Button onClick={() => setQuickAction(true)}>
                   Quick Action
                 </Button>
               )}
-            {UserState.value.data &&
-              UserState.value.data.customer_add_access && (
+            {customer_add_access && (
                 <Button onClick={() => setAddCustomer(true)}>
                   Add new customer
                 </Button>
@@ -335,16 +326,16 @@ export default function CustomerMainPage({ onReturn }) {
           </div>
 
           <AddCustomerDialog
-            user_id={UserState.value.data?.id}
-             office={UserState.value.data?.office}
+            user_id={userID}
+             office={office}
             ownership={
-              UserState.value.data?.designation === "Owner" ||
-              UserState.value.data?.designation ===
+             isAdmin ||
+              designation ===
                 "Customer Relationship Manager" ||
-              UserState.value.data?.designation ===
+              designation ===
                 "Customer Relationship Manager (After Sales)"
             }
-            user_designation={UserState.value.data?.designation}
+            user_designation={designation}
             visible={addCustomer}
             onClose={setAddCustomer}
             onRefresh={async () => {
@@ -386,20 +377,16 @@ export default function CustomerMainPage({ onReturn }) {
           }
           totalItems={filteredData.length}
           tableHeader={tableHeader}
-          onRowClick={(val) => {
+          onRowClick={(val, e) => {
             if (val.id) {
-              // startHolyLoader();
-              // router.push(
-              //   `/${UserState.value.data?.base_route}/customer/${val.id}`
-              // );
+            
               onReturn(val.id);
             }
           }}
         >
           <div className=" flex justify-between flex-wrap gap-2">
             <div className="flex gap-4 flex-wrap">
-              {(UserState.value.data?.designation === "Owner" ||
-                UserState.value.data?.full_access) && (
+              {isAdmin && (
                 <div className="w-[300px]">
                   <UserSearch
                     placeholder="Filter user..."
@@ -421,8 +408,7 @@ export default function CustomerMainPage({ onReturn }) {
                     {[
                       { value: "unassigned", label: "Unassigned" },
                       { value: "unsold", label: "Unsold Customers" },
-                      (UserState.value.data?.designation === "Owner" ||
-                        UserState.value.data?.full_access) && {
+                      isAdmin && {
                         value: "duplicate",
                         label: "Duplicate",
                       },

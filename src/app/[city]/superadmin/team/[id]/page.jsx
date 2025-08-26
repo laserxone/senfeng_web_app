@@ -11,21 +11,14 @@ import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { storage } from "@/config/firebase";
 import { useToast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
 import { getDownloadURL, ref } from "firebase/storage";
-import { useSearchParams } from "next/navigation";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "react-medium-image-zoom/dist/styles.css";
 
 export default function Page({ params }) {
-  const [data, setData] = useState();
-  const search = useSearchParams();
-  const userID = search.get("id");
-  const { state: UserState } = useContext(UserContext);
-  const [totalSales, setTotalSales] = useState(0);
-  const [customers, setCustomers] = useState([]);
-  const [allowedExtraData, setAllowedExtraData] = useState(true);
+  const {userID} = useUserDetail()
   const [joiningDate, setJoiningDate] = useState(null);
   const [leavingDate, setLeavingDate] = useState(null);
   const [dataLoading, setDataLoading] = useState(false);
@@ -65,15 +58,15 @@ export default function Page({ params }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       fetchData();
     } 
-  }, [UserState]);
+  }, [userID]);
 
   async function fetchData() {
     const { id } = await params;
     axios
-      .get(`/${UserState.value.data?.id}/user?user=${id}`)
+      .get(`/${userID}/user?user=${id}`)
       .then((response) => {
         if (response.data.length > 0) {
           const apiData = response.data.length > 0 ? response.data[0] : {};
@@ -149,7 +142,7 @@ export default function Page({ params }) {
     if (!employeeId) return;
     setDataLoading(true);
     axios
-      .put(`/${UserState.value.data?.id}/user/${employeeId}`, {
+      .put(`/${userID}/user/${employeeId}`, {
         basic_salary: form?.basic_salary || 0,
         monthly_target: form?.monthly_target || 0,
         note: form?.note || "",
@@ -237,7 +230,7 @@ export default function Page({ params }) {
         </>
       );
     },
-    [fixedData, UserState]
+    [fixedData, userID]
   );
 
   return (

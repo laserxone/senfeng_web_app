@@ -1,25 +1,25 @@
 import axios from "@/lib/axios";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { Button } from "../ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { ScrollArea } from "../ui/scroll-area";
 import "./Button.css";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
 import exportToExcel from "@/lib/exportToExcel";
-import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
@@ -37,12 +37,10 @@ const OrderStockDialog = ({
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
-  const { state: UserState } = useContext(UserContext);
+  const {userID, isAdmin} = useUserDetail()
   const [sendTo, setSendTo] = useState(null);
 
-  const isSuper =
-    UserState.value.data?.designation === "Owner" ||
-    UserState.value.data?.full_access;
+
 
   const toggleItem = (id) => {
     setSelectedItems((prev) =>
@@ -111,9 +109,9 @@ const OrderStockDialog = ({
 
     try {
       const response = await axios.post(
-        `/${UserState.value.data?.id}/conversations`,
+        `/${userID}/conversations`,
         {
-          user1: UserState.value.data?.id,
+          user1: userID,
           user2: sendTo,
         }
       );
@@ -122,9 +120,9 @@ const OrderStockDialog = ({
 
         await axios
           .post(
-            `/${UserState.value.data?.id}/conversations/${response.data?.id}`,
+            `/${userID}/conversations/${response.data?.id}`,
             {
-              senderId: UserState.value.data?.id,
+              senderId: userID,
               message: `New stock order generated ${moment().format(
                 "YYYY-MM-DD"
               )}`,
@@ -161,7 +159,7 @@ const OrderStockDialog = ({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {isSuper ? (
+            {isAdmin ? (
               <Button
                 disabled={selectedItems.length === 0}
                 onClick={handleCreateExcel}
@@ -208,7 +206,6 @@ const OrderStockDialog = ({
                   <RenderOtherStockItems
                     index={index}
                     item={item}
-                    UserState={UserState}
                     onRefresh={onRefresh}
                   />
                 </div>

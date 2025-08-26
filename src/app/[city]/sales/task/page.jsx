@@ -1,16 +1,9 @@
 "use client";
 
-
 import TaskEmployee from "@/components/users/task";
-import { UserContext } from "@/store/context/UserContext";
-import { useContext } from "react";
-
+import useUserDetail from "@/hooks/use-user-detail";
 
 export default function Page() {
-  const {state : UserState} = useContext(UserContext)
- return (
-  <TaskEmployee id={UserState.value.data?.id} base="team/user"/>
- )
+  const { userID } = useUserDetail();
+  return <TaskEmployee id={userID} base="team/user" />;
 }
-
-

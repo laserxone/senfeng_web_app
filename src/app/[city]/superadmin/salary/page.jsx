@@ -5,11 +5,10 @@ import { Label } from "@/components/ui/label";
 import { ArrowUpDown, Trash2 } from "lucide-react";
 import {
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
-  useState,
+  useState
 } from "react";
 
 import PageTable from "@/components/app-table";
@@ -36,7 +35,6 @@ import { UserSearch } from "@/components/user-search";
 import { storage } from "@/config/firebase";
 import { useToast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
 import { format, setMonth } from "date-fns";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
@@ -45,6 +43,13 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 
 import AccountsPdf from "@/components/accountsPdf";
+import CommissionRecord from "@/components/commission-salary";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   Dialog,
   DialogClose,
@@ -54,14 +59,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import useUserDetail from "@/hooks/use-user-detail";
 import { pdf } from "@react-pdf/renderer";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import CommissionRecord from "@/components/commission-salary";
 
 export default function Page() {
   return (
@@ -89,7 +88,7 @@ const SalaryComponent = () => {
   const [startDate, setStartDate] = useState(
     moment().startOf("month").toISOString()
   );
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
   const [endDate, setEndDate] = useState(moment().endOf("month").toISOString());
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -161,11 +160,11 @@ const SalaryComponent = () => {
 
   async function handleGenerate() {
     setLoading(true);
-    const response = await axios.get(`/${UserState.value.data?.id}/settings`);
+    const response = await axios.get(`/${userID}/settings`);
     setForm({ ...form, late_fine_per_day: response.data.late_fine * -1 });
     axios
       .get(
-        `/${UserState.value.data?.id}/salary?user=${user}&start=${startDate}&end=${endDate}&month=${selectedMonth}&year=${selectedYear}`
+        `/${userID}/salary?user=${user}&start=${startDate}&end=${endDate}&month=${selectedMonth}&year=${selectedYear}`
       )
       .then((response) => {
         if (
@@ -439,8 +438,6 @@ const SalaryComponent = () => {
 
     setAttendanceData([...finalData]);
 
-    
-
     if (condition) {
       const totalPresent = finalData.filter(
         (item) => item.status === "Present" || item.status === "Late"
@@ -448,7 +445,6 @@ const SalaryComponent = () => {
       const lateCount = finalData.filter(
         (item) => item.status === "Late"
       ).length;
-
 
       setForm((prevState) => ({
         ...prevState,
@@ -462,7 +458,7 @@ const SalaryComponent = () => {
     setSaveLoading(true);
 
     axios
-      .post(`/${UserState.value.data?.id}/salary`, {
+      .post(`/${userID}/salary`, {
         user_id: user,
         year: selectedYear,
         month: selectedMonth,
@@ -483,12 +479,14 @@ const SalaryComponent = () => {
         toast({ title: "Salary saved" });
         if (data?.commission) {
           data.commission.map((item) => {
-            axios.put(`/${UserState.value.data?.id}/commission/${item.id}`, { commission_issued: true });
+            axios.put(`/${userID}/commission/${item.id}`, {
+              commission_issued: true,
+            });
           });
         }
         if (data?.lead_commission) {
           data.lead_commission.map((item) => {
-            axios.put(`/${UserState.value.data?.id}/commission/${item.id}`, {
+            axios.put(`/${userID}/commission/${item.id}`, {
               lead_commission_issued: true,
             });
           });
@@ -502,7 +500,7 @@ const SalaryComponent = () => {
   async function handleAccounts() {
     setAccountsLoading(true);
     axios
-      .get(`/${UserState.value.data?.id}/accounts?month=${selectedMonth}&year=${selectedYear}`)
+      .get(`/${userID}/accounts?month=${selectedMonth}&year=${selectedYear}`)
       .then(async (response) => {
         const apiData = response.data;
         const totalPayments = apiData.reduce(
@@ -608,7 +606,7 @@ const SalaryComponent = () => {
             </SelectContent>
           </Select>
         </div>
-        {UserState.value.data?.id && (
+        {userID && (
           <>
             <Button
               disabled={!user}
@@ -1394,7 +1392,7 @@ const AttendanceRecord = ({ passingData = [] }) => {
 };
 
 const TargetRecord = ({ passingData = [] }) => {
-  const { state: UserState } = useContext(UserContext);
+  const { base_route } = useUserDetail();
   const columns = [
     {
       accessorKey: "contract_date",
@@ -1530,8 +1528,10 @@ const TargetRecord = ({ passingData = [] }) => {
           columns={columns}
           data={passingData}
           totalItems={passingData.length}
-          onRowClick={(val) => {
-            const url = `/${UserState.value.data?.base_route}/member/${val.customer_id}/${val.id}`;
+          onRowClick={(val, e) => {
+            const url = `/${base_route}/member/${
+              val.customer_id
+            }/${val.id}`;
             window.open(url, "_blank");
           }}
         ></PageTable>
@@ -1541,19 +1541,19 @@ const TargetRecord = ({ passingData = [] }) => {
 };
 
 const RecordComponent = () => {
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       fetchData();
     }
-  }, [UserState]);
+  }, [userID]);
 
   async function fetchData() {
     axios
-      .get(`/${UserState.value.data?.id}/record`)
+      .get(`/${userID}/record`)
       .then((response) => {
         setData(response.data);
       })
@@ -1629,7 +1629,7 @@ const RecordComponent = () => {
     if (!id) return;
     setLoading(true);
     axios
-      .delete(`/${UserState.value.data?.id}/record/${id}`)
+      .delete(`/${userID}/record/${id}`)
       .then(async () => {
         await fetchData();
       })
@@ -1660,7 +1660,7 @@ const RecordComponent = () => {
           totalItems={data.length}
           searchItem={"user_name"}
           searchName={"Search employee..."}
-          onRowClick={(val) => {
+          onRowClick={(val, e) => {
             // setImageURL(val);
             // setVisible(true);
           }}

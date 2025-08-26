@@ -44,15 +44,14 @@ import Spinner from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import VisitTab from "@/components/users/addVisit";
 import CustomerTask from "@/components/users/customerTask";
+import useUserDetail from "@/hooks/use-user-detail";
 import { debounce } from "@/lib/debounce";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { GetProfileImage } from "@/lib/getProfileImage";
-import { UserContext } from "@/store/context/UserContext";
 import { startHolyLoader } from "holy-loader";
 import { CheckCircle, Clock } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
-import { useContext } from "react";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import InvoiceDetails from "./invoice-details";
@@ -68,7 +67,7 @@ export default function MemberDetail({
   height,
 }) {
   const [data, setData] = useState(null);
-  const { state: UserState } = useContext(UserContext);
+  const { userID, designation, base_route } = useUserDetail();
   const [feedback, setFeedback] = useState([]);
   const [editVisible, setEditVisible] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -81,10 +80,10 @@ export default function MemberDetail({
   const [activeTab, setActiveTab] = useState("timeline");
 
   useEffect(() => {
-    if (customer_id && UserState.value.data?.id) {
+    if (customer_id && userID) {
       debouncedFetchCustomerData();
     }
-  }, [UserState, customer_id]);
+  }, [userID, customer_id]);
 
   const debouncedFetchCustomerData = debounce(() => {
     fetchCustomerTask();
@@ -94,22 +93,18 @@ export default function MemberDetail({
   }, 500);
 
   async function fetchCustomerTask() {
-    axios
-      .get(`/${UserState.value.data?.id}/customer/${customer_id}/task`)
-      .then((response) => {
-        setTaskData(response.data);
-      });
+    axios.get(`/${userID}/customer/${customer_id}/task`).then((response) => {
+      setTaskData(response.data);
+    });
   }
   async function fetchCustomerVisit() {
-    axios
-      .get(`/${UserState.value.data?.id}/customer/${customer_id}/visit`)
-      .then((response) => {
-        setVisitData(response.data);
-      });
+    axios.get(`/${userID}/customer/${customer_id}/visit`).then((response) => {
+      setVisitData(response.data);
+    });
   }
   async function fetchCustomerFeedback() {
     axios
-      .get(`/${UserState.value.data?.id}/customer/${customer_id}/feedback`)
+      .get(`/${userID}/customer/${customer_id}/feedback`)
       .then((response) => {
         setFeedback(response.data);
       });
@@ -121,7 +116,7 @@ export default function MemberDetail({
     }
 
     axios
-      .get(`/${UserState.value.data?.id}/customer/${customer_id}/dashboard`)
+      .get(`/${userID}/customer/${customer_id}/dashboard`)
       .then((response) => {
         const data = response.data.customer;
         console.log(data?.parts);
@@ -146,9 +141,6 @@ export default function MemberDetail({
         const overallCompletion =
           (customerCompletion + totalMachineCompletion) / (machines.length + 1);
         setProfileCompletion(overallCompletion.toFixed(0));
-        // setTaskData(response.data.task);
-        // setVisitData(response.data.visit);
-        // setFeedback(response.data.feedback);
       })
       .finally(() => {
         if (onLoading) onLoading(false);
@@ -162,12 +154,10 @@ export default function MemberDetail({
       if (data.image) {
         if (!data?.image?.includes("https")) DeleteFromStorage(data.image);
       }
-      const response = await axios.delete(
-        `/${UserState.value.data?.id}/customer/${id}`
-      );
+      const response = await axios.delete(`/${userID}/customer/${id}`);
       toast({ title: "Customer Deleted" });
       startHolyLoader();
-      router.push(`/${UserState.value.data?.base_route}/${from}`);
+      router.push(`/${base_route}/${from}`);
     } finally {
       setDeleteLoading(false);
       setShowConfirmation(false);
@@ -181,7 +171,7 @@ export default function MemberDetail({
         base={base}
         customer_data={customer_id || null}
         disable={true}
-        id={UserState.value.data?.id}
+        id={userID}
         data={visitData}
         height={height}
         onRefresh={async () => {
@@ -197,7 +187,7 @@ export default function MemberDetail({
         <CardContent className="flex flex-1 pt-2">
           <CustomerTask
             base={base}
-            id={UserState.value.data?.id}
+            id={userID}
             customer_id={customer_id}
             data={taskData}
             onFetchData={async () => await fetchCustomerDashboard()}
@@ -211,13 +201,11 @@ export default function MemberDetail({
   const RenderFeedbackTabs = useCallback(() => {
     return (
       <FeedbackTab
-        base={base}
         type={data?.member ? "aftersales" : "feedback"}
-        userID={UserState.value.data?.id}
+        userID={userID}
         customerID={customer_id}
         data={feedback || []}
         onRefresh={() => fetchCustomerDashboard()}
-        height={height}
       />
     );
   }, [data, feedback]);
@@ -231,11 +219,8 @@ export default function MemberDetail({
             name={data?.name}
             onClick={() => {
               if (data?.id) {
-                if (
-                  UserState.value.data?.designation === "Sales" ||
-                  UserState.value.data?.designation === "Engineer"
-                ) {
-                  if (data?.ownership === UserState.value.data?.id) {
+                if (designation === "Sales" || designation === "Engineer") {
+                  if (data?.ownership === userID) {
                     setEditVisible(true);
                   } else {
                     toast({
@@ -296,7 +281,7 @@ export default function MemberDetail({
       >
         <TabsList className="justify-start">
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
-          {UserState.value.data?.designation !== "Dealer" && (
+          {designation !== "Dealer" && (
             <TabsTrigger value="feedback">
               {data?.member ? "After Sales" : "Feedback"}
             </TabsTrigger>
@@ -306,10 +291,10 @@ export default function MemberDetail({
 
           <TabsTrigger value="parts">Parts</TabsTrigger>
 
-          {UserState.value.data?.designation !== "Dealer" && (
+          {designation !== "Dealer" && (
             <TabsTrigger value="visit">Visit</TabsTrigger>
           )}
-          {UserState.value.data?.designation !== "Dealer" && (
+          {designation !== "Dealer" && (
             <TabsTrigger value="task">Task</TabsTrigger>
           )}
           <TabsTrigger value="about">About</TabsTrigger>
@@ -319,15 +304,9 @@ export default function MemberDetail({
           {activeTab === "timeline" && (
             <RenderTimeline
               height={height}
-              feedbackData={
-                UserState.value.data?.designation !== "Dealer" ? feedback : []
-              }
-              visitData={
-                UserState.value.data?.designation !== "Dealer" ? visitData : []
-              }
-              taskData={
-                UserState.value.data?.designation !== "Dealer" ? taskData : []
-              }
+              feedbackData={designation !== "Dealer" ? feedback : []}
+              visitData={designation !== "Dealer" ? visitData : []}
+              taskData={designation !== "Dealer" ? taskData : []}
               customerDetail={data}
             />
           )}
@@ -341,7 +320,7 @@ export default function MemberDetail({
           {activeTab === "machines" && (
             <CustomersTab
               data={data?.machines || []}
-              user_id={UserState.value.data?.id}
+              user_id={userID}
               customer_id={customer_id}
               onRefresh={() => fetchCustomerDashboard()}
               onReturn={onReturn}
@@ -539,7 +518,7 @@ function CustomersTab({
   route,
 }) {
   const [visible, setVisible] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+  const { base_route } = useUserDetail();
 
   const RenderEachMachine = ({ machine, index }) => {
     const totalPayments = machine?.payments
@@ -553,11 +532,10 @@ function CustomersTab({
             <div className="flex justify-between items-center w-full flex-wrap gap-2">
               <Link
                 className="flex gap-4 items-center"
-                // href={`/${UserState.value.data?.base_route}/member/${customer_id}/${machine.id}`}
                 href={
                   !route
                     ? "#"
-                    : `/${UserState.value.data?.base_route}/member/${customer_id}/${machine.id}`
+                    : `/${base_route}/member/${customer_id}/${machine.id}`
                 }
                 onClick={() => onReturn(machine.id)}
               >
@@ -656,21 +634,12 @@ function CustomersTab({
   );
 }
 
-function FeedbackTab({
-  userID,
-  customerID,
-  data,
-  onRefresh,
-  type,
-  base,
-  height,
-}) {
+function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
   const [writeFeedback, setWriteFeedback] = useState("");
   const [date, setDate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedDelete, setSelectedDelete] = useState(null);
   const [satisfactory, setSatisfactory] = useState(false);
-  const { state: UserState } = useContext(UserContext);
   const [localData, setLocalData] = useState(
     data
       .filter((item) => item?.type === type)
@@ -683,7 +652,7 @@ function FeedbackTab({
   async function handleDelete(id) {
     setSelectedDelete(id);
     axios
-      .delete(`/${UserState.value.data?.id}/feedback/${id}`)
+      .delete(`/${userID}/feedback/${id}`)
       .then(async () => {
         await onRefresh();
       })
@@ -695,7 +664,7 @@ function FeedbackTab({
   async function handleSavePost() {
     setLoading(true);
     axios
-      .post(`/${UserState.value.data?.id}/feedback`, {
+      .post(`/${userID}/feedback`, {
         feedback: writeFeedback,
         next_followup: date,
         top_follow: topFollow,
@@ -1005,13 +974,12 @@ const RenderTimeline = ({
 
 const PartsTab = ({ data, height }) => {
   return (
-   <Card className="flex flex-1 shadow-lg rounded-2xl p-4 self-center">
-  <ScrollArea className={`flex flex-col flex-1 ${height} gap-2`}>
-    {data.map((item, index) => (
-      <InvoiceDetails key={index} invoice={item} />
-    ))}
-  </ScrollArea>
-</Card>
-
+    <Card className="flex flex-1 shadow-lg rounded-2xl p-4 self-center">
+      <ScrollArea className={`flex flex-1 ${height}`}>
+        {data.map((item, index) => (
+          <InvoiceDetails key={index} invoice={item} />
+        ))}
+      </ScrollArea>
+    </Card>
   );
 };

@@ -7,32 +7,23 @@ import SalesTeamProgressChart from "@/components/charts/sales_progress/page";
 import { CustomerMapComponent } from "@/components/customerMapComponent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PakCities } from "@/constants/data";
 import { useDebounce } from "@/hooks/use-debounce";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { MapProvider } from "@/providers/map-provider";
-import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Page({ params }) {
   const [customers, setCustomers] = useState([]);
   const [data, setData] = useState();
   const [loading, setLoading] = useState(true);
-  const { state: UserState } = useContext(UserContext);
   const [userTaskData, setUserTaskData] = useState([]);
-  const userId = UserState.value.data?.id;
-  const debouncedUserId = useDebounce(userId, 1000);
+  const {userID} = useUserDetail()
+  const debouncedUserId = useDebounce(userID, 1000);
   const [selectedOffice, setSelectedOffice] = useState("lahore");
 
   useEffect(() => {

@@ -190,7 +190,7 @@ export default function Attendance({ passingData, onFilterReturn, onRefresh }) {
           totalItems={data.length}
          
           tableHeader={tableHeader}
-          onRowClick={(val) => {
+          onRowClick={(val, e) => {
             setSelectedAttendance(val);
             setVisible(true);
           }}

@@ -1,30 +1,28 @@
 import { Button } from "@/components/ui/button";
 import { useMessages } from "@/hooks/use-messages";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import exportToExcel from "@/lib/exportToExcel";
 import { TriggerFirebase } from "@/lib/triggerFirebase";
-import { UserContext } from "@/store/context/UserContext";
-import { ArrowLeft, Clock, Send, X } from "lucide-react";
+import { Clock, Send } from "lucide-react";
 import moment from "moment";
-import { useContext, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { Card, CardContent, CardHeader } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
-import { ProfilePicture } from "../users/ProfilePicture";
-import Spinner from "../ui/spinner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
-import { Card, CardContent, CardHeader } from "../ui/card";
-import Link from "next/link";
-import exportToExcel from "@/lib/exportToExcel";
+import Spinner from "../ui/spinner";
 
 const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
-  const { state: UserState } = useContext(UserContext);
+
+  const {userID} = useUserDetail()
   const { messages: realMessages, loading } = useMessages(id);
   const [input, setInput] = useState("");
   const [tempMessages, setTempMessages] = useState([]);
   const bottomRef = useRef(null);
   const [selectedContent, setSelectedContent] = useState(null);
-
-  const userId = UserState.value.data?.id;
 
   useEffect(() => {
     if (!id) return;
@@ -54,9 +52,9 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
   }, [realMessages, tempMessages]);
 
   useEffect(() => {
-    if (!userId || !realMessages.length) return;
+    if (!userID || !realMessages.length) return;
     const unreadExists = realMessages.some(
-      (msg) => Number(msg.sender_id) !== Number(userId) && !msg.is_read
+      (msg) => Number(msg.sender_id) !== Number(userID) && !msg.is_read
     );
 
     if (unreadExists) {
@@ -74,7 +72,7 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
       id: tempId,
       message: input,
       created_at: created,
-      sender_id: userId,
+      sender_id: userID,
       pending: true,
     };
 
@@ -82,15 +80,15 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
     setInput("");
 
     axios
-      .post(`/${userId}/conversations/${id}`, {
-        senderId: userId,
+      .post(`/${userID}/conversations/${id}`, {
+        senderId: userID,
         message: input,
         created_at: created,
       })
       .then(() => {
         if (id && user?.id) {
           TriggerFirebase(id.toString(), user?.id?.toString());
-          TriggerFirebase("", userId.toString());
+          TriggerFirebase("", userID.toString());
         }
       })
       .catch(() => {
@@ -100,7 +98,7 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
 
   const markAsRead = async () => {
     try {
-      await axios.put(`/${UserState.value.data?.id}/conversations/${id}/read`, {
+      await axios.put(`/${userID}/conversations/${id}/read`, {
         userId: user?.id,
       });
     } catch (err) {
@@ -108,39 +106,13 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
     }
 
     // TriggerFirebase(id.toString(), user?.id?.toString());
-    // TriggerFirebase(id.toString(), UserState.value.data?.id?.toString());
+    // TriggerFirebase(id.toString(), userID?.toString());
   };
 
   const combinedMessages = [...realMessages, ...tempMessages];
 
   return (
     <div className="flex flex-col w-full h-full bg-muted/40 ">
-      {/* <div className="flex items-center justify-between px-4 py-2 bg-background border-b">
-        <div className="flex items-center gap-3">
-           <Button
-            variant="icon"
-            onClick={onBackClick}
-            className="p-1 rounded hover:bg-muted"
-          >
-            <ArrowLeft size={18} />
-          </Button> 
-           <ProfilePicture
-            img={user?.dp}
-            name={user?.name}
-            className="h-10 w-10"
-          /> 
-           <div className="flex flex-col">
-            <Label className="text-base font-semibold">{user?.name}</Label>
-          </div> 
-        </div>
-          <Button
-            variant="icon"
-            onClick={onXClick}
-            className="p-1 rounded hover:bg-muted"
-          >
-            <X size={18} />
-          </Button>
-      </div> */}
       {stateLoading ? (
         <div className="flex-1 flex items-center justify-center text-muted-foreground">
           <Spinner />
@@ -148,7 +120,7 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
       ) : (
         <ScrollArea className="h-[calc(100dvh-220px)] px-5">
           {combinedMessages.map((item, index) => {
-            const isMe = item.sender_id === userId;
+            const isMe = item.sender_id === userID;
             return (
               <div
                 key={index}
@@ -226,8 +198,9 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
 };
 
 const RenderSelectedContent = ({ visible, onClose, data, type }) => {
-  const { state: UserState } = useContext(UserContext);
+
   const [loading, setLoading] = useState(false);
+  const {base_route} = useUserDetail()
 
   async function handleCreateExcel() {
     setLoading(true);
@@ -304,7 +277,7 @@ const RenderSelectedContent = ({ visible, onClose, data, type }) => {
                           </div>
                           <Link
                             target="blank"
-                            href={`/${UserState.value.data?.base_route}/member/${fb.customer_id}`}
+                            href={`/${base_route}/member/${fb.customer_id}`}
                           >
                             <div className="text-base font-semibold text-foreground hover:underline">
                               {`${fb.name} - ${fb.owner} - ${fb.location}`}

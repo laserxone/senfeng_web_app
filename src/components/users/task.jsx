@@ -1,16 +1,10 @@
 "use client";
 import { TIMEZONE } from "@/constants/data";
-import {
-  ArrowUpDown,
-  BadgeCheck,
-  CircleDashed,
-  Filter,
-  Loader2,
-} from "lucide-react";
+import { ArrowUpDown, BadgeCheck, CircleDashed, Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Dialog,
@@ -44,12 +38,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
 import momentT from "moment-timezone";
-import FilterSheet from "./filterSheet";
 import Spinner from "../ui/spinner";
+import FilterSheet from "./filterSheet";
 
 const getSchema = (isClientSelected) =>
   z.object({
@@ -61,13 +55,12 @@ const getSchema = (isClientSelected) =>
   });
 
 export default function TaskEmployee({ id, base }) {
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
   const [data, setData] = useState([]);
   const [visible, setVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState({});
   const [addTaskVisible, setAddTaskVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -212,7 +205,6 @@ export default function TaskEmployee({ id, base }) {
   ];
 
   async function fetchData(id, start_date, end_date) {
-    setLoading(true);
     return new Promise((resolve, reject) => {
       axios
         .get(`/${id}/task?start_date=${start_date}&end_date=${end_date}`)
@@ -227,7 +219,6 @@ export default function TaskEmployee({ id, base }) {
           console.log(e);
         })
         .finally(() => {
-          setLoading(false);
           resolve(true);
         });
     });
@@ -246,7 +237,7 @@ export default function TaskEmployee({ id, base }) {
       .endOf("day")
       .utc()
       .toISOString();
-    fetchData(UserState.value.data?.id, startDate, endDate);
+    fetchData(userID, startDate, endDate);
   }
 
   return (
@@ -263,7 +254,7 @@ export default function TaskEmployee({ id, base }) {
         </Button>
 
         <AddTask
-         base={base}
+          base={base}
           onRefresh={() => {
             const startDate = momentT
               .tz(TIMEZONE)
@@ -279,9 +270,9 @@ export default function TaskEmployee({ id, base }) {
               .utc()
               .toISOString();
 
-            fetchData(UserState.value.data?.id, startDate, endDate);
+            fetchData(userID, startDate, endDate);
           }}
-          user_id={UserState.value.data?.id}
+          user_id={userID}
           defaultRadio={"office"}
           visible={addTaskVisible}
           onClose={setAddTaskVisible}
@@ -294,7 +285,7 @@ export default function TaskEmployee({ id, base }) {
         totalItems={data.length}
         searchItem={"task_name"}
         searchName={"Search task..."}
-        onRowClick={(val) => {
+        onRowClick={(val, e) => {
           setSelectedTask(val);
           setVisible(true);
         }}
@@ -309,8 +300,8 @@ export default function TaskEmployee({ id, base }) {
       </PageTable>
 
       <TaskDetail
-      base={base}
-        user_id={UserState.value.data?.id}
+        base={base}
+        user_id={userID}
         detail={selectedTask}
         visible={visible}
         onClose={setVisible}
@@ -358,7 +349,7 @@ const TaskDetail = ({
   onDelete,
   onMark,
   user_id,
-  base
+  base,
 }) => {
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -484,7 +475,7 @@ const TaskDetail = ({
 const AddTask = ({ visible, onClose, onRefresh, user_id, base }) => {
   const [selectedRadio, setSelectedRadio] = useState("office");
   const [loading, setLoading] = useState(false);
-  const {state : UserState} = useContext(UserContext)
+  const { userID } = useUserDetail();
   const { toast } = useToast();
 
   const form = useForm({
@@ -513,7 +504,7 @@ const AddTask = ({ visible, onClose, onRefresh, user_id, base }) => {
   const onSubmit = (values) => {
     setLoading(true);
     axios
-      .post(`/${UserState.value.data?.id}/task`, {
+      .post(`/${userID}/task`, {
         task_name: values.task,
         type: values.radio == "office" ? "Office Task" : "Client Visit",
         client: values.client,

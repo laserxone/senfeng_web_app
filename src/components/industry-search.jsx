@@ -17,26 +17,25 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { BASE_URL } from "@/constants/data";
-import { cn } from "@/lib/utils";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
+import { cn } from "@/lib/utils";
 
 export function IndustrySearch({ value, onReturn }) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState([]);
-  const { state: UserState } = React.useContext(UserContext);
+  const {userID} = useUserDetail()
 
   React.useEffect(() => {
-    if (UserState.value.data?.id) {
-      axios.get(`/${UserState.value.data?.id}/settings`).then((response) => {
+    if (userID) {
+      axios.get(`/${userID}/settings`).then((response) => {
         const list = response.data.industry_list.map((item) => {
           return { value: item, label: item };
         });
         setData([...list]);
       });
     }
-  }, [UserState]);
+  }, [userID]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

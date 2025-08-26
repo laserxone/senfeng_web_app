@@ -3,11 +3,12 @@
 import { storage } from "@/config/firebase";
 import { CountriesList } from "@/constants/data";
 import { toast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { debounce } from "@/lib/debounce";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { UploadImage } from "@/lib/uploadFunction";
-import { UserContext } from "@/store/context/UserContext";
+import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getDownloadURL, ref } from "firebase/storage";
 import { Trash } from "lucide-react";
@@ -47,7 +48,6 @@ import {
 } from "./ui/select";
 import Spinner from "./ui/spinner";
 import { UserSearch } from "./user-search";
-import { OfficeContext } from "@/store/context/OfficeContext";
 
 const EditCustomerDialog = ({
   onRefresh,
@@ -61,18 +61,16 @@ const EditCustomerDialog = ({
   const [numbers, setNumbers] = useState([""]);
   const [numberError, setNumberError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+  const { userID, isAdmin, customer_delete_access, designation, base_route } =
+    useUserDetail();
   const [checking, setChecking] = useState(false);
   const [customerInfo, setCustomerInfo] = useState([]);
   const [selectedNumber, setSelectedNumber] = useState(["+92"]);
   const [imageUrl, setImageUrl] = useState(null);
   const [originalUrl, setOriginalUrl] = useState(null);
-  const {state : OfficeState} = useContext(OfficeContext)
+  const { state: OfficeState } = useContext(OfficeContext);
 
-  const canDelete =
-    UserState.value.data?.designation === "Owner" ||
-    UserState.value.data?.full_access ||
-    UserState.value.data?.customer_delete_access;
+  const canDelete = isAdmin || customer_delete_access;
 
   const formSchema = z.object({
     company: z.string().min(1, { message: "" }), // Optional field without min(1)
@@ -220,7 +218,7 @@ const EditCustomerDialog = ({
     };
 
     try {
-      let backendRoute = `/${UserState.value.data?.id}/customer/${data.id}`;
+      let backendRoute = `/${userID}/customer/${data.id}`;
       if (data.image && !imageUrl) {
         DeleteFromStorage(data.image);
         const response = await axios.put(backendRoute, {
@@ -228,9 +226,9 @@ const EditCustomerDialog = ({
           image: null,
         });
       } else if (imageUrl && !data.image) {
-        const name = `${OfficeState.value.data}/customer/${data.id}/profile/${moment()
-          .valueOf()
-          .toString()}.png`;
+        const name = `${OfficeState.value.data}/customer/${
+          data.id
+        }/profile/${moment().valueOf().toString()}.png`;
         const uploadRef = await UploadImage(imageUrl, name);
         const response = await axios.put(backendRoute, {
           ...apiData,
@@ -287,7 +285,7 @@ const EditCustomerDialog = ({
     setCustomerInfo([]);
     setChecking(true);
     try {
-      const response = await axios.post(`/${UserState.value.data?.id}/check-number`, { number });
+      const response = await axios.post(`/${userID}/check-number`, { number });
       const finalData = response.data.filter((item) => item.id !== data.id);
       setCustomerInfo(finalData);
     } catch (error) {
@@ -383,7 +381,7 @@ const EditCustomerDialog = ({
                                 <Link
                                   key={index}
                                   target="_blank"
-                                  href={`/${UserState.value.data?.base_route}/${
+                                  href={`/${base_route}/${
                                     item.member ? "member" : "customer"
                                   }${item?.id}`}
                                   className="block text-red-600 dark:text-red-400 text-sm font-medium hover:underline"
@@ -491,7 +489,7 @@ const EditCustomerDialog = ({
                           )}
                         />
                       )}
-                      {UserState.value.data?.designation === "Sales" ? null : (
+                      {designation === "Sales" ? null : (
                         <FormField
                           control={control}
                           name="lead"
@@ -527,10 +525,8 @@ const EditCustomerDialog = ({
                             </FormItem>
                           )}
                         />
-                        {(UserState.value.data?.designation === "Owner" ||
-                          UserState.value.data?.full_access ||
-                          UserState.value.data?.designation ===
-                            "Customer Relationship Manager") && (
+                        {(isAdmin ||
+                          designation === "Customer Relationship Manager") && (
                           <FormField
                             control={form.control}
                             name="created_at"
@@ -548,8 +544,7 @@ const EditCustomerDialog = ({
                             )}
                           />
                         )}
-                        {UserState.value.data?.designation ===
-                        "Sales" ? null : (
+                        {designation === "Sales" ? null : (
                           <FormField
                             control={control}
                             name="member"

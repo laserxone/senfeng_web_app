@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import Spinner from "@/components/ui/spinner";
 import { useToast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
 import { UserContext } from "@/store/context/UserContext";
 import {
   EmailAuthProvider,
@@ -25,25 +26,24 @@ import {
   reauthenticateWithCredential,
   updatePassword,
 } from "firebase/auth";
-import { Loader2 } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 
 export default function Page() {
   const { state: UserState } = useContext(UserContext);
   const [name, setName] = useState("");
   const [image, setImage] = useState("");
-  const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const { toast } = useToast();
+  const { userID } = useUserDetail();
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       setName(UserState.value.data.name);
       setImage(UserState.value.data.dp);
     }
-  }, [UserState.value.data]);
+  }, [userID]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -58,14 +58,12 @@ export default function Page() {
 
   const handleSave = async () => {
     // setLoading(true)
-    console.log("pressed")
-   
+    console.log("pressed");
   };
 
   function checkStatus() {
     return (
-      name !== UserState.value.data?.name ||
-      image !== UserState.value.data?.dp
+      name !== UserState.value.data?.name || image !== UserState.value.data?.dp
     );
   }
 
@@ -82,16 +80,15 @@ export default function Page() {
       await reauthenticateWithCredential(user, credential);
       await updatePassword(user, newPassword);
       toast({
-        description: "Password changed successfully"
+        description: "Password changed successfully",
       });
     } catch (error) {
-        console.log(error.message)
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: error?.message || "Error updating password"
-          });
-      
+      console.log(error.message);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error?.message || "Error updating password",
+      });
     }
     setPasswordLoading(false);
   };
@@ -129,7 +126,6 @@ export default function Page() {
               onClick={handleSave}
               className="w-full"
             >
-              {loading && <Spinner />}
               Save Changes
             </Button>
 

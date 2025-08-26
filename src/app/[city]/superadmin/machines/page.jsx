@@ -1,11 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
-import {
-  useContext,
-  useEffect,
-  useState
-} from "react";
+import { useContext, useEffect, useState } from "react";
 
 import PageTable from "@/components/app-table";
 import { CustomerSearch } from "@/components/customer-search";
@@ -20,35 +16,28 @@ import {
 import { Heading } from "@/components/ui/heading";
 import { Label } from "@/components/ui/label";
 import Spinner from "@/components/ui/spinner";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { UserContext } from "@/store/context/UserContext";
 import "react-medium-image-zoom/dist/styles.css";
 
 export default function Page() {
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
-  const [filterValues, setFilterValues] = useState(null);
-  const [imageURL, setImageURL] = useState(null);
   const [visible, setVisible] = useState(false);
-   const [visibleSell, setVisibleSell] = useState(false);
-  const [reimbursementVisible, setReimbursementVisible] = useState(false);
-  const [total, setTotal] = useState(0);
-  const { state: UserState } = useContext(UserContext);
-  const [resetLoading, setResetLoading] = useState(false);
+  const { userID } = useUserDetail();
   const [loading, setLoading] = useState(true);
   const [selectedMachine, setSelectedMachine] = useState({});
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       fetchData();
     }
-  }, [UserState]);
+  }, [userID]);
 
   async function fetchData() {
     return new Promise((resolve, reject) => {
       axios
-        .get(`/${UserState.value.data?.id}/machine-bookings`)
+        .get(`/${userID}/machine-bookings`)
         .then((response) => {
           const apiData = response.data;
           const enriched = apiData.map((item) => {
@@ -212,7 +201,6 @@ export default function Page() {
                 onClick={(e) => {
                   e.stopPropagation();
                   setSelectedMachine(currentItem);
-                  setVisibleSell(true);
                 }}
               >
                 Sell Machine
@@ -244,7 +232,7 @@ export default function Page() {
         />
       </div>
       <CustomerSelectionDialog
-        user_id={UserState.value.data?.id}
+        user_id={userID}
         machine_id={selectedMachine?.id}
         onClose={setVisible}
         visible={visible}
@@ -263,7 +251,7 @@ const CustomerSelectionDialog = ({
 }) => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
-  const {state : UserState} = useContext(UserContext)
+  const {userID} = useUserDetail()
 
   function handleClose(val) {
     onClose(val);
@@ -275,7 +263,7 @@ const CustomerSelectionDialog = ({
     setLoading(true);
 
     axios
-      .put(`/${UserState.value.data?.id}/machine-bookings/${machine_id}`, {
+      .put(`/${userID}/machine-bookings/${machine_id}`, {
         customer_id: selectedCustomer,
         status: "Booked",
         booked: true,

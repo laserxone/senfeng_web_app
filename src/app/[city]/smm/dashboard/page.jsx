@@ -1,31 +1,30 @@
 "use client";
 import AutoScrollMembers from "@/components/autoScroll";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Attendance from "@/components/users/attendance";
 import CustomerEmployee from "@/components/users/customer";
 import { CustomerExtraData } from "@/components/users/ExtraData";
 import { ProfilePicture } from "@/components/users/ProfilePicture";
 import Reimbursement from "@/components/users/Reimbursement";
 import SalaryRecord from "@/components/users/SalaryRecord";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
 
 export default function Page() {
   const [data, setData] = useState();
-  const { state: UserState } = useContext(UserContext);
-  const [customers, setCustomers] = useState([]);
   const [extraData, setExtraData] = useState({});
   const [selectedOption, setSelectedOption] = useState("thisMonth");
   const [reimbursementData, setReimbursementData] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
   const [activeTab, setActiveTab] = useState("newCustomers");
+  const { userID } = useUserDetail();
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       const startDate = moment().startOf("month").toISOString();
       const endDate = moment().endOf("month").toISOString();
       fetchData();
@@ -33,13 +32,13 @@ export default function Page() {
       fetchReimbursementData(startDate, endDate);
       fetchAttendanceData(startDate, endDate);
     }
-  }, [UserState]);
+  }, [userID]);
 
   async function fetchReimbursementData(startDate, endDate) {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           setReimbursementData(response.data);
@@ -56,7 +55,7 @@ export default function Page() {
     return new Promise((res, rej) => {
       axios
         .get(
-          `/${UserState.value.data.id}/attendance?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           if (response.data.length > 0) {
@@ -79,22 +78,20 @@ export default function Page() {
   }
 
   async function fetchData() {
-    axios.get(`/${UserState.value.data?.id}/dashboard`).then((response) => {
+    axios.get(`/${userID}/dashboard`).then((response) => {
       setData(response.data);
     });
   }
 
   async function fetchExtraCustomerOptions() {
-    axios
-      .get(`/${UserState.value.data?.id}/dashboard/group`)
-      .then((response) => {
-        setExtraData(response.data);
-      });
+    axios.get(`/${userID}/dashboard/group`).then((response) => {
+      setExtraData(response.data);
+    });
   }
 
   const RenderNewCustomer = useCallback(() => {
     return (
-       <Card className="flex flex-1">
+      <Card className="flex flex-1">
         <CardContent className="pt-5 flex flex-1">
           <div className="flex flex-1 gap-5">
             <CustomerExtraData
@@ -117,14 +114,14 @@ export default function Page() {
         </CardContent>
       </Card>
     );
-  }, [UserState.value.data, data, extraData, selectedOption]);
+  }, [userID, data, extraData, selectedOption]);
 
   const RenderReimbursement = useCallback(() => {
     return (
       <Card className="flex flex-1">
         <CardContent className="pt-5 flex flex-1">
           <Reimbursement
-            id={UserState.value.data?.id}
+            id={userID}
             passingData={reimbursementData || []}
             onAddRefresh={(temp) => setReimbursementData([...temp])}
             onFilterReturn={async (start, end) =>
@@ -167,7 +164,7 @@ export default function Page() {
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-          className="flex w-full flex-1 flex-col" 
+          className="flex w-full flex-1 flex-col"
         >
           <TabsList className="justify-start">
             <TabsTrigger value="newCustomers">New Customers</TabsTrigger>
@@ -183,7 +180,7 @@ export default function Page() {
             {activeTab === "salary" && (
               <Card className="flex flex-1">
                 <CardContent className="pt-2 flex flex-1">
-                  <SalaryRecord id={UserState.value.data?.id} />
+                  <SalaryRecord id={userID} />
                 </CardContent>
               </Card>
             )}

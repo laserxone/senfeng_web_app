@@ -7,11 +7,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { toast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
 import Link from "next/link";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import {
@@ -53,7 +53,7 @@ export default function Commission({ owner, crm }) {
 }
 
 const OwnerView = () => {
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [visibleDisapprove, setVisibleDisapprove] = useState(false);
@@ -63,15 +63,15 @@ const OwnerView = () => {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       fetchData();
     }
-  }, [UserState]);
+  }, [userID]);
 
   async function fetchData() {
     return new Promise(async (resolve, reject) => {
       try {
-        const route = `/${UserState.value.data?.id}/commission`;
+        const route = `/${userID}/commission`;
         const response = await axios.get(route);
         setData(response.data);
       } catch (error) {
@@ -108,7 +108,7 @@ const OwnerView = () => {
 
   const RenderEachRow = ({ item, onRefresh, onDisapprove }) => {
     const [loading, setLoading] = useState(false);
-    const { state: UserState } = useContext(UserContext);
+    const { userID, base_route } = useUserDetail();
     const [selectedPercentage, setSelectedPercentage] = useState(null);
     const [showManual, setShowManual] = useState(false);
     const [manualNumber, setManualNumber] = useState("");
@@ -123,11 +123,11 @@ const OwnerView = () => {
       if (!id) return;
       setLoading(true);
       try {
-        await axios.put(`/${UserState.value.data?.id}/commission/${id}`, {
+        await axios.put(`/${userID}/commission/${id}`, {
           is_approved: is_approved,
           approval_date: approval_date,
           commission_amount: commission_amount,
-          lead_commission_amount : lead_commission_amount
+          lead_commission_amount: lead_commission_amount,
         });
         await onRefresh();
         setShowManual(false);
@@ -151,7 +151,7 @@ const OwnerView = () => {
         <TableCell>
           <Link
             target="blank"
-            href={`/${UserState.value.data?.base_route}/member/${item.customer_id}/${item.sale_id}`}
+            href={`/${base_route}/member/${item.customer_id}/${item.sale_id}`}
             className="hover:underline"
           >
             {item.customer_name}
@@ -160,7 +160,7 @@ const OwnerView = () => {
         <TableCell>
           <Link
             target="blank"
-            href={`/${UserState.value.data?.base_route}/member/${item.customer_id}/${item.sale_id}`}
+            href={`/${base_route}/member/${item.customer_id}/${item.sale_id}`}
             className="hover:underline"
           >
             {item.customer_owner}
@@ -259,7 +259,9 @@ const OwnerView = () => {
           ) : (
             <div className="flex gap-2 items-center">
               <span className="text-green-600">Approved</span>
-              <Button onClick={() => handleUpdate(item.id, null, null, null, null)}>
+              <Button
+                onClick={() => handleUpdate(item.id, null, null, null, null)}
+              >
                 Undo
               </Button>
             </div>
@@ -274,12 +276,12 @@ const OwnerView = () => {
     setDisapproveLoading(true);
     try {
       await axios
-        .put(`/${UserState.value.data?.id}/commission/${selectedItem?.id}`, {
+        .put(`/${userID}/commission/${selectedItem?.id}`, {
           is_approved: false,
           owner_note: disapproveMsg,
         })
         .then(async () => {
-          await axios.put(`/${UserState.value.data?.id}/machine/${selectedItem.sale_id}`, {
+          await axios.put(`/${userID}/machine/${selectedItem.sale_id}`, {
             payment_lock: false,
           });
         });
@@ -390,18 +392,20 @@ const OwnerView = () => {
 };
 
 const OtherView = () => {
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
-      fetchData(UserState.value.data?.id);
+    if (userID) {
+      fetchData(userID);
     }
-  }, [UserState]);
+  }, [userID]);
 
   async function fetchData(id) {
-    return new Promise(async (resolve, reject) => {
+    setLoading(true);
+    return new Promise(async (resolve) => {
       try {
         const route = `/${id}/commission`;
         const response = await axios.get(route);
@@ -416,8 +420,9 @@ const OtherView = () => {
 
   const RenderEachRow = ({ item, onRefresh }) => {
     const [loading, setLoading] = useState(false);
-    const { state: UserState } = useContext(UserContext);
+    const { userID, base_route } = useUserDetail();
     const [note, setNote] = useState(item?.note || "");
+    const [issueLoading, setIssueLoading] = useState(false);
 
     async function handleApplyCommission(id, amount, item) {
       if (item.customer.profile_completion < 100) {
@@ -430,7 +435,7 @@ const OtherView = () => {
             <ToastAction
               onClick={() => {
                 window.open(
-                  `/${UserState.value.data?.base_route}/member/${item.customer.id}`,
+                  `/${base_route}/member/${item.customer.id}`,
                   "_blank"
                 );
               }}
@@ -452,7 +457,7 @@ const OtherView = () => {
             <ToastAction
               onClick={() => {
                 window.open(
-                  `/${UserState.value.data?.base_route}/member/${item.customer.id}/${item.id}`,
+                  `/${base_route}/member/${item.customer.id}/${item.id}`,
                   "_blank"
                 );
               }}
@@ -475,9 +480,9 @@ const OtherView = () => {
 
       try {
         await axios
-          .post(`/${UserState.value.data?.id}/commission`, {
+          .post(`/${userID}/commission`, {
             sale_id: id,
-            user_id: UserState.value.data?.id,
+            user_id: userID,
             is_requested: true,
             total_amount: totalPrice,
             note: note,
@@ -485,7 +490,7 @@ const OtherView = () => {
           })
           .then(async () => {
             await axios
-              .put(`/${UserState.value.data?.id}/machine/${id}`, {
+              .put(`/${userID}/machine/${id}`, {
                 payment_lock: true,
               })
               .then(async () => {
@@ -504,14 +509,14 @@ const OtherView = () => {
 
       try {
         await axios
-          .put(`/${UserState.value.data?.id}/commission/${id}`, {
+          .put(`/${userID}/commission/${id}`, {
             is_requested: true,
             is_approved: null,
             request_date: new Date(),
           })
           .then(async () => {
             await axios
-              .put(`/${UserState.value.data?.id}/machine/${id}`, {
+              .put(`/${userID}/machine/${id}`, {
                 payment_lock: true,
               })
               .then(async () => {
@@ -524,12 +529,46 @@ const OtherView = () => {
       }
     }
 
+    async function handleAlreadyReceived(val) {
+      if (!val?.id) return;
+      setIssueLoading(true);
+      try {
+        if (val?.commission?.id) {
+          await axios.put(`/${userID}/commission/${val.commission.id}`, {
+            commission_issued: true,
+            is_requested: true,
+            is_approved: true,
+            lead_commission_issued: true,
+          });
+        } else {
+          const formData = {
+            sale_id: val.id,
+            user_id: userID,
+            is_requested: true,
+            request_date: new Date(),
+            is_approved: true,
+            approval_date: new Date(),
+            commission_amount: 0,
+            total_amount: val.price,
+            commission_issued: true,
+          };
+
+          await axios.post(`/${userID}/old-commissions`, formData);
+          await fetchData(userID);
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIssueLoading(false);
+      }
+    }
+
     return (
       <Card className="max-w-[calc(100vw-34px)]">
         <CardContent className="p-4 space-y-2">
           <Link
-            target="blank"
-            href={`/${UserState.value.data?.base_route}/member/${item.customer_id}/${item.id}`}
+            target="_blank"
+            href={`/${base_route}/member/${item.customer_id}/${item.id}`}
           >
             <h2 className="font-semibold text-lg hover:underline">
               Customer: {item.customer?.name || item.customer?.owner || "NIL"}
@@ -537,24 +576,33 @@ const OtherView = () => {
           </Link>
 
           <div className="overflow-x-auto">
-            <Table>
+            <Table className="table-fixed w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Machine</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Paid</TableHead>
-                  <TableHead>Balance</TableHead>
-                  <TableHead>Note</TableHead>
-                  <TableHead>Commission Status</TableHead>
+                  <TableHead className="w-[120px]">Machine</TableHead>
+                  <TableHead className="w-[100px]">Price</TableHead>
+                  <TableHead className="w-[100px]">Paid</TableHead>
+                  <TableHead className="w-[100px]">Balance</TableHead>
+                  <TableHead className="w-[200px]">Note</TableHead>
+                  <TableHead className="w-[220px]">Commission Status</TableHead>
+                  <TableHead className="w-[160px]">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 <TableRow>
-                  <TableCell>{item.serial_no}</TableCell>
-                  <TableCell>{item.created_amount}</TableCell>
-                  <TableCell>{item.paid_amount}</TableCell>
-                  <TableCell>{item.balance}</TableCell>
-                  <TableCell>
+                  <TableCell className="align-middle">
+                    {item.serial_no}
+                  </TableCell>
+                  <TableCell className="align-middle">
+                    {item.created_amount}
+                  </TableCell>
+                  <TableCell className="align-middle">
+                    {item.paid_amount}
+                  </TableCell>
+                  <TableCell className="align-middle">{item.balance}</TableCell>
+
+                  {/* Note column */}
+                  <TableCell className="align-middle">
                     {item.balance !== 0 ? null : item.commission?.id ? (
                       <span>{item.commission?.note}</span>
                     ) : (
@@ -566,10 +614,12 @@ const OtherView = () => {
                       </div>
                     )}
                   </TableCell>
-                  <TableCell>
+
+                  {/* Commission Status column */}
+                  <TableCell className="align-middle">
                     {loading ? (
                       <Spinner />
-                    ) : item.commission.commission_issued === true ? (
+                    ) : item.commission?.commission_issued === true ? (
                       <span className="text-green-600">Issued</span>
                     ) : item.balance !== 0 ? (
                       <span className="text-red-600">
@@ -618,6 +668,17 @@ const OtherView = () => {
                       </Button>
                     )}
                   </TableCell>
+
+                  <TableCell className="align-middle">
+                    {!item.commission?.commission_issued && (
+                      <Button
+                        disabled={issueLoading}
+                        onClick={() => handleAlreadyReceived(item)}
+                      >
+                        {issueLoading && <Spinner />} Already received
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -626,6 +687,17 @@ const OtherView = () => {
       </Card>
     );
   };
+
+  const filteredData = data.filter((item) => {
+    const customerName = item?.customer?.name?.toLowerCase() ?? "";
+    const customerOwner = item?.customer?.owner?.toLowerCase() ?? "";
+    const searchingValue = search.toLowerCase();
+
+    return (
+      customerName.includes(searchingValue) ||
+      customerOwner.includes(searchingValue)
+    );
+  });
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -639,15 +711,24 @@ const OtherView = () => {
         </div>
       ) : (
         <div className="space-y-4">
+          <Input
+            value={search}
+            placeholder={`Search...`}
+            onChange={(event) => {
+              setSearch(event.target.value);
+            }}
+            className="w-[60vw] max-w-sm"
+          />
+
           {data.length === 0 ? (
             <p>No data available.</p>
           ) : (
-            data.map((item) => (
+            filteredData.map((item) => (
               <RenderEachRow
                 key={item.id}
                 item={item}
                 onRefresh={async () => {
-                  await fetchData(UserState.value.data?.id);
+                  await fetchData(userID);
                 }}
               />
             ))
@@ -659,15 +740,15 @@ const OtherView = () => {
 };
 
 const CrmView = () => {
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
-      fetchData(UserState.value.data?.id);
+    if (userID) {
+      fetchData(userID);
     }
-  }, [UserState]);
+  }, [userID]);
 
   async function fetchData(id) {
     return new Promise(async (resolve, reject) => {

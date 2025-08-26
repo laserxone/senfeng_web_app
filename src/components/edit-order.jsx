@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { RequiredStar } from "@/components/RequiredStar";
 import {
@@ -21,10 +21,10 @@ import {
 } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import "react-medium-image-zoom/dist/styles.css";
 import { InventorySearch } from "./inventory-select";
-import { UserContext } from "@/store/context/UserContext";
 
 const EditOrderDialog = ({
   visible,
@@ -77,18 +77,17 @@ const EditOrderDialog = ({
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [existingInventory, setExistingInventory] = useState([]);
-  const [title, setTitle] = useState("");
-  const { state: UserState } = useContext(UserContext);
+  const {userID} = useUserDetail()
   const [manual, setManual] = useState(true);
 
   useEffect(() => {
-    if (visible && UserState.value.data?.id) {
+    if (visible && userID) {
       fetchPOSInventory();
     }
-  }, [visible, UserState]);
+  }, [visible, userID]);
 
   async function fetchPOSInventory() {
-    axios.get(`/${UserState.value.data?.id}/pos`).then((response) => {
+    axios.get(`/${userID}/pos`).then((response) => {
       if (response.data.stock.length > 0) {
         let resultedData = [...response.data.stock];
         setExistingInventory([...resultedData]);
@@ -147,7 +146,7 @@ const EditOrderDialog = ({
       setLoading(true);
       try {
         const response = await axios.put(
-          `/${UserState.value.data?.id}/neworder/orderitem/${id}`,
+          `/${userID}/neworder/orderitem/${id}`,
           items
         );
         await onRefresh();

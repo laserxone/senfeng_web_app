@@ -1,9 +1,10 @@
 import Dropzone from "@/components/dropzone";
 import { toast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { debounce } from "@/lib/debounce";
 import { UploadImage } from "@/lib/uploadFunction";
-import { UserContext } from "@/store/context/UserContext";
+import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import moment from "moment";
 import Link from "next/link";
@@ -33,7 +34,6 @@ import {
 } from "./ui/select";
 import Spinner from "./ui/spinner";
 import { Textarea } from "./ui/textarea";
-import { OfficeContext } from "@/store/context/OfficeContext";
 
 const AddPayment = ({
   visible,
@@ -45,7 +45,7 @@ const AddPayment = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+  const {userID, base_route} = useUserDetail()
   const {state : OfficeState} = useContext(OfficeContext)
   const [lockTID, setLockTID] = useState(false)
   const [error, setError] = useState({});
@@ -83,7 +83,7 @@ const AddPayment = ({
           .valueOf()
           .toString()}.png`;
         const imgRef = await UploadImage(values.image, name);
-        const response = await axios.post(`/${UserState.value.data?.id}/payment`, {
+        const response = await axios.post(`/${userID}/payment`, {
           ...values,
           machine_id: machine_id,
           image: name,
@@ -122,7 +122,7 @@ const AddPayment = ({
     setChecking(true);
     setError({});
     try {
-      const response = await axios.post(`/${UserState.value.data?.id}/check-note`, { number });
+      const response = await axios.post(`/${userID}/check-note`, { number });
       if (Array.isArray(response.data) && response.data.length > 0) {
         
         setError(response.data[0]);
@@ -210,7 +210,7 @@ const AddPayment = ({
                         target="blank"
                         className="text-red-500 text-sm"
                         href={
-                          `/${UserState.value.data?.base_route}/member/${error.saleData[0]?.customer_id}/${error?.machine_id}` ||
+                          `/${base_route}/member/${error.saleData[0]?.customer_id}/${error?.machine_id}` ||
                           "#"
                         }
                       >

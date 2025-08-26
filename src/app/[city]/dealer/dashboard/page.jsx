@@ -7,20 +7,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PakCities } from "@/constants/data";
 import { useDebounce } from "@/hooks/use-debounce";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { MapProvider } from "@/providers/map-provider";
-import { UserContext } from "@/store/context/UserContext";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-export default function Page({params}) {
+export default function Page() {
   
   const [customers, setCustomers] = useState([]);
   const [data, setData] = useState();
   const [loading, setLoading] = useState(true);
-  const { state: UserState } = useContext(UserContext);
-  const [userTaskData, setUserTaskData] = useState([]);
-  const userId = UserState.value.data?.id;
-  const debouncedUserId = useDebounce(userId, 1000);
+  const {userID} = useUserDetail()
+  const debouncedUserId = useDebounce(userID, 1000);
 
   
 

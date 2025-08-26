@@ -8,9 +8,10 @@ import Chatcomponent from "./chat-component";
 import axios from "@/lib/axios";
 import { BadgeCount } from "../NotificationBadge";
 import { useMessagesNotification } from "@/hooks/use-message-notification";
+import useUserDetail from "@/hooks/use-user-detail";
 
 export default function FloatingChat() {
-  const { state: UserState } = useContext(UserContext);
+  const {userID} = useUserDetail()
   const [open, setOpen] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -18,9 +19,9 @@ export default function FloatingChat() {
 
   const handleStartConversation = async (item) => {
     const response = await axios.post(
-      `/${UserState.value.data?.id}/conversations`,
+      `/${userID}/conversations`,
       {
-        user1: UserState.value.data?.id,
+        user1: userID,
         user2: item.id,
       }
     );
@@ -87,7 +88,7 @@ export default function FloatingChat() {
             className={`${selectedConversation ? "hidden" : "block"}`}
           >
             <UserChatIcon
-              myId={UserState.value.data?.id}
+              myId={userID}
               onChatSelected={(item) => {
                 if (item?.id === selectedConversation?.user?.id) return;
                 setLoading(true);

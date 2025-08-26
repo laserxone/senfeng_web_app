@@ -3,7 +3,7 @@ import { ArrowUpDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Dialog,
@@ -39,8 +39,8 @@ import {
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
 import { startHolyLoader } from "holy-loader";
 import moment from "moment";
 import { useRouter } from "next/navigation";
@@ -191,17 +191,17 @@ export default function Page() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const { state: UserState } = useContext(UserContext);
+  const { userID, office, base_route } = useUserDetail();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (UserState.value.data?.id) fetchData();
-  }, [UserState]);
+    if (userID) fetchData();
+  }, [userID]);
 
   async function fetchData() {
     return new Promise((resolve, reject) => {
       axios
-        .get(`/${UserState.value.data?.id}/user`)
+        .get(`/${userID}/user`)
         .then((response) => {
           setData(response.data);
         })
@@ -229,10 +229,15 @@ export default function Page() {
         columns={columns}
         data={data}
         totalItems={data.length}
-        onRowClick={(val) => {
+        onRowClick={(val, event) => {
           if (val.id) {
-            startHolyLoader();
-            router.push(`/${UserState.value.data?.base_route}/team/${val.id}`);
+            const url = `/${base_route}/team/${val.id}`;
+            if (event.ctrlKey || event.metaKey) {
+              window.open(url, "_blank");
+            } else {
+              startHolyLoader();
+              router.push(url);
+            }
           }
         }}
       ></PageTable>
@@ -240,7 +245,7 @@ export default function Page() {
       <AddUserDialog
         visible={open}
         onClose={setOpen}
-        office={UserState.value.data?.office}
+        office={office}
         onReturn={(newUser) => {
           let temp = [...data];
           temp.push(newUser);
@@ -268,7 +273,7 @@ const AddUserDialog = ({
   office = "islamabad",
 }) => {
   const [dataLoading, setDataLoading] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
   const formSchema = z.object({
     name: z.string().min(2, { message: "Name must be at least 2 characters." }),
     email: z.string().email({ message: "Invalid email address." }),
@@ -294,7 +299,7 @@ const AddUserDialog = ({
     setDataLoading(true);
 
     axios
-      .post(`/${UserState.value.data?.id}/user`, {
+      .post(`/${userID}/user`, {
         ...values,
         name: values.name.toUpperCase(),
       })
@@ -415,7 +420,7 @@ const AddUserDialog = ({
               />
 
               <FormField
-                 control={form.control}
+                control={form.control}
                 name="office"
                 render={({ field }) => (
                   <FormItem>

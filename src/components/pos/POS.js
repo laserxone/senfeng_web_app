@@ -1,14 +1,12 @@
 "use client"
 import axios from '@/lib/axios';
 import { pdf } from '@react-pdf/renderer';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FaMinusCircle, FaPlus } from "react-icons/fa";
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { ScrollArea } from '../ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Textarea } from '../ui/textarea';
 import './Button.css';
@@ -16,8 +14,7 @@ import InvoicePDF from './invoicePDF';
 import PageContainer from './page-container';
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 import { useDebounce } from '@/hooks/use-debounce';
-import { UserContext } from '@/store/context/UserContext';
-import moment from 'moment';
+import useUserDetail from '@/hooks/use-user-detail';
 import "pdfjs-dist/build/pdf.worker.mjs";
 import 'pdfjs-dist/legacy/web/pdf_viewer.css';
 import { CustomerSearchWithData } from '../customer-search-with-data';
@@ -27,12 +24,12 @@ import Spinner from '../ui/spinner';
 import { UserSearch } from '../user-search';
 import NotificationBadge from './NotificationBadge';
 import AddItemDialog from './add-item-dialog';
+import AddPOSPayment from './add-pos-payment';
+import EngineerModal from './engineer-modal';
 import OrderStockDialog from './order-stock-dialog';
 import POSModal from './pos-modal';
 import SearchResultModal from './search-result-modal';
 import ViewableInvoice from './viewable-invoice';
-import EngineerModal from './engineer-modal';
-import AddPOSPayment from './add-pos-payment';
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -74,7 +71,7 @@ export default function POS() {
     const [reminder, setReminder] = useState([])
     const [warranty, setWarranty] = useState(false)
     const [warrantyYear, setWarrantyYear] = useState(1)
-    const { state: UserState } = useContext(UserContext)
+    const { userID, designation } = useUserDetail()
     const [selectedRadio, setSelectedRadio] = useState("customer")
     const [selectedUser, setSelectedUser] = useState({ id: null, label: null })
     const [engineerLoading, setEngineerLoading] = useState(false)
@@ -85,9 +82,7 @@ export default function POS() {
     const [orderStockVisible, setOrderStockVisible] = useState(false)
     const [walkIn, setWalkIn] = useState(false)
     const [selectedInvoice, setSelectedInvoice] = useState(null)
-
-    const userId = UserState.value.data?.id;
-    const debouncedUserId = useDebounce(userId, 1000);
+    const debouncedUserId = useDebounce(userID, 1000);
 
     useEffect(() => {
         if (debouncedUserId) {
@@ -109,7 +104,7 @@ export default function POS() {
 
     const handleInvoiceBackendData = async () => {
 
-        axios.put(`/${UserState.value.data?.id}/pos/customer`, {
+        axios.put(`/${userID}/pos/customer`, {
             name: name,
             company: companyName,
             phone: phoneNumber,
@@ -118,7 +113,7 @@ export default function POS() {
             await fetchDataCustomer()
         })
 
-        axios.put(`/${UserState.value.data?.id}/pos/update/${selectedSearchItem.id}`, {
+        axios.put(`/${userID}/pos/update/${selectedSearchItem.id}`, {
             olditems: selectedSearchItem,
             newitems: { name: name, company: companyName, phone: phoneNumber, address: address, manager: manager, invoicenumber: nextInvoice, fields: invoiceItems, payment: checked }
         }).finally(() => {
@@ -152,7 +147,7 @@ export default function POS() {
         const modified = stock.filter((item) => item?.modified);
 
         try {
-            const response = await axios.put(`/${UserState.value.data?.id}/pos`, {
+            const response = await axios.put(`/${userID}/pos`, {
                 entries: modified,
                 name: name,
                 company: companyName,
@@ -160,7 +155,7 @@ export default function POS() {
                 address: address,
                 manager: manager,
                 fields: invoiceItems,
-                payment: selectedCustomer ?  false : checked,
+                payment: selectedCustomer ? false : checked,
                 selecteduser: selectedUser,
                 customer_id: selectedCustomer ? selectedCustomer?.id : null
             });
@@ -176,7 +171,7 @@ export default function POS() {
     const fetchData = async () => {
         clearAll()
         return new Promise((resolve) => {
-            axios.get(`/${UserState.value.data?.id}/pos`)
+            axios.get(`/${userID}/pos`)
                 .then((response) => {
                     if (response.data.stock.length > 0) {
                         let resultedData = [...response.data.stock]
@@ -208,7 +203,7 @@ export default function POS() {
 
     const fetchDataCustomer = async () => {
         try {
-            const response = await axios.get(`/${UserState.value.data?.id}/pos/customer`)
+            const response = await axios.get(`/${userID}/pos/customer`)
             if (response.data.customers.length > 0) {
                 setCustomers(response.data.customers)
             }
@@ -348,7 +343,7 @@ export default function POS() {
 
 
     async function handleItemSearch() {
-        axios.get(`/${UserState.value.data?.id}/pos/search/${itemSearch}`)
+        axios.get(`/${userID}/pos/search/${itemSearch}`)
             .then((response) => {
                 if (response.data.length > 0) {
                     const resultWithTotal = response.data.map((item) => {
@@ -367,7 +362,7 @@ export default function POS() {
     }
 
     async function handleItemSearchAll() {
-        axios.get(`/${UserState.value.data?.id}/pos/search`)
+        axios.get(`/${userID}/pos/search`)
             .then((response) => {
                 if (response.data.length > 0) {
                     const resultWithTotal = response.data.map((item) => {
@@ -397,7 +392,7 @@ export default function POS() {
 
     async function handlePendingPayments() {
         return new Promise((resolve) => {
-            axios.get(`/${UserState.value.data?.id}/pos/search/null?pending=true`)
+            axios.get(`/${userID}/pos/search/null?pending=true`)
                 .then((response) => {
                     if (response.data.length > 0) {
                         const resultWithTotal = response.data.map((item) => {
@@ -425,7 +420,7 @@ export default function POS() {
     async function handleEngineerItems() {
         try {
             setEngineerLoading(true)
-            const response = await axios.get(`/${UserState.value.data?.id}/pos/engineer`)
+            const response = await axios.get(`/${userID}/pos/engineer`)
 
             setAllEngineersData(response.data)
             setEngineersModal(true)
@@ -775,9 +770,9 @@ export default function POS() {
                             })
 
                         }}
-                        onReturn={(obj)=>{
+                        onReturn={(obj) => {
                             setSearchModal(false)
-                            setSelectedCustomer({id : obj.customer_id})
+                            setSelectedCustomer({ id: obj.customer_id })
                             setSelectedInvoice(obj.id)
                         }}
                     />
@@ -816,7 +811,7 @@ export default function POS() {
                         fetchData()
                     }}
                     handleOrderStock={handleOrderStock}
-                    designation={UserState.value.data?.designation} />
+                    designation={designation} />
             </PageContainer >
     )
 }

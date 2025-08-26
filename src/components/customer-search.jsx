@@ -17,49 +17,47 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { cn } from "@/lib/utils";
-import { UserContext } from "@/store/context/UserContext";
 export function CustomerSearch({ value, onReturn }) {
   const [open, setOpen] = React.useState(false);
   const [customers, setCustomers] = React.useState([]);
-  const { state: UserState } = React.useContext(UserContext);
+  const { userID } = useUserDetail();
 
   React.useEffect(() => {
     async function fetchData() {
-      axios
-        .get(`/${UserState.value.data?.id}/mycustomer`)
-        .then((response) => {
-          if (response.data.length > 0) {
-            const apiData = response.data
-              .filter((item) => {
-                const hasValidName = item.name && item.name.trim() !== "";
-                const hasValidOwner = item.owner && item.owner.trim() !== "";
-                return hasValidName || hasValidOwner;
-              })
-              .map((item) => {
-                const hasValidName = item.name && item.name.trim() !== "";
-                return {
-                  ...item,
-                  label: hasValidName
-                    ? item.name.trim()
-                    : `${item.owner?.trim() || ""} ${
-                        item.location?.trim() || ""
-                      }`.trim(),
-                };
-              })
-              .filter((item) => !!item.label)
-              .sort((a, b) => a.label.localeCompare(b.label));
+      axios.get(`/${userID}/mycustomer`).then((response) => {
+        if (response.data.length > 0) {
+          const apiData = response.data
+            .filter((item) => {
+              const hasValidName = item.name && item.name.trim() !== "";
+              const hasValidOwner = item.owner && item.owner.trim() !== "";
+              return hasValidName || hasValidOwner;
+            })
+            .map((item) => {
+              const hasValidName = item.name && item.name.trim() !== "";
+              return {
+                ...item,
+                label: hasValidName
+                  ? item.name.trim()
+                  : `${item.owner?.trim() || ""} ${
+                      item.location?.trim() || ""
+                    }`.trim(),
+              };
+            })
+            .filter((item) => !!item.label)
+            .sort((a, b) => a.label.localeCompare(b.label));
 
-            const finalData = apiData.map((item) => {
-              return { value: item.id, label: item.label };
-            });
-            setCustomers(finalData);
-          }
-        });
+          const finalData = apiData.map((item) => {
+            return { value: item.id, label: item.label };
+          });
+          setCustomers(finalData);
+        }
+      });
     }
-    if (UserState.value.data?.id) fetchData();
-  }, [UserState]);
+    if (userID) fetchData();
+  }, [userID]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

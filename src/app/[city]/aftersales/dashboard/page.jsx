@@ -40,6 +40,7 @@ import { ProfilePicture } from "@/components/users/ProfilePicture";
 import Reimbursement from "@/components/users/Reimbursement";
 import SalaryRecord from "@/components/users/SalaryRecord";
 import { toast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -55,30 +56,29 @@ import "./styles.css";
 
 export default function Page() {
   const [data, setData] = useState();
-  const { state: UserState } = useContext(UserContext);
-  const [customers, setCustomers] = useState([]);
   const [reimbursementData, setReimbursementData] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
   const [filter, setFilter] = useState({ start: null, end: null });
   const [filterData, setFilterData] = useState();
   const [selectedOption, setSelectedOption] = useState("withoutFeedback");
   const [activeTab, setActiveTab] = useState("newCustomers");
+  const { userID, base_route } = useUserDetail();
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       const startDate = moment().startOf("month").toISOString();
       const endDate = moment().endOf("month").toISOString();
       fetchData();
       fetchReimbursementData(startDate, endDate);
       fetchAttendanceData(startDate, endDate);
     }
-  }, [UserState]);
+  }, [userID]);
 
   async function fetchReimbursementData(startDate, endDate) {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           setReimbursementData(response.data);
@@ -95,7 +95,7 @@ export default function Page() {
     return new Promise((res, rej) => {
       axios
         .get(
-          `/${UserState.value.data.id}/attendance?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           if (response.data.length > 0) {
@@ -120,8 +120,8 @@ export default function Page() {
   async function fetchData() {
     return new Promise(async (resolve) => {
       try {
-        const response = await axios.get(`/${UserState.value.data?.id}/dashboard`);
-  
+        const response = await axios.get(`/${userID}/dashboard`);
+
         const withFeedbackFixed = response.data.withFeedback.map((item) => {
           return { ...item, number: item?.number?.join(", ") };
         });
@@ -193,7 +193,7 @@ export default function Page() {
       <Card className="flex flex-1">
         <CardContent className="pt-5 flex flex-1">
           <Reimbursement
-            id={UserState.value.data?.id}
+            id={userID}
             passingData={reimbursementData || []}
             onAddRefresh={(temp) => setReimbursementData([...temp])}
             onFilterReturn={async (start, end) =>
@@ -235,7 +235,8 @@ export default function Page() {
 
         <Tabs
           className="relative flex w-full flex-1 flex-col"
-          value={activeTab} onValueChange={setActiveTab}
+          value={activeTab}
+          onValueChange={setActiveTab}
         >
           <TabsList className="justify-start">
             <TabsTrigger value="newCustomers">Members</TabsTrigger>
@@ -246,7 +247,7 @@ export default function Page() {
           </TabsList>
 
           <div className="flex flex-1 w-full mt-2">
-            {activeTab === "newCustomers" && <RenderNewCustomer />} 
+            {activeTab === "newCustomers" && <RenderNewCustomer />}
             {activeTab === "reimbursement" && <RenderReimbursement />}
             {activeTab === "attendance" && <RenderAttendance />}
             {activeTab === "task" && (
@@ -259,7 +260,7 @@ export default function Page() {
             {activeTab === "salary" && (
               <Card className="flex flex-1">
                 <CardContent className="pt-2 flex flex-1">
-                  <SalaryRecord id={UserState.value.data?.id} />
+                  <SalaryRecord id={userID} />
                 </CardContent>
               </Card>
             )}
@@ -282,7 +283,8 @@ const CustomerEmployeeAfterSales = ({
   selectedOption,
   setSelectedOption,
 }) => {
-  const { state: UserState } = useContext(UserContext);
+  const { base_route, customer_add_access, designation, office } =
+    useUserDetail();
   const [addCustomer, setAddCustomer] = useState(false);
   const router = useRouter();
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -411,12 +413,12 @@ const CustomerEmployeeAfterSales = ({
   async function handleSaveFeedback() {
     setLoading(true);
     axios
-      .post(`/${UserState.value.data?.id}/feedback`, {
+      .post(`/${userID}/feedback`, {
         feedback: feedback,
         top_follow: false,
         type: "aftersales",
         customer_id: selectedCustomer?.id,
-        user_id: UserState.value.data?.id,
+        user_id: userID,
         status: satisfactory ? "Satisfactory" : "Unsatisfactory",
         next_followup: next,
         top_follow: top,
@@ -452,14 +454,17 @@ const CustomerEmployeeAfterSales = ({
             data={data?.[selectedOption] || []}
             totalItems={data?.[selectedOption]?.length || 0}
             tableHeader={tableHeader}
-            onRowClick={(val) => {
+            onRowClick={(val, event) => {
               if (val?.id) {
-                startHolyLoader();
-                router.push(
-                  `/${UserState.value.data?.base_route}/${
-                    val.member ? "member" : "customer"
-                  }/${val.id}`
-                );
+                const url = `/${base_route}/${
+                  val.member ? "member" : "customer"
+                }/${val.id}`;
+                if (event.ctrlKey || event.metaKey) {
+                  window.open(url, "_blank");
+                } else {
+                  startHolyLoader();
+                  router.push(url);
+                }
               }
             }}
           >
@@ -477,12 +482,11 @@ const CustomerEmployeeAfterSales = ({
                 </Button>
               </div>
 
-              {UserState.value.data &&
-                UserState.value.data.customer_add_access && (
-                  <Button onClick={() => setAddCustomer(true)}>
-                    Add Customer
-                  </Button>
-                )}
+              {customer_add_access && (
+                <Button onClick={() => setAddCustomer(true)}>
+                  Add Customer
+                </Button>
+              )}
 
               <Button
                 variant={"outline"}
@@ -495,8 +499,8 @@ const CustomerEmployeeAfterSales = ({
         </div>
 
         <AddCustomerDialog
-          user_designation={UserState.value.data?.designation}
-          office={UserState.value.data?.office}
+          user_designation={designation}
+          office={office}
           user_id={user_id}
           ownership={true}
           visible={addCustomer}
@@ -517,7 +521,7 @@ const CustomerEmployeeAfterSales = ({
         <OldRecordSheet
           visible={oldRecordVisible}
           onClose={setOldRecordVisible}
-          user_id={UserState.value.data?.id}
+          user_id={userID}
         />
 
         <Dialog open={showFeedback} onOpenChange={setShowFeedback}>
@@ -579,7 +583,7 @@ export const OldRecordSheet = ({ visible, onClose, user_id, crm = false }) => {
   const [loading, setLoading] = useState(false);
   const [sendTo, setSendTo] = useState(null);
   const [data, setData] = useState([]);
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
   const [sendLoading, setSendLoading] = useState(false);
 
   const formSchema = z.object({
@@ -632,29 +636,23 @@ export const OldRecordSheet = ({ visible, onClose, user_id, crm = false }) => {
     setSendLoading(true);
 
     try {
-      const response = await axios.post(
-        `/${UserState.value.data?.id}/conversations`,
-        {
-          user1: UserState.value.data?.id,
-          user2: sendTo,
-        }
-      );
+      const response = await axios.post(`/${userID}/conversations`, {
+        user1: userID,
+        user2: sendTo,
+      });
       if (response.data?.id) {
         let formData = { type: "feedback", content: data };
         const startDate = form.getValues("start");
         const endDate = form.getValues("end");
 
         await axios
-          .post(
-            `/${UserState.value.data?.id}/conversations/${response.data?.id}`,
-            {
-              senderId: UserState.value.data?.id,
-              message: `Report ${moment(startDate).format(
-                "YYYY-MM-DD"
-              )} to ${moment(endDate).format("YYYY-MM-DD")}`,
-              data: JSON.stringify(formData),
-            }
-          )
+          .post(`/${userID}/conversations/${response.data?.id}`, {
+            senderId: userID,
+            message: `Report ${moment(startDate).format(
+              "YYYY-MM-DD"
+            )} to ${moment(endDate).format("YYYY-MM-DD")}`,
+            data: JSON.stringify(formData),
+          })
           .then(() => {
             toast({ title: "Report sent" });
           });
@@ -757,7 +755,7 @@ export const OldRecordSheet = ({ visible, onClose, user_id, crm = false }) => {
                         </div>
                         <Link
                           target="blank"
-                          href={`/${UserState.value.data?.base_route}/member/${fb.customer_id}`}
+                          href={`/${base_route}/member/${fb.customer_id}`}
                         >
                           <div className="text-base font-semibold text-foreground hover:underline">
                             {`${fb.name} - ${fb.owner} - ${fb.location}`}

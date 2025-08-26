@@ -1,9 +1,9 @@
 "use client";
-import { ArrowUpDown, Frown, Smile, Trash2 } from "lucide-react";
+import { ArrowUpDown, Frown, Smile } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Dialog,
@@ -37,8 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BASE_URL } from "@/constants/data";
-import { UserContext } from "@/store/context/UserContext";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import moment from "moment";
 import Link from "next/link";
@@ -61,11 +60,11 @@ const tableHeader = [
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState([]);
-  const { state: UserState } = useContext(UserContext);
+  const { userID, base_route } = useUserDetail();
 
   useEffect(() => {
     async function fetchData() {
-      axios.get(`/${UserState.value.data?.id}/feedback`).then((response) => {
+      axios.get(`/${userID}/feedback`).then((response) => {
         const temp = response.data.map((item) => {
           return {
             ...item,
@@ -75,8 +74,8 @@ export default function Page() {
         setData([...temp]);
       });
     }
-    if (UserState.value.data?.id) fetchData();
-  }, [UserState.value.data]);
+    if (userID) fetchData();
+  }, [userID]);
 
   const columns = [
     {
@@ -99,7 +98,7 @@ export default function Page() {
         return (
           <Link
             className="hover:underline"
-            href={`/${UserState.value.data?.base_route}/customer${item.customer_id}`}
+            href={`/${base_route}/customer${item.customer_id}`}
           >
             <div className="ml-2">{row.getValue("customer_name")}</div>
           </Link>

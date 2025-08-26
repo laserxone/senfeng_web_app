@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 export default function InvoiceDetails({ invoice }) {
   return (
     
-      <Card>
+      <Card className="mb-2">
         <CardHeader>
           <CardTitle>Invoice #{invoice.invoicenumber}</CardTitle>
         </CardHeader>

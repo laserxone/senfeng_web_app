@@ -54,23 +54,21 @@ import { UserSearch } from "@/components/user-search";
 import FilterSheet from "@/components/users/filterSheet";
 import { storage } from "@/config/firebase";
 import { TIMEZONE } from "@/constants/data";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import exportToExcel from "@/lib/exportToExcel";
 import { UploadImage } from "@/lib/uploadFunction";
-import { UserContext } from "@/store/context/UserContext";
+import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import momentT from "moment-timezone";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
-import { OfficeContext } from "@/store/context/OfficeContext";
-import { startHolyLoader } from "holy-loader";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -80,13 +78,12 @@ export default function Page() {
   const [visible, setVisible] = useState(false);
   const [reimbursementVisible, setReimbursementVisible] = useState(false);
   const [total, setTotal] = useState(0);
-  const { state: UserState } = useContext(UserContext);
+  const { base_route, userID } = useUserDetail();
   const [resetLoading, setResetLoading] = useState(false);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       const startDate = momentT
         .tz(TIMEZONE)
         .startOf("month")
@@ -100,16 +97,14 @@ export default function Page() {
         .utc()
         .toISOString();
       fetchData(startDate, endDate);
-    } 
-  }, [UserState]);
+    }
+  }, [userID]);
 
   async function fetchData(startDate, endDate, user = null) {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/${
-            UserState.value.data?.id
-          }/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${
+          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${
             user || ""
           }`
         )
@@ -191,7 +186,7 @@ export default function Page() {
         if (currentItem.customer_id)
           return (
             <Link
-              href={`/${UserState.value.data.base_route}/${
+              href={`/${base_route}/${
                 currentItem.customer_member ? "member" : "customer"
               }/${currentItem.customer_id}`}
               target="blank"
@@ -302,7 +297,7 @@ export default function Page() {
         if (currentItem.customer_id)
           return (
             <Link
-              href={`/${UserState.value.data.base_route}/customer/${currentItem.customer_id}`}
+              href={`/${base_route}/customer/${currentItem.customer_id}`}
               target="blank"
             >
               <ChevronsRight
@@ -479,7 +474,7 @@ const ImageSheet = ({
   const [isZoomed, setIsZoomed] = useState(false);
   const isMountedRef = useRef(true);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
 
   const fetchImage = useCallback(async () => {
     if (!img) return;
@@ -529,13 +524,11 @@ const ImageSheet = ({
         DeleteFromStorage(img);
       }
     }
-    axios
-      .delete(`/${UserState.value.data?.id}/reimbursement/${id}`)
-      .then(async () => {
-        await onRefresh(id);
-        setDeleteLoading(false);
-        handleClose(false);
-      });
+    axios.delete(`/${userID}/reimbursement/${id}`).then(async () => {
+      await onRefresh(id);
+      setDeleteLoading(false);
+      handleClose(false);
+    });
   }
 
   return (
@@ -604,7 +597,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
   const [loading, setLoading] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedRadio, setSelectedRadio] = useState("customer");
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
   const { state: OfficeState } = useContext(OfficeContext);
 
   const formSchema = z.object({
@@ -639,18 +632,15 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
         values.submitted_by
       }/reimbursement/${moment().valueOf().toString()}.png`;
       const imgRef = await UploadImage(values.image, name);
-      const response = await axios.post(
-        `/${UserState.value.data?.id}/reimbursement`,
-        {
-          amount: values.amount,
-          title: values.title,
-          description: values.description,
-          city: values.city,
-          image: name,
-          date: values.date,
-          submitted_by: values.submitted_by,
-        }
-      );
+      const response = await axios.post(`/${userID}/reimbursement`, {
+        amount: values.amount,
+        title: values.title,
+        description: values.description,
+        city: values.city,
+        image: name,
+        date: values.date,
+        submitted_by: values.submitted_by,
+      });
       onRefresh(response.data.reimbursement);
       form.reset();
       onClose(false);

@@ -3,7 +3,7 @@ import { ArrowUpDown, BadgeCheck, CircleDashed, Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Dialog,
@@ -40,8 +40,8 @@ import { UserSearch } from "@/components/user-search";
 import FilterSheet from "@/components/users/filterSheet";
 import { TIMEZONE } from "@/constants/data";
 import { useToast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
 import momentT from "moment-timezone";
 
@@ -190,7 +190,7 @@ const getSchema = (isClient) =>
   });
 
 export default function TeamTask() {
-  const { state: UserState } = useContext(UserContext);
+  const {userID} = useUserDetail()
   const [data, setData] = useState([]);
   const [visible, setVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState({});
@@ -199,7 +199,7 @@ export default function TeamTask() {
   const [dataLoading, setDataLoading] = useState(false);
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       const startDate = momentT
         .tz(TIMEZONE)
         .startOf("month")
@@ -214,7 +214,7 @@ export default function TeamTask() {
         .toISOString();
       fetchData(startDate, endDate);
     }
-  }, [UserState.value.data]);
+  }, [userID]);
 
   async function fetchData(start_date, end_date) {
     setDataLoading(true);
@@ -266,7 +266,7 @@ export default function TeamTask() {
           totalItems={data.length}
           searchItem={"task_name"}
           searchName={"Search task..."}
-          onRowClick={(val) => {
+          onRowClick={(val, e) => {
             setSelectedTask(val);
             setVisible(true);
           }}
@@ -278,7 +278,7 @@ export default function TeamTask() {
           >
             <Filter />
           </Button>
-          {UserState.value.data?.id && (
+          {userID && (
             <Button
               onClick={() => {
                 setAddTaskVisible(true);
@@ -291,7 +291,7 @@ export default function TeamTask() {
       </div>
 
       <TaskDetail
-        user_id={UserState.value.data?.id}
+        user_id={userID}
         detail={selectedTask}
         visible={visible}
         onClose={setVisible}
@@ -331,7 +331,7 @@ export default function TeamTask() {
         defaultRadio={"office"}
         visible={addTaskVisible}
         onClose={setAddTaskVisible}
-        assigned_by={UserState.value.data?.id}
+        assigned_by={userID}
       />
     </div>
   );

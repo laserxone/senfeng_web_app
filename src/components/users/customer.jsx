@@ -2,22 +2,22 @@
 import { ArrowUpDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
 import { startHolyLoader } from "holy-loader";
 import moment from "moment";
 import { useRouter } from "next/navigation";
-import AddCustomerDialog from "../addCustomer";
-import Spinner from "../ui/spinner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { RequiredStar } from "../RequiredStar";
+import AddCustomerDialog from "../addCustomer";
 import AppCalendar from "../appCalendar";
 import { Checkbox } from "../ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
+import Spinner from "../ui/spinner";
 
 const tableHeader = [
   {
@@ -52,7 +52,8 @@ export default function CustomerEmployee({
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState([]);
   const [addCustomer, setAddCustomer] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+  const { userID, designation, customer_add_access, office, base_route } =
+    useUserDetail();
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState("");
@@ -63,14 +64,10 @@ export default function CustomerEmployee({
   const router = useRouter();
 
   useEffect(() => {
- 
-      if (customer_data && customer_data.length > 0) {
-        setData(customer_data);
-      }
-    
+    if (customer_data && customer_data.length > 0) {
+      setData(customer_data);
+    }
   }, [customer_data]);
-
-
 
   const columns = useMemo(() => {
     const baseColumns = [
@@ -165,8 +162,8 @@ export default function CustomerEmployee({
     ];
 
     if (
-      UserState.value.data?.designation === "Customer Relationship Manager" ||
-      UserState.value.data?.designation === "Social Media Manager"
+      designation === "Customer Relationship Manager" ||
+      designation === "Social Media Manager"
     ) {
       baseColumns.push({
         id: "actions",
@@ -188,17 +185,17 @@ export default function CustomerEmployee({
     }
 
     return baseColumns;
-  }, [UserState]);
+  }, [userID]);
 
   async function handleSaveFeedback() {
     setLoading(true);
     axios
-      .post(`/${UserState.value.data?.id}/feedback`, {
+      .post(`/${userID}/feedback`, {
         feedback: feedback,
         top_follow: false,
         type: "feedback",
         customer_id: selectedCustomer?.id,
-        user_id: UserState.value.data?.id,
+        user_id: userID,
         status: satisfactory ? "Satisfactory" : "Unsatisfactory",
         next_followup: next,
         top_follow: top,
@@ -222,45 +219,45 @@ export default function CustomerEmployee({
           data={data}
           totalItems={data.length}
           tableHeader={tableHeader}
-          onRowClick={(val) => {
+          onRowClick={(val, event) => {
             if (val?.id) {
-              startHolyLoader();
-              router.push(
-                `/${UserState.value.data?.base_route}/${
-                  val.member ? "member" : "customer"
-                }/${val.id}`
-              );
+              const url = `/${base_route}/${
+                val.member ? "member" : "customer"
+              }/${val.id}`;
+
+              if (event.ctrlKey || event.metaKey) {
+                window.open(url, "_blank");
+              } else {
+                startHolyLoader();
+                router.push(url);
+              }
             }
           }}
-          // filter={true}
-          // onFilterClick={() => setFilterVisible(true)}
         >
           <div className=" flex justify-between">
             <div className="flex gap-4">
-              {UserState.value.data &&
-                UserState.value.data.customer_add_access && (
-                  <Button onClick={() => setAddCustomer(true)}>
-                    Add Customer
-                  </Button>
-                )}
+              {customer_add_access && (
+                <Button onClick={() => setAddCustomer(true)}>
+                  Add Customer
+                </Button>
+              )}
             </div>
           </div>
         </PageTable>
       </div>
 
       <AddCustomerDialog
-        base={`team/user/${UserState.value.data?.id}`}
-         office={UserState.value.data?.office}
-        user_id={UserState.value.data?.id}
-        user_designation={UserState.value.data?.designation}
+        base={`team/user/${userID}`}
+        office={office}
+        user_id={userID}
+        user_designation={designation}
         ownership={ownership}
         visible={addCustomer}
         onClose={setAddCustomer}
         onRefresh={() => {
           setData([]);
-         
-            onRefresh();
-          
+
+          onRefresh();
         }}
       />
 

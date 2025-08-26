@@ -26,10 +26,11 @@ import moment from "moment";
 import momentT from "moment-timezone";
 import { TIMEZONE } from "@/constants/data";
 import Spinner from "../ui/spinner";
+import useUserDetail from "@/hooks/use-user-detail";
 
 const FilterSheet = ({ visible, onClose, onReturn, user = true }) => {
   const [loading, setLoading] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+  const { isAdmin } = useUserDetail();
   const formSchema = z.object({
     start: z.date({ required_error: "Start date is required." }),
     end: z.date({ required_error: "End date is required." }),
@@ -83,8 +84,7 @@ const FilterSheet = ({ visible, onClose, onReturn, user = true }) => {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {(UserState.value.data?.designation === "Owner" ||
-              UserState.value.data?.full_access) && user && (
+            {isAdmin && user && (
               <FormField
                 control={form.control}
                 name="user"

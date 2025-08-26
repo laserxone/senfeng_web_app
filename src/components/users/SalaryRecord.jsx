@@ -113,7 +113,7 @@ const SalaryRecord = ({ id }) => {
           totalItems={data.length}
           searchItem={"user_name"}
           searchName={"Search employee..."}
-          onRowClick={(val) => {
+          onRowClick={(val, e) => {
             // setImageURL(val);
             // setVisible(true);
           }}

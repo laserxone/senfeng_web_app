@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { RequiredStar } from "@/components/RequiredStar";
 import {
@@ -21,10 +21,10 @@ import {
 } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import "react-medium-image-zoom/dist/styles.css";
 import { InventorySearch } from "./inventory-select";
-import { UserContext } from "@/store/context/UserContext";
 
 const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
   const [items, setItems] = useState([
@@ -49,18 +49,18 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
   const [loading, setLoading] = useState(false);
   const [existingInventory, setExistingInventory] = useState([]);
   const [title, setTitle] = useState("");
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
   const [manual, setManual] = useState(false);
   const [location, setLocation] = useState("Lahore");
 
   useEffect(() => {
-    if (visible && UserState.value.data?.id) {
+    if (visible && userID) {
       fetchPOSInventory();
     }
-  }, [visible, UserState]);
+  }, [visible, userID]);
 
   async function fetchPOSInventory() {
-    axios.get(`/${UserState.value.data?.id}/pos`).then((response) => {
+    axios.get(`/${userID}/pos`).then((response) => {
       if (response.data.stock.length > 0) {
         let resultedData = [...response.data.stock];
         setExistingInventory([...resultedData]);
@@ -197,14 +197,11 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
         status: "Order Placed",
         items: processedItems,
         title: title,
-      location : location
+        location: location,
       };
       setLoading(true);
       try {
-        const response = await axios.post(
-          `/${UserState.value.data?.id}/neworder`,
-          payload
-        );
+        const response = await axios.post(`/${userID}/neworder`, payload);
         await onRefresh();
         handleClose();
       } finally {
@@ -249,13 +246,12 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
             <div className="px-2">
               <Label>Shipment name</Label>
               <Input
-              className="mb-2"
+                className="mb-2"
                 placeholder="Enter shipment name"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
-            
-            
+
               <Label>
                 Location <RequiredStar />
               </Label>

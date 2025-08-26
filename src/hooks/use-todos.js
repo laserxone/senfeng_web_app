@@ -1,24 +1,25 @@
 
 
 import axios from '@/lib/axios';
-import { UserContext } from '@/store/context/UserContext';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import useUserDetail from './use-user-detail';
 
 export function useTodos() {
      const [tasks, setTasks] = useState([]);
-    const { state: UserState } = useContext(UserContext)
+
+     const {userID} = useUserDetail()
 
     const fetchTasks = async () => {
-        const response = await axios.get(`/${UserState.value.data?.id}/todo`);
+        const response = await axios.get(`/${userID}/todo`);
         setTasks(response.data);
     };
 
     useEffect(() => {
-        if (UserState.value.data?.id) {
+        if (userID) {
            fetchTasks()
         }
 
-    }, [UserState]);
+    }, [userID]);
 
     return { tasks, setTasks, fetchTasks };
 }

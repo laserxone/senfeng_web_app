@@ -6,7 +6,6 @@ import HolyLoader from "holy-loader";
 import { Lato } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
-import PwaInstallButton from "@/components/install-pwa";
 
 export const metadata = {
   title: "SENFENG",

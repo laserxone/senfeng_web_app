@@ -1,9 +1,10 @@
-import { BASE_URL } from "@/constants/data";
 import { toast } from "@/hooks/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { Loader2 } from "lucide-react";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { debounce } from "@/lib/debounce";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import AppCalendar from "./appCalendar";
@@ -27,11 +28,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Textarea } from "./ui/textarea";
-import { debounce } from "@/lib/debounce";
 import Spinner from "./ui/spinner";
-import { UserContext } from "@/store/context/UserContext";
-import Link from "next/link";
+import { Textarea } from "./ui/textarea";
 
 const EditPayment = ({
   visible,
@@ -40,7 +38,7 @@ const EditPayment = ({
   machine_id,
   customer_id,
   data,
-  base
+  base,
 }) => {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -56,7 +54,7 @@ const EditPayment = ({
     clearance_date: z.date().optional(),
     remarks: z.string().optional(),
   });
-  const { state: UserState } = useContext(UserContext);
+  const { userID, base_route } = useUserDetail();
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -89,17 +87,16 @@ const EditPayment = ({
   async function onSubmit(values) {
     setLoading(true);
     try {
-      const response = await axios.put(`/${UserState.value.data?.id}/payment`, {
+      const response = await axios.put(`/${userID}/payment`, {
         ...values,
         machine_id: machine_id,
         id: data.id,
-        status : "pending"
+        status: "pending",
       });
       toast({ title: "Payment updated successfully" });
       onRefresh();
       handleClose(false);
     } catch (e) {
-     
       setLoading(false);
     }
   }
@@ -124,7 +121,7 @@ const EditPayment = ({
     setChecking(true);
     setError({});
     try {
-      const response = await axios.post(`/${UserState.value.data?.id}/check-note`, { number });
+      const response = await axios.post(`/${userID}/check-note`, { number });
       if (Array.isArray(response.data) && response.data.length > 0) {
         const apiData = response.data[0];
         if (apiData.note !== data.note) {
@@ -207,7 +204,7 @@ const EditPayment = ({
                       target="blank"
                       className="text-red-500 text-sm"
                       href={
-                        `/${UserState.value.data?.base_route}/member/${error.saleData[0]?.customer_id}/${error?.machine_id}` ||
+                        `/${base_route}/member/${error.saleData[0]?.customer_id}/${error?.machine_id}` ||
                         "#"
                       }
                     >

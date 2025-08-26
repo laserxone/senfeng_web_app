@@ -10,8 +10,10 @@ import { Bell } from "lucide-react";
 import Link from "next/link";
 import { BellNotification } from "./NotificationBadge";
 import { Button } from "./ui/button";
+import useUserDetail from "@/hooks/use-user-detail";
 
-export default function NotificationDropdown({ UserState, NotificationState }) {
+export default function NotificationDropdown({ NotificationState }) {
+  const {base_route} = useUserDetail()
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -32,7 +34,7 @@ export default function NotificationDropdown({ UserState, NotificationState }) {
                 >
                   <Bell className="w-4 h-4 text-blue-500 flex-shrink-0" />
                   <Link
-                    href={`/${UserState.value.data?.base_route}/${notification.page}`}
+                    href={`/${base_route}/${notification.page}`}
                     className="text-sm text-gray-800 hover:underline truncate max-w-[16rem]"
                     title={notification.title}
                   >
@@ -45,7 +47,7 @@ export default function NotificationDropdown({ UserState, NotificationState }) {
 
         <div className="p-2 border-t border-gray-200 text-center">
           <Link
-            href={`/${UserState.value.data?.base_route}/notification`}
+            href={`/${base_route}/notification`}
             className="text-sm text-primary hover:underline"
           >
             View all notifications

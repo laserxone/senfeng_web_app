@@ -9,16 +9,16 @@ import { CustomerExtraData } from "@/components/users/ExtraData";
 import { ProfilePicture } from "@/components/users/ProfilePicture";
 import Reimbursement from "@/components/users/Reimbursement";
 import SalaryRecord from "@/components/users/SalaryRecord";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { OldRecordSheet } from "../../aftersales/dashboard/page";
 import "./styles.css";
 
 export default function Page() {
   const [data, setData] = useState();
-  const { state: UserState } = useContext(UserContext);
+  const {userID} = useUserDetail()
   const [extraData, setExtraData] = useState({});
   const [selectedOption, setSelectedOption] = useState("thisMonth");
   const [reimbursementData, setReimbursementData] = useState([]);
@@ -27,7 +27,7 @@ export default function Page() {
   const [activeTab, setActiveTab] = useState("newCustomers");
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       const startDate = moment().startOf("month").toISOString();
       const endDate = moment().endOf("month").toISOString();
       fetchData();
@@ -35,13 +35,13 @@ export default function Page() {
       fetchReimbursementData(startDate, endDate);
       fetchAttendanceData(startDate, endDate);
     }
-  }, [UserState]);
+  }, [userID]);
 
   async function fetchReimbursementData(startDate, endDate) {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           setReimbursementData(response.data);
@@ -58,7 +58,7 @@ export default function Page() {
     return new Promise((res, rej) => {
       axios
         .get(
-          `/${UserState.value.data.id}/attendance?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           if (response.data.length > 0) {
@@ -82,7 +82,7 @@ export default function Page() {
 
   async function fetchData() {
     axios
-      .get(`/${UserState.value.data?.id}/dashboard`)
+      .get(`/${userID}/dashboard`)
       .then((response) => {
         setData(response.data);
       });
@@ -90,7 +90,7 @@ export default function Page() {
 
   async function fetchExtraCustomerOptions() {
     axios
-      .get(`/${UserState.value.data?.id}/dashboard/group`)
+      .get(`/${userID}/dashboard/group`)
       .then((response) => {
         setExtraData(response.data);
       });
@@ -124,14 +124,14 @@ export default function Page() {
         </CardContent>
       </Card>
     );
-  }, [UserState.value.data, data, extraData, selectedOption]);
+  }, [userID, data, extraData, selectedOption]);
 
   const RenderReimbursement = useCallback(() => {
     return (
       <Card className="flex flex-1">
         <CardContent className="pt-5 flex flex-1">
           <Reimbursement
-            id={UserState.value.data?.id}
+            id={userID}
             passingData={reimbursementData || []}
             onAddRefresh={(temp) => setReimbursementData([...temp])}
             onFilterReturn={async (start, end) =>
@@ -198,7 +198,7 @@ export default function Page() {
             {activeTab === "salary" && (
               <Card className="flex flex-1">
                 <CardContent className="pt-2 flex flex-1">
-                  <SalaryRecord id={UserState.value.data?.id} />
+                  <SalaryRecord id={userID} />
                 </CardContent>
               </Card>
             )}
@@ -209,7 +209,7 @@ export default function Page() {
       <OldRecordSheet
         visible={oldRecordVisible}
         onClose={setOldRecordVisible}
-        user_id={UserState.value.data?.id}
+        user_id={userID}
         crm={true}
       />
 

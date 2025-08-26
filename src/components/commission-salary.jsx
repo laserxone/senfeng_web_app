@@ -1,10 +1,10 @@
 "use client";
 
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
 import Link from "next/link";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -45,7 +45,7 @@ const CommissionRecord = ({ data, fetchData }) => {
   const [disapproveMsg, setDisapproveMsg] = useState("");
   const [disapproveLoading, setDisapproveLoading] = useState(false);
   const [total, setTotal] = useState(0);
-  const {state : UserState} = useContext(UserContext)
+  const { userID, base_route } = useUserDetail();
 
   useEffect(() => {
     const totalCommission = data.reduce(
@@ -57,11 +57,10 @@ const CommissionRecord = ({ data, fetchData }) => {
 
   const RenderEachRow = ({ item, onRefresh, onDisapprove }) => {
     const [loading, setLoading] = useState(false);
-    const { state: UserState } = useContext(UserContext);
+
     const [selectedPercentage, setSelectedPercentage] = useState(null);
     const [showManual, setShowManual] = useState(false);
     const [manualNumber, setManualNumber] = useState("");
-
 
     async function handleUpdate(
       id,
@@ -72,14 +71,11 @@ const CommissionRecord = ({ data, fetchData }) => {
       if (!id) return;
       setLoading(true);
       try {
-        await axios.put(
-          `/${UserState.value.data?.id}/commission/${id}`,
-          {
-            is_approved: is_approved,
-            approval_date: approval_date,
-            commission_amount: commission_amount,
-          }
-        );
+        await axios.put(`/${userID}/commission/${id}`, {
+          is_approved: is_approved,
+          approval_date: approval_date,
+          commission_amount: commission_amount,
+        });
         await onRefresh();
         setShowManual(false);
         setManualNumber("");
@@ -102,7 +98,9 @@ const CommissionRecord = ({ data, fetchData }) => {
         <TableCell>
           <Link
             target="blank"
-            href={`/${UserState.value.data?.base_route}/member/${item.customer_id}/${item.sale_id}`}
+            href={`/${base_route}/member/${item.customer_id}/${
+              item.sale_id
+            }`}
             className="hover:underline"
           >
             {item.customer_name}
@@ -111,7 +109,9 @@ const CommissionRecord = ({ data, fetchData }) => {
         <TableCell>
           <Link
             target="blank"
-            href={`/${UserState.value.data?.base_route}/member/${item.customer_id}/${item.sale_id}`}
+            href={`/${base_route}/member/${item.customer_id}/${
+              item.sale_id
+            }`}
             className="hover:underline"
           >
             {item.customer_owner}
@@ -224,20 +224,14 @@ const CommissionRecord = ({ data, fetchData }) => {
     setDisapproveLoading(true);
     try {
       await axios
-        .put(
-          `/${UserState.value.data?.id}/commission/${selectedItem?.id}`,
-          {
-            is_approved: false,
-            owner_note: disapproveMsg,
-          }
-        )
+        .put(`/${userID}/commission/${selectedItem?.id}`, {
+          is_approved: false,
+          owner_note: disapproveMsg,
+        })
         .then(async () => {
-          await axios.put(
-            `/${UserState.value.data?.id}/machine/${selectedItem.sale_id}`,
-            {
-              payment_lock: false,
-            }
-          );
+          await axios.put(`/${userID}/machine/${selectedItem.sale_id}`, {
+            payment_lock: false,
+          });
         });
       await fetchData();
       setVisibleDisapprove(false);

@@ -206,7 +206,7 @@ export default function Reimbursement({
           totalItems={data.length}
           searchItem={"title"}
           searchName={"Search bill..."}
-          onRowClick={(val) => {
+          onRowClick={(val, e) => {
             setImageURL(val);
             setVisible(true);
           }}

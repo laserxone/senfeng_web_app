@@ -46,6 +46,7 @@ import AddOrderDialog from "@/components/add-order";
 import EditOrderDialog from "@/components/edit-order";
 import Image from "next/image";
 import SortableCard from "@/components/sortable-card";
+import useUserDetail from "@/hooks/use-user-detail";
 
 const colorClasses = [
   { bg: "bg-red-100", text: "text-red-800" },
@@ -63,15 +64,10 @@ const colorClasses = [
 export default function Page() {
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
-  const [imageURL, setImageURL] = useState(null);
   const [visible, setVisible] = useState(false);
-  const [reimbursementVisible, setReimbursementVisible] = useState(false);
-  const [total, setTotal] = useState(0);
-  const { state: UserState } = useContext(UserContext);
-  const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
-
+  const { userID } = useUserDetail();
   const [orderedData, setOrderedData] = useState([]);
 
   useEffect(() => {
@@ -110,17 +106,15 @@ export default function Page() {
   }
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       fetchData();
     }
-  }, [UserState]);
+  }, [userID]);
 
   async function fetchData(startDate, endDate) {
     return new Promise((resolve, reject) => {
       axios
-        .get(
-          `/${UserState.value.data?.id}/neworder?start_date=${startDate}&end_date=${endDate}`
-        )
+        .get(`/${userID}/neworder?start_date=${startDate}&end_date=${endDate}`)
         .then((response) => {
           const rawData = response.data;
 
@@ -203,19 +197,14 @@ export default function Page() {
         .catch((e) => {
           console.log(e);
           reject(null);
-        })
-        .finally(() => {
-          setLoading(false);
         });
     });
   }
 
   async function handleDelete(orderId) {
-    axios
-      .delete(`/${UserState.value.data?.id}/neworder/${orderId}`)
-      .then(() => {
-        fetchData();
-      });
+    axios.delete(`/${userID}/neworder/${orderId}`).then(() => {
+      fetchData();
+    });
   }
 
   function handleEditItem(itemId) {
@@ -457,14 +446,14 @@ export default function Page() {
       <CreateOrderDialog
         visible={visible}
         onClose={setVisible}
-        user_id={UserState.value.data?.id}
+        user_id={userID}
         onRefresh={fetchData}
       />
 
       <AddOrderDialog
         visible={!!selectedOrder}
         onClose={() => setSelectedOrder(null)}
-        user_id={UserState.value.data?.id}
+        user_id={userID}
         id={selectedOrder}
         onRefresh={fetchData}
       />
@@ -472,7 +461,7 @@ export default function Page() {
       <EditOrderDialog
         visible={!!selectedItem}
         onClose={() => setSelectedItem(null)}
-        user_id={UserState.value.data?.id}
+        user_id={userID}
         id={selectedItem?.id}
         onRefresh={fetchData}
         item={selectedItem}

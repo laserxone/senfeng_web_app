@@ -8,7 +8,6 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
@@ -17,28 +16,24 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useDebounce } from "@/hooks/use-debounce";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { cn } from "@/lib/utils";
-import { UserContext } from "@/store/context/UserContext";
 import { Input } from "./ui/input";
-import { useDebounce } from "@/hooks/use-debounce";
-
 
 export function CustomerSearchWithData({ value, onReturn }) {
   const [open, setOpen] = React.useState(false);
   const [customers, setCustomers] = React.useState([]);
-  const { state: UserState } = React.useContext(UserContext);
+  const { userID } = useUserDetail();
   const [search, setSearch] = React.useState("");
 
   React.useEffect(() => {
     async function fetchData() {
-      const response = await axios.get(
-        `/${UserState.value.data?.id}/mycustomer`
-      );
+      const response = await axios.get(`/${userID}/mycustomer`);
       if (response.data.length > 0) {
         const apiData = response.data
           .filter((item) => {
-          
             const hasValidName = item.name && item.name.trim() !== "";
             const hasValidOwner = item.owner && item.owner.trim() !== "";
             return hasValidName || hasValidOwner;
@@ -90,18 +85,17 @@ export function CustomerSearchWithData({ value, onReturn }) {
         setCustomers(finalData);
       }
     }
-    if (UserState.value.data?.id) fetchData();
-  }, [UserState]);
+    if (userID) fetchData();
+  }, [userID]);
 
-   const debouncedSearch = useDebounce(search, 500);
+  const debouncedSearch = useDebounce(search, 500);
 
-   const filteredCustomers = React.useMemo(() => {
+  const filteredCustomers = React.useMemo(() => {
     if (!debouncedSearch) return customers;
     return customers.filter((item) =>
       item.search.toLowerCase().includes(debouncedSearch.toLowerCase())
     );
   }, [customers, debouncedSearch]);
-
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -118,11 +112,12 @@ export function CustomerSearchWithData({ value, onReturn }) {
       </PopoverTrigger>
       <PopoverContent className="py-2 px-0">
         <Command>
-          <Input value={search}
+          <Input
+            value={search}
             onChange={(e) => setSearch(e.target.value)}
-             placeholder="Search customer..."
+            placeholder="Search customer..."
             className="h-9 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
-            />
+          />
           <CommandList>
             <CommandEmpty>No customer found.</CommandEmpty>
             <CommandGroup>

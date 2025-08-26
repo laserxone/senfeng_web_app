@@ -4,17 +4,17 @@ import MemberDetail from "@/components/customer-components/detail/member-detail"
 import Machine from "@/components/customer-components/machine/machine-component";
 import TabManager from "@/components/tabManager";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { UserContext } from "@/store/context/UserContext";
+import useUserDetail from "@/hooks/use-user-detail";
 import { startHolyLoader } from "holy-loader";
 import { useRouter } from "next/navigation";
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function MemberBaseComponent({ base }) {
   const [tabs, setTabs] = useState([]);
   const [activeTabId, setActiveTabId] = useState("dashboard");
   const [loading, setLoading] = useState([]);
   const isMobile = useIsMobile();
-  const { state: UserState } = useContext(UserContext);
+  const {base_route} = useUserDetail()
   const router = useRouter();
 
   const openTab = useCallback((tab) => {
@@ -32,7 +32,7 @@ export default function MemberBaseComponent({ base }) {
         onReturn={(cid) => {
           if (isMobile) {
             startHolyLoader();
-            router.push(`/${UserState.value.data?.base_route}/member/${cid}`);
+            router.push(`/${base_route}/member/${cid}`);
           } else {
             const id = `customer-${cid}`;
             openTab({
@@ -63,7 +63,7 @@ export default function MemberBaseComponent({ base }) {
                     if (isMobile) {
                       startHolyLoader();
                       router.push(
-                        `/${UserState.value.data?.base_route}/member/${cid}/${mid}`
+                        `/${base_route}/member/${cid}/${mid}`
                       );
                     } else {
                       const id = `machine-${mid}`;

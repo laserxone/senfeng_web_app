@@ -3,7 +3,7 @@ import { ArrowUpDown, Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
@@ -18,10 +18,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import FilterSheet from "@/components/users/filterSheet";
 import { TIMEZONE } from "@/constants/data";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { GetProfileImage } from "@/lib/getProfileImage";
 import { MapProvider } from "@/providers/map-provider";
-import { UserContext } from "@/store/context/UserContext";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import moment from "moment";
 import momentT from "moment-timezone";
@@ -30,25 +30,25 @@ import { useTheme } from "next-themes";
 export default function Page() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
-  const { state: UserState } = useContext(UserContext);
   const [data, setData] = useState([]);
   const [visible, setVisible] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState(null);
   const [resetLoading, setResetLoading] = useState(false);
+  const {userID} = useUserDetail()
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       const start_date = momentT.tz(TIMEZONE).startOf("month").startOf("day").utc().toISOString();
       const end_date = momentT.tz(TIMEZONE).endOf("month").endOf("day").utc().toISOString();
       fetchData(start_date, end_date);
     }
-  }, [UserState.value.data]);
+  }, [userID]);
 
   async function fetchData(start, end, user = null) {
     return new Promise((res, ) => {
       axios
         .get(
-          `/${UserState.value.data?.id}/attendance?start_date=${start}&end_date=${end}&user=${user || ""}`
+          `/${userID}/attendance?start_date=${start}&end_date=${end}&user=${user || ""}`
         )
         .then((response) => {
           if (response.data.length > 0) {
@@ -325,7 +325,7 @@ export default function Page() {
         data={data}
         totalItems={data.length}
         tableHeader={tableHeader}
-        onRowClick={(val) => {
+        onRowClick={(val, event) => {
           setSelectedAttendance(val);
           setVisible(true);
         }}

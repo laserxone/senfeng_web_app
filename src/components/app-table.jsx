@@ -177,7 +177,7 @@ const PageTable = ({
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
                     <TableRow
-                      onClick={() => onRowClick(row.original)}
+                      onClick={(e) => onRowClick(row.original, e)}
                       className="even:bg-gray-100 dark:even:bg-gray-800 dark:text-white text-black cursor-pointer"
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}

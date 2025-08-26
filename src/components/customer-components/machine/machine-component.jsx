@@ -51,6 +51,7 @@ import EditPayment from "@/components/editPayment";
 import InvoicePDF from "@/components/invoicepdf";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -69,12 +70,14 @@ import {
 import { UserSearch } from "@/components/user-search";
 import { storage } from "@/config/firebase";
 import { Colors } from "@/constants/data";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { debounce } from "@/lib/debounce";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { UploadImage } from "@/lib/uploadFunction";
-import { UserContext } from "@/store/context/UserContext";
+import { OfficeContext } from "@/store/context/OfficeContext";
 import { pdf } from "@react-pdf/renderer";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
@@ -84,10 +87,6 @@ import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import "pdfjs-dist/build/pdf.worker";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
-import { OfficeContext } from "@/store/context/OfficeContext";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Input } from "@/components/ui/input";
-import useUserDetail from "@/hooks/use-user-detail";
 
 export default function Machine({ id, onLoading = () => {}, base }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -103,7 +102,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
   const [addPayment, setAddPayment] = useState(false);
   const [editPayment, setEditPayment] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
-  const { state: UserState } = useContext(UserContext);
+  const { userID, isAdmin, limited_access, designation } = useUserDetail();
   const [editAllowed, setEditAllowed] = useState(false);
   const [zipDownloading, setZipDwonloading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -114,10 +113,10 @@ export default function Machine({ id, onLoading = () => {}, base }) {
   const [installmentVisible, setInstallmentVisible] = useState(false);
 
   useEffect(() => {
-    if (id && UserState.value.data?.id) {
+    if (id && userID) {
       debouncedFetchData(id);
     }
-  }, [id, UserState]);
+  }, [id, userID]);
 
   const debouncedFetchData = useCallback(
     debounce((id) => {
@@ -132,34 +131,29 @@ export default function Machine({ id, onLoading = () => {}, base }) {
     }
 
     try {
-      const response = await axios.get(
-        `/${UserState.value.data?.id}/machine/${id}`
-      );
+      const response = await axios.get(`/${userID}/machine/${id}`);
 
       const machine = response.data?.machine;
-      const userData = UserState.value.data;
       if (response.data?.installments) {
-        console.log(response.data.installments);
         setInstallments(response.data?.installments);
       }
       setUnmatched(response.data.unmatchedFields);
 
       if (
         response.data?.customer &&
-        response.data?.customer?.ownership === userData?.id
+        response.data?.customer?.ownership === userID
       ) {
         setEditAllowed(true);
       } else if (
         response.data?.machine &&
-        response.data?.machine?.sell_by === userData?.id
+        response.data?.machine?.sell_by === userID
       ) {
         setEditAllowed(true);
-      } else if (userData?.designation === "Owner" || userData?.full_access) {
+      } else if (isAdmin) {
         setEditAllowed(true);
       } else if (
-        userData?.designation ===
-          "Customer Relationship Manager (After Sales)" &&
-        !userData?.limited_access
+        designation === "Customer Relationship Manager (After Sales)" &&
+        !limited_access
       ) {
         setEditAllowed(true);
       } else {
@@ -397,17 +391,15 @@ export default function Machine({ id, onLoading = () => {}, base }) {
                 />
               )}
 
-              {(UserState.value.data?.designation === "Owner" ||
-                UserState.value.data?.full_access) &&
-                currentItem?.status === "pending" && (
-                  <RenderVerifyButton
-                    item={currentItem}
-                    onRefresh={async () => {
-                      await fetchData(id);
-                      return true;
-                    }}
-                  />
-                )}
+              {isAdmin && currentItem?.status === "pending" && (
+                <RenderVerifyButton
+                  item={currentItem}
+                  onRefresh={async () => {
+                    await fetchData(id);
+                    return true;
+                  }}
+                />
+              )}
             </div>
           );
         },
@@ -445,7 +437,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
   async function deleteMachine() {
     if (!id) return;
     setDeleteLoading(true);
-    axios.delete(`/${UserState.value.data?.id}/machine/${id}`).then(() => {
+    axios.delete(`/${userID}/machine/${id}`).then(() => {
       const trimmedUrl = pathname.split("/").slice(0, -1).join("/");
       router.replace(trimmedUrl);
     });
@@ -744,13 +736,11 @@ export default function Machine({ id, onLoading = () => {}, base }) {
               </Button>
             )}
 
-            {(UserState.value.data?.designation === "Owner" ||
-              UserState.value.data?.full_access) &&
-              !data?.machine?.payment_lock && (
-                <Button size="sm" variant="destructive" onClick={deleteMachine}>
-                  {deleteLoading && <Spinner />} Delete
-                </Button>
-              )}
+            {isAdmin && !data?.machine?.payment_lock && (
+              <Button size="sm" variant="destructive" onClick={deleteMachine}>
+                {deleteLoading && <Spinner />} Delete
+              </Button>
+            )}
 
             {installments.length > 0 && (
               <Button
@@ -772,7 +762,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
           data={payments}
           totalItems={payments.length}
           disableInput={true}
-          onRowClick={(val) => {}}
+          onRowClick={(val, e) => {}}
         />
       </div>
       <EditMachine
@@ -871,7 +861,7 @@ const ImageSheet = ({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
   const [rotation, setRotation] = useState(0);
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -908,7 +898,7 @@ const ImageSheet = ({
         await DeleteFromStorage(img);
       }
 
-      await axios.delete(`/${UserState.value.data?.id}/payment/${id}`);
+      await axios.delete(`/${userID}/payment/${id}`);
       await onRefresh(id);
       handleClose(false);
       toast({ title: "Payment Deleted" });
@@ -1137,7 +1127,7 @@ const InstallmentSheet = ({ visible, onClose, data, updateData }) => {
 
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
-      <SheetContent style={{maxWidth: "50vw"}}>
+      <SheetContent style={{ maxWidth: "50vw" }}>
         <SheetHeader className="mb-6">
           <SheetTitle className="text-2xl font-semibold">
             Installments
@@ -1214,7 +1204,8 @@ const ViewImagesSheet = ({
   const [contractPdfImages, setContractPdfImages] = useState([]);
   const [otherPdfImages, setOtherPdfImages] = useState([]);
   const [addImageVisible, setAddImageVisible] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+
+  const { userID } = useUserDetail();
   const { toast } = useToast();
 
   const contractImages = useMemo(() => data?.contract_images_png || [], [data]);
@@ -1307,10 +1298,7 @@ const ViewImagesSheet = ({
         formData.handover_user_id = null;
       }
 
-      await axios.put(
-        `/${UserState.value.data?.id}/machine/${data.id}`,
-        formData
-      );
+      await axios.put(`/${userID}/machine/${data.id}`, formData);
 
       toast({ title: "Image deleted successfully." });
       await onRefresh();
@@ -1546,7 +1534,7 @@ const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }) => {
 
 const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
   const [loading, setLoading] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
   const { state: OfficeState } = useContext(OfficeContext);
   const formSchema = z
     .object({
@@ -1624,7 +1612,7 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
     }
 
     await axios
-      .put(`/${UserState.value.data?.id}/machine/${machine.id}`, formData)
+      .put(`/${userID}/machine/${machine.id}`, formData)
       .then(async (response) => {
         await onRefresh();
         handleClose(false);
@@ -1841,11 +1829,11 @@ const MyImg = ({ img }) => {
 
 const RenderVerifyButton = ({ item, onRefresh }) => {
   const [loading, setLoading] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
   async function handleVerify(item) {
     setLoading(true);
     await axios
-      .put(`/${UserState.value.data?.id}/payment-verification/${item.id}`, {
+      .put(`/${userID}/payment-verification/${item.id}`, {
         status: "approved",
         payment_lock: true,
       })

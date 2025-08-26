@@ -1,9 +1,9 @@
 "use client";
-import { ArrowUpDown, Loader2 } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import PageTable from "@/components/app-table";
 import PageContainer from "@/components/page-container";
@@ -23,10 +23,9 @@ import {
 } from "@/components/ui/form";
 import { Heading } from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { BASE_URL } from "@/constants/data";
-import { UserContext } from "@/store/context/UserContext";
-import { zodResolver } from "@hookform/resolvers/zod";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { startHolyLoader } from "holy-loader";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -40,8 +39,8 @@ export default function Inventory() {
 const RenderInventory = () => {
   const [stock, setStock] = useState([]);
   const [visible, setVisible] = useState(false);
-  const { state: UserState } = useContext(UserContext);
-  const router = useRouter()
+  const { userID, base_route } = useUserDetail();
+  const router = useRouter();
 
   const tableHeader = [
     {
@@ -51,10 +50,10 @@ const RenderInventory = () => {
   ];
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       fetchData();
     }
-  }, [UserState.value.data]);
+  }, [userID]);
 
   async function fetchData() {
     axios
@@ -86,10 +85,7 @@ const RenderInventory = () => {
       },
       cell: ({ row }) => <div className="ml-2">{row.getValue("shipment")}</div>,
     },
-
-    
   ];
-
 
   return (
     <PageContainer scrollable={false}>
@@ -122,11 +118,17 @@ const RenderInventory = () => {
             searchItem={"shipment"}
             searchName={`Search name...`}
             tableHeader={tableHeader}
-            onRowClick={(val)=>{
-            if(val?.id){
-              startHolyLoader()
-              router.push(`/${UserState.value.data?.base_route}/inventory/${val.id}`)
-            }
+            onRowClick={(val, event) => {
+              if (val?.id) {
+                const url = `/${base_route}/inventory/${val.id}`;
+
+                if (event.ctrlKey || event.metaKey) {
+                  window.open(url, "_blank");
+                } else {
+                  startHolyLoader();
+                  router.push(url);
+                }
+              }
             }}
           ></PageTable>
         </div>

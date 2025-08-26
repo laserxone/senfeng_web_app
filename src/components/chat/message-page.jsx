@@ -1,21 +1,21 @@
 "use client";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import Chatcomponent from "./chat-component";
 import UserChatIcon from "./chatIcon";
 
 export default function MessagePage() {
-  const { state: UserState } = useContext(UserContext);
+  const {userID} = useUserDetail()
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleStartConversation = async (item) => {
-    const info = { name: item.name, dp: item.dp, id: item.id };
+  
     const response = await axios.post(
-      `/${UserState.value.data?.id}/conversations`,
+      `/${userID}/conversations`,
       {
-        user1: UserState.value.data?.id,
+        user1: userID,
         user2: item.id,
       }
     );
@@ -35,7 +35,7 @@ export default function MessagePage() {
           <h2 className="text-lg font-bold mb-4">Messages</h2>
           <div className="space-y-2">
             <UserChatIcon
-              myId={UserState.value.data?.id}
+              myId={userID}
               onChatSelected={(item) => {
                 if (item?.id === selectedConversation?.user?.id) return;
                 setLoading(true);

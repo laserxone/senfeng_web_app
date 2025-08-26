@@ -1,18 +1,18 @@
 
 
-import { useState, useEffect, useContext } from 'react';
-import { onSnapshot, doc } from 'firebase/firestore';
-import axios from '@/lib/axios';
 import { db } from '@/config/firebase';
-import { UserContext } from '@/store/context/UserContext';
+import axios from '@/lib/axios';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import useUserDetail from './use-user-detail';
 
 export function useMessages(conversationId) {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true)
-    const { state: UserState } = useContext(UserContext)
+    const {userID} = useUserDetail()
 
     const fetchMessages = async () => {
-        const response = await axios.get(`/${UserState.value.data?.id}/conversations/${conversationId}`);
+        const response = await axios.get(`/${userID}/conversations/${conversationId}`);
         setMessages(response.data);
         setLoading(false)
     };

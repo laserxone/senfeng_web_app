@@ -22,13 +22,14 @@ import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
 import { Textarea } from "./ui/textarea";
+import useUserDetail from "@/hooks/use-user-detail";
 
 const EditMachine = ({ machine_id, visible, onClose, onRefresh, data, base }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
   const [orderNumbers, setOrderNumbers] = useState([""]);
   const [orderNumberError, setOrderNumberError] = useState("");
-  const {state : UserState} = useContext(UserContext)
+  const {userID} = useUserDetail()
   const formSchema = z.object({
     machineModel: z.string().min(1, { message: "Machine model is required." }),
     power: z.string().min(1, { message: "Power is required." }),
@@ -97,7 +98,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data, base }) =>
 
     setLoading(true);
     axios
-      .put(`/${UserState.value.data?.id}/machine/${machine_id}`, {
+      .put(`/${userID}/machine/${machine_id}`, {
         id: machine_id,
         speed_money_note: values.speedMoneyNote,
         speed_money: values.isSpeedMoney,

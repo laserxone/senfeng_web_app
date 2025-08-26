@@ -12,16 +12,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { auth } from "@/config/firebase";
 import { useProfileImage } from "@/hooks/use-profile-image";
+import useUserDetail from "@/hooks/use-user-detail";
 import { NotificationContext } from "@/store/context/NotificationContext";
-import { UserContext } from "@/store/context/UserContext";
 import { signOut } from "firebase/auth";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useContext } from "react";
 import NotificationDropdown from "./notification-dropdown";
 export function UserNav() {
-  const { state: UserState } = useContext(UserContext);
-  const router = useRouter();
+
+  const {base_route, name, email} = useUserDetail()
+  
   const profileImage = useProfileImage();
   const { state: NotificationState } = useContext(NotificationContext);
   return (
@@ -32,7 +32,7 @@ export function UserNav() {
             <Avatar className="h-8 w-8">
               <AvatarImage src={profileImage} alt={"user-dp"} />
               <AvatarFallback>
-                {UserState.value.data?.name.substring(0, 2)}
+                {name.substring(0, 2)}
               </AvatarFallback>
             </Avatar>
           </Button>
@@ -41,16 +41,16 @@ export function UserNav() {
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">
-                {UserState.value.data?.name}
+                {name}
               </p>
               <p className="text-xs leading-none text-muted-foreground">
-                {UserState.value.data?.email}
+                {email}
               </p>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <Link href={`/${UserState.value.data?.base_route}/profile`}>
+            <Link href={`/${base_route}/profile`}>
               <DropdownMenuItem>Profile</DropdownMenuItem>
             </Link>
           </DropdownMenuGroup>
@@ -66,12 +66,8 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      {/* <Link href={`/${UserState.value.data?.base_route}/notification`}>
-        <BellNotification count={NotificationState?.value?.data?.length} />
-      </Link> */}
       <NotificationDropdown
         NotificationState={NotificationState}
-        UserState={UserState}
       />
     </div>
   );

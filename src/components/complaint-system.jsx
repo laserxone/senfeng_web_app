@@ -3,13 +3,13 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Filter, MapPin, MapPinOff } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { CustomerSearch } from "./customer-search";
@@ -54,8 +54,7 @@ const formSchemaClosing = z.object({
 
 export default function ComplaintSystem({ base }) {
   const [loading, setLoading] = useState(false);
-
-  const { state: UserState } = useContext(UserContext);
+  const {userID, isAdmin, complaint_assigned} = useUserDetail()
   const [visible, setVisible] = useState(false);
   const [data, setData] = useState([]);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
@@ -70,21 +69,19 @@ export default function ComplaintSystem({ base }) {
   const [selectedComplaintForClose, setSelectedComplaintForClose] =
     useState(null);
 
-  const isAdmin =
-    UserState.value.data?.designation === "Owner" ||
-    UserState.value.data?.full_access;
+  
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       fetchData(dates.start.toISOString(), dates.end.toISOString());
     }
-  }, [UserState]);
+  }, [userID]);
 
   async function fetchData(startDate, endDate) {
     setLoading(true);
     axios
       .get(
-        `/${UserState.value.data?.id}/complaint?start_date=${startDate}&end_date=${endDate}`
+        `/${userID}/complaint?start_date=${startDate}&end_date=${endDate}`
       )
       .then((response) => {
         setData(response.data);
@@ -101,7 +98,7 @@ export default function ComplaintSystem({ base }) {
   async function handleCloseComplaint(id) {
     if (!id) return;
     setCloseLoading(id);
-    await axios.put(`/${UserState.value.data?.id}/complaint`, {
+    await axios.put(`/${userID}/complaint`, {
       id: id,
       status: "completed",
     });
@@ -127,7 +124,7 @@ export default function ComplaintSystem({ base }) {
           title="Complaint & Installation System"
           description="Manage complaints and machine installations"
         />
-        {(UserState.value.data?.complaint_assigned || isAdmin) && (
+        {(complaint_assigned || isAdmin) && (
           <Button onClick={() => setVisible(true)}>Register</Button>
         )}
       </div>
@@ -399,7 +396,7 @@ export default function ComplaintSystem({ base }) {
 
 const AddNewComplaint = ({ visible, onClose, onRefresh, base }) => {
   const [loading, setLoading] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+  const {userID} = useUserDetail()
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -416,7 +413,7 @@ const AddNewComplaint = ({ visible, onClose, onRefresh, base }) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        `/${UserState.value.data?.id}/complaint`,
+        `/${userID}/complaint`,
         {
           ...values,
           status: "pending",
@@ -564,8 +561,7 @@ const AssignEngineerModal = ({
   base,
 }) => {
   const [loading, setLoading] = useState(false);
-  const { state: UserState } = useContext(UserContext);
-
+  const {userID} = useUserDetail()
   const form = useForm({
     resolver: zodResolver(formSchemaEngineer),
     defaultValues: {
@@ -577,11 +573,11 @@ const AssignEngineerModal = ({
     setLoading(true);
     try {
       const response = await axios.post(
-        `/${UserState.value.data?.id}/complaint-assignments`,
+        `/${userID}/complaint-assignments`,
         {
           ...values,
           complaint_id: complaint_id,
-          assigned_by: UserState.value.data.id,
+          assigned_by: userID,
         }
       );
       await onRefresh();
@@ -644,8 +640,7 @@ const CloseComplaint = ({
   base,
 }) => {
   const [loading, setLoading] = useState(false);
-  const { state: UserState } = useContext(UserContext);
-
+  const {userID} = useUserDetail()
   const form = useForm({
     resolver: zodResolver(formSchemaClosing),
     defaultValues: {
@@ -657,15 +652,15 @@ const CloseComplaint = ({
     setLoading(true);
     try {
       const responseLog = await axios.post(
-        `/${UserState.value.data?.id}/complaint-logs`,
+        `/${userID}/complaint-logs`,
         {
           remark: values.status,
-          engineer_id: UserState.value.data?.id,
+          engineer_id: userID,
           complaint_id: complaint_id,
         }
       );
       const response = await axios.put(
-        `/${UserState.value.data?.id}/complaint`,
+        `/${userID}/complaint`,
         {
           status: "completed",
           id: complaint_id,

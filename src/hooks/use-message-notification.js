@@ -1,33 +1,33 @@
 import { db } from "@/config/firebase";
-import { UserContext } from "@/store/context/UserContext";
-import { doc, onSnapshot } from "firebase/firestore";
-import { useContext, useState, useEffect } from "react";
 import axios from "@/lib/axios";
+import { doc, onSnapshot } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import useUserDetail from "./use-user-detail";
 
 
 export function useMessagesNotification() {
 
-    const { state: UserState } = useContext(UserContext)
+    const {userID} = useUserDetail()
     const [conversations, setConversations] = useState(0);
 
 
     useEffect(() => {
-        if (!UserState.value.data?.id) return;
+        if (!userID) return;
 
         fetchConversations();
 
         const unsub = onSnapshot(
-            doc(db, "conversations_meta", UserState.value.data?.id.toString()),
+            doc(db, "conversations_meta", userID.toString()),
             () => {
                 fetchConversations();
             }
         );
 
         return () => unsub();
-    }, [UserState]);
+    }, [userID]);
 
     const fetchConversations = async () => {
-        const response = await axios.get(`/${UserState.value.data?.id}/chat`);
+        const response = await axios.get(`/${userID}/chat`);
         let unreadConversationsCount = 0;
         const convs = response.data.map((c) => {
             if (Number(c.unreadCount) > 0) {

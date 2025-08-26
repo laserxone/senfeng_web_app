@@ -3,29 +3,24 @@
 import { storage } from "@/config/firebase";
 import axios from "@/lib/axios";
 import { UserContext } from "@/store/context/UserContext";
-import {
-  GoogleMap,
-  InfoWindow,
-  OverlayView
-} from "@react-google-maps/api";
+import { GoogleMap, InfoWindow, OverlayView } from "@react-google-maps/api";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import { useTheme } from "next-themes";
 import { useParams } from "next/navigation";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import useUserDetail from "@/hooks/use-user-detail";
 
 const MapComponent = () => {
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
   const [data, setData] = useState([]);
   const { theme } = useTheme();
   const { city } = useParams();
 
   useEffect(() => {
     async function fetchData() {
-      const response = await axios.get(
-        `/${UserState.value.data?.id}/locations`
-      );
+      const response = await axios.get(`/${userID}/locations`);
 
       const resolvedData = await Promise.all(
         response.data.map(async (item) => {
@@ -41,10 +36,10 @@ const MapComponent = () => {
       setData(resolvedData);
     }
 
-    if (UserState.value.data?.id) {
+    if (userID) {
       fetchData();
     }
-  }, [UserState.value.data]);
+  }, [userID]);
 
   const defaultMapContainerStyle = {
     width: "100%",
@@ -167,4 +162,3 @@ const MapComponent = () => {
 };
 
 export { MapComponent };
-

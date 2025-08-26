@@ -1,19 +1,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
-import { UserContext } from "@/store/context/UserContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import useUserDetail from "@/hooks/use-user-detail";
 import moment from "moment";
 import Link from "next/link";
-import { useContext } from "react";
 
 export function Sale({ data }) {
-
-  const {state : UserState} = useContext(UserContext)
-
+  const { base_route } = useUserDetail();
   return (
     <Card>
       <CardHeader>
@@ -41,7 +33,7 @@ export function Sale({ data }) {
                     target="blank"
                     href={
                       item?.customer_id
-                        ? `/${UserState.value.data?.base_route}/member/${item?.customer_id}`
+                        ? `/${base_route}/member/${item?.customer_id}`
                         : "#"
                     }
                   >

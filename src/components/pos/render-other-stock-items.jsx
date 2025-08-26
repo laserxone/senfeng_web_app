@@ -11,8 +11,9 @@ import { toast } from "@/hooks/use-toast";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
 import Spinner from "../ui/spinner";
+import useUserDetail from "@/hooks/use-user-detail";
 
-const RenderOtherStockItems = ({ item, UserState, onRefresh }) => {
+const RenderOtherStockItems = ({ item, onRefresh }) => {
   const [localName, setLocalName] = useState("");
   const [localChineseName, setLocalChineseName] = useState("");
   const [localQty, setLocalQty] = useState("");
@@ -25,6 +26,7 @@ const RenderOtherStockItems = ({ item, UserState, onRefresh }) => {
   const [newOrder, setNewOrder] = useState("");
   const [buying, setBuying] = useState("");
   const [imageLoading, setImageLoading] = useState(false);
+  const {userID, isAdmin} = useUserDetail()
 
   useEffect(() => {
     async function getImage(refImage) {
@@ -186,7 +188,7 @@ const RenderOtherStockItems = ({ item, UserState, onRefresh }) => {
         formData.img = result;
       }
 
-      await axios.put(`/${UserState.value.data?.id}/pos/${id}`, formData);
+      await axios.put(`/${userID}/pos/${id}`, formData);
       onRefresh();
     } catch (error) {
       toast({
@@ -199,9 +201,6 @@ const RenderOtherStockItems = ({ item, UserState, onRefresh }) => {
     }
   }
 
-  const isAdmin =
-    UserState.value.data?.designation === "Owner" ||
-    UserState.value.data?.full_access;
 
   return (
     <div
@@ -235,8 +234,7 @@ const RenderOtherStockItems = ({ item, UserState, onRefresh }) => {
               <p>{item.chinese_name}</p>
             </div>
             <p className="w-1/3">New order: {item.new_order}</p>
-            {(UserState.value.data?.designation === "Owner" ||
-              UserState.value.data?.full_access) && (
+            {isAdmin && (
               <p className="w-1/3">Buying ¥: {item.buying}</p>
             )}
           </div>

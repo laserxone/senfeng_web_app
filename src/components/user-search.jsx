@@ -20,6 +20,7 @@ import {
 import axios from "@/lib/axios";
 import { cn } from "@/lib/utils";
 import { UserContext } from "@/store/context/UserContext";
+import useUserDetail from "@/hooks/use-user-detail";
 
 export function UserSearch({
   value,
@@ -33,11 +34,11 @@ export function UserSearch({
 }) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState([]);
-  const { state: UserState } = React.useContext(UserContext);
+  const {userID} = useUserDetail()
 
   React.useEffect(() => {
     async function fetchData() {
-      axios.get(`/${UserState.value.data?.id}/user?withoutleave=true`).then((response) => {
+      axios.get(`/${userID}/user?withoutleave=true`).then((response) => {
         if (response.data.length > 0) {
           if (lead) {
             const finalData = response.data
@@ -59,7 +60,7 @@ export function UserSearch({
             if (remove) {
               setData(
                 finalData.filter(
-                  (item) => item.value !== UserState.value.data?.id
+                  (item) => item.value !== userID
                 )
               );
             } else {
@@ -72,7 +73,7 @@ export function UserSearch({
              if (remove) {
               setData(
                 finalData.filter(
-                  (item) => item.value !== UserState.value.data?.id
+                  (item) => item.value !== userID
                 )
               );
             } else {

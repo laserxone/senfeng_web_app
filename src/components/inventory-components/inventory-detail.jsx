@@ -8,19 +8,13 @@ import {
 } from "@/components/ui/context-menu";
 import { Label } from "@/components/ui/label";
 import { useDebounce } from "@/hooks/use-debounce";
-import { UserContext } from "@/store/context/UserContext";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../ui/tooltip";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { cn } from "@/lib/utils";
+import { Check, ChevronsUpDown } from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -29,19 +23,17 @@ import {
   CommandItem,
   CommandList,
 } from "../ui/command";
-import { cn } from "@/lib/utils";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import Spinner from "../ui/spinner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
 export default function InventoryDetail({ booking_id }) {
-  const { state: UserState } = useContext(UserContext);
+  const {userID} = useUserDetail()
   const [focusedRow, setFocusedRow] = useState(null);
   const [focusedBoard, setFocusedBoard] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -89,11 +81,11 @@ export default function InventoryDetail({ booking_id }) {
   }, [debouncedData, prefetching]);
 
   useEffect(() => {
-    if (UserState.value.data?.id && booking_id) {
+    if (userID && booking_id) {
       fetchData();
       fetchCustomerData();
     }
-  }, [UserState.value.data]);
+  }, [userID]);
 
   useEffect(() => {
     const updateHeight = () => {

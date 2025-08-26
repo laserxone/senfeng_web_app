@@ -1,7 +1,7 @@
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
 import Link from "next/link";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   Card,
@@ -12,7 +12,7 @@ import {
 import { Label } from "./ui/label";
 
 const AutoScrollMembers = () => {
-  const { state: UserState } = useContext(UserContext);
+  const {userID, base_route} = useUserDetail()
   const [localData, setLocalData] = useState([]);
   const scrollRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -21,7 +21,7 @@ const AutoScrollMembers = () => {
     async function fetchData() {
       try {
         const res = await axios.get(
-          `/${UserState.value.data?.id}/scroll`
+          `/${userID}/scroll`
         );
         const customers = res.data || [];
 
@@ -44,10 +44,10 @@ const AutoScrollMembers = () => {
       }
     }
 
-    if (UserState.value.data?.id) {
+    if (userID) {
       fetchData();
     }
-  }, [UserState.value.data?.id]);
+  }, [userID]);
 
   useEffect(() => {
     if (localData.length === 0) return;
@@ -125,7 +125,7 @@ const AutoScrollMembers = () => {
               <Link
                 key={index}
                 className="flex items-center m-2 cursor-pointer"
-                href={`/${UserState.value.data?.base_route}/${
+                href={`/${base_route}/${
                   item.member ? "member" : "customer"
                 }/${item.id}`}
               >

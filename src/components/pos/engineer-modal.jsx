@@ -1,12 +1,12 @@
+import useUserDetail from '@/hooks/use-user-detail';
 import axios from '@/lib/axios';
-import { useContext, useState } from 'react';
+import moment from 'moment';
+import { useState } from 'react';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { ScrollArea } from '../ui/scroll-area';
-import './Button.css';
-import { UserContext } from '@/store/context/UserContext';
-import moment from 'moment';
 import Spinner from '../ui/spinner';
+import './Button.css';
 
 const EngineerModal = ({engineersModal, setEngineersModal, allEngineersData, onRefresh}) => {
   return (
@@ -39,11 +39,11 @@ const EngineerModal = ({engineersModal, setEngineersModal, allEngineersData, onR
 
   const RenderEachEngineerRow = ({ item, onRefresh }) => {
         const [updateLoading, setUpdateLoading] = useState(false)
-        const {state : UserState} = useContext(UserContext)
+        const {userID} = useUserDetail()
 
         async function handleReceivedBack() {
             setUpdateLoading(true)
-            axios.post(`/${UserState.value.data?.id}/pos/engineer/${item.id}`, { field: item.fields })
+            axios.post(`/${userID}/pos/engineer/${item.id}`, { field: item.fields })
                 .then(async () => {
                     await onRefresh()
                     setUpdateLoading(false)

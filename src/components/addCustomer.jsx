@@ -1,13 +1,13 @@
 "use client";
 
 import { toast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { debounce, debouncePromise } from "@/lib/debounce";
-import { UserContext } from "@/store/context/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Trash } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import AppCalendar from "./appCalendar";
@@ -53,7 +53,7 @@ const AddCustomerDialog = ({
   const [numbers, setNumbers] = useState([""]);
   const [numberError, setNumberError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+  const { userID, designation, full_access, base_route } = useUserDetail();
   const [checking, setChecking] = useState(false);
   const [customerInfo, setCustomerInfo] = useState([]);
   const [selectedNumber, setSelectedNumber] = useState(["+92"]);
@@ -137,10 +137,7 @@ const AddCustomerDialog = ({
   const debouncedSaveData = useCallback(debouncePromise(saveData, 1000), []);
 
   async function saveData(formData) {
-    const response = await axios.post(
-      `/${UserState.value.data?.id}/customer`,
-      formData
-    );
+    const response = await axios.post(`/${userID}/customer`, formData);
     return response;
   }
 
@@ -185,14 +182,14 @@ const AddCustomerDialog = ({
         platform: values.platform,
         pin: values.pin,
         ownership:
-          UserState.value.data?.designation == "Sales"
-            ? UserState.value.data?.id
-            : UserState.value.data?.designation == "Dealer"
-            ? UserState.value.data?.id
+          designation == "Sales"
+            ? userID
+            : designation == "Dealer"
+            ? userID
             : ownership
             ? values.ownership
             : undefined,
-        created_by: UserState.value.data?.id,
+        created_by: userID,
         created_at: values.created_at || undefined,
         office: values.office,
       };
@@ -245,10 +242,7 @@ const AddCustomerDialog = ({
     setCustomerInfo([]);
     setChecking(true);
     try {
-      const response = await axios.post(
-        `/${UserState.value.data?.id}/check-number`,
-        { number }
-      );
+      const response = await axios.post(`/${userID}/check-number`, { number });
       setCustomerInfo(response.data);
     } catch (error) {
       console.log("Error checking number:", error);
@@ -338,7 +332,9 @@ const AddCustomerDialog = ({
                               <Link
                                 key={index}
                                 target="_blank"
-                                href={`/${UserState.value.data?.base_route}/customer/${item?.id}`}
+                                href={`/${
+                                  base_route
+                                }/customer/${item?.id}`}
                                 className="block text-red-600 dark:text-red-400 text-sm font-medium hover:underline"
                               >
                                 {item?.name || item?.owner} -{" "}
@@ -657,10 +653,9 @@ const AddCustomerDialog = ({
                           </FormItem>
                         )}
                       />
-                      {(UserState.value.data?.designation === "Owner" ||
-                        UserState.value.data?.full_access ||
-                        UserState.value.data?.designation ===
-                          "Customer Relationship Manager") && (
+                      {(designation === "Owner" ||
+                        full_access ||
+                        designation === "Customer Relationship Manager") && (
                         <FormField
                           control={form.control}
                           name="created_at"

@@ -161,7 +161,7 @@ export default function CustomerTask({
           totalItems={data.length}
           searchItem={"task_name"}
           searchName={"Search task..."}
-          onRowClick={(val) => {
+          onRowClick={(val, e) => {
             setSelectedTask(val);
             setVisible(true);
           }}

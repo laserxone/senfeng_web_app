@@ -1,10 +1,7 @@
 "use client";
-import { ArrowUpDown, Filter, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useContext, useEffect, useState } from "react";
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
-import PageContainer from "@/components/page-container";
+import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
   Select,
@@ -14,15 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UserSearch } from "@/components/user-search";
-import { toast } from "@/hooks/use-toast";
-import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
-import { startHolyLoader } from "holy-loader";
-import moment from "moment";
-import { useRouter } from "next/navigation";
 import Spinner from "@/components/ui/spinner";
+import { UserSearch } from "@/components/user-search";
 import FilterSheet from "@/components/users/filterSheet";
+import { toast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { ArrowUpDown, Filter, Trash2 } from "lucide-react";
+import moment from "moment";
+import { useEffect, useState } from "react";
 
 const tableHeader = [
   {
@@ -55,14 +52,13 @@ const tableHeader = [
   },
 ];
 
-export default function MemberMainPage({ base, onReturn }) {
+export default function MemberMainPage({  onReturn }) {
   const [additionalFilter, setAdditionalFilter] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState([]);
-  const { state: UserState } = useContext(UserContext);
+  const {userID, isAdmin, designation, customer_delete_access,} = useUserDetail()
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const router = useRouter();
   const [selectedUser, setSelectedUser] = useState(null);
   const [numCount, setNumCount] = useState({});
   const [loading, setLoading] = useState(true);
@@ -70,18 +66,18 @@ export default function MemberMainPage({ base, onReturn }) {
   const [filterVisible, setFilterVisible] = useState(false);
 
   useEffect(() => {
-    if (UserState.value.data?.id)
+    if (userID)
       fetchData().then(() => {
         setLoading(false);
       });
-  }, [UserState.value.data]);
+  }, [userID]);
 
   async function fetchData(startDate, endDate, user) {
     return new Promise((resolve, reject) => {
       axios
         .get(
           `/${
-            UserState.value.data?.id
+            userID
           }/customer?machines=true&member=true&start_date=${
             startDate || ""
           }&end_date=${endDate || ""}&user=${user || ""}`
@@ -268,12 +264,11 @@ export default function MemberMainPage({ base, onReturn }) {
       header: "Action",
       cell: ({ row }) => {
         const currentItem = row.original;
-        const user = UserState.value.data;
-
+       
         const canDelete =
-          user?.designation === "Owner" ||
-          user?.full_access === true ||
-          user?.customer_delete_access === true;
+          designation === "Owner" ||
+          full_access === true ||
+          customer_delete_access === true;
 
         if (!canDelete) return null;
 
@@ -304,7 +299,7 @@ export default function MemberMainPage({ base, onReturn }) {
     setDeleteLoading(true);
     try {
       const response = await axios.delete(
-        `/${UserState.value.data?.id}/customer/${id}`
+        `/${userID}/customer/${id}`
       );
       toast({ title: "Customer Deleted" });
       await fetchData();
@@ -362,20 +357,16 @@ export default function MemberMainPage({ base, onReturn }) {
           }
           totalItems={filteredData.length}
           tableHeader={tableHeader}
-          onRowClick={(val) => {
+          onRowClick={(val, e) => {
             if (val.id) {
-              // startHolyLoader();
-              // router.push(
-              //   `/${UserState.value.data?.base_route}/member/${val.id}`
-              // );
+             
               onReturn(val.id);
             }
           }}
         >
           <div className=" flex justify-between flex-wrap">
             <div className="flex gap-4 flex-wrap">
-              {(UserState.value.data?.designation === "Owner" ||
-                UserState.value.data?.full_access) && (
+              {isAdmin && (
                 <>
                   <div className="w-[300px]">
                     <UserSearch
@@ -384,8 +375,7 @@ export default function MemberMainPage({ base, onReturn }) {
                       onReturn={setSelectedUser}
                     />
                   </div>
-                  {(UserState.value.data?.designation === "Owner" ||
-                    UserState.value.data?.full_access) && (
+                  {isAdmin && (
                     <Select
                       onValueChange={setAdditionalFilter}
                       value={additionalFilter}

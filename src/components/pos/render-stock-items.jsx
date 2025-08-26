@@ -1,18 +1,14 @@
 import { storage } from "@/config/firebase";
 import axios from "@/lib/axios";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
-import {
-    Minus,
-    PencilIcon,
-    Plus
-} from "lucide-react";
-import { useContext, useEffect, useState } from "react";
+import { Minus, PencilIcon, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import "./Button.css";
 import Dropzone from "./dropzone";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 import { toast } from "@/hooks/use-toast";
-import { UserContext } from "@/store/context/UserContext";
+import useUserDetail from "@/hooks/use-user-detail";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
 import Spinner from "../ui/spinner";
@@ -45,7 +41,7 @@ const RenderStockItems = ({
   const [threshold, setThreshold] = useState("");
   const [newOrder, setNewOrder] = useState("");
   const [buying, setBuying] = useState("");
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
 
   useEffect(() => {
     async function getImage(refImage) {
@@ -203,7 +199,7 @@ const RenderStockItems = ({
         formData.img = result;
       }
 
-      await axios.put(`/${UserState.value.data?.id}/pos/${id}`, formData);
+      await axios.put(`/${userID}/pos/${id}`, formData);
 
       onRefresh();
     } catch (error) {

@@ -1,17 +1,16 @@
 "use client";
 import { storage } from "@/config/firebase";
-import { UserContext } from "@/store/context/UserContext";
 import { getDownloadURL, ref } from "firebase/storage";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import useUserDetail from "./use-user-detail";
 
 export const useProfileImage = () => {
   const [profileImage, setProfileImage] = useState(null);
-  const { state: UserState } = useContext(UserContext);
-  const userDp = UserState.value.data?.dp; // Extract `dp` to avoid redundant lookups
+  const { userDp } = useUserDetail();
 
   useEffect(() => {
     if (!userDp) {
-      setProfileImage(null); // Reset when `dp` is missing
+      setProfileImage(null);
       return;
     }
 
@@ -25,7 +24,7 @@ export const useProfileImage = () => {
           setProfileImage(null);
         });
     }
-  }, [userDp]); // Optimized dependency array
+  }, [userDp]);
 
   return profileImage;
 };

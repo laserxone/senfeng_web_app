@@ -22,9 +22,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Spinner from "@/components/ui/spinner";
 import { useToast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { supabase } from "@/lib/supabaseClient";
-import { UserContext } from "@/store/context/UserContext";
 import {
   ChevronRight,
   List,
@@ -34,7 +34,6 @@ import moment from "moment";
 import Image from "next/image";
 import {
   Fragment,
-  useContext,
   useEffect,
   useRef,
   useState
@@ -44,7 +43,7 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } 
 const DocumentManagement = () => {
   const [selectedFile, setSelectedFile] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { state: UserState } = useContext(UserContext);
+  const {userID, name, email, dms_write_access, isAdmin} = useUserDetail()
   const { toast } = useToast();
   const [uploadLoading, setUploadLoading] = useState(false);
   const fileInputRef = useRef(null);
@@ -64,18 +63,18 @@ const DocumentManagement = () => {
 
   useEffect(() => {
 
-    if (UserState.value.data?.id) {
+    if (userID) {
       setLoading(true)
       fetchFiles()
     }
 
-  }, [UserState, currentFolder]);
+  }, [userID, currentFolder]);
 
   const fetchFiles = async () => {
     return new Promise(async (resolve) => {
       try {
         const response = await axios.get(
-          `/${UserState.value.data?.id}/folder?folder=${currentFolder?.id || null}`
+          `/${userID}/folder?folder=${currentFolder?.id || null}`
         );
         setAllDocuments(response.data.documents);
         setAllFolders(response.data.folders);
@@ -119,8 +118,8 @@ const DocumentManagement = () => {
         continue;
       }
 
-      await axios.post(`/${UserState.value.data?.id}/document`, {
-        added_by: UserState.value.data?.name || UserState.value.data?.email,
+      await axios.post(`/${userID}/document`, {
+        added_by: name || email,
         path: filePath,
         folder_id: currentFolder ? currentFolder.id : undefined,
       });
@@ -139,7 +138,7 @@ const DocumentManagement = () => {
   async function handleCreateFolder() {
     setFolderLoading(true)
     axios
-      .post(`/${UserState.value.data?.id}/folder`, {
+      .post(`/${userID}/folder`, {
         name: folderName,
         parent_folder: currentFolder ? currentFolder?.id : undefined,
       })
@@ -157,7 +156,7 @@ const DocumentManagement = () => {
     if (!selectedFolder) return
     setFolderLoading(true)
     axios
-      .put(`/${UserState.value.data?.id}/folder/${selectedFolder?.id}`, {
+      .put(`/${userID}/folder/${selectedFolder?.id}`, {
         name: newName,
       })
       .then(async () => {
@@ -177,7 +176,7 @@ const DocumentManagement = () => {
     async function handleDelete(file) {
       const id = file.id;
       await axios
-        .delete(`/${UserState.value.data?.id}/document/${id}`)
+        .delete(`/${userID}/document/${id}`)
         .then(async () => {
           await supabase.storage.from("documents").remove([file.path]);
           await fetchFiles();
@@ -274,9 +273,7 @@ const DocumentManagement = () => {
           >
             Download
           </ContextMenuItem>
-          {UserState.value.data &&
-            (UserState.value.data.designation === "Owner" ||
-              UserState.value.data.full_access) && (
+          {isAdmin && (
               <ContextMenuItem
                 onClick={async () => {
                   setDeleteLoading(true);
@@ -313,7 +310,7 @@ const DocumentManagement = () => {
           title="Documents Management"
           description="Manage office documents"
         />
-        {UserState.value.data && UserState.value.data?.dms_write_access && (
+        {dms_write_access && (
           <div className="flex justify-between mb-4 gap-2 flex-wrap">
             <div className="flex gap-2 items-center">
               <input
@@ -436,12 +433,11 @@ const DocumentManagement = () => {
 const RenderEachFolder = ({ item, index, view, setFolderBread, setCurrentFolder, setSelectedFolder, setNewName, fetchFiles }) => {
 
   const [deleteLoading, setDeleteLoading] = useState(false)
-  const { state: UserState } = useContext(UserContext)
-
+  const {userID} = useUserDetail()
   async function handleDeleteFolder(id) {
     try {
       setDeleteLoading(true)
-      await axios.delete(`/${UserState.value.data?.id}/folder/${id}`)
+      await axios.delete(`/${userID}/folder/${id}`)
       await fetchFiles()
     } finally {
       setDeleteLoading(false)

@@ -1,10 +1,10 @@
 "use client";
 
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { cn } from "@/lib/utils";
-import { UserContext } from "@/store/context/UserContext";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import {
@@ -37,17 +37,17 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
   const [batchId, setBatchId] = useState(null);
   const [batchLoading, setBatchLoading] = useState(false);
   const [batchData, setBatchData] = useState([]);
-  const {state : UserState} = useContext(UserContext)
+  const {userID} = useUserDetail()
 
   useEffect(() => {
-    if(UserState.value.data?.id)
+    if(userID)
     setLocalData(data.map((item) => ({ ...item, checked: false })));
-  }, [data, UserState]);
+  }, [data, userID]);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await axios.get(`/${UserState.value.data?.id}/user`);
+        const response = await axios.get(`/${userID}/user`);
         if (response.data.length > 0) {
           const finalData = response.data
             .filter((item) => {
@@ -73,7 +73,7 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
   const handleUpdate = async (id, ownership) => {
     setLoading(true);
     try {
-      const response = await axios.put(`/${UserState.value.data?.id}/customer/${id}?notify=true`, {
+      const response = await axios.put(`/${userID}/customer/${id}?notify=true`, {
         ownership: ownership,
       });
       onRefresh(id, ownership);
@@ -133,7 +133,7 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
     try {
       const promises = batchData.map((item) =>
         axios
-          .put(`/${UserState.value.data?.id}/customer/${item.id}`, {
+          .put(`/${userID}/customer/${item.id}`, {
             ownership: batchId,
           })
           .then(() => {

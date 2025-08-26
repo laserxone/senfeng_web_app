@@ -45,10 +45,11 @@ import AppCalendar from "@/components/appCalendar";
 import { RequiredStar } from "@/components/RequiredStar";
 import { CustomerExtraData } from "@/components/users/ExtraData";
 import { ProfilePicture } from "@/components/users/ProfilePicture";
+import useUserDetail from "@/hooks/use-user-detail";
 
 export default function Page() {
   const [data, setData] = useState();
-  const { state: UserState } = useContext(UserContext);
+  const { userID, base_route } = useUserDetail();
   const [visitData, setVisitData] = useState([]);
   const [extraData, setExtraData] = useState({});
   const [selectedOption, setSelectedOption] = useState("thisMonth");
@@ -60,7 +61,7 @@ export default function Page() {
   const [activeTab, setActiveTab] = useState("newCustomers");
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       const startDate = moment().startOf("month").toISOString();
       const endDate = moment().endOf("month").toISOString();
       fetchData();
@@ -71,14 +72,12 @@ export default function Page() {
       fetchCallData(startDate, endDate);
       // fetchScrollData()
     }
-  }, [UserState]);
+  }, [userID]);
 
   async function fetchCallData(startDate, endDate) {
     return new Promise((resolve) => {
       axios
-        .get(
-          `/${UserState.value.data?.id}/call?start_date=${startDate}&end_date=${endDate}`
-        )
+        .get(`/${userID}/call?start_date=${startDate}&end_date=${endDate}`)
         .then((response) => {
           setCallData(response.data);
         })
@@ -92,7 +91,7 @@ export default function Page() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/${UserState.value.data?.id}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           setReimbursementData(response.data);
@@ -109,7 +108,7 @@ export default function Page() {
     return new Promise((res, rej) => {
       axios
         .get(
-          `/${UserState.value.data?.id}/attendance?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           if (response.data.length > 0) {
@@ -134,7 +133,7 @@ export default function Page() {
   async function fetchData() {
     return new Promise((resolve) => {
       axios
-        .get(`/${UserState.value.data?.id}/dashboard`)
+        .get(`/${userID}/dashboard`)
         .then((response) => {
           setData(response.data);
         })
@@ -147,9 +146,7 @@ export default function Page() {
   async function fetchVisitData(start, end) {
     return new Promise((res, rej) => {
       axios
-        .get(
-          `/${UserState.value.data.id}/visit?start_date=${start}&end_date=${end}`
-        )
+        .get(`/${userID}/visit?start_date=${start}&end_date=${end}`)
         .then((response) => {
           setVisitData(response.data);
         })
@@ -160,18 +157,16 @@ export default function Page() {
   }
 
   async function fetchExtraCustomerOptions() {
-    axios
-      .get(`/${UserState.value.data?.id}/dashboard/group`)
-      .then((response) => {
-        setExtraData(response.data);
-      });
+    axios.get(`/${userID}/dashboard/group`).then((response) => {
+      setExtraData(response.data);
+    });
   }
 
   const RenderVisitTab = useCallback(() => {
     return (
       <VisitTab
         height="h-[calc(100dvh-260px)]"
-        id={UserState.value.data?.id}
+        id={userID}
         data={visitData}
         onRefresh={async () => {
           const startDate = moment().startOf("month").toISOString();
@@ -199,7 +194,7 @@ export default function Page() {
               }}
             />
             <CustomerEmployee
-              user_id={UserState.value.data?.id}
+              user_id={userID}
               ownership={false}
               customer_data={
                 selectedOption && extraData ? extraData[selectedOption] : []
@@ -210,7 +205,7 @@ export default function Page() {
         </CardContent>
       </Card>
     );
-  }, [UserState.value.data, data, extraData, selectedOption]);
+  }, [userID, data, extraData, selectedOption]);
 
   const RenderMembers = useCallback(() => {
     return (
@@ -225,14 +220,14 @@ export default function Page() {
         </CardContent>
       </Card>
     );
-  }, [UserState.value.data, data]);
+  }, [userID, data]);
 
   const RenderReimbursement = useCallback(() => {
     return (
       <Card className="flex flex-1">
         <CardContent className="pt-2 flex flex-1">
           <Reimbursement
-            id={UserState.value.data?.id}
+            id={userID}
             passingData={reimbursementData || []}
             onAddRefresh={(temp) => setReimbursementData([...temp])}
             onFilterReturn={async (start, end) =>
@@ -281,13 +276,7 @@ export default function Page() {
     <div className="flex flex-1 gap-5">
       <div className="flex flex-1 flex-col">
         <div className="flex justify-between mb-8 flex-wrap gap-2">
-          <Link
-            href={
-              UserState.value.data?.base_route
-                ? `/${UserState.value.data?.base_route}/profile`
-                : "#"
-            }
-          >
+          <Link href={base_route ? `/${base_route}/profile` : "#"}>
             <div className="flex items-center">
               <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
               <div>
@@ -349,7 +338,7 @@ export default function Page() {
             {activeTab === "salary" && (
               <Card className="flex flex-1">
                 <CardContent className="pt-2 flex flex-1">
-                  <SalaryRecord id={UserState.value.data?.id} />
+                  <SalaryRecord id={userID} />
                 </CardContent>
               </Card>
             )}
@@ -376,7 +365,7 @@ export default function Page() {
                 <Link
                   key={index}
                   target="_blank"
-                  href={`/${UserState.value.data?.base_route}/member/${item.customer_id}/${item.id}`}
+                  href={`/${base_route}/member/${item.customer_id}/${item.id}`}
                   className="grid grid-cols-3 hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded"
                 >
                   <div>{item.serial_no}</div>
@@ -393,8 +382,8 @@ export default function Page() {
 }
 
 function CustomersTab({ data }) {
-  const { state: UserState } = useContext(UserContext);
   const [localData, setLocalData] = useState([]);
+  const { base_route } = useUserDetail();
 
   useEffect(() => {
     if (data.length > 0) {
@@ -424,9 +413,7 @@ function CustomersTab({ data }) {
 
     return (
       <div className="flex justify-between items-center border-b pb-2 w-full">
-        <Link
-          href={`/${UserState.value.data?.base_route}/member/${customer_id}/${machine.id}`}
-        >
+        <Link href={`/${base_route}/member/${customer_id}/${machine.id}`}>
           <span className="hover:underline">{machine.serial_no}</span>
         </Link>
         <div className="flex items-center">
@@ -453,82 +440,80 @@ function CustomersTab({ data }) {
   };
 
   return (
-   
-      <ScrollArea className="h-[calc(100dvh-250px)] p-5 w-full">
-        <Accordion type="single" collapsible className="w-full space-y-4">
-          {localData.length == 0 ? (
-            <Label>No Data found</Label>
-          ) : (
-            localData.map((customer) => (
-              <div className="flex gap-5" key={customer.id}>
-                <div className="flex flex-1">
-                  <AccordionItem
-                    className="w-full"
-                    value={`customer-${customer.id}`}
-                  >
-                    <Card>
-                      <AccordionTrigger className="px-4 py-2 hover:no-underline">
-                        <div className="flex justify-between items-center w-full">
-                          <Link
-                            href={`/${UserState.value.data?.base_route}/${
-                              customer.member ? "member" : "customer"
-                            }/${customer.id}`}
+    <ScrollArea className="h-[calc(100dvh-250px)] p-5 w-full">
+      <Accordion type="single" collapsible className="w-full space-y-4">
+        {localData.length == 0 ? (
+          <Label>No Data found</Label>
+        ) : (
+          localData.map((customer) => (
+            <div className="flex gap-5" key={customer.id}>
+              <div className="flex flex-1">
+                <AccordionItem
+                  className="w-full"
+                  value={`customer-${customer.id}`}
+                >
+                  <Card>
+                    <AccordionTrigger className="px-4 py-2 hover:no-underline">
+                      <div className="flex justify-between items-center w-full">
+                        <Link
+                          href={`/${base_route}/${
+                            customer.member ? "member" : "customer"
+                          }/${customer.id}`}
+                        >
+                          <h3 className="font-semibold text-lg hover:underline">
+                            {customer.name}
+                          </h3>
+                        </Link>
+                        <div className="flex flex-row gap-2">
+                          <span className="font-normal text-sm text-gray-600 mr-2">
+                            Overall profile completion: {customer.overall}%
+                          </span>
+                          <Badge
+                            className={"mr-2"}
+                            variant={
+                              customer.sales.length === 0
+                                ? "secondary"
+                                : "default"
+                            }
                           >
-                            <h3 className="font-semibold text-lg hover:underline">
-                              {customer.name}
-                            </h3>
-                          </Link>
-                          <div className="flex flex-row gap-2">
-                            <span className="font-normal text-sm text-gray-600 mr-2">
-                              Overall profile completion: {customer.overall}%
-                            </span>
-                            <Badge
-                              className={"mr-2"}
-                              variant={
-                                customer.sales.length === 0
-                                  ? "secondary"
-                                  : "default"
-                              }
-                            >
-                              {customer.sales.length === 0
-                                ? "Assigned"
-                                : "Purchased"}
-                            </Badge>
-                          </div>
+                            {customer.sales.length === 0
+                              ? "Assigned"
+                              : "Purchased"}
+                          </Badge>
                         </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <CardContent className="pt-0">
-                          {customer.sales.length > 0 ? (
-                            <div className="space-y-2">
-                              {customer.sales.map((machine) => (
-                                <RenderEachMachine
-                                  key={machine.id}
-                                  machine={machine}
-                                  customer_id={customer.id}
-                                />
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="flex items-center text-muted-foreground">
-                              <AlertCircle className="w-5 h-5 mr-2" />
-                              No machines purchased yet
-                            </div>
-                          )}
-                        </CardContent>
-                      </AccordionContent>
-                    </Card>
-                  </AccordionItem>
-                </div>
-                {/* <Button variant="outline" className="mt-1">
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <CardContent className="pt-0">
+                        {customer.sales.length > 0 ? (
+                          <div className="space-y-2">
+                            {customer.sales.map((machine) => (
+                              <RenderEachMachine
+                                key={machine.id}
+                                machine={machine}
+                                customer_id={customer.id}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex items-center text-muted-foreground">
+                            <AlertCircle className="w-5 h-5 mr-2" />
+                            No machines purchased yet
+                          </div>
+                        )}
+                      </CardContent>
+                    </AccordionContent>
+                  </Card>
+                </AccordionItem>
+              </div>
+              {/* <Button variant="outline" className="mt-1">
                 Satisfaction
               </Button> */}
-              </div>
-            ))
-          )}
-        </Accordion>
-      </ScrollArea>
-   
+            </div>
+          ))
+        )}
+      </Accordion>
+    </ScrollArea>
   );
 }
 
@@ -537,20 +522,21 @@ function Calls({ data, onRefresh }) {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+
   const [satisfactory, setSatisfactory] = useState(false);
   const [next, setNext] = useState(null);
   const [top, setTop] = useState(false);
+  const { userID } = useUserDetail();
 
   async function handleSaveFeedback() {
     setLoading(true);
     axios
-      .post(`/${UserState.value.data?.id}/feedback`, {
+      .post(`/${userID}/feedback`, {
         feedback: feedback,
         top_follow: false,
         type: "feedback",
         customer_id: selectedCustomer?.id,
-        user_id: UserState.value.data?.id,
+        user_id: userID,
         status: satisfactory ? "Satisfactory" : "Unsatisfactory",
         next_followup: next,
         top_follow: top,

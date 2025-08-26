@@ -37,11 +37,12 @@ import FilterSheet from "@/components/users/filterSheet";
 import { storage } from "@/config/firebase";
 import { TIMEZONE } from "@/constants/data";
 import { toast } from "@/hooks/use-toast";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import exportToExcel from "@/lib/exportToExcel";
 import { UploadImage } from "@/lib/uploadFunction";
-import { UserContext } from "@/store/context/UserContext";
+import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
@@ -52,16 +53,19 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
 import Spinner from "../ui/spinner";
-import { OfficeContext } from "@/store/context/OfficeContext";
 
 export default function EmployeeBranchExpenses({ base }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
-  const [filterValues, setFilterValues] = useState(null);
   const [imageURL, setImageURL] = useState(null);
   const [visible, setVisible] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+  const {
+    userID,
+    isAdmin,
+    branch_expenses_assigned,
+    branch_expenses_write_access,
+  } = useUserDetail();
   const [visibleAdd, setVisibleAdd] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
   const router = useRouter();
@@ -70,11 +74,8 @@ export default function EmployeeBranchExpenses({ base }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
-      const allowed =
-        UserState.value.data?.branch_expenses_assigned ||
-        UserState.value.data?.full_access ||
-        UserState.value.data?.designation === "Owner";
+    if (userID) {
+      const allowed = branch_expenses_assigned || isAdmin;
       if (!allowed) {
         router.push("/not-allowed");
       }
@@ -92,14 +93,12 @@ export default function EmployeeBranchExpenses({ base }) {
         .toISOString();
       fetchData(startDate, endDate);
     }
-  }, [UserState.value.data]);
+  }, [userID]);
 
   async function fetchData(startDate, endDate) {
     return new Promise((resolve, reject) => {
       axios
-        .get(
-          `/${UserState.value.data?.id}/expenses?start_date=${startDate}&end_date=${endDate}`
-        )
+        .get(`/${userID}/expenses?start_date=${startDate}&end_date=${endDate}`)
         .then((response) => {
           setData(response.data);
         })
@@ -215,9 +214,7 @@ export default function EmployeeBranchExpenses({ base }) {
       if (imageURL && imageURL?.image && !imageURL.image.includes("http")) {
         DeleteFromStorage(imageURL.image);
       }
-      const response = await axios.delete(
-        `/${UserState.value.data?.id}/expenses/${id}`
-      );
+      const response = await axios.delete(`/${userID}/expenses/${id}`);
       toast({ title: "Branch Expense Deleted" });
       const startDate = momentT
         .tz(TIMEZONE)
@@ -244,12 +241,11 @@ export default function EmployeeBranchExpenses({ base }) {
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <Heading title="Office Expenses" description="Manage office expenses" />
-        {UserState.value.data &&
-          UserState.value.data?.branch_expenses_write_access && (
-            <Button onClick={() => setVisibleAdd(true)}>
-              Add Office Expenses
-            </Button>
-          )}
+        {branch_expenses_write_access && (
+          <Button onClick={() => setVisibleAdd(true)}>
+            Add Office Expenses
+          </Button>
+        )}
       </div>
 
       <ConfimationDialog
@@ -267,7 +263,7 @@ export default function EmployeeBranchExpenses({ base }) {
         totalItems={data.length}
         searchItem={"note"}
         searchName={"Search bill..."}
-        onRowClick={(val) => {
+        onRowClick={(val, e) => {
           setImageURL(val);
           setVisible(true);
         }}
@@ -319,7 +315,7 @@ export default function EmployeeBranchExpenses({ base }) {
       <AddExpensesDialog
         visible={visibleAdd}
         onClose={setVisibleAdd}
-        user_id={UserState.value.data?.id}
+        user_id={userID}
         onRefresh={async () =>
           await fetchData(
             momentT
@@ -358,12 +354,9 @@ const ImageSheet = ({
 }) => {
   const [imageOpen, setImageOpen] = useState(false);
   const [localImage, setLocalImage] = useState(null);
-  const { state: UserState } = useContext(UserContext);
+  const { isAdmin, branch_expenses_delete_access } = useUserDetail();
 
-  const hasPermission =
-    UserState.value.data?.designation === "Owner" ||
-    UserState.value.data?.full_access ||
-    UserState.value.data?.branch_expenses_delete_access;
+  const hasPermission = isAdmin || branch_expenses_delete_access;
 
   const isCurrentOrFutureMonth =
     date && !moment(date).startOf("day").isBefore(moment().startOf("month"));
@@ -431,7 +424,7 @@ const ImageSheet = ({
 
 const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
   const [loading, setLoading] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+  const { userID } = useUserDetail();
   const { state: OfficeState } = useContext(OfficeContext);
   const formSchema = z.object({
     note: z.string().min(1, { message: "Note is required." }),
@@ -460,24 +453,18 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
           .valueOf()
           .toString()}.png`;
         const imgRes = await UploadImage(values.image, name);
-        const response = await axios.post(
-          `/${UserState.value.data?.id}/expenses`,
-          {
-            ...values,
-            submitted_by: user_id,
-            image: name,
-          }
-        );
+        const response = await axios.post(`/${userID}/expenses`, {
+          ...values,
+          submitted_by: user_id,
+          image: name,
+        });
         await onRefresh();
         handleClose(false);
       } else {
-        const response = await axios.post(
-          `/${UserState.value.data?.id}/expenses`,
-          {
-            ...values,
-            submitted_by: user_id,
-          }
-        );
+        const response = await axios.post(`/${userID}/expenses`, {
+          ...values,
+          submitted_by: user_id,
+        });
         await onRefresh();
         handleClose(false);
       }

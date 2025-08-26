@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
 import { db } from "@/config/firebase";
+import useUserDetail from "@/hooks/use-user-detail";
 import { NotificationContext } from "@/store/context/NotificationContext";
-import { UserContext } from "@/store/context/UserContext";
 import { deleteDoc, doc } from "firebase/firestore";
 import { Bell, CheckCircle } from "lucide-react";
 import Link from "next/link";
@@ -12,7 +12,7 @@ import { useContext } from "react";
 
 export default function Notification() {
   const { state: NotificationState } = useContext(NotificationContext);
-  const { state: UserState } = useContext(UserContext);
+  const {base_route} = useUserDetail()
 
   const markAsRead = async (id) => {
     await deleteDoc(doc(db, "Notification", id));
@@ -53,7 +53,7 @@ export default function Notification() {
                 <CardContent className="flex items-center space-x-3 p-0">
                   <Bell className="w-5 h-5 text-blue-500" />
                   <Link
-                    href={`/${UserState.value.data?.base_route}/${notification.page}`}
+                    href={`/${base_route}/${notification.page}`}
                   >
                     <span>{notification.title}</span>
                   </Link>

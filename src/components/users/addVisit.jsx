@@ -10,19 +10,18 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { storage } from "@/config/firebase";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { UploadImage } from "@/lib/uploadFunction";
-import { UserContext } from "@/store/context/UserContext";
+import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { getDownloadURL, ref } from "firebase/storage";
 import {
   Filter,
-  Loader2,
   MapPin,
   MapPinOff,
-  Pencil,
-  PencilOff,
-  Trash2,
+  Trash2
 } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
@@ -34,13 +33,11 @@ import { z } from "zod";
 import AddCustomerDialog from "../addCustomer";
 import AppCalendar from "../appCalendar";
 import { CustomerSearchWithData } from "../customer-search-with-data";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { OfficeContext } from "@/store/context/OfficeContext";
-import { getDownloadURL, ref } from "firebase/storage";
 
 const formSchema = z.object({
   note: z.string().min(1, "Note cannot be empty"),
@@ -62,7 +59,7 @@ export default function VisitTab({
   const [feedbacks, setFeedbacks] = useState(data || []);
   const [addCustomer, setAddCustomer] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const { state: UserState } = useContext(UserContext);
+  const {userID, designation, office, base_route} = useUserDetail()
   const {state : OfficeState} = useContext(OfficeContext)
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedDelete, setSelectedDelete] = useState(null);
@@ -137,7 +134,7 @@ export default function VisitTab({
       setSelectedDelete(item.id);
       DeleteFromStorage(item.image);
       axios
-        .delete(`/${UserState.value.data?.id}/visit/${item.id}`)
+        .delete(`/${userID}/visit/${item.id}`)
         .then(async () => {
           await onRefresh();
         })
@@ -204,14 +201,14 @@ export default function VisitTab({
                     />
 
                     <AddCustomerDialog
-                    user_designation={UserState.value.data?.designation}
-                     office={UserState.value.data?.office}
-                      user_id={UserState.value.data?.id}
+                    user_designation={designation}
+                     office={office}
+                      user_id={userID}
                       ownership={
-                        UserState.value.data?.designation === "Owner" ||
-                        UserState.value.data?.designation ===
+                        designation === "Owner" ||
+                        designation ===
                           "Customer Relationship Manager" ||
-                        UserState.value.data?.designation ===
+                        designation ===
                           "Customer Relationship Manager (After Sales)"
                       }
                       visible={addCustomer}
@@ -339,7 +336,7 @@ export default function VisitTab({
                 <CardContent className="p-4">
                   <Link
                     target="blank"
-                    href={`/${UserState.value.data?.base_route}/${
+                    href={`/${base_route}/${
                       feedback.customer_member ? "member" : "customer"
                     }${feedback.customer_id}`}
                   >

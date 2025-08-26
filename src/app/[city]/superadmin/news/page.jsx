@@ -1,19 +1,17 @@
 "use client";
-import { useContext, useEffect, useState } from "react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Heading } from "@/components/ui/heading";
-import { Textarea } from "@/components/ui/textarea";
-import { format } from "date-fns";
-import { UserContext } from "@/store/context/UserContext";
-import axios from "@/lib/axios";
 import AppCalendar from "@/components/appCalendar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Heading } from "@/components/ui/heading";
+import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import moment from "moment";
 import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
 import { Trash } from "lucide-react";
+import moment from "moment";
+import { useEffect, useState } from "react";
 
 export default function NewsPage() {
   const [newsList, setNewsList] = useState([]);
@@ -21,19 +19,19 @@ export default function NewsPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [loading, setLoading] = useState(false);
-  const { state: UserState } = useContext(UserContext);
+  const {userID} = useUserDetail()
   
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       fetchData();
     }
-  }, [UserState]);
+  }, [userID]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`/${UserState.value.data?.id}/news`);
+      const response = await axios.get(`/${userID}/news`);
       setNewsList(response.data);
     } catch (error) {
       console.error("Fetch Error:", error);
@@ -45,7 +43,7 @@ export default function NewsPage() {
   const addNews = async () => {
     setLoading(true);
     try {
-      await axios.post(`/${UserState.value.data?.id}/news`, {
+      await axios.post(`/${userID}/news`, {
         news: newsText,
         start_date: startDate,
         end_date: endDate,
@@ -64,7 +62,7 @@ export default function NewsPage() {
 
     async function handleDelete(id) {
     try {
-      await axios.delete(`/${UserState.value.data?.id}/news/${id}`);
+      await axios.delete(`/${userID}/news/${id}`);
       await fetchData();
     } catch (error) {
       console.error("Submit Error:", error);

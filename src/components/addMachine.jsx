@@ -495,7 +495,7 @@ const ChequeCredit = ({ total, value, setTotal, setValue }) => {
         >
           {/* Date */}
           <div className="flex flex-col gap-1">
-            <Label>Date</Label>
+            <Label>Deposit date</Label>
             <AppCalendar
               date={item.date}
               onChange={(val) => handleUpdateData(val, index, "date")}

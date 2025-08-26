@@ -20,9 +20,11 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import Spinner from "../ui/spinner";
 import { Textarea } from "../ui/textarea";
 import { OfficeContext } from "@/store/context/OfficeContext";
+import useUserDetail from "@/hooks/use-user-detail";
 
 export default function ProfilePage() {
   const { state: UserState, setUser } = useContext(UserContext);
+  const { userID } = useUserDetail();
   const { state: OfficeState } = useContext(OfficeContext);
   const [isPasswordResetVisible, setIsPasswordResetVisible] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
@@ -59,7 +61,7 @@ export default function ProfilePage() {
   const [formLoading, setFormLoading] = useState(false);
 
   useEffect(() => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       const u = UserState.value.data;
       setFormData({
         name: u.name || "",
@@ -89,7 +91,7 @@ export default function ProfilePage() {
         father_cnic: u.father_cnic || "",
       });
     }
-  }, [UserState]);
+  }, [userID]);
 
   const RenderProfilePicture = useCallback(() => {
     const [localImage, setLocalImage] = useState(null);
@@ -119,9 +121,9 @@ export default function ProfilePage() {
       setLoading(true);
       try {
         const fileList = Array.from(event.target.files);
-        const name = `${OfficeState.value.data}/${UserState.value.data?.id}/profile/${UserState.value.data?.email}-dp.png`;
+        const name = `${OfficeState.value.data}/${userID}/profile/${UserState.value.data?.email}-dp.png`;
         const img = await UploadImage(URL.createObjectURL(fileList[0]), name);
-        const response = await axios.put(`/${UserState.value.data.id}`, {
+        const response = await axios.put(`/${userID}`, {
           ...formData,
           dp: name,
           password: undefined,
@@ -180,7 +182,7 @@ export default function ProfilePage() {
       const [fileName, setFileName] = useState("");
       const fileInputRef = useRef();
 
-      const userId = UserState.value.data?.id;
+      const userId = userID;
       const userEmail = UserState.value.data?.email;
 
       useEffect(() => {
@@ -371,7 +373,7 @@ export default function ProfilePage() {
     setFormLoading(true);
 
     try {
-      const response = await axios.put(`/${UserState.value.data.id}`, {
+      const response = await axios.put(`/${userID}`, {
         ...formData,
         password: undefined,
         confirmPassword: undefined,

@@ -55,6 +55,7 @@ import { useContext, useEffect, useState } from "react";
 import { BadgeCount } from "./NotificationBadge";
 import { ScrollArea } from "./ui/scroll-area";
 import { useMessagesNotification } from "@/hooks/use-message-notification";
+import useUserDetail from "@/hooks/use-user-detail";
 
 export const company = {
   name: "SENFENG",
@@ -72,6 +73,7 @@ export default function AppSidebar({ office }) {
   const profileImage = useProfileImage();
   const { toggleSidebar } = useSidebar();
   const isMobile = useIsMobile();
+  const {userID, isAdmin, name, email, base_route, nav_items} = useUserDetail()
 
   useEffect(() => {
     checkSession().then((val) => {
@@ -90,10 +92,10 @@ export default function AppSidebar({ office }) {
   }
 
   useEffect(() => {
-    if (UserState.value.data?.email) {
+    if (userID) {
       const q = query(
         collection(db, "Notification"),
-        where("sendTo", "==", UserState.value.data.id),
+        where("sendTo", "==", userID),
         where("read", "==", false),
         orderBy("TimeStamp", "desc")
       );
@@ -106,11 +108,9 @@ export default function AppSidebar({ office }) {
       });
       return () => unsubscribe();
     }
-  }, [UserState]);
+  }, [userID]);
 
-  function recursive (){
-    
-  }
+  
 
   return (
     <Sidebar collapsible="icon">
@@ -128,8 +128,8 @@ export default function AppSidebar({ office }) {
         <ScrollArea>
           <SidebarGroup>
             <SidebarMenu>
-              {UserState.value.data?.nav_items &&
-                UserState.value.data?.nav_items.map((item, index) => {
+              {
+                nav_items.map((item, index) => {
                   const Icon = item.icon ? Icons[item.icon] : Icons.logo;
                   return item?.items && item?.items?.length > 0 ? (
                     <Collapsible
@@ -163,7 +163,7 @@ export default function AppSidebar({ office }) {
                                       if (subItem.title === "POS")
                                         toggleSidebar();
                                     }}
-                                    href={`/${UserState.value.data?.base_route}${subItem.url}`}
+                                    href={`/${base_route}${subItem.url}`}
                                   >
                                     <span className="text-[12px]">
                                       {subItem.title}
@@ -187,7 +187,7 @@ export default function AppSidebar({ office }) {
                           onClick={() => {
                             if (isMobile) toggleSidebar();
                           }}
-                          href={`/${UserState.value.data?.base_route}${item.url}`}
+                          href={`/${base_route}${item.url}`}
                         >
                           <Icon />
                           <span className="text-[14px]">{item.title}</span>
@@ -213,18 +213,18 @@ export default function AppSidebar({ office }) {
                   <Avatar className="h-8 w-8 rounded-lg">
                     <AvatarImage src={profileImage} alt={"User-dp"} />
                     <AvatarFallback className="rounded-lg">
-                      {UserState.value.data?.name.substring(0, 2)}
+                      {name.substring(0, 2)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <div className="flex flex-row gap-2 items-center">
                       <span className="truncate font-semibold">
-                        {UserState.value.data?.name}
+                        {name}
                       </span>
                     </div>
 
                     <span className="truncate text-xs">
-                      {UserState.value.data?.email}
+                      {email}
                     </span>
                   </div>
 
@@ -242,16 +242,16 @@ export default function AppSidebar({ office }) {
                     <Avatar className="h-8 w-8 rounded-lg">
                       <AvatarImage src={profileImage} alt={"User-dp"} />
                       <AvatarFallback className="rounded-lg">
-                        {UserState.value.data?.name.substring(0, 2)}
+                        {name.substring(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">
-                        {UserState.value.data?.name}
+                        {name}
                       </span>
                       <span className="truncate text-xs">
                         {" "}
-                        {UserState.value.data?.email}
+                        {email}
                       </span>
                     </div>
                   </div>
@@ -259,15 +259,14 @@ export default function AppSidebar({ office }) {
                 <DropdownMenuSeparator />
 
                 <DropdownMenuGroup>
-                  <Link href={`/${UserState.value.data?.base_route}/profile`}>
+                  <Link href={`/${base_route}/profile`}>
                     <DropdownMenuItem>
                       <CreditCard />
                       Profile
                     </DropdownMenuItem>
                   </Link>
 
-                  {(UserState.value.data?.designation === "Owner" ||
-                    UserState.value.data?.full_access) && (
+                  {isAdmin && (
                     <Link
                       href={`${
                         pathname.includes("karachi")

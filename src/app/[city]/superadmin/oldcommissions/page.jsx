@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
 import { UserSearch } from "@/components/user-search";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
@@ -26,27 +27,23 @@ import { useContext, useEffect, useRef, useState } from "react";
 import "react-medium-image-zoom/dist/styles.css";
 
 export default function Page() {
-  const { state: UserState } = useContext(UserContext);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const hasFetched = useRef(false);
   const [search, setSearch] = useState("");
-
-  const userId = UserState.value.data?.id;
+  const { userID } = useUserDetail();
 
   useEffect(() => {
-    if (userId && !hasFetched.current) {
+    if (userID && !hasFetched.current) {
       hasFetched.current = true;
       fetchData();
     }
-  }, [userId]);
+  }, [userID]);
 
   async function fetchData() {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `/${UserState.value.data?.id}/old-commissions`
-      );
+      const response = await axios.get(`/${userID}/old-commissions`);
       setData(response.data);
     } catch (err) {
       console.error("Failed to fetch data:", err);
@@ -111,7 +108,6 @@ export default function Page() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {customer.machines.map((machine) => (
                     <RenderEachMachine
-                      UserState={UserState}
                       machine={machine}
                       key={machine.sale_id}
                       onReturn={(machineId) => {
@@ -141,13 +137,14 @@ export default function Page() {
   );
 }
 
-const RenderEachMachine = ({ machine, onReturn, UserState }) => {
+const RenderEachMachine = ({ machine, onReturn }) => {
   const [selectedPercentage, setSelectedPercentage] = useState("2");
   const [showManual, setShowManual] = useState(false);
   const [manualNumber, setManualNumber] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [commissionAmount, setCommissionAmount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   useEffect(() => {
     if (machine?.sold_by_id) {
@@ -183,10 +180,7 @@ const RenderEachMachine = ({ machine, onReturn, UserState }) => {
     };
 
     try {
-      await axios.post(
-        `/${UserState.value.data?.id}/old-commissions`,
-        formData
-      );
+      await axios.post(`/${userID}/old-commissions`, formData);
       onReturn(machine.sale_id);
     } finally {
       setLoading(false);

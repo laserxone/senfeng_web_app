@@ -1,5 +1,6 @@
 "use client";
-import { UserContext } from "@/store/context/UserContext";
+import useUserDetail from "@/hooks/use-user-detail";
+import { startHolyLoader } from "holy-loader";
 import {
   KBarAnimator,
   KBarPortal,
@@ -8,25 +9,24 @@ import {
   KBarSearch,
 } from "kbar";
 import { useRouter } from "next/navigation";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import RenderResults from "./render-result";
-import { startHolyLoader } from "holy-loader";
 
 export default function KBar({ children }) {
   const router = useRouter();
-  const { state: UserState } = useContext(UserContext);
   const [navItems, setNavItems] = useState([]);
+  const { base_route, userID, nav_items } = useUserDetail();
 
   useEffect(() => {
-    if (UserState.value.data?.nav_items) {
-      setNavItems(UserState.value.data?.nav_items);
+    if (nav_items) {
+      setNavItems(nav_items);
     }
-  }, [UserState]);
+  }, [userID]);
 
   const navigateTo = (url) => {
-    if (UserState.value.data?.id) {
+    if (userID) {
       startHolyLoader();
-      router.push(`/${UserState.value.data.base_route}/${url}`);
+      router.push(`/${base_route}/${url}`);
     }
   };
 
