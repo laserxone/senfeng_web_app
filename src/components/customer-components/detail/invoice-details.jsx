@@ -1,4 +1,12 @@
+import {
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -7,87 +15,101 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import moment from "moment";
-import { Label } from "@/components/ui/label";
-import { useCallback, useEffect, useState } from "react";
-import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "@/config/firebase";
+import { getDownloadURL, ref } from "firebase/storage";
+import moment from "moment";
+import { useCallback, useEffect, useState } from "react";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
-import { Button } from "@/components/ui/button";
 
 export default function InvoiceDetails({ invoice }) {
+  
   return (
-    
-      <Card className="mb-2">
-        <CardHeader>
-          <CardTitle>Invoice #{invoice.invoicenumber}</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4 text-sm">
-          <div>
+    <AccordionItem value={`invoice-${invoice.invoicenumber}`} className="border rounded-lg">
+      <AccordionTrigger className="px-4 py-2 hover:bg-muted rounded-lg  hover:no-underline">
+        <div className="flex justify-between items-center w-full">
+          <span className="font-semibold">
+            Invoice #{invoice.invoicenumber}
+          </span>
+          {invoice.payment ? (
+            <Badge variant="default">Paid</Badge>
+          ) : (
+            <Badge variant="destructive">Pending</Badge>
+          )}
+        </div>
+      </AccordionTrigger>
+
+      <AccordionContent>
+        <Card className="shadow-none border-none">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Invoice Details</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-6 text-sm">
             
-              <span className="font-medium">Payment Status:</span>{" "}
-              {invoice.payment ? (
-                <Badge variant="default">Paid</Badge>
-              ) : (
-                <Badge variant="destructive">Pending</Badge>
-              )}
-            
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Qty</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {invoice.fields.map((item, ind) => (
-                <TableRow key={ind}>
-                  <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.qty}</TableCell>
-                  <TableCell>{item.price}</TableCell>
-                  <TableCell>{item.total}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <Label className="font-bold">Payments</Label>
-          {invoice.payments.map((p, i) => (
-            <div key={i} className="flex flex-col gap-2 border-b">
-              <p>
-                <span className="font-medium">Amount:</span> {p.amount}
-              </p>
-              <p>
-                <span className="font-medium">Mode:</span> {p.mode}
-              </p>
-              <p>
-                <span className="font-medium">Received By:</span>{" "}
-                {p.received_by}
-              </p>
-              <p>
-                <span className="font-medium">Transaction Date:</span>{" "}
-                {moment(p.transaction_date).format("YYYY-MM-DD")}
-              </p>
-              {p.clearance_date && (
-                <p>
-                  <span className="font-medium">Cleared On:</span>{" "}
-                  {moment(p.clearance_date).format("YYYY-MM-DD")}
-                </p>
-              )}
-              {p.image && <RenderImage img={p.image} />}
-              {p.remarks && (
-                <p>
-                  <span className="font-medium">Remarks:</span> {p.remarks}
-                </p>
-              )}
+            {/* Products Table */}
+            <div>
+              <Label className="font-bold mb-2 block">Products</Label>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Qty</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoice.fields.map((item, ind) => (
+                    <TableRow key={ind}>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>{item.qty}</TableCell>
+                      <TableCell>{item.price}</TableCell>
+                      <TableCell>{item.total}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-          ))}
-        </CardContent>
-      </Card>
-    
+
+            {/* Payments Table */}
+            <div>
+              <Label className="font-bold mb-2 block">Payments</Label>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Mode</TableHead>
+                    <TableHead>Received By</TableHead>
+                    <TableHead>Transaction Date</TableHead>
+                    <TableHead>Clearance Date</TableHead>
+                    <TableHead>Image</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoice.payments.map((p, i) => (
+                    <TableRow key={i}>
+                      <TableCell>{p.amount}</TableCell>
+                      <TableCell>{p.mode}</TableCell>
+                      <TableCell>{p.received_by}</TableCell>
+                      <TableCell>
+                        {moment(p.transaction_date).format("YYYY-MM-DD")}
+                      </TableCell>
+                      <TableCell>
+                        {p.clearance_date
+                          ? moment(p.clearance_date).format("YYYY-MM-DD")
+                          : "—"}
+                      </TableCell>
+                      <TableCell>
+                        {p.image ? <RenderImage img={p.image} /> : "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </AccordionContent>
+    </AccordionItem>
   );
 }
 
@@ -188,7 +210,7 @@ const RenderImage = ({ img }) => {
           alt="payment-img"
           style={{
             maxWidth: "100%",
-            maxHeight: "400px",
+            maxHeight: "100px",
             objectFit: "contain",
             cursor: "zoom-in",
           }}

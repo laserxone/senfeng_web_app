@@ -973,12 +973,14 @@ const RenderTimeline = ({
 };
 
 const PartsTab = ({ data, height }) => {
-  return (
+ return (
     <Card className="flex flex-1 shadow-lg rounded-2xl p-4 self-center">
       <ScrollArea className={`flex flex-1 ${height}`}>
-        {data.map((item, index) => (
-          <InvoiceDetails key={index} invoice={item} />
-        ))}
+        <Accordion type="single" collapsible className="w-full space-y-2">
+          {data.map((item, index) => (
+            <InvoiceDetails key={index} invoice={item} />
+          ))}
+        </Accordion>
       </ScrollArea>
     </Card>
   );

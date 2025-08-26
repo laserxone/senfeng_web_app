@@ -87,6 +87,7 @@ import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import "pdfjs-dist/build/pdf.worker";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
+import AddCheque from "./add-cheque";
 
 export default function Machine({ id, onLoading = () => {}, base }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -111,6 +112,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
   const [unmatched, setUnmatched] = useState([]);
   const [installments, setInstallments] = useState([]);
   const [installmentVisible, setInstallmentVisible] = useState(false);
+  const [credit, setCredit] = useState(false);
 
   useEffect(() => {
     if (id && userID) {
@@ -666,6 +668,11 @@ export default function Machine({ id, onLoading = () => {}, base }) {
     );
   });
 
+  async function onRefresh() {
+    setCredit(false)
+    fetchData(id)
+  }
+
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <ClientCard
@@ -752,6 +759,15 @@ export default function Machine({ id, onLoading = () => {}, base }) {
                 Installments
               </Button>
             )}
+
+            <Button
+              size="sm"
+              onClick={() => {
+                setCredit(true);
+              }}
+            >
+              Credit Cheque
+            </Button>
           </div>
         )}
       </ClientCard>
@@ -841,6 +857,8 @@ export default function Machine({ id, onLoading = () => {}, base }) {
           onRefresh={async () => await fetchData(id)}
         />
       )}
+
+      <AddCheque visible={credit} onClose={setCredit} saleID={id} customer_id={data?.customer?.id} onRefresh={onRefresh}/>
     </div>
   );
 }
