@@ -90,6 +90,7 @@ const EditCustomerDialog = ({
     member: z.boolean().optional(),
     ownership: z.number().nullable().optional(),
     created_at: z.date().nullable().optional(),
+    office: z.string().min(1, { message: "" })
   });
 
   const form = useForm({
@@ -112,6 +113,7 @@ const EditCustomerDialog = ({
       member: false,
       ownership: null,
       created_at: null,
+      office : "islamabad"
     },
   });
 
@@ -165,6 +167,7 @@ const EditCustomerDialog = ({
         pin: data?.pin || "",
         platform: data?.platform || "",
         created_at: data?.created_at ? new Date(data.created_at) : null,
+        office : data?.office || ""
       });
     }
   }, [data, form]);
@@ -215,6 +218,7 @@ const EditCustomerDialog = ({
       platform: values.platform,
       pin: values.pin,
       created_at: values.created_at,
+      office : values.office
     };
 
     try {
@@ -502,6 +506,44 @@ const EditCustomerDialog = ({
                                   value={field.value}
                                   onReturn={(val) => field.onChange(val)}
                                 />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
+                      {!(
+                        designation === "Sales" ||
+                        designation === "Dealer"
+                      ) && (
+                        <FormField
+                          control={control}
+                          name="office"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>
+                                Office branch <RequiredStar />
+                              </FormLabel>
+                              <FormControl>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select office" />
+                                  </SelectTrigger>
+
+                                  <SelectContent>
+                                    <SelectGroup>
+                                      {["lahore", "karachi"].map((item) => (
+                                        <SelectItem key={item} value={item}>
+                                          {item}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectGroup>
+                                  </SelectContent>
+                                </Select>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
