@@ -39,7 +39,6 @@ export default function Page() {
     axios
       .get(`/${debouncedUserId}/dashboard`)
       .then((response) => {
-        console.log(response.data)
         setData(response.data);
       })
       .catch((e) => console.log(e))

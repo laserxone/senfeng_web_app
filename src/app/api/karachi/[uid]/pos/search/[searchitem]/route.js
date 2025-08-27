@@ -11,7 +11,6 @@ export async function GET(req, { params }) {
   try {
 
     if(all){
-      console.log(1)
        const query = `
       SELECT * FROM savedinvoices`
       const result = await pool.query(query);
@@ -19,7 +18,7 @@ export async function GET(req, { params }) {
     }
 
     if (searchitem !== 'null') {
-      console.log(2)
+      
       const query = `
         SELECT * FROM savedinvoices 
   WHERE 
@@ -37,7 +36,7 @@ export async function GET(req, { params }) {
       const result = await pool.query(query, values);
       return NextResponse.json(result.rows, { status: 200 });
     } else if(pending) {
-      console.log(3)
+      
       const query = `
       SELECT * FROM savedinvoices
       WHERE payment = FALSE`

@@ -42,7 +42,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import AddPayment from "@/components/addPayment";
-import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
 import { downloadCustomerZip } from "@/components/downloadzip";
 import DropzoneMulti from "@/components/dropzone-multi";
@@ -90,7 +89,6 @@ import "react-medium-image-zoom/dist/styles.css";
 import AddCheque from "./add-cheque";
 
 export default function Machine({ id, onLoading = () => {}, base }) {
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState();
   const [total, setTotal] = useState(0);
   const [received, setReceived] = useState(0);
@@ -789,13 +787,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
         onRefresh={async () => await fetchData(id)}
         data={data?.machine || {}}
       />
-      <ConfimationDialog
-        open={showConfirmation}
-        title={"Are you sure you want to delete?"}
-        description={"Your action will remove branch expense from the system"}
-        onPressYes={() => console.log("press yes")}
-        onPressCancel={() => setShowConfirmation(false)}
-      />
+
       <ImageSheet
         payment_lock={imageURL?.payment_lock}
         editAllowed={editAllowed}

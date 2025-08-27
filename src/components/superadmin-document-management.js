@@ -125,6 +125,7 @@ const SuperadminDocumentManagement = () => {
         added_by: name || email,
         path: filePath,
         folder_id: currentFolder ? currentFolder.id : undefined,
+        created_by : userID
       });
     }
 
@@ -144,6 +145,7 @@ const SuperadminDocumentManagement = () => {
       .post(`/${userID}/cloud/folder`, {
         name: folderName,
         parent_folder: currentFolder ? currentFolder?.id : undefined,
+        created_by : userID
       })
       .then(async () => {
         setFolderName("");

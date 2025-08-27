@@ -70,7 +70,6 @@ const CustomerMapComponent = ({ data }) => {
                     options={{
                       headerDisabled : true
                     }}
-                    onCloseClick={() => console.log("ub")}
                     position={{
                       lat: parseFloat(selectedMarker.latitude),
                       lng: parseFloat(selectedMarker.longitude),

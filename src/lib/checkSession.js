@@ -29,7 +29,6 @@ export default function useCheckSession() {
 
             if (userData?.designation) {
 
-                console.log(userData.base_route)
                 // if (userData.full_access || userData.designation === 'Owner') {
                 //     if (!pathname.includes("superadmin")) {
                 //         startHolyLoader()

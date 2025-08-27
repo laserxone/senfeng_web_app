@@ -361,7 +361,7 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
             }
 
             const user = userResult.rows[0];
-            console.log(user.designation)
+        
 
             if (user?.designation === 'Dealer') {
 

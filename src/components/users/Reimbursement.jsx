@@ -1,10 +1,9 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowUpDown, Filter, Loader2 } from "lucide-react";
+import { ArrowUpDown, Filter } from "lucide-react";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
 import AppCalendar from "@/components/appCalendar";
 import Dropzone from "@/components/dropzone";
@@ -35,6 +34,7 @@ import { storage } from "@/config/firebase";
 import axios from "@/lib/axios";
 import exportToExcel from "@/lib/exportToExcel";
 import { UploadImage } from "@/lib/uploadFunction";
+import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
@@ -43,12 +43,11 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
 import { CustomerSearchWithData } from "../customer-search-with-data";
+import { RequiredStar } from "../RequiredStar";
 import { Label } from "../ui/label";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
-import { RequiredStar } from "../RequiredStar";
-import { OfficeContext } from "@/store/context/OfficeContext";
 
 export default function Reimbursement({
   id,
@@ -57,7 +56,6 @@ export default function Reimbursement({
   onFilterReturn,
   onReset,
 }) {
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
   const [imageURL, setImageURL] = useState(null);
@@ -192,13 +190,7 @@ export default function Reimbursement({
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <ConfimationDialog
-        open={showConfirmation}
-        title={"Are you sure you want to delete?"}
-        description={"Your action will remove branch expense from the system"}
-        onPressYes={() => console.log("press yes")}
-        onPressCancel={() => setShowConfirmation(false)}
-      />
+    
       <div className="flex flex-1">
         <PageTable
           columns={columns}
@@ -210,8 +202,7 @@ export default function Reimbursement({
             setImageURL(val);
             setVisible(true);
           }}
-          // filter={true}
-          // onFilterClick={() => setFilterVisible(true)}
+         
         >
           <Button
             onClick={() => setFilterVisible(true)}

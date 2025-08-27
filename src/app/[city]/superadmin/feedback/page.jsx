@@ -1,42 +1,9 @@
 "use client";
 import { ArrowUpDown, Frown, Smile } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-
-import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
-import { CustomerSearch } from "@/components/customer-search";
 import { Heading } from "@/components/ui/heading";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import moment from "moment";
@@ -58,7 +25,6 @@ const tableHeader = [
 ];
 
 export default function Page() {
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState([]);
   const { userID, base_route } = useUserDetail();
 
@@ -190,26 +156,12 @@ export default function Page() {
         </div>
       ),
     },
-
-    // {
-    //   id: "actions",
-    //   header: "Action",
-    //   size: 50,
-    //   cell: ({ row }) => {
-    //     return (
-    //       <Button variant="ghost" onClick={() => setShowConfirmation(true)}>
-    //         <Trash2 className="h-5 w-5 text-red-500" />
-    //       </Button>
-    //     );
-    //   },
-    // },
   ];
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-center justify-between">
         <Heading title="Feedback" description="Manage Feedback from clients" />
-        {/* <FeedbackDialog /> */}
       </div>
 
       <PageTable
@@ -219,126 +171,6 @@ export default function Page() {
         tableHeader={tableHeader}
         onRowClick={() => {}}
       ></PageTable>
-
-      <ConfimationDialog
-        open={showConfirmation}
-        title={"Are you sure you want to delete?"}
-        description={"Your action will remove feedback from the system"}
-        onPressYes={() => console.log("press yes")}
-        onPressCancel={() => setShowConfirmation(false)}
-      />
     </div>
   );
 }
-
-const FeedbackDialog = () => {
-  const formSchema = z.object({
-    feedback: z
-      .string()
-      .min(6, { message: "Feedback must be at least 6 characters." }),
-    client: z.number({ required_error: "Client is required" }),
-    status: z.string().min(1, { message: "Status is required." }),
-  });
-
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      feedback: "",
-      client: null,
-      status: "",
-    },
-  });
-
-  function onSubmit(values) {
-    console.log("Form Data:", values);
-  }
-
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          onClick={() => {
-            form.reset();
-          }}
-        >
-          Add Feedback
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add new feedback</DialogTitle>
-        </DialogHeader>
-        <div className="py-4">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* Feedback Input */}
-              <FormField
-                control={form.control}
-                name="feedback"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Feedback</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter feedback" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Client Select Dropdown */}
-              <FormField
-                control={form.control}
-                name="client"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Select Client</FormLabel>
-                    <CustomerSearch
-                      value={field.value}
-                      onReturn={(val) => field.onChange(val)}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Select status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Status</SelectLabel>
-                          <SelectItem value="Satisfactory">
-                            Satisfactory
-                          </SelectItem>
-                          <SelectItem value="Unsatisfactory">
-                            Unsatisfactory
-                          </SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Submit Button */}
-              <Button type="submit" className="w-full">
-                Submit
-              </Button>
-            </form>
-          </Form>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};

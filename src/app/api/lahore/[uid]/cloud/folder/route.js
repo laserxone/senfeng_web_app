@@ -1,8 +1,8 @@
 import pool from "@/config/db";
 import { NextResponse } from "next/server";
 
-export async function GET(req) {
-
+export async function GET(req, {params}) {
+    const {uid} =  await params
     const searchParams = req.nextUrl.searchParams
     const folder = searchParams.get('folder');
     const isRoot = !folder || folder === "null";
@@ -11,11 +11,11 @@ export async function GET(req) {
     let folders
     try {
         if (!isRoot) {
-            documents = await pool.query(`SELECT * FROM superadmin_document WHERE folder_id = $1 ORDER BY id ASC`, [folder])
-            folders = await pool.query(`SELECT * FROM superadmin_folder WHERE parent_folder = $1 ORDER BY id ASC`, [folder])
+            documents = await pool.query(`SELECT * FROM superadmin_document WHERE folder_id = $1 AND created_by = $2 ORDER BY id ASC`, [folder, uid])
+            folders = await pool.query(`SELECT * FROM superadmin_folder WHERE parent_folder = $1 AND created_by = $2 ORDER BY id ASC`, [folder, uid])
         } else {
-            documents = await pool.query(`SELECT * FROM superadmin_document WHERE folder_id IS NULL ORDER BY id ASC`)
-            folders = await pool.query(`SELECT * FROM superadmin_folder WHERE parent_folder IS NULL ORDER BY id ASC`)
+            documents = await pool.query(`SELECT * FROM superadmin_document WHERE folder_id IS NULL AND created_by = $1 ORDER BY id ASC`, [uid])
+            folders = await pool.query(`SELECT * FROM superadmin_folder WHERE parent_folder IS NULL AND created_by = $1 ORDER BY id ASC`, [uid])
         }
 
         return NextResponse.json({ folders: folders.rows, documents: documents.rows }, { status: 200 })

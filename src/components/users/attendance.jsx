@@ -8,14 +8,12 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
 import { AttendanceDetail } from "@/app/[city]/superadmin/attendance/page";
-import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
 import moment from "moment";
 import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
 
 export default function Attendance({ passingData, onFilterReturn, onRefresh }) {
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
   const [visible, setVisible] = useState(false);
@@ -175,13 +173,7 @@ export default function Attendance({ passingData, onFilterReturn, onRefresh }) {
 
   return (
     <div className="flex flex-1 flex-col space-y-4 mt-4">
-      <ConfimationDialog
-        open={showConfirmation}
-        title={"Are you sure you want to delete?"}
-        description={"Your action will remove branch expense from the system"}
-        onPressYes={() => console.log("press yes")}
-        onPressCancel={() => setShowConfirmation(false)}
-      />
+   
       <div className="flex flex-1">
         <PageTable
           

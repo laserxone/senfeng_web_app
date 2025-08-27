@@ -17,7 +17,6 @@ import {
   useState,
 } from "react";
 
-import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
 import AppCalendar from "@/components/appCalendar";
 import { CustomerSearchWithData } from "@/components/customer-search-with-data";
@@ -71,7 +70,7 @@ import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
 
 export default function Page() {
-  const [showConfirmation, setShowConfirmation] = useState(false);
+
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
   const [imageURL, setImageURL] = useState(null);
@@ -359,13 +358,7 @@ export default function Page() {
           </CardContent>
         </Card>
       </div>
-      <ConfimationDialog
-        open={showConfirmation}
-        title={"Are you sure you want to delete?"}
-        description={"Your action will remove branch expense from the system"}
-        onPressYes={() => console.log("press yes")}
-        onPressCancel={() => setShowConfirmation(false)}
-      />
+    
       <div className="flex flex-1 min-h-[600px]">
         <PageTable
           loading={loading}
@@ -378,8 +371,7 @@ export default function Page() {
             setImageURL(val);
             setVisible(true);
           }}
-          // filter={true}
-          // onFilterClick={() => setFilterVisible(true)}
+       
         >
           <Button
             onClick={() => setFilterVisible(true)}

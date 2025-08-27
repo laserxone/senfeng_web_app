@@ -5,7 +5,7 @@ import { NextResponse } from "next/server"
 export async function POST(req) {
     let { number } = await req.json()
 
-    console.log(number)
+    
 
     try {
         if (!number) {
@@ -14,7 +14,7 @@ export async function POST(req) {
 
         number = number.replace(/\s|-/g, "");
 
-        console.log(number)
+        
 
         const query = `
         SELECT id, name, owner, number FROM customer 
