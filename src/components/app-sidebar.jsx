@@ -34,7 +34,8 @@ import { Icons } from "@/components/icons";
 import { auth, db } from "@/config/firebase";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfileImage } from "@/hooks/use-profile-image";
-import axios, { setUserOffice } from "@/lib/axios";
+import useUserDetail from "@/hooks/use-user-detail";
+import { setUserOffice } from "@/lib/axios";
 import useCheckSession from "@/lib/checkSession";
 import { NotificationContext } from "@/store/context/NotificationContext";
 import { OfficeContext } from "@/store/context/OfficeContext";
@@ -42,20 +43,16 @@ import { UserContext } from "@/store/context/UserContext";
 import { signOut } from "firebase/auth";
 import {
   collection,
-  doc,
   onSnapshot,
   orderBy,
   query,
-  where,
+  where
 } from "firebase/firestore";
 import { ChevronRight, ChevronsUpDown, CreditCard, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useContext, useEffect, useState } from "react";
-import { BadgeCount } from "./NotificationBadge";
+import { useContext, useEffect } from "react";
 import { ScrollArea } from "./ui/scroll-area";
-import { useMessagesNotification } from "@/hooks/use-message-notification";
-import useUserDetail from "@/hooks/use-user-detail";
 
 export const company = {
   name: "SENFENG",

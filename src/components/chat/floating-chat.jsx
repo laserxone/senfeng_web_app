@@ -1,30 +1,26 @@
 "use client";
-import { useState, useContext } from "react";
-import { X, ArrowLeft, MessageCircle } from "lucide-react";
-import { UserContext } from "@/store/context/UserContext";
-import { Button } from "../ui/button";
-import UserChatIcon from "./chatIcon";
-import Chatcomponent from "./chat-component";
-import axios from "@/lib/axios";
-import { BadgeCount } from "../NotificationBadge";
 import { useMessagesNotification } from "@/hooks/use-message-notification";
 import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { ArrowLeft, MessageCircle, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BadgeCount } from "../NotificationBadge";
+import Chatcomponent from "./chat-component";
+import UserChatIcon from "./chatIcon";
+import { playNotificationSound } from "../playNotificationSound";
 
 export default function FloatingChat() {
-  const {userID} = useUserDetail()
+  const { userID } = useUserDetail();
   const [open, setOpen] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [loading, setLoading] = useState(false);
   const { conversations } = useMessagesNotification();
 
   const handleStartConversation = async (item) => {
-    const response = await axios.post(
-      `/${userID}/conversations`,
-      {
-        user1: userID,
-        user2: item.id,
-      }
-    );
+    const response = await axios.post(`/${userID}/conversations`, {
+      user1: userID,
+      user2: item.id,
+    });
 
     if (response.data.id) {
       setSelectedConversation({
@@ -34,9 +30,15 @@ export default function FloatingChat() {
     }
   };
 
+  useEffect(() => {
+    if (conversations > 0) {
+      playNotificationSound();
+    }
+  }, [conversations]);
+
   return (
     <>
-      <div >
+      <div>
         <BadgeCount count={conversations} offset={{ top: 0, right: 0 }}>
           <div
             onClick={() => setOpen((prev) => !prev)}
@@ -84,9 +86,7 @@ export default function FloatingChat() {
         </div>
 
         <div className="flex-1 overflow-hidden">
-          <div
-            className={`${selectedConversation ? "hidden" : "block"}`}
-          >
+          <div className={`${selectedConversation ? "hidden" : "block"}`}>
             <UserChatIcon
               myId={userID}
               onChatSelected={(item) => {
@@ -96,7 +96,7 @@ export default function FloatingChat() {
               }}
             />
           </div>
- 
+
           <div
             className={`${!selectedConversation ? "hidden" : "block"} h-full`}
           >
