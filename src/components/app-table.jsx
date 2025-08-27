@@ -53,7 +53,7 @@ const PageTable = ({
   pageSizeOptions = [10, 20, 30, 40, 50],
   disableInput = false,
   totalCustomerText,
-  onRowClick,
+  onRowClick = ()=>{},
   loading = false,
 }) => {
   const [sorting, setSorting] = useState([]);

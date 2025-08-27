@@ -4,7 +4,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Attendance from "@/components/users/attendance";
 import { ProfilePicture } from "@/components/users/ProfilePicture";
 import Reimbursement from "@/components/users/Reimbursement";
+import RenderReturnable from "@/components/users/render-returnable";
 import SalaryRecord from "@/components/users/SalaryRecord";
+import useIssuedItem from "@/hooks/use-issued-items";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import moment from "moment";
@@ -13,7 +15,7 @@ import "./styles.css";
 
 export default function Page() {
   const [data, setData] = useState();
-  const {userID} = useUserDetail()
+  const { userID } = useUserDetail();
   const [reimbursementData, setReimbursementData] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
   const [activeTab, setActiveTab] = useState("attendance");
@@ -139,6 +141,8 @@ export default function Page() {
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
+
+            <TabsTrigger value="issued">Returnable</TabsTrigger>
           </TabsList>
 
           <div className="flex flex-1 w-full mt-2">
@@ -151,6 +155,8 @@ export default function Page() {
                 </CardContent>
               </Card>
             )}
+
+            {activeTab === "issued" && <RenderReturnable />}
           </div>
         </Tabs>
       </div>

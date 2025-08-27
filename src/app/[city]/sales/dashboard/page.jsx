@@ -46,6 +46,7 @@ import { RequiredStar } from "@/components/RequiredStar";
 import { CustomerExtraData } from "@/components/users/ExtraData";
 import { ProfilePicture } from "@/components/users/ProfilePicture";
 import useUserDetail from "@/hooks/use-user-detail";
+import RenderReturnable from "@/components/users/render-returnable";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -324,6 +325,7 @@ export default function Page() {
             <TabsTrigger value="calls">Calls</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
+            <TabsTrigger value="issued">Returnable</TabsTrigger>
           </TabsList>
 
           <div className="flex flex-1 w-full mt-2">
@@ -342,6 +344,7 @@ export default function Page() {
                 </CardContent>
               </Card>
             )}
+            {activeTab === "issued" && <RenderReturnable />}
           </div>
         </Tabs>
       </div>
