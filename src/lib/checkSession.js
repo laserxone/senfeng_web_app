@@ -29,18 +29,18 @@ export default function useCheckSession() {
 
             if (userData?.designation) {
 
-
-                if (userData.full_access || userData.designation === 'Owner') {
-                    if (!pathname.includes("superadmin")) {
-                        startHolyLoader()
-                        router.push(`/${userData.office.toLowerCase()}/superadmin`)
-                    }
-                } else {
+                console.log(userData.base_route)
+                // if (userData.full_access || userData.designation === 'Owner') {
+                //     if (!pathname.includes("superadmin")) {
+                //         startHolyLoader()
+                //         router.push(`/${userData.office.toLowerCase()}/superadmin`)
+                //     }
+                // } else {
                     if (!pathname.includes(userData.base_route)) {
                         startHolyLoader()
                         router.replace(`/${userData.base_route}/dashboard`)
                     }
-                }
+                // }
 
                 return { user: { ...userData, ...user } };
             } else {

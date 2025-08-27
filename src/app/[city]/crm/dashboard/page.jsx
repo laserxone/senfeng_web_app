@@ -13,12 +13,12 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
-import { OldRecordSheet } from "../../aftersales/dashboard/page";
 import "./styles.css";
+import OldRecordSheet from "@/components/users/old-record-sheet";
 
 export default function Page() {
   const [data, setData] = useState();
-  const {userID} = useUserDetail()
+  const { userID } = useUserDetail();
   const [extraData, setExtraData] = useState({});
   const [selectedOption, setSelectedOption] = useState("thisMonth");
   const [reimbursementData, setReimbursementData] = useState([]);
@@ -81,19 +81,15 @@ export default function Page() {
   }
 
   async function fetchData() {
-    axios
-      .get(`/${userID}/dashboard`)
-      .then((response) => {
-        setData(response.data);
-      });
+    axios.get(`/${userID}/dashboard`).then((response) => {
+      setData(response.data);
+    });
   }
 
   async function fetchExtraCustomerOptions() {
-    axios
-      .get(`/${userID}/dashboard/group`)
-      .then((response) => {
-        setExtraData(response.data);
-      });
+    axios.get(`/${userID}/dashboard/group`).then((response) => {
+      setExtraData(response.data);
+    });
   }
 
   const RenderNewCustomer = useCallback(() => {
@@ -174,7 +170,7 @@ export default function Page() {
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-            className="flex w-full flex-1 flex-col"
+          className="flex w-full flex-1 flex-col"
         >
           <TabsList className="justify-start">
             <TabsTrigger value="newCustomers">Customers</TabsTrigger>
@@ -210,7 +206,6 @@ export default function Page() {
         visible={oldRecordVisible}
         onClose={setOldRecordVisible}
         user_id={userID}
-        crm={true}
       />
 
       <AutoScrollMembers />
