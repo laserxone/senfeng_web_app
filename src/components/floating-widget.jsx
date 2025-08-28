@@ -2,6 +2,7 @@
 import { DndContext, useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { useState } from "react";
+import { GripVertical } from "lucide-react"; // 👈 nice drag icon
 
 function DraggableGroup({ id, children, position, onPositionChange }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id });
@@ -13,18 +14,23 @@ function DraggableGroup({ id, children, position, onPositionChange }) {
     }),
     touchAction: "none",
     position: "fixed",
-    bottom: "1.5rem", 
+    bottom: "1.5rem",
     right: "1.5rem",
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
-    >
-      {children}
+    <div ref={setNodeRef} style={style}>
+      {/* Drag handle with icon */}
+      <div
+        {...listeners}
+        {...attributes}
+        className="flex justify-center cursor-grab bg-gray-800 text-white w-8 h-8 rounded-full mb-2 shadow-md hover:bg-gray-700"
+      >
+        <GripVertical className="w-5 h-5 self-center" />
+      </div>
+
+      {/* Children remain fully clickable */}
+      <div>{children}</div>
     </div>
   );
 }
@@ -32,7 +38,6 @@ function DraggableGroup({ id, children, position, onPositionChange }) {
 export default function FloatingWidgets({ children }) {
   const [position, setPosition] = useState(null);
 
-  
   const handleDragEnd = (event) => {
     const { delta } = event;
     setPosition((prev) => {
