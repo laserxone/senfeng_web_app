@@ -142,7 +142,7 @@ export default function AppSidebar({ office }) {
                             isActive={pathname.includes(item.url)}
                           >
                             {item.icon && <Icon />}
-                            <span className="text-[12px]">{item.title}</span>
+                            <span className="text-[14px]">{item.title}</span>
                             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
@@ -162,7 +162,7 @@ export default function AppSidebar({ office }) {
                                     }}
                                     href={`/${base_route}${subItem.url}`}
                                   >
-                                    <span className="text-[12px]">
+                                    <span className="text-[14px]">
                                       {subItem.title}
                                     </span>
                                   </Link>

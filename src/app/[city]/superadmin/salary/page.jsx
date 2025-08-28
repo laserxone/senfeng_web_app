@@ -193,6 +193,16 @@ const SalaryComponent = () => {
               reimbursement: totalAmount,
             }));
           }
+          if(response.data?.fines){
+             const totalAmount = response.data.fines.reduce(
+              (sum, item) => sum + Number(item.amount),
+              0
+            );
+            setForm((prevState) => ({
+              ...prevState,
+              additional_fine : (totalAmount * -1),
+            }));
+          }
           if (response.data?.commission) {
             const totalCommission = response.data?.commission.reduce(
               (sum, item) => sum + Number(item.commission_amount),
@@ -264,6 +274,16 @@ const SalaryComponent = () => {
                 reimbursement: totalAmount,
               }));
             }
+            if(response.data?.fines){
+             const totalAmount = response.data.fines.reduce(
+              (sum, item) => sum + Number(item.amount),
+              0
+            );
+            setForm((prevState) => ({
+              ...prevState,
+              additional_fine : (totalAmount * -1),
+            }));
+          }
             if (response.data?.commission) {
               const totalCommission = response.data?.commission.reduce(
                 (sum, item) => sum + Number(item.commission_amount),
@@ -965,6 +985,28 @@ const SalaryComponent = () => {
             </Card>
           </AccordionContent>
         </AccordionItem>
+
+        <AccordionItem value="fines">
+          <AccordionTrigger>
+            <span>Fines</span>
+          </AccordionTrigger>
+          <AccordionContent>
+            <Card>
+              <CardHeader>
+                <CardTitle>Fines Record</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-5">
+                {loading ? (
+                  <div className="flex flex-1 items-center justify-center">
+                    <Spinner />
+                  </div>
+                ) : (
+                  <Fines passingData={data?.fines || []} />
+                )}
+              </CardContent>
+            </Card>
+          </AccordionContent>
+        </AccordionItem>
       </Accordion>
 
       <Dialog open={modal} onOpenChange={setModal}>
@@ -1061,6 +1103,146 @@ const SalaryComponent = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+};
+
+const Fines = ({ passingData }) => {
+  const [data, setData] = useState([]);
+
+  const tableHeader = [
+  {
+    value: "customer_name",
+    label: "Customer",
+  },
+  {
+    value: "user_name",
+    label: "Employee",
+  },
+  {
+    value: "amount",
+    label: "Amount",
+  },
+  {
+    value: "reason",
+    label: "Reason",
+  },
+];
+
+const columns = [
+    {
+      accessorKey: "created_at",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Date
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <div>
+          {row.getValue("created_at")
+            ? moment(new Date(row.getValue("created_at"))).format("YYYY-MM-DD")
+            : ""}
+        </div>
+      ),
+    },
+
+    {
+      accessorKey: "user_name",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Employee
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("user_name")}</div>,
+    },
+    {
+      accessorKey: "customer_name",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Customer
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("customer_name")}</div>,
+    },
+
+    {
+      accessorKey: "amount",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Amount
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("amount")}</div>,
+    },
+
+    {
+      accessorKey: "reason",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Reason
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("reason")}</div>,
+    },
+
+   
+  ]
+
+
+  useEffect(() => {
+    setData([...passingData]);
+  }, [passingData]);
+
+
+
+  return (
+    <div className="flex flex-1 flex-col space-y-4">
+      <div className="flex flex-1 min-h-[600px]">
+         <PageTable
+        columns={columns}
+        data={data}
+        totalItems={data.length}
+        tableHeader={tableHeader}
+        onRowClick={() => {}}
+      />
+      </div>
+
+    
     </div>
   );
 };

@@ -18,7 +18,10 @@ export async function GET(req, { params }) {
 
     try {
         const { uid } = await params
-         const isAdmin = checkSuperadmin(uid)
+        const isAdmin = checkSuperadmin(uid)
+        if (!isAdmin) {
+            return NextResponse.json({ message: "Not allowed to perform this action" }, { status: 500 })
+        }
         const salaryQuery = `
         SELECT * FROM salaries WHERE user_id = $1 AND month = $2 AND year = $3
     `;
@@ -207,6 +210,22 @@ export async function GET(req, { params }) {
         const leadCommissionResult = await pool.query(leadCommissionQuery, [user]);
 
 
+        const fineQuery = await pool.query(`
+             SELECT 
+      f.*, 
+      u.id AS user_id, 
+      u.name AS user_name,
+      c.id AS customer_id,
+      c.name AS customer_name,
+      c.owner AS customer_owner
+    FROM fine f
+    INNER JOIN users u ON f.user_id = u.id
+    INNER JOIN customer c ON f.customer_id = c.id
+    WHERE f.user_id = $1 AND f.created_at BETWEEN $2 AND $3
+            `, [user, start_date, end_date])
+
+        const fineResult = fineQuery.rows
+
         return NextResponse.json({
             reimbursement: reimbursement.rows,
             attendance: uniqueData,
@@ -218,14 +237,14 @@ export async function GET(req, { params }) {
             feedbacksTakenThisMonth,
             remainingFeedbacks,
             totalCustomersWithSale,
-            totalVisits
+            totalVisits,
+            fines: fineResult
         }, { status: 200 });
 
     } catch (error) {
         console.error('Error inserting data: ', error);
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }
-
 }
 
 export async function POST(req) {

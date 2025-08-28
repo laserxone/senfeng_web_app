@@ -13,7 +13,7 @@ export default function PageContainer({
   return (
     <>
       {effectiveScrollable ? (
-        <ScrollArea className="h-[calc(100dvh-52px)] w-full">
+        <ScrollArea className="h-[calc(100dvh-70px)] w-full">
           <div className={`flex flex-1 px-4 pb-4 md:px-6 ${className}`}>
             {children}
           </div>
