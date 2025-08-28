@@ -438,8 +438,8 @@ export default function Machine({ id, onLoading = () => {}, base }) {
     if (!id) return;
     setDeleteLoading(true);
     axios.delete(`/${userID}/machine/${id}`).then(() => {
-      const trimmedUrl = pathname.split("/").slice(0, -1).join("/");
-      router.replace(trimmedUrl);
+     onRefresh()
+     setDeleteLoading(false)
     });
   }
 

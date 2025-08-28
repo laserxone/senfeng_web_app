@@ -8,16 +8,20 @@ import useUserDetail from './use-user-detail';
 
 export function useFines() {
     const [fine, setFine] = useState({})
-    const { userID } = useUserDetail()
+    const { userID, isAdmin } = useUserDetail()
 
     const fetchFines = async () => {
         const response = await axios.get(`/${userID}/fine?LIMIT=1`);
-        setFine(response.data)
+        if (response.data.length > 0) {
+            setFine(response.data[0])
+        }
+
     };
 
     useEffect(() => {
-        if (!userID)
-            return
+
+        if (!userID || isAdmin) return;
+
         const unsub = onSnapshot(
             doc(db, 'fine_notification', userID.toString()),
             () => fetchFines()
@@ -26,7 +30,7 @@ export function useFines() {
             unsub()
         }
 
-    }, [userID]);
+    }, [userID, isAdmin]);
 
     return { fine };
 }
