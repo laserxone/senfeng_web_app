@@ -23,9 +23,9 @@ export async function PUT(req, { params }) {
   try {
     const data = await req.json();
     const { ...updates } = data;
-    const { uid } = await params
+    const { uid, id } = await params
 
-    if (!uid) {
+    if (!uid || !id) {
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
@@ -43,7 +43,7 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ message: "No valid data provided for update" }, { status: 400 });
     }
 
-    values.push(uid);
+    values.push(id);
     const query = `
           UPDATE fine 
           SET ${fields.join(", ")}
