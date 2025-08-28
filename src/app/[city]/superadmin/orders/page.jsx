@@ -2,18 +2,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Calendar,
-  CheckCircle,
-  Edit,
-  Filter,
-  Package,
-  Plus,
-  Trash2,
-} from "lucide-react";
-import { useContext, useEffect, useState } from "react";
-import {
-  DndContext,
   closestCenter,
+  DndContext,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -25,8 +15,20 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import {
+  Calendar,
+  Edit,
+  Filter,
+  Package,
+  Plus,
+  Trash2
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
+import AddOrderDialog from "@/components/add-order";
+import EditOrderDialog from "@/components/edit-order";
 import CreateOrderDialog from "@/components/new-order";
+import SortableCard from "@/components/sortable-card";
 import {
   Accordion,
   AccordionContent,
@@ -38,15 +40,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import FilterSheet from "@/components/users/filterSheet";
-import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
-import moment from "moment";
-import "react-medium-image-zoom/dist/styles.css";
-import AddOrderDialog from "@/components/add-order";
-import EditOrderDialog from "@/components/edit-order";
-import Image from "next/image";
-import SortableCard from "@/components/sortable-card";
 import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import moment from "moment";
+import Image from "next/image";
+import "react-medium-image-zoom/dist/styles.css";
 
 const colorClasses = [
   { bg: "bg-red-100", text: "text-red-800" },

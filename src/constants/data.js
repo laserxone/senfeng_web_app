@@ -95,6 +95,12 @@ export const ownerNavItems = [
         icon: 'team',
         shortcut: ['t', 'e', 'a'],
       },
+       {
+        title: 'Fine',
+        url: '/fine',
+        icon: 'fine',
+        shortcut: ['f', 'i', 'n', 'e'],
+      },
     ]
   },
   {

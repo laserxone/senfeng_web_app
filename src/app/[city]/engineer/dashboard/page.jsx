@@ -5,8 +5,8 @@ import Attendance from "@/components/users/attendance";
 import { ProfilePicture } from "@/components/users/ProfilePicture";
 import Reimbursement from "@/components/users/Reimbursement";
 import RenderReturnable from "@/components/users/render-returnable";
+import RenderFines from "@/components/users/render-fines"
 import SalaryRecord from "@/components/users/SalaryRecord";
-import useIssuedItem from "@/hooks/use-issued-items";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import moment from "moment";
@@ -143,6 +143,7 @@ export default function Page() {
             <TabsTrigger value="salary">Salary</TabsTrigger>
 
             <TabsTrigger value="issued">Returnable</TabsTrigger>
+             <TabsTrigger value="fines">Fines</TabsTrigger>
           </TabsList>
 
           <div className="flex flex-1 w-full mt-2">
@@ -157,6 +158,7 @@ export default function Page() {
             )}
 
             {activeTab === "issued" && <RenderReturnable />}
+             {activeTab === "fines" && <RenderFines />}
           </div>
         </Tabs>
       </div>
