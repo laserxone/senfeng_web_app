@@ -44,6 +44,7 @@ export async function GET(req, { params }) {
     const searchParams = req.nextUrl.searchParams
     const start_date = searchParams.get('start_date')
     const end_date = searchParams.get('end_date')
+    const LIMIT = searchParams.get("LIMIT")
     const user = searchParams.get('user')
 
     try {
@@ -106,7 +107,13 @@ export async function GET(req, { params }) {
                 queryParams.push(start_date, end_date);
             }
 
-            query += ` ORDER BY f.created_at DESC;`;
+             if (LIMIT) {
+                query += ` AND is_read IS FALSE LIMIT ${LIMIT}`;
+            }
+
+            query += ` ORDER BY f.created_at DESC`;
+
+           
 
             const result = await pool.query(query, queryParams);
             return NextResponse.json(result.rows, { status: 200 });

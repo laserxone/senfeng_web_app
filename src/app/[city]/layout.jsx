@@ -1,5 +1,6 @@
 import FloatingChat from "@/components/chat/floating-chat";
 import CommonLayout from "@/components/CommonLayout";
+import FinePopup from "@/components/fine-popup";
 import FloatingInformation from "@/components/floating-information";
 import FloatingTodo from "@/components/floating-todo";
 import FloatingWidgets from "@/components/floating-widget";
@@ -12,9 +13,11 @@ export default async function DashboardLayout({ children, params }) {
     redirect("/");
   }
 
+
   return (
     <CommonLayout office={city}>
       {children}
+       <FinePopup/>
       <FloatingWidgets>
         <div className="flex flex-col gap-2">
           <FloatingInformation />

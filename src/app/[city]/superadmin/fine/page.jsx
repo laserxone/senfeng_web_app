@@ -35,6 +35,8 @@ import FilterSheet from "@/components/users/filterSheet";
 import momentT from "moment-timezone";
 import { TIMEZONE } from "@/constants/data";
 import Spinner from "@/components/ui/spinner";
+import { useToast } from "@/hooks/use-toast";
+import { TriggerFirebaseForFine } from "@/lib/triggerFirebase";
 
 const formSchema = z.object({
   user_id: z.number({ required_error: "User is required." }),
@@ -74,6 +76,7 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedFine, setSelectedFine] = useState(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (userID) {
@@ -246,11 +249,11 @@ export default function Page() {
         );
       },
     },
-  ];
+  ]
 
   async function handleDelete(id) {
     if (!id) return;
-    setSelectedFine(id)
+    setSelectedFine(id);
     try {
       const response = await axios.delete(`/${userID}/fine/${id}`);
       toast({ title: "Fine Deleted" });
@@ -316,8 +319,6 @@ const AddFine = ({ open, setOpen, onRefresh, userID }) => {
   });
 
   const onSubmit = (values) => {
-    console.log("Submitted Fine:", values);
-
     if (!userID) return;
 
     setLoading(true);
@@ -326,6 +327,7 @@ const AddFine = ({ open, setOpen, onRefresh, userID }) => {
       .then(async () => {
         await onRefresh();
         handleOpenChange(false);
+        TriggerFirebaseForFine(values.user_id)
       })
       .catch((e) => {
         console.log(e);
