@@ -38,7 +38,7 @@ export default function FinePopup() {
         </DialogTitle>
 
         <p className="text-lg mb-2">
-          <span className="font-semibold">Amount:</span> ${fine?.amount}
+          <span className="font-semibold">Amount:</span> {fine?.amount}
         </p>
         <p className="text-lg mb-6">
           <span className="font-semibold">Reason:</span> {fine?.reason}
