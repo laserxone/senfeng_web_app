@@ -13,7 +13,7 @@ import axios from "@/lib/axios";
 import useUserDetail from "@/hooks/use-user-detail";
 
 export default function FinePopup() {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const { userID } = useUserDetail();
   const { fine } = useFines();
 

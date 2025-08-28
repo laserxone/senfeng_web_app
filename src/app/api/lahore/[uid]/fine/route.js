@@ -107,13 +107,15 @@ export async function GET(req, { params }) {
                 queryParams.push(start_date, end_date);
             }
 
-             if (LIMIT) {
-                query += ` AND is_read IS FALSE LIMIT ${LIMIT}`;
+            if (LIMIT) {
+                query += ` AND f.is_read IS FALSE ORDER BY f.created_at DESC LIMIT ${LIMIT}`;
+            } else {
+                query += ` ORDER BY f.created_at DESC`;
             }
 
-            query += ` ORDER BY f.created_at DESC`;
 
-           
+
+
 
             const result = await pool.query(query, queryParams);
             return NextResponse.json(result.rows, { status: 200 });
