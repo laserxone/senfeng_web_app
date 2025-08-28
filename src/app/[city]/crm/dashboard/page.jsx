@@ -15,6 +15,7 @@ import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
 import OldRecordSheet from "@/components/users/old-record-sheet";
+import RenderFines from "@/components/users/render-fines";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -178,6 +179,7 @@ export default function Page() {
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="task">Team Task</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
+              <TabsTrigger value="fines">Fines</TabsTrigger>
           </TabsList>
 
           <div className="flex flex-1 w-full mt-2">
@@ -198,6 +200,7 @@ export default function Page() {
                 </CardContent>
               </Card>
             )}
+            {activeTab === 'fines' && <RenderFines />}
           </div>
         </Tabs>
       </div>
