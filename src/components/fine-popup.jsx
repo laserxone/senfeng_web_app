@@ -31,7 +31,11 @@ export default function FinePopup() {
     <Dialog open={open}>
       <DialogOverlay />
       <DialogContent className="max-w-lg p-10 text-center rounded-2xl">
-        <DialogTitle>Notice</DialogTitle>
+        <DialogTitle>
+             <h1 className="text-2xl font-bold text-red-600 mb-4">
+          🚨 You Have Been Fined!
+        </h1>
+        </DialogTitle>
 
         <p className="text-lg mb-2">
           <span className="font-semibold">Amount:</span> ${fine?.amount}
