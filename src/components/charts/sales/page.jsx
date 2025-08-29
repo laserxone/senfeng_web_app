@@ -1,8 +1,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import useUserDetail from "@/hooks/use-user-detail";
+import { GetProfileImage } from "@/lib/getProfileImage";
 import moment from "moment";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export function Sale({ data }) {
   const { base_route } = useUserDetail();
@@ -20,7 +22,8 @@ export function Sale({ data }) {
             >
               <div className="flex  items-center">
                 <Avatar className="h-9 w-9">
-                  <AvatarImage src={item.seller_dp} alt="Avatar" />
+                  <RenderImage img={item.seller_dp} />
+
                   <AvatarFallback>
                     {item.seller_name.substring(0, 2)}
                   </AvatarFallback>
@@ -60,4 +63,28 @@ export function Sale({ data }) {
       </CardContent>
     </Card>
   );
+}
+
+const RenderImage = ({ img }) => {
+
+  const [localImage, setLocalImage] = useState(null)
+
+  useEffect(() => {
+    async function fetchImage() {
+      if (img?.includes("http")) {
+        setLocalImage(img);
+      } else {
+        const imgResult = await GetProfileImage(img);
+        setLocalImage(imgResult);
+      }
+    }
+
+    if (img) {
+      fetchImage();
+    }
+  }, [img]);
+
+  return (
+    <AvatarImage src={localImage} alt="Avatar" />
+  )
 }

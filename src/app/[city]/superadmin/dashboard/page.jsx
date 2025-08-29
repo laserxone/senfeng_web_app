@@ -7,6 +7,7 @@ import SalesTeamProgressChart from "@/components/charts/sales_progress/page";
 import { CustomerMapComponent } from "@/components/customerMapComponent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PakCities } from "@/constants/data";
@@ -20,26 +21,27 @@ import { useEffect, useState } from "react";
 export default function Page({ params }) {
   const [customers, setCustomers] = useState([]);
   const [data, setData] = useState();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [userTaskData, setUserTaskData] = useState([]);
-  const {userID} = useUserDetail()
+  const { userID } = useUserDetail()
   const debouncedUserId = useDebounce(userID, 1000);
   const [selectedOffice, setSelectedOffice] = useState("lahore");
 
   useEffect(() => {
-    if (debouncedUserId) {
+    if (debouncedUserId && selectedOffice) {
       fetchData();
     }
-  }, [debouncedUserId]);
+  }, [debouncedUserId, selectedOffice]);
 
   function fetchData() {
+    setLoading(true)
     fetchCustomerList();
     fetchDashboardData();
   }
 
   async function fetchDashboardData() {
     axios
-      .get(`/${debouncedUserId}/dashboard`)
+      .get(`/${debouncedUserId}/dashboard?office=${selectedOffice}`)
       .then((response) => {
         setData(response.data);
         if (response.data?.team_task) {
@@ -81,8 +83,7 @@ export default function Page({ params }) {
 
   async function fetchCustomerList() {
     try {
-      let list1 = [];
-      axios.get(`/${debouncedUserId}/customer?map=true`).then((response) => {
+      axios.get(`/${debouncedUserId}/customer?map=true&office=${selectedOffice}`).then((response) => {
         const customerList = response.data;
         const newArray = mergeArrays(customerList, PakCities);
 
@@ -120,17 +121,17 @@ export default function Page({ params }) {
           Hi, Welcome back 👋
         </h2>
         <div className="w-[200px]">
-        {/* <Select onValueChange={setSelectedOffice} value={selectedOffice}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select office" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="lahore">lahore</SelectItem>
-              <SelectItem value="karachi">karachi</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select> */}
+          <Select onValueChange={setSelectedOffice} value={selectedOffice}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select office" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="lahore">lahore</SelectItem>
+                <SelectItem value="karachi">karachi</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       <div className="flex flex-row justify-between flex-wrap gap-4">
@@ -159,9 +160,9 @@ export default function Page({ params }) {
               <div className="text-2xl font-bold">
                 {data?.total_payment_this_month
                   ? new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "PKR",
-                    }).format(data?.total_payment_this_month || 0)
+                    style: "currency",
+                    currency: "PKR",
+                  }).format(data?.total_payment_this_month || 0)
                   : ""}
               </div>
             )}
@@ -286,27 +287,32 @@ export default function Page({ params }) {
           )}
         </div>
       </div>
-      <Card>
-        <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
-          <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
-            <CardTitle>Task status</CardTitle>
-            <Separator className="my-2" />
-            <ScrollArea className="h-[500px] pr-3">
-              {userTaskData.map((user) => (
-                <div key={user.assigned_user_id} className="mb-10">
-                  <h2 className="text-xl font-bold mb-4">
-                    {user.assigned_user_name}
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {renderTaskCard(user.yesterdayTasks, "🕒 Yesterday")}
-                    {renderTaskCard(user.todayTasks, "📅 Today")}
+      {loading ?
+        <Skeleton className="h-64" />
+        :
+
+        <Card>
+          <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
+            <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
+              <CardTitle>Task status</CardTitle>
+              <Separator className="my-2" />
+              <ScrollArea className="h-[500px] pr-3">
+                {userTaskData.map((user) => (
+                  <div key={user.assigned_user_id} className="mb-10">
+                    <h2 className="text-xl font-bold mb-4">
+                      {user.assigned_user_name}
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {renderTaskCard(user.yesterdayTasks, "🕒 Yesterday")}
+                      {renderTaskCard(user.todayTasks, "📅 Today")}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </ScrollArea>
-          </div>
-        </CardHeader>
-      </Card>
+                ))}
+              </ScrollArea>
+            </div>
+          </CardHeader>
+        </Card>
+      }
 
       <div className="mb-5">
         {loading ? (
@@ -333,9 +339,8 @@ const renderTaskCard = (tasks, label) => (
         tasks.map((task) => (
           <div
             key={task.id}
-            className={`p-3 rounded text-sm border border-muted-foreground/10 ${
-              task.status === "Completed" ? "bg-green-200" : "bg-red-200"
-            }`}
+            className={`p-3 rounded text-sm border border-muted-foreground/10 ${task.status === "Completed" ? "bg-green-200" : "bg-red-200"
+              }`}
           >
             <p className="font-medium text-black">
               {task.title || `Task #${task.id}`}{" "}

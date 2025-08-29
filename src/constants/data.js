@@ -142,7 +142,7 @@ export const ownerNavItems = [
   },
 
   {
-    title: 'DMS',
+    title: 'Documents',
     url: '/dms',
     icon: 'dms',
     shortcut: ['d', 'm', 's'],
@@ -213,7 +213,7 @@ export const employeeNavItems = [
     items: []
   },
   {
-    title: 'DMS',
+    title: 'Documents',
     url: '/dms',
     icon: 'dms',
     shortcut: ['d', 'm', 's'],
@@ -305,7 +305,7 @@ export const StoreNavItem = [
     items: []
   },
   {
-    title: 'DMS',
+    title: 'Documents',
     url: '/dms',
     icon: 'dms',
     shortcut: ['d', 'm', 's'],

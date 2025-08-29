@@ -1,11 +1,8 @@
 "use client";
 
-//Map component Component from library
 import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useState } from "react";
-
-//Map's styling
 
 const CustomerMapComponent = ({ data }) => {
   const { theme } = useTheme();

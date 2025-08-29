@@ -83,23 +83,35 @@ export async function GET(req, { params }) {
     const end_date = searchParams.get('end_date')
     const user = searchParams.get("user")
     const member = searchParams.get("member")
+    const office = searchParams.get("office")
 
     try {
         const isAdmin = await checkSuperadmin(uid)
 
         if (isAdmin) {
             if (mapQuery) {
-                const result = await pool.query(`
-                SELECT 
-                customer.id, 
-                customer.name,
-                customer.owner, 
-                customer.location
-                FROM customer
-                LEFT JOIN users ON customer.ownership = users.id
-                ORDER BY customer.name ASC;
-                `)
+                let query = `
+    SELECT 
+        customer.id, 
+        customer.name,
+        customer.owner, 
+        customer.location,
+        customer.office,
+        customer.ownership,
+        users.name AS ownership_name
+    FROM customer
+    LEFT JOIN users ON customer.ownership = users.id
+`
+
+                if (office) {
+                    query += ` WHERE customer.office = '${office}'`
+                }
+
+                query += " ORDER BY customer.name ASC"
+
+                const result = await pool.query(query)
                 return NextResponse.json(result.rows, { status: 200 });
+
             }
             else if (urlQuery) {
                 const result = await pool.query(`
