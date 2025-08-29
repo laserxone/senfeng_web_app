@@ -21,12 +21,15 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { cn } from "@/lib/utils";
 import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Switch } from "./ui/switch";
 
 export function CustomerSearchWithData({ value, onReturn }) {
   const [open, setOpen] = React.useState(false);
   const [customers, setCustomers] = React.useState([]);
-  const { userID } = useUserDetail();
+  const { userID, designation, office } = useUserDetail();
   const [search, setSearch] = React.useState("");
+  const [city, setCity] = React.useState("lahore");
 
   React.useEffect(() => {
     async function fetchData() {
@@ -88,14 +91,23 @@ export function CustomerSearchWithData({ value, onReturn }) {
     if (userID) fetchData();
   }, [userID]);
 
+  React.useEffect(() => {
+    if (office) {
+      setCity(office);
+    }
+  }, [office]);
+
   const debouncedSearch = useDebounce(search, 500);
 
   const filteredCustomers = React.useMemo(() => {
-    if (!debouncedSearch) return customers;
-    return customers.filter((item) =>
-      item.search.toLowerCase().includes(debouncedSearch.toLowerCase())
-    );
-  }, [customers, debouncedSearch]);
+    if (!debouncedSearch)
+      return customers.filter((item) => item?.office === city);
+    return customers
+      .filter((item) => item?.office === city)
+      .filter((item) =>
+        item.search.toLowerCase().includes(debouncedSearch.toLowerCase())
+      );
+  }, [customers, debouncedSearch, city]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -112,6 +124,18 @@ export function CustomerSearchWithData({ value, onReturn }) {
       </PopoverTrigger>
       <PopoverContent className="py-2 px-0">
         <Command>
+          {designation !== "Sales" && (
+            <div className="flex items-center justify-center gap-2 px-2 py-1 border-b">
+              <Label className="text-sm">Lahore</Label>
+              <Switch
+                checked={city === "karachi"}
+                onCheckedChange={(checked) =>
+                  setCity(checked ? "karachi" : "lahore")
+                }
+              />
+              <Label className="text-sm">Karachi</Label>
+            </div>
+          )}
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}

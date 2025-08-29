@@ -20,6 +20,8 @@ import {
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { cn } from "@/lib/utils";
+import { Label } from "./ui/label";
+import { Switch } from "./ui/switch";
 
 export function UserSearch({
   value,
@@ -33,7 +35,8 @@ export function UserSearch({
 }) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState([]);
-  const {userID} = useUserDetail()
+  const [city, setCity] = React.useState("lahore");
+  const { userID, designation, office } = useUserDetail();
 
   React.useEffect(() => {
     async function fetchData() {
@@ -57,24 +60,20 @@ export function UserSearch({
                 };
               });
             if (remove) {
-              setData(
-                finalData.filter(
-                  (item) => item.value !== userID
-                )
-              );
+              setData(finalData.filter((item) => item.value !== userID));
             } else {
               setData(finalData);
             }
           } else {
             const finalData = response.data.map((item) => {
-              return { value: item.id, label: item?.name || item.email };
+              return {
+                value: item.id,
+                label: item?.name || item.email,
+                data: item,
+              };
             });
-             if (remove) {
-              setData(
-                finalData.filter(
-                  (item) => item.value !== userID
-                )
-              );
+            if (remove) {
+              setData(finalData.filter((item) => item.value !== userID));
             } else {
               setData(finalData);
             }
@@ -84,6 +83,14 @@ export function UserSearch({
     }
     fetchData();
   }, []);
+
+  React.useEffect(() => {
+    if (office) {
+      setCity(office);
+    }
+  }, [office]);
+
+  const filteredData = data.filter((item) => item?.data?.office === city);
 
   return (
     <div className={className}>
@@ -96,18 +103,30 @@ export function UserSearch({
             className="w-full justify-between"
           >
             {value
-              ? data.find((item) => item.value === value)?.label
+              ? filteredData.find((item) => item.value === value)?.label
               : placeholder}
             <ChevronsUpDown className="opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="py-2 px-0">
           <Command>
+            {designation !== "Sales" && (
+              <div className="flex items-center justify-center gap-2 px-2 py-1 border-b">
+                <Label className="text-sm">Lahore</Label>
+                <Switch
+                  checked={city === "karachi"}
+                  onCheckedChange={(checked) =>
+                    setCity(checked ? "karachi" : "lahore")
+                  }
+                />
+                <Label className="text-sm">Karachi</Label>
+              </div>
+            )}
             <CommandInput placeholder="Search user..." className="h-9" />
             <CommandList>
               <CommandEmpty>No user found.</CommandEmpty>
               <CommandGroup>
-                {data.map((item) => (
+                {filteredData.map((item) => (
                   <CommandItem
                     key={item.value}
                     value={item.label}

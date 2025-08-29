@@ -24,6 +24,7 @@ export async function GET(req, { params }) {
                 c.number, 
                 c.lead, 
                 c.ownership,
+                c.office,
                 u.name AS ownership_name
             FROM customer c
             LEFT JOIN users u ON c.ownership = u.id
