@@ -30,8 +30,8 @@ export function UserSearch({
   lead = false,
   className = "",
   remove = false,
-  onReturnName = () => {},
-  onReturnData = () => {},
+  onReturnName = () => { },
+  onReturnData = () => { },
 }) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState([]);
@@ -81,14 +81,20 @@ export function UserSearch({
         }
       });
     }
-    fetchData();
-  }, []);
+    if (userID)
+      fetchData();
+  }, [userID]);
 
   React.useEffect(() => {
     if (office) {
-      setCity(office);
+      if (designation === 'Sales') {
+        setCity("")
+      } else {
+        setCity(office);
+      }
+
     }
-  }, [office]);
+  }, [office, designation]);
 
   const filteredData = data.filter((item) => item?.data?.office === city);
 

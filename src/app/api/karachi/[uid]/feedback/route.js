@@ -10,12 +10,12 @@ export async function GET(req, { params }) {
     const searchParams = req.nextUrl.searchParams;
     const start_date = searchParams.get("start_date");
     const end_date = searchParams.get("end_date");
-    const crm = searchParams.get("crm");
+    const member = searchParams.get("member");
 
-   
+
 
     try {
- const isAdmin = await checkSuperadmin(uid)
+        const isAdmin = await checkSuperadmin(uid)
         if (isAdmin) {
             const query = `
 SELECT 
@@ -38,7 +38,7 @@ ORDER BY created_at DESC;
         } else {
             const userQuery = await pool.query("SELECT limited_access FROM users WHERE id = $1", [uid])
             const user = userQuery.rows[0]
-           
+
 
             const limitedAccess = user.limited_access
 
@@ -58,17 +58,23 @@ ORDER BY created_at DESC;
       customer.name,
       customer.owner,
       customer.location,
-      customer.number
+      customer.number,
+      customer.created_at AS customer_created_at
     FROM feedback
     LEFT JOIN customer ON feedback.customer_id = customer.id
     LEFT JOIN users ON feedback.user_id = users.id 
   `;
 
-            if (limitedAccess || !crm) {
+            if (limitedAccess) {
                 conditions.push(`feedback.user_id = $${queryParams.length + 1}`);
                 queryParams.push(uid);
             }
 
+            if (member === 'TRUE') {
+                conditions.push(`member IS TRUE`)
+            } else if (member === 'FALSE') {
+                conditions.push(`member IS FALSE`)
+            }
 
             if (start_date && end_date) {
                 conditions.push(`feedback.created_at BETWEEN $${queryParams.length + 1} AND $${queryParams.length + 2}`);

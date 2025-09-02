@@ -58,7 +58,8 @@ ORDER BY created_at DESC;
       customer.name,
       customer.owner,
       customer.location,
-      customer.number
+      customer.number,
+      customer.created_at AS customer_created_at
     FROM feedback
     LEFT JOIN customer ON feedback.customer_id = customer.id
     LEFT JOIN users ON feedback.user_id = users.id 

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import Spinner from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { storage } from "@/config/firebase";
 import { useToast } from "@/hooks/use-toast";
@@ -18,9 +19,10 @@ import { useCallback, useEffect, useState } from "react";
 import "react-medium-image-zoom/dist/styles.css";
 
 export default function Page({ params }) {
-  const {userID} = useUserDetail()
+  const { userID } = useUserDetail()
   const [joiningDate, setJoiningDate] = useState(null);
   const [leavingDate, setLeavingDate] = useState(null);
+  const [active, setActive] = useState(false)
   const [dataLoading, setDataLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [employeeId, setEmployeeId] = useState(null);
@@ -60,7 +62,7 @@ export default function Page({ params }) {
   useEffect(() => {
     if (userID) {
       fetchData();
-    } 
+    }
   }, [userID]);
 
   async function fetchData() {
@@ -95,7 +97,7 @@ export default function Page({ params }) {
             limited_access: apiData?.limited_access,
             full_access: apiData?.full_access,
             pos_assigned: apiData?.pos_assigned,
-            complaint_assigned : apiData?.complaint_assigned
+            complaint_assigned: apiData?.complaint_assigned
           });
           setForm({
             basic_salary: apiData?.basic_salary || 0,
@@ -104,8 +106,9 @@ export default function Page({ params }) {
             total_salary: apiData?.total_salary || 0,
           });
 
-          setJoiningDate(apiData?.joining_date);
-          setLeavingDate(apiData?.leaving_date);
+          setJoiningDate(apiData?.joining_date || null);
+          setLeavingDate(apiData?.leaving_date || null);
+          setActive(apiData?.active || false)
         } else {
           toast({
             title: "Employee details not found",
@@ -158,7 +161,8 @@ export default function Page({ params }) {
         joining_date: joiningDate,
         leaving_date: leavingDate,
         pos_assigned: checks?.pos_assigned,
-        complaint_assigned : checks?.complaint_assigned
+        complaint_assigned: checks?.complaint_assigned,
+        active: active
       })
       .then(() => {
         toast({ title: "Information updated" });
@@ -307,14 +311,14 @@ export default function Page({ params }) {
                   <Label>PHONE NUMBER</Label>
                   <Input
                     value={fixedData?.number}
-                    onChange={() => {}}
+                    onChange={() => { }}
                     disabled
                   />
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <Label>KINSHIP NUMBER</Label>
-                  <Input value={fixedData?.kin} onChange={() => {}} disabled />
+                  <Input value={fixedData?.kin} onChange={() => { }} disabled />
                 </div>
                 <div className="flex flex-col gap-1">
                   <Label>NOTE</Label>
@@ -337,6 +341,14 @@ export default function Page({ params }) {
                   <AppCalendar
                     date={leavingDate}
                     onChange={(date) => setLeavingDate(date)}
+                  />
+                </div>
+
+                <div className="flex flex-row items-center gap-1">
+                  <Label>Status</Label>
+                  <Switch
+                    checked={active}
+                    onCheckedChange={setActive}
                   />
                 </div>
               </CardContent>

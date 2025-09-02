@@ -226,6 +226,24 @@ export async function GET(req, { params }) {
 
         const fineResult = fineQuery.rows
 
+        const oldSalariesQuery = await pool.query(
+            `
+    SELECT 
+      s.user_id, 
+      s.payable, 
+      s.created_at,
+      s.salary_month,
+      u.name
+    FROM salaries s
+    LEFT JOIN users u ON u.id = s.user_id
+    WHERE s.user_id = $1
+    ORDER BY s.year DESC, s.month DESC
+    LIMIT 6
+  `,
+            [user]
+        );
+
+
         return NextResponse.json({
             reimbursement: reimbursement.rows,
             attendance: uniqueData,
@@ -238,7 +256,8 @@ export async function GET(req, { params }) {
             remainingFeedbacks,
             totalCustomersWithSale,
             totalVisits,
-            fines: fineResult
+            fines: fineResult,
+            old_record: oldSalariesQuery.rows
         }, { status: 200 });
 
     } catch (error) {

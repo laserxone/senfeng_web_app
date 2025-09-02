@@ -62,11 +62,16 @@ export function CustomerSearch({ value, onReturn }) {
     if (userID) fetchData();
   }, [userID]);
 
-  React.useEffect(() => {
-    if (office) {
-      setCity(office);
-    }
-  }, [office]);
+   React.useEffect(() => {
+     if (office) {
+       if (designation === 'Sales') {
+         setCity("")
+       } else {
+         setCity(office);
+       }
+ 
+     }
+   }, [office, designation]);
 
   const filteredData = customers.filter((item) => item?.office === city);
 

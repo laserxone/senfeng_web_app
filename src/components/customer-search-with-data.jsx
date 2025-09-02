@@ -48,18 +48,17 @@ export function CustomerSearchWithData({ value, onReturn }) {
             const numbers = Array.isArray(item.number)
               ? item.number
               : item.number
-              ? [item.number]
-              : [];
+                ? [item.number]
+                : [];
 
             return {
               ...item,
               label: hasValidName
                 ? item.name.trim() + " " + numbers.join(" ")
-                : `${item.owner?.trim() || ""} ${
-                    item.location?.trim() || ""
+                : `${item.owner?.trim() || ""} ${item.location?.trim() || ""
                   }`.trim() +
-                  " " +
-                  numbers.join(" "),
+                " " +
+                numbers.join(" "),
             };
           })
           .filter((item) => !!item.label)
@@ -69,8 +68,8 @@ export function CustomerSearchWithData({ value, onReturn }) {
           const numbers = Array.isArray(item.number)
             ? item.number
             : item.number
-            ? [item.number]
-            : [];
+              ? [item.number]
+              : [];
           return {
             ...item,
             search: [
@@ -93,9 +92,14 @@ export function CustomerSearchWithData({ value, onReturn }) {
 
   React.useEffect(() => {
     if (office) {
-      setCity(office);
+      if (designation === 'Sales') {
+        setCity("")
+      } else {
+        setCity(office);
+      }
+
     }
-  }, [office]);
+  }, [office, designation]);
 
   const debouncedSearch = useDebounce(search, 500);
 

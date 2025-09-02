@@ -35,9 +35,10 @@ import axios from "@/lib/axios";
 import { zodResolver } from "@hookform/resolvers/zod";
 import moment from "moment";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import AppCalendarRange from "../appCalendarRange";
 
 
 const OldRecordSheet = ({ visible, onClose, user_id }) => {
@@ -47,6 +48,7 @@ const OldRecordSheet = ({ visible, onClose, user_id }) => {
   const { userID, base_route } = useUserDetail();
   const [sendLoading, setSendLoading] = useState(false);
   const [filterValue, setFilterValue] = useState("All");
+  const [rangeDate, setRangeDate] = useState(null)
 
   const formSchema = z.object({
     start: z.date({ required_error: "Start date is required." }),
@@ -65,6 +67,8 @@ const OldRecordSheet = ({ visible, onClose, user_id }) => {
 
   async function onSubmit(values) {
     if (!user_id) return;
+    setData([])
+    setRangeDate(null)
     setLoading(true);
     let start = values.start.toISOString();
     let end = values.end.toISOString();
@@ -129,11 +133,25 @@ const OldRecordSheet = ({ visible, onClose, user_id }) => {
     }
   }
 
+
+
   const uniqueUserNames = [...new Set(data.map((item) => item.user_name))];
 
-  const visibleData = data.filter(
-    (item) => filterValue === "All" || item.user_name.includes(filterValue)
-  );
+  const visibleData = data
+    .filter((item) => filterValue === "All" || item.user_name.includes(filterValue))
+    .filter((item) => {
+      if (rangeDate?.from && rangeDate?.to) {
+        const start = moment(rangeDate.from).startOf("day")
+        const end = moment(rangeDate.to).endOf("day")
+
+        return moment(item.customer_created_at).isBetween(start, end, null, "[]")
+
+      }
+      return true
+    })
+
+
+
 
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
@@ -161,6 +179,9 @@ const OldRecordSheet = ({ visible, onClose, user_id }) => {
                           field.onChange(date);
                         }}
                       />
+
+
+
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -220,8 +241,15 @@ const OldRecordSheet = ({ visible, onClose, user_id }) => {
 
               {data.length > 0 && (
                 <div className="flex gap-2 items-end">
+                  <div>
+                    <Label>Filter customer date</Label>
+                    <AppCalendarRange
+                      date={rangeDate}
+                      onChange={setRangeDate}
+                    />
+                  </div>
                   <div className="space-y-2">
-                    <Label>Filter by user</Label>
+
                     <Select onValueChange={setFilterValue} value={filterValue}>
                       <SelectTrigger className="w-[200px]">
                         <SelectValue placeholder="Filter by user" />

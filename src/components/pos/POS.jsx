@@ -30,6 +30,7 @@ import OrderStockDialog from './order-stock-dialog';
 import POSModal from './pos-modal';
 import SearchResultModal from './search-result-modal';
 import ViewableInvoice from './viewable-invoice';
+import InwardModal from './inward-modal';
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -83,6 +84,9 @@ export default function POS() {
     const [walkIn, setWalkIn] = useState(false)
     const [selectedInvoice, setSelectedInvoice] = useState(null)
     const debouncedUserId = useDebounce(userID, 1000);
+
+    const [inwardModal, setInwardModal] = useState(false)
+    const [outwardModal, setOutwardModal] = useState(false)
 
     useEffect(() => {
         if (debouncedUserId) {
@@ -428,10 +432,14 @@ export default function POS() {
         } finally {
             setEngineerLoading(false)
         }
+    }
 
+    function handleInward() {
+        setInwardModal(true)
+    }
 
-
-
+    function handleOutward() {
+        setOutwardModal(true)
     }
 
 
@@ -691,7 +699,7 @@ export default function POS() {
                             </Button>
 
                             <Button
-                                onClick={handleEngineerItems}
+                                onClick={handleInward}
                                 className="h-[100px] w-[100px] text-wrap"
                             >
 
@@ -699,7 +707,7 @@ export default function POS() {
                             </Button>
 
                             <Button
-                                onClick={handleEngineerItems}
+                                onClick={handleOutward}
                                 className="h-[100px] w-[100px] text-wrap"
                             >
 
@@ -812,6 +820,11 @@ export default function POS() {
                     }}
                     handleOrderStock={handleOrderStock}
                     designation={designation} />
+
+                <InwardModal visible={inwardModal} onClose={setInwardModal} data={stock} onRefresh={async () => {
+                    setLoading(true)
+                    await fetchData()
+                }} />
             </PageContainer >
     )
 }
