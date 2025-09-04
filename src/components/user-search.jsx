@@ -96,7 +96,7 @@ export function UserSearch({
     }
   }, [office, designation]);
 
-  const filteredData = data.filter((item) => item?.data?.office === city);
+  const filteredData = data.filter((item) => item?.data?.office?.includes(city));
 
   return (
     <div className={className}>

@@ -105,9 +105,9 @@ export function CustomerSearchWithData({ value, onReturn }) {
 
   const filteredCustomers = React.useMemo(() => {
     if (!debouncedSearch)
-      return customers.filter((item) => item?.office === city);
+      return customers.filter((item) => item?.office?.includes(city));
     return customers
-      .filter((item) => item?.office === city)
+      .filter((item) => item?.office?.includes(city))
       .filter((item) =>
         item.search.toLowerCase().includes(debouncedSearch.toLowerCase())
       );

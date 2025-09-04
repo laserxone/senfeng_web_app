@@ -543,19 +543,20 @@ const SalaryComponent = ({ onSelectedId }) => {
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-4">
-      <div className="flex justify-between flex-wrap gap-2">
-        <div className="space-y-2">
-          <div className="flex flex-wrap gap-4 justify-between items-start">
 
+    <div className="flex flex-1 flex-col gap-4">
+      {/* Header + TT Rate */}
+      <div className="flex flex-col lg:flex-row justify-between gap-4">
+        <div className="space-y-4 flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <Heading
-              className="my-4"
+              className="my-2"
               title={"Generate Salary"}
               description={"Manage employee salaries"}
             />
 
             {data && Array.isArray(data?.machines) && data.machines.length > 0 && (
-              <Card>
+              <Card className="w-full sm:w-[280px]">
                 <CardHeader>
                   <CardTitle>TT Rate</CardTitle>
                 </CardHeader>
@@ -566,15 +567,21 @@ const SalaryComponent = ({ onSelectedId }) => {
             )}
           </div>
 
-          <div className="flex items-end gap-4 flex-wrap ">
-            <div className="flex w-full sm:w-[300px] flex-col gap-2">
+          {/* Filters + Actions */}
+          <div className="flex flex-wrap gap-4 items-end">
+            {/* User */}
+            <div className="flex sm:w-[300px] flex-col gap-2">
               <Label>Select User</Label>
-              <UserSearch value={user} onReturn={(val) => {
-                setUser(val)
-                onSelectedId(val)
-              }} />
+              <UserSearch
+                value={user}
+                onReturn={(val) => {
+                  setUser(val);
+                  onSelectedId(val);
+                }}
+              />
             </div>
 
+            {/* Year */}
             <div className="flex flex-col gap-2">
               <Label>Select Year</Label>
               <Select
@@ -597,6 +604,7 @@ const SalaryComponent = ({ onSelectedId }) => {
               </Select>
             </div>
 
+            {/* Month */}
             <div className="flex flex-col gap-2">
               <Label>Select Month</Label>
               <Select
@@ -618,8 +626,10 @@ const SalaryComponent = ({ onSelectedId }) => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Generate + Accounts */}
             {userID && (
-              <>
+              <div className="flex flex-wrap gap-2">
                 <Button
                   disabled={!user}
                   onClick={() => {
@@ -632,30 +642,29 @@ const SalaryComponent = ({ onSelectedId }) => {
                 <Button onClick={() => handleAccounts()}>
                   {accountsLoading && <Spinner />} To Accounts
                 </Button>
-              </>
+              </div>
             )}
 
+            {/* Refresh + Save + Issue */}
             {data?.user && (
-              <>
+              <div className="flex flex-wrap gap-4 items-center mt-2">
                 <Button
                   onClick={() => {
                     clearForm();
                     setModal(true);
                     setRefresh(true);
                   }}
-                  className="mt-6"
                 >
                   Refresh
                 </Button>
                 <Button
                   onClick={() => handleSave()}
                   variant="destructive"
-                  className="mt-6"
                 >
                   {saveLoading && <Spinner />} Save
                 </Button>
-                <div className="flex flex-row gap-2 mt-6">
-                  <Label>Issue ?</Label>
+                <div className="flex flex-row gap-2 items-center">
+                  <Label>Issue?</Label>
                   <Checkbox
                     checked={checked}
                     onCheckedChange={(checked) => {
@@ -663,12 +672,13 @@ const SalaryComponent = ({ onSelectedId }) => {
                     }}
                   />
                 </div>
-              </>
+              </div>
             )}
           </div>
 
-          <div className="flex flex-row flex-wrap gap-4">
-            <Card>
+          {/* Configurable + Overview */}
+          <div className="flex flex-col xl:flex-row gap-4">
+            <Card className="flex-1">
               <CardHeader>
                 <CardTitle>Configurable</CardTitle>
               </CardHeader>
@@ -694,18 +704,19 @@ const SalaryComponent = ({ onSelectedId }) => {
                 </div>
               </CardContent>
             </Card>
-            <Card>
+
+            <Card className="flex-1">
               <CardHeader>
                 <CardTitle>Overview</CardTitle>
               </CardHeader>
               <CardContent className="pt-5">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {/* Salary Details */}
                   <div className="flex flex-col gap-1">
                     <Label>TOTAL SALARY</Label>
                     <Input
                       value={data?.user?.total_salary || 0}
                       disabled
-                      onChange={(e) => { }}
                       readOnly
                     />
                   </div>
@@ -714,7 +725,6 @@ const SalaryComponent = ({ onSelectedId }) => {
                     <Input
                       value={data?.user?.basic_salary || 0}
                       disabled
-                      onChange={(e) => { }}
                       readOnly
                     />
                   </div>
@@ -727,42 +737,39 @@ const SalaryComponent = ({ onSelectedId }) => {
                           : 0
                       }
                       disabled
-                      onChange={(e) => { }}
                       readOnly
                     />
                   </div>
+
+                  {/* Targets */}
                   <div className="flex flex-col gap-1">
                     <Label>MONTHLY TARGET</Label>
                     <Input
                       value={data?.user?.monthly_target || 0}
                       disabled
-                      onChange={(e) => { }}
                       readOnly
                     />
                   </div>
+
                   {data?.user?.designation === "Sales" && (
                     <>
                       <div className="flex flex-col gap-1">
                         <Label>MONTHLY VISITS</Label>
-                        <Input value={15} disabled onChange={(e) => { }} readOnly />
+                        <Input value={15} disabled readOnly />
                       </div>
-
                       <div className="flex flex-col gap-1">
                         <Label>VISITS DONE</Label>
                         <Input
                           value={data?.totalVisits || 0}
                           disabled
-                          onChange={(e) => { }}
                           readOnly
                         />
                       </div>
-
                       <div className="flex flex-col gap-1">
                         <Label>MONTHLY FEEDBACKS</Label>
                         <Input
                           value={data?.totalCustomersWithSale || 0}
                           disabled
-                          onChange={(e) => { }}
                           readOnly
                         />
                       </div>
@@ -771,125 +778,68 @@ const SalaryComponent = ({ onSelectedId }) => {
                         <Input
                           value={data?.feedbacksTakenThisMonth || 0}
                           disabled
-                          onChange={(e) => { }}
                           readOnly
                         />
                       </div>
                     </>
                   )}
 
+                  {/* KPI + Fines */}
                   <div className="flex flex-col gap-1">
                     <Label>KPI ACHIEVED</Label>
-                    <Input
-                      value={kpi.toFixed(2)}
-                      disabled
-                      onChange={(e) => { }}
-                      readOnly
-                    />
+                    <Input value={kpi.toFixed(2)} disabled readOnly />
                   </div>
-
                   <div className="flex flex-col gap-1">
                     <Label>ABSENTS FINE</Label>
-                    <Input
-                      value={absentsFine}
-                      disabled
-                      onChange={(e) => { }}
-                      readOnly
-                    />
+                    <Input value={absentsFine} disabled readOnly />
                   </div>
-
                   <div className="flex flex-col gap-1">
                     <Label>LATE COMING FINE</Label>
-                    <Input
-                      value={lateComingFine}
-                      disabled
-                      onChange={(e) => { }}
-                      readOnly
-                    />
+                    <Input value={lateComingFine} disabled readOnly />
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
+          {/* Final Salary */}
           <Card>
             <CardHeader>
               <CardTitle>Final Salary</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              <div className="grid grid-cols-3 items-center">
-                <Label>Reimbursements</Label>
-                {loading ? (
-                  <Skeleton className={"h-[40px] w-[300px]"} />
-                ) : (
-                  <Input
-                    value={form.reimbursement}
-                    disabled
-                    onChange={(e) => { }}
-                    readOnly
-                  />
-                )}
-              </div>
+            <CardContent className="flex flex-col gap-4">
+              {[
+                ["Reimbursements", form.reimbursement],
+                ["Commission", form.commission],
+                ["Miscellaneous", form.miscellaneous],
+                ["ADDITIONAL FINE", form.additional_fine],
+              ].map(([label, value]) => (
+                <div key={label} className="grid grid-cols-3 items-center gap-2">
+                  <Label>{label}</Label>
+                  {loading ? (
+                    <Skeleton className={"h-[40px] w-[300px]"} />
+                  ) : (
+                    <Input value={value} disabled readOnly />
+                  )}
+                </div>
+              ))}
 
-              <div className="grid grid-cols-3 items-center">
-                <Label>Commission</Label>
-                {loading ? (
-                  <Skeleton className={"h-[40px] w-[300px]"} />
-                ) : (
-                  <Input
-                    value={form.commission}
-                    disabled
-                    onChange={(e) => { }}
-                    readOnly
-                  />
-                )}
-              </div>
-
-              <div className="grid grid-cols-3 items-center">
-                <Label>Miscellaneous</Label>
-                {loading ? (
-                  <Skeleton className={"h-[40px] w-[300px]"} />
-                ) : (
-                  <Input
-                    value={form.miscellaneous}
-                    disabled
-                    onChange={(e) => { }}
-                    readOnly
-                  />
-                )}
-              </div>
-
-              <div className="grid grid-cols-3 items-center">
-                <Label>ADDITIONAL FINE</Label>
-                {loading ? (
-                  <Skeleton className={"h-[40px] w-[300px]"} />
-                ) : (
-                  <Input
-                    value={form.additional_fine}
-                    disabled
-                    onChange={(e) => { }}
-                    readOnly
-                  />
-                )}
-              </div>
-
-              <div className="grid grid-cols-3 items-center">
+              <div className="grid grid-cols-3 items-center gap-2">
                 <Label className="text-lg font-semibold text-green-600 tracking-wide">
                   PAYABLE SALARY
                 </Label>
                 {loading ? (
                   <Skeleton className={"h-[40px] w-[300px]"} />
                 ) : (
-                  <Input value={payable} disabled onChange={(e) => { }} readOnly />
+                  <Input value={payable} disabled readOnly />
                 )}
               </div>
             </CardContent>
           </Card>
         </div>
 
+        {/* Salary History (side) */}
         <SalaryHistory data={data?.old_record || []} />
-
-
       </div>
 
       <Accordion type="multiple" className="space-y-2">
@@ -1105,7 +1055,6 @@ const SalaryComponent = ({ onSelectedId }) => {
 
       <Accounts visible={toAccounts.length > 0} onClose={() => setToAccounts([])} data={toAccounts} />
 
-
     </div>
   );
 };
@@ -1115,9 +1064,23 @@ function SalaryHistory({ data }) {
     return
   }
 
+  const totalPayments = data.reduce(
+    (sum, payment) => sum + Number(payment.payable),
+    0
+  );
+
+
   return (
-    <ScrollArea className="max-h-[80vh] pr-2">
+    <ScrollArea className="max-h-[80vh] pr-2 w-[220px]">
       <div className="grid gap-2">
+        <Label className="block text-md font-semibold text-green-600 text-right">
+          Total Paid:{" "}
+          {new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "PKR",
+          }).format(totalPayments || 0)}
+        </Label>
+
         {data.map((item, index) => (
           <Card key={index} className="shadow-sm border">
             <CardHeader className="p-3 pb-0">
@@ -1232,9 +1195,9 @@ const Accounts = ({ visible, onClose, data }) => {
               <TableRow>
                 <TableHead className="w-[50px]">
                   <Checkbox
-                    checked={allSelected}
+                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
                     onCheckedChange={toggleAll}
-                    indeterminate={someSelected}
+
                   />
                 </TableHead>
                 <TableHead>Name</TableHead>

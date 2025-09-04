@@ -73,7 +73,7 @@ export function CustomerSearch({ value, onReturn }) {
      }
    }, [office, designation]);
 
-  const filteredData = customers.filter((item) => item?.office === city);
+  const filteredData = customers.filter((item) => item?.office?.includes(city));
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
