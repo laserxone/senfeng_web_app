@@ -40,6 +40,7 @@ const RenderStockItemsOtherView = ({
   const [localPrice, setLocalPrice] = useState("");
   const [localImage, setLocalImage] = useState(null);
   const [editable, setEditable] = useState(false);
+  const [remarks, setRemarks] = useState("")
   const [loading, setLoading] = useState(false);
   const [threshold, setThreshold] = useState("");
   const [newOrder, setNewOrder] = useState("");
@@ -142,6 +143,7 @@ const RenderStockItemsOtherView = ({
     const formData = {
       name: localName,
       chinese_name: localChineseName,
+      remarks : remarks
     };
 
     if (!isNaN(Number(localPrice))) {
@@ -336,6 +338,26 @@ const RenderStockItemsOtherView = ({
             </div>
           )}
 
+            {designation === "Owner" && (
+            <div className="flex justify-between">
+              <div className="text-[14px]">Remarks</div>
+              <input
+                placeholder={item?.remarks || "Enter remarks"}
+                style={{
+                  borderWidth: 1,
+                  borderColor: "#cccccc",
+                  fontSize: "14px",
+                  width: "50%",
+                }}
+                className="px-2 "
+                value={remarks}
+                onChange={(e) => {
+                  setRemarks(e.target.value);
+                }}
+              />
+            </div>
+          )}
+
           <Button onClick={() => handleSave(item.id, item.img)}>
             {loading && <Spinner />}
             Save
@@ -379,6 +401,7 @@ const RenderStockItemsOtherView = ({
             setLocalPrice(item?.price || "");
             setThreshold(item?.threshold || "");
             setNewOrder(item?.new_order || "");
+            setRemarks(item?.remarks || "")
             setEditable(!editable);
           }}
         >

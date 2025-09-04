@@ -101,6 +101,13 @@ export const ownerNavItems = [
         icon: 'fine',
         shortcut: ['f', 'i', 'n', 'e'],
       },
+
+       {
+        title: 'Analytics',
+        url: '/analytics',
+        icon: 'fine',
+        shortcut: ['f', 'i', 'n', 'e'],
+      },
     ]
   },
   {
