@@ -286,6 +286,12 @@ const RenderSelectedContent = ({ visible, onClose, data, type }) => {
                         </CardHeader>
 
                         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-sm">
+                         <div>
+                            <span className="font-medium text-foreground">
+                              Manager:
+                            </span>{" "}
+                            {fb?.ownership_name || "NIL"}
+                          </div>
                           <div>
                             <span className="font-medium text-foreground">
                               Number:
