@@ -41,13 +41,8 @@ export async function GET(req) {
   const searchParams = req.nextUrl.searchParams;
   const start_date = searchParams.get("start_date");
   const end_date = searchParams.get("end_date");
-  const { uid } = await params;
 
-  const meQuery = await pool.query(`SELECT office FROM users WHERE id = $1`, [
-    uid,
-  ]);
-
-  const office = meQuery.rows[0]?.office || "lahore";
+  const office = "lahore";
 
   try {
     let query = `
