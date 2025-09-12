@@ -58,7 +58,7 @@ INNER JOIN users u ON r.submitted_by = u.id
     const queryParams = [office];
 
     if (start_date && end_date) {
-      query += ` AND r.date BETWEEN $1 AND $2`;
+      query += ` AND r.date BETWEEN $2 AND $3`;
       queryParams.push(start_date, end_date);
     }
     query += ` ORDER BY r.date DESC;`;
