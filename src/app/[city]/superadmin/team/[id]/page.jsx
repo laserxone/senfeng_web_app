@@ -48,6 +48,7 @@ export default function Page({ params }) {
   const [checks, setChecks] = useState({
     branch_expenses_assigned: false,
     branch_expenses_delete_access: false,
+    branch_expenses_write_access : false,
     inventory_assigned: false,
     customer_add_access: false,
     customer_delete_access: false,
@@ -90,6 +91,7 @@ export default function Page({ params }) {
             branch_expenses_assigned: apiData?.branch_expenses_assigned,
             branch_expenses_delete_access:
               apiData?.branch_expenses_delete_access,
+              branch_expenses_write_access : apiData?.branch_expenses_write_access,
             customer_add_access: apiData?.customer_add_access,
             customer_delete_access: apiData?.customer_delete_access,
             inventory_assigned: apiData?.inventory_assigned,
@@ -152,6 +154,7 @@ export default function Page({ params }) {
         total_salary: form?.total_salary || 0,
         branch_expenses_assigned: checks?.branch_expenses_assigned,
         branch_expenses_delete_access: checks?.branch_expenses_delete_access,
+        branch_expenses_write_access : checks?.branch_expenses_write_access,
         customer_add_access: checks?.customer_add_access,
         customer_delete_access: checks?.customer_delete_access,
         inventory_assigned: checks?.inventory_assigned,
