@@ -52,7 +52,6 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
   const [title, setTitle] = useState("");
   const { userID } = useUserDetail();
   const [manual, setManual] = useState(false);
-  const [location, setLocation] = useState("Lahore");
 
   useEffect(() => {
     if (visible && userID) {
