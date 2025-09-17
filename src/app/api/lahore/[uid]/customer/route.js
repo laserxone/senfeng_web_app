@@ -84,6 +84,7 @@ export async function GET(req, { params }) {
     const user = searchParams.get("user")
     const member = searchParams.get("member")
     const office = searchParams.get("office")
+    const mycustomer = searchParams.get('mycustomer')
 
     try {
         const isAdmin = await checkSuperadmin(uid)
@@ -203,6 +204,9 @@ export async function GET(req, { params }) {
                 return NextResponse.json(customersWithSales, { status: 200 });
             }
         } else {
+
+
+
             const userQuery = await pool.query(
                 `SELECT id, designation, limited_access FROM users WHERE id = $1`,
                 [uid]
@@ -246,6 +250,9 @@ export async function GET(req, { params }) {
                     whereClauses.push(`c.ownership = $${queryParams.length + 1}`);
                     queryParams.push(uid);
                 }
+            } else if (mycustomer) {
+                whereClauses.push(`c.lead = $${queryParams.length + 1}`);
+                queryParams.push(uid);
             }
             if (user.designation === 'Dealer') {
                 whereClauses.push(`c.ownership = $${queryParams.length + 1}`);

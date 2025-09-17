@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
 import { UserSearch } from "@/components/user-search";
 import { toast } from "@/hooks/use-toast";
 import useUserDetail from "@/hooks/use-user-detail";
@@ -57,12 +58,13 @@ export default function CustomerMainPage({ onReturn }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState([]);
   const [addCustomer, setAddCustomer] = useState(false);
-  const {userID, isAdmin, designation, customer_add_access, customer_delete_access, office} = useUserDetail()
+  const { userID, isAdmin, designation, customer_add_access, customer_delete_access, office } = useUserDetail()
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [quickAction, setQuickAction] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [numCount, setNumCount] = useState({});
+  const [myLoading, setMyLoading] = useState(false)
 
   useEffect(() => {
     if (userID) {
@@ -237,7 +239,7 @@ export default function CustomerMainPage({ onReturn }) {
       header: "Action",
       cell: ({ row }) => {
         const currentItem = row.original;
-        
+
 
         const canDelete =
           isAdmin ||
@@ -286,10 +288,10 @@ export default function CustomerMainPage({ onReturn }) {
       additionalFilter == "unassigned"
         ? !item.ownership === true
         : additionalFilter == "unsold"
-        ? !item.machines
-        : additionalFilter == "duplicate"
-        ? item.orignalNumber?.some((num) => numCount[num] > 1)
-        : true
+          ? !item.machines
+          : additionalFilter == "duplicate"
+            ? item.orignalNumber?.some((num) => numCount[num] > 1)
+            : true
     )
     .filter((item) => (selectedUser ? item?.ownership === selectedUser : true));
 
@@ -306,6 +308,33 @@ export default function CustomerMainPage({ onReturn }) {
     }
   }, [data]);
 
+  async function handleMyCustomers() {
+    setMyLoading(true)
+
+    axios
+      .get(
+        `/${userID
+        }/customer?member=false&mycustomer=true`
+      )
+      .then((response) => {
+        const apiData = response.data;
+        const temp = apiData.map((item) => {
+          return {
+            ...item,
+            orignalNumber: item.number,
+            number: item.number.join(", "),
+            sorting: item.owner || item.name,
+          };
+        });
+
+        setData([...temp]);
+      })
+      .finally(() => {
+        setMyLoading(false);
+      });
+
+  }
+
   return (
     <>
       <div className="flex flex-1 flex-col space-y-4">
@@ -314,26 +343,26 @@ export default function CustomerMainPage({ onReturn }) {
 
           <div className="flex gap-2">
             {isAdmin && (
-                <Button onClick={() => setQuickAction(true)}>
-                  Quick Action
-                </Button>
-              )}
+              <Button onClick={() => setQuickAction(true)}>
+                Quick Action
+              </Button>
+            )}
             {customer_add_access && (
-                <Button onClick={() => setAddCustomer(true)}>
-                  Add new customer
-                </Button>
-              )}
+              <Button onClick={() => setAddCustomer(true)}>
+                Add new customer
+              </Button>
+            )}
           </div>
 
           <AddCustomerDialog
             user_id={userID}
-             office={office}
+            office={office}
             ownership={
-             isAdmin ||
+              isAdmin ||
               designation ===
-                "Customer Relationship Manager" ||
+              "Customer Relationship Manager" ||
               designation ===
-                "Customer Relationship Manager (After Sales)"
+              "Customer Relationship Manager (After Sales)"
             }
             user_designation={designation}
             visible={addCustomer}
@@ -369,17 +398,17 @@ export default function CustomerMainPage({ onReturn }) {
           data={
             additionalFilter === "duplicate"
               ? filteredData.sort((a, b) =>
-                  a?.sorting
-                    ?.toLowerCase()
-                    ?.localeCompare(b?.sorting?.toLowerCase() || "")
-                )
+                a?.sorting
+                  ?.toLowerCase()
+                  ?.localeCompare(b?.sorting?.toLowerCase() || "")
+              )
               : filteredData
           }
           totalItems={filteredData.length}
           tableHeader={tableHeader}
           onRowClick={(val, e) => {
             if (val.id) {
-            
+
               onReturn(val.id);
             }
           }}
@@ -440,6 +469,16 @@ export default function CustomerMainPage({ onReturn }) {
               >
                 Clear
               </Button>
+
+              {designation === 'Customer Relationship Manager' &&
+                <Button disabled={myLoading} variant="outline"
+                  onClick={() => {
+                    handleMyCustomers()
+                  }}
+                >
+                  {myLoading && <Spinner />}  Show My Customers
+                </Button>
+              }
             </div>
           </div>
         </PageTable>

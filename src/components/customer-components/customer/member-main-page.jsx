@@ -52,11 +52,11 @@ const tableHeader = [
   },
 ];
 
-export default function MemberMainPage({  onReturn }) {
+export default function MemberMainPage({ onReturn }) {
   const [additionalFilter, setAdditionalFilter] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState([]);
-  const {userID, isAdmin, designation, customer_delete_access,} = useUserDetail()
+  const { userID, isAdmin, designation, customer_delete_access, } = useUserDetail()
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -64,6 +64,7 @@ export default function MemberMainPage({  onReturn }) {
   const [loading, setLoading] = useState(true);
   const [resetLoading, setResetLoading] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
+  const [myLoading, setMyLoading] = useState(false)
 
   useEffect(() => {
     if (userID)
@@ -76,10 +77,8 @@ export default function MemberMainPage({  onReturn }) {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/${
-            userID
-          }/customer?machines=true&member=true&start_date=${
-            startDate || ""
+          `/${userID
+          }/customer?machines=true&member=true&start_date=${startDate || ""
           }&end_date=${endDate || ""}&user=${user || ""}`
         )
         .then((response) => {
@@ -264,7 +263,7 @@ export default function MemberMainPage({  onReturn }) {
       header: "Action",
       cell: ({ row }) => {
         const currentItem = row.original;
-       
+
         const canDelete =
           isAdmin ||
           customer_delete_access === true;
@@ -333,6 +332,35 @@ export default function MemberMainPage({  onReturn }) {
     }
   }, [data]);
 
+  async function handleMyCustomers() {
+    setMyLoading(true)
+
+    axios
+      .get(
+        `/${userID
+        }/customer?machines=true&member=true&mycustomer=true`
+      )
+      .then((response) => {
+        const apiData = response.data;
+        const temp = apiData
+          .map((item) => {
+            return {
+              ...item,
+              machines: item.machines.join(", "),
+              orignalNumber: item.number,
+              number: item.number.join(", "),
+              sorting: item.owner || item.name,
+            };
+          })
+          .filter((item) => item.member);
+        setData([...temp]);
+      })
+      .finally(() => {
+        setMyLoading(false);
+      });
+
+  }
+
   return (
     <>
       <div className="flex flex-1 flex-col space-y-4">
@@ -348,17 +376,17 @@ export default function MemberMainPage({  onReturn }) {
           data={
             additionalFilter === "duplicate"
               ? filteredData.sort((a, b) =>
-                  a?.sorting
-                    ?.toLowerCase()
-                    ?.localeCompare(b?.sorting?.toLowerCase() || "")
-                )
+                a?.sorting
+                  ?.toLowerCase()
+                  ?.localeCompare(b?.sorting?.toLowerCase() || "")
+              )
               : filteredData
           }
           totalItems={filteredData.length}
           tableHeader={tableHeader}
           onRowClick={(val, e) => {
             if (val.id) {
-             
+
               onReturn(val.id);
             }
           }}
@@ -436,6 +464,15 @@ export default function MemberMainPage({  onReturn }) {
                 >
                   {resetLoading && <Spinner />} Reset
                 </Button>
+                {designation === 'Customer Relationship Manager' &&
+                  <Button disabled={myLoading} variant="outline"
+                    onClick={() => {
+                      handleMyCustomers()
+                    }}
+                  >
+                  {myLoading && <Spinner />}  Show My Customers
+                  </Button>
+                }
               </div>
             </div>
           </div>

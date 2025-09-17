@@ -1,8 +1,7 @@
 import pool from "@/config/db";
 import { addLog } from "@/lib/addLog";
 import { generateLog } from "@/lib/generateLog";
-import moment from "moment";
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
 
 
 export async function POST(req) {
