@@ -41,7 +41,7 @@ export async function POST(req) {
         } catch (error) {
             console.log(error)
         }
-
+ 
         if (inventory) {
             const inventoryId = Number(inventory)
             await pool.query(

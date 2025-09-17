@@ -26,6 +26,7 @@ import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
 import { Textarea } from "./ui/textarea";
+import useUserDetail from "@/hooks/use-user-detail";
 
 const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
@@ -36,19 +37,33 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   const [value, setValue] = useState();
   const [total, setTotal] = useState([]);
   const { state: OfficeState } = useContext(OfficeContext);
+  const { office } = useUserDetail()
 
-  const formSchema = z.object({
-    machineModel: z.string().min(1, { message: "Machine model is required." }),
-    power: z.string().min(1, { message: "Power is required." }),
-    source: z.string().min(1, { message: "Source is required." }),
-    contractDate: z.date({ required_error: "Contract date is required." }),
-    isSpeedMoney: z.boolean().default(false),
-    speedMoney: z.string().optional(),
-    speedMoneyNote: z.string().optional(),
-    totalPrice: z.number().min(1, { message: "Total price is required." }),
-    cnic: z.string().optional(),
-    order_item: z.number({ message: "Machine selection is required" }),
-  });
+  const formSchema = z
+    .object({
+      machineModel: z.string().min(1, { message: "Machine model is required." }),
+      power: z.string().min(1, { message: "Power is required." }),
+      source: z.string().min(1, { message: "Source is required." }),
+      contractDate: z.date({ required_error: "Contract date is required." }),
+      isSpeedMoney: z.boolean().default(false),
+      speedMoney: z.string().optional(),
+      speedMoneyNote: z.string().optional(),
+      totalPrice: z.number().min(1, { message: "Total price is required." }),
+      cnic: z.string().optional(),
+      order_item: z.number().nullable().optional(), // start optional, then refine below
+    })
+    .refine(
+      (data) => {
+        if (office === "karachi") {
+          return true;
+        }
+        return typeof data.order_item === "number" && data.order_item > 0;
+      },
+      {
+        message: "Machine selection is required",
+        path: ["order_item"],
+      }
+    );
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -68,9 +83,13 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
 
   function onSubmit(values) {
     setLoading(true);
+    let baseLink = `/${user_id}/machine?inventory=${values.order_item}&cheque=${cheque}`
+    if (office === 'karachi') {
+      baseLink = `/${user_id}/machine?cheque=${cheque}`
+    }
     axios
       .post(
-        `/${user_id}/machine?inventory=${values.order_item}&cheque=${cheque}`,
+        baseLink,
         {
           customer_id: customer_id,
           type: "Machine",
@@ -89,26 +108,28 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
       )
       .then(async (response) => {
         if (response.data?.sale_id) {
-          const saleID = response.data.sale_id;
+          if (cheque) {
+            const saleID = response.data.sale_id;
 
-          const res = await Promise.all(
-            total.map(async (item, idx) => {
-              const name = `${
-                OfficeState.value.data
-              }/customer/${customer_id}/machine/${saleID}/installments/${moment()
-                .valueOf()
-                .toString()}_${idx}.png`;
-              const imgRef = await UploadImage(item.img, name);
-              return axios.post(`/${user_id}/installments`, {
-                date: item.date,
-                image: name,
-                amount: item.amount,
-                sale_id: saleID,
-              });
-            })
-          );
+            const res = await Promise.all(
+              total.map(async (item, idx) => {
+                const name = `${OfficeState.value.data
+                  }/customer/${customer_id}/machine/${saleID}/installments/${moment()
+                    .valueOf()
+                    .toString()}_${idx}.png`;
+                const imgRef = await UploadImage(item.img, name);
+                return axios.post(`/${user_id}/installments`, {
+                  date: item.date,
+                  image: name,
+                  amount: item.amount,
+                  sale_id: saleID,
+                });
+              })
+            );
 
-          console.log("All installments saved:", res);
+            console.log("All installments saved:", res);
+          }
+
         }
         onRefresh();
         handleClose(false);
@@ -127,9 +148,8 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent
-        className={`transition-all duration-300 ${
-          cheque ? "max-w-[90vw] w-[90vw]" : "max-w-lg w-full"
-        }`}
+        className={`transition-all duration-300 ${cheque ? "max-w-[90vw] w-[90vw]" : "max-w-lg w-full"
+          }`}
       >
         <DialogHeader>
           <DialogTitle>Add New Machine</DialogTitle>
@@ -138,9 +158,8 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
         <div className="w-full flex flex-1">
           <ScrollArea className="px-2 w-full max-h-[90vh]">
             <div
-              className={`flex gap-6 ${
-                cheque ? "flex-row" : "flex-col"
-              } w-full`}
+              className={`flex gap-6 ${cheque ? "flex-row" : "flex-col"
+                } w-full`}
             >
               {/* Left Side Form */}
               <div className={`${cheque ? "w-1/2" : "w-full"} px-2 space-y-2`}>
@@ -151,33 +170,35 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                     })}
                     className="space-y-2"
                   >
-                    <FormField
-                      control={form.control}
-                      name="order_item"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Select Machine <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <AvailableMachines
-                              onReturn={setSelectedMachine}
-                              value={selectedMachine}
-                              onReturnItem={(val) => {
-                                field.onChange(val.id);
-                                form.setValue(
-                                  "machineModel",
-                                  val.machine_model
-                                );
-                                form.setValue("power", val.machine_power);
-                                form.setValue("source", val.machine_source);
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {office !== 'karachi' &&
+                      <FormField
+                        control={form.control}
+                        name="order_item"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Select Machine <RequiredStar />
+                            </FormLabel>
+                            <FormControl>
+                              <AvailableMachines
+                                onReturn={setSelectedMachine}
+                                value={selectedMachine}
+                                onReturnItem={(val) => {
+                                  field.onChange(val.id);
+                                  form.setValue(
+                                    "machineModel",
+                                    val.machine_model
+                                  );
+                                  form.setValue("power", val.machine_power);
+                                  form.setValue("source", val.machine_source);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    }
 
                     {additionalMachines.map((item, index) => (
                       <div className="flex gap-2">
@@ -228,7 +249,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                           </FormLabel>
                           <FormControl>
                             <Input
-                              disabled
+                              disabled={office !== 'karachi'}
                               placeholder="example: SF3015G"
                               {...field}
                             />
@@ -248,7 +269,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                           </FormLabel>
                           <FormControl>
                             <Input
-                              disabled
+                              disabled={office !== 'karachi'}
                               placeholder="example: 3000W/1500W/6000W"
                               {...field}
                             />
@@ -268,7 +289,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                           </FormLabel>
                           <FormControl>
                             <Input
-                              disabled
+                              disabled={office !== 'karachi'}
                               placeholder="example: RAYCUS / MAX /IPG"
                               {...field}
                             />
