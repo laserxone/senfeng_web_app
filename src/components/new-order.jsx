@@ -43,6 +43,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
       status: "Order Placed",
       isExisting: false,
       inventory_id: null,
+      show: true
     },
   ]);
   const [errors, setErrors] = useState([]);
@@ -197,7 +198,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
         status: "Order Placed",
         items: processedItems,
         title: title,
-        location: location,
+
       };
       setLoading(true);
       try {
@@ -228,6 +229,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
         status: "Order Placed",
         isExisting: false,
         inventory_id: null,
+        location: "Lahore"
       },
     ]);
 
@@ -252,24 +254,12 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
                 onChange={(e) => setTitle(e.target.value)}
               />
 
-              <Label>
-                Location <RequiredStar />
-              </Label>
-              <Select
-                value={location}
-                onValueChange={(val) => setLocation(val)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select location" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Lahore">Lahore</SelectItem>
-                  <SelectItem value="Karachi">Karachi</SelectItem>
-                </SelectContent>
-              </Select>
+
             </div>
             {items.map((item, index) => (
               <div key={index} className="border p-4 rounded-md space-y-4">
+
+
                 <div className="flex items-center justify-between">
                   <Label className="text-base font-medium">
                     Item #{index + 1}
@@ -283,6 +273,24 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
                   </Button>
                 </div>
 
+                <div>
+                  <Label>
+                    Location <RequiredStar />
+                  </Label>
+                  <Select
+                    value={item?.location}
+                    onValueChange={(val) => handleItemChange(index, "location", val)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Lahore">Lahore</SelectItem>
+                      <SelectItem value="Karachi">Karachi</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={item.isExisting}
@@ -293,6 +301,26 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
                   <Label>
                     {item.isExisting ? "Existing Item" : "New Item"}
                   </Label>
+                </div>
+
+                <div className="flex items-center gap-2 mt-2">
+                  <Switch
+                    checked={item.is_machine}
+                    onCheckedChange={(val) =>
+                      handleItemChange(index, "is_machine", val)
+                    }
+                  />
+                  <Label>Is Machine?</Label>
+                </div>
+
+                <div className="flex items-center gap-2 mt-2">
+                  <Switch
+                    checked={item.show}
+                    onCheckedChange={(val) =>
+                      handleItemChange(index, "show", val)
+                    }
+                  />
+                  <Label>{item.show ? "Show" : "Hide"}</Label>
                 </div>
 
                 {item.isExisting ? (
@@ -462,21 +490,15 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
                       </>
                     )}
 
-                    <div className="flex items-center gap-2 mt-2">
-                      <Switch
-                        checked={item.is_machine}
-                        onCheckedChange={(val) =>
-                          handleItemChange(index, "is_machine", val)
-                        }
-                      />
-                      <Label>Is Machine?</Label>
-                    </div>
+
+
+
 
                     {item.is_machine && (
                       <div className="flex items-center gap-2 mt-2">
                         <Switch
                           checked={manual}
-                          onCheckedChange={(val) => setManual(true)}
+                          onCheckedChange={(val) => setManual(val)}
                         />
                         <Label>Manual?</Label>
                       </div>

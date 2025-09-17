@@ -90,14 +90,15 @@ export async function POST(req) {
             const threshold = item.threshold || 0
             const new_order = item.new_order || 0
             const buying_price = item.buying_price || 0
-            const location = data?.location || "Lahore"
+            const location = item?.location || "Lahore"
+            const show = item?.show || false
 
 
             await pool.query(
                 `INSERT INTO order_items 
-          (order_id, inventory_id, name, qty, price, is_machine, machine_serial, machine_model, machine_source, machine_power, status, threshold, new_order, buying_price, location)
+          (order_id, inventory_id, name, qty, price, is_machine, machine_serial, machine_model, machine_source, machine_power, status, threshold, new_order, buying_price, location, show)
          VALUES 
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
                 [
                     orderId,
                     inventory_id,
@@ -113,7 +114,8 @@ export async function POST(req) {
                     threshold,
                     new_order,
                     buying_price,
-                    location
+                    location,
+                    show
                 ]
             );
         }
