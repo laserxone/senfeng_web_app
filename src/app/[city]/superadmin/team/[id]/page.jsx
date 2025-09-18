@@ -15,10 +15,13 @@ import { useToast } from "@/hooks/use-toast";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { getDownloadURL, ref } from "firebase/storage";
+import Link from "next/link";
+import { useParams, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import "react-medium-image-zoom/dist/styles.css";
 
-export default function Page({ params }) {
+export default function Page() {
+  const {id} = useParams()
   const { userID } = useUserDetail()
   const [joiningDate, setJoiningDate] = useState(null);
   const [leavingDate, setLeavingDate] = useState(null);
@@ -43,12 +46,13 @@ export default function Page({ params }) {
     monthly_target: "",
     total_salary: "",
     note: "",
+    fuel: 0
   });
 
   const [checks, setChecks] = useState({
     branch_expenses_assigned: false,
     branch_expenses_delete_access: false,
-    branch_expenses_write_access : false,
+    branch_expenses_write_access: false,
     inventory_assigned: false,
     customer_add_access: false,
     customer_delete_access: false,
@@ -61,13 +65,13 @@ export default function Page({ params }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (userID) {
+    if (userID && id) {
       fetchData();
     }
-  }, [userID]);
+  }, [userID, id]);
 
   async function fetchData() {
-    const { id } = await params;
+
     axios
       .get(`/${userID}/user?user=${id}`)
       .then((response) => {
@@ -91,7 +95,7 @@ export default function Page({ params }) {
             branch_expenses_assigned: apiData?.branch_expenses_assigned,
             branch_expenses_delete_access:
               apiData?.branch_expenses_delete_access,
-              branch_expenses_write_access : apiData?.branch_expenses_write_access,
+            branch_expenses_write_access: apiData?.branch_expenses_write_access,
             customer_add_access: apiData?.customer_add_access,
             customer_delete_access: apiData?.customer_delete_access,
             inventory_assigned: apiData?.inventory_assigned,
@@ -106,6 +110,7 @@ export default function Page({ params }) {
             monthly_target: apiData?.monthly_target || 0,
             note: apiData?.note || "",
             total_salary: apiData?.total_salary || 0,
+            fuel: apiData?.fuel || 0
           });
 
           setJoiningDate(apiData?.joining_date || null);
@@ -149,12 +154,13 @@ export default function Page({ params }) {
     axios
       .put(`/${userID}/user/${employeeId}`, {
         basic_salary: form?.basic_salary || 0,
+        fuel: form?.fuel || 0,
         monthly_target: form?.monthly_target || 0,
         note: form?.note || "",
         total_salary: form?.total_salary || 0,
         branch_expenses_assigned: checks?.branch_expenses_assigned,
         branch_expenses_delete_access: checks?.branch_expenses_delete_access,
-        branch_expenses_write_access : checks?.branch_expenses_write_access,
+        branch_expenses_write_access: checks?.branch_expenses_write_access,
         customer_add_access: checks?.customer_add_access,
         customer_delete_access: checks?.customer_delete_access,
         inventory_assigned: checks?.inventory_assigned,
@@ -256,6 +262,10 @@ export default function Page({ params }) {
                 <p className="text-muted-foreground">
                   {fixedData?.designation}
                 </p>
+                {fixedData?.designation === 'Sales' && <Link href={`/lahore/superadmin/team/${id}/dashboard`} target="blank">
+                  Open Dashboard
+                </Link>
+                }
               </div>
             </div>
 

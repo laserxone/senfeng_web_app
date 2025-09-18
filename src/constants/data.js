@@ -375,6 +375,12 @@ export const Tools = {
       url: '/oldcommissions',
       icon: 'login'
     },
+     {
+      title: 'Configuration',
+      shortcut: ['o', 'l', 'd'],
+      url: '/configuration',
+      icon: 'login'
+    },
     // {
     //   title: 'Multiple TID',
     //   url: '/multipletid',
