@@ -50,6 +50,7 @@ const EditOrderDialog = ({
     isExisting: false,
     inventory_id: null,
     location: "",
+    show: true
   });
 
   useEffect(() => {
@@ -70,6 +71,7 @@ const EditOrderDialog = ({
         isExisting: item.inventory_id ? true : false,
         inventory_id: item.inventory_id,
         location: item.location,
+        show: item.show
       });
     }
   }, [item]);
@@ -77,7 +79,7 @@ const EditOrderDialog = ({
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [existingInventory, setExistingInventory] = useState([]);
-  const {userID} = useUserDetail()
+  const { userID } = useUserDetail()
   const [manual, setManual] = useState(true);
 
   useEffect(() => {
@@ -174,7 +176,8 @@ const EditOrderDialog = ({
       status: "Order Placed",
       isExisting: false,
       inventory_id: null,
-      location : ""
+      location: "",
+      show: true
     });
 
     setErrors({});
@@ -184,7 +187,7 @@ const EditOrderDialog = ({
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Add in existing order</DialogTitle>
+          <DialogTitle>Edit in existing order</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="min-h-[500px] max-h-[70vh] pr-4">
@@ -370,6 +373,16 @@ const EditOrderDialog = ({
                       }
                     />
                     <Label>Is Machine?</Label>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-2">
+                    <Switch
+                      checked={items.show}
+                      onCheckedChange={(val) =>
+                        handleItemChange("show", val)
+                      }
+                    />
+                    <Label>{items.show ? "Show" : "Hide"}</Label>
                   </div>
 
                   {items.is_machine && (
