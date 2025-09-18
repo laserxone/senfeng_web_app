@@ -613,7 +613,7 @@ function CustomersTab({
     <Card className="flex flex-1">
       <CardContent className="p-4 flex flex-1 flex-col">
         <div className="p-4 flex justify-end">
-          {user_id && (
+          {user_id && customer_id && (
             <Button onClick={() => setVisible(true)}>Add Machine</Button>
           )}
           <AddMachine
