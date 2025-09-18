@@ -219,6 +219,27 @@ export default function Page() {
     setSelectedItem(itemId);
   }
 
+  const filteredData = orderedData?.map((order) => {
+    if (!search.trim()) return order; // no search → keep everything
+
+    // Filter order_items for this order
+    const filteredItems = order.order_items.filter((item) =>
+      Object.entries(item).some(([_, value]) => {
+        if (value === null || value === undefined) return false;
+        return String(value).toLowerCase().includes(search.toLowerCase());
+      })
+    );
+
+    // If no items match, drop the order entirely
+    if (filteredItems.length === 0) return null;
+
+    return {
+      ...order,
+      order_items: filteredItems,
+    };
+  }).filter(Boolean); // remove null orders
+
+
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex justify-between flex-wrap">
@@ -249,7 +270,7 @@ export default function Page() {
         >
           <ScrollArea className="h-[700px] pr-6">
             <div className="space-y-4">
-              {orderedData.map((order) => {
+              {filteredData.map((order) => {
                 return (
                   <SortableCard
                     key={order.id}
