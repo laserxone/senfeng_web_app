@@ -174,14 +174,21 @@ export async function GET(req, { params }) {
                 return NextResponse.json(result.rows, { status: 200 })
             }
             else {
-                const customerQuery = await pool.query(`
+                let query = `
                 SELECT 
                 customer.*, 
                 users.name AS ownership_name
                 FROM customer
                 LEFT JOIN users ON customer.ownership = users.id
-                ORDER BY customer.name ASC;
-                `);
+                
+                `
+                if (member && member === 'true') {
+                    query += ` WHERE customer.member IS TRUE`
+                } else if (member && member === 'false') {
+                    query += ` WHERE customer.member IS FALSE`
+                }
+                query += ` ORDER BY customer.name ASC;`
+                const customerQuery = await pool.query(query);
                 const customers = customerQuery.rows;
 
                 if (customers.length === 0) {

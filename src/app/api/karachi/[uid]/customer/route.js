@@ -83,23 +83,36 @@ export async function GET(req, { params }) {
     const end_date = searchParams.get('end_date')
     const user = searchParams.get("user")
     const member = searchParams.get("member")
+    const office = searchParams.get("office")
+    const mycustomer = searchParams.get('mycustomer')
 
     try {
         const isAdmin = await checkSuperadmin(uid)
 
         if (isAdmin) {
             if (mapQuery) {
-                const result = await pool.query(`
-                SELECT 
-                customer.id, 
-                customer.name,
-                customer.owner, 
-                customer.location
-                FROM customer
-                LEFT JOIN users ON customer.ownership = users.id
-                ORDER BY customer.name ASC;
-                `)
+                let query = `
+    SELECT 
+        customer.id, 
+        customer.name,
+        customer.owner, 
+        customer.location,
+        customer.office,
+        customer.ownership,
+        users.name AS ownership_name
+    FROM customer
+    LEFT JOIN users ON customer.ownership = users.id
+`
+
+                if (office) {
+                    query += ` WHERE customer.office = '${office}'`
+                }
+
+                query += " ORDER BY customer.name ASC"
+
+                const result = await pool.query(query)
                 return NextResponse.json(result.rows, { status: 200 });
+
             }
             else if (urlQuery) {
                 const result = await pool.query(`
@@ -161,14 +174,21 @@ export async function GET(req, { params }) {
                 return NextResponse.json(result.rows, { status: 200 })
             }
             else {
-                const customerQuery = await pool.query(`
+                let query = `
                 SELECT 
                 customer.*, 
                 users.name AS ownership_name
                 FROM customer
                 LEFT JOIN users ON customer.ownership = users.id
-                ORDER BY customer.name ASC;
-                `);
+                
+                `
+                if (member && member === 'true') {
+                    query += ` WHERE customer.member IS TRUE`
+                } else if (member && member === 'false') {
+                    query += ` WHERE customer.member IS FALSE`
+                }
+                query += ` ORDER BY customer.name ASC;`
+                const customerQuery = await pool.query(query);
                 const customers = customerQuery.rows;
 
                 if (customers.length === 0) {
@@ -191,6 +211,9 @@ export async function GET(req, { params }) {
                 return NextResponse.json(customersWithSales, { status: 200 });
             }
         } else {
+
+
+
             const userQuery = await pool.query(
                 `SELECT id, designation, limited_access FROM users WHERE id = $1`,
                 [uid]
@@ -234,6 +257,9 @@ export async function GET(req, { params }) {
                     whereClauses.push(`c.ownership = $${queryParams.length + 1}`);
                     queryParams.push(uid);
                 }
+            } else if (mycustomer) {
+                whereClauses.push(`c.lead = $${queryParams.length + 1}`);
+                queryParams.push(uid);
             }
             if (user.designation === 'Dealer') {
                 whereClauses.push(`c.ownership = $${queryParams.length + 1}`);
