@@ -120,17 +120,28 @@ export default function Page() {
           let colorIndex = 0;
 
           const updatedData = rawData.map((order) => {
+            // ✅ First: sort all order_items by machine_serial (numeric ascending)
+            const sortedOrderItems = [...order.order_items].sort((a, b) => {
+              const serialA = parseInt(a.machine_serial, 10);
+              const serialB = parseInt(b.machine_serial, 10);
+              if (isNaN(serialA) || isNaN(serialB)) {
+                // fallback: string comparison if not numeric
+                return a.machine_serial.localeCompare(b.machine_serial);
+              }
+              return serialA - serialB;
+            });
+
             const groupedMachines = {};
 
-            // First: group all machine items by typeKey regardless of booked
-            for (const item of order.order_items) {
+            // Group machine items by typeKey after sorting
+            for (const item of sortedOrderItems) {
               if (item.is_machine) {
                 const typeKey = `${item.machine_model}-${item.machine_power}-${item.machine_source}`;
                 if (!groupedMachines[typeKey]) groupedMachines[typeKey] = [];
                 groupedMachines[typeKey].push(item);
               }
             }
-
+            
             const finalMachineItems = [];
 
             for (const typeKey in groupedMachines) {
@@ -145,40 +156,33 @@ export default function Page() {
 
               const assignedColor = typeColorMap.get(typeKey);
 
-              // Sort by name for consistent order
-              items.sort((a, b) => (a.name > b.name ? 1 : -1));
-
               let counter = 1;
 
-              // Add unbooked first with counter
-              items
-                .filter((i) => !i.booked)
-                .forEach((item) => {
-                  finalMachineItems.push({
-                    ...item,
-                    machine_color_bg: assignedColor.bg,
-                    machine_color_text: assignedColor.text,
-                    machine_type_count: counter++,
-                  });
+              // ✅ Keep original order (booked/unbooked mixed)
+              items.forEach((item) => {
+                finalMachineItems.push({
+                  ...item,
+                  machine_color_bg: assignedColor.bg,
+                  machine_color_text: assignedColor.text,
+                  machine_type_count: counter++,
                 });
-
-              // Then add booked items with continuation of counter
-              items
-                .filter((i) => i.booked)
-                .forEach((item) => {
-                  finalMachineItems.push({
-                    ...item,
-                    machine_color_bg: assignedColor.bg,
-                    machine_color_text: assignedColor.text,
-                    machine_type_count: counter++,
-                  });
-                });
+              });
             }
 
-            // Now handle non-machine items (maintain original order)
-            const nonMachineItems = order.order_items.filter(
-              (i) => !i.is_machine
-            );
+            console.log(finalMachineItems)
+
+            finalMachineItems.sort((a, b) => {
+              const serialA = parseInt(a.machine_serial, 10);
+              const serialB = parseInt(b.machine_serial, 10);
+              if (isNaN(serialA) || isNaN(serialB)) {
+                // fallback: string comparison if not numeric
+                return a.machine_serial.localeCompare(b.machine_serial);
+              }
+              return serialA - serialB;
+            });
+
+            // Non-machine items (keep original order from sorted list)
+            const nonMachineItems = sortedOrderItems.filter((i) => !i.is_machine);
 
             const finalItems = [...finalMachineItems, ...nonMachineItems];
 
@@ -198,6 +202,7 @@ export default function Page() {
         });
     });
   }
+
 
   async function handleDelete(orderId) {
     axios.delete(`/${userID}/neworder/${orderId}`).then(() => {
@@ -312,13 +317,11 @@ export default function Page() {
                                 {order?.order_items?.map((item) => (
                                   <div
                                     key={item.id}
-                                    className={`relative px-2 py-1 ${
-                                      item.is_machine
-                                        ? item.machine_color_bg
-                                        : "bg-muted"
-                                    } rounded-md border ${
-                                      item.is_machine && item.machine_color_text
-                                    }`}
+                                    className={`relative px-2 py-1 ${item.is_machine
+                                      ? item.machine_color_bg
+                                      : "bg-muted"
+                                      } rounded-md border ${item.is_machine && item.machine_color_text
+                                      }`}
                                   >
                                     {item?.booked && (
                                       <Image
@@ -340,7 +343,7 @@ export default function Page() {
                                           <span className="font-medium">
                                             {item.name}
                                             {item.location &&
-                                            item.location === "Lahore" ? (
+                                              item.location === "Lahore" ? (
                                               <Badge
                                                 variant="outline"
                                                 className="bg-blue-500 text-white dark:bg-blue-600 ml-2 hover:none"
@@ -377,11 +380,10 @@ export default function Page() {
                                       </div>
 
                                       <div
-                                        className={`text-sm text-muted-foreground grid grid-cols-4 gap-1 ${
-                                          item.is_machine
-                                            ? item.machine_color_text
-                                            : "text-muted-foreground"
-                                        }`}
+                                        className={`text-sm text-muted-foreground grid grid-cols-4 gap-1 ${item.is_machine
+                                          ? item.machine_color_text
+                                          : "text-muted-foreground"
+                                          }`}
                                       >
                                         {item.is_machine && (
                                           <>
@@ -409,8 +411,8 @@ export default function Page() {
                                               Booking Date:{" "}
                                               {item?.booking_date
                                                 ? moment(
-                                                    item?.booking_date
-                                                  ).format("YYYY-MM-DD")
+                                                  item?.booking_date
+                                                ).format("YYYY-MM-DD")
                                                 : ""}
                                             </span>
                                           </>
