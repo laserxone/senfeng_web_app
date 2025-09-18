@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
-import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import "react-medium-image-zoom/dist/styles.css";
 import { InventorySearch } from "./inventory-select";
@@ -43,12 +42,13 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
       status: "Order Placed",
       isExisting: false,
       inventory_id: null,
+      show : false
     },
   ]);
   const [errors, setErrors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [existingInventory, setExistingInventory] = useState([]);
-  
+
   const [manual, setManual] = useState(false);
 
   useEffect(() => {
@@ -98,6 +98,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
         status: "Order Placed",
         isExisting: false,
         inventory_id: null,
+        show : false
       },
     ]);
   };
@@ -247,6 +248,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
         status: "Order Placed",
         isExisting: false,
         inventory_id: null,
+        show : false
       },
     ]);
 
@@ -288,6 +290,26 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                     {item.isExisting ? "Existing Item" : "New Item"}
                   </Label>
                 </div>
+
+                 <div className="flex items-center gap-2 mt-2">
+                      <Switch
+                        checked={item.is_machine}
+                        onCheckedChange={(val) =>
+                          handleItemChange(index, "is_machine", val)
+                        }
+                      />
+                      <Label>Is Machine?</Label>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-2">
+                      <Switch
+                        checked={item.show}
+                        onCheckedChange={(val) =>
+                          handleItemChange(index, "show", val)
+                        }
+                      />
+                      <Label>{item.show ? "Show" : "Hide"}</Label>
+                    </div>
 
                 {item.isExisting ? (
                   <>
@@ -378,7 +400,9 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                                 handleItemChange(
                                   index,
                                   "qty",
-                                  parseInt(e.target.value)
+                                  isNaN(e.target.value)
+                                    ? ""
+                                    : parseInt(e.target.value)
                                 )
                               }
                             />
@@ -456,15 +480,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                       </>
                     )}
 
-                    <div className="flex items-center gap-2 mt-2">
-                      <Switch
-                        checked={item.is_machine}
-                        onCheckedChange={(val) =>
-                          handleItemChange(index, "is_machine", val)
-                        }
-                      />
-                      <Label>Is Machine?</Label>
-                    </div>
+                   
 
                     {item.is_machine && (
                       <div className="flex items-center gap-2 mt-2">

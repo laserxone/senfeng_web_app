@@ -45,6 +45,7 @@ import axios from "@/lib/axios";
 import moment from "moment";
 import Image from "next/image";
 import "react-medium-image-zoom/dist/styles.css";
+import ConfimationDialog from "@/components/alert-dialog";
 
 const colorClasses = [
   { bg: "bg-red-100", text: "text-red-800" },
@@ -67,6 +68,9 @@ export default function Page() {
   const [selectedItem, setSelectedItem] = useState(null);
   const { userID } = useUserDetail();
   const [orderedData, setOrderedData] = useState([]);
+  const [search, setSearch] = useState("")
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [selectedShipment, setSelectedShipment] = useState(null)
 
   useEffect(() => {
     const savedOrder = localStorage.getItem("cardOrder");
@@ -141,7 +145,7 @@ export default function Page() {
                 groupedMachines[typeKey].push(item);
               }
             }
-            
+
             const finalMachineItems = [];
 
             for (const typeKey in groupedMachines) {
@@ -169,8 +173,6 @@ export default function Page() {
               });
             }
 
-            console.log(finalMachineItems)
-
             finalMachineItems.sort((a, b) => {
               const serialA = parseInt(a.machine_serial, 10);
               const serialB = parseInt(b.machine_serial, 10);
@@ -181,7 +183,6 @@ export default function Page() {
               return serialA - serialB;
             });
 
-            // Non-machine items (keep original order from sorted list)
             const nonMachineItems = sortedOrderItems.filter((i) => !i.is_machine);
 
             const finalItems = [...finalMachineItems, ...nonMachineItems];
@@ -205,9 +206,13 @@ export default function Page() {
 
 
   async function handleDelete(orderId) {
+    setDeleteLoading(true)
     axios.delete(`/${userID}/neworder/${orderId}`).then(() => {
       fetchData();
-    });
+      setSelectedShipment(null)
+    }).finally(() => {
+      setDeleteLoading(false)
+    })
   }
 
   function handleEditItem(itemId) {
@@ -223,7 +228,7 @@ export default function Page() {
       <div className="flex gap-2 justify-between items-center">
         <div className="flex w-full flex-wrap gap-2 items-center">
           <div className="w-[350px]">
-            <Input placeholder="Search order" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search order" />
           </div>
           <Button variant="ghost" className="p-0 w-8">
             <Filter />
@@ -286,7 +291,10 @@ export default function Page() {
                               <Button
                                 size="icon"
                                 variant="destructive"
-                                onClick={() => handleDelete(order.id)}
+                                onClick={() => {
+                                  setSelectedShipment(order.id)
+                                  // handleDelete(order.id)
+                                }}
                               >
                                 <Trash2 size={14} />
                               </Button>
@@ -358,10 +366,22 @@ export default function Page() {
                                                 {item?.location}
                                               </Badge>
                                             )}
+
                                           </span>
                                         </div>
 
                                         <div className="flex gap-2 items-center">
+                                          <div>
+                                            <Badge
+                                              className={`ml-2 px-2.5 py-0.5 rounded-full text-xs font-medium border ${item.show
+                                                ? "bg-green-100 text-green-700 border-green-200"
+                                                : "bg-red-100 text-red-700 border-red-200"
+                                                }`}
+                                            >
+                                              {item?.show ? "Showing" : "Hidden"}
+                                            </Badge>
+                                          </div>
+
                                           <div>
                                             <Badge
                                               variant="outline"
@@ -465,6 +485,15 @@ export default function Page() {
         id={selectedItem?.id}
         onRefresh={fetchData}
         item={selectedItem}
+      />
+
+      <ConfimationDialog
+        loading={deleteLoading}
+        open={!!selectedShipment}
+        title={"Are you sure you want to delete?"}
+        description={"Your action will remove shipment from the system"}
+        onPressYes={() => handleDelete(selectedShipment)}
+        onPressCancel={() => setSelectedShipment(null)}
       />
     </div>
   );
