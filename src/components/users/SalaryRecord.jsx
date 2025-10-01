@@ -1,13 +1,10 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { BASE_URL } from "@/constants/data";
-import { ArrowUpDown, Trash2 } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
+import { ArrowUpDown } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import PageTable from "@/components/app-table";
 import SalaryPdf from "@/components/salaryPdf";
-import { Heading } from "@/components/ui/heading";
-import { UserContext } from "@/store/context/UserContext";
 import axios from "@/lib/axios";
 import moment from "moment";
 import { FaRegFilePdf } from "react-icons/fa";

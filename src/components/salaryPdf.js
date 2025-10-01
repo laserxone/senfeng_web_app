@@ -261,6 +261,7 @@ const FormField = ({ data }) => {
                 'Late Fine/Day',
                 'Absents',
                 'Late',
+                'Fuel'
             ].map((label, index) => (
                 <View key={label} style={{ display: 'flex', flexDirection: 'column', marginBottom: 5 }}>
                     <Text style={{ color: '#7F7F7FFF', marginLeft: 10, fontFamily: 'Helvetica-Bold', fontSize: 11 }}>
@@ -299,7 +300,9 @@ const FormField = ({ data }) => {
                                                                 ? data?.absents
                                                                 : index === 9
                                                                     ? data?.late
-                                                                    : ''}
+                                                                    : index === 10
+                                                                        ? data?.fuel
+                                                                        : ''}
                         </Text>
                     </View>
                 </View>

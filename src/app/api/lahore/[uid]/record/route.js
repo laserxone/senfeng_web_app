@@ -12,15 +12,17 @@ export async function GET(req, { params }) {
 
         const isAdmin = await checkSuperadmin(uid)
         if (isAdmin) {
+            const officeQuery = await pool.query(`SELECT office FROM users WHERE id = $1`, [uid])
+            const office = officeQuery.rows[0]?.office
             const salaries = await pool.query(`
             SELECT 
                 s.*, 
                 u.name AS user_name 
             FROM salaries s
             INNER JOIN users u ON s.user_id = u.id
-            WHERE issued = $1
+            WHERE issued = $1 AND u.office = $2
             ORDER BY s.year DESC, s.month DESC;
-        `, [true]);
+        `, [true, office]);
 
             return NextResponse.json(salaries.rows, { status: 200 });
 

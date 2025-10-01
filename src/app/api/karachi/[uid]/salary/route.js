@@ -87,7 +87,7 @@ export async function GET(req, { params }) {
         })
 
 
-        const userQuery = await pool.query(`SELECT id, name, email, basic_salary, total_salary, monthly_target, designation FROM users WHERE id = $1`, [user])
+        const userQuery = await pool.query(`SELECT id, name, email,fuel, basic_salary, total_salary, monthly_target, designation FROM users WHERE id = $1`, [user])
 
 
         const userMap = {};

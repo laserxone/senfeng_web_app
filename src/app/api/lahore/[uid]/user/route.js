@@ -64,6 +64,7 @@ export async function GET(req) {
   const user = searchParams.get('user')
   const withoutleave = searchParams.get('withoutleave')
   const withBranch = searchParams.get("withbranch")
+  const active = searchParams.get("active")
 
 
   try {
@@ -86,7 +87,9 @@ export async function GET(req) {
       conditions.push(`office = 'lahore'`);
     }
 
-
+    if (active) {
+      conditions.push(`active IS TRUE`);
+    }
 
     if (conditions.length > 0) {
       query += ` WHERE ` + conditions.join(" AND ");

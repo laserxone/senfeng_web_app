@@ -363,6 +363,7 @@ const SalaryComponent = ({ onSelectedId }) => {
     if (data?.user) {
       setPayable(
         (
+          Number(data?.user?.fuel || 0) +
           Number(data?.user?.basic_salary || 0) +
           Number(kpi || 0) +
           Number(lateComingFine || 0) +
@@ -478,6 +479,7 @@ const SalaryComponent = ({ onSelectedId }) => {
         salary_month: startDate,
         payable: payable,
         kpi: kpi,
+        fuel : data?.user?.fuel || 0
       })
       .then(() => {
         toast({ title: "Salary saved" });
@@ -797,6 +799,11 @@ const SalaryComponent = ({ onSelectedId }) => {
                     <Label>LATE COMING FINE</Label>
                     <Input value={lateComingFine} disabled readOnly />
                   </div>
+
+                  <div className="flex flex-col gap-1">
+                    <Label>FUEL</Label>
+                    <Input value={data?.user?.fuel || 0} disabled readOnly />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -813,6 +820,7 @@ const SalaryComponent = ({ onSelectedId }) => {
                 ["Commission", form.commission],
                 ["Miscellaneous", form.miscellaneous],
                 ["ADDITIONAL FINE", form.additional_fine],
+                ["FUEL", data?.user?.fuel || 0]
               ].map(([label, value]) => (
                 <div key={label} className="grid grid-cols-3 items-center gap-2">
                   <Label>{label}</Label>

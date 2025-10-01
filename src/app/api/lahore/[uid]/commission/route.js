@@ -83,6 +83,8 @@ export async function GET(req, { params }) {
     try {
   const isAdmin = await checkSuperadmin(uid)
         if (isAdmin) {
+            const officeQuery = await pool.query(`SELECT office FROM users WHERE id = $1`, [uid])
+            const office = officeQuery.rows[0]?.office            
             const query = `
       SELECT 
         commissions.*, 
@@ -99,10 +101,11 @@ export async function GET(req, { params }) {
       LEFT JOIN users ON commissions.user_id = users.id
       LEFT JOIN sale ON commissions.sale_id = sale.id
       LEFT JOIN customer AS customer ON sale.customer_id = customer.id
+      WHERE users.office = $1
       ORDER BY commissions.created_at DESC
     `;
 
-            const { rows } = await pool.query(query);
+            const { rows } = await pool.query(query, [office]);
 
             return NextResponse.json(rows, { status: 200 });
         } else {
