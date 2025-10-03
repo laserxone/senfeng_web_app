@@ -12,8 +12,6 @@ export async function GET(req, { params }) {
 
   try {
     const isAdmin = await checkSuperadmin(uid);
-    const myOfficeQuery = await pool.query(`SELECT office FROM users WHERE id = $1`, [uid])
-    const myOffice = myOfficeQuery.rows[0]?.office || "karachi"
     const queryParams = [];
     let query = "";
 
@@ -57,7 +55,7 @@ export async function GET(req, { params }) {
         LEFT JOIN complaint_assignments ca ON ca.complaint_id = c.id
         LEFT JOIN users engineer ON ca.engineer_id = engineer.id
         LEFT JOIN users assigned_by_user ON ca.assigned_by = assigned_by_user.id
-        WHERE c.customer_id IS NOT NULL AND owner_user.office = '${myOffice}'
+        WHERE c.customer_id IS NOT NULL AND owner_user.office = 'karachi'
       `;
 
       if (start_date && end_date) {
@@ -119,7 +117,7 @@ export async function GET(req, { params }) {
         LEFT JOIN complaint_assignments ca ON ca.complaint_id = c.id
         LEFT JOIN users engineer ON ca.engineer_id = engineer.id
         LEFT JOIN users assigned_by_user ON ca.assigned_by = assigned_by_user.id
-        WHERE c.customer_id IS NOT NULL AND owner_user.office = '${myOffice}'
+        WHERE c.customer_id IS NOT NULL AND owner_user.office = 'karachi'
       `;
 
       if (start_date && end_date) {

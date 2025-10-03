@@ -16,7 +16,6 @@ export async function GET(req, { params }) {
 
     try {
         const isAdmin = await checkSuperadmin(uid)
-        const office = 'karachi'
         if (isAdmin) {
             const query = `
 SELECT 
@@ -29,7 +28,7 @@ SELECT
 FROM feedback f
 LEFT JOIN customer c ON f.customer_id = c.id
 LEFT JOIN users u ON f.user_id = u.id
-WHERE u.office = '${office}'
+WHERE u.office = 'karachi'
 ORDER BY created_at DESC;
 
     `;

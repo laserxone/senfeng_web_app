@@ -237,7 +237,7 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
   LEFT JOIN users ON task.assigned_to = users.id
   LEFT JOIN customer ON task.customer_id = customer.id
   WHERE task.created_at BETWEEN $1 AND $2
-    AND users.office = '${office}'
+    AND users.office = 'lahore'
   GROUP BY users.id, users.name
   ORDER BY MAX(task.created_at) DESC;
 `;

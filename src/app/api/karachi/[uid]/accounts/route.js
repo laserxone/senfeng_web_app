@@ -4,9 +4,7 @@ import { NextResponse } from "next/server"
 
 export async function GET(req, { params }) {
 
-    const { uid } = await params
-    const branchQuery = await pool.query(`SELECT office FROM users WHERE id = $1`, [uid])
-    const branch = branchQuery.rows[0]?.office || "karachi"
+    const branch = "karachi"
     const searchParams = req.nextUrl.searchParams;
 
     try {

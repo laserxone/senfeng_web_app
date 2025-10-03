@@ -77,7 +77,7 @@ export async function GET(req, { params }) {
                 queryParams.push(user);
              } else {
                  query += queryParams.length ? ` AND` : ` WHERE`;
-                query += ` u.office = 'karachi'`;
+                query += ` u.office = 'lahore'`;
             }
 
             query += ` ORDER BY f.created_at DESC;`;
