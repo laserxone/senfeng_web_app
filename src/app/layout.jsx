@@ -59,11 +59,11 @@ export default async function RootLayout({ children }) {
           <Providers>
             {/* <MobileScreenWrapper> */}
             <MaintenanceWrapper>
-              <InstallPrompt />
+              {/* <InstallPrompt /> */}
               {children}
               </MaintenanceWrapper>
             {/* </MobileScreenWrapper> */}
-            <PwaInstallButton />
+            {/* <PwaInstallButton /> */}
           </Providers>
         </Suspense>
 
