@@ -19,23 +19,24 @@ import { toast } from "@/hooks/use-toast";
 export default function SettingsPage() {
     const [industries, setIndustries] = useState([]);
     const [newIndustry, setNewIndustry] = useState("");
+    const [lateFine, setLateFine] = useState("");  // ✅ new state
     const [loading, setLoading] = useState(false);
-    const [settings, setSetting] = useState(null)
-    const { userID } = useUserDetail()
+    const [settings, setSetting] = useState(null);
+    const { userID } = useUserDetail();
 
     // ✅ Fetch settings
     useEffect(() => {
         if (userID) {
             axios.get(`/${userID}/settings`).then((response) => {
-                setSetting(response.data)
+                setSetting(response.data);
                 const list = response.data.industry_list.map((item) => ({
                     value: item,
                     label: item,
                 }));
                 setIndustries(list);
+                setLateFine(response.data.late_fine || ""); // ✅ set lateFine from backend
             });
         }
-
     }, [userID]);
 
     // ✅ Remove industry
@@ -59,7 +60,9 @@ export default function SettingsPage() {
         setLoading(true);
         try {
             await axios.put(`/${userID}/settings`, {
-                industry_list: industries.map((i) => i.value), id : settings?.id
+                id: settings?.id,
+                industry_list: industries.map((i) => i.value),
+                late_fine: lateFine, // ✅ send lateFine back
             });
             toast({ description: "Settings saved successfully!" });
         } catch (err) {
@@ -75,7 +78,7 @@ export default function SettingsPage() {
             <Card className="max-w-xl mx-auto">
                 <CardHeader>
                     <CardTitle>Configuration</CardTitle>
-                    <CardDescription>Manage your industry list</CardDescription>
+                    <CardDescription>Manage your industry list & late fine</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {/* Existing industries */}
@@ -106,6 +109,17 @@ export default function SettingsPage() {
                             onChange={(e) => setNewIndustry(e.target.value)}
                         />
                         <Button onClick={handleAdd}>Add</Button>
+                    </div>
+
+                    {/* Late Fine input */}
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium">Late Fine</label>
+                        <Input
+                            type="number"
+                            placeholder="Enter late fine"
+                            value={lateFine}
+                            onChange={(e) => setLateFine(e.target.value)}
+                        />
                     </div>
 
                     {/* Save button */}
