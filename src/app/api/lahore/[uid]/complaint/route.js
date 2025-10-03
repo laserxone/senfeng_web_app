@@ -57,8 +57,7 @@ export async function GET(req, { params }) {
         LEFT JOIN complaint_assignments ca ON ca.complaint_id = c.id
         LEFT JOIN users engineer ON ca.engineer_id = engineer.id
         LEFT JOIN users assigned_by_user ON ca.assigned_by = assigned_by_user.id
-        LEFT JOIN users u ON u.id = c.customer_id
-        WHERE c.customer_id IS NOT NULL AND u.office = '${myOffice}'
+        WHERE c.customer_id IS NOT NULL AND owner_user.office = '${myOffice}'
       `;
 
       if (start_date && end_date) {
@@ -120,8 +119,7 @@ export async function GET(req, { params }) {
         LEFT JOIN complaint_assignments ca ON ca.complaint_id = c.id
         LEFT JOIN users engineer ON ca.engineer_id = engineer.id
         LEFT JOIN users assigned_by_user ON ca.assigned_by = assigned_by_user.id
-        LEFT JOIN users u ON u.id = c.customer_id
-        WHERE c.customer_id IS NOT NULL AND u.office = '${myOffice}'
+        WHERE c.customer_id IS NOT NULL AND owner_user.office = '${myOffice}'
       `;
 
       if (start_date && end_date) {
