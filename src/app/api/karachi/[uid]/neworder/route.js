@@ -90,7 +90,7 @@ export async function POST(req) {
             const threshold = item.threshold || 0
             const new_order = item.new_order || 0
             const buying_price = item.buying_price || 0
-            const location = item?.location || "Lahore"
+            const location = item?.location || "karachi"
             const show = item?.show || false
 
 

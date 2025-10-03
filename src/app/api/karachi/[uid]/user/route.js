@@ -84,7 +84,7 @@ export async function GET(req) {
     }
 
     if (withBranch) {
-      conditions.push(`office = 'lahore'`);
+      conditions.push(`office = 'karachi'`);
     }
 
     if (active) {
