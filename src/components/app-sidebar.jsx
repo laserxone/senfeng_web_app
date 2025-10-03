@@ -70,7 +70,7 @@ export default function AppSidebar({ office }) {
   const profileImage = useProfileImage();
   const { toggleSidebar } = useSidebar();
   const isMobile = useIsMobile();
-  const {userID, isAdmin, name, email, base_route, nav_items} = useUserDetail()
+  const { userID, isAdmin, name, email, base_route, nav_items } = useUserDetail()
 
   useEffect(() => {
     checkSession().then((val) => {
@@ -107,7 +107,7 @@ export default function AppSidebar({ office }) {
     }
   }, [userID]);
 
-  
+
 
   return (
     <Sidebar collapsible="icon">
@@ -256,20 +256,13 @@ export default function AppSidebar({ office }) {
                 <DropdownMenuSeparator />
 
                 <DropdownMenuGroup>
-                  <Link href={`/${base_route}/profile`}>
-                    <DropdownMenuItem>
-                      <CreditCard />
-                      Profile
-                    </DropdownMenuItem>
-                  </Link>
-
-                  {/* {isAdmin && (
+                   {isAdmin && (
+                    <>
                     <Link
-                      href={`${
-                        pathname.includes("karachi")
+                      href={`${pathname.includes("karachi")
                           ? pathname.replace("karachi", "lahore")
                           : pathname.replace("lahore", "karachi")
-                      }`}
+                        }`}
                     >
                       <DropdownMenuItem>
                         <CreditCard />
@@ -280,9 +273,18 @@ export default function AppSidebar({ office }) {
                         Dashboard
                       </DropdownMenuItem>
                     </Link>
-                  )} */}
+                    </>
+                  )}
+                  <Link href={`/${base_route}/profile`}>
+                    <DropdownMenuItem>
+                      <CreditCard />
+                      Profile
+                    </DropdownMenuItem>
+                  </Link>
+
+                
+                 
                 </DropdownMenuGroup>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => {
                     signOut(auth);

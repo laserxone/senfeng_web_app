@@ -5,7 +5,7 @@ export async function GET(req, {params}) {
 
     const searchParams = req.nextUrl.searchParams;
     const expiry = searchParams.get('expiry');
-    const office = req.headers.get('x-user-office');
+    const office = 'lahore'
 
     const queryParams = [];
     let conditions = [];
