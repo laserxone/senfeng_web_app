@@ -7,6 +7,7 @@ import { Lato, Inter, Nunito, Yantramanav, Open_Sans, Poppins,  } from "next/fon
 import { Suspense } from "react";
 
 import "./globals.css";
+import PwaInstallButton from "@/components/install-pwa";
 
 export const metadata = {
   title: "SENFENG",
@@ -59,7 +60,7 @@ export default async function RootLayout({ children }) {
             {/* <MobileScreenWrapper> */}
             <MaintenanceWrapper>{children}</MaintenanceWrapper>
             {/* </MobileScreenWrapper> */}
-            {/* <PwaInstallButton /> */}
+            <PwaInstallButton />
           </Providers>
         </Suspense>
 

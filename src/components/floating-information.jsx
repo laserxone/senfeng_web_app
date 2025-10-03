@@ -92,7 +92,7 @@ const FloatingInformation = () => {
                       </li>
                       {grouped.passed.map((t) => (
                         <Link
-                          href={`/${base_route}/${t.link}`}
+                          href={`/${base_route}${t.link}`}
                           key={t.id}
                           className="flex rounded-lg border p-2 hover:bg-accent transition"
                           onClick={() => setIsOpen(!isOpen)}

@@ -139,14 +139,14 @@ export const ownerNavItems = [
     isActive: false,
     items: [] // No child items
   },
-  {
-    title: 'Inventory',
-    url: '/inventory',
-    icon: 'inventory',
-    shortcut: ['i', 'n', 'v'],
-    isActive: false,
-    items: [] // No child items
-  },
+  // {
+  //   title: 'Inventory',
+  //   url: '/inventory',
+  //   icon: 'inventory',
+  //   shortcut: ['i', 'n', 'v'],
+  //   isActive: false,
+  //   items: [] // No child items
+  // },
 
   {
     title: 'Documents',
