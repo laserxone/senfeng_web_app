@@ -100,6 +100,7 @@ FROM task t
 INNER JOIN users u ON t.assigned_to = u.id
 LEFT JOIN users ab ON t.assigned_by = ab.id
 LEFT JOIN customer c ON t.customer_id = c.id
+WHERE u.office = 'karachi'
     `;
 
             if (start_date && end_date) {
