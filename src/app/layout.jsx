@@ -3,11 +3,11 @@ import Providers from "@/components/providers";
 import SenfengLogoLoader from "@/components/senfengLogoLoader";
 import { Toaster } from "@/components/ui/toaster";
 import HolyLoader from "holy-loader";
-import { Lato, Inter, Nunito, Yantramanav, Open_Sans, Poppins,  } from "next/font/google";
+import { Lato, Inter, Nunito, Yantramanav, Open_Sans, Poppins, } from "next/font/google";
 import { Suspense } from "react";
 
 import "./globals.css";
-import PwaInstallButton from "@/components/install-pwa";
+import PwaInstallButton, { InstallPrompt } from "@/components/install-pwa";
 
 export const metadata = {
   title: "SENFENG",
@@ -31,8 +31,8 @@ const inter = Inter({
 });
 
 const yantra = Yantramanav({
-  subsets : ['latin'],
-  weight : "500"
+  subsets: ['latin'],
+  weight: "500"
 })
 
 const open_sans = Open_Sans({
@@ -41,7 +41,7 @@ const open_sans = Open_Sans({
 
 const poppins = Poppins({
   subsets: ["latin"],
-  weight : "400"
+  weight: "400"
 });
 
 
@@ -58,7 +58,10 @@ export default async function RootLayout({ children }) {
         <Suspense fallback={<SenfengLogoLoader />}>
           <Providers>
             {/* <MobileScreenWrapper> */}
-            <MaintenanceWrapper>{children}</MaintenanceWrapper>
+            <MaintenanceWrapper>
+              <InstallPrompt />
+              {children}
+              </MaintenanceWrapper>
             {/* </MobileScreenWrapper> */}
             <PwaInstallButton />
           </Providers>
