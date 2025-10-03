@@ -104,7 +104,7 @@ WHERE u.office = 'karachi'
     `;
 
             if (start_date && end_date) {
-                query += ` WHERE t.created_at BETWEEN $1 AND $2`;
+                query += ` AND t.created_at BETWEEN $1 AND $2`;
                 queryParams.push(start_date, end_date);
             }
             if (user) {
