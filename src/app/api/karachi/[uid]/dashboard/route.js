@@ -8,12 +8,15 @@ import { profileFields, saleFields } from "@/constants/data";
 export async function GET(req, { params }) {
 
     const { uid } = await params
+    const searchParams = req.nextUrl.searchParams
+    const office = searchParams.get('office')
 
 
 
     try {
         const isAdmin = await checkSuperadmin(uid)
         if (isAdmin) {
+
             const TIMEZONE = 'Asia/Karachi';
             const currentDate = momentT.tz(TIMEZONE);
 
@@ -45,10 +48,10 @@ export async function GET(req, { params }) {
     SELECT 
         s.contract_date AS sale_date,
         COUNT(*) AS total_machines_sold 
-    FROM 
-        sale s 
-    WHERE 
-        s.contract_date BETWEEN $1 AND $2
+    FROM sale s
+    JOIN customer c ON s.customer_id = c.id
+    WHERE s.contract_date BETWEEN $1 AND $2
+      AND c.office = '${office}'
     GROUP BY sale_date
     ORDER BY sale_date;
 `;
@@ -80,37 +83,35 @@ export async function GET(req, { params }) {
 
 
             const paymentQuery = `
-            SELECT 
-                SUM(p.amount) AS total_payment
-            FROM 
-                payment p
-            WHERE 
-                p.transaction_date BETWEEN $1 AND $2
-        `;
+    SELECT 
+        SUM(p.amount) AS total_payment
+    FROM payment p
+    JOIN sale s ON p.machine_id = s.id
+    JOIN customer c ON s.customer_id = c.id
+    WHERE p.transaction_date BETWEEN $1 AND $2
+      AND c.office = '${office}';
+`;
 
             const machinesSoldQuery = `
-            SELECT 
-                COUNT(*) AS total_machines_sold
-            FROM 
-                sale s
-            WHERE 
-                s.contract_date BETWEEN $1 AND $2
-        `;
+    SELECT COUNT(*) AS total_machines_sold
+    FROM sale s
+    JOIN customer c ON s.customer_id = c.id
+    WHERE s.contract_date BETWEEN $1 AND $2
+      AND c.office = '${office}';
+`;
 
             // Query to get new customers added this month
             const newCustomersQuery = `
-            SELECT 
-                COUNT(*) AS total_new_customers
-            FROM 
-                customer c
-            WHERE 
-                c.created_at BETWEEN $1 AND $2
-        `;
+    SELECT COUNT(*) AS total_new_customers
+    FROM customer c
+    WHERE c.created_at BETWEEN $1 AND $2
+      AND c.office = '${office}';
+`;
 
 
 
             const recentSalesQuery = `
-        SELECT 
+    SELECT 
         s.price,
         s.contract_date,
         u.name AS seller_name,
@@ -119,45 +120,52 @@ export async function GET(req, { params }) {
         c.id AS customer_id,
         c.name AS customer_name,
         c.owner AS customer_owner
-        FROM 
-        sale s
-        JOIN 
-        users u ON u.id = s.sell_by
-        JOIN 
-        customer c ON c.id = s.customer_id
-        ORDER BY 
-        s.contract_date DESC
-        LIMIT 5;
+    FROM sale s
+    JOIN users u ON u.id = s.sell_by
+    JOIN customer c ON c.id = s.customer_id
+    WHERE c.office = '${office}'
+    ORDER BY s.contract_date DESC
+    LIMIT 5;
 `;
 
 
             const industryCount = `
-       SELECT 
-  CASE 
-    WHEN industry IS NULL OR industry = '' THEN 'No industry'
-    ELSE industry
-  END AS industry,
-  COUNT(*) AS customer_count
-FROM customer
-GROUP BY 
-  CASE 
-    WHEN industry IS NULL OR industry = '' THEN 'No industry'
-    ELSE industry
-  END;
-        `
+    SELECT 
+      CASE 
+        WHEN industry IS NULL OR industry = '' THEN 'No industry'
+        ELSE industry
+      END AS industry,
+      COUNT(*) AS customer_count
+    FROM customer
+    WHERE office = '${office}'
+    GROUP BY 
+      CASE 
+        WHEN industry IS NULL OR industry = '' THEN 'No industry'
+        ELSE industry
+      END;
+`;
 
             const feedbackQuery = `
-        WITH months AS (
-            SELECT TO_CHAR(date_trunc('month', CURRENT_DATE) - INTERVAL '1 month' * generate_series(0, 11), 'YYYY-MM') AS month
-        )
-        SELECT 
-            months.month,
-            COALESCE(COUNT(CASE WHEN f.status = 'Satisfactory' THEN 1 END), 0) AS satisfactory,
-            COALESCE(COUNT(CASE WHEN f.status = 'Unsatisfactory' THEN 1 END), 0) AS unsatisfactory
-        FROM months
-        LEFT JOIN feedback f ON TO_CHAR(f.created_at, 'YYYY-MM') = months.month
-        GROUP BY months.month
-        ORDER BY months.month;`;
+    WITH months AS (
+  SELECT TO_CHAR(
+    date_trunc('month', CURRENT_DATE) - INTERVAL '1 month' * generate_series(0, 11),
+    'YYYY-MM'
+  ) AS month
+)
+SELECT 
+  months.month,
+  COALESCE(COUNT(CASE WHEN f.status = 'Satisfactory' THEN 1 END), 0) AS satisfactory,
+  COALESCE(COUNT(CASE WHEN f.status = 'Unsatisfactory' THEN 1 END), 0) AS unsatisfactory
+FROM months
+LEFT JOIN feedback f 
+  ON TO_CHAR(f.created_at, 'YYYY-MM') = months.month
+LEFT JOIN customer c
+  ON f.customer_id = c.id
+WHERE c.office = '${office}'
+GROUP BY months.month
+ORDER BY months.month;
+
+`;
 
             // Execute all queries in parallel
 
@@ -165,19 +173,19 @@ GROUP BY
 WITH sales_users AS (
   SELECT id, name, email, monthly_target
   FROM users
-  WHERE designation = 'Sales'
+  WHERE designation = 'Sales' AND office = '${office}'
 ),
 feedback_count AS (
-  SELECT user_id, COUNT(*) AS total_feedbacks
-  FROM feedback
-  WHERE created_at BETWEEN $1 AND $2
-  GROUP BY user_id
+  SELECT f.user_id, COUNT(*) AS total_feedbacks
+  FROM feedback f
+  WHERE f.created_at BETWEEN $1 AND $2
+  GROUP BY f.user_id
 ),
 visit_count AS (
-  SELECT user_id, COUNT(*) AS total_visits
-  FROM visit
-  WHERE created_at BETWEEN $1 AND $2
-  GROUP BY user_id
+  SELECT v.user_id, COUNT(*) AS total_visits
+  FROM visit v
+  WHERE v.created_at BETWEEN $1 AND $2
+  GROUP BY v.user_id
 ),
 customer_count AS (
   SELECT c.ownership AS user_id, COUNT(DISTINCT c.id) AS total_members
@@ -186,10 +194,10 @@ customer_count AS (
   GROUP BY c.ownership
 ),
 sale_sum AS (
-  SELECT sell_by AS user_id, SUM(price) AS total_sale_price
-  FROM sale
-  WHERE contract_date BETWEEN $1 AND $2
-  GROUP BY sell_by
+  SELECT s.sell_by AS user_id, SUM(s.price) AS total_sale_price
+  FROM sale s
+  WHERE s.contract_date BETWEEN $1 AND $2
+  GROUP BY s.sell_by
 )
 SELECT 
   u.id,
@@ -205,8 +213,8 @@ LEFT JOIN feedback_count f ON u.id = f.user_id
 LEFT JOIN visit_count v ON u.id = v.user_id
 LEFT JOIN customer_count c ON u.id = c.user_id
 LEFT JOIN sale_sum s ON u.id = s.user_id;
-
 `;
+
 
             const taskQuery = `
   SELECT
@@ -229,6 +237,7 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
   LEFT JOIN users ON task.assigned_to = users.id
   LEFT JOIN customer ON task.customer_id = customer.id
   WHERE task.created_at BETWEEN $1 AND $2
+    AND users.office = '${office}'
   GROUP BY users.id, users.name
   ORDER BY MAX(task.created_at) DESC;
 `;
@@ -299,23 +308,23 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
             });
 
             const paymentLast = Number(totalPaymentLastMonth) || 0;
-                const paymentThis = Number(totalPaymentThisMonth) || 0;
-                const machinesLast = Number(totalMachinesSoldLastMonth) || 0;
-                const machinesThis = Number(totalMachinesSoldThisMonth) || 0;
-                const customersLast = Number(totalNewCustomersLastMonth) || 0;
-                const customersThis = Number(totalNewCustomersThisMonth) || 0;
+            const paymentThis = Number(totalPaymentThisMonth) || 0;
+            const machinesLast = Number(totalMachinesSoldLastMonth) || 0;
+            const machinesThis = Number(totalMachinesSoldThisMonth) || 0;
+            const customersLast = Number(totalNewCustomersLastMonth) || 0;
+            const customersThis = Number(totalNewCustomersThisMonth) || 0;
 
-                const paymentChangePercentage = paymentLast === 0
-                    ? 0
-                    : ((paymentThis - paymentLast) / paymentLast) * 100;
+            const paymentChangePercentage = paymentLast === 0
+                ? 0
+                : ((paymentThis - paymentLast) / paymentLast) * 100;
 
-                const machinesSoldChangePercentage = machinesLast === 0
-                    ? 0
-                    : ((machinesThis - machinesLast) / machinesLast) * 100;
+            const machinesSoldChangePercentage = machinesLast === 0
+                ? 0
+                : ((machinesThis - machinesLast) / machinesLast) * 100;
 
-                const newCustomerChangePercentage = customersLast === 0
-                    ? 0
-                    : ((customersThis - customersLast) / customersLast) * 100;
+            const newCustomerChangePercentage = customersLast === 0
+                ? 0
+                : ((customersThis - customersLast) / customersLast) * 100;
 
             // Prepare the response data
             const responseData = {
@@ -361,7 +370,7 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
             }
 
             const user = userResult.rows[0];
-        
+            console.log(user.designation)
 
             if (user?.designation === 'Dealer') {
 
