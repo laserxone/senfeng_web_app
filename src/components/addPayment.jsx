@@ -45,8 +45,8 @@ const AddPayment = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
-  const {userID, base_route} = useUserDetail()
-  const {state : OfficeState} = useContext(OfficeContext)
+  const { userID, base_route } = useUserDetail()
+  const { state: OfficeState } = useContext(OfficeContext)
   const [lockTID, setLockTID] = useState(false)
   const [error, setError] = useState({});
   const formSchema = z.object({
@@ -58,9 +58,19 @@ const AddPayment = ({
       required_error: "Transaction date is required.",
     }),
     clearance_date: z.date().optional(),
-    image: z.string().min(1, { message: "Image by is required." }),
+    image: z.string().min(1, { message: "Image is required." }),
     remarks: z.string().optional(),
+    check_id: z.string().optional(), // default optional
+  }).superRefine((data, ctx) => {
+    if (data.mode === "Cheque" && (!data.check_id || data.check_id.trim() === "")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Cheque ID is required when payment mode is Cheque.",
+        path: ["check_id"],
+      });
+    }
   });
+
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -73,9 +83,11 @@ const AddPayment = ({
       clearance_date: undefined,
       image: null,
       remarks: "",
+      check_id: "",   // 👈 add here
     },
   });
   async function onSubmit(values) {
+ 
     setLoading(true);
     try {
       if (values.image) {
@@ -99,7 +111,7 @@ const AddPayment = ({
     }
   }
 
- 
+
   function handleClose(val) {
     form.reset();
     setLoading(false);
@@ -124,7 +136,7 @@ const AddPayment = ({
     try {
       const response = await axios.post(`/${userID}/check-note`, { number });
       if (Array.isArray(response.data) && response.data.length > 0) {
-        
+
         setError(response.data[0]);
       }
     } catch (error) {
@@ -186,6 +198,58 @@ const AddPayment = ({
                       )}
                     />
 
+                    {/* Payment Mode */}
+                    <FormField
+                      control={form.control}
+                      name="mode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Payment Mode <RequiredStar />
+                          </FormLabel>
+                          <FormControl>
+                            <Select
+                              onValueChange={(val) => {
+                                field.onChange(val);
+                                if (val === "Cash") {
+                                  form.setValue(
+                                    "note",
+                                    moment()
+                                      .format("YYYYMMDDHHmmss")
+                                      .toString()
+                                  );
+                                  setLockTID(true)
+                                } else {
+                                  if (form.getValues("note") && lockTID) {
+                                    setLockTID(false)
+                                  }
+                                }
+                              }}
+                              value={field.value}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select payment mode" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {[
+                                  "Cheque",
+                                  "Cash",
+                                  "Deposit",
+                                  "Online",
+                                  "Pay Order",
+                                ].map((user) => (
+                                  <SelectItem key={user} value={user}>
+                                    {user}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <FormField
                       control={form.control}
                       name="note"
@@ -218,57 +282,25 @@ const AddPayment = ({
                       </Link>
                     )}
 
-                    {/* Payment Mode */}
-                    <FormField
-                      control={form.control}
-                      name="mode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Payment Mode <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Select
-                              onValueChange={(val) => {
-                                field.onChange(val);
-                                if (val === "Cash") {
-                                  form.setValue(
-                                    "note",
-                                    moment()
-                                      .format("YYYYMMDDHHmmss")
-                                      .toString()
-                                  );
-                                  setLockTID(true)
-                                } else {
-                                  if(form.getValues("note") && lockTID){
-                                    setLockTID(false)
-                                  }
-                                }
-                              }}
-                              value={field.value}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select payment mode" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {[
-                                  "Cheque",
-                                  "Cash",
-                                  "Deposit",
-                                  "Online",
-                                  "Pay Order",
-                                ].map((user) => (
-                                  <SelectItem key={user} value={user}>
-                                    {user}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {form.watch("mode") === "Cheque" && (
+                      <FormField
+                        control={form.control}
+                        name="check_id"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Cheque ID <RequiredStar />
+                            </FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter cheque ID" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+
 
                     {/* Received By */}
                     <FormField

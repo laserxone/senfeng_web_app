@@ -34,17 +34,17 @@ export async function POST(req) {
             JOIN customer c ON s.customer_id = c.id
             WHERE p.id = $1`, [result.rows[0].id])
 
-        sendNotificationToOwner(`New payment added for ${customerResult.rows[0].customer_name}`, `member/${customerResult.rows[0].customer_id}/${result.rows[0].machine_id}`)
+        sendNotificationToOwner(`New payment added for ${customerResult.rows[0].customer_name}`, `member/${customerResult.rows[0].customer_id}/${result.rows[0].machine_id}`, 'lahore')
 
-      
-            try {
-     const logMSG = generateLog(data, "New Payment added")
 
-        addLog({ text: logMSG, user_id: null, customer_id: null, sale_id: result.rows[0].machine_id, payment_id: result.rows[0].id })
+        try {
+            const logMSG = generateLog(data, "New Payment added")
 
-    } catch (error) {
-      console.log(error)
-    }
+            addLog({ text: logMSG, user_id: null, customer_id: null, sale_id: result.rows[0].machine_id, payment_id: result.rows[0].id })
+
+        } catch (error) {
+            console.log(error)
+        }
 
         return NextResponse.json({
             message: "Payment added successfully",

@@ -16,8 +16,8 @@ const nextConfig = {
   },
 };
 
-export default withPWA({
-  dest: 'public',
-})(nextConfig);
+// export default withPWA({
+//   dest: 'public',
+// })(nextConfig);
 
-// export default nextConfig
+export default nextConfig

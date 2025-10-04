@@ -8,7 +8,7 @@ export async function GET(req, { params }) {
 
    
        const query = `
-      SELECT * FROM savedinvoices`
+      SELECT * FROM savedinvoices_karachi`
       const result = await pool.query(query);
       return NextResponse.json(result.rows, { status: 200 });
     

@@ -6,10 +6,10 @@ export async function GET(){
 
     try {
        const query = await pool.query(`
-  SELECT issueditems.*, users.name AS user_name
-  FROM issueditems
-  LEFT JOIN users ON issueditems.user_id = users.id
-  WHERE issueditems.received IS false
+  SELECT issueditems_karachi.*, users.name AS user_name
+  FROM issueditems_karachi
+  LEFT JOIN users ON issueditems_karachi.user_id = users.id
+  WHERE issueditems_karachi.received IS false
 `);
 
     return NextResponse.json(query.rows, {status : 200})

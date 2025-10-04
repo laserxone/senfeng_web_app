@@ -9,13 +9,13 @@ export async function POST(req, { params }) {
 
     try {
         const query = await pool.query(`
-  UPDATE issueditems SET received = $1, receiving_date = $2 WHERE id = $3
+  UPDATE issueditems_karachi SET received = $1, receiving_date = $2 WHERE id = $3
 `, [true, new Date(), id]);
 
         for (const item of field) {
             const { id: itemId, qty } = item;
             await pool.query(
-                `UPDATE inventory SET qty = qty + $1 WHERE id = $2`,
+                `UPDATE inventory_karachi SET qty = qty + $1 WHERE id = $2`,
                 [qty, itemId]
             );
         }

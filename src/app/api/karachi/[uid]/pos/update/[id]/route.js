@@ -9,7 +9,7 @@ export async function PUT(req, { params }) {
         for (const item of olditems.fields) {
             const { id: itemId, qty } = item;
             await pool.query(
-                `UPDATE inventory SET qty = qty + $1 WHERE id = $2`,
+                `UPDATE inventory_karachi SET qty = qty + $1 WHERE id = $2`,
                 [qty, itemId]
             );
         }
@@ -17,13 +17,13 @@ export async function PUT(req, { params }) {
         for (const item of newitems.fields) {
             const { id: itemId, qty } = item;
             await pool.query(
-                `UPDATE inventory SET qty = qty - $1 WHERE id = $2`,
+                `UPDATE inventory_karachi SET qty = qty - $1 WHERE id = $2`,
                 [qty, itemId]
             );
         }
 
         await pool.query(
-            `UPDATE savedinvoices SET 
+            `UPDATE savedinvoices_karachi SET 
                 name = $1,
                 company = $2,
                 phone = $3,

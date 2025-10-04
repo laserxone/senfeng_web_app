@@ -4,11 +4,11 @@ import pool from "@/config/db";
 
 
 
-export const sendNotificationToOwner = async (title, page) => {
+export const sendNotificationToOwner = async (title, page, office) => {
   try {
 
     const ownersResult = await pool.query(
-      "SELECT id FROM users WHERE designation = 'Owner'"
+      `SELECT id FROM users WHERE designation = 'Owner' AND office = '${office}'`
     );
     const ownerIds = ownersResult.rows.map((owner) => owner.id);
 

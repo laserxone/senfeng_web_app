@@ -8,7 +8,7 @@ export async function PUT(req, { params }) {
     try {
        
         await pool.query(
-            `UPDATE savedinvoices SET 
+            `UPDATE savedinvoices_karachi SET 
                 payment = $1
              WHERE id = $2`,
             [

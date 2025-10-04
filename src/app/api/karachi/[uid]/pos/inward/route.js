@@ -11,7 +11,7 @@ export async function POST(req, { params }) {
     try {
         // Insert gatepass
         await pool.query(
-            `INSERT INTO inward_gatepass (from_by, vehicle_no, driver_name, manager, received_by, user_id)
+            `INSERT INTO inward_gatepass_karachi (from_by, vehicle_no, driver_name, manager, received_by, user_id)
        VALUES ($1, $2, $3, $4, $5, $6)`,
             [from, vehicle_no, driver_name, manager, received_by, uid]
         );
@@ -21,7 +21,7 @@ export async function POST(req, { params }) {
             for (const item of items) {
                 if (item.existing) {
                     await pool.query(
-                        `UPDATE inventory SET qty = qty + $1 WHERE id = $2`,
+                        `UPDATE inventory_karachi SET qty = qty + $1 WHERE id = $2`,
                         [item.quantity, item.existing]
                     );
                 }

@@ -14,7 +14,7 @@ export async function POST(req) {
 
         const paymentQuery = `
             SELECT id, part_id, note 
-            FROM customer_parts 
+            FROM customer_parts_karachi 
             WHERE note = $1
         `;
         const paymentResult = await pool.query(paymentQuery, [trimmedNumber]);
@@ -27,7 +27,7 @@ export async function POST(req) {
         const partIds = paymentResult.rows.map(row => row.machine_id);
 
         const saleQuery = `
-            SELECT * FROM savedinvoices 
+            SELECT * FROM savedinvoices_karachi 
             WHERE id = ANY($1)
             LIMIT 1
         `;

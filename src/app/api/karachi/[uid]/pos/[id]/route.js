@@ -32,7 +32,7 @@ export async function PUT(req, {params}) {
   
         values.push(id);
         const query = `
-            UPDATE inventory 
+            UPDATE inventory_karachi 
             SET ${fields.join(", ")}
             WHERE id = $${values.length}
         `;

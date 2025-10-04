@@ -8,7 +8,7 @@ export async function GET() {
 
     try {
        
-        const customer = await pool.query("SELECT * FROM poscustomer")
+        const customer = await pool.query("SELECT * FROM poscustomer_karachi")
        
         return NextResponse.json({ customers: customer.rows }, { status: 200 })
     } catch (error) {
@@ -29,15 +29,15 @@ export async function PUT(req) {
         } = await req.json();
 
        
-        const result = await pool.query("SELECT id FROM poscustomer WHERE phone = $1 LIMIT 1", [phone]);
+        const result = await pool.query("SELECT id FROM poscustomer_karachi WHERE phone = $1 LIMIT 1", [phone]);
         if (result.rows.length > 0) {
             await pool.query(
-                "UPDATE poscustomer SET name = $1, customer = $2, phone = $3, address = $4 WHERE id = $5",
+                "UPDATE poscustomer_karachi SET name = $1, customer = $2, phone = $3, address = $4 WHERE id = $5",
                 [name, company, phone, address, result.rows[0].id]
             );
         } else {
             await pool.query(
-                `INSERT INTO poscustomer 
+                `INSERT INTO poscustomer_karachi 
                 (name, customer, phone, address) 
                 VALUES ($1, $2, $3, $4)`,
                 [name, company, phone, address]

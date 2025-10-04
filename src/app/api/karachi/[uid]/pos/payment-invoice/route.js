@@ -17,14 +17,14 @@ export async function POST(req) {
         const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
 
         const query = `
-        INSERT INTO customer_parts (${fields.join(", ")})
+        INSERT INTO customer_parts_karachi (${fields.join(", ")})
         VALUES (${placeholders})
     `;
 
         await pool.query(query, values);
         const { part_id } = data
         await pool.query(
-            `UPDATE savedinvoices SET 
+            `UPDATE savedinvoices_karachi SET 
                 payment = $1
              WHERE id = $2`,
             [
@@ -69,7 +69,7 @@ export async function PUT(req) {
 
         values.push(id);
         const query = `
-            UPDATE customer_parts 
+            UPDATE customer_parts_karachi 
             SET ${fields.join(", ")}
             WHERE id = $${values.length}
         `;

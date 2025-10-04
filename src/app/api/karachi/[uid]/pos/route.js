@@ -9,7 +9,7 @@ export async function GET(req) {
     const searchParams = req.nextUrl.searchParams
   const availablemachine = searchParams.get('availablemachine')
 
-
+ 
     try {
         if(availablemachine){
 
@@ -18,9 +18,9 @@ export async function GET(req) {
         return NextResponse.json(result.rows, { status: 200 })
 
         } else {
-  const result = await pool.query("SELECT * FROM inventory ORDER BY id ASC");
+  const result = await pool.query("SELECT * FROM inventory_karachi ORDER BY id ASC");
 
-        const reminders = await pool.query("SELECT * FROM savedinvoices WHERE payment=false");
+        const reminders = await pool.query("SELECT * FROM savedinvoices_karachi WHERE payment=false");
 
         return NextResponse.json({ stock: result.rows, reminders: reminders.rows }, { status: 200 })
         }
@@ -47,7 +47,7 @@ export async function POST(req) {
         const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
 
         const query = `
-        INSERT INTO inventory (${fields.join(", ")})
+        INSERT INTO inventory_karachi (${fields.join(", ")})
         VALUES (${placeholders})
         RETURNING *
     `;
@@ -89,18 +89,18 @@ export async function PUT(req) {
         if (selecteduser?.id) {
 
             await pool.query(
-                `INSERT INTO issueditems 
+                `INSERT INTO issueditems_karachi 
             (name, company, phone, address, manager, fields, user_id, issued) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
                 [name, company, phone, address, manager, JSON.stringify(fields), selecteduser.id, true]
             );
 
         } else {
-            const lastIdResult = await pool.query("SELECT MAX(id) AS last_id FROM savedinvoices");
+            const lastIdResult = await pool.query("SELECT MAX(id) AS last_id FROM savedinvoices_karachi");
             const invoicenumber = Number(lastIdResult.rows[0]?.last_id || 0) + 1
             generatedInvoiceNumber = `${moment().format("YYYYMMDD")}-${invoicenumber}`
            const result =  await pool.query(
-                `INSERT INTO savedinvoices 
+                `INSERT INTO savedinvoices_karachi 
             (name, company, phone, address, manager, invoicenumber, fields, payment, customer_id) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING id`,
@@ -114,22 +114,22 @@ export async function PUT(req) {
             for (const entry of entries) {
                 const { id, qty } = entry;
                 await pool.query(
-                    "UPDATE inventory SET qty = $1 WHERE id = $2",
+                    "UPDATE inventory_karachi SET qty = $1 WHERE id = $2",
                     [qty, id]
                 );
             }
         }
 
 
-        const result = await pool.query("SELECT id FROM poscustomer WHERE phone = $1 LIMIT 1", [phone]);
+        const result = await pool.query("SELECT id FROM poscustomer_karachi WHERE phone = $1 LIMIT 1", [phone]);
         if (result.rows.length > 0) {
             await pool.query(
-                "UPDATE poscustomer SET name = $1, customer = $2, phone = $3, address = $4 WHERE id = $5",
+                "UPDATE poscustomer_karachi SET name = $1, customer = $2, phone = $3, address = $4 WHERE id = $5",
                 [name, company, phone, address, result.rows[0].id]
             );
         } else {
             await pool.query(
-                `INSERT INTO poscustomer 
+                `INSERT INTO poscustomer_karachi 
                 (name, customer, phone, address) 
                 VALUES ($1, $2, $3, $4)`,
                 [name, company, phone, address]

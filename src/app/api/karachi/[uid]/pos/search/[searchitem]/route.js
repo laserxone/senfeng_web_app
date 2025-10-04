@@ -12,7 +12,7 @@ export async function GET(req, { params }) {
 
     if(all){
        const query = `
-      SELECT * FROM savedinvoices`
+      SELECT * FROM savedinvoices_karachi`
       const result = await pool.query(query);
       return NextResponse.json(result.rows, { status: 200 });
     }
@@ -20,7 +20,7 @@ export async function GET(req, { params }) {
     if (searchitem !== 'null') {
       
       const query = `
-        SELECT * FROM savedinvoices 
+        SELECT * FROM savedinvoices_karachi 
   WHERE 
     name ILIKE $1 OR 
     company ILIKE $1 OR 
@@ -38,7 +38,7 @@ export async function GET(req, { params }) {
     } else if(pending) {
       
       const query = `
-      SELECT * FROM savedinvoices
+      SELECT * FROM savedinvoices_karachi
       WHERE payment = FALSE`
       const result = await pool.query(query);
       return NextResponse.json(result.rows, { status: 200 });

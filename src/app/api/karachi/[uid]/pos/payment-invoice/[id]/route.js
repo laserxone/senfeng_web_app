@@ -10,7 +10,7 @@ export async function DELETE(req, { params }) {
     if (!id) {
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
-    await pool.query(`DELETE FROM customer_parts WHERE id = $1`, [id]);
+    await pool.query(`DELETE FROM customer_parts_karachi WHERE id = $1`, [id]);
 
 
     return NextResponse.json({ message: "Payment Deleted" }, { status: 200 });

@@ -119,7 +119,7 @@ export default function POS() {
 
         axios.put(`/${userID}/pos/update/${selectedSearchItem.id}`, {
             olditems: selectedSearchItem,
-            newitems: { name: name, company: companyName, phone: phoneNumber, address: address, manager: manager, invoicenumber: nextInvoice, fields: invoiceItems, payment: checked }
+            newitems: { name: name, company: companyName, phone: phoneNumber, address: address, manager: manager, invoicenumber: nextInvoice, fields: invoiceItems, payment: selectedSearchItem?.payment || false }
         }).finally(() => {
             fetchData()
             setSelectedSearchItem(null)
@@ -183,6 +183,11 @@ export default function POS() {
                         resultedData.push({ name: "Plus", id: resultedData[resultedData.length - 1].id + 2 })
                         setStock([...resultedData]);
 
+                    } else {
+                        let resultedData = []
+                        resultedData.push({ name: "Other", id: 1 })
+                        resultedData.push({ name: "Plus", id: 2 })
+                        setStock([...resultedData]);
                     }
                     // if (response.data?.lastInventoryId) {
                     //     setNextInvoice(`${moment().format("YYYYMMDD")}-${response.data?.lastInventoryId + 1}`)
@@ -449,6 +454,7 @@ export default function POS() {
         setOrderStockVisible(true)
     }
 
+
     return (
         (loading || customerLoading) ?
             <div className='flex flex-1 w-full items-center justify-center h-[80vh]'>
@@ -648,9 +654,10 @@ export default function POS() {
                                         setLoading(true)
                                         setCustomerLoading(true)
                                         handleUpdateInvoice()
-                                        className = "h-[100px] w-[100px] text-wrap"
+
                                     }}
                                     disabled={invoiceItems.length === 0}
+                                    className="h-[100px] w-[100px] text-wrap"
 
                                 >
 
