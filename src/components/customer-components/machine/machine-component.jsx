@@ -88,7 +88,7 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import AddCheque from "./add-cheque";
 
-export default function Machine({ id, onLoading = () => {}, base }) {
+export default function Machine({ id, onLoading = () => { }, base }) {
   const [data, setData] = useState();
   const [total, setTotal] = useState(0);
   const [received, setReceived] = useState(0);
@@ -113,23 +113,20 @@ export default function Machine({ id, onLoading = () => {}, base }) {
   const [credit, setCredit] = useState(false);
 
   useEffect(() => {
+
     if (id && userID) {
-      debouncedFetchData(id);
+
+      fetchData(id);
     }
   }, [id, userID]);
 
-  const debouncedFetchData = useCallback(
-    debounce((id) => {
-      fetchData(id);
-    }, 1000),
-    []
-  );
+
 
   async function fetchData(id) {
     if (onLoading) {
       onLoading(true);
     }
-
+    console.log(id, userID)
     try {
       const response = await axios.get(`/${userID}/machine/${id}`);
 
@@ -268,8 +265,8 @@ export default function Machine({ id, onLoading = () => {}, base }) {
           <div>
             {row.getValue("transaction_date")
               ? moment(new Date(row.getValue("transaction_date"))).format(
-                  "YYYY-MM-DD"
-                )
+                "YYYY-MM-DD"
+              )
               : ""}
           </div>
         ),
@@ -297,8 +294,8 @@ export default function Machine({ id, onLoading = () => {}, base }) {
           >
             {row.getValue("clearance_date")
               ? moment(new Date(row.getValue("clearance_date"))).format(
-                  "YYYY-MM-DD"
-                )
+                "YYYY-MM-DD"
+              )
               : "Pending"}
           </div>
         ),
@@ -438,8 +435,8 @@ export default function Machine({ id, onLoading = () => {}, base }) {
     if (!id) return;
     setDeleteLoading(true);
     axios.delete(`/${userID}/machine/${id}`).then(() => {
-     onRefresh()
-     setDeleteLoading(false)
+      onRefresh()
+      setDeleteLoading(false)
     });
   }
 
@@ -776,7 +773,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
           data={payments}
           totalItems={payments.length}
           disableInput={true}
-          onRowClick={(val, e) => {}}
+          onRowClick={(val, e) => { }}
         />
       </div>
       <EditMachine
@@ -824,6 +821,12 @@ export default function Machine({ id, onLoading = () => {}, base }) {
             )
           );
         }}
+        onDeleteData={(id) => {
+          setInstallments((prevState) =>
+            prevState.filter((item) => item.id !== id)
+          );
+
+        }}
         onClose={() => setInstallmentVisible(false)}
       />
 
@@ -850,7 +853,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
         />
       )}
 
-      <AddCheque visible={credit} onClose={setCredit} saleID={id} customer_id={data?.customer?.id} onRefresh={onRefresh}/>
+      <AddCheque visible={credit} onClose={setCredit} saleID={id} customer_id={data?.customer?.id} onRefresh={onRefresh} />
     </div>
   );
 }
@@ -1045,7 +1048,7 @@ const ImageSheet = ({
   );
 };
 
-const InstallmentSheet = ({ visible, onClose, data, updateData }) => {
+const InstallmentSheet = ({ visible, onClose, data, updateData, onDeleteData }) => {
   const [imageOpen, setImageOpen] = useState(false);
   const { toast } = useToast();
   const { isAdmin, userID } = useUserDetail();
@@ -1058,6 +1061,7 @@ const InstallmentSheet = ({ visible, onClose, data, updateData }) => {
 
   const RenderEachRow = ({ item }) => {
     const [loading, setLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false)
 
     async function handlePaid(id) {
       if (!id || !userID) return;
@@ -1080,44 +1084,72 @@ const InstallmentSheet = ({ visible, onClose, data, updateData }) => {
       }
     }
 
+
+    async function handleDelete(id) {
+      if (!id || !userID) return;
+
+      setDeleteLoading(true);
+
+      if (item.image) {
+        DeleteFromStorage(item.image);
+      }
+
+      try {
+        await axios.delete(`/${userID}/reminders/${id}`);
+        onDeleteData(id);
+      } catch (error) {
+        toast({
+          title: "Failed to delete installment",
+          description: error.message || "An error occurred",
+          variant: "destructive",
+        });
+      } finally {
+        setDeleteLoading(false);
+      }
+    }
+
     return (
-      <div className="grid grid-cols-5 items-center gap-4 p-3 rounded-xl border shadow-sm bg-white dark:bg-neutral-900 hover:shadow-md transition">
-        {/* Status */}
-        <div>
-          {item.pending ? (
-            <Badge variant="destructive">Pending</Badge>
-          ) : (
-            <Badge variant="secondary">Paid</Badge>
-          )}
+      <div className="rounded-xl border shadow-sm bg-white dark:bg-neutral-900 hover:shadow-md transition p-3">
+        <div className="grid grid-cols-5 items-center gap-4 p-3 ">
+          {/* Status */}
+          <div>
+            {item.pending ? (
+              <Badge variant="destructive">Pending</Badge>
+            ) : (
+              <Badge variant="secondary">Paid</Badge>
+            )}
+          </div>
+
+          {/* Date */}
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs text-muted-foreground">Date</Label>
+            <Input
+              value={moment(item.date).format("YYYY-MM-DD")}
+              readOnly
+              className="h-8 text-sm"
+            />
+          </div>
+
+          {/* Amount */}
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs text-muted-foreground">Amount</Label>
+            <Input value={item.amount} readOnly className="h-8 text-sm" />
+          </div>
+
+          {/* Image */}
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs text-muted-foreground">Image</Label>
+            <RenderInstallmentImage
+              img={item.image}
+              setImageOpen={setImageOpen}
+            />
+          </div>
+
+          {/* Action */}
+
         </div>
 
-        {/* Date */}
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs text-muted-foreground">Date</Label>
-          <Input
-            value={moment(item.date).format("YYYY-MM-DD")}
-            readOnly
-            className="h-8 text-sm"
-          />
-        </div>
-
-        {/* Amount */}
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs text-muted-foreground">Amount</Label>
-          <Input value={item.amount} readOnly className="h-8 text-sm" />
-        </div>
-
-        {/* Image */}
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs text-muted-foreground">Image</Label>
-          <RenderInstallmentImage
-            img={item.image}
-            setImageOpen={setImageOpen}
-          />
-        </div>
-
-        {/* Action */}
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-4">
           {isAdmin && item?.pending && (
             <Button
               size="sm"
@@ -1130,14 +1162,23 @@ const InstallmentSheet = ({ visible, onClose, data, updateData }) => {
               Mark Paid
             </Button>
           )}
+
+          {isAdmin &&
+            <Button onClick={() => {
+              handleDelete(item.id)
+            }} variant="destructive" disable={deleteLoading}>   {loading && <Spinner className="h-4 w-4 animate-spin" />}
+              Delete</Button>
+          }
         </div>
       </div>
+
     );
   };
 
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
-      <SheetContent style={{ maxWidth: "50vw" }}>
+      <SheetContent className="w-[90vw] max-w-[90vw]"
+        style={{ width: "100%", maxWidth: "90vw" }}>
         <SheetHeader className="mb-6">
           <SheetTitle className="text-2xl font-semibold">
             Installments
@@ -1578,11 +1619,9 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
     let allProcessedImages = [];
     await Promise.all(
       values.images.map(async (item) => {
-        const name = `${
-          OfficeState.value.data
-        }/customer/${customer_id}/machine/${machine.id}/${
-          values.note
-        }/${moment().valueOf().toString()}.png`;
+        const name = `${OfficeState.value.data
+          }/customer/${customer_id}/machine/${machine.id}/${values.note
+          }/${moment().valueOf().toString()}.png`;
         const imageRefResult = await UploadImage(item, name);
         allProcessedImages.push(name);
       })
