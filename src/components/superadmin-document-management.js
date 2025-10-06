@@ -42,11 +42,13 @@ import {
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "./ui/context-menu";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import useUserDetail from "@/hooks/use-user-detail";
+import { useRouter } from "next/navigation";
+import { startHolyLoader } from "holy-loader";
 
 const SuperadminDocumentManagement = () => {
   const [selectedFile, setSelectedFile] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { userID, name, email } = useUserDetail()
+  const { userID, name, email, superadmin_cloud_access, isAdmin, base_route } = useUserDetail()
   const { toast } = useToast();
   const [uploadLoading, setUploadLoading] = useState(false);
   const fileInputRef = useRef(null);
@@ -63,15 +65,23 @@ const SuperadminDocumentManagement = () => {
   const [selectedPreview, setSelectedPreview] = useState(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [preview, setPreview] = useState(false)
+  const router = useRouter()
+
 
   useEffect(() => {
 
     if (userID) {
-      setLoading(true)
-      fetchFiles()
+      if (isAdmin || superadmin_cloud_access) {
+        setLoading(true)
+        fetchFiles()
+      } else {
+          startHolyLoader()
+          router.push(`/restricted`)
+      }
+
     }
 
-  }, [userID, currentFolder]);
+  }, [userID, currentFolder, superadmin_cloud_access]);
 
   const fetchFiles = async () => {
     return new Promise(async (resolve) => {
@@ -125,7 +135,7 @@ const SuperadminDocumentManagement = () => {
         added_by: name || email,
         path: filePath,
         folder_id: currentFolder ? currentFolder.id : undefined,
-        created_by : userID
+        created_by: userID
       });
     }
 
@@ -145,7 +155,7 @@ const SuperadminDocumentManagement = () => {
       .post(`/${userID}/cloud/folder`, {
         name: folderName,
         parent_folder: currentFolder ? currentFolder?.id : undefined,
-        created_by : userID
+        created_by: userID
       })
       .then(async () => {
         setFolderName("");

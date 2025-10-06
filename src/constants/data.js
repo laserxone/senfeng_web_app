@@ -184,6 +184,15 @@ export const complaintItem = {
   items: []
 }
 
+export const myCloud =  {
+    title: 'My Cloud',
+    url: '/cloud',
+    icon: 'cloud',
+    shortcut: ['c', 'l', 'o'],
+    isActive: false,
+    items: [] 
+  }
+
 export const employeeNavItems = [
   {
     title: 'Dashboard',

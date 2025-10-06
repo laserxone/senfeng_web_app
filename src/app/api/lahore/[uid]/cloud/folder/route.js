@@ -11,11 +11,11 @@ export async function GET(req, {params}) {
     let folders
     try {
         if (!isRoot) {
-            documents = await pool.query(`SELECT * FROM superadmin_document WHERE folder_id = $1 AND created_by = $2 ORDER BY id ASC`, [folder, uid])
-            folders = await pool.query(`SELECT * FROM superadmin_folder WHERE parent_folder = $1 AND created_by = $2 ORDER BY id ASC`, [folder, uid])
+            documents = await pool.query(`SELECT * FROM superadmin_document WHERE folder_id = $1 ORDER BY id ASC`, [folder])
+            folders = await pool.query(`SELECT * FROM superadmin_folder WHERE parent_folder = $1 ORDER BY id ASC`, [folder])
         } else {
-            documents = await pool.query(`SELECT * FROM superadmin_document WHERE folder_id IS NULL AND created_by = $1 ORDER BY id ASC`, [uid])
-            folders = await pool.query(`SELECT * FROM superadmin_folder WHERE parent_folder IS NULL AND created_by = $1 ORDER BY id ASC`, [uid])
+            documents = await pool.query(`SELECT * FROM superadmin_document WHERE folder_id IS NULL ORDER BY id ASC`)
+            folders = await pool.query(`SELECT * FROM superadmin_folder WHERE parent_folder IS NULL ORDER BY id ASC`)
         }
 
         return NextResponse.json({ folders: folders.rows, documents: documents.rows }, { status: 200 })

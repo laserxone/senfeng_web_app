@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { branchNavItem, complaintItem, dealerNavItems, employeeNavItems, ownerNavItems, POSNavItem, StoreNavItem, Tools } from "@/constants/data";
+import { branchNavItem, complaintItem, dealerNavItems, employeeNavItems, myCloud, ownerNavItems, POSNavItem, StoreNavItem, Tools } from "@/constants/data";
 import admin from "@/lib/firebaseAdmin";
 import { NextResponse } from "next/server";
 
@@ -67,6 +67,9 @@ export async function GET(req, { params }) {
             }
             if (user.complaint_assigned) {
                 nav_items.push(complaintItem)
+            }
+            if(user.superadmin_cloud_access){
+                nav_items.push(myCloud)
             }
             if (user.designation == 'Engineer') {
                 base_route = `${branchOffice}/engineer`

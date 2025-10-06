@@ -25,6 +25,7 @@ const branch_expenses_assigned = data.branch_expenses_assigned ?? false
 const branch_expenses_write_access = data.branch_expenses_write_access ?? false
 const branch_expenses_delete_access = data.branch_expenses_delete_access ?? false
 const userDp = UserState.value.data?.dp ?? ""
+const superadmin_cloud_access = data.superadmin_cloud_access ?? false
 
 
   return {
@@ -46,6 +47,7 @@ const userDp = UserState.value.data?.dp ?? ""
     branch_expenses_write_access,
     branch_expenses_delete_access,
     userDp,
+    superadmin_cloud_access
   };
 };
 
