@@ -83,8 +83,7 @@ export async function GET(req, { params }) {
     try {
   const isAdmin = await checkSuperadmin(uid)
         if (isAdmin) {
-            const officeQuery = await pool.query(`SELECT office FROM users WHERE id = $1`, [uid])
-            const office = officeQuery.rows[0]?.office            
+            const office = 'lahore'           
             const query = `
       SELECT 
         commissions.*, 
