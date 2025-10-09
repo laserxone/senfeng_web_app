@@ -1,13 +1,13 @@
+import { TIMEZONE } from "@/constants/data";
+import useUserDetail from "@/hooks/use-user-detail";
 import { zodResolver } from "@hookform/resolvers/zod";
+import moment from "moment";
+import momentT from "moment-timezone";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "../ui/sheet";
+import AppCalendar from "../appCalendar";
+import { Button } from "../ui/button";
 import {
   Form,
   FormControl,
@@ -16,17 +16,15 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
-import AppCalendar from "../appCalendar";
-import { Button } from "../ui/button";
-import { useContext, useState } from "react";
-import { Loader2 } from "lucide-react";
-import { UserContext } from "@/store/context/UserContext";
-import { UserSearch } from "../user-search";
-import moment from "moment";
-import momentT from "moment-timezone";
-import { TIMEZONE } from "@/constants/data";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "../ui/sheet";
 import Spinner from "../ui/spinner";
-import useUserDetail from "@/hooks/use-user-detail";
+import { UserSearch } from "../user-search";
 
 const FilterSheet = ({ visible, onClose, onReturn, user = true }) => {
   const [loading, setLoading] = useState(false);

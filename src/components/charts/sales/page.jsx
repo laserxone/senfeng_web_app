@@ -1,3 +1,4 @@
+import CurrencyFormatter from "@/components/currency-formatter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import useUserDetail from "@/hooks/use-user-detail";
@@ -48,10 +49,7 @@ export function Sale({ data }) {
               </div>
               <div className="flex  flex-col items-start">
                 <div className="font-medium">
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "PKR",
-                  }).format(item.price || 0)}
+                  <CurrencyFormatter amount={item?.price}/>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {moment(item.contract_date).format("YYYY-MM-DD")}

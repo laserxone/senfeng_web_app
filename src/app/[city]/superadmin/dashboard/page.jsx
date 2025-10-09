@@ -4,6 +4,7 @@ import { BarStats } from "@/components/charts/bar_stats/page";
 import { Stats } from "@/components/charts/pie_stats/page";
 import { Sale } from "@/components/charts/sales/page";
 import SalesTeamProgressChart from "@/components/charts/sales_progress/page";
+import CurrencyFormatter from "@/components/currency-formatter";
 import { CustomerMapComponent } from "@/components/customerMapComponent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -158,12 +159,7 @@ export default function Page({ params }) {
               <Skeleton className="h-6 w-32" />
             ) : (
               <div className="text-2xl font-bold">
-                {data?.total_payment_this_month
-                  ? new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "PKR",
-                  }).format(data?.total_payment_this_month || 0)
-                  : ""}
+                <CurrencyFormatter amount={data?.total_payment_this_month} />
               </div>
             )}
             {loading ? (

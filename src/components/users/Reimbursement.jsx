@@ -48,6 +48,7 @@ import { Label } from "../ui/label";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
+import CurrencyFormatter from "../currency-formatter";
 
 export default function Reimbursement({
   id,
@@ -239,10 +240,7 @@ export default function Reimbursement({
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "PKR",
-                  }).format(total)}
+                  <CurrencyFormatter amount={total}/>
                 </div>
               </CardContent>
             </Card>

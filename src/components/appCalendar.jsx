@@ -27,6 +27,7 @@ const AppCalendar = ({ date, onChange, min = new Date("1900-01-01") }) => {
           mode="single"
           selected={date}
           onSelect={(e) => {
+            if(!e) return
             const now = new Date();
             const updatedDate = new Date(e);
             updatedDate.setHours(

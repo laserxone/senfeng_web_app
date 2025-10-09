@@ -55,14 +55,15 @@ import Link from "next/link";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import InvoiceDetails from "./invoice-details";
+import CurrencyFormatter from "@/components/currency-formatter";
 
 export default function MemberDetail({
   ownership = false,
   from,
   customer_id,
   base,
-  onReturn = () => {},
-  onLoading = () => {},
+  onReturn = () => { },
+  onLoading = () => { },
   route,
   height,
 }) {
@@ -392,9 +393,8 @@ const ProfilePicture = ({ img, name, onClick }) => {
 
       <div
         onClick={onClick}
-        className={`absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 rounded-full cursor-pointer ${
-          hover ? "opacity-100" : "opacity-0"
-        }`}
+        className={`absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 rounded-full cursor-pointer ${hover ? "opacity-100" : "opacity-0"
+          }`}
       >
         <Wrench className="h-5 w-5 text-white" />
       </div>
@@ -469,18 +469,6 @@ const InfoRow = ({ icon, label, link }) => (
 );
 
 const BillingInformation = ({ total, received, balance }) => {
-  const formattedTotal = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "PKR",
-  }).format(total || 0);
-  const formattedReceived = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "PKR",
-  }).format(received || 0);
-  const formattedBalance = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "PKR",
-  }).format(balance || 0);
 
   return (
     <div className="w-full sm:w-auto p-4 mt-4 bg-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:text-white">
@@ -501,9 +489,9 @@ const BillingInformation = ({ total, received, balance }) => {
       </div>
 
       <div className="grid grid-cols-3 gap-4 text-xs sm:text-sm mt-2 font-bold">
-        <p>{formattedTotal}</p>
-        <p className="text-green-600">{formattedReceived}</p>
-        <p className="text-red-600">{formattedBalance}</p>
+        <p><CurrencyFormatter amount={total} /></p>
+        <p className="text-green-600"><CurrencyFormatter amount={received} /></p>
+        <p className="text-red-600"><CurrencyFormatter amount={balance} /></p>
       </div>
     </div>
   );
@@ -553,7 +541,7 @@ function CustomersTab({
                   Data completion: {machine?.percentage_completion || 0}%
                 </span>
                 {Number(machine.price) === totalPayments &&
-                machine?.percentage_completion === 100 ? (
+                  machine?.percentage_completion === 100 ? (
                   <CheckCircle className="text-green-500 w-5 h-5 mr-2" />
                 ) : (
                   <Clock className="text-yellow-500 w-5 h-5 mr-2" />
@@ -585,8 +573,8 @@ function CustomersTab({
                   <strong>Contract Date:</strong>{" "}
                   {machine?.created_at
                     ? new Date(machine.contract_date).toLocaleDateString(
-                        "en-GB"
-                      )
+                      "en-GB"
+                    )
                     : ""}
                 </p>
                 {machine?.order_no_arr &&
@@ -788,18 +776,9 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
 }
 
 const BillingInformationMachine = ({ payment }) => {
-  const formattedTotal = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "PKR",
-  }).format(payment[0] || 0);
-  const formattedReceived = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "PKR",
-  }).format(payment[1] || 0);
-  const formattedBalance = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "PKR",
-  }).format((payment[0] || 0) - (payment[1] || 0));
+  const formattedTotal = <CurrencyFormatter amount={payment[0]} />
+  const formattedReceived = <CurrencyFormatter amount={payment[1]} />
+  const formattedBalance = <CurrencyFormatter amount={(payment[0] || 0) - (payment[1] || 0)} />
 
   return (
     <div className="p-4 mt-4 bg-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:text-white">
@@ -856,9 +835,8 @@ const RenderTimeline = ({
       localData.push({
         id: `visit-${visit.id}`,
         title: `Visit by ${visit.user_name}`,
-        description: `Problem: ${visit?.problem || "Nil"}, Solution: ${
-          visit?.solution || "Nil"
-        } Note: ${visit.note}`,
+        description: `Problem: ${visit?.problem || "Nil"}, Solution: ${visit?.solution || "Nil"
+          } Note: ${visit.note}`,
         time: visit.created_at,
       });
     });
@@ -876,12 +854,10 @@ const RenderTimeline = ({
       customerDetail?.machines?.forEach((machine) => {
         localData.push({
           id: `machine-${machine.id}`,
-          title: `Sell Machine ${machine.serial_no} (${
-            machine.source || "Nil"
-          })`,
-          description: `Power: ${machine.power || "Nil"}W, Price: $${
-            machine.price
-          }, Order No: ${machine.order_no_arr?.join(", ")}`,
+          title: `Sell Machine ${machine.serial_no} (${machine.source || "Nil"
+            })`,
+          description: `Power: ${machine.power || "Nil"}W, Price: $${machine.price
+            }, Order No: ${machine.order_no_arr?.join(", ")}`,
           time: machine.contract_date
             ? machine.contract_date
             : machine.created_at,
@@ -891,15 +867,12 @@ const RenderTimeline = ({
           localData.push({
             id: `payment-${payment.id}`,
             title: `Payment for Machine ${machine.serial_no}`,
-            description: `Tx: ${payment.note}, Amount: $${
-              payment.amount
-            }, Mode: ${payment.mode}, Received by: ${
-              payment.received_by
-            }, Clearance Date: ${
-              payment.clearance_data
+            description: `Tx: ${payment.note}, Amount: $${payment.amount
+              }, Mode: ${payment.mode}, Received by: ${payment.received_by
+              }, Clearance Date: ${payment.clearance_data
                 ? moment(payment.clearance_data).format("YYYY-MM-DD")
                 : "Pending"
-            }`,
+              }`,
             time: payment.transaction_date,
           });
         });
@@ -908,9 +881,8 @@ const RenderTimeline = ({
       localData.push({
         id: `customer-${customerDetail.id}`,
         title: `Customer added`,
-        description: `Company ${customerDetail.name || "Nil"}, Owner: ${
-          customerDetail.owner || "Nil"
-        }, Location: ${customerDetail.location}`,
+        description: `Company ${customerDetail.name || "Nil"}, Owner: ${customerDetail.owner || "Nil"
+          }, Location: ${customerDetail.location}`,
         time: customerDetail.created_at,
       });
     }
@@ -946,21 +918,20 @@ const RenderTimeline = ({
                   {moment(item.time).format("YYYY-MM-DD")}
                 </TimelineTime>
                 <TimelineTitle
-                  className={`${
-                    item.title.toLowerCase().includes("feedback")
+                  className={`${item.title.toLowerCase().includes("feedback")
                       ? "text-orange-500"
                       : item.title.toLowerCase().includes("customer")
-                      ? "text-blue-500"
-                      : item.title.toLowerCase().includes("payment")
-                      ? "text-green-500"
-                      : item.title.toLowerCase().includes("machine")
-                      ? "text-purple-500"
-                      : item.title.toLowerCase().includes("visit")
-                      ? "text-red-500"
-                      : item.title.toLowerCase().includes("task")
-                      ? "text-yellow-500"
-                      : "text-black"
-                  }`}
+                        ? "text-blue-500"
+                        : item.title.toLowerCase().includes("payment")
+                          ? "text-green-500"
+                          : item.title.toLowerCase().includes("machine")
+                            ? "text-purple-500"
+                            : item.title.toLowerCase().includes("visit")
+                              ? "text-red-500"
+                              : item.title.toLowerCase().includes("task")
+                                ? "text-yellow-500"
+                                : "text-black"
+                    }`}
                 >
                   {item.title}
                 </TimelineTitle>

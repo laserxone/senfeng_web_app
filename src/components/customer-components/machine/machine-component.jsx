@@ -87,6 +87,7 @@ import "pdfjs-dist/build/pdf.worker";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import AddCheque from "./add-cheque";
+import CurrencyFormatter from "@/components/currency-formatter";
 
 export default function Machine({ id, onLoading = () => { }, base }) {
   const [data, setData] = useState();
@@ -126,7 +127,6 @@ export default function Machine({ id, onLoading = () => { }, base }) {
     if (onLoading) {
       onLoading(true);
     }
-    console.log(id, userID)
     try {
       const response = await axios.get(`/${userID}/machine/${id}`);
 
@@ -367,7 +367,6 @@ export default function Machine({ id, onLoading = () => { }, base }) {
                 <div
                   onClick={() => {
                     if (currentItem.id) {
-                      console.log(currentItem.id)
                       setImageURL(currentItem);
                       setVisible(true);
                     }
@@ -613,10 +612,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
                   </p>
                   <p className="font-bold">
                     {" "}
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "PKR",
-                    }).format(payment[0] || 0)}
+                    <CurrencyFormatter amount={payment[0]} />
                   </p>
                 </div>
                 <div className="flex flex-col">
@@ -624,10 +620,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
                     <strong>Received:</strong>
                   </p>
                   <p className="text-green-600 font-bold">
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "PKR",
-                    }).format(payment[1] || 0)}
+                    <CurrencyFormatter amount={payment[1]} />
                   </p>
                 </div>
                 <div className="flex flex-col">
@@ -636,10 +629,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
                   </p>
                   <p className="text-red-600 font-bold">
                     {" "}
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "PKR",
-                    }).format(payment[0] - payment[1] || 0)}
+                    <CurrencyFormatter amount={((payment[0] || 0) - (payment[1] || 0))} />
                   </p>
                 </div>
               </div>
@@ -1044,10 +1034,10 @@ const ImageSheet = ({
           <Label>{note}</Label>
 
           {cheque_id &&
-          <>
-          <strong>Cheque#</strong>
-          <Label>{cheque_id}</Label>
-          </>}
+            <>
+              <strong>Cheque#</strong>
+              <Label>{cheque_id}</Label>
+            </>}
 
           <strong>Remarks</strong>
           <Label>{remarks}</Label>
@@ -1070,11 +1060,10 @@ const InstallmentSheet = ({ visible, onClose, data, updateData, onDeleteData }) 
 
   const RenderEachRow = ({ item }) => {
     const [loading, setLoading] = useState(false);
-    const [deleteLoading, setDeleteLoading] = useState(false)
+    const [deleteLoading, setDeleteLoading] = useState(false);
 
     async function handlePaid(id) {
       if (!id || !userID) return;
-
       setLoading(true);
 
       try {
@@ -1093,10 +1082,8 @@ const InstallmentSheet = ({ visible, onClose, data, updateData, onDeleteData }) 
       }
     }
 
-
     async function handleDelete(id) {
       if (!id || !userID) return;
-
       setDeleteLoading(true);
 
       if (item.image) {
@@ -1119,8 +1106,7 @@ const InstallmentSheet = ({ visible, onClose, data, updateData, onDeleteData }) 
 
     return (
       <div className="rounded-xl border shadow-sm bg-white dark:bg-neutral-900 hover:shadow-md transition p-3">
-        <div className="grid grid-cols-5 items-center gap-4 p-3 ">
-          {/* Status */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 items-center gap-4 p-3">
           <div>
             {item.pending ? (
               <Badge variant="destructive">Pending</Badge>
@@ -1148,58 +1134,56 @@ const InstallmentSheet = ({ visible, onClose, data, updateData, onDeleteData }) 
           {/* Image */}
           <div className="flex flex-col gap-1">
             <Label className="text-xs text-muted-foreground">Image</Label>
-            <RenderInstallmentImage
-              img={item.image}
-              setImageOpen={setImageOpen}
-            />
+            <RenderInstallmentImage img={item.image} setImageOpen={setImageOpen} />
           </div>
 
           {/* Action */}
+          <div className="flex flex-wrap justify-end gap-3 mt-3 sm:mt-0">
+            {isAdmin && item?.pending && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-2"
+                onClick={() => handlePaid(item.id)}
+                disabled={loading}
+              >
+                {loading && <Spinner className="h-4 w-4 animate-spin" />}
+                Mark Paid
+              </Button>
+            )}
 
-        </div>
-
-        <div className="flex justify-end gap-4">
-          {isAdmin && item?.pending && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-2"
-              onClick={() => handlePaid(item.id)}
-              disabled={loading}
-            >
-              {loading && <Spinner className="h-4 w-4 animate-spin" />}
-              Mark Paid
-            </Button>
-          )}
-
-          {isAdmin &&
-            <Button onClick={() => {
-              handleDelete(item.id)
-            }} variant="destructive" disable={deleteLoading}>   {loading && <Spinner className="h-4 w-4 animate-spin" />}
-              Delete</Button>
-          }
+            {isAdmin && (
+              <Button
+                onClick={() => handleDelete(item.id)}
+                variant="destructive"
+                disabled={deleteLoading}
+              >
+                {deleteLoading && <Spinner className="h-4 w-4 animate-spin" />}
+                Delete
+              </Button>
+            )}
+          </div>
         </div>
       </div>
-
     );
   };
 
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
-      <SheetContent className="w-[90vw] max-w-[90vw]"
-        style={{ width: "100%", maxWidth: "90vw" }}>
+      <SheetContent
+        className="w-full sm:w-[90vw] sm:max-w-[90vw] h-[100vh] sm:h-auto overflow-hidden"
+        style={{ maxWidth: "100%", padding: "1rem" }}
+      >
         <SheetHeader className="mb-6">
           <SheetTitle className="text-2xl font-semibold">
             Installments
           </SheetTitle>
         </SheetHeader>
 
-        <ScrollArea className="h-[80vh] px-1">
+        <ScrollArea className="h-[calc(100vh-120px)] sm:h-[80vh] px-1">
           <div className="flex flex-1 flex-col gap-3">
             {data.length > 0 ? (
-              data.map((item, index) => (
-                <RenderEachRow key={index} item={item} />
-              ))
+              data.map((item, index) => <RenderEachRow key={index} item={item} />)
             ) : (
               <div className="flex items-center justify-center h-40 text-muted-foreground">
                 No installments found
@@ -1215,6 +1199,7 @@ const InstallmentSheet = ({ visible, onClose, data, updateData, onDeleteData }) 
 const RenderInstallmentImage = memo(({ img, type, setImageOpen }) => {
   const [localImage, setLocalImage] = useState(null);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [loading, setLoading] = useState(false)
 
   const handleZoomChange = useCallback((shouldZoom) => {
     setIsZoomed(shouldZoom);
@@ -1229,9 +1214,12 @@ const RenderInstallmentImage = memo(({ img, type, setImageOpen }) => {
       if (img.includes("http")) {
         setLocalImage(img);
       } else {
+        setLoading(true)
         getDownloadURL(ref(storage, img)).then((url) => {
           if (isMounted) setLocalImage(url);
-        });
+        }).finally(() => {
+          setLoading(false)
+        })
       }
     }
     return () => {
@@ -1241,13 +1229,15 @@ const RenderInstallmentImage = memo(({ img, type, setImageOpen }) => {
 
   return (
     <div className="space-y-2">
-      <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
-        <img
-          src={localImage}
-          alt="payment-img"
-          className="h-[150px] w-auto object-contain"
-        />
-      </ControlledZoom>
+      {loading ? <Spinner /> :
+        <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
+          <img
+            src={localImage}
+            alt="payment-img"
+            className="h-[150px] w-auto object-contain"
+          />
+        </ControlledZoom>
+      }
     </div>
   );
 });

@@ -21,10 +21,10 @@ function FloatingTodoButton({ onClick, pending }) {
         <div
           onClick={onClick}
           className="cursor-pointer
-    bg-gradient-to-br from-blue-500 via-cyan-500 to-teal-500
-    text-white h-[50px] w-[50px] shadow-2xl flex items-center justify-center
-    hover:scale-90 active:scale-95 transition-transform duration-200 ease-in-out
-    rounded-full rounded-bl-2xl relative"
+          bg-gradient-to-br from-blue-500 via-cyan-500 to-teal-500
+          text-white h-[50px] w-[50px] shadow-2xl flex items-center justify-center
+          hover:scale-90 active:scale-95 transition-transform duration-200 ease-in-out
+          rounded-full rounded-bl-2xl relative"
         >
           <span className="relative drop-shadow-lg text-xl">📝</span>
         </div>
@@ -108,10 +108,11 @@ export default function FloatingTodo() {
         pending={tasks.filter((t) => !t.is_done).length}
       />
 
-      <div
-        className={`fixed bottom-20 right-6 w-96 h-[600px] bg-white dark:bg-neutral-900 rounded-2xl shadow-xl flex flex-col overflow-hidden border transition-all duration-200 ${
-          isOpen ? "block" : "hidden"
-        }`}
+     <div
+        className={`absolute bottom-0 right-0  w-[calc(100vw-30px)] sm:w-96 h-[600px]
+    bg-white dark:bg-neutral-900 rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col
+    overflow-hidden border transition-all duration-200 z-10 sm:mx-0 ${isOpen ? "block" : "hidden"
+          }`}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
           <div className="flex items-center gap-2">

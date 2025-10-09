@@ -68,6 +68,7 @@ import { useForm } from "react-hook-form";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
+import CurrencyFormatter from "@/components/currency-formatter";
 
 export default function Page() {
 
@@ -350,10 +351,7 @@ export default function Page() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "PKR",
-              }).format(total)}
+              <CurrencyFormatter amount={total}/>
             </div>
           </CardContent>
         </Card>
