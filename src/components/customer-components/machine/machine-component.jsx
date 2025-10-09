@@ -329,7 +329,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
                 column.toggleSorting(column.getIsSorted() === "asc")
               }
             >
-              Note
+              TID
               <ArrowUpDown />
             </Button>
           );
@@ -367,6 +367,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
                 <div
                   onClick={() => {
                     if (currentItem.id) {
+                      console.log(currentItem.id)
                       setImageURL(currentItem);
                       setVisible(true);
                     }
@@ -795,6 +796,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
         }}
         img={imageURL?.image || null}
         note={imageURL?.note || null}
+        cheque_id={imageURL?.cheque_id || null}
         remarks={imageURL?.remarks || null}
         id={imageURL?.id}
         onRefresh={async () => {
@@ -868,6 +870,7 @@ const ImageSheet = ({
   id,
   onRefresh,
   editAllowed,
+  cheque_id
 }) => {
   const [imageOpen, setImageOpen] = useState(false);
   const [localImage, setLocalImage] = useState(null);
@@ -1037,8 +1040,14 @@ const ImageSheet = ({
             <Label>No Image found</Label>
           )}
 
-          <strong>Note</strong>
+          <strong>TID</strong>
           <Label>{note}</Label>
+
+          {cheque_id &&
+          <>
+          <strong>Cheque#</strong>
+          <Label>{cheque_id}</Label>
+          </>}
 
           <strong>Remarks</strong>
           <Label>{remarks}</Label>

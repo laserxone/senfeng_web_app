@@ -426,7 +426,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
   const [loading, setLoading] = useState(false);
   const { state: OfficeState } = useContext(OfficeContext);
   const formSchema = z.object({
-    note: z.string().min(1, { message: "Note is required." }),
+    note: z.string().min(1, { message: "TID is required." }),
     amount: z
       .number()
       .min(0.01, { message: "Amount must be greater than zero." }),

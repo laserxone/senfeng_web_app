@@ -55,7 +55,7 @@ const AddPOSPayment = ({
   const [error, setError] = useState({});
 
   const formSchema = z.object({
-    note: z.string().min(1, { message: "Note is required." }),
+    note: z.string().min(1, { message: "TID is required." }),
     amount: z.number().min(1, { message: "Amount must be greater than 1." }),
     mode: z.string().min(1, { message: "Payment mode is required." }),
     received_by: z.string().min(1, { message: "Bank name is required." }),
