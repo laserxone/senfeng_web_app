@@ -13,7 +13,7 @@ import { Button } from "./ui/button";
 import useUserDetail from "@/hooks/use-user-detail";
 
 export default function NotificationDropdown({ NotificationState }) {
-  const {base_route} = useUserDetail()
+  const { base_route } = useUserDetail()
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -30,17 +30,27 @@ export default function NotificationDropdown({ NotificationState }) {
               .map((notification) => (
                 <div
                   key={notification.id}
-                  className="flex items-center gap-2 p-2 rounded hover:bg-gray-50"
+                  className="
+    flex items-center gap-2 p-2 rounded-md 
+    hover:bg-gray-200 dark:hover:bg-gray-700
+    transition-colors
+  "
                 >
-                  <Bell className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                  <Bell
+                    className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0"
+                  />
                   <Link
                     href={`/${base_route}/${notification.page}`}
-                    className="text-sm text-gray-800 hover:underline truncate max-w-[16rem]"
+                    className="
+      text-sm hover:underline truncate max-w-[16rem]
+      text-gray-800 dark:text-gray-200
+    "
                     title={notification.title}
                   >
                     {notification.title}
                   </Link>
                 </div>
+
               ))}
           </div>
         </ScrollArea>
