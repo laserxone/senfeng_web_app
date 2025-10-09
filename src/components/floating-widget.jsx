@@ -2,51 +2,73 @@
 import { DndContext, useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { useState } from "react";
-import { GripVertical } from "lucide-react"; // 👈 nice drag icon
+import { GripVertical, ChevronRight } from "lucide-react";
 
-function DraggableGroup({ id, children, position, onPositionChange }) {
+function DraggableGroup({ id, children, position, expanded, onToggle }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id });
 
+  // Only vertical movement
+  const y = (position?.y || 0) + (transform?.y || 0);
+
   const style = {
-    transform: CSS.Translate.toString({
-      x: (position?.x || 0) + (transform?.x || 0),
-      y: (position?.y || 0) + (transform?.y || 0),
-    }),
+    transform: CSS.Translate.toString({ x: 0, y }),
     touchAction: "none",
     position: "fixed",
-    bottom: "1.5rem",
-    right: "1.5rem",
+    top: "40%",
+    right: expanded ? "1rem" : "1rem",
+    zIndex: 50,
+    transition: "right 0.3s ease",
   };
 
   return (
     <div ref={setNodeRef} style={style}>
-      {/* Drag handle with icon */}
-      <div
-        {...listeners}
-        {...attributes}
-        className="flex justify-center cursor-grab bg-gray-800 text-white w-8 h-8 rounded-full mb-2 shadow-md hover:bg-gray-700"
-      >
-        <GripVertical className="w-5 h-5 self-center" />
-      </div>
+      <div className="relative">
+        {/* DRAG HANDLE (small invisible area) */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-10 cursor-grab"
+          title="Drag up/down"
+        ></div>
 
-      {/* Children remain fully clickable */}
-      <div>{children}</div>
+        {/* CLICKABLE BUTTON */}
+        <div
+          onClick={onToggle}
+          className="flex justify-center items-center cursor-pointer bg-blue-600 text-white w-10 h-10 rounded-full shadow-lg hover:bg-blue-700"
+        >
+          {expanded ? (
+            <ChevronRight className="w-5 h-5" />
+          ) : (
+            <GripVertical className="w-5 h-5" />
+          )}
+        </div>
+
+        {/* CHILDREN PANEL */}
+        <div
+          className={`absolute top-0 right-2 transition-all duration-300 overflow-hidden ${
+            expanded ? "opacity-100 p-4" : "opacity-0 w-0 p-0"
+          }`}
+        >
+          {expanded && children}
+        </div>
+      </div>
     </div>
   );
 }
 
 export default function FloatingWidgets({ children }) {
-  const [position, setPosition] = useState(null);
+  const [position, setPosition] = useState({ y: 0 });
+  const [expanded, setExpanded] = useState(false);
 
   const handleDragEnd = (event) => {
     const { delta } = event;
-    setPosition((prev) => {
-      const newPos = {
-        x: (prev?.x || 0) + delta.x,
-        y: (prev?.y || 0) + delta.y,
-      };
-      return newPos;
-    });
+    setPosition((prev) => ({
+      y: (prev?.y || 0) + delta.y,
+    }));
+  };
+
+  const toggleExpand = () => {
+    setExpanded((prev) => !prev);
   };
 
   return (
@@ -54,7 +76,8 @@ export default function FloatingWidgets({ children }) {
       <DraggableGroup
         id="floating-group"
         position={position}
-        onPositionChange={setPosition}
+        expanded={expanded}
+        onToggle={toggleExpand}
       >
         {children}
       </DraggableGroup>

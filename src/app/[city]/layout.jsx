@@ -1,5 +1,6 @@
 import FloatingChat from "@/components/chat/floating-chat";
 import CommonLayout from "@/components/CommonLayout";
+import EdgePanel from "@/components/edge-panel";
 import FinePopup from "@/components/fine-popup";
 import FloatingInformation from "@/components/floating-information";
 import FloatingTodo from "@/components/floating-todo";
@@ -18,13 +19,15 @@ export default async function DashboardLayout({ children, params }) {
     <CommonLayout office={city}>
       {children}
        <FinePopup/>
-      <FloatingWidgets>
-        <div className="flex flex-col gap-2">
+        <EdgePanel width={384} className={"pt-4"}>
+      {/* <FloatingWidgets> */}
+        <div className="flex gap-2 w-full justify-evenly">
           <FloatingInformation />
           <FloatingTodo />
           <FloatingChat />
         </div>
-      </FloatingWidgets>
+      {/* </FloatingWidgets> */}
+      </EdgePanel>
     </CommonLayout>
   );
 }
