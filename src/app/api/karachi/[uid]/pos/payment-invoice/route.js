@@ -39,7 +39,7 @@ export async function POST(req) {
 
     } catch (error) {
         console.error('Error inserting data: ', error);
-        return NextResponse.json({ message: 'Error adding payment' }, { status: 500 })
+        return NextResponse.json({ message: error?.message || 'Error adding payment' }, { status: 500 })
     }
 }
 

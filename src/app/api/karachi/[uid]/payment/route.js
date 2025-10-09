@@ -36,15 +36,15 @@ export async function POST(req) {
 
         sendNotificationToOwner(`New payment added for ${customerResult.rows[0].customer_name}`, `member/${customerResult.rows[0].customer_id}/${result.rows[0].machine_id}`, 'karachi')
 
-      
-            try {
-     const logMSG = generateLog(data, "New Payment added")
 
-        addLog({ text: logMSG, user_id: null, customer_id: null, sale_id: result.rows[0].machine_id, payment_id: result.rows[0].id })
+        try {
+            const logMSG = generateLog(data, "New Payment added")
 
-    } catch (error) {
-      console.log(error)
-    }
+            addLog({ text: logMSG, user_id: null, customer_id: null, sale_id: result.rows[0].machine_id, payment_id: result.rows[0].id })
+
+        } catch (error) {
+            console.log(error)
+        }
 
         return NextResponse.json({
             message: "Payment added successfully",
@@ -52,7 +52,7 @@ export async function POST(req) {
 
     } catch (error) {
         console.error('Error inserting data: ', error);
-        return NextResponse.json({ message: 'Error adding payment' }, { status: 500 })
+        return NextResponse.json({ message:error?.message ||  'Error adding payment' }, { status: 500 })
     }
 }
 

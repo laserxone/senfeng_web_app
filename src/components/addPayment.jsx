@@ -60,13 +60,13 @@ const AddPayment = ({
     clearance_date: z.date().optional(),
     image: z.string().min(1, { message: "Image is required." }),
     remarks: z.string().optional(),
-    check_id: z.string().optional(), // default optional
+    cheque_id: z.string().optional(), // default optional
   }).superRefine((data, ctx) => {
-    if (data.mode === "Cheque" && (!data.check_id || data.check_id.trim() === "")) {
+    if (data.mode === "Cheque" && (!data.cheque_id || data.cheque_id.trim() === "")) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Cheque ID is required when payment mode is Cheque.",
-        path: ["check_id"],
+        path: ["cheque_id"],
       });
     }
   });
@@ -83,7 +83,7 @@ const AddPayment = ({
       clearance_date: undefined,
       image: null,
       remarks: "",
-      check_id: "",   // 👈 add here
+      cheque_id: "",   // 👈 add here
     },
   });
   async function onSubmit(values) {
@@ -285,7 +285,7 @@ const AddPayment = ({
                     {form.watch("mode") === "Cheque" && (
                       <FormField
                         control={form.control}
-                        name="check_id"
+                        name="cheque_id"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>
