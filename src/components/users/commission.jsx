@@ -98,9 +98,8 @@ const OwnerView = () => {
 
   const filteredData = data.filter((item) => {
     if (!search) return true;
-    const allSearch = `${item.customer_name || ""} ${item.user_name || ""} ${
-      item.customer_owner || ""
-    }`;
+    const allSearch = `${item.customer_name || ""} ${item.user_name || ""} ${item.customer_owner || ""
+      }`;
     return allSearch.toLowerCase().includes(search.toLowerCase());
   });
 
@@ -207,8 +206,7 @@ const OwnerView = () => {
                   const regex = /^\d*\.?\d*$/;
 
                   if (regex.test(value)) {
-                    const numericValue = Number(value);
-                    setManualNumber(numericValue);
+                    setManualNumber(value); // Keep as string
                   }
                 }}
               />
@@ -225,14 +223,14 @@ const OwnerView = () => {
           ) : item.is_approved === null ? (
             <div className="flex gap-2 items-center">
               <Button
-                disabled={showManual ? !manualNumber : !selectedPercentage}
+                disabled={showManual ? manualNumber === "" : !selectedPercentage}
                 onClick={() =>
                   handleUpdate(
                     item.id,
                     true,
                     new Date(),
                     showManual
-                      ? manualNumber
+                      ? Number(manualNumber)
                       : (item.total_amount * (selectedPercentage || 0)) / 100,
                     item.lead_id ? item.total_amount / 100 : null
                   )
