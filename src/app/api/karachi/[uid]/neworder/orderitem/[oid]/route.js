@@ -1,3 +1,4 @@
+
 import pool from "@/config/db"
 import { NextResponse } from "next/server"
 
@@ -22,10 +23,12 @@ export async function PUT(req, {params}) {
         is_machine = false,
         machine_serial = null,
         machine_model = null,
+        customer_id = null,
         machine_source = null,
         machine_power = null,
         inventory_id = null,
-        location = "karachi"
+        location = "Lahore",
+        show = false
     } = item;
 
    
@@ -44,8 +47,10 @@ export async function PUT(req, {params}) {
         threshold = $10,
         new_order = $11,
         buying_price = $12,
-        location = $13
-      WHERE id = $14`,
+        location = $13,
+        customer_id = $14,
+        show = $15
+      WHERE id = $16`,
             [
                 inventory_id,
                 name,
@@ -60,6 +65,8 @@ export async function PUT(req, {params}) {
                 new_order,
                 buying_price,
                 location,
+                customer_id,
+                show,
                 oid,
                 
             ]
@@ -74,3 +81,5 @@ export async function PUT(req, {params}) {
 
 
 }
+
+export const revalidate = 0

@@ -2,7 +2,7 @@ import axios from "@/lib/axios";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Trash } from "lucide-react";
+import { Trash, Trash2 } from "lucide-react";
 import moment from "moment";
 import { useContext, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -27,49 +27,35 @@ import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
 import { Textarea } from "./ui/textarea";
 import useUserDetail from "@/hooks/use-user-detail";
+import { Label } from "./ui/label";
 
-const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
+const AddParts = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selectedMachine, setSelectedMachine] = useState(null);
   const [cheque, setCheque] = useState(false);
   const [value, setValue] = useState();
   const [total, setTotal] = useState([]);
   const { state: OfficeState } = useContext(OfficeContext);
-  const { office } = useUserDetail()
+  const [newParts, setNewParts] = useState([{ name: "", model: "", power: "", serial_no: "" }])
+  const [errors, setErrors] = useState({})
 
   const formSchema = z
     .object({
-      machineModel: z.string().min(1, { message: "Machine model is required." }),
-      power: z.string().min(1, { message: "Power is required." }),
-      source: z.string().min(1, { message: "Source is required." }),
+      serial_no: z.string().min(1, { message: "Name is required." }),
       contractDate: z.date({ required_error: "Contract date is required." }),
       isSpeedMoney: z.boolean().default(false),
       speedMoney: z.string().optional(),
       speedMoneyNote: z.string().optional(),
       totalPrice: z.number().min(1, { message: "Total price is required." }),
       cnic: z.string().optional(),
-      order_item: z.number().nullable().optional(), // start optional, then refine below
+      order_item: z.number().nullable().optional(),
     })
-    .refine(
-      (data) => {
-        if (office === "karachi") {
-          return true;
-        }
-        return typeof data.order_item === "number" && data.order_item > 0;
-      },
-      {
-        message: "Machine selection is required",
-        path: ["order_item"],
-      }
-    );
+
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      machineModel: "",
-      power: "",
-      source: "",
+      serial_no: "",
       contractDate: undefined,
       isSpeedMoney: false,
       speedMoney: "",
@@ -80,29 +66,51 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
     },
   });
 
+  function validateNewParts() {
+
+    let newErrors = {};
+
+    newParts.forEach((part, index) => {
+      let partErrors = {};
+
+      Object.entries(part).forEach(([key, value]) => {
+        if (!value.trim()) { 
+          partErrors[key] = `${key.charAt(0).toUpperCase() + key.slice(1).replace("_", " ")} is required`;
+        }
+      });
+
+      if (Object.keys(partErrors).length > 0) {
+        newErrors[index] = partErrors;
+      }
+    });
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  }
+
   function onSubmit(values) {
+    if (!validateNewParts()) return
+    setErrors({})
     setLoading(true);
-    let baseLink = `/${user_id}/machine?inventory=${values.order_item}&cheque=${cheque}`
-    if (office === 'karachi') {
-      baseLink = `/${user_id}/machine?cheque=${cheque}`
-    }
+    let baseLink = `/${user_id}/machine?cheque=${cheque}`
+
     axios
       .post(
         baseLink,
         {
           customer_id: customer_id,
-          type: "Machine",
+          type: "Parts",
           speed_money_note: values.speedMoneyNote,
           speed_money: values.isSpeedMoney,
           speed_money_amount: values.speedMoney ? Number(values.speedMoney) : 0,
-          serial_no: values.machineModel,
-          power: values.power,
-          source: values.source,
+          serial_no: values.serial_no,
           sell_by: user_id,
           commission: true,
           price: values.totalPrice,
           contract_date: values.contractDate,
           cnic: values.cnic,
+          parts_information: newParts
         }
       )
       .then(async (response) => {
@@ -141,7 +149,23 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   function handleClose(val) {
     form.reset();
     onClose(val);
-    setSelectedMachine(null);
+    setNewParts([{ name: "", model: "", power: "", serial_no: "" }])
+  }
+
+  function generatePlaceholder(key) {
+    if (key === "name") {
+      return "Laser Source"
+    }
+    if (key === 'model') {
+      return "RAYCUS-RFL-C3000S-CE"
+    }
+    if (key === 'power') {
+      return "3000W"
+    }
+    if (key === 'serial_no') {
+      return "C1000A24B000XXX"
+    }
+
   }
 
   return (
@@ -151,16 +175,15 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
           }`}
       >
         <DialogHeader>
-          <DialogTitle>Add New Machine</DialogTitle>
+          <DialogTitle>Add New Parts</DialogTitle>
         </DialogHeader>
 
         <div className="w-full flex flex-1">
-          <ScrollArea className="px-2 w-full max-h-[90vh]">
+          <ScrollArea className="px-2 w-full max-h-[85vh]">
             <div
               className={`flex gap-6 ${cheque ? "flex-row" : "flex-col"
                 } w-full`}
             >
-              {/* Left Side Form */}
               <div className={`${cheque ? "w-1/2" : "w-full"} px-2 space-y-2`}>
                 <Form {...form}>
                   <form
@@ -169,97 +192,79 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                     })}
                     className="space-y-2"
                   >
-                    {office !== 'karachi' &&
-                      <FormField
-                        control={form.control}
-                        name="order_item"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              Select Machine <RequiredStar />
-                            </FormLabel>
-                            <FormControl>
-                              <AvailableMachines
-                                onReturn={setSelectedMachine}
-                                value={selectedMachine}
-                                onReturnItem={(val) => {
-                                  field.onChange(val.id);
-                                  form.setValue(
-                                    "machineModel",
-                                    val.machine_model
-                                  );
-                                  form.setValue("power", val.machine_power);
-                                  form.setValue("source", val.machine_source);
+
+                    <FormField
+                      control={form.control}
+                      name="serial_no"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Name <RequiredStar />
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+
+                              placeholder="Enter name e.g: 3KW Upgradation"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="w-full space-y-6">
+                      {newParts.map((item, index) => (
+                        <div key={index} className="flex flex-col gap-3 w-full p-4 rounded-2xl border border-gray-700/50">
+                          <div className="flex justify-between items-center">
+                            <Label className="font-semibold text-lg mb-2">
+                              Part {index + 1}
+                            </Label>
+                            <Button onClick={(e) => {
+                              e.preventDefault()
+                              setNewParts((prevState) => {
+                                const newState = prevState.filter((item, ind) => index !== ind)
+                                return newState
+                              })
+                            }} variant="destructive" size="sm" as="icon">
+                              <Trash2 />
+                            </Button>
+                          </div>
+                          {Object.entries(item).map(([key, val], i) => (
+                            <div key={key} className="flex flex-col gap-1">
+                              <Label className="text-sm">
+                                {key.charAt(0).toUpperCase() + key.slice(1).replace("_", " ")}{" "}
+                                <RequiredStar />
+                              </Label>
+
+                              <Input
+                                value={val}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  setNewParts((prev) => {
+                                    const updated = [...prev];
+                                    updated[index] = { ...updated[index], [key]: value.toUpperCase() };
+                                    return updated;
+                                  });
                                 }}
+                                placeholder={`Example: ${generatePlaceholder(key)}`}
                               />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    }
+                              {errors[index]?.[key] && (
+                                <p className="text-red-500 text-xs">{errors[index][key]}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
 
-                    
 
-                    <FormField
-                      control={form.control}
-                      name="machineModel"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Machine Model <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              disabled={office !== 'karachi'}
-                              placeholder="example: SF3015G"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <Button onClick={(e) => {
+                      e.preventDefault()
+                      setNewParts([...newParts, { name: "", model: "", power: "", serial_no: "" }])
+                    }} className="mt-2">Add new part</Button>
 
-                    <FormField
-                      control={form.control}
-                      name="power"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Power <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              disabled={office !== 'karachi'}
-                              placeholder="example: 3000W/1500W/6000W"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
 
-                    <FormField
-                      control={form.control}
-                      name="source"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Source <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              disabled={office !== 'karachi'}
-                              placeholder="example: RAYCUS / MAX /IPG"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
 
                     <FormField
                       control={form.control}
@@ -423,4 +428,4 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
 
 
 
-export default AddMachine;
+export default AddParts;

@@ -14,11 +14,13 @@ import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
 import RenderFines from "@/components/users/render-fines";
+import OldRecordSheet from "@/components/users/old-record-sheet";
 
 export default function Page() {
   const [data, setData] = useState();
   const [extraData, setExtraData] = useState({});
   const [selectedOption, setSelectedOption] = useState("thisMonth");
+  const [oldRecordVisible, setOldRecordVisible] = useState(false)
   const [reimbursementData, setReimbursementData] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
   const [activeTab, setActiveTab] = useState("newCustomers");
@@ -99,7 +101,11 @@ export default function Page() {
               data={extraData || {}}
               option={selectedOption}
               onSelect={(val) => {
-                setSelectedOption(val);
+                if (val === "record") {
+                  setOldRecordVisible(true);
+                } else {
+                  setSelectedOption(val);
+                }
               }}
             />
             <CustomerEmployee
@@ -172,7 +178,7 @@ export default function Page() {
             <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
-              <TabsTrigger value="fines">Fines</TabsTrigger>
+            <TabsTrigger value="fines">Fines</TabsTrigger>
           </TabsList>
 
           <div className="flex flex-1 w-full mt-2">
@@ -190,6 +196,12 @@ export default function Page() {
           </div>
         </Tabs>
       </div>
+
+      <OldRecordSheet
+        visible={oldRecordVisible}
+        onClose={setOldRecordVisible}
+        user_id={userID}
+      />
       <AutoScrollMembers />
     </div>
   );

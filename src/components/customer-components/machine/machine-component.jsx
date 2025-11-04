@@ -88,6 +88,8 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import AddCheque from "./add-cheque";
 import CurrencyFormatter from "@/components/currency-formatter";
+import EditParts from "@/components/edit-parts";
+import ConfimationDialog from "@/components/alert-dialog";
 
 export default function Machine({ id, onLoading = () => { }, base }) {
   const [data, setData] = useState();
@@ -99,6 +101,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
   const [visible, setVisible] = useState(false);
   const [imagesVisible, setImagesVisible] = useState(false);
   const [editMachine, setEditMachine] = useState(false);
+  const [editParts, setEditParts] = useState(false);
   const [addPayment, setAddPayment] = useState(false);
   const [editPayment, setEditPayment] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
@@ -106,12 +109,12 @@ export default function Machine({ id, onLoading = () => { }, base }) {
   const [editAllowed, setEditAllowed] = useState(false);
   const [zipDownloading, setZipDwonloading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const router = useRouter();
-  const pathname = usePathname();
   const [unmatched, setUnmatched] = useState([]);
   const [installments, setInstallments] = useState([]);
   const [installmentVisible, setInstallmentVisible] = useState(false);
   const [credit, setCredit] = useState(false);
+  const [readyForDelivery, setReadyForDelivery] = useState(null)
+  const [confirmLoading, setConfirmLoading] = useState(false)
 
   useEffect(() => {
 
@@ -524,79 +527,159 @@ export default function Machine({ id, onLoading = () => { }, base }) {
 
         <div className="flex flex-1 gap-6 flex-wrap">
           <Card className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <CardContent>
-              <div className="flex gap-2 text-sm items-center">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  Machine Information
-                </h3>
-                {machine?.status && (
-                  <div>
-                    <Badge variant={"secondary"}>{machine?.status}</Badge>
-                  </div>
-                )}
-              </div>
-              {machine ? (
-                <div className="text-gray-600 dark:text-gray-300 text-sm flex flex-col gap-2">
-                  <div className="flex items-start gap-2">
-                    <Wrench className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
-                    <span>
-                      Model:{" "}
-                      <span className="font-medium">
-                        {machine.serial_no || "N/A"}
-                      </span>
-                    </span>
-                  </div>
+            {machine?.type === 'Parts' ?
+              <CardContent>
+                <div className="flex gap-2 text-sm items-center">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                    Parts Information
+                  </h3>
+                  {machine?.status && (
+                    <div>
+                      <Badge variant={machine?.status === 'delivered' ? "default" : "secondary"}>{machine?.status}</Badge>
+                    </div>
+                  )}
+                </div>
+                {machine ? (
+                  <div className="text-gray-600 dark:text-gray-300 text-sm flex flex-col gap-2">
+                    <div
+                      className={`w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${machine?.parts_information?.length > 3
+                        ? 3
+                        : machine?.parts_information?.length || 1
+                        } gap-6`}
+                    >
+                      {machine?.parts_information?.map((item, i) => (
+                        <div
+                          key={i}
+                          className="flex flex-col gap-2"
+                        >
+                          <h3 className="font-semibold mb-2">
+                            Part {i + 1}
+                          </h3>
 
-                  <div className="flex items-start gap-2">
-                    <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
-                    <span>
-                      Power:{" "}
-                      <span className="font-medium">
-                        {machine.power || "N/A"}
-                      </span>
-                    </span>
-                  </div>
+                          {Object.entries(item).map(([key, val], ind) => (
+                            <div key={ind} className="flex items-start gap-2">
+                              <ClipboardList className="h-4 w-4  mt-0.5" />
+                              <span className="text-sm ">
+                                {key.charAt(0).toUpperCase() + key.slice(1).replace("_", " ")}:{" "}
+                                <span className="font-medium ">
+                                  {val || "N/A"}
+                                </span>
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
 
-                  <div className="flex items-start gap-2">
-                    <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
-                    <span>
-                      Source:{" "}
-                      <span className="font-medium">
-                        {machine.source || "N/A"}
-                      </span>
-                    </span>
-                  </div>
 
-                  {(machine.order_no_arr && machine.order_no_arr.length > 0
-                    ? machine.order_no_arr
-                    : ["N/A"]
-                  ).map((item, index) => (
-                    <div className="flex items-start gap-2" key={index}>
+                    <div className="flex items-start gap-2">
                       <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
                       <span>
-                        Order No: <span className="font-medium">{item}</span>
+                        Contract:{" "}
+                        <span className="font-medium">
+                          {machine.contract_date
+                            ? moment(machine.contract_date).format("YYYY-MM-DD")
+                            : "N/A"}
+                        </span>
                       </span>
                     </div>
-                  ))}
-
-                  <div className="flex items-start gap-2">
-                    <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
-                    <span>
-                      Contract:{" "}
-                      <span className="font-medium">
-                        {machine.contract_date
-                          ? moment(machine.contract_date).format("YYYY-MM-DD")
-                          : "N/A"}
-                      </span>
-                    </span>
                   </div>
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No data available
+                  </p>
+                )}
+              </CardContent> :
+              <CardContent>
+                <div className="flex gap-2 text-sm items-center">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                    Machine Information
+                  </h3>
+                  {machine?.status && (
+                    <div>
+                      <Badge variant={"secondary"}>{machine?.status}</Badge>
+                    </div>
+                  )}
+
+                  {machine?.cancelled_detail && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <div>
+                            <Badge variant={"destructive"}>Cancelled</Badge>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-red-600">
+                          <p className="text-white">{machine?.cancelled_reason}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
+                  )}
                 </div>
-              ) : (
-                <p className="text-gray-500 dark:text-gray-400">
-                  No machine data available
-                </p>
-              )}
-            </CardContent>
+                {machine ? (
+                  <div className="text-gray-600 dark:text-gray-300 text-sm flex flex-col gap-2">
+                    <div className="flex items-start gap-2">
+                      <Wrench className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
+                      <span>
+                        Model:{" "}
+                        <span className="font-medium">
+                          {machine.serial_no || "N/A"}
+                        </span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
+                      <span>
+                        Power:{" "}
+                        <span className="font-medium">
+                          {machine.power || "N/A"}
+                        </span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
+                      <span>
+                        Source:{" "}
+                        <span className="font-medium">
+                          {machine.source || "N/A"}
+                        </span>
+                      </span>
+                    </div>
+
+                    {(machine.order_no_arr && machine.order_no_arr.length > 0
+                      ? machine.order_no_arr
+                      : ["N/A"]
+                    ).map((item, index) => (
+                      <div className="flex items-start gap-2" key={index}>
+                        <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
+                        <span>
+                          Order No: <span className="font-medium">{item}</span>
+                        </span>
+                      </div>
+                    ))}
+
+                    <div className="flex items-start gap-2">
+                      <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
+                      <span>
+                        Contract:{" "}
+                        <span className="font-medium">
+                          {machine.contract_date
+                            ? moment(machine.contract_date).format("YYYY-MM-DD")
+                            : "N/A"}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No data available
+                  </p>
+                )}
+              </CardContent>
+            }
           </Card>
 
           <Card className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
@@ -659,6 +742,19 @@ export default function Machine({ id, onLoading = () => { }, base }) {
     fetchData(id)
   }
 
+  async function handleReadyforDeliver() {
+
+    setConfirmLoading(true)
+    const response = await axios.put(`/${userID}/machine/${readyForDelivery.id}/delivery`, {
+      ready_for_delivery: true
+    })
+    setReadyForDelivery(null)
+    onRefresh()
+    setConfirmLoading(false)
+
+  }
+
+
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <ClientCard
@@ -667,6 +763,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
         payment={[total, received]}
       >
         {data && (
+          !data?.machine?.cancelled_detail &&
           <div className="w-[150px] shrink-0 flex flex-col gap-2">
             <Button
               size="sm"
@@ -678,11 +775,16 @@ export default function Machine({ id, onLoading = () => { }, base }) {
                   });
                   return;
                 } else {
-                  setEditMachine(true);
+                  if (data?.machine?.type === 'Parts') {
+                    setEditParts(true)
+                  } else {
+                    setEditMachine(true);
+                  }
+
                 }
               }}
             >
-              Edit Machine
+              {data?.machine?.type === 'Parts' ? "Edit Parts" : "Edit Machine"}
             </Button>
 
             {data?.machine && !data?.machine?.payment_lock && (
@@ -754,6 +856,19 @@ export default function Machine({ id, onLoading = () => { }, base }) {
             >
               Credit Cheque
             </Button>
+
+            {data && !data?.machine?.ready_for_delivery &&
+              <Button
+                size="sm"
+                onClick={() => {
+                  setReadyForDelivery(data?.machine);
+                }}
+              >
+                Ready For Delivery
+              </Button>
+            }
+
+            <CancelDeal machine={data?.machine} onRefresh={onRefresh} />
           </div>
         )}
       </ClientCard>
@@ -771,6 +886,15 @@ export default function Machine({ id, onLoading = () => { }, base }) {
         base={base}
         visible={editMachine}
         onClose={setEditMachine}
+        machine_id={id}
+        onRefresh={async () => await fetchData(id)}
+        data={data?.machine || {}}
+      />
+
+      <EditParts
+        base={base}
+        visible={editParts}
+        onClose={setEditParts}
         machine_id={id}
         onRefresh={async () => await fetchData(id)}
         data={data?.machine || {}}
@@ -846,8 +970,56 @@ export default function Machine({ id, onLoading = () => { }, base }) {
       )}
 
       <AddCheque visible={credit} onClose={setCredit} saleID={id} customer_id={data?.customer?.id} onRefresh={onRefresh} />
+
+
+      <ConfimationDialog loading={confirmLoading} open={!!readyForDelivery} title={"Sending for delivery?"} description={"Make sure everything is ready and completed before sending for delivery request"} onPressCancel={() => setReadyForDelivery(null)} onPressYes={handleReadyforDeliver} />
     </div>
   );
+}
+
+const CancelDeal = ({ machine, onRefresh }) => {
+
+  const [loading, setLoading] = useState(false)
+  const [confirmation, setConfirmation] = useState(false)
+  const [reason, setReason] = useState("")
+  const { userID } = useUserDetail()
+
+  async function handleDealCancel() {
+
+    if (!machine?.id) return
+
+    setLoading(true)
+
+    axios.post(`/${userID}/machine/${machine?.id}/dealcancel`, { reason }).then(async () => {
+      await onRefresh()
+      setConfirmation(false)
+    }).finally(() => {
+      setLoading(false)
+    })
+
+
+  }
+
+  return (
+    <>
+      {!machine?.cancelled_detail &&
+        <Button
+          onClick={() => setConfirmation(true)}
+          variant="destructive"
+          size="sm">
+          Cancel Deal
+        </Button>
+      }
+
+      <ConfimationDialog valid={!!reason} loading={loading} open={confirmation} title={"Cancel Deal?"} description={"Make sure payments are reversed back to client before cancelling this deal"} onPressCancel={() => setConfirmation(false)} onPressYes={handleDealCancel} >
+        <div>
+          <Label>Reason</Label>
+          <Input value={reason} placeholder="Enter reason for cancel" onChange={(e) => setReason(e.target.value)} />
+        </div>
+      </ConfimationDialog>
+
+    </>
+  )
 }
 
 const ImageSheet = ({

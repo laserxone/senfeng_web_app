@@ -1,0 +1,97 @@
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+
+import { RequiredStar } from "@/components/RequiredStar";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import "react-medium-image-zoom/dist/styles.css";
+import { CustomerSearchWithData } from "./customer-search-with-data";
+
+const BookOrderDialog = ({
+  visible,
+  onClose,
+  user_id,
+  onRefresh,
+  id,
+  item,
+}) => {
+  const [customer, setCustomer] = useState(null)
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail()
+
+  const handleSubmit = async () => {
+    if (!customer?.id) return
+    setLoading(true);
+    try {
+
+      const response = await axios
+        .post(
+          `/${userID}/machine?inventory=${id}`,
+          {
+            customer_id: customer?.id,
+            type: "Machine",
+            serial_no: item.machine_model,
+            power: item.machine_power,
+            source: item.machine_source,
+            sell_by: customer?.ownership,
+            order_no_arr : [item?.machine_serial],
+            commission: true,
+          }
+        )
+      await onRefresh();
+      handleClose();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  function handleClose(val) {
+    onClose(val);
+    setCustomer(null)
+  }
+
+  return (
+    <Dialog open={visible} onOpenChange={handleClose}>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>Book machine for customer</DialogTitle>
+        </DialogHeader>
+
+        <ScrollArea className=" pr-4">
+          <div className="space-y-6">
+            <div className="border p-4 rounded-md space-y-4">
+              <div>
+                <Label>
+                  Customer <RequiredStar />
+                </Label>
+                <CustomerSearchWithData value={customer} onReturn={setCustomer} />
+              </div>
+
+            </div>
+          </div>
+        </ScrollArea>
+
+        <DialogFooter className="mt-6">
+          <Button type="button" variant="secondary" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button disabled={loading || !customer} onClick={handleSubmit}>
+            {loading && <Spinner />}Book Order
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default BookOrderDialog;

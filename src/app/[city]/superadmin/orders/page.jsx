@@ -46,6 +46,7 @@ import moment from "moment";
 import Image from "next/image";
 import "react-medium-image-zoom/dist/styles.css";
 import ConfimationDialog from "@/components/alert-dialog";
+import BookOrderDialog from "@/components/book-order";
 
 const colorClasses = [
   { bg: "bg-red-100", text: "text-red-800" },
@@ -66,6 +67,7 @@ export default function Page() {
   const [visible, setVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItemForBook, setSelectedItemForBook] = useState(null);
   const { userID } = useUserDetail();
   const [orderedData, setOrderedData] = useState([]);
   const [search, setSearch] = useState("")
@@ -219,6 +221,11 @@ export default function Page() {
     setSelectedItem(itemId);
   }
 
+
+  function handleBookItem(itemId) {
+    setSelectedItemForBook(itemId)
+  }
+
   const filteredData = orderedData?.map((order) => {
     if (!search.trim()) return order; // no search → keep everything
 
@@ -268,7 +275,7 @@ export default function Page() {
           items={orderedData.map((order) => order.id)}
           strategy={verticalListSortingStrategy}
         >
-          <ScrollArea className="h-[700px] pr-6">
+          {/* <ScrollArea className="h-[700px] pr-6"> */}
             <div className="space-y-4">
               {filteredData.map((order) => {
                 return (
@@ -411,6 +418,13 @@ export default function Page() {
                                               {item.status}
                                             </Badge>
                                           </div>
+                                          {!item.booked &&
+                                            <Button size="sm" onClick={() => {
+                                              handleBookItem(item)
+                                            }}>
+                                              Book
+                                            </Button>
+                                          }
                                           <Button
                                             size="icon"
                                             onClick={() => handleEditItem(item)}
@@ -472,7 +486,7 @@ export default function Page() {
                 );
               })}
             </div>
-          </ScrollArea>
+          {/* </ScrollArea> */}
         </SortableContext>
       </DndContext>
 
@@ -506,6 +520,15 @@ export default function Page() {
         id={selectedItem?.id}
         onRefresh={fetchData}
         item={selectedItem}
+      />
+
+      <BookOrderDialog
+        visible={!!selectedItemForBook}
+        onClose={() => setSelectedItemForBook(null)}
+        user_id={userID}
+        id={selectedItemForBook?.id}
+        onRefresh={fetchData}
+        item={selectedItemForBook}
       />
 
       <ConfimationDialog

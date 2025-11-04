@@ -20,13 +20,11 @@ export default async function DashboardLayout({ children, params }) {
       {children}
        <FinePopup/>
         <EdgePanel width={384} className={"pt-4"}>
-      {/* <FloatingWidgets> */}
         <div className="flex gap-2 w-full justify-evenly">
           <FloatingInformation />
           <FloatingTodo />
           <FloatingChat />
         </div>
-      {/* </FloatingWidgets> */}
       </EdgePanel>
     </CommonLayout>
   );

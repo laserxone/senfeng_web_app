@@ -59,7 +59,7 @@ export default function MemberBaseComponent({ base }) {
                     }
                   }}
                   customerId={cid}
-                  onReturn={(mid) => {
+                  onReturn={(mid, type = "Machine") => {
                     if (isMobile) {
                       startHolyLoader();
                       router.push(
@@ -69,7 +69,7 @@ export default function MemberBaseComponent({ base }) {
                       const id = `machine-${mid}`;
                       openTab({
                         id,
-                        title: `Machine ${mid}`,
+                        title: `${type} ${mid}`,
                         closable: true,
                         component: (
                           <MemoizedMachineTab

@@ -173,6 +173,33 @@ export const ownerNavItems = [
     isActive: false,
     items: [] 
   },
+    {
+    title: 'Delivery',
+    url: '#',
+    icon: 'truck',
+    isActive: false,
+
+    items: [
+      {
+        title: 'Machine Delivery',
+        url: '/delivery/machinedelivery',
+        icon: 'userPen',
+        shortcut: ['m', 'd', 'e']
+      },
+      {
+        title: 'Other Delivery',
+        url: '/delivery/otherdelivery',
+        icon: 'member',
+        shortcut: ['o', 'd', 'e']
+      },
+      {
+        title: 'Delivered',
+        shortcut: ['d', 'e', 'l'],
+        url: '/delivery/delivered',
+        icon: 'login'
+      },
+    ]
+  },
 ];
 
 export const complaintItem = {

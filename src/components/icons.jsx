@@ -49,6 +49,7 @@ import {
   AlertCircle,
   MessageSquare,
   Cloud,
+  Truck,
 } from 'lucide-react';
 
 
@@ -102,6 +103,7 @@ export const Icons = {
   complaint : AlertCircle,
   messages : MessageSquare,
   cloud : Cloud,
+  truck : Truck,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden='true'

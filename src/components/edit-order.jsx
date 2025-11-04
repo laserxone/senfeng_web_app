@@ -144,6 +144,7 @@ const EditOrderDialog = ({
   };
 
   const handleSubmit = async () => {
+    console.log(items)
     if (validateItems()) {
       setLoading(true);
       try {
@@ -562,7 +563,7 @@ const EditOrderDialog = ({
             Cancel
           </Button>
           <Button disabled={loading} onClick={handleSubmit}>
-            {loading && <Spinner />}Updat Order Item
+            {loading && <Spinner />}Update Order Item
           </Button>
         </DialogFooter>
       </DialogContent>

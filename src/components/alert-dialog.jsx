@@ -6,13 +6,11 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialogTitle
 } from "@/components/ui/alert-dialog";
-import { Loader2 } from "lucide-react";
 import Spinner from "./ui/spinner";
 
-const ConfimationDialog = ({ children, title, description, onPressYes,onPressCancel, open, loading }) => {
+const ConfimationDialog = ({ title, description, onPressYes,onPressCancel, open, loading, children = null, valid = true }) => {
   return (
     <AlertDialog open={open}>
       {/* <AlertDialogTrigger >{children}</AlertDialogTrigger> */}
@@ -23,9 +21,10 @@ const ConfimationDialog = ({ children, title, description, onPressYes,onPressCan
             {description}
           </AlertDialogDescription>
         </AlertDialogHeader>
+        {children}
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onPressCancel}>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={() => onPressYes()}>
+          <AlertDialogAction disabled={!valid} onClick={() => onPressYes()}>
            {loading && <Spinner />} Yes
           </AlertDialogAction>
         </AlertDialogFooter>

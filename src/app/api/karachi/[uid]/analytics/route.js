@@ -1,8 +1,5 @@
 import pool from "@/config/db";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
-import admin from "@/lib/firebaseAdmin";
-import UploadImageForMobile from "@/lib/uploadImageForMobile";
-import moment from "moment";
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {

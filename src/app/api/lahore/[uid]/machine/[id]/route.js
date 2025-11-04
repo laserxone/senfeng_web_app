@@ -20,7 +20,18 @@ export async function GET(req, { params }) {
 
 
       // 1. Get the machine and its customer ID
-      const machineQuery = `SELECT * FROM sale WHERE id = $1`;
+      const machineQuery = `
+  SELECT s.*, 
+         CASE WHEN cm.id IS NOT NULL THEN TRUE ELSE FALSE END AS cancelled_detail,
+         cm.id AS cancelled_id,
+         cm.created_at AS cancelled_at,
+         cm.issued AS cancelled_issued,
+         cm.reason AS cancelled_reason
+  FROM sale s
+  LEFT JOIN cancelled_machine cm ON s.id = cm.machine_id
+  WHERE s.id = $1
+`;
+
       const machineResult = await pool.query(machineQuery, [id]);
 
       if (machineResult.rows.length === 0) {
@@ -120,7 +131,17 @@ export async function GET(req, { params }) {
       }
 
       // 1. Get the machine and its customer ID
-      const machineQuery = `SELECT * FROM sale WHERE id = $1`;
+       const machineQuery = `
+  SELECT s.*, 
+         CASE WHEN cm.id IS NOT NULL THEN TRUE ELSE FALSE END AS cancelled_detail,
+         cm.id AS cancelled_id,
+         cm.created_at AS cancelled_at,
+         cm.issued AS cancelled_issued,
+         cm.reason AS cancelled_reason
+  FROM sale s
+  LEFT JOIN cancelled_machine cm ON s.id = cm.machine_id
+  WHERE s.id = $1
+`;
       const machineResult = await pool.query(machineQuery, [id]);
 
       if (machineResult.rows.length === 0) {

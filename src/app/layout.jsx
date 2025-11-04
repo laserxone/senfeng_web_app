@@ -7,7 +7,7 @@ import { Lato, Inter, Nunito, Yantramanav, Open_Sans, Poppins, } from "next/font
 import { Suspense } from "react";
 
 import "./globals.css";
-import PwaInstallButton, { InstallPrompt } from "@/components/install-pwa";
+// import PwaInstallButton, { InstallPrompt } from "@/components/install-pwa";
 
 export const metadata = {
   title: "SENFENG",

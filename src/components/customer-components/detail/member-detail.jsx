@@ -56,6 +56,7 @@ import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import InvoiceDetails from "./invoice-details";
 import CurrencyFormatter from "@/components/currency-formatter";
+import AddParts from "@/components/add-parts";
 
 export default function MemberDetail({
   ownership = false,
@@ -289,7 +290,7 @@ export default function MemberDetail({
 
           <TabsTrigger value="machines">Machines</TabsTrigger>
 
-          <TabsTrigger value="parts">Parts</TabsTrigger>
+          <TabsTrigger value="parts">POS</TabsTrigger>
 
           {designation !== "Dealer" && (
             <TabsTrigger value="visit">Visit</TabsTrigger>
@@ -510,6 +511,7 @@ function CustomersTab({
   route,
 }) {
   const [visible, setVisible] = useState(false);
+  const [visibleParts, setVisibleParts] = useState(false);
   const { base_route } = useUserDetail();
 
   const RenderEachMachine = ({ machine, index }) => {
@@ -597,13 +599,110 @@ function CustomersTab({
     );
   };
 
+  const RenderEachPart = ({ machine, index }) => {
+    const totalPayments = machine?.payments
+      .filter((item) => item.clearance_date)
+      ?.reduce((sum, payment) => sum + Number(payment.amount), 0);
+    const total = machine.price || 0;
+    return (
+      <AccordionItem key={machine.id} value={`customer-${machine.id}`}>
+        <Card>
+          <AccordionTrigger className="px-4 py-2 hover:no-underline">
+            <div className="flex justify-between items-center w-full flex-wrap gap-2">
+              <Link
+                className="flex gap-4 items-center"
+                href={
+                  !route
+                    ? "#"
+                    : `/${base_route}/member/${customer_id}/${machine.id}`
+                }
+                onClick={() => onReturn(machine.id, "Parts")}
+              >
+                <Badge variant={"outline"}>Part no:{index}</Badge>
+                <h3 className="font-semibold text-lg hover:underline">
+                  {machine.serial_no}
+                </h3>
+              </Link>
+              <div className="flex items-center">
+                <span className="font-normal text-sm text-gray-600 mr-2">
+                  Data completion: {machine?.percentage_completion || 0}%
+                </span>
+                {Number(machine.price) === totalPayments &&
+                  machine?.percentage_completion === 100 ? (
+                  <CheckCircle className="text-green-500 w-5 h-5 mr-2" />
+                ) : (
+                  <Clock className="text-yellow-500 w-5 h-5 mr-2" />
+                )}
+                <Badge
+                  variant={
+                    Number(machine.price) === totalPayments
+                      ? "success"
+                      : "warning"
+                  }
+                >
+                  {Number(machine.price) === totalPayments
+                    ? "Completed"
+                    : "Pending"}
+                </Badge>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <CardContent className="pt-0">
+              <h4 className="text-lg font-semibold">{machine.name}</h4>
+              <div className=" gap-2 text-sm ">
+                {machine?.status && (
+                  <div>
+                    <strong>Status:</strong> <Badge>{machine?.status}</Badge>
+                  </div>
+                )}
+                <p>
+                  <strong>Contract Date:</strong>{" "}
+                  {machine?.created_at
+                    ? new Date(machine.contract_date).toLocaleDateString(
+                      "en-GB"
+                    )
+                    : ""}
+                </p>
+                {machine?.order_no_arr &&
+                  machine?.order_no_arr.map((item, index) => (
+                    <p key={index}>
+                      <strong>Order No:</strong> {item}
+                    </p>
+                  ))}
+
+                <p>
+                  <strong>Model No:</strong>{" "}
+                  {machine?.model_no || machine.serial_no}
+                </p>
+              </div>
+              <BillingInformationMachine payment={[total, totalPayments]} />
+            </CardContent>
+          </AccordionContent>
+        </Card>
+      </AccordionItem>
+    );
+  };
+
   return (
     <Card className="flex flex-1">
       <CardContent className="p-4 flex flex-1 flex-col">
         <div className="p-4 flex justify-end">
           {user_id && customer_id && (
-            <Button onClick={() => setVisible(true)}>Add Machine</Button>
+
+            <div className="flex gap-2">
+              <Button onClick={() => setVisibleParts(true)}>Sell Parts</Button>
+              <Button onClick={() => setVisible(true)}>Add Machine</Button>
+            </div>
+
           )}
+          <AddParts
+            visible={visibleParts}
+            onClose={setVisibleParts}
+            onRefresh={onRefresh}
+            customer_id={customer_id}
+            user_id={user_id}
+          />
           <AddMachine
             visible={visible}
             onClose={setVisible}
@@ -611,14 +710,21 @@ function CustomersTab({
             customer_id={customer_id}
             user_id={user_id}
           />
+
         </div>
         <Accordion type="single" collapsible className="w-full space-y-4">
           {data.map((machine, index) => (
-            <RenderEachMachine
-              key={machine.id}
-              machine={machine}
-              index={index + 1}
-            />
+            machine.type === 'Machine' ?
+              <RenderEachMachine
+                key={machine.id}
+                machine={machine}
+                index={index + 1}
+              />
+              : <RenderEachPart
+                key={machine.id}
+                machine={machine}
+                index={index + 1}
+              />
           ))}
         </Accordion>
       </CardContent>
@@ -852,30 +958,57 @@ const RenderTimeline = ({
 
     if (customerDetail) {
       customerDetail?.machines?.forEach((machine) => {
-        localData.push({
-          id: `machine-${machine.id}`,
-          title: `Sell Machine ${machine.serial_no} (${machine.source || "Nil"
-            })`,
-          description: `Power: ${machine.power || "Nil"}W, Price: $${machine.price
-            }, Order No: ${machine.order_no_arr?.join(", ")}`,
-          time: machine.contract_date
-            ? machine.contract_date
-            : machine.created_at,
-        });
-
-        machine.payments?.forEach((payment) => {
+        if (machine.type === 'Parts') {
           localData.push({
-            id: `payment-${payment.id}`,
-            title: `Payment for Machine ${machine.serial_no}`,
-            description: `Tx: ${payment.note}, Amount: $${payment.amount
-              }, Mode: ${payment.mode}, Received by: ${payment.received_by
-              }, Clearance Date: ${payment.clearance_data
-                ? moment(payment.clearance_data).format("YYYY-MM-DD")
-                : "Pending"
+            id: `machine-${machine.id}`,
+            title: `Sell Parts ${machine.serial_no}`,
+            description: `Power: ${machine.power || "Nil"}, Price: ${machine.price
               }`,
-            time: payment.transaction_date,
+            time: machine.contract_date
+              ? machine.contract_date
+              : machine.created_at,
           });
-        });
+
+          machine.payments?.forEach((payment) => {
+            localData.push({
+              id: `payment-${payment.id}`,
+              title: `Payment for Parts  ${machine.serial_no}`,
+              description: `Tx: ${payment.note}, Amount: $${payment.amount
+                }, Mode: ${payment.mode}, Received by: ${payment.received_by
+                }, Clearance Date: ${payment.clearance_data
+                  ? moment(payment.clearance_data).format("YYYY-MM-DD")
+                  : "Pending"
+                }`,
+              time: payment.transaction_date,
+            });
+          });
+        } else {
+          localData.push({
+            id: `machine-${machine.id}`,
+            title: `Sell Machine ${machine.serial_no} (${machine.source || "Nil"
+              })`,
+            description: `Power: ${machine.power || "Nil"}W, Price: ${machine.price
+              }, Order No: ${machine.order_no_arr?.join(", ")}`,
+            time: machine.contract_date
+              ? machine.contract_date
+              : machine.created_at,
+          });
+
+          machine.payments?.forEach((payment) => {
+            localData.push({
+              id: `payment-${payment.id}`,
+              title: `Payment for Machine ${machine.serial_no}`,
+              description: `Tx: ${payment.note}, Amount: $${payment.amount
+                }, Mode: ${payment.mode}, Received by: ${payment.received_by
+                }, Clearance Date: ${payment.clearance_data
+                  ? moment(payment.clearance_data).format("YYYY-MM-DD")
+                  : "Pending"
+                }`,
+              time: payment.transaction_date,
+            });
+          });
+        }
+
       });
 
       localData.push({
@@ -919,18 +1052,18 @@ const RenderTimeline = ({
                 </TimelineTime>
                 <TimelineTitle
                   className={`${item.title.toLowerCase().includes("feedback")
-                      ? "text-orange-500"
-                      : item.title.toLowerCase().includes("customer")
-                        ? "text-blue-500"
-                        : item.title.toLowerCase().includes("payment")
-                          ? "text-green-500"
-                          : item.title.toLowerCase().includes("machine")
-                            ? "text-purple-500"
-                            : item.title.toLowerCase().includes("visit")
-                              ? "text-red-500"
-                              : item.title.toLowerCase().includes("task")
-                                ? "text-yellow-500"
-                                : "text-black"
+                    ? "text-orange-500"
+                    : item.title.toLowerCase().includes("customer")
+                      ? "text-blue-500"
+                      : item.title.toLowerCase().includes("payment")
+                        ? "text-green-500"
+                        : item.title.toLowerCase().includes("machine")
+                          ? "text-purple-500"
+                          : item.title.toLowerCase().includes("visit")
+                            ? "text-red-500"
+                            : item.title.toLowerCase().includes("task")
+                              ? "text-yellow-500"
+                              : "text-black"
                     }`}
                 >
                   {item.title}

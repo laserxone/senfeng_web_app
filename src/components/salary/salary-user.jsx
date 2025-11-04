@@ -85,7 +85,9 @@ const SalaryComponent = ({ onSelectedId }) => {
     commission: 0,
     miscellaneous: 0,
     additional_fine: 0,
+    old_target_achieved: 0
   });
+  const [cancelled, setCancelled] = useState(0)
   const [saveLoading, setSaveLoading] = useState(false);
   const [kpi, setKpi] = useState(0);
   const [lateComingFine, setLateComingFine] = useState(0);
@@ -377,6 +379,17 @@ const SalaryComponent = ({ onSelectedId }) => {
     }
   }, [data, form, kpi, lateComingFine, absentsFine]);
 
+  useEffect(() => {
+    if (cancelled && form.target_achieved) {
+      const oldTarget = form.target_achieved * Number(ttRate)
+      const newAmount = (Number(oldTarget) - Number(cancelled))
+      const finalNewTarget = newAmount / Number(ttRate)
+      setForm((prevState) => ({ ...prevState, target_achieved: finalNewTarget.toFixed(0) }))
+    } else {
+      setForm((prevState) => ({ ...prevState, target_achieved: prevState.old_target_achieved }))
+    }
+  }, [cancelled])
+
   const handleInputChange = (field, value) => {
     setForm((prev) => ({
       ...prev,
@@ -479,7 +492,7 @@ const SalaryComponent = ({ onSelectedId }) => {
         salary_month: startDate,
         payable: payable,
         kpi: kpi,
-        fuel : data?.user?.fuel || 0
+        fuel: data?.user?.fuel || 0
       })
       .then(() => {
         toast({ title: "Salary saved" });
@@ -687,6 +700,7 @@ const SalaryComponent = ({ onSelectedId }) => {
               <CardContent className="pt-5">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {Object.keys(form).map((key) => (
+                    key !== 'old_target_achieved' &&
                     <div key={key} className="flex flex-col gap-1">
                       <Label>
                         {key.replace(/_/g, " ").toUpperCase()}{" "}
@@ -703,6 +717,25 @@ const SalaryComponent = ({ onSelectedId }) => {
                       )}
                     </div>
                   ))}
+
+                  <div className="flex flex-col gap-1">
+                    <Label>
+                      Deals Cancelled
+                    </Label>
+                    {loading ? (
+                      <Skeleton className={"h-[40px] w-[150px]"} />
+                    ) : (
+                      <Input
+                        type="number"
+                        value={cancelled}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          setCancelled(value ? (value == "-" ? value : Number(value)) : "")
+                        }}
+                      />
+                    )}
+                  </div>
+
                 </div>
               </CardContent>
             </Card>
@@ -1050,6 +1083,7 @@ const SalaryComponent = ({ onSelectedId }) => {
                   setForm((prev) => ({
                     ...prev,
                     target_achieved: finalTotal.toFixed(0),
+                    old_target_achieved: finalTotal.toFixed(0)
                   }));
                 }
                 setTTModal(false);
