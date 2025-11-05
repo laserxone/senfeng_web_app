@@ -168,6 +168,7 @@ const SalaryComponent = ({ onSelectedId }) => {
             response.data.attendance,
             true
           );
+
           if (response.data?.reimbursement) {
             const totalAmount = response.data.reimbursement.reduce(
               (sum, item) => sum + Number(item.amount),
@@ -188,8 +189,9 @@ const SalaryComponent = ({ onSelectedId }) => {
               additional_fine: (totalAmount * -1),
             }));
           }
-          if (response.data?.commission) {
-            const totalCommission = response.data?.commission.reduce(
+
+          if (response.data?.commission?.length) {
+            const totalCommission = response.data.commission.reduce(
               (sum, item) => sum + Number(item.commission_amount),
               0
             );
@@ -198,8 +200,8 @@ const SalaryComponent = ({ onSelectedId }) => {
               commission: totalCommission,
             }));
           }
-          if (response.data?.lead_commission) {
-            const totalCommission = response.data?.lead_commission.reduce(
+          else if (response.data?.lead_commission?.length) {
+            const totalCommission = response.data.lead_commission.reduce(
               (sum, item) => sum + Number(item.lead_commission_amount),
               0
             );
