@@ -50,6 +50,7 @@ import {
   MessageSquare,
   Cloud,
   Truck,
+  Coins,
 } from 'lucide-react';
 
 
@@ -104,6 +105,7 @@ export const Icons = {
   messages : MessageSquare,
   cloud : Cloud,
   truck : Truck,
+  coins : Coins,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden='true'

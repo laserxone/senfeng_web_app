@@ -437,6 +437,15 @@ export const Tools = {
   ]
 }
 
+export const Prices =  {
+    title: 'Prices',
+    url: '/prices',
+    icon: 'coins',
+    shortcut: ['p', 'r', 'i'],
+    isActive: false,
+    items: [] 
+  }
+
 export const PakCities = [
   {
     "country": "PK",

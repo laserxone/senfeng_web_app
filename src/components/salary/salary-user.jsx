@@ -367,7 +367,6 @@ const SalaryComponent = ({ onSelectedId }) => {
     if (data?.user) {
       setPayable(
         (
-          Number(data?.user?.fuel || 0) +
           Number(data?.user?.basic_salary || 0) +
           Number(kpi || 0) +
           Number(lateComingFine || 0) +
@@ -498,20 +497,25 @@ const SalaryComponent = ({ onSelectedId }) => {
       })
       .then(() => {
         toast({ title: "Salary saved" });
-        if (data?.commission) {
-          data.commission.map((item) => {
-            axios.put(`/${userID}/commission/${item.id}`, {
-              commission_issued: true,
+        if (checked) {
+          if (data?.commission) {
+            data.commission.map((item) => {
+              axios.put(`/${userID}/commission/${item.id}`, {
+                commission_issued: true,
+                issue_date: new Date()
+              });
             });
-          });
-        }
-        if (data?.lead_commission) {
-          data.lead_commission.map((item) => {
-            axios.put(`/${userID}/commission/${item.id}`, {
-              lead_commission_issued: true,
+          }
+          if (data?.lead_commission) {
+            data.lead_commission.map((item) => {
+              axios.put(`/${userID}/commission/${item.id}`, {
+                lead_commission_issued: true,
+                lead_issue_date: new Date()
+              });
             });
-          });
+          }
         }
+
       })
       .finally(() => {
         setSaveLoading(false);

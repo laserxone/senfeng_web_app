@@ -1,12 +1,12 @@
 import pool from "@/config/db";
-import { branchNavItem, complaintItem, dealerNavItems, employeeNavItems, myCloud, ownerNavItems, POSNavItem, StoreNavItem, Tools } from "@/constants/data";
+import { branchNavItem, complaintItem, dealerNavItems, employeeNavItems, myCloud, ownerNavItems, POSNavItem, Prices, StoreNavItem, Tools } from "@/constants/data";
 import admin from "@/lib/firebaseAdmin";
 import { NextResponse } from "next/server";
 
 
 export async function GET(req, { params }) {
     const { email } = await params
-     const referrer = req.headers.get('referer')
+    const referrer = req.headers.get('referer')
     let city = ""
     if (referrer) {
         const url = new URL(referrer);
@@ -47,6 +47,7 @@ export async function GET(req, { params }) {
             nav_items = [...ownerNavItems]
             nav_items.push(POSNavItem)
             nav_items.push(Tools)
+            nav_items.push(Prices)
             base_route = `${city ? city : branchOffice}/superadmin`
         } else {
             if (user.designation == 'Store Manager') {
@@ -68,26 +69,31 @@ export async function GET(req, { params }) {
             if (user.complaint_assigned) {
                 nav_items.push(complaintItem)
             }
-            if(user.superadmin_cloud_access){
+            if (user.superadmin_cloud_access) {
                 nav_items.push(myCloud)
             }
             if (user.designation == 'Engineer') {
                 base_route = `${branchOffice}/engineer`
+
             }
             if (user.designation == 'Sales') {
                 base_route = `${branchOffice}/sales`
+                nav_items.push(Prices)
             }
             if (user.designation == 'Customer Relationship Manager') {
                 base_route = `${branchOffice}/crm`
+                nav_items.push(Prices)
             }
             if (user.designation == 'Customer Relationship Manager (After Sales)') {
                 base_route = `${branchOffice}/aftersales`
+                nav_items.push(Prices)
             }
             if (user.designation == 'Social Media Manager') {
                 base_route = `${branchOffice}/smm`
             }
             if (user.designation == 'Manager') {
                 base_route = `${branchOffice}/manager`
+                nav_items.push(Prices)
             }
 
         }

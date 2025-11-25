@@ -251,7 +251,7 @@ export default function Page() {
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex justify-between flex-wrap">
         <Heading title="Orders" description="Manage orders" />
-      </div>
+      </div> 
 
       <div className="flex gap-2 justify-between items-center">
         <div className="flex w-full flex-wrap gap-2 items-center">
