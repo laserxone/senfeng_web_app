@@ -4612,6 +4612,17 @@ export const saleFields = [
   'handshake_images'
 ];
 
+export const partFields = [
+  'price',
+  'serial_no',
+  'contract_date',
+  'cnic',
+  'machine_nameplate_images',
+  'final_handover_images',
+  'handover_user_id',
+  'installation_report',
+  'handshake_images'
+];
 
 export const profileFields = [
   'name',

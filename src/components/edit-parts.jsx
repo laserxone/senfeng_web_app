@@ -77,7 +77,7 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, base }) => {
         setNewParts(data.parts_information)
       }
     }
-  }, [data, form]);
+  }, [data, form, visible]);
 
   function validateNewParts() {
 

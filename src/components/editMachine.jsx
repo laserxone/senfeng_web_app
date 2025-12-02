@@ -77,7 +77,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data, base }) =>
         setOrderNumbers([...data.order_no_arr]);
       }
     }
-  }, [data, form]);
+  }, [data, form, visible]);
 
   function onSubmit(values) {
     const cleanedOrderNumbers = orderNumbers.filter(

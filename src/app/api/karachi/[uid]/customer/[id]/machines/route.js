@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { saleFields } from "@/constants/data";
+import { partFields, saleFields } from "@/constants/data";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { NextResponse } from "next/server";
 
@@ -55,23 +55,29 @@ export async function GET(req, { params }) {
 
                 if (hasContractImages) machineFilled++;
 
-                saleFields.forEach(field => {
-                    const value = machine[field];
-                    const isFilled =
+                let checkingFields = []
+
+                if (machine.type === 'machine') {
+                    checkingFields = [...saleFields]
+                } else {
+                    checkingFields = [...partFields]
+                }
+
+                checkingFields.forEach(field => {
+                    const value = sale[field];
+                    const filled =
                         Array.isArray(value)
                             ? value.length > 0
-                            : typeof value === 'number'
-                                ? ['price'].includes(field)
-                                    ? value !== null && !isNaN(value)
-                                    : true
-                                : typeof value === 'string'
-                                    ? value.trim() !== '' && value !== 'null'
+                            : typeof value === "string"
+                                ? value.trim() !== "" && value !== "null"
+                                : typeof value === "number"
+                                    ? !isNaN(value)
                                     : value !== null && value !== undefined;
 
-                    if (isFilled) machineFilled++;
+                    if (filled) machineFilled++;
                 });
 
-                const totalFields = saleFields.length + 1;
+                const totalFields = checkingFields.length + 1;
 
                 saleFilledCount += machineFilled;
 
@@ -157,23 +163,29 @@ export async function GET(req, { params }) {
 
                 if (hasContractImages) machineFilled++;
 
-                saleFields.forEach(field => {
-                    const value = machine[field];
-                    const isFilled =
+                let checkingFields = []
+
+                if (machine.type === 'machine') {
+                    checkingFields = [...saleFields]
+                } else {
+                    checkingFields = [...partFields]
+                }
+
+                checkingFields.forEach(field => {
+                    const value = sale[field];
+                    const filled =
                         Array.isArray(value)
                             ? value.length > 0
-                            : typeof value === 'number'
-                                ? ['price'].includes(field)
-                                    ? value !== null && !isNaN(value)
-                                    : true
-                                : typeof value === 'string'
-                                    ? value.trim() !== '' && value !== 'null'
+                            : typeof value === "string"
+                                ? value.trim() !== "" && value !== "null"
+                                : typeof value === "number"
+                                    ? !isNaN(value)
                                     : value !== null && value !== undefined;
 
-                    if (isFilled) machineFilled++;
+                    if (filled) machineFilled++;
                 });
 
-                const totalFields = saleFields.length + 1;
+                const totalFields = checkingFields.length + 1;
 
                 saleFilledCount += machineFilled;
 

@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { profileFields, saleFields } from "@/constants/data";
+import { partFields, profileFields, saleFields } from "@/constants/data";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import admin from "@/lib/firebaseAdmin";
 import moment from "moment";
@@ -157,8 +157,16 @@ ORDER BY
 
                         if (hasContractImages) machineFilled++;
 
+                           let checkingFields = []
+                        
+                                                    if (machine.type === 'machine') {
+                                                        checkingFields = [...saleFields]
+                                                    } else {
+                                                        checkingFields = [...partFields]
+                                                    }
 
-                        saleFields.forEach(field => {
+
+                        checkingFields.forEach(field => {
                             const value = sale[field];
                             const isFilled =
                                 Array.isArray(value)
@@ -174,7 +182,7 @@ ORDER BY
                             if (isFilled) machineFilled++;
                         });
 
-                        const totalFields = saleFields.length + 1;
+                        const totalFields = checkingFields.length + 1;
 
                         const customerResult = await pool.query(
                             'SELECT * FROM customer WHERE id = $1',
