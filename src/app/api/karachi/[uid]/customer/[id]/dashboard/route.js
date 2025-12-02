@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { profileFields, saleFields } from "@/constants/data";
+import { partFields, profileFields, saleFields } from "@/constants/data";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { NextResponse } from "next/server";
 
@@ -81,25 +81,33 @@ export async function GET(req, { params }) {
 
                 if (hasContractImages) machineFilled++;
 
-                // Handle other saleFields
-                saleFields.forEach(field => {
-                    const value = machine[field];
-                    const isFilled =
-                        Array.isArray(value)
-                            ? value.length > 0
-                            : typeof value === 'number'
-                                ? ['price'].includes(field)
-                                    ? value !== null && !isNaN(value)
-                                    : true
-                                : typeof value === 'string'
-                                    ? value.trim() !== '' && value !== 'null'
-                                    : value !== null && value !== undefined;
-
-                    if (isFilled) machineFilled++;
-                });
-
-                const totalFields = saleFields.length + 1;
-
+                let checkingFields = []
+              
+                              if (machine.type === 'machine') {
+                                  checkingFields = [...saleFields]
+                              } else {
+                                  checkingFields = [...partFields]
+                              }
+              
+                              // Handle other saleFields
+                              checkingFields.forEach(field => {
+                                  const value = machine[field];
+                                  const isFilled =
+                                      Array.isArray(value)
+                                          ? value.length > 0
+                                          : typeof value === 'number'
+                                              ? ['price'].includes(field)
+                                                  ? value !== null && !isNaN(value)
+                                                  : true
+                                              : typeof value === 'string'
+                                                  ? value.trim() !== '' && value !== 'null'
+                                                  : value !== null && value !== undefined;
+              
+                                  if (isFilled) machineFilled++;
+                              });
+              
+                              const totalFields = checkingFields.length + 1;
+              
                 saleFilledCount += machineFilled;
 
                 return {
@@ -253,8 +261,16 @@ export async function GET(req, { params }) {
 
                 if (hasContractImages) machineFilled++;
 
+             let checkingFields = []
+
+                if (machine.type === 'machine') {
+                    checkingFields = [...saleFields]
+                } else {
+                    checkingFields = [...partFields]
+                }
+
                 // Handle other saleFields
-                saleFields.forEach(field => {
+                checkingFields.forEach(field => {
                     const value = machine[field];
                     const isFilled =
                         Array.isArray(value)
@@ -270,7 +286,7 @@ export async function GET(req, { params }) {
                     if (isFilled) machineFilled++;
                 });
 
-                const totalFields = saleFields.length + 1;
+                const totalFields = checkingFields.length + 1;
 
                 saleFilledCount += machineFilled;
 

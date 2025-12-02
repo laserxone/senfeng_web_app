@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { profileFields, saleFields } from "@/constants/data";
+import { partFields, profileFields, saleFields } from "@/constants/data";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import admin from "@/lib/firebaseAdmin";
 import moment from "moment";
@@ -78,12 +78,12 @@ export async function GET(req, { params }) {
     const searchParams = req.nextUrl.searchParams
     const lead = searchParams.get('lead')
 
-  
+
 
     try {
-  const isAdmin = await checkSuperadmin(uid)
+        const isAdmin = await checkSuperadmin(uid)
         if (isAdmin) {
-            const office = 'karachi'            
+            const office = 'karachi'
             const query = `
       SELECT 
         commissions.*, 
@@ -158,7 +158,16 @@ ORDER BY
                         if (hasContractImages) machineFilled++;
 
 
-                        saleFields.forEach(field => {
+                        let checkingFields = []
+
+                        if (sale.type === 'machine') {
+                            checkingFields = [...saleFields]
+                        } else {
+                            checkingFields = [...partFields]
+                        }
+
+
+                        checkingFields.forEach(field => {
                             const value = sale[field];
                             const isFilled =
                                 Array.isArray(value)
@@ -174,7 +183,7 @@ ORDER BY
                             if (isFilled) machineFilled++;
                         });
 
-                        const totalFields = saleFields.length + 1;
+                        const totalFields = checkingFields.length + 1;
 
                         const customerResult = await pool.query(
                             'SELECT * FROM customer WHERE id = $1',
@@ -205,7 +214,7 @@ ORDER BY
                             [sale.id]
                         );
                         const payments = (paymentResult.rows || []).filter(
-                            (payment) => payment.clearance_date !== null 
+                            (payment) => payment.clearance_date !== null
                             // && payment.status === 'approved'
                         );
 

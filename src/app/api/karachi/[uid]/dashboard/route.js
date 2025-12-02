@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import momentT from 'moment-timezone';
 import moment from "moment/moment";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
-import { profileFields, saleFields } from "@/constants/data";
+import { partFields, profileFields, saleFields } from "@/constants/data";
 
 export async function GET(req, { params }) {
 
@@ -690,7 +690,16 @@ GROUP BY
 
                             if (hasContractImages) machineFilled++;
 
-                            saleFields.forEach(field => {
+                            let checkingFields = []
+
+                            if (sale.type === 'machine') {
+                                checkingFields = [...saleFields]
+                            } else {
+                                checkingFields = [...partFields]
+                            }
+
+
+                            checkingFields.forEach(field => {
                                 const value = sale[field];
                                 const filled =
                                     Array.isArray(value)
@@ -704,7 +713,7 @@ GROUP BY
                                 if (filled) machineFilled++;
                             });
 
-                            const totalFields = saleFields.length + 1;
+                            const totalFields = checkingFields.length + 1;
                             const completion = Math.round((machineFilled / totalFields) * 100);
 
                             return {

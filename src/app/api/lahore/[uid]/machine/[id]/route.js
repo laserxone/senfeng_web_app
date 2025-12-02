@@ -1,6 +1,6 @@
 import pool from "@/config/db";
 import { storage } from "@/config/firebase";
-import { saleFields } from "@/constants/data";
+import { partFields, saleFields } from "@/constants/data";
 import { addLog } from "@/lib/addLog";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { generateLog } from "@/lib/generateLog";
@@ -89,7 +89,15 @@ export async function GET(req, { params }) {
 
       if (hasContractImages) machineFilled++;
 
-      saleFields.forEach(field => {
+      let checkingFields = []
+
+      if(machine.type === 'machine'){
+        checkingFields = [...saleFields]
+      } else {
+        checkingFields = [...partFields]
+      }
+
+      checkingFields.forEach(field => {
         const value = machine[field];
         const isFilled =
           Array.isArray(value)
@@ -109,7 +117,7 @@ export async function GET(req, { params }) {
         }
       });
 
-      const totalFields = saleFields.length + 1;
+      const totalFields = checkingFields.length + 1;
 
 
 
@@ -219,7 +227,16 @@ export async function GET(req, { params }) {
 
       if (hasContractImages) machineFilled++;
 
-      saleFields.forEach(field => {
+       let checkingFields = []
+
+      if(machine.type === 'machine'){
+        checkingFields = [...saleFields]
+      } else {
+        checkingFields = [...partFields]
+      }
+
+
+      checkingFields.forEach(field => {
         const value = machine[field];
         const isFilled =
           Array.isArray(value)
@@ -239,7 +256,7 @@ export async function GET(req, { params }) {
         }
       });
 
-      const totalFields = saleFields.length + 1;
+      const totalFields = checkingFields.length + 1;
 
 
 
