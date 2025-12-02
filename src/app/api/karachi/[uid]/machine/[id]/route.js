@@ -1,6 +1,6 @@
 import pool from "@/config/db";
 import { storage } from "@/config/firebase";
-import { partFields, saleFields } from "@/constants/data";
+import { saleFields } from "@/constants/data";
 import { addLog } from "@/lib/addLog";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { generateLog } from "@/lib/generateLog";
@@ -89,15 +89,7 @@ export async function GET(req, { params }) {
 
       if (hasContractImages) machineFilled++;
 
-      let checkingFields = []
-
-      if (machine.type === 'machine') {
-        checkingFields = [...saleFields]
-      } else {
-        checkingFields = [...partFields]
-      }
-
-      checkingFields.forEach(field => {
+      saleFields.forEach(field => {
         const value = machine[field];
         const isFilled =
           Array.isArray(value)
@@ -117,7 +109,7 @@ export async function GET(req, { params }) {
         }
       });
 
-      const totalFields = checkingFields.length + 1;
+      const totalFields = saleFields.length + 1;
 
 
 
@@ -139,7 +131,7 @@ export async function GET(req, { params }) {
       }
 
       // 1. Get the machine and its customer ID
-      const machineQuery = `
+       const machineQuery = `
   SELECT s.*, 
          CASE WHEN cm.id IS NOT NULL THEN TRUE ELSE FALSE END AS cancelled_detail,
          cm.id AS cancelled_id,
@@ -227,15 +219,7 @@ export async function GET(req, { params }) {
 
       if (hasContractImages) machineFilled++;
 
-      let checkingFields = []
-
-      if (machine.type === 'machine') {
-        checkingFields = [...saleFields]
-      } else {
-        checkingFields = [...partFields]
-      }
-
-      checkingFields.forEach(field => {
+      saleFields.forEach(field => {
         const value = machine[field];
         const isFilled =
           Array.isArray(value)
@@ -255,7 +239,7 @@ export async function GET(req, { params }) {
         }
       });
 
-      const totalFields = checkingFields.length + 1;
+      const totalFields = saleFields.length + 1;
 
 
 

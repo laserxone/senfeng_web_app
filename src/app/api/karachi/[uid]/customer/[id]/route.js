@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { partFields, profileFields, saleFields } from "@/constants/data";
+import { profileFields, saleFields } from "@/constants/data";
 import { addLog } from "@/lib/addLog";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import admin from "@/lib/firebaseAdmin";
@@ -18,7 +18,7 @@ export async function GET(req, { params }) {
 
   try {
 
-    const isAdmin = await checkSuperadmin(uid)
+      const isAdmin = await checkSuperadmin(uid)
 
 
     if (isAdmin) {
@@ -89,29 +89,23 @@ export async function GET(req, { params }) {
         if (hasContractImages) machineFilled++;
 
         // Handle other saleFields
-        let checkingFields = []
-
-        if (machine.type === 'machine') {
-          checkingFields = [...saleFields]
-        } else {
-          checkingFields = [...partFields]
-        }
-
-        checkingFields.forEach(field => {
-          const value = sale[field];
-          const filled =
+        saleFields.forEach(field => {
+          const value = machine[field];
+          const isFilled =
             Array.isArray(value)
               ? value.length > 0
-              : typeof value === "string"
-                ? value.trim() !== "" && value !== "null"
-                : typeof value === "number"
-                  ? !isNaN(value)
+              : typeof value === 'number'
+                ? ['price'].includes(field)
+                  ? value !== null && !isNaN(value)
+                  : true
+                : typeof value === 'string'
+                  ? value.trim() !== '' && value !== 'null'
                   : value !== null && value !== undefined;
 
-          if (filled) machineFilled++;
+          if (isFilled) machineFilled++;
         });
 
-        const totalFields = checkingFields.length + 1;
+        const totalFields = saleFields.length + 1;
 
         saleFilledCount += machineFilled;
 
@@ -360,19 +354,19 @@ export async function DELETE(req, { params }) {
 
 async function checkDeleteUser(id) {
 
-  if (!id) throw new Error("User ID is missing");
+    if (!id) throw new Error("User ID is missing");
 
-  const userQuery = await pool.query(
-    `SELECT id, designation, full_access, customer_delete_access FROM users WHERE id = $1`,
-    [id]
-  );
+    const userQuery = await pool.query(
+        `SELECT id, designation, full_access, customer_delete_access FROM users WHERE id = $1`,
+        [id]
+    );
 
 
-  let user = userQuery.rows[0];
+    let user = userQuery.rows[0];
+   
+    if (!user) throw new Error("User not found");
 
-  if (!user) throw new Error("User not found");
-
-  return user.designation === "Owner" || user.full_access === true || user.customer_delete_access === true;
+    return user.designation === "Owner" || user.full_access === true || user.customer_delete_access === true;
 }
 
 
