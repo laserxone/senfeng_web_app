@@ -417,6 +417,12 @@ export const Tools = {
       url: '/configuration',
       icon: 'login'
     },
+     {
+      title: 'Backend',
+      shortcut: ['b', 'a', 'c'],
+      url: '/backend',
+      icon: 'login'
+    },
     // {
     //   title: 'Multiple TID',
     //   url: '/multipletid',
