@@ -243,6 +243,14 @@ export async function GET(req, { params }) {
             [user]
         );
 
+       const loanResult = await pool.query(`
+      SELECT l.*, u.name as user_name
+      FROM employee_loans l
+      JOIN users u ON u.id = l.user_id
+      WHERE l.user_id = $1 AND l.status = 'active'
+      ORDER BY l.issued_date DESC
+    `, [user]);
+
 
         return NextResponse.json({
             reimbursement: reimbursement.rows,
@@ -257,7 +265,8 @@ export async function GET(req, { params }) {
             totalCustomersWithSale,
             totalVisits,
             fines: fineResult,
-            old_record: oldSalariesQuery.rows
+            old_record: oldSalariesQuery.rows,
+            loan : loanResult.rows
         }, { status: 200 });
 
     } catch (error) {

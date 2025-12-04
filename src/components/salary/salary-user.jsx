@@ -105,6 +105,8 @@ const SalaryComponent = ({ onSelectedId }) => {
   const { toast } = useToast();
   const [toAccounts, setToAccounts] = useState([])
   const [refresh, setRefresh] = useState(false);
+  const [remainingLoan, setRemainingLoan] = useState(0)
+  const [repayment, setRepayment] = useState(0)
   const years = Array.from(
     { length: 20 },
     (_, i) => new Date().getFullYear() - 10 + i
@@ -168,6 +170,14 @@ const SalaryComponent = ({ onSelectedId }) => {
             response.data.attendance,
             true
           );
+
+          if (response.data?.loan) {
+            const totalAmount = response.data.loan.reduce(
+              (sum, item) => sum + Number(item.loan_amount),
+              0
+            );
+            setRemainingLoan(totalAmount)
+          }
 
           if (response.data?.reimbursement) {
             const totalAmount = response.data.reimbursement.reduce(
@@ -235,7 +245,7 @@ const SalaryComponent = ({ onSelectedId }) => {
               reimbursement: Number(existing.reimbursement),
               target_achieved: Number(existing.target_achieved),
             });
-
+            setRemainingLoan(existing?.loan)
             setChecked(existing.issued);
             processAttendance(
               Number(moment(startDate).format("YYYY")),
@@ -251,6 +261,13 @@ const SalaryComponent = ({ onSelectedId }) => {
               response.data.attendance,
               true
             );
+            if (response.data?.loan) {
+              const totalAmount = response.data.loan.reduce(
+                (sum, item) => sum + Number(item.loan_amount),
+                0
+              );
+              setRemainingLoan(totalAmount)
+            }
             if (response.data?.reimbursement) {
               const totalAmount = response.data.reimbursement.reduce(
                 (sum, item) => sum + Number(item.amount),
@@ -374,11 +391,12 @@ const SalaryComponent = ({ onSelectedId }) => {
           Number(form.reimbursement || 0) +
           Number(form.commission || 0) +
           Number(form.miscellaneous || 0) +
-          Number(form.additional_fine || 0)
+          Number(form.additional_fine || 0) +
+          Number(repayment || 0)
         ).toFixed(2)
       );
     }
-  }, [data, form, kpi, lateComingFine, absentsFine]);
+  }, [data, form, kpi, lateComingFine, absentsFine, repayment]);
 
   useEffect(() => {
     if (cancelled && form.target_achieved) {
@@ -493,11 +511,18 @@ const SalaryComponent = ({ onSelectedId }) => {
         salary_month: startDate,
         payable: payable,
         kpi: kpi,
-        fuel: data?.user?.fuel || 0
+        fuel: data?.user?.fuel || 0,
+        loan: repayment
       })
       .then(() => {
         toast({ title: "Salary saved" });
         if (checked) {
+          if (repayment && !isNaN(repayment) && employeeLoan) {
+            axios.post(`/${userID}/loans/repayment`, {
+              loan_id: employeeLoan.id,
+              amount: Number(repayment),
+            });
+          }
           if (data?.commission) {
             data.commission.map((item) => {
               axios.put(`/${userID}/commission/${item.id}`, {
@@ -562,6 +587,8 @@ const SalaryComponent = ({ onSelectedId }) => {
       </div>
     );
   };
+
+  const employeeLoan = data?.loan && Array.isArray(data.loan) && data.loan.length > 0 ? data.loan[0] : null;
 
   return (
 
@@ -742,6 +769,26 @@ const SalaryComponent = ({ onSelectedId }) => {
                     )}
                   </div>
 
+                  {employeeLoan &&
+                    <div className="flex flex-col gap-1">
+                      <Label>
+                        Loan Deduction
+                      </Label>
+                      {loading ? (
+                        <Skeleton className={"h-[40px] w-[150px]"} />
+                      ) : (
+                        <Input
+                          type="number"
+                          value={repayment}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setRepayment(value ? (value == "-" ? value : Number(value)) : "")
+                          }}
+                        />
+                      )}
+                    </div>
+                  }
+
                 </div>
               </CardContent>
             </Card>
@@ -843,6 +890,13 @@ const SalaryComponent = ({ onSelectedId }) => {
                     <Label>FUEL</Label>
                     <Input value={data?.user?.fuel || 0} disabled readOnly />
                   </div>
+
+                  {employeeLoan &&
+                    <div className="flex flex-col gap-1">
+                      <Label>Remaining Loan</Label>
+                      <Input value={remainingLoan || 0} disabled readOnly />
+                    </div>
+                  }
                 </div>
               </CardContent>
             </Card>
@@ -859,17 +913,19 @@ const SalaryComponent = ({ onSelectedId }) => {
                 ["Commission", form.commission],
                 ["Miscellaneous", form.miscellaneous],
                 ["ADDITIONAL FINE", form.additional_fine],
-                ["FUEL", data?.user?.fuel || 0]
+                ["FUEL", data?.user?.fuel || 0],
+                ...(employeeLoan ? [["LOAN DEDUCTION", repayment]] : [])
               ].map(([label, value]) => (
                 <div key={label} className="grid grid-cols-3 items-center gap-2">
                   <Label>{label}</Label>
                   {loading ? (
-                    <Skeleton className={"h-[40px] w-[300px]"} />
+                    <Skeleton className="h-[40px] w-[300px]" />
                   ) : (
                     <Input value={value} disabled readOnly />
                   )}
                 </div>
               ))}
+
 
               <div className="grid grid-cols-3 items-center gap-2">
                 <Label className="text-lg font-semibold text-green-600 tracking-wide">

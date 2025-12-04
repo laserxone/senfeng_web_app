@@ -101,6 +101,12 @@ export const ownerNavItems = [
         icon: 'fine',
         shortcut: ['f', 'i', 'n', 'e'],
       },
+       {
+        title: 'Loans',
+        url: '/loans',
+        icon: 'fine',
+        shortcut: ['l', 'o', 'a', 'n'],
+      },
 
        {
         title: 'Analytics',
