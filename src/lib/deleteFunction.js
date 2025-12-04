@@ -9,6 +9,7 @@ export async function DeleteFromStorage(name) {
         await deleteObject(deleteRef)
         return "done";
     } catch (error) {
+        if(error?.message?.includes("object-not-found")) return "done"
         toast({
             title: error.message || "Error",
             description: "Error deleting file from storage",
