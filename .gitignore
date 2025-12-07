@@ -47,3 +47,6 @@ next-env.d.ts
 
 
 certificates
+
+db_backup.backup
+db_backup.bak
