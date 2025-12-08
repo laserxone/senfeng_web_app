@@ -19,10 +19,13 @@ import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
 import { Checkbox } from "../ui/checkbox";
 import Spinner from "../ui/spinner";
+import formatCurrency from "@/lib/formatCurrency";
 
 const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh, onReturn }) => {
   const pageTableRef = useRef();
   const [value, setValue] = useState("");
+
+  const total = data.reduce((sum, item) => sum + (item.total || 0), 0);
 
   const columns = [
     {
@@ -123,7 +126,7 @@ const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh, onRetu
           </Button>
         );
       },
-      cell: ({ row }) => <RenderPaid row={row} onRefresh={onRefresh} onReturn={onReturn}/>,
+      cell: ({ row }) => <RenderPaid row={row} onRefresh={onRefresh} onReturn={onReturn} />,
     },
 
     {
@@ -177,7 +180,7 @@ const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh, onRetu
           searchName={value ? `Search ${value}...` : "Select filter first..."}
           tableHeader={tableHeader}
         >
-          <div className=" flex justify-between">
+          <div className="flex flex-1 flex-wrap gap-2 flex items-center justify-between">
             <div className="flex gap-4">
               <Select
                 onValueChange={(val) => {
@@ -212,7 +215,19 @@ const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh, onRetu
               >
                 Clear
               </Button>
+
+
             </div>
+
+            <div className="flex justify-between items-center p-2 rounded-md w-full max-w-xs border-b border-gray-300 dark:border-gray-700">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Total Amount
+              </span>
+              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                {formatCurrency(total || 0)}
+              </span>
+            </div>
+
           </div>
         </PageTable>
       </DialogContent>

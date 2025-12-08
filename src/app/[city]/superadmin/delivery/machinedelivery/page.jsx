@@ -1,6 +1,6 @@
 'use client'
 
-import PageTable from "@/components/app-table"
+import PageTable from "@/components/app-table-without-pagination"
 import { Button } from "@/components/ui/button"
 import { Heading } from "@/components/ui/heading"
 import useUserDetail from "@/hooks/use-user-detail"
@@ -197,7 +197,6 @@ const columns = [
               <PageTable
                 columns={columns}
                 data={data}
-                totalItems={data.length}
                 tableHeader={tableHeader}
                 onRowClick={(val, event) => {
                  

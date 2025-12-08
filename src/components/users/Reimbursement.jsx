@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowUpDown, Filter } from "lucide-react";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import AppCalendar from "@/components/appCalendar";
 import Dropzone from "@/components/dropzone";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -196,9 +196,7 @@ export default function Reimbursement({
         <PageTable
           columns={columns}
           data={data}
-          totalItems={data.length}
-          searchItem={"title"}
-          searchName={"Search bill..."}
+        
           onRowClick={(val, e) => {
             setImageURL(val);
             setVisible(true);

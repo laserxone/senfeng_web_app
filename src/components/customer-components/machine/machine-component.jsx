@@ -42,7 +42,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import AddPayment from "@/components/addPayment";
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import { downloadCustomerZip } from "@/components/downloadzip";
 import DropzoneMulti from "@/components/dropzone-multi";
 import EditMachine from "@/components/editMachine";
@@ -877,7 +877,6 @@ export default function Machine({ id, onLoading = () => { }, base }) {
         <PageTable
           columns={columns}
           data={payments}
-          totalItems={payments.length}
           disableInput={true}
           onRowClick={(val, e) => { }}
         />

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useState } from "react";
 
 import ConfimationDialog from "@/components/alert-dialog";
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { startHolyLoader } from "holy-loader";
@@ -217,7 +217,7 @@ export default function CustomerEmployee({
           totalCustomer={data.length}
           columns={columns}
           data={data}
-          totalItems={data.length}
+         
           tableHeader={tableHeader}
           onRowClick={(val, event) => {
             if (val?.id) {

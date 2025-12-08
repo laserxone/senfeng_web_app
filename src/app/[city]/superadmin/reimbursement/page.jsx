@@ -17,7 +17,7 @@ import {
   useState,
 } from "react";
 
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import AppCalendar from "@/components/appCalendar";
 import { CustomerSearchWithData } from "@/components/customer-search-with-data";
 import Dropzone from "@/components/dropzone";
@@ -362,9 +362,6 @@ export default function Page() {
           loading={loading}
           columns={columns}
           data={data}
-          totalItems={data.length}
-          searchItem={"title"}
-          searchName={"Search bill..."}
           onRowClick={(val) => {
             setImageURL(val);
             setVisible(true);

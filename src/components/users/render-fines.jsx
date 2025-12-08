@@ -1,4 +1,4 @@
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TIMEZONE } from "@/constants/data";

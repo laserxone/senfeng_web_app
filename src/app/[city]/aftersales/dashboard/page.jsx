@@ -1,6 +1,6 @@
 "use client";
 import AddCustomerDialog from "@/components/addCustomer";
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import AppCalendar from "@/components/appCalendar";
 import AutoScrollMembers from "@/components/autoScroll";
 import { RequiredStar } from "@/components/RequiredStar";
@@ -429,11 +429,8 @@ const CustomerEmployeeAfterSales = ({
 
         <div className="flex flex-1">
           <PageTable
-            totalCustomerText={totalCustomerText}
-            totalCustomer={data?.[selectedOption]?.length || 0}
             columns={columns}
             data={data?.[selectedOption] || []}
-            totalItems={data?.[selectedOption]?.length || 0}
             tableHeader={tableHeader}
             onRowClick={(val, event) => {
               if (val?.id) {

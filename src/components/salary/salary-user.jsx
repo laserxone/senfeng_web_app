@@ -12,7 +12,7 @@ import {
   useState
 } from "react";
 
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Heading } from "@/components/ui/heading";
@@ -1477,7 +1477,7 @@ const Fines = ({ passingData }) => {
         <PageTable
           columns={columns}
           data={data}
-          totalItems={data.length}
+        
           tableHeader={tableHeader}
           onRowClick={() => { }}
         />
@@ -1595,9 +1595,7 @@ const Reimbursement = ({ passingData }) => {
           disableInput={true}
           columns={columns}
           data={data}
-          totalItems={data.length}
-          searchItem={"title"}
-          searchName={"Search bill..."}
+        
           onRowClick={(val) => {
             setImageURL(val);
             setVisible(true);
@@ -1806,7 +1804,7 @@ const AttendanceRecord = ({ passingData = [] }) => {
           disableInput={true}
           columns={columns}
           data={passingData}
-          totalItems={passingData.length}
+       
           onRowClick={(val) => { }}
         ></PageTable>
       </div>
@@ -1950,7 +1948,7 @@ const TargetRecord = ({ passingData = [] }) => {
           disableInput={true}
           columns={columns}
           data={passingData}
-          totalItems={passingData.length}
+        
           onRowClick={(val, e) => {
             const url = `/${base_route}/member/${val.customer_id
               }/${val.id}`;

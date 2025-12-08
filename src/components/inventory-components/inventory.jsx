@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import PageContainer from "@/components/page-container";
 import {
   Dialog,
@@ -114,9 +114,6 @@ const RenderInventory = () => {
           <PageTable
             columns={columns}
             data={stock}
-            totalItems={stock.length}
-            searchItem={"shipment"}
-            searchName={`Search name...`}
             tableHeader={tableHeader}
             onRowClick={(val, event) => {
               if (val?.id) {

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useCallback, useEffect, useState } from "react";
 
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import {
   Dialog,
   DialogContent,
@@ -323,8 +323,7 @@ export default function TeamAttendance() {
       <PageTable
         columns={columns}
         data={data}
-        totalItems={data.length}
-        tableHeader={tableHeader}
+       tableHeader={tableHeader}
         onRowClick={(val, e) => {
           setSelectedAttendance(val);
           setVisible(true);

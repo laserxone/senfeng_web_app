@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import { CustomerSearch } from "@/components/customer-search";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -225,9 +225,6 @@ export default function Page() {
           loading={loading}
           columns={columns}
           data={data}
-          totalItems={data.length}
-          searchItem={"title"}
-          searchName={"Search bill..."}
           onRowClick={(val) => {}}
         />
       </div>

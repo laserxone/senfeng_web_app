@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useCallback, useEffect, useState } from "react";
 
 import ConfimationDialog from "@/components/alert-dialog";
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import {
   Dialog,
   DialogContent,
@@ -323,7 +323,6 @@ export default function Page() {
       <PageTable
         columns={columns}
         data={data}
-        totalItems={data.length}
         tableHeader={tableHeader}
         onRowClick={(val, event) => {
           setSelectedAttendance(val);

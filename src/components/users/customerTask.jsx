@@ -11,7 +11,7 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { z } from "zod";
 
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import {
   Sheet,
   SheetContent,
@@ -158,9 +158,7 @@ export default function CustomerTask({
         <PageTable
           columns={columns}
           data={data}
-          totalItems={data.length}
-          searchItem={"task_name"}
-          searchName={"Search task..."}
+        
           onRowClick={(val, e) => {
             setSelectedTask(val);
             setVisible(true);

@@ -2,7 +2,7 @@
 import AddCustomerDialog from "@/components/addCustomer";
 import AddQuickAction from "@/components/addQuickAction";
 import ConfimationDialog from "@/components/alert-dialog";
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -392,8 +392,6 @@ export default function CustomerMainPage({ onReturn }) {
         </div>
 
         <PageTable
-          totalCustomerText={"Total Customers"}
-          totalCustomer={filteredData.length}
           columns={columns}
           data={
             additionalFilter === "duplicate"
@@ -404,7 +402,6 @@ export default function CustomerMainPage({ onReturn }) {
               )
               : filteredData
           }
-          totalItems={filteredData.length}
           tableHeader={tableHeader}
           onRowClick={(val, e) => {
             if (val.id) {

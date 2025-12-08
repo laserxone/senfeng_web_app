@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
 import { AttendanceDetail } from "@/app/[city]/superadmin/attendance/page";
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import moment from "moment";
 import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
@@ -179,8 +179,7 @@ export default function Attendance({ passingData, onFilterReturn, onRefresh }) {
           
           columns={columns}
           data={data}
-          totalItems={data.length}
-         
+        
           tableHeader={tableHeader}
           onRowClick={(val, e) => {
             setSelectedAttendance(val);

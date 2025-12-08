@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import SalaryPdf from "@/components/salaryPdf";
 import axios from "@/lib/axios";
 import moment from "moment";
@@ -107,9 +107,7 @@ const SalaryRecord = ({ id }) => {
           loading={loading}
           columns={columns}
           data={data}
-          totalItems={data.length}
-          searchItem={"user_name"}
-          searchName={"Search employee..."}
+        
           onRowClick={(val, e) => {
             // setImageURL(val);
             // setVisible(true);

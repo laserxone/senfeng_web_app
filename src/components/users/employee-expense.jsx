@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useCallback, useContext, useEffect, useState } from "react";
 
 import ConfimationDialog from "@/components/alert-dialog";
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import AppCalendar from "@/components/appCalendar";
 import Dropzone from "@/components/dropzone";
 import {
@@ -260,9 +260,7 @@ export default function EmployeeBranchExpenses({ base }) {
         loading={loading}
         columns={columns}
         data={data}
-        totalItems={data.length}
-        searchItem={"note"}
-        searchName={"Search bill..."}
+        
         onRowClick={(val, e) => {
           setImageURL(val);
           setVisible(true);

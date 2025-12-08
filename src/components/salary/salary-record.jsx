@@ -7,7 +7,7 @@ import {
     useState
 } from "react";
 
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import SalaryPdf from "@/components/salaryPdf";
 import { Heading } from "@/components/ui/heading";
 import axios from "@/lib/axios";
@@ -134,9 +134,7 @@ const RecordComponent = () => {
                     loading={loading}
                     columns={columns}
                     data={data}
-                    totalItems={data.length}
-                    searchItem={"user_name"}
-                    searchName={"Search employee..."}
+                 
                     onRowClick={(val, e) => {
                         // setImageURL(val);
                         // setVisible(true);

@@ -26,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { UserSearch } from "@/components/user-search";
 import { Heading } from "@/components/ui/heading";
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import { ArrowUpDown, Filter, Trash2 } from "lucide-react";
 import moment from "moment";
 import useUserDetail from "@/hooks/use-user-detail";
@@ -273,7 +273,6 @@ export default function Page() {
         loading={loading}
         columns={columns}
         data={data}
-        totalItems={data.length}
         tableHeader={tableHeader}
         onRowClick={() => {}}
       >

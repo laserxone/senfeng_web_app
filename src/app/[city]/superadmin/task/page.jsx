@@ -24,7 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import { CustomerSearch } from "@/components/customer-search";
 import { Heading } from "@/components/ui/heading";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -273,9 +273,6 @@ export default function Page() {
         loading={dataLoading}
         columns={columns}
         data={data}
-        totalItems={data.length}
-        searchItem={"task_name"}
-        searchName={"Search task..."}
         onRowClick={(val, e) => {
           setSelectedTask(val);
           setVisible(true);

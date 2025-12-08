@@ -23,7 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import AppCalendar from "@/components/appCalendar";
 import { RequiredStar } from "@/components/RequiredStar";
 import { Badge } from "@/components/ui/badge";
@@ -193,6 +193,7 @@ export default function Page() {
   const router = useRouter();
   const { userID, office, base_route } = useUserDetail();
   const { toast } = useToast();
+  const [status, setStatus] = useState("Active")
 
   useEffect(() => {
     if (userID) fetchData();
@@ -227,8 +228,12 @@ export default function Page() {
       <PageTable
         loading={loading}
         columns={columns}
-        data={data}
-        totalItems={data.length}
+        data={data.filter((item) => {
+          if (status === 'All') return true;
+          if (status === 'Active') return item.active === true;
+          return item.active === false;
+        })}
+      
         onRowClick={(val, event) => {
           if (val.id) {
             const url = `/${base_route}/team/${val.id}`;
@@ -240,7 +245,23 @@ export default function Page() {
             }
           }
         }}
-      ></PageTable>
+      >
+        <div className="w-lg">
+        <Select onValueChange={setStatus} value={status}>
+          <SelectTrigger>
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value="All">All</SelectItem>
+              <SelectItem value="Active">Active</SelectItem>
+              <SelectItem value="Inactive">Inactive</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        </div>
+
+      </PageTable>
 
       <AddUserDialog
         visible={open}

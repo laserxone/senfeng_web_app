@@ -1,6 +1,6 @@
 "use client";
 import ConfimationDialog from "@/components/alert-dialog";
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -369,8 +369,6 @@ export default function MemberMainPage({ onReturn }) {
         </div>
 
         <PageTable
-          totalCustomerText={"Total Members"}
-          totalCustomer={filteredData.length}
           columns={columns}
           loading={loading}
           data={
@@ -382,7 +380,6 @@ export default function MemberMainPage({ onReturn }) {
               )
               : filteredData
           }
-          totalItems={filteredData.length}
           tableHeader={tableHeader}
           onRowClick={(val, e) => {
             if (val.id) {
