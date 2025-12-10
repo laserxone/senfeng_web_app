@@ -85,7 +85,7 @@ const OrderStockDialog = ({
         });
         return;
       }
-      await exportToExcel(headers, formattedData, "New Order.xlsx", true);
+      await exportToExcel(headers, formattedData, "New Order.xlsx", true, "products");
     } catch (error) {
       toast({
         title: "Error",

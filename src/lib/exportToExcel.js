@@ -7,7 +7,8 @@ const exportToExcel = async (
   headers,
   data,
   fileName = "data.xlsx",
-  formatBuyingPrice = false
+  formatBuyingPrice = false,
+  baseStorage = ""
 ) => {
   if (!data || data.length === 0) {
     throw new Error("No data available to export");
@@ -21,7 +22,7 @@ const exportToExcel = async (
 
     if (refImage) {
       try {
-        const starsRef = ref(storage, `products/${refImage}`);
+        const starsRef = ref(storage, `${baseStorage}/${refImage}`);
         const url = await getDownloadURL(starsRef);
         newRow[4] = `=IMAGE("${url}", "", 0)`;
       } catch (err) {
