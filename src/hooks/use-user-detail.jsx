@@ -6,26 +6,27 @@ const { useContext } = require("react");
 const useUserDetail = () => {
   const { state: UserState } = useContext(UserContext);
 
- const data = UserState.value.data ?? {};
-const isAdmin = (data.designation === "Owner" || data.full_access) ?? false;
-const userID = data.id ?? "";
-const base_route = data.base_route ?? "";
-const designation = data.designation ?? "";
-const limited_access = data.limited_access ?? false;
-const full_access = data.full_access ?? false;
-const office = data.office ?? "";
-const name = data.name ?? "";
-const email = data.email ?? "";
-const complaint_assigned = data.complaint_assigned ?? false;
-const dms_write_access = data.dms_write_access ?? false;
-const customer_delete_access = data.customer_delete_access ?? false;
-const customer_add_access = data.customer_add_access ?? false
-const nav_items = data.nav_items ?? []
-const branch_expenses_assigned = data.branch_expenses_assigned ?? false
-const branch_expenses_write_access = data.branch_expenses_write_access ?? false
-const branch_expenses_delete_access = data.branch_expenses_delete_access ?? false
-const userDp = UserState.value.data?.dp ?? ""
-const superadmin_cloud_access = data.superadmin_cloud_access ?? false
+  const data = UserState.value.data ?? {};
+  const isAdmin = (data.designation === "Owner" || data.full_access) ?? false;
+  const userID = data.id ?? "";
+  const base_route = data.base_route ?? "";
+  const designation = data.designation ?? "";
+  const limited_access = data.limited_access ?? false;
+  const full_access = data.full_access ?? false;
+  const office = data.office ?? "";
+  const name = data.name ?? "";
+  const email = data.email ?? "";
+  const complaint_assigned = data.complaint_assigned ?? false;
+  const dms_write_access = data.dms_write_access ?? false;
+  const customer_delete_access = data.customer_delete_access ?? false;
+  const customer_add_access = data.customer_add_access ?? false
+  const nav_items = data.nav_items ?? []
+  const branch_expenses_assigned = data.branch_expenses_assigned ?? false
+  const branch_expenses_write_access = data.branch_expenses_write_access ?? false
+  const branch_expenses_delete_access = data.branch_expenses_delete_access ?? false
+  const userDp = data?.dp ?? ""
+  const superadmin_cloud_access = data.superadmin_cloud_access ?? false
+  const customer_full_access = data?.customer_full_access ?? false
 
 
   return {
@@ -47,7 +48,8 @@ const superadmin_cloud_access = data.superadmin_cloud_access ?? false
     branch_expenses_write_access,
     branch_expenses_delete_access,
     userDp,
-    superadmin_cloud_access
+    superadmin_cloud_access,
+    customer_full_access
   };
 };
 

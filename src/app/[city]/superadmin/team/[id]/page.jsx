@@ -62,6 +62,7 @@ export default function Page() {
     pos_assigned: false,
     complaint_assigned: false,
     superadmin_cloud_access: false,
+    customer_full_access : false
   });
   const { toast } = useToast();
 
@@ -105,7 +106,8 @@ export default function Page() {
             full_access: apiData?.full_access,
             pos_assigned: apiData?.pos_assigned,
             complaint_assigned: apiData?.complaint_assigned,
-            superadmin_cloud_access : apiData?.superadmin_cloud_access
+            superadmin_cloud_access : apiData?.superadmin_cloud_access,
+            customer_full_access : apiData?.customer_full_access
           });
           setForm({
             basic_salary: apiData?.basic_salary || 0,
@@ -174,6 +176,7 @@ export default function Page() {
         pos_assigned: checks?.pos_assigned,
         complaint_assigned: checks?.complaint_assigned,
         superadmin_cloud_access : checks?.superadmin_cloud_access,
+        customer_full_access : checks?.customer_full_access,
         active: active
       })
       .then(() => {

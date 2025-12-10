@@ -103,7 +103,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
   const [addPayment, setAddPayment] = useState(false);
   const [editPayment, setEditPayment] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
-  const { userID, isAdmin, limited_access, designation } = useUserDetail();
+  const { userID, isAdmin, limited_access, designation, customer_full_access } = useUserDetail();
   const [editAllowed, setEditAllowed] = useState(false);
   const [zipDownloading, setZipDwonloading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -153,6 +153,8 @@ export default function Machine({ id, onLoading = () => { }, base }) {
         designation === "Customer Relationship Manager (After Sales)" &&
         !limited_access
       ) {
+        setEditAllowed(true);
+      } else if (customer_full_access) {
         setEditAllowed(true);
       } else {
         setEditAllowed(false);
