@@ -174,7 +174,7 @@ export default function Reimbursement({
       moment(item.date).format("YYYY-MM-DD"),
       item.title,
       item?.city,
-      item.amount,
+      Number(item.amount || 0),
       item.description,
       item.submitted_by_name,
     ]);

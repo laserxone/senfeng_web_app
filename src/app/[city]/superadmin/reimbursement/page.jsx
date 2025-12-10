@@ -327,7 +327,7 @@ export default function Page() {
       item?.title,
       item.submitted_by_name,
       item.city,
-      item.amount,
+      Number(item.amount || 0),
       item.description,
     ]);
     exportToExcel(headers, formattedData, "Reimbursement.xlsx");

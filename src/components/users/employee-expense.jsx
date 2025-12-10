@@ -196,7 +196,7 @@ export default function EmployeeBranchExpenses({ base }) {
       const formattedData = finalData.map((item) => [
         moment(item.date).format("YYYY-MM-DD"),
         item.note,
-        item.amount,
+        Number(item.amount || 0),
         item.submitted_by_name,
       ]);
       exportToExcel(headers, formattedData, "Branch-Expenses.xlsx");
