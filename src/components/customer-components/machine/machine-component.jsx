@@ -42,9 +42,12 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import AddPayment from "@/components/addPayment";
+import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table-without-pagination";
+import CurrencyFormatter from "@/components/currency-formatter";
 import { downloadCustomerZip } from "@/components/downloadzip";
 import DropzoneMulti from "@/components/dropzone-multi";
+import EditParts from "@/components/edit-parts";
 import EditMachine from "@/components/editMachine";
 import EditPayment from "@/components/editPayment";
 import InvoicePDF from "@/components/invoicepdf";
@@ -73,7 +76,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { debounce } from "@/lib/debounce";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
@@ -81,15 +83,11 @@ import { pdf } from "@react-pdf/renderer";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
 import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import "pdfjs-dist/build/pdf.worker";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import AddCheque from "./add-cheque";
-import CurrencyFormatter from "@/components/currency-formatter";
-import EditParts from "@/components/edit-parts";
-import ConfimationDialog from "@/components/alert-dialog";
 
 export default function Machine({ id, onLoading = () => { }, base }) {
   const [data, setData] = useState();
