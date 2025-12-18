@@ -11,10 +11,12 @@ import {
 import { Input } from "@/components/ui/input";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Heading } from "./ui/heading";
 import { Label } from "./ui/label";
 import Spinner from "./ui/spinner";
+import PageTable from "./app-table-without-pagination";
+import { ArrowUpDown } from "lucide-react";
 
 export default function PricesComponent() {
 
@@ -31,7 +33,7 @@ export default function PricesComponent() {
         fob: "",
         fob_bottom: "",
         ddp_bottom: "",
-        description : ""
+        description: ""
     };
 
     const [formData, setFormData] = useState(emptyForm);
@@ -87,12 +89,103 @@ export default function PricesComponent() {
 
     };
 
+
+    const columns = useMemo(() => {
+        const baseColumns = [
+            {
+                accessorKey: "model",
+                filterFn: "includesString",
+                header: ({ column }) => (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Model
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                ),
+                cell: ({ row }) => <div>{row.getValue("model")}</div>,
+            },
+
+            {
+                accessorKey: "power",
+                filterFn: "includesString",
+                header: ({ column }) => (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Power
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                ),
+                cell: ({ row }) => <div>{row.getValue("power")}</div>,
+            },
+
+            {
+                accessorKey: "ddp",
+                filterFn: "includesString",
+                header: ({ column }) => (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        DDP
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                ),
+                cell: ({ row }) => <div>{row.getValue("ddp")}</div>,
+            },
+        ]
+
+        const advancedColumns = showAdvanced
+            ? [
+                {
+                    accessorKey: "fob",
+                    header: "FOB",
+                    cell: ({ row }) => <div>{row.getValue("fob")}</div>,
+                },
+                {
+                    accessorKey: "fob_bottom",
+                    header: "FOB Bottom",
+                    cell: ({ row }) => <div>{row.getValue("fob_bottom")}</div>,
+                },
+                {
+                    accessorKey: "ddp_bottom",
+                    header: "DDP Bottom",
+                    cell: ({ row }) => <div>{row.getValue("ddp_bottom")}</div>,
+                },
+                {
+                    accessorKey: "description",
+                    header: "Description",
+                    cell: ({ row }) => <div>{row.getValue("description")}</div>,
+                },
+            ]
+            : []
+
+        const adminColumn = isAdmin
+            ? [
+                {
+                    id: "actions",
+                    header: "Actions",
+                    cell: ({ row }) => (
+                        <Button size="sm" onClick={() => handleEditClick(row.original)}>
+                            Edit
+                        </Button>
+                    ),
+                },
+            ]
+            : []
+
+        return [...baseColumns, ...advancedColumns, ...adminColumn]
+    },[userID, isAdmin, showAdvanced])
+
     return (
         <div className="flex flex-1 flex-col space-y-4">
             <div className="flex justify-between flex-wrap">
                 <Heading title="Pricing" description="Manage machine paricings" />
             </div>
-            <div className="flex justify-between items-center mb-4">
+            {/* <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Price Table</h2>
 
                 <div className="flex space-x-2">
@@ -148,7 +241,30 @@ export default function PricesComponent() {
                         </tr>
                     ))}
                 </tbody>
-            </table>
+            </table> */}
+
+            <div className="flex flex-1 min-h-[600px]">
+                <PageTable
+                    loading={loading}
+                    columns={columns}
+                    data={data}
+                    // onRowClick={(val) => {
+                    //     setImageURL(val);
+                    //     setVisible(true);
+                    // }}
+
+                >
+                    <div className="flex space-x-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowAdvanced((prev) => !prev)}
+                        >
+                            {showAdvanced ? "Hide Extra Columns" : "Show Extra Columns"}
+                        </Button>
+                        {isAdmin && <Button onClick={handleAddClick}>Add New Entry</Button>}
+                    </div>
+                </PageTable>
+            </div>
 
             <Dialog open={openDialog} onOpenChange={setOpenDialog}>
                 <DialogContent>
