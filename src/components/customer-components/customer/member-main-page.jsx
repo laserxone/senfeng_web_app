@@ -371,6 +371,7 @@ export default function MemberMainPage({ onReturn }) {
         <PageTable
           columns={columns}
           loading={loading}
+          download={true}
           data={
             additionalFilter === "duplicate"
               ? filteredData.sort((a, b) =>
@@ -440,6 +441,7 @@ export default function MemberMainPage({ onReturn }) {
                   >
                     Clear
                   </Button>
+                
                 </>
               )}
 

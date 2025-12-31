@@ -1,47 +1,50 @@
 "use client";
 
 import {
-    flexRender,
-    getCoreRowModel,
-    getFilteredRowModel,
-    getSortedRowModel,
-    useReactTable
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  useReactTable
 } from "@tanstack/react-table";
 
 
 
 import { Input } from "@/components/ui/input";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import {
-    useMemo,
-    useState
+  useMemo,
+  useState
 } from "react";
 
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Spinner from "./ui/spinner";
+import { Button } from "./ui/button";
+import exportToExcel from "@/lib/exportToExcel";
 
 const PageTable = ({
   children,
   columns,
   data,
   disableInput = false,
-  onRowClick = ()=>{},
+  onRowClick = () => { },
   loading = false,
+  download = false
 }) => {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const [search, setSearch] = useState("");
- 
+
   const filteredData = useMemo(() => {
     let filtered = data;
 
@@ -65,10 +68,10 @@ const PageTable = ({
     return filtered;
   }, [data, columnFilters, search]);
 
- 
- 
+
+
   const table = useReactTable({
-    data : filteredData,
+    data: filteredData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -85,14 +88,48 @@ const PageTable = ({
       rowSelection,
       globalFilter: search,
     },
-    defaultColumn : {
-      size : 200
+    defaultColumn: {
+      size: 200
     }
     // manualPagination: true,
     // manualFiltering: true
   });
 
   const isMobile = useIsMobile()
+
+ function handleDownload() {
+  try {
+    if (!filteredData || !filteredData.length) return;
+
+    // 1️⃣ Generate headers dynamically from columns
+   const headers = columns
+  .filter((col) => typeof col.accessorKey === "string")
+  .map((col) => col.accessorKey);
+
+    // 2️⃣ Generate rows dynamically based on visible columns
+    const formattedData = filteredData.map((row) =>
+      columns.map((col) => {
+        const value = row[col.accessorKey];
+        // Format dates nicely if needed
+        if (col.type === "date" && value) {
+          return moment(value).format("YYYY-MM-DD");
+        }
+        // Otherwise return value or empty string
+        return value != null ? value : "";
+      })
+    );
+
+    console.log("Headers:", headers);
+    console.log("Formatted Data:", formattedData);
+
+    
+    exportToExcel(headers, formattedData, "Table-Export.xlsx", false, "", false);
+
+  } catch (error) {
+    console.error("Error exporting Excel:", error);
+  }
+}
+
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -107,6 +144,9 @@ const PageTable = ({
             className="w-[60vw] max-w-sm"
           />
         )}
+        {download &&
+          <Button onClick={handleDownload}>Download list</Button>
+          }
         {children}
       </div>
 
@@ -177,9 +217,9 @@ const PageTable = ({
               "No entries found"
             )}
           </div>
-         
+
         </div>
-       
+
       </div>
     </div>
   );
@@ -187,7 +227,7 @@ const PageTable = ({
 
 function customGlobalFilter(row, columnId, filterValue) {
   const search = filterValue.toLowerCase();
- return row
+  return row
     .getAllCells()
     .some((cell) => String(cell.getValue()).toLowerCase().includes(search));
 }

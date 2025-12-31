@@ -8,7 +8,8 @@ const exportToExcel = async (
   data,
   fileName = "data.xlsx",
   formatBuyingPrice = false,
-  baseStorage = ""
+  baseStorage = "",
+  image = false
 ) => {
   if (!data || data.length === 0) {
     throw new Error("No data available to export");
@@ -16,35 +17,43 @@ const exportToExcel = async (
 
   const worksheetData = [headers];
 
-  for (const row of data) {
-    const newRow = [...row];
-    const refImage = row[4];
+  if (image) {
+    for (const row of data) {
+      const newRow = [...row];
+      const refImage = row[4];
 
-    if (refImage) {
-      try {
-        const starsRef = ref(storage, `${baseStorage}/${refImage}`);
-        const url = await getDownloadURL(starsRef);
-        newRow[4] = `=IMAGE("${url}", "", 0)`;
-      } catch (err) {
-        console.error(`Failed to load image for ${refImage}:`, err);
+      if (refImage) {
+        try {
+          const starsRef = ref(storage, `${baseStorage}/${refImage}`);
+          const url = await getDownloadURL(starsRef);
+          newRow[4] = `=IMAGE("${url}", "", 0)`;
+        } catch (err) {
+          console.error(`Failed to load image for ${refImage}:`, err);
+          newRow[4] = "Image not available";
+        }
+      } else {
         newRow[4] = "Image not available";
       }
-    } else {
-      newRow[4] = "Image not available";
-    }
 
-    worksheetData.push(newRow);
+      worksheetData.push(newRow);
+    }
+  } else {
+   for (const row of data) {
+      worksheetData.push(row);
+   }
   }
+
+
 
   const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
   worksheet['!cols'] = [
-  { wch: 20 },
-  { wch: 20 },
-  { wch: 20 },
-  { wch: 20 },
-  { wch: 50 }, // Image column
-];
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 50 }, // Image column
+  ];
 
   if (formatBuyingPrice) {
     for (let rowIndex = 1; rowIndex < worksheetData.length; rowIndex++) {

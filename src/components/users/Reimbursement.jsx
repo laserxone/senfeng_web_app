@@ -178,7 +178,7 @@ export default function Reimbursement({
       item.description,
       item.submitted_by_name,
     ]);
-    exportToExcel(headers, formattedData, "Reimbursement.xlsx");
+    exportToExcel(headers, formattedData, "Reimbursement.xlsx", false, "", false);
   }
 
   useEffect(() => {

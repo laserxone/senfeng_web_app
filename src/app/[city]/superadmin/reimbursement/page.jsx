@@ -330,7 +330,7 @@ export default function Page() {
       Number(item.amount || 0),
       item.description,
     ]);
-    exportToExcel(headers, formattedData, "Reimbursement.xlsx");
+    exportToExcel(headers, formattedData, "Reimbursement.xlsx", false, "", false);
   }
 
   useEffect(() => {

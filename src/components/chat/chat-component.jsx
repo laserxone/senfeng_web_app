@@ -231,6 +231,8 @@ const RenderSelectedContent = ({ visible, onClose, data, type }) => {
           item.img,
         ]),
         "New Order.xlsx",
+        true,
+        "",
         true
       );
     } catch (error) {

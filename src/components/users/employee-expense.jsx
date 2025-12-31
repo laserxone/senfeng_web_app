@@ -200,7 +200,7 @@ export default function EmployeeBranchExpenses({ base }) {
         item.submitted_by_name,
         item.image
       ]);
-      exportToExcel(headers, formattedData, "Branch-Expenses.xlsx");
+      exportToExcel(headers, formattedData, "Branch-Expenses.xlsx", false, "", true);
     } catch (error) {
       console.log("error");
     } finally {
