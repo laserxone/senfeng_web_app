@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Filter, MapPin, MapPinOff } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { CustomerSearch } from "./customer-search";
@@ -35,6 +35,7 @@ import Spinner from "./ui/spinner";
 import { UserSearch } from "./user-search";
 import { MyImg } from "./users/addVisit";
 import FilterSheet from "./users/filterSheet";
+import { OfficeContext } from "@/store/context/OfficeContext";
 
 const formSchema = z.object({
   title: z.string().min(1, "Required"),
@@ -397,6 +398,7 @@ export default function ComplaintSystem({ base }) {
 const AddNewComplaint = ({ visible, onClose, onRefresh, base }) => {
   const [loading, setLoading] = useState(false);
   const {userID} = useUserDetail()
+  const { state: OfficeState } = useContext(OfficeContext);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -416,6 +418,7 @@ const AddNewComplaint = ({ visible, onClose, onRefresh, base }) => {
         `/${userID}/complaint`,
         {
           ...values,
+          managing_office : OfficeState.value.data || "lahore",
           status: "pending",
         }
       );
