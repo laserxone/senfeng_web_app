@@ -473,9 +473,33 @@ const SalaryComponent = ({ onSelectedId }) => {
       return day;
     });
 
-    setAttendanceData([...finalData]);
+  
+
+   
 
     if (condition) {
+
+        finalData = finalData.map((day, index, arr) => {
+      if (day.day === "Sunday") {
+        const prevDay = arr[index - 1]; // Saturday
+        const nextDay = arr[index + 1]; // Monday
+
+        if (
+          prevDay &&
+          nextDay &&
+          prevDay.status === "Absent" &&
+          nextDay.status === "Absent"
+        ) {
+          return {
+            ...day,
+            status: "Absent",
+            sandwich: true,
+          };
+        }
+      }
+      return day;
+    });
+    
       const totalPresent = finalData.filter(
         (item) => item.status === "Present" || item.status === "Late"
       );
@@ -489,6 +513,8 @@ const SalaryComponent = ({ onSelectedId }) => {
         late: lateCount,
       }));
     }
+
+     setAttendanceData([...finalData]);
   };
 
   async function handleSave() {
@@ -1477,7 +1503,7 @@ const Fines = ({ passingData }) => {
         <PageTable
           columns={columns}
           data={data}
-        
+
           tableHeader={tableHeader}
           onRowClick={() => { }}
         />
@@ -1595,7 +1621,7 @@ const Reimbursement = ({ passingData }) => {
           disableInput={true}
           columns={columns}
           data={data}
-        
+
           onRowClick={(val) => {
             setImageURL(val);
             setVisible(true);
@@ -1804,7 +1830,7 @@ const AttendanceRecord = ({ passingData = [] }) => {
           disableInput={true}
           columns={columns}
           data={passingData}
-       
+
           onRowClick={(val) => { }}
         ></PageTable>
       </div>
@@ -1948,7 +1974,7 @@ const TargetRecord = ({ passingData = [] }) => {
           disableInput={true}
           columns={columns}
           data={passingData}
-        
+
           onRowClick={(val, e) => {
             const url = `/${base_route}/member/${val.customer_id
               }/${val.id}`;
