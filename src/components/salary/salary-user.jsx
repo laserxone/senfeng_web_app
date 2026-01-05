@@ -210,16 +210,16 @@ const SalaryComponent = ({ onSelectedId }) => {
               commission: totalCommission,
             }));
           }
-          else if (response.data?.lead_commission?.length) {
-            const totalCommission = response.data.lead_commission.reduce(
-              (sum, item) => sum + Number(item.lead_commission_amount),
-              0
-            );
-            setForm((prevState) => ({
-              ...prevState,
-              commission: totalCommission,
-            }));
-          }
+          // else if (response.data?.lead_commission?.length) {
+          //   const totalCommission = response.data.lead_commission.reduce(
+          //     (sum, item) => sum + Number(item.lead_commission_amount),
+          //     0
+          //   );
+          //   setForm((prevState) => ({
+          //     ...prevState,
+          //     commission: totalCommission,
+          //   }));
+          // }
           if (excludeAbsent) {
             setForm((prev) => ({ ...prev, absents: 0 }));
           }
@@ -557,14 +557,14 @@ const SalaryComponent = ({ onSelectedId }) => {
               });
             });
           }
-          if (data?.lead_commission) {
-            data.lead_commission.map((item) => {
-              axios.put(`/${userID}/commission/${item.id}`, {
-                lead_commission_issued: true,
-                lead_issue_date: new Date()
-              });
-            });
-          }
+          // if (data?.lead_commission) {
+          //   data.lead_commission.map((item) => {
+          //     axios.put(`/${userID}/commission/${item.id}`, {
+          //       lead_commission_issued: true,
+          //       lead_issue_date: new Date()
+          //     });
+          //   });
+          // }
         }
 
       })

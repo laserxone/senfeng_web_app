@@ -126,7 +126,7 @@ const OwnerView = () => {
           is_approved: is_approved,
           approval_date: approval_date,
           commission_amount: commission_amount,
-          lead_commission_amount: lead_commission_amount,
+          // lead_commission_amount: lead_commission_amount,
         });
         await onRefresh();
         setShowManual(false);
@@ -536,7 +536,7 @@ const OtherView = () => {
             commission_issued: true,
             is_requested: true,
             is_approved: true,
-            lead_commission_issued: true,
+            // lead_commission_issued: true,
           });
         } else {
           const formData = {
@@ -764,9 +764,10 @@ const CrmView = () => {
 
   const RenderEachRow = ({ item }) => {
     const renderCommissionStatus = (item) => {
-      if (item.lead_commission_issued === true) {
-        return <span className="text-green-600">Issued</span>;
-      } else if (item.is_approved === true) {
+      // if (item.lead_commission_issued === true) {
+      //   return <span className="text-green-600">Issued</span>;
+      // } else 
+        if (item.is_approved === true) {
         return <span className="text-green-600">Approved</span>;
       } else if (item.is_approved === false) {
         return (
