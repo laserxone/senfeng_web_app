@@ -43,7 +43,8 @@ next-env.d.ts
 *.zip
 .zip*
 
-/scripts
+/scripts/listApiRoutes.js
+/scripts/listAxiosRoutes.js
 
 
 certificates
