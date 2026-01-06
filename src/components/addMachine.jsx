@@ -1,8 +1,8 @@
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Trash } from "lucide-react";
 import moment from "moment";
 import { useContext, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -26,7 +26,6 @@ import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
 import { Textarea } from "./ui/textarea";
-import useUserDetail from "@/hooks/use-user-detail";
 
 const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);

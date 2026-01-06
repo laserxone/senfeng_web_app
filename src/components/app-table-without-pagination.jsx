@@ -101,27 +101,19 @@ const PageTable = ({
   try {
     if (!filteredData || !filteredData.length) return;
 
-    // 1️⃣ Generate headers dynamically from columns
    const headers = columns
   .filter((col) => typeof col.accessorKey === "string")
   .map((col) => col.accessorKey);
 
-    // 2️⃣ Generate rows dynamically based on visible columns
     const formattedData = filteredData.map((row) =>
       columns.map((col) => {
         const value = row[col.accessorKey];
-        // Format dates nicely if needed
         if (col.type === "date" && value) {
           return moment(value).format("YYYY-MM-DD");
         }
-        // Otherwise return value or empty string
         return value != null ? value : "";
       })
     );
-
-    console.log("Headers:", headers);
-    console.log("Formatted Data:", formattedData);
-
     
     exportToExcel(headers, formattedData, "Table-Export.xlsx", false, "", false);
 
@@ -151,12 +143,12 @@ const PageTable = ({
       </div>
 
       <div className={`relative flex flex-1 flex-col ${isMobile && "min-h-[500px]"}`}>
-        <div className="absolute bottom-0 left-0 right-0 top-0 flex overflow-scroll rounded-md border md:overflow-auto">
-          <ScrollArea className="flex-1">
+        <div className="absolute bottom-0 left-0 right-0 top-0 flex overflow-scroll rounded-md border md:overflow-auto custom-scrollbar">
+          {/* <ScrollArea className="flex-1 relative"> */}
             <Table className="relative">
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id} className="bg-background">
+                  <TableRow key={headerGroup.id}  className="sticky top-0 z-20 bg-background">
                     {headerGroup.headers.map((header) => (
                       <TableHead style={{ width: header.getSize() }} key={header.id}>
                         {header.isPlaceholder
@@ -201,8 +193,8 @@ const PageTable = ({
                 )}
               </TableBody>
             </Table>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+            {/* <ScrollBar orientation="horizontal" />
+          </ScrollArea> */}
         </div>
       </div>
 
