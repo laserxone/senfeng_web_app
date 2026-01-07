@@ -864,7 +864,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
                   setReadyForDelivery(data?.machine);
                 }}
               >
-                Ready For Delivery
+                Apply For Delivery
               </Button>
             }
 

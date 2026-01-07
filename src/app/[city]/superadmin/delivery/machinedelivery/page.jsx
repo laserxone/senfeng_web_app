@@ -24,7 +24,6 @@ async function fetchData(){
     if(!userID) return
     setLoading(true)
     const response = await axios.get(`/${userID}/delivery`)
-    console.log(response.data)
     setData(response.data)
     setLoading(false)
 }

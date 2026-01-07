@@ -53,7 +53,7 @@ export async function GET(req) {
             };
         });
 
-        const pendingMachines = normalizedSales.filter((sale) => sale.pending > 0);
+        const pendingMachines = normalizedSales.filter((sale) => sale.pending > 0).filter((sale) => sale.total_payment_received != 0)
 
         const summary = pendingMachines.reduce(
             (acc, sale) => {

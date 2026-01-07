@@ -230,18 +230,23 @@ export default function Page() {
                         <CardTitle className="text-sm font-medium">
                             Total Payment Received
                         </CardTitle>
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            className="h-4 w-4 text-muted-foreground"
-                        >
-                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                        </svg>
+                        {commulative?.received ?
+                            <div>
+                                {`${(Number(commulative.received) * 100 / Number(commulative.total)).toFixed(0)}%`} </div>
+                            :
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                className="h-4 w-4 text-muted-foreground"
+                            >
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                            </svg>
+                        }
                     </CardHeader>
                     <CardContent>
                         {commloading ? (
@@ -252,6 +257,7 @@ export default function Page() {
                             </div>
                         )}
 
+
                     </CardContent>
                 </Card>
 
@@ -260,18 +266,23 @@ export default function Page() {
                         <CardTitle className="text-sm font-medium">
                             Total Payment Pending
                         </CardTitle>
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            className="h-4 w-4 text-muted-foreground"
-                        >
-                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                        </svg>
+                       {commulative?.pending ?
+                            <div>
+                                {`${(Number(commulative.pending) * 100 / Number(commulative.total)).toFixed(0)}%`} </div>
+                            :
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                className="h-4 w-4 text-muted-foreground"
+                            >
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                            </svg>
+                        }
                     </CardHeader>
                     <CardContent>
                         {commloading ? (
@@ -281,6 +292,8 @@ export default function Page() {
                                 <CurrencyFormatter amount={commulative?.pending} />
                             </div>
                         )}
+
+                       
                     </CardContent>
                 </Card>
             </div>
@@ -289,77 +302,87 @@ export default function Page() {
 
 
             <div className="flex flex-row justify-between flex-wrap gap-4">
-                <div className="w-full sm:w-auto sm:min-w-[350px] border rounded-md py-2 px-4 bg-white">
-                    {filterDate?.start &&
-                        <div className="flex gap-2 items-center flex-wrap">
-                            <p className="text-xs">
-                                From
-                            </p>
-                            <p className="font-bold text-blue-500 text-md">{moment(filterDate.start).format("YYYY-MM-DD")}</p>
-                            <p className="text-xs">
-                                to
-                            </p>
-                            
-                            <p className="font-bold text-blue-500 text-md">
-                                {moment(filterDate.end).format("YYYY-MM-DD")}
-                            </p>
-                        </div>
-                    }
-                    <div className="text-sm">
-                        Total Bill Generated
-                    </div>
-                    <div className="font-bold">
-                        <CurrencyFormatter amount={data?.total} />
-                    </div>
-                </div>
+                <Card className="w-full sm:w-auto sm:min-w-[350px] ">
+                    <CardContent className="p-0 px-4 py-2">
+                        {filterDate?.start &&
+                            <div className="flex gap-2 items-center flex-wrap">
+                                <p className="text-xs">
+                                    From
+                                </p>
+                                <p className="font-bold text-blue-500 text-md">{moment(filterDate.start).format("YYYY-MM-DD")}</p>
+                                <p className="text-xs">
+                                    to
+                                </p>
 
-                <div className="w-full sm:w-auto sm:min-w-[350px] border rounded-md py-2 px-4 bg-white">
-                    {filterDate?.start &&
-                        <div className="flex gap-2 items-center flex-wrap">
-                            <p className="text-xs">
-                                From
-                            </p>
-                            <p className="font-bold text-blue-500 text-md">{moment(filterDate.start).format("YYYY-MM-DD")}</p>
-                            <p className="text-xs">
-                                to
-                            </p>
-                            
-                            <p className="font-bold text-blue-500 text-md">
-                                {moment(filterDate.end).format("YYYY-MM-DD")}
-                            </p>
+                                <p className="font-bold text-blue-500 text-md">
+                                    {moment(filterDate.end).format("YYYY-MM-DD")}
+                                </p>
+                            </div>
+                        }
+                        <div className="text-sm">
+                            Total Bill Generated
                         </div>
-                    }
-                    <div className="text-sm">
-                        Total Payment Received
-                    </div>
-                    <div className="font-bold text-green-400">
-                        <CurrencyFormatter amount={data?.received} />
-                    </div>
-                </div>
+                        <div className="font-bold">
+                            <CurrencyFormatter amount={data?.total} />
+                        </div>
+                    </CardContent>
 
-                <div className="w-full sm:w-auto sm:min-w-[350px] border rounded-md py-2 px-4 bg-white">
-                     {filterDate?.start &&
-                        <div className="flex gap-2 items-center flex-wrap">
-                            <p className="text-xs">
-                                From
-                            </p>
-                            <p className="font-bold text-blue-500 text-md">{moment(filterDate.start).format("YYYY-MM-DD")}</p>
-                            <p className="text-xs">
-                                to
-                            </p>
-                            
-                            <p className="font-bold text-blue-500 text-md">
-                                {moment(filterDate.end).format("YYYY-MM-DD")}
-                            </p>
+                </Card>
+
+                <Card className="w-full sm:w-auto sm:min-w-[350px]">
+                    <CardContent className="p-0 px-4 py-2">
+                        {filterDate?.start &&
+                            <div className="flex gap-2 items-center flex-wrap">
+                                <p className="text-xs">
+                                    From
+                                </p>
+                                <p className="font-bold text-blue-500 text-md">{moment(filterDate.start).format("YYYY-MM-DD")}</p>
+                                <p className="text-xs">
+                                    to
+                                </p>
+
+                                <p className="font-bold text-blue-500 text-md">
+                                    {moment(filterDate.end).format("YYYY-MM-DD")}
+                                </p>
+                            </div>
+                        }
+                        <div className="text-sm">
+                            Total Payment Received
                         </div>
-                    }
-                    <div className="text-sm">
-                        Total Payment Pending
-                    </div>
-                    <div className="font-bold text-red-400">
-                        <CurrencyFormatter amount={data?.pending} />
-                    </div>
-                </div>
+                        <div className="font-bold text-green-400">
+                            <CurrencyFormatter amount={data?.received} />
+                        </div>
+
+                    </CardContent>
+
+                </Card>
+
+                <Card className="w-full sm:w-auto sm:min-w-[350px]">
+                    <CardContent className="p-0 px-4 py-2">
+                        {filterDate?.start &&
+                            <div className="flex gap-2 items-center flex-wrap">
+                                <p className="text-xs">
+                                    From
+                                </p>
+                                <p className="font-bold text-blue-500 text-md">{moment(filterDate.start).format("YYYY-MM-DD")}</p>
+                                <p className="text-xs">
+                                    to
+                                </p>
+
+                                <p className="font-bold text-blue-500 text-md">
+                                    {moment(filterDate.end).format("YYYY-MM-DD")}
+                                </p>
+                            </div>
+                        }
+                        <div className="text-sm">
+                            Total Payment Pending
+                        </div>
+                        <div className="font-bold text-red-400">
+                            <CurrencyFormatter amount={data?.pending} />
+                        </div>
+                    </CardContent>
+
+                </Card>
 
             </div>
 

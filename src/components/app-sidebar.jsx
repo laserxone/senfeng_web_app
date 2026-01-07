@@ -51,8 +51,10 @@ import {
 import { ChevronRight, ChevronsUpDown, CreditCard, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { ScrollArea } from "./ui/scroll-area";
+import NotificationBadge from "./NotificationBadge";
+import axios from "@/lib/axios";
 
 export const company = {
   name: "SENFENG",
@@ -71,6 +73,8 @@ export default function AppSidebar({ office }) {
   const { toggleSidebar } = useSidebar();
   const isMobile = useIsMobile();
   const { userID, isAdmin, name, email, base_route, nav_items } = useUserDetail()
+  const [pendingMachine, setPendingMachine] = useState(0)
+  
 
   useEffect(() => {
     checkSession().then((val) => {
@@ -78,18 +82,28 @@ export default function AppSidebar({ office }) {
     });
   }, [office]);
 
+  async function fetchPendingMachines() {
+   
+    axios.get(`/${userID}/delivery`).then((response) => {
+      setPendingMachine(response.data?.length)
+    })
+  }
+
   async function updateData(val) {
     if (val?.user) {
       if (office) {
         setUserOffice(`/${office}`);
         setOffice(office);
       }
+
       setUser(val.user);
+     
     }
   }
 
   useEffect(() => {
     if (userID) {
+      fetchPendingMachines()
       const q = query(
         collection(db, "Notification"),
         where("sendTo", "==", userID),
@@ -163,7 +177,7 @@ export default function AppSidebar({ office }) {
                                     href={`/${base_route}${subItem.url}`}
                                   >
                                     <span className="text-[14px]">
-                                      {subItem.title}
+                                      {subItem.title} {subItem.title === "Machine Delivery" && pendingMachine > 0 && <NotificationBadge count={pendingMachine} className="ml-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm font-bold shadow-sm" />}
                                     </span>
                                   </Link>
                                 </SidebarMenuSubButton>
@@ -256,23 +270,23 @@ export default function AppSidebar({ office }) {
                 <DropdownMenuSeparator />
 
                 <DropdownMenuGroup>
-                   {isAdmin && (
+                  {isAdmin && (
                     <>
-                    <Link
-                      href={`${pathname.includes("karachi")
+                      <Link
+                        href={`${pathname.includes("karachi")
                           ? pathname.replace("karachi", "lahore")
                           : pathname.replace("lahore", "karachi")
-                        }`}
-                    >
-                      <DropdownMenuItem>
-                        <CreditCard />
-                        Switch to{" "}
-                        {pathname.includes("karachi")
-                          ? "lahore"
-                          : "karachi"}{" "}
-                        Dashboard
-                      </DropdownMenuItem>
-                    </Link>
+                          }`}
+                      >
+                        <DropdownMenuItem>
+                          <CreditCard />
+                          Switch to{" "}
+                          {pathname.includes("karachi")
+                            ? "lahore"
+                            : "karachi"}{" "}
+                          Dashboard
+                        </DropdownMenuItem>
+                      </Link>
                     </>
                   )}
                   <Link href={`/${base_route}/profile`}>
@@ -282,8 +296,8 @@ export default function AppSidebar({ office }) {
                     </DropdownMenuItem>
                   </Link>
 
-                
-                 
+
+
                 </DropdownMenuGroup>
                 <DropdownMenuItem
                   onClick={() => {
