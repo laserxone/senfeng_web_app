@@ -145,6 +145,15 @@ export const ownerNavItems = [
     isActive: false,
     items: [] // No child items
   },
+
+   {
+    title: 'Finance',
+    url: '/finance',
+    icon: 'finance',
+    shortcut: ['f', 'i', 'n', 'a'],
+    isActive: false,
+    items: [] // No child items
+  },
   // {
   //   title: 'Inventory',
   //   url: '/inventory',

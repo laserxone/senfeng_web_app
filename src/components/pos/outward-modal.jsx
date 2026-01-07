@@ -18,6 +18,7 @@ import Spinner from "../ui/spinner";
 import { Switch } from "../ui/switch";
 import InvoicePDFGatepass from "./invoice-pdf-gatepass";
 import StockSearch from "./stock-search";
+import { useToast } from "@/hooks/use-toast";
 
 const emptyItem = {
     name: "",
@@ -28,12 +29,12 @@ const emptyItem = {
     inventory_id: null,
 };
 
-const InwardModal = ({ visible, onClose, data = [], onRefresh }) => {
+const OutwardModal = ({ visible, onClose, data = [], onRefresh }) => {
 
     const [items, setItems] = useState([emptyItem]);
     const [loading, setLoading] = useState(false)
     const { userID } = useUserDetail()
-
+    const { toast } = useToast();
     const stock = data.length > 0 ? data.slice(0, -2) : [];
 
     const handleSubmit = async (e) => {
@@ -49,33 +50,45 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }) => {
             items: items,
         };
 
-        try {
-            const response = await axios.post(`/${userID}/pos/inward`, formData)
-            const blob = await pdf(
-                <InvoicePDFGatepass
-                    from={formData.from}
-                    vehicle_no={formData.vehicle_no}
-                    driver_name={formData.driver_name}
-                    received_by={formData.received_by}
-                    manager={formData.manager}
-                    gatepass={response.data.id}
-                    gatepassType={"Inward Gate Pass"}
-                    items={items}
-                />
-            ).toBlob();
+        axios.post(`/${userID}/pos/outward`, formData).then(async (response) => {
+            if (response.data?.newQty) {
+                setItems((prevState) =>
+                    prevState.map((item) =>
+                        Number(item.inventory_id) === Number(response.data.inventory_id)
+                            ? { ...item, available_qty: response.data.newQty }
+                            : item
+                    )
+                );
+                toast({
+                    title: "Error",
+                    description: response.data?.message,
+                    variant: "destructive",
+                })
+            } else {
+                const blob = await pdf(
+                    <InvoicePDFGatepass
+                        from={formData.from}
+                        vehicle_no={formData.vehicle_no}
+                        driver_name={formData.driver_name}
+                        received_by={formData.received_by}
+                        manager={formData.manager}
+                        gatepass={response.data.id}
+                        gatepassType={"Outward Gate Pass"}
+                        items={items}
+                    />
+                ).toBlob();
 
-            const url = URL.createObjectURL(blob);
-            window.open(url, "_blank");
-            setTimeout(() => URL.revokeObjectURL(url), 600000);
-        } catch (e) {
-            console.log(e)
-        }
+                const url = URL.createObjectURL(blob);
+                window.open(url, "_blank");
+                setTimeout(() => URL.revokeObjectURL(url), 600000);
+                onClose(false)
+                onRefresh()
+            }
 
-        setLoading(false)
-        onRefresh()
-        onClose(false)
+        }).finally(() => {
 
-
+            setLoading(false)
+        })
 
 
     };
@@ -115,11 +128,11 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }) => {
         <Dialog open={visible} onOpenChange={onClose}>
             <DialogContent className="p-4 max-w-4xl">
                 <DialogHeader>
-                    <DialogTitle>Inward Gatepass</DialogTitle>
+                    <DialogTitle>Outward Gatepass</DialogTitle>
                 </DialogHeader>
                 <ScrollArea className="max-h-[90vh] w-full pr-2">
                     <form onSubmit={handleSubmit} className="space-y-4 ">
-                        {/* Top Fields */}
+
                         <div className="grid grid-cols-2 gap-4 px-2">
                             <div>
                                 <label className="text-sm font-medium">From</label>
@@ -185,7 +198,8 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }) => {
                                                             ...copy[index],
                                                             inventory_id: Number(val.id),
                                                             name: val.name,
-                                                            unit: val.unit
+                                                            unit: val.unit,
+                                                            available_qty: Number(val.qty)
                                                         };
                                                         setItems(copy);
                                                     }}
@@ -204,17 +218,16 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }) => {
                                         }
 
                                         <div>
-                                            <Label>Quantity</Label>
+                                            <Label>Quantity <p className="text-blue-500 inline-flex">{item?.available_qty && `${item?.available_qty} available`}</p></Label>
                                             <Input
                                                 type="number"
                                                 value={item.qty ? item.qty : ""}
                                                 onChange={(e) => {
-                                                    if (!isNaN(Number(e.target.value)))
-                                                        handleItemChange(
-                                                            index,
-                                                            "qty",
-                                                            Number(e.target.value)
-                                                        );
+                                                    const value = Number(e.target.value);
+                                                    if (isNaN(value)) return;
+                                                    if (item?.available_qty && value > item.available_qty) return
+                                                    handleItemChange(index, "qty", value);
+
                                                 }}
                                             />
                                         </div>
@@ -237,7 +250,6 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }) => {
                                             />
                                         </div>
                                     </div>
-
                                 </div>
                             ))}
                         </div>
@@ -258,6 +270,4 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }) => {
 
 
 
-
-
-export default InwardModal;
+export default OutwardModal;

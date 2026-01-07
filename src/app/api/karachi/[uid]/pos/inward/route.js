@@ -4,31 +4,35 @@ import { NextResponse } from "next/server"
 
 export async function POST(req, { params }) {
     const { from, vehicle_no, driver_name, manager, received_by, items } = await req.json();
-    const {uid} = await params
+    const { uid } = await params
 
-    console.log(uid)
 
     try {
         // Insert gatepass
-        await pool.query(
-            `INSERT INTO inward_gatepass_karachi (from_by, vehicle_no, driver_name, manager, received_by, user_id)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-            [from, vehicle_no, driver_name, manager, received_by, uid]
+     const gatepassid =   await pool.query(
+            `INSERT INTO inward_gatepass_karachi (from_by, vehicle_no, driver_name, manager, received_by, user_id, items)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+            [from, vehicle_no, driver_name, manager, received_by, uid, JSON.stringify(items)]
         );
 
         // Update inventory
         if (items && items.length > 0) {
             for (const item of items) {
-                if (item.existing) {
+                if (item.inventory_id) {
                     await pool.query(
                         `UPDATE inventory_karachi SET qty = qty + $1 WHERE id = $2`,
-                        [item.quantity, item.existing]
+                        [item.qty, item.inventory_id]
                     );
+                } else {
+                    await pool.query(
+                        `INSERT INTO inventory_karachi (name, qty, unit, remarks) VALUES ($1, $2, $3, $4)`, 
+                        [item.name, item.qty, item.unit, item.remarks]
+                    )
                 }
             }
         }
 
-        return NextResponse.json({ message: "Done" }, { status: 200 });
+        return NextResponse.json({ id: gatepassid.rows[0].id }, { status: 200 });
     } catch (error) {
         return NextResponse.json(
             { message: error?.message || "Error saving data" },

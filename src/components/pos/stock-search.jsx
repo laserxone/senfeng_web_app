@@ -60,8 +60,8 @@ export default function StockSearch({
                                         key={item.value}
                                         value={item.label}
                                         onSelect={() => {
-                                            onReturn(Number(item.value));
-                                            onReturnData(item);
+                                            onReturn?.(Number(item.value));
+                                            onReturnData?.(item);
                                             setOpen(false);
                                         }}
                                     >

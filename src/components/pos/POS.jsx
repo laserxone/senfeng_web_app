@@ -31,6 +31,7 @@ import POSModal from './pos-modal';
 import SearchResultModal from './search-result-modal';
 import ViewableInvoice from './viewable-invoice';
 import InwardModal from './inward-modal';
+import OutwardModal from './outward-modal';
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -829,6 +830,11 @@ export default function POS() {
                     designation={designation} />
 
                 <InwardModal visible={inwardModal} onClose={setInwardModal} data={stock} onRefresh={async () => {
+                    setLoading(true)
+                    await fetchData()
+                }} />
+
+                   <OutwardModal visible={outwardModal} onClose={setOutwardModal} data={stock} onRefresh={async () => {
                     setLoading(true)
                     await fetchData()
                 }} />
