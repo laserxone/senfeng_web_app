@@ -114,6 +114,23 @@ export default function Page() {
         },
 
         {
+            accessorKey: "sell_by_name",
+            filterFn: "includesString",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Sale Person
+                        <ArrowUpDown />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => <div>{row.getValue("sell_by_name")}</div>,
+        },
+
+        {
             accessorKey: "machine_price",
             filterFn: "includesString",
             header: ({ column }) => {
@@ -166,13 +183,14 @@ export default function Page() {
     ];
 
 
-    async function fetchData(startDate, endDate) {
+    async function fetchData(startDate, endDate, user=null) {
 
         setLoading(true)
 
-        axios.get(`/${userID}/finance?start_date=${startDate}&end_date=${endDate}`)
+        axios.get(`/${userID}/finance?start_date=${startDate}&end_date=${endDate}&user=${user || ""}`)
             .then((response) => {
                 setTableData(response.data)
+                console.log(response.data)
             }).finally(() => {
                 setLoading(false)
             })
@@ -408,11 +426,11 @@ export default function Page() {
             </PageTable>
 
             <FilterSheet
-                user_disable={true}
+                user_disable={false}
                 visible={filterVisible}
                 onClose={setFilterVisible}
                 onReturn={async (val) => {
-                    await fetchData(val.start, val.end);
+                    await fetchData(val.start, val.end, val.user);
                 }}
             />
 

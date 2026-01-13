@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { branchNavItem, complaintItem, dealerNavItems, employeeNavItems, myCloud, ownerNavItems, POSNavItem, Prices, StoreNavItem, Tools } from "@/constants/data";
+import { branchNavItem, complaintItem, dealerNavItems, employeeNavItems, myCloud, ownerNavItems, POSNavItem, Prices, RepairAndMaintenance, StoreNavItem, Tools } from "@/constants/data";
 import admin from "@/lib/firebaseAdmin";
 import { NextResponse } from "next/server";
 
@@ -48,6 +48,7 @@ export async function GET(req, { params }) {
             nav_items.push(POSNavItem)
             nav_items.push(Tools)
             nav_items.push(Prices)
+            nav_items.push(RepairAndMaintenance)
             base_route = `${city ? city : branchOffice}/superadmin`
         } else {
             if (user.designation == 'Store Manager') {

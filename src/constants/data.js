@@ -467,6 +467,15 @@ export const Prices =  {
     items: [] 
   }
 
+  export const RepairAndMaintenance =  {
+    title: 'Repair and Maintenance',
+    url: '/repairandmaintenance',
+    icon: 'settings',
+    shortcut: ['r', 'a', 'm'],
+    isActive: false,
+    items: [] 
+  }
+
 export const PakCities = [
   {
     "country": "PK",

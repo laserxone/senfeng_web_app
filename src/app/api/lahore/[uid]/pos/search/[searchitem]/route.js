@@ -1,25 +1,22 @@
-import pool from '@/config/db';
-import { NextResponse } from 'next/server';
+import pool from "@/config/db";
+import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
   const { searchitem } = await params;
-  const searchParams = req.nextUrl.searchParams
-  const pending = searchParams.get('pending')
-  const all = searchParams.get('all')
- 
+  const searchParams = req.nextUrl.searchParams;
+  const pending = searchParams.get("pending");
+  const all = searchParams.get("all");
 
   try {
-
-    if(all){
-      console.log(1)
-       const query = `
-      SELECT * FROM savedinvoices`
+    if (all) {
+      const query = `
+      SELECT * FROM savedinvoices`;
       const result = await pool.query(query);
       return NextResponse.json(result.rows, { status: 200 });
     }
 
-    if (searchitem !== 'null') {
-      console.log(2)
+    if (searchitem !== "null") {
+      console.log(2);
       const query = `
         SELECT * FROM savedinvoices 
   WHERE 
@@ -36,16 +33,19 @@ export async function GET(req, { params }) {
       const values = [`%${searchitem}%`];
       const result = await pool.query(query, values);
       return NextResponse.json(result.rows, { status: 200 });
-    } else if(pending) {
-      console.log(3)
+    } else if (pending) {
       const query = `
-      SELECT * FROM savedinvoices
-      WHERE payment = FALSE`
+  SELECT 
+    si.*, 
+    u.name AS owner_name
+  FROM savedinvoices si
+  LEFT JOIN customer c ON c.id = si.customer_id
+  LEFT JOIN users u ON u.id = c.ownership
+  WHERE si.payment = FALSE
+`;
       const result = await pool.query(query);
       return NextResponse.json(result.rows, { status: 200 });
     }
-
-
   } catch (error) {
     console.log(error);
     return NextResponse.json({ message: "Processing error" }, { status: 500 });

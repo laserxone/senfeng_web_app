@@ -98,6 +98,22 @@ const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh, onRetu
     },
 
     {
+      accessorKey: "owner_name",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Sale Person
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("owner_name")}</div>,
+    },
+
+    {
       accessorKey: "total",
       header: ({ column }) => {
         return (
