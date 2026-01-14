@@ -570,7 +570,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
                   )}
                 />
 
-                <Button className="w-full" type="submit">
+                <Button className="w-full" type="submit" disabled={loading}>
                   {loading && <Spinner />} Submit
                 </Button>
               </form>

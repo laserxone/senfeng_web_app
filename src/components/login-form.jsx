@@ -163,7 +163,7 @@ export function LoginForm({ className, ...props }) {
                     </div>
                   </div>
                 </div>
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Spinner />}
                   Login
                 </Button>

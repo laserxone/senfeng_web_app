@@ -327,7 +327,7 @@ const EditPayment = ({
 
                   {/* Submit Button */}
                   <Button
-                    disabled={error?.errorMessage || checking}
+                    disabled={error?.errorMessage || checking || loading}
                     className="w-full"
                     type="submit"
                   >

@@ -24,7 +24,7 @@ const ConfimationDialog = ({ title, description, onPressYes,onPressCancel, open,
         {children}
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onPressCancel}>Cancel</AlertDialogCancel>
-          <AlertDialogAction disabled={!valid} onClick={() => onPressYes()}>
+          <AlertDialogAction disabled={!valid || loading} onClick={() => onPressYes()}>
            {loading && <Spinner />} Yes
           </AlertDialogAction>
         </AlertDialogFooter>

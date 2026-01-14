@@ -606,7 +606,7 @@ const AddTask = ({ visible, onClose, onRefresh, assigned_by }) => {
                 />
               )}
 
-              <Button className="w-full" type="submit">
+              <Button disabled={loading} className="w-full" type="submit">
                 {loading && <Spinner />} Submit
               </Button>
             </form>

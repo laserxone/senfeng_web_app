@@ -348,6 +348,7 @@ export default function InventoryDetail({ booking_id }) {
                   setLoading(false);
                 }, [1000]);
               }}
+              disabled={loading}
             >
               {loading && <Spinner />}
               Submit

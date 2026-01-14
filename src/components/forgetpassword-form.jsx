@@ -71,7 +71,7 @@ export function ForgetPasswordForm({ className, ...props }) {
                   />
                 </div>
 
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Spinner />}
                   Reset
                 </Button>

@@ -288,7 +288,7 @@ export default function VisitTab({
                   )}
                 />
 
-                <Button disabled={!selectedCustomer?.id} type="submit" className="mt-2 w-full">
+                <Button disabled={!selectedCustomer?.id || loading} type="submit" className="mt-2 w-full">
                   {loading && <Spinner />} Post
                 </Button>
               </form>

@@ -12,6 +12,7 @@ import axios from "@/lib/axios";
 import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
+import RepairAndMaintenance from "@/components/users/repair-and-maintenance";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -19,6 +20,7 @@ export default function Page() {
   const [reimbursementData, setReimbursementData] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
   const [activeTab, setActiveTab] = useState("attendance");
+  const [repairData, setRepairData] = useState([])
 
   useEffect(() => {
     if (userID) {
@@ -27,8 +29,27 @@ export default function Page() {
       fetchData();
       fetchReimbursementData(startDate, endDate);
       fetchAttendanceData(startDate, endDate);
+      fetchRepairingData()
     }
   }, [userID]);
+
+  async function fetchRepairingData() {
+
+    return new Promise((resolve, reject) => {
+      axios
+        .get(
+          `/${userID}/lab?user=${userID}`
+        )
+        .then((response) => {
+          setRepairData(response.data);
+          resolve(true);
+        })
+        .catch((e) => {
+          console.log(e);
+          reject(null);
+        });
+    });
+  }
 
   async function fetchReimbursementData(startDate, endDate) {
     return new Promise((resolve, reject) => {
@@ -119,14 +140,16 @@ export default function Page() {
     );
   }, [attendanceData]);
 
-  const RenderRepair = useCallback(() => {
+  const RenderRepair = useCallback(() => (
     <Card className="flex flex-1">
       <CardContent className="pt-2 flex flex-1">
-       
+        <RepairAndMaintenance data={repairData} onRefresh={async () => {
+          await fetchRepairingData()
+        }} />
       </CardContent>
     </Card>
 
-  }, [])
+  ), [repairData])
 
   return (
     <div className="flex flex-1 gap-5">
@@ -151,7 +174,6 @@ export default function Page() {
             <TabsTrigger value="repair">Repairing And Maintenance</TabsTrigger>
             <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
-
             <TabsTrigger value="issued">Returnable</TabsTrigger>
             <TabsTrigger value="fines">Fines</TabsTrigger>
           </TabsList>

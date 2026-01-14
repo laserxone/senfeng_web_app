@@ -365,7 +365,7 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, base }) => {
                     )}
                   />
 
-                  <Button className="w-full" type="submit">
+                  <Button className="w-full" type="submit" disabled={loading}>
                     {loading && <Spinner />} Submit
                   </Button>
                 </form>

@@ -55,7 +55,6 @@ export async function GET(req, { params }) {
                 base_route = `${branchOffice}/store`
                 nav_items = [...StoreNavItem]
                 nav_items.push(POSNavItem)
-                nav_items.push(RepairAndMaintenance)
             } else if (user.designation === 'Dealer') {
                 nav_items = [...dealerNavItems]
                 base_route = `${branchOffice}/dealer`
@@ -70,6 +69,9 @@ export async function GET(req, { params }) {
             }
             if (user.complaint_assigned) {
                 nav_items.push(complaintItem)
+            }
+            if (user.repairing_and_maintenance) {
+                nav_items.push(RepairAndMaintenance)
             }
             if (user.superadmin_cloud_access) {
                 nav_items.push(myCloud)

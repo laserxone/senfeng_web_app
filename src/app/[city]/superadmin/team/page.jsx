@@ -504,7 +504,7 @@ const AddUserDialog = ({
                 )}
               />
 
-              <Button className="w-full" type="submit">
+              <Button disabled={dataLoading} className="w-full" type="submit">
                 {dataLoading && <Spinner />} Save
               </Button>
             </form>

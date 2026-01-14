@@ -42,6 +42,11 @@ export async function POST(req) {
 }
 
 export async function GET(req, { params }) {
+
+  const searchParams = req.nextUrl.searchParams;
+  const user = searchParams.get("user");
+
+  let queryParams = []
   try {
     let query = `
    SELECT
@@ -52,10 +57,15 @@ export async function GET(req, { params }) {
 FROM lab_tasks lt
 LEFT JOIN users u ON u.id = lt.user_id
 LEFT JOIN customer c ON c.id = lt.customer_id
-LEFT JOIN users o ON o.id = c.ownership;
+LEFT JOIN users o ON o.id = c.ownership
   `;
 
-    const result = await pool.query(query);
+  if(user){
+    query += "WHERE u.id = $1"
+    queryParams.push(user)
+  }
+
+    const result = await pool.query(query, queryParams);
 
     return NextResponse.json(result.rows, { status: 200 });
   } catch (error) {

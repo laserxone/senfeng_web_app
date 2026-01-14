@@ -62,7 +62,8 @@ export default function Page() {
     pos_assigned: false,
     complaint_assigned: false,
     superadmin_cloud_access: false,
-    customer_full_access : false
+    customer_full_access : false,
+    repairing_and_maintenance : false
   });
   const { toast } = useToast();
 
@@ -107,7 +108,8 @@ export default function Page() {
             pos_assigned: apiData?.pos_assigned,
             complaint_assigned: apiData?.complaint_assigned,
             superadmin_cloud_access : apiData?.superadmin_cloud_access,
-            customer_full_access : apiData?.customer_full_access
+            customer_full_access : apiData?.customer_full_access,
+             repairing_and_maintenance : apiData?.repairing_and_maintenance
           });
           setForm({
             basic_salary: apiData?.basic_salary || 0,
@@ -177,6 +179,7 @@ export default function Page() {
         complaint_assigned: checks?.complaint_assigned,
         superadmin_cloud_access : checks?.superadmin_cloud_access,
         customer_full_access : checks?.customer_full_access,
+        repairing_and_maintenance : checks?.repairing_and_maintenance,
         active: active
       })
       .then(() => {

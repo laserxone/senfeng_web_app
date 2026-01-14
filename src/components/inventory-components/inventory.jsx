@@ -208,7 +208,7 @@ const AddInventory = ({ visible, onClose, onRefresh }) => {
                     )}
                   />
 
-                  <Button className="w-full" type="submit">
+                  <Button className="w-full" type="submit" disabled={loading}>
                     {loading && <Spinner />} Submit
                   </Button>
                 </form>

@@ -160,7 +160,7 @@ export default function Page() {
                       </div>
                     </div>
 
-                    <Button onClick={handlePasswordCreation} disabled={!validation[0] || !validation[1] || !matched} type="submit" className="w-full">
+                    <Button onClick={handlePasswordCreation} disabled={!validation[0] || !validation[1] || !matched || loading} type="submit" className="w-full">
                       {loading && <Spinner />}
                       Proceed
                     </Button>
