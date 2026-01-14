@@ -1,5 +1,4 @@
 import pool from "@/config/db";
-import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {
@@ -18,7 +17,7 @@ export async function POST(req) {
     const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
 
     const query = `
-        INSERT INTO lab_tasks_karachi (${fields.join(", ")})
+        INSERT INTO lab_tasks (${fields.join(", ")})
         VALUES (${placeholders})
         RETURNING *
     `;
@@ -42,6 +41,12 @@ export async function POST(req) {
 }
 
 export async function GET(req, { params }) {
+
+  const searchParams = req.nextUrl.searchParams;
+  const user = searchParams.get("user");
+  const office = "lahore"
+
+  let queryParams = []
   try {
     let query = `
    SELECT
@@ -49,13 +54,19 @@ export async function GET(req, { params }) {
     u.name AS user_name,
     c.name AS customer_name,
     o.name AS owner_name
-FROM lab_tasks_karachi lt
+FROM lab_tasks lt
 LEFT JOIN users u ON u.id = lt.user_id
 LEFT JOIN customer c ON c.id = lt.customer_id
-LEFT JOIN users o ON o.id = c.ownership;
+LEFT JOIN users o ON o.id = c.ownership
+WHERE lt.managing_office = 'karachi'
   `;
 
-    const result = await pool.query(query);
+  if(user){
+    query += " AND WHERE u.id = $1"
+    queryParams.push(user)
+  }
+
+    const result = await pool.query(query, queryParams);
 
     return NextResponse.json(result.rows, { status: 200 });
   } catch (error) {

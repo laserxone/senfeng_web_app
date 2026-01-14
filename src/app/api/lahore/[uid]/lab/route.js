@@ -1,5 +1,4 @@
 import pool from "@/config/db";
-import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {
@@ -45,6 +44,7 @@ export async function GET(req, { params }) {
 
   const searchParams = req.nextUrl.searchParams;
   const user = searchParams.get("user");
+  const office = "lahore"
 
   let queryParams = []
   try {
@@ -58,10 +58,11 @@ FROM lab_tasks lt
 LEFT JOIN users u ON u.id = lt.user_id
 LEFT JOIN customer c ON c.id = lt.customer_id
 LEFT JOIN users o ON o.id = c.ownership
+WHERE lt.managing_office = 'lahore'
   `;
 
   if(user){
-    query += "WHERE u.id = $1"
+    query += " AND WHERE u.id = $1"
     queryParams.push(user)
   }
 

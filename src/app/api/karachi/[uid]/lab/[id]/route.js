@@ -10,7 +10,7 @@ export async function DELETE(req, { params }) {
     if (!id) {
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
-    await pool.query(`DELETE FROM lab_tasks_karachi WHERE id = $1`, [id]);
+    await pool.query(`DELETE FROM lab_tasks WHERE id = $1`, [id]);
 
 
     return NextResponse.json({ message: "fine Deleted" }, { status: 200 });
@@ -45,7 +45,7 @@ export async function PUT(req, { params }) {
 
     values.push(id);
     const query = `
-          UPDATE lab_tasks_karachi 
+          UPDATE lab_tasks
           SET ${fields.join(", ")}
           WHERE id = $${values.length}
       `;

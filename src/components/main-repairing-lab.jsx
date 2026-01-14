@@ -20,9 +20,10 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { ArrowUpDown, Trash2 } from "lucide-react";
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import ConfimationDialog from "./alert-dialog";
+import { OfficeContext } from "@/store/context/OfficeContext";
 
 export default function MainRepairingLab() {
   const [data, setData] = useState([]);
@@ -171,26 +172,26 @@ export default function MainRepairingLab() {
       cell: ({ row }) => <div>{row.getValue("remarks_other")}</div>,
     },
     {
-          id: "actions",
-          cell: ({ row }) => {
-            const currentItem = row.original;
-    
-            return (
-              <Button
-              size="icon"
-              variant="destructive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if(currentItem?.id) setSelectedTaskDelete(currentItem?.id)
-                  // setSelectedCustomer(currentItem);
-                  // setShowFeedback(true);
-                }}
-              >
-                <Trash2 />
-              </Button>
-            );
-          },
-        },
+      id: "actions",
+      cell: ({ row }) => {
+        const currentItem = row.original;
+
+        return (
+          <Button
+            size="icon"
+            variant="destructive"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (currentItem?.id) setSelectedTaskDelete(currentItem?.id)
+              // setSelectedCustomer(currentItem);
+              // setShowFeedback(true);
+            }}
+          >
+            <Trash2 />
+          </Button>
+        );
+      },
+    },
   ];
 
   async function handleDelete(labID) {
@@ -202,7 +203,7 @@ export default function MainRepairingLab() {
       setDeleteLoading(false)
     })
   }
-  
+
   const filteredData =
     filter === "all"
       ? data
@@ -224,7 +225,7 @@ export default function MainRepairingLab() {
         columns={columns}
         data={filteredData}
       >
-         <div className="w-[200px]">
+        <div className="w-[200px]">
           <Select onValueChange={setFilter} value={filter}>
             <SelectTrigger >
               <SelectValue placeholder="Select office" />
@@ -257,7 +258,7 @@ export default function MainRepairingLab() {
         onRefresh={fetchData}
       />
 
-       <ConfimationDialog
+      <ConfimationDialog
         loading={deleteLoading}
         open={!!selectedTaskDelete}
         title={"Are you sure you want to delete?"}
@@ -279,6 +280,7 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }) => {
     remarks: "",
   });
   const [loading, setLoading] = useState(false);
+  const { state: OfficeState } = useContext(OfficeContext);
 
   const updateForm = (key, value) => {
     setForm((prev) => ({
@@ -302,6 +304,7 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }) => {
           customer_id: null,
           charges: 0,
           remarks: "",
+          managing_office: OfficeState.value.data || "lahore",
         });
         onChange(false);
       })
