@@ -119,6 +119,15 @@ export default function Page() {
     );
   }, [attendanceData]);
 
+  const RenderRepair = useCallback(() => {
+    <Card className="flex flex-1">
+      <CardContent className="pt-2 flex flex-1">
+       
+      </CardContent>
+    </Card>
+
+  }, [])
+
   return (
     <div className="flex flex-1 gap-5">
       <div className="flex flex-1 flex-col">
@@ -139,11 +148,12 @@ export default function Page() {
         >
           <TabsList className="justify-start">
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
+            <TabsTrigger value="repair">Repairing And Maintenance</TabsTrigger>
             <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
 
             <TabsTrigger value="issued">Returnable</TabsTrigger>
-             <TabsTrigger value="fines">Fines</TabsTrigger>
+            <TabsTrigger value="fines">Fines</TabsTrigger>
           </TabsList>
 
           <div className="flex flex-1 w-full mt-2">
@@ -158,7 +168,9 @@ export default function Page() {
             )}
 
             {activeTab === "issued" && <RenderReturnable />}
-             {activeTab === "fines" && <RenderFines />}
+            {activeTab === "fines" && <RenderFines />}
+
+            {activeTab === "repair" && <RenderRepair />}
           </div>
         </Tabs>
       </div>
