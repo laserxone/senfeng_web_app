@@ -18,12 +18,20 @@ import { UserSearch } from "@/components/user-search";
 import { useDebounce } from "@/hooks/use-debounce";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { TOMORROW, YESTERDAY, yesterday } from "@/lib/utils";
+import { OfficeContext } from "@/store/context/OfficeContext";
 import { ArrowUpDown, Trash2 } from "lucide-react";
 import moment from "moment";
 import { useContext, useEffect, useState } from "react";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import ConfimationDialog from "./alert-dialog";
-import { OfficeContext } from "@/store/context/OfficeContext";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export default function MainRepairingLab() {
   const [data, setData] = useState([]);
@@ -33,9 +41,9 @@ export default function MainRepairingLab() {
   const debouncedUserId = useDebounce(userID, 1000);
   const [assignTask, setAssignTask] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
-  const [filter, setFilter] = useState("all")
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const [selectedTaskDelete, setSelectedTaskDelete] = useState(null)
+  const [filter, setFilter] = useState("all");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [selectedTaskDelete, setSelectedTaskDelete] = useState(null);
 
   useEffect(() => {
     if (debouncedUserId) {
@@ -44,12 +52,15 @@ export default function MainRepairingLab() {
   }, [debouncedUserId]);
 
   function fetchData() {
-    setLoading(true)
-    axios.get(`/${debouncedUserId}/lab`).then((response) => {
-      setData(response.data);
-    }).finally(() => {
-      setLoading(false)
-    })
+    setLoading(true);
+    axios
+      .get(`/${debouncedUserId}/lab`)
+      .then((response) => {
+        setData(response.data);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }
 
   const columns = [
@@ -68,8 +79,9 @@ export default function MainRepairingLab() {
       cell: ({ row }) => (
         <div className="flex gap-2 items-center">
           <div
-            className={`${row.original.status === "pending" ? "bg-red-500" : "bg-green-500"
-              } border border-white h-3 w-3`}
+            className={`${
+              row.original.status === "pending" ? "bg-red-500" : "bg-green-500"
+            } border border-white h-3 w-3`}
           />{" "}
           <div>
             {moment(new Date(row.getValue("assign_date"))).format("YYYY-MM-DD")}
@@ -182,7 +194,7 @@ export default function MainRepairingLab() {
             variant="destructive"
             onClick={(e) => {
               e.stopPropagation();
-              if (currentItem?.id) setSelectedTaskDelete(currentItem?.id)
+              if (currentItem?.id) setSelectedTaskDelete(currentItem?.id);
               // setSelectedCustomer(currentItem);
               // setShowFeedback(true);
             }}
@@ -195,19 +207,22 @@ export default function MainRepairingLab() {
   ];
 
   async function handleDelete(labID) {
-    setDeleteLoading(true)
-    axios.delete(`/${userID}/lab/${labID}`).then(() => {
-      fetchData();
-      setSelectedTaskDelete(null)
-    }).finally(() => {
-      setDeleteLoading(false)
-    })
+    setDeleteLoading(true);
+    axios
+      .delete(`/${userID}/lab/${labID}`)
+      .then(() => {
+        fetchData();
+        setSelectedTaskDelete(null);
+      })
+      .finally(() => {
+        setDeleteLoading(false);
+      });
   }
 
   const filteredData =
     filter === "all"
       ? data
-      : data.filter(item => item.status?.includes(filter))
+      : data.filter((item) => item.status?.includes(filter));
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -218,7 +233,6 @@ export default function MainRepairingLab() {
         </div>
       </div>
 
-
       <PageTable
         onRowClick={(val) => setSelectedTask(val)}
         loading={loading}
@@ -227,7 +241,7 @@ export default function MainRepairingLab() {
       >
         <div className="w-[200px]">
           <Select onValueChange={setFilter} value={filter}>
-            <SelectTrigger >
+            <SelectTrigger>
               <SelectValue placeholder="Select office" />
             </SelectTrigger>
             <SelectContent>
@@ -239,9 +253,7 @@ export default function MainRepairingLab() {
             </SelectContent>
           </Select>
         </div>
-
       </PageTable>
-
 
       <AssignTasksModal
         open={assignTask}
@@ -327,7 +339,8 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }) => {
               <AppCalendar
                 date={form.assign_date}
                 onChange={(date) => updateForm("assign_date", date)}
-                min={new Date()}
+                min={YESTERDAY}
+               
               />
             </div>
 
@@ -339,7 +352,7 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }) => {
               <AppCalendar
                 date={form.deliver_date}
                 onChange={(date) => updateForm("deliver_date", date)}
-                min={form.assign_date || new Date()}
+                min={YESTERDAY}
               />
             </div>
 
@@ -412,7 +425,7 @@ const UpdateTaskModal = ({ open, onChange, userID, onRefresh, task_id }) => {
   useEffect(() => {
     if (open) {
       setForm({ status: null, remarks_other: "" });
-      setLoading(false)
+      setLoading(false);
     }
   }, [open]);
   const [form, setForm] = useState({

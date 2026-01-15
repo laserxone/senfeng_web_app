@@ -272,6 +272,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                             <AppCalendar
                               date={field.value}
                               onChange={field.onChange}
+                               max={new Date()}
                             />
                           </FormControl>
                           <FormMessage />

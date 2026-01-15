@@ -253,6 +253,7 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, base }) => {
                           <AppCalendar
                             date={field.value}
                             onChange={field.onChange}
+                             max={new Date()}
                           />
                         </FormControl>
                         <FormMessage />

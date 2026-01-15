@@ -536,6 +536,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
                       <FormLabel>Date</FormLabel>
                       <FormControl>
                         <AppCalendar
+                         max={new Date()}
                           date={field.value}
                           onChange={field.onChange}
                         />

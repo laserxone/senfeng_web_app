@@ -6,7 +6,14 @@ import { Button } from "./ui/button";
 import { Calendar } from "./ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
-const AppCalendar = ({ date, onChange, min = new Date("1900-01-01") }) => {
+const AppCalendar = ({
+  date,
+  onChange,
+  min = new Date("1900-01-01"),
+  max = "",
+}) => {
+  console.log(min);
+  console.log(max);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   return (
     <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
@@ -27,7 +34,7 @@ const AppCalendar = ({ date, onChange, min = new Date("1900-01-01") }) => {
           mode="single"
           selected={date}
           onSelect={(e) => {
-            if(!e) return
+            if (!e) return;
             const now = new Date();
             const updatedDate = new Date(e);
             updatedDate.setHours(
@@ -39,7 +46,12 @@ const AppCalendar = ({ date, onChange, min = new Date("1900-01-01") }) => {
             onChange(updatedDate);
             setIsCalendarOpen(false);
           }}
-          disabled={(date) => date < min}
+          disabled={(date) => {
+            if ((min && date < min) || (max && date >= max)) {
+              return true;
+            }
+            return false;
+          }}
           initialFocus
         />
       </PopoverContent>

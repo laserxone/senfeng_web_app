@@ -550,6 +550,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                         <AppCalendar
                           date={field.value}
                           onChange={field.onChange}
+                           max={new Date()}
                           min={
                             new Date(
                               new Date().getFullYear(),

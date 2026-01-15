@@ -772,6 +772,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh,}) => {
                         <AppCalendar
                           date={field.value}
                           onChange={field.onChange}
+                           max={new Date()}
                         />
                       </FormControl>
                       <FormMessage />
