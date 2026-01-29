@@ -29,6 +29,7 @@ export async function GET(req) {
         s.sell_by,
         c.name AS customer_name,
         c.owner AS customer_owner,
+        c.id AS customer_id,
          u.name AS sell_by_name
     FROM sale s
     

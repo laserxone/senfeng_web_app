@@ -11,11 +11,12 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { ArrowUpDown, Filter } from "lucide-react";
 import moment from "moment";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function Page() {
   const [filterVisible, setFilterVisible] = useState(false);
-  const { userID } = useUserDetail();
+  const { userID, base_route } = useUserDetail();
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [commulative, setCommulative] = useState({
@@ -94,7 +95,15 @@ export default function Page() {
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("customer_name")}</div>,
+      cell: ({ row }) => (
+        <Link
+          target="blank"
+          href={`/${base_route}/member/${row.original.customer_id}`}
+          className="hover:underline"
+        >
+          <div>{row.getValue("customer_name")}</div>
+        </Link>
+      ),
     },
     {
       accessorKey: "machine_serial_no",
@@ -110,7 +119,15 @@ export default function Page() {
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("machine_serial_no")}</div>,
+      cell: ({ row }) => (
+        <Link
+          target="blank"
+          href={`/${base_route}/member/${row.original.customer_id}/${row.original.machine_id}`}
+          className="hover:underline"
+        >
+          <div>{row.getValue("machine_serial_no")}</div>
+        </Link>
+      ),
     },
 
     {

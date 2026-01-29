@@ -28,6 +28,7 @@ export async function GET(req) {
         s.price AS total_generated,
         s.sell_by,
         c.name AS customer_name,
+        c.id AS customer_id,
         c.owner AS customer_owner,
          u.name AS sell_by_name
     FROM sale s

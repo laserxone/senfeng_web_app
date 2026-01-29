@@ -20,6 +20,7 @@ export async function GET(req) {
         s.serial_no AS machine_serial_no,
         s.price AS total_generated,
         s.sell_by,
+        c.id AS customer_id,
         c.name AS customer_name,
         c.owner AS customer_owner,
          u.name AS sell_by_name
