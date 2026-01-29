@@ -193,6 +193,7 @@ export default function Page() {
       {data.length > 0 && <MapWithPath data={data} />}
 
       <FilterSheet
+      user_disable={false}
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {

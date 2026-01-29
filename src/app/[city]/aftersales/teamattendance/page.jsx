@@ -48,7 +48,7 @@ export default function Page() {
     return new Promise((res, ) => {
       axios
         .get(
-          `/${userID}/attendance?start_date=${start}&end_date=${end}&user=${user || ""}`
+          `/${userID}/attendance?team=true&start_date=${start}&end_date=${end}&user=${user || ""}`
         )
         .then((response) => {
           if (response.data.length > 0) {

@@ -82,6 +82,7 @@ export async function GET(req, { params }) {
     const start_date = searchParams.get('start_date')
     const end_date = searchParams.get('end_date')
     const user = searchParams.get("user")
+    const team = searchParams.get("team")
 
     const { uid } = await params
 
@@ -93,7 +94,7 @@ export async function GET(req, { params }) {
     try {
         const isSuper = await checkSuperadmin(uid)
 
-        if (isSuper) {
+        if (isSuper || team === "true") {
             let query = `
         SELECT 
             t.*, 
@@ -195,7 +196,8 @@ export async function GET(req, { params }) {
             } else {
                 return NextResponse.json(finalData, { status: 200 })
             }
-        } else {
+        } 
+        else {
 
             let query = `
     SELECT 

@@ -235,6 +235,15 @@ export const myCloud =  {
     items: [] 
   }
 
+  export const teamAttendance =  {
+    title: 'Team Attendance',
+    url: '/teamattendance',
+    icon: 'userPen',
+    shortcut: ['t', 'a', 't'],
+    isActive: false,
+    items: [] 
+  }
+
 export const employeeNavItems = [
   {
     title: 'Dashboard',

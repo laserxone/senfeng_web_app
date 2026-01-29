@@ -59,6 +59,7 @@ export default function Page() {
             <SalesTable data={data} base_route={base_route} loading={loading} />
 
             <FilterSheet
+            user_disable={false}
                 visible={filterVisible}
                 onClose={() => setFilterVisible(false)}
                 onReturn={async (val) => {

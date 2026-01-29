@@ -26,7 +26,7 @@ import {
 import Spinner from "../ui/spinner";
 import { UserSearch } from "../user-search";
 
-const FilterSheet = ({ visible, onClose, onReturn, user = true, user_disable = false }) => {
+const FilterSheet = ({ visible, onClose, onReturn, user_disable = true }) => {
   const [loading, setLoading] = useState(false);
   const { isAdmin } = useUserDetail();
   const formSchema = z.object({
@@ -82,7 +82,7 @@ const FilterSheet = ({ visible, onClose, onReturn, user = true, user_disable = f
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {!user_disable && isAdmin && user && (
+            {!user_disable && (
               <FormField
                 control={form.control}
                 name="user"

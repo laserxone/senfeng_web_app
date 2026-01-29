@@ -351,7 +351,6 @@ export default function ComplaintSystem({ base }) {
       </ScrollArea>
 
       <FilterSheet
-        user={false}
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
