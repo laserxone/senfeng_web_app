@@ -423,6 +423,7 @@ const OtherView = () => {
     const [issueLoading, setIssueLoading] = useState(false);
 
     async function handleApplyCommission(id, amount, item) {
+      
       if (item.customer.profile_completion < 100) {
         toast({
           title: "Incomplete data",

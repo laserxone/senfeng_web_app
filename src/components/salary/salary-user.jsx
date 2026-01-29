@@ -100,7 +100,6 @@ const SalaryComponent = ({ onSelectedId }) => {
   const [excludeAbsentFine, setExcludeAbsentFine] = useState(false);
   const [excludeLateFine, setExcludeLateFine] = useState(false);
   const [modal, setModal] = useState(false);
-  const [TTModal, setTTModal] = useState(false);
   const [ttRate, setTTRate] = useState(1);
   const { toast } = useToast();
   const [toAccounts, setToAccounts] = useState([])
@@ -114,6 +113,14 @@ const SalaryComponent = ({ onSelectedId }) => {
   const months = Array.from({ length: 12 }, (_, i) =>
     format(setMonth(new Date(), i), "MMMM")
   );
+
+   useEffect(() => {
+          if (userID) {
+              axios.get(`/${userID}/settings`).then((response) => {
+                  setTTRate(response.data.usd_rate || "")
+              });
+          }
+      }, [userID]);
 
   const updateDate = (month, year) => {
     const start = moment()
@@ -154,13 +161,7 @@ const SalaryComponent = ({ onSelectedId }) => {
         `/${userID}/salary?user=${user}&start=${startDate}&end=${endDate}&month=${selectedMonth}&year=${selectedYear}`
       )
       .then((response) => {
-        if (
-          response.data.machines &&
-          Array.isArray(response.data?.machines) &&
-          response.data?.machines.length > 0
-        ) {
-          setTTModal(true);
-        }
+
         setData(response.data);
         if (refresh) {
           setChecked(false);
@@ -1146,42 +1147,7 @@ const SalaryComponent = ({ onSelectedId }) => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={TTModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Define USD conversion rate</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col space-y-2">
-            <Label> Enter rate</Label>
-            <Input
-              value={ttRate}
-              onChange={(e) => setTTRate(e.target.value)}
-              type="number"
-            />
-          </div>
-          <DialogFooter className="justify-start sm:justify-end gap-2">
-            <Button
-              onClick={() => {
-                if (Number(ttRate) > 0 && Array.isArray(data?.machines)) {
-                  const total = data.machines.reduce(
-                    (sum, item) => sum + Number(item.price || 0),
-                    0
-                  );
-                  const finalTotal = total / Number(ttRate);
-                  setForm((prev) => ({
-                    ...prev,
-                    target_achieved: finalTotal.toFixed(0),
-                    old_target_achieved: finalTotal.toFixed(0)
-                  }));
-                }
-                setTTModal(false);
-              }}
-            >
-              Ok
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+    
 
       <Accounts visible={toAccounts.length > 0} onClose={() => setToAccounts([])} data={toAccounts} />
 

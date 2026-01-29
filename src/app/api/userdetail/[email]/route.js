@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { branchNavItem, complaintItem, dealerNavItems, employeeNavItems, myCloud, ownerNavItems, POSNavItem, Prices, RepairAndMaintenance, StoreNavItem, teamAttendance, Tools } from "@/constants/data";
+import { branchNavItem, complaintItem, dealerNavItems, employeeNavItems, FinanceItem, myCloud, ownerNavItems, POSNavItem, Prices, RepairAndMaintenance, StoreNavItem, teamAttendance, Tools } from "@/constants/data";
 import admin from "@/lib/firebaseAdmin";
 import { NextResponse } from "next/server";
 
@@ -45,6 +45,7 @@ export async function GET(req, { params }) {
         if (user.full_access || user.designation == 'Owner') {
 
             nav_items = [...ownerNavItems]
+            nav_items.push(FinanceItem)
             nav_items.push(POSNavItem)
             nav_items.push(Tools)
             nav_items.push(Prices)
@@ -85,6 +86,7 @@ export async function GET(req, { params }) {
             if (user.designation == 'Sales') {
                 base_route = `${branchOffice}/sales`
                 nav_items.push(Prices)
+                 nav_items.push(FinanceItem)
             }
             if (user.designation == 'Customer Relationship Manager') {
                 base_route = `${branchOffice}/crm`

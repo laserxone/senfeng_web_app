@@ -20,6 +20,7 @@ export default function SettingsPage() {
     const [industries, setIndustries] = useState([]);
     const [newIndustry, setNewIndustry] = useState("");
     const [lateFine, setLateFine] = useState("");  // ✅ new state
+      const [ttRate, setTtRate] = useState("");  // ✅ new state
     const [loading, setLoading] = useState(false);
     const [settings, setSetting] = useState(null);
     const { userID } = useUserDetail();
@@ -35,6 +36,7 @@ export default function SettingsPage() {
                 }));
                 setIndustries(list);
                 setLateFine(response.data.late_fine || ""); // ✅ set lateFine from backend
+                setTtRate(response.data.usd_rate || "")
             });
         }
     }, [userID]);
@@ -63,6 +65,7 @@ export default function SettingsPage() {
                 id: settings?.id,
                 industry_list: industries.map((i) => i.value),
                 late_fine: lateFine, // ✅ send lateFine back
+                usd_rate : ttRate
             });
             toast({ description: "Settings saved successfully!" });
         } catch (err) {
@@ -119,6 +122,16 @@ export default function SettingsPage() {
                             placeholder="Enter late fine"
                             value={lateFine}
                             onChange={(e) => setLateFine(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium">USD rate</label>
+                        <Input
+                            type="number"
+                            placeholder="Enter USD rate"
+                            value={ttRate}
+                            onChange={(e) => setTtRate(e.target.value)}
                         />
                     </div>
 

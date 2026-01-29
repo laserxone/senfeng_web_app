@@ -33,10 +33,9 @@ export default function Page() {
   async function fetchCommulative() {
     setCommloading(true);
     axios
-      .get(`/${userID}/finance/all`)
+      .get(`/${userID}/finance/all?user=${userID}`)
       .then((response) => {
         setCommulative(response.data.summary);
-        console.log(response.data.items);
         setTableData(response.data.items);
       })
       .finally(() => {
@@ -400,12 +399,11 @@ export default function Page() {
       </PageTable>
 
       <FilterSheet
-        user_disable={false}
         visible={filterVisible}
         onClose={setFilterVisible}
         onReturn={async (val) => {
           setLoading(true);
-          await fetchData(val.start, val.end, val.user);
+          await fetchData(val.start, val.end, userID);
         }}
       />
     </div>
