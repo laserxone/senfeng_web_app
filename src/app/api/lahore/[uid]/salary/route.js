@@ -284,8 +284,7 @@ export async function POST(req) {
         }
 
         const { user_id, month, year, ...otherFields } = data;
-
-        if (!user_id || !month || !year) {
+        if (user_id == null || month == null || year == null) {
             return NextResponse.json({ message: "Missing user_id, month, or year" }, { status: 400 });
         }
 
