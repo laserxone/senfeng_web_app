@@ -141,9 +141,11 @@ const PageTable = ({
         {children}
       </div>
 
-      <ScrollArea className="flex-1 relative">
-        <div className={`flex flex-1 flex-col max-h-[500px]`}>
-          <div className="flex overflow-scroll rounded-md border md:overflow-auto custom-scrollbar">
+      <div
+        className={`relative flex flex-1 flex-col ${isMobile && "min-h-[500px]"}`}
+      >
+          <div className="absolute bottom-0 left-0 right-0 top-0 flex rounded-md border md:overflow-auto custom-scrollbar overflow-auto">
+        {/* <ScrollArea className="relative flex-1 w-[calc(100dvw-40px)]"> */}
             <Table className="relative">
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -204,10 +206,11 @@ const PageTable = ({
                 )}
               </TableBody>
             </Table>
+              {/* <ScrollBar orientation="horizontal" />
+        </ScrollArea> */}
           </div>
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+        
+      </div>
 
       <div className="flex flex-col items-center justify-end gap-2 space-x-2 py-2 sm:flex-row">
         <div className="flex w-full items-center justify-between">

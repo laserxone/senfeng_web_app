@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/table";
 import { Heading } from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 
 
@@ -43,7 +44,7 @@ export default function BackendPage() {
   const [search, setSearch] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "" });
 
-
+const isMobile = useIsMobile()
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 15;
 
@@ -397,7 +398,7 @@ function renderCellInput(row, col) {
 
 
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <div className="w-64">
           <Select onValueChange={(v) => setSelected(v)}>
             <SelectTrigger className="w-full">
@@ -427,12 +428,14 @@ function renderCellInput(row, col) {
           {selected ? `${(rows || []).length} rows` : ""}
         </div>
       </div>
-      <div className={`relative flex flex-1 flex-col`}>
-        <div className="absolute bottom-0 left-0 right-0 top-0 flex overflow-scroll rounded-md border md:overflow-auto">
+       <div
+        className={`relative flex flex-1 flex-col ${isMobile && "min-h-[500px]"}`}
+      >
+        <div className="absolute bottom-0 left-0 right-0 top-0 flex rounded-md border md:overflow-auto custom-scrollbar overflow-auto">
 
-          <div className="flex flex-1 border rounded-md">
+         
             {selected ? (
-              <ScrollArea className="flex-1">
+             
                 <Table className="relative">
                   <TableHeader>
                     <TableRow>
@@ -479,11 +482,11 @@ function renderCellInput(row, col) {
                     ))}
                   </TableBody>
                 </Table>
-              </ScrollArea>
+          
             ) : (
               <div className="p-6 text-muted-foreground">Select a table to view rows</div>
             )}
-          </div>
+   
         </div>
       </div>
 
