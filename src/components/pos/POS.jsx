@@ -90,7 +90,7 @@ export default function POS() {
   const [walkIn, setWalkIn] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const debouncedUserId = useDebounce(userID, 1000);
-    const [discount, setDiscount] = useState("")
+  const [discount, setDiscount] = useState("");
   const [inwardModal, setInwardModal] = useState(false);
   const [outwardModal, setOutwardModal] = useState(false);
   const { toast } = useToast();
@@ -116,6 +116,7 @@ export default function POS() {
         totalAmount={totalAmount}
         warranty={warranty}
         warrantyYear={warrantyYear}
+        discount={discount}
       />,
     ).toBlob();
     const url = URL.createObjectURL(blob);
@@ -205,7 +206,7 @@ export default function POS() {
         payment: selectedCustomer ? false : checked,
         selecteduser: selectedUser,
         customer_id: selectedCustomer ? selectedCustomer?.id : null,
-        discount : discount || 0
+        discount: discount || 0,
       });
 
       return response.data;
@@ -271,7 +272,7 @@ export default function POS() {
   useEffect(() => {
     if (invoiceItems.length > 0) {
       let total = 0;
-      let dis = discount || 0
+      let dis = discount || 0;
       invoiceItems.forEach((item) => {
         total = total + Number(item.total);
       });
@@ -281,8 +282,6 @@ export default function POS() {
       setTotalAmount(0);
     }
   }, [invoiceItems, discount]);
-
- 
 
   const handleAddToInvoice = () => {
     if (showOther) {
@@ -395,7 +394,7 @@ export default function POS() {
     setQty("");
     setPrice("");
     setTotalAmount(0);
-    setDiscount("")
+    setDiscount("");
     setOther("");
     setShowOther(false);
     setManager("");
@@ -426,15 +425,15 @@ export default function POS() {
       .then((response) => {
         if (response.data.length > 0) {
           const resultWithTotal = response.data.map((item) => {
-            const discount = item.discount || 0
-            const total =  item.fields.reduce(
-                (acc, curr) => acc + Number(curr.total),
-                0,
-              )
+            const discount = item.discount || 0;
+            const total = item.fields.reduce(
+              (acc, curr) => acc + Number(curr.total),
+              0,
+            );
             return {
               ...item,
-              total : total - discount,
-              discount
+              total: total - discount,
+              discount,
             };
           });
           setSearchModal(true);
@@ -778,8 +777,8 @@ export default function POS() {
               </div>
 
               <Input
-              value={discount ? discount : ""}
-              onChange={(e)=> setDiscount(e.target.value)}
+                value={discount ? discount : ""}
+                onChange={(e) => setDiscount(e.target.value)}
                 type="number"
                 placeholder="Enter discount"
                 className="border-0 shadow-none focus:border-0 focus:ring-0 focus:outline-none focus-visible:ring-0"
@@ -796,38 +795,38 @@ export default function POS() {
             </div>
           </div>
 
-            <div className="flex flex-row gap-4 items-center mt-2">
-              <div
-                className="flex items-center justify-between bg-white shadow-md rounded-lg px-4 py-2 w-fit gap-2 cursor-pointer"
-                onClick={() => {
-                  setPendingLoading(true);
-                  handlePendingPayments();
-                }}
-              >
-                {pendingLoading && <Spinner />}
-                <Label className="text-lg font-semibold text-gray-800 cursor-pointer">
-                  Pending Payments
-                </Label>
-                <NotificationBadge
-                  count={reminder.length}
-                  className="ml-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm font-bold shadow-sm"
-                />
-              </div>
-              <div className="flex flex-row gap-2 items-center mr-2">
-                <Label className="text-lg">Include warranty</Label>
-                <Checkbox checked={warranty} onCheckedChange={setWarranty} />
-                {warranty && (
-                  <div>
-                    <Input
-                      type="number"
-                      value={warrantyYear}
-                      onChange={(e) => setWarrantyYear(e.target.value)}
-                    />
-                  </div>
-                )}
-              </div>
+          <div className="flex flex-row gap-4 items-center mt-2">
+            <div
+              className="flex items-center justify-between bg-white shadow-md rounded-lg px-4 py-2 w-fit gap-2 cursor-pointer"
+              onClick={() => {
+                setPendingLoading(true);
+                handlePendingPayments();
+              }}
+            >
+              {pendingLoading && <Spinner />}
+              <Label className="text-lg font-semibold text-gray-800 cursor-pointer">
+                Pending Payments
+              </Label>
+              <NotificationBadge
+                count={reminder.length}
+                className="ml-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm font-bold shadow-sm"
+              />
             </div>
-         
+            <div className="flex flex-row gap-2 items-center mr-2">
+              <Label className="text-lg">Include warranty</Label>
+              <Checkbox checked={warranty} onCheckedChange={setWarranty} />
+              {warranty && (
+                <div>
+                  <Input
+                    type="number"
+                    value={warrantyYear}
+                    onChange={(e) => setWarrantyYear(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="flex flex-row flex-wrap gap-2 w-full">
             {selectedSearchItem ? (
               <Button
@@ -970,7 +969,7 @@ export default function POS() {
             setAddress(val.address);
             setInvoiceItems(val.fields);
             setNextInvoice(val.invoicenumber);
-            setDiscount(val.discount)
+            setDiscount(val.discount);
           }}
           onRefresh={(item, val) => {
             if (val == true) {
