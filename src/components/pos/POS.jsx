@@ -90,7 +90,7 @@ export default function POS() {
   const [walkIn, setWalkIn] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const debouncedUserId = useDebounce(userID, 1000);
-
+    const [discount, setDiscount] = useState("")
   const [inwardModal, setInwardModal] = useState(false);
   const [outwardModal, setOutwardModal] = useState(false);
   const { toast } = useToast();
@@ -172,6 +172,7 @@ export default function POS() {
           totalAmount={totalAmount}
           warranty={warranty}
           warrantyYear={warrantyYear}
+          discount={discount}
         />,
       ).toBlob();
       const url = URL.createObjectURL(blob);
@@ -204,6 +205,7 @@ export default function POS() {
         payment: selectedCustomer ? false : checked,
         selecteduser: selectedUser,
         customer_id: selectedCustomer ? selectedCustomer?.id : null,
+        discount : discount || 0
       });
 
       return response.data;
@@ -269,14 +271,18 @@ export default function POS() {
   useEffect(() => {
     if (invoiceItems.length > 0) {
       let total = 0;
+      let dis = discount || 0
       invoiceItems.forEach((item) => {
         total = total + Number(item.total);
       });
-      setTotalAmount(total);
+
+      setTotalAmount(total - dis);
     } else {
       setTotalAmount(0);
     }
-  }, [invoiceItems]);
+  }, [invoiceItems, discount]);
+
+ 
 
   const handleAddToInvoice = () => {
     if (showOther) {
@@ -389,6 +395,7 @@ export default function POS() {
     setQty("");
     setPrice("");
     setTotalAmount(0);
+    setDiscount("")
     setOther("");
     setShowOther(false);
     setManager("");
@@ -419,12 +426,15 @@ export default function POS() {
       .then((response) => {
         if (response.data.length > 0) {
           const resultWithTotal = response.data.map((item) => {
-            return {
-              ...item,
-              total: item.fields.reduce(
+            const discount = item.discount || 0
+            const total =  item.fields.reduce(
                 (acc, curr) => acc + Number(curr.total),
                 0,
-              ),
+              )
+            return {
+              ...item,
+              total : total - discount,
+              discount
             };
           });
           setSearchModal(true);
@@ -761,8 +771,32 @@ export default function POS() {
               />
             </div>
           </Card>
-          <div className="flex justify-between w-full mt-4">
-            <div className="flex flex-row gap-5 items-center">
+          <div className="w-full flex justify-between gap-2">
+            <div className="w-72 items-center flex border rounded-md overflow-hidden">
+              <div className="flex-1 bg-gray-200 dark:bg-gray-900 p-3 font-bold text-center">
+                Discount
+              </div>
+
+              <Input
+              value={discount ? discount : ""}
+              onChange={(e)=> setDiscount(e.target.value)}
+                type="number"
+                placeholder="Enter discount"
+                className="border-0 shadow-none focus:border-0 focus:ring-0 focus:outline-none focus-visible:ring-0"
+              />
+            </div>
+
+            <div className="w-72 flex border rounded-md overflow-hidden">
+              <div className="flex-1 bg-gray-200 dark:bg-gray-900 p-3 font-bold text-center">
+                Total Amount
+              </div>
+              <div className="flex-1 bg-white dark:bg-gray-800 p-3 font-bold text-center">
+                {totalAmount ? `${totalAmount}` : "0"}
+              </div>
+            </div>
+          </div>
+
+            <div className="flex flex-row gap-4 items-center mt-2">
               <div
                 className="flex items-center justify-between bg-white shadow-md rounded-lg px-4 py-2 w-fit gap-2 cursor-pointer"
                 onClick={() => {
@@ -793,15 +827,7 @@ export default function POS() {
                 )}
               </div>
             </div>
-            <div className="w-72 flex border rounded-md overflow-hidden">
-              <div className="flex-1 bg-gray-200 dark:bg-gray-900 p-3 font-bold text-center">
-                Total Amount
-              </div>
-              <div className="flex-1 bg-white dark:bg-gray-800 p-3 font-bold text-center">
-                {totalAmount ? `${totalAmount}` : "0"}
-              </div>
-            </div>
-          </div>
+         
           <div className="flex flex-row flex-wrap gap-2 w-full">
             {selectedSearchItem ? (
               <Button
@@ -925,6 +951,7 @@ export default function POS() {
           phoneNumber={phoneNumber}
           selectedUser={selectedUser}
           totalAmount={totalAmount}
+          discount={discount}
           warranty={warranty}
           warrantyYear={warrantyYear}
         />
@@ -943,6 +970,7 @@ export default function POS() {
             setAddress(val.address);
             setInvoiceItems(val.fields);
             setNextInvoice(val.invoicenumber);
+            setDiscount(val.discount)
           }}
           onRefresh={(item, val) => {
             if (val == true) {

@@ -26,6 +26,7 @@ export default function ViewableInvoice({
   totalAmount,
   warranty,
   warrantyYear,
+  discount
 }) {
   const pdfRef = useRef();
 
@@ -198,8 +199,8 @@ export default function ViewableInvoice({
                   </tr>
                 ))}
                 {!warranty &&
-                  invoiceItems.length <= 10 &&
-                  [...Array(10 - invoiceItems.length)].map((_, i) => (
+                  invoiceItems.length <= 9 &&
+                  [...Array(9 - invoiceItems.length)].map((_, i) => (
                     <tr key={i} style={{ fontSize: 14, height: 30 }}>
                       <td
                         className="border border-gray-300 "
@@ -222,7 +223,53 @@ export default function ViewableInvoice({
             </table>
           </div>
 
-          {/* Total Amount */}
+        
+            <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              marginBottom: 2,
+            }}
+          >
+            <div style={{ width: "300px", display: "flex" }}>
+              <div
+                style={{
+                  flex: 1,
+                  
+                  backgroundColor: "#0072BC",
+                  color: "white",
+                  paddingLeft: 5,
+                  height: 30,
+                  display: "flex",
+                  alignItems: "center",
+                  fontWeight: "600",
+                }}
+              >
+                <Label>Discount</Label>
+              </div>
+              <div
+                style={{
+                  flex: 1,
+                 
+                  backgroundColor: "#0072BC",
+                  color: "white",
+                  paddingLeft: 10,
+                  height: 30,
+                  display: "flex",
+                  alignItems: "center",
+                  fontWeight: "600",
+                  borderLeft: "1px solid",
+                  borderColor: "white",
+                }}
+              >
+                <Label>
+                  {discount &&
+                   - new Intl.NumberFormat("en-US").format(discount)}
+                  
+                </Label>
+              </div>
+            </div>
+          </div>
           <div
             style={{
               display: "flex",

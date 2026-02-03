@@ -2,7 +2,7 @@ import { Document, Image, Page, Path, Svg, Text, View } from '@react-pdf/rendere
 
 
 
-const InvoicePDF = ({ companyName, name, phoneNumber, address, manager, nextInvoice, invoiceItems, totalAmount, warranty, warrantyYear, selectedUser }) => {
+const InvoicePDF = ({ companyName, name, phoneNumber, address, manager, nextInvoice, invoiceItems, totalAmount, warranty, warrantyYear, selectedUser, discount }) => {
 
 
   return (
@@ -50,7 +50,7 @@ const InvoicePDF = ({ companyName, name, phoneNumber, address, manager, nextInvo
               </View>
             ))}
 
-            {!warranty && invoiceItems.length <= 10 && [...Array(10 - invoiceItems.length)].map((_, i) => (
+            {!warranty && invoiceItems.length <= 9 && [...Array(9 - invoiceItems.length)].map((_, i) => (
               <View key={i} style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: i % 2 === 0 ? "#f1f1f1" : "white", border: '1px solid #D1D5DB', borderTopWidth: i !== 0 && 0 }}>
                 <View style={[{ textAlign: 'left', display: 'flex', justifyContent: 'center', height: 20, paddingLeft: 5, width: 30, }]}>
                   <Text style={{ fontSize: 10, color: 'black' }}>{i + invoiceItems.length + 1}</Text>
@@ -66,6 +66,14 @@ const InvoicePDF = ({ companyName, name, phoneNumber, address, manager, nextInvo
 
           {/* Total Amount */}
           <View style={{ display: 'flex', width: '100%', alignItems: 'flex-end', justifyContent: 'flex-end', marginBottom: 5, }}>
+            <View style={{ display: 'flex', flexDirection: 'row' }}>
+              <View style={{ backgroundColor: '#0072BC', color: 'white', paddingLeft: 5, height: 17, display: 'flex', justifyContent: 'center', width: 100, }}>
+                <Text style={{ fontSize: 12, fontFamily: "Helvetica-Bold" }}>Discount</Text>
+              </View>
+              <View style={{ backgroundColor: '#0072BC', color: 'white', paddingLeft: 10, height: 17, display: 'flex', justifyContent: 'center', borderLeftWidth: 1, borderColor: 'white', width: 110, }}>
+                <Text style={{ fontSize: 12, fontFamily: "Helvetica-Bold" }}>{discount && -new Intl.NumberFormat('en-US').format(discount)}/-</Text>
+              </View>
+            </View>
             <View style={{ display: 'flex', flexDirection: 'row' }}>
               <View style={{ backgroundColor: '#0072BC', color: 'white', paddingLeft: 5, height: 35, display: 'flex', justifyContent: 'center', width: 100, }}>
                 <Text style={{ fontSize: 12, fontFamily: "Helvetica-Bold" }}>Total Amount</Text>
