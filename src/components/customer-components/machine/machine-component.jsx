@@ -444,7 +444,6 @@ export default function Machine({ id, onLoading = () => { }, base }) {
   }
 
   const ClientCard = memo(({ data, payment, machine, children }) => {
-    const isMobile = useIsMobile();
     const [showAlert, setShowAlert] = useState(false);
     useEffect(() => {
       if (machine) {

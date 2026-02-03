@@ -28,14 +28,19 @@ export async function GET(req) {
         s.price AS total_generated,
         s.sell_by,
         c.name AS customer_name,
-        c.owner AS customer_owner,
         c.id AS customer_id,
+        c.owner AS customer_owner,
          u.name AS sell_by_name
     FROM sale s
     
     LEFT JOIN users u ON u.id = s.sell_by
     LEFT JOIN customer c ON c.id = s.customer_id
-    WHERE u.office = $1 ${whereClause}
+    WHERE u.office = $1
+    AND NOT EXISTS (
+        SELECT 1
+        FROM cancelled_machine cm
+        WHERE cm.machine_id = s.id
+    ) ${whereClause}
   `;
 
     const { rows: sales } = await pool.query(query, queryParams);

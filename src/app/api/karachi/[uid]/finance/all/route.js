@@ -26,13 +26,20 @@ export async function GET(req, { params }) {
         c.id AS customer_id,
         c.name AS customer_name,
         c.owner AS customer_owner,
-         u.name AS sell_by_name
+        u.name AS sell_by_name
     FROM sale s
     
     LEFT JOIN users u ON u.id = s.sell_by
     LEFT JOIN customer c ON c.id = s.customer_id
+    
     WHERE u.office = $1
-  `;
+    AND NOT EXISTS (
+        SELECT 1
+        FROM cancelled_machine cm
+        WHERE cm.machine_id = s.id
+    )
+`;
+
 
       if (user) {
         query += ` AND s.sell_by = $2`;
@@ -111,11 +118,14 @@ export async function GET(req, { params }) {
       );
     }
   } else {
+
     if (!user) {
       return NextResponse.json({ message: "USer missing" }, { status: 400 });
     }
 
     try {
+
+      
       const query = `
     SELECT
         s.id AS machine_id,
@@ -128,13 +138,19 @@ export async function GET(req, { params }) {
         c.id AS customer_id,
         c.name AS customer_name,
         c.owner AS customer_owner,
-         u.name AS sell_by_name
+        u.name AS sell_by_name
     FROM sale s
     
     LEFT JOIN users u ON u.id = s.sell_by
     LEFT JOIN customer c ON c.id = s.customer_id
+    
     WHERE u.office = $1 AND s.sell_by = $2
-  `;
+    AND NOT EXISTS (
+        SELECT 1
+        FROM cancelled_machine cm
+        WHERE cm.machine_id = s.id
+    )
+`;
 
       const { rows: sales } = await pool.query(query, [office, user]);
 

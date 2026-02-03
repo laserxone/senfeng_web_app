@@ -35,7 +35,12 @@ export async function GET(req) {
     
     LEFT JOIN users u ON u.id = s.sell_by
     LEFT JOIN customer c ON c.id = s.customer_id
-    WHERE u.office = $1 ${whereClause}
+    WHERE u.office = $1
+    AND NOT EXISTS (
+        SELECT 1
+        FROM cancelled_machine cm
+        WHERE cm.machine_id = s.id
+    ) ${whereClause}
   `;
 
     const { rows: sales } = await pool.query(query, queryParams);
