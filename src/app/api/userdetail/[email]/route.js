@@ -102,6 +102,7 @@ export async function GET(req, { params }) {
             if (user.designation == 'Manager') {
                 base_route = `${branchOffice}/manager`
                 nav_items.push(Prices)
+                nav_items.push(FinanceItem)
             }
 
         }

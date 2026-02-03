@@ -5,10 +5,8 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
-  useReactTable
+  useReactTable,
 } from "@tanstack/react-table";
-
-
 
 import { Input } from "@/components/ui/input";
 import {
@@ -19,10 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  useMemo,
-  useState
-} from "react";
+import { useMemo, useState } from "react";
 
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -35,9 +30,9 @@ const PageTable = ({
   columns,
   data,
   disableInput = false,
-  onRowClick = () => { },
+  onRowClick = () => {},
   loading = false,
-  download = false
+  download = false,
 }) => {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
@@ -50,25 +45,26 @@ const PageTable = ({
 
     // Apply column filters
     columnFilters.forEach((filter) => {
-      filtered = filtered.filter(row => {
+      filtered = filtered.filter((row) => {
         const cellValue = row[filter.id];
-        return cellValue.toString().toLowerCase().includes(filter.value.toLowerCase());
+        return cellValue
+          .toString()
+          .toLowerCase()
+          .includes(filter.value.toLowerCase());
       });
     });
 
     // Apply global search filter
     if (search) {
-      filtered = filtered.filter(row => {
-        return Object.values(row).some(value =>
-          String(value).toLowerCase().includes(search.toLowerCase())
+      filtered = filtered.filter((row) => {
+        return Object.values(row).some((value) =>
+          String(value).toLowerCase().includes(search.toLowerCase()),
         );
       });
     }
 
     return filtered;
   }, [data, columnFilters, search]);
-
-
 
   const table = useReactTable({
     data: filteredData,
@@ -89,39 +85,44 @@ const PageTable = ({
       globalFilter: search,
     },
     defaultColumn: {
-      size: 200
-    }
+      size: 200,
+    },
     // manualPagination: true,
     // manualFiltering: true
   });
 
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile();
 
- function handleDownload() {
-  try {
-    if (!filteredData || !filteredData.length) return;
+  function handleDownload() {
+    try {
+      if (!filteredData || !filteredData.length) return;
 
-   const headers = columns
-  .filter((col) => typeof col.accessorKey === "string")
-  .map((col) => col.accessorKey);
+      const headers = columns
+        .filter((col) => typeof col.accessorKey === "string")
+        .map((col) => col.accessorKey);
 
-    const formattedData = filteredData.map((row) =>
-      columns.map((col) => {
-        const value = row[col.accessorKey];
-        if (col.type === "date" && value) {
-          return moment(value).format("YYYY-MM-DD");
-        }
-        return value != null ? value : "";
-      })
-    );
-    
-    exportToExcel(headers, formattedData, "Table-Export.xlsx", false, "", false);
+      const formattedData = filteredData.map((row) =>
+        columns.map((col) => {
+          const value = row[col.accessorKey];
+          if (col.type === "date" && value) {
+            return moment(value).format("YYYY-MM-DD");
+          }
+          return value != null ? value : "";
+        }),
+      );
 
-  } catch (error) {
-    console.error("Error exporting Excel:", error);
+      exportToExcel(
+        headers,
+        formattedData,
+        "Table-Export.xlsx",
+        false,
+        "",
+        false,
+      );
+    } catch (error) {
+      console.error("Error exporting Excel:", error);
+    }
   }
-}
-
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -136,24 +137,31 @@ const PageTable = ({
             className="w-[60vw] max-w-sm"
           />
         )}
-        {download &&
-          <Button onClick={handleDownload}>Download list</Button>
-          }
+        {download && <Button onClick={handleDownload}>Download list</Button>}
         {children}
       </div>
 
-      <div className={`relative flex flex-1 flex-col ${isMobile && "min-h-[500px]"}`}>
-        <div className="absolute bottom-0 left-0 right-0 top-0 flex overflow-scroll rounded-md border md:overflow-auto custom-scrollbar">
-          {/* <ScrollArea className="flex-1 relative"> */}
+      <ScrollArea className="flex-1 relative">
+        <div className={`flex flex-1 flex-col max-h-[500px]`}>
+          <div className="flex overflow-scroll rounded-md border md:overflow-auto custom-scrollbar">
             <Table className="relative">
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}  className="sticky top-0 z-20 bg-background">
+                  <TableRow
+                    key={headerGroup.id}
+                    className="sticky top-0 z-20 bg-background"
+                  >
                     {headerGroup.headers.map((header) => (
-                      <TableHead style={{ width: header.getSize() }} key={header.id}>
+                      <TableHead
+                        style={{ width: header.getSize() }}
+                        key={header.id}
+                      >
                         {header.isPlaceholder
                           ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
                       </TableHead>
                     ))}
                   </TableRow>
@@ -180,7 +188,10 @@ const PageTable = ({
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
                       {loading ? (
                         <div className="flex flex-1 justify-center">
                           <Spinner />
@@ -193,25 +204,21 @@ const PageTable = ({
                 )}
               </TableBody>
             </Table>
-            {/* <ScrollBar orientation="horizontal" />
-          </ScrollArea> */}
+          </div>
         </div>
-      </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
 
       <div className="flex flex-col items-center justify-end gap-2 space-x-2 py-2 sm:flex-row">
         <div className="flex w-full items-center justify-between">
           <div className="flex-1 text-sm text-muted-foreground">
             {filteredData.length > 0 ? (
-              <>
-                Showing {filteredData.length} entries
-              </>
+              <>Showing {filteredData.length} entries</>
             ) : (
               "No entries found"
             )}
           </div>
-
         </div>
-
       </div>
     </div>
   );

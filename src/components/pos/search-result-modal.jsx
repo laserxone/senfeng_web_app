@@ -235,7 +235,7 @@ const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh, onRetu
 
             </div>
 
-            <div className="flex justify-between items-center p-2 rounded-md w-full max-w-xs border-b border-gray-300 dark:border-gray-700">
+            <div className="flex justify-between items-center p-2 w-full max-w-xs border-b border-gray-300 dark:border-gray-700">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Total Amount
               </span>

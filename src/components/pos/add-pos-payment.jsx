@@ -159,7 +159,7 @@ const AddPOSPayment = ({
             gap: imageFile ? 16 : 0,
           }}
         >
-          <div className="w-full sm:w-[25%] flex">
+          <div className="w-full sm:w-[30%] flex">
             <ScrollArea className="px-2 w-full max-h-[90vh]">
               <div className="px-2">
                 <Form {...form}>

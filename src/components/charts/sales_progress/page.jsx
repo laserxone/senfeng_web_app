@@ -1,17 +1,11 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  XAxis,
-  YAxis
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/ui/card";
 import {
   ChartContainer,
@@ -22,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useDebounce } from "@/hooks/use-debounce";
 import React, { useEffect, useState } from "react";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
 
 const chartConfig = {
   completed_feedback: {
@@ -38,10 +34,18 @@ const chartConfig = {
   },
 };
 
-export default function SalesTeamProgressChart({ passingData }) {
+export default function SalesTeamProgressChart({ passingData, USDRate }) {
   const [data, setData] = useState([]);
-  const [usd, setUsd] = React.useState("280");
+  const [usd, setUsd] = React.useState("0");
   const debouncedUsd = useDebounce(usd, 1000);
+  const { userID } = useUserDetail();
+
+  useEffect(() => {
+    if (!userID) return;
+    axios.get(`/${userID}/settings`).then((response) => {
+      setUsd(response.data.usd_rate || "0");
+    });
+  }, [userID]);
 
   useEffect(() => {
     if (debouncedUsd) {
@@ -62,7 +66,7 @@ export default function SalesTeamProgressChart({ passingData }) {
           monthlyTarget > 0
             ? Math.min(
                 (totalSalePrice / monthlyTarget / Number(debouncedUsd)) * 100,
-                100
+                100,
               )
             : 0;
 
@@ -109,7 +113,6 @@ export default function SalesTeamProgressChart({ passingData }) {
 }
 
 const RenderBarChart = ({ data }) => {
- 
   return (
     <ChartContainer
       config={chartConfig}
