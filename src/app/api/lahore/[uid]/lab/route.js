@@ -44,7 +44,6 @@ export async function GET(req, { params }) {
 
   const searchParams = req.nextUrl.searchParams;
   const user = searchParams.get("user");
-  const office = "lahore"
 
   let queryParams = []
   try {
@@ -62,7 +61,7 @@ WHERE lt.managing_office = 'lahore'
   `;
 
   if(user){
-    query += " AND WHERE u.id = $1"
+    query += " AND u.id = $1"
     queryParams.push(user)
   }
 
