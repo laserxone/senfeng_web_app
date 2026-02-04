@@ -13,29 +13,34 @@ export async function GET(req) {
   const queryParams = [office, start_date, end_date];
 
   if (user) {
-    // If user exists, add additional filter
-    whereClause += ` AND u.id = $4`;
+    
+    whereClause += ` AND COALESCE(c.ownership, s.sell_by) = $4`;
     queryParams.push(user);
   }
 
   try {
+    
     const query = `
-    SELECT
+     SELECT
         s.id AS machine_id,
+        s.price AS total_generated,
         s.speed_money_amount AS machine_speed_money_amount,
         s.speed_money AS machine_speed_money,
         s.serial_no AS machine_serial_no,
-        s.price AS total_generated,
         s.sell_by,
-        c.name AS customer_name,
+        s.contract_date AS machine_contract_date,
         c.id AS customer_id,
+        c.name AS customer_name,
         c.owner AS customer_owner,
-         u.name AS sell_by_name
+        c.ownership,
+        COALESCE(ownership_user.name, sell_user.name) AS sell_by_name,
+        COALESCE(ownership_user.id, sell_user.id) AS sell_id
     FROM sale s
-    
-    LEFT JOIN users u ON u.id = s.sell_by
     LEFT JOIN customer c ON c.id = s.customer_id
-    WHERE u.office = $1
+    LEFT JOIN users sell_user ON sell_user.id = s.sell_by
+    LEFT JOIN users ownership_user ON ownership_user.id = c.ownership
+    
+    WHERE sell_user.office = $1
     AND NOT EXISTS (
         SELECT 1
         FROM cancelled_machine cm

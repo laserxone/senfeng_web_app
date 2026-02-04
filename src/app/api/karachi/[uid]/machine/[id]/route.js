@@ -8,7 +8,7 @@ import { deleteObject, ref } from "firebase/storage";
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
-  const { id, uid } = await params; // Machine ID
+  const { id, uid } = await params; 
 
 
 
@@ -19,7 +19,7 @@ export async function GET(req, { params }) {
     if (isAdmin) {
 
 
-      // 1. Get the machine and its customer ID
+      
       const machineQuery = `
   SELECT s.*, 
          CASE WHEN cm.id IS NOT NULL THEN TRUE ELSE FALSE END AS cancelled_detail,
@@ -40,9 +40,9 @@ export async function GET(req, { params }) {
 
       const machine = machineResult.rows[0];
       const customerId = machine.customer_id;
-      const sellBy = machine.sell_by; // Get sell_by ID
+      const sellBy = machine.sell_by; 
 
-      // 2. Get customer details
+      
       const customerQuery = `SELECT * FROM customer WHERE id = $1`;
       const customerResult = await pool.query(customerQuery, [customerId]);
 
@@ -62,19 +62,17 @@ export async function GET(req, { params }) {
         }
       }
 
-      // 4. Get all payments related to this machine, ordered by transaction_date
       const paymentsQuery = `SELECT * FROM payment WHERE machine_id = $1 ORDER BY transaction_date ASC`;
       const paymentsResult = await pool.query(paymentsQuery, [id]);
 
-      // 5. Add track number to each payment
+      
       const payments = paymentsResult.rows.map((payment, index) => ({
         ...payment,
-        track: index + 1, // Starts from 1
+        track: index + 1, 
       }));
 
-      // 6. Attach payments and sell_by_name to the machine object
       machine.payments = payments;
-      machine.sell_by_name = sellByName; // Attach seller's name
+      machine.sell_by_name = sellByName; 
 
       const machineStatus = await pool.query(`SELECT status FROM order_items WHERE machine_id = $1`, [id])
 
@@ -118,13 +116,9 @@ export async function GET(req, { params }) {
           });
     
           const totalFields = checkingFields.length + 1;
-    
-
-
+  
       const percentage_completion = Math.round((machineFilled / totalFields) * 100)
-
       const installmentQuery = await pool.query(`SELECT * FROM machine_installments WHERE sale_id = $1 ORDER BY date ASC`, [id])
-
       const installments = installmentQuery.rows
 
       return NextResponse.json({ customer, machine, percentage_completion, unmatchedFields, installments }, { status: 200 });
@@ -138,7 +132,7 @@ export async function GET(req, { params }) {
         return NextResponse.json({ message: "User not found" }, { status: 500 })
       }
 
-      // 1. Get the machine and its customer ID
+      
        const machineQuery = `
   SELECT s.*, 
          CASE WHEN cm.id IS NOT NULL THEN TRUE ELSE FALSE END AS cancelled_detail,
@@ -158,9 +152,9 @@ export async function GET(req, { params }) {
 
       const machine = machineResult.rows[0];
       const customerId = machine.customer_id;
-      const sellBy = machine.sell_by; // Get sell_by ID
+      const sellBy = machine.sell_by; 
 
-      // 2. Get customer details
+      
       const customerQuery = `SELECT * FROM customer WHERE id = $1`;
       const customerResult = await pool.query(customerQuery, [customerId]);
 
@@ -200,19 +194,19 @@ export async function GET(req, { params }) {
         }
       }
 
-      // 4. Get all payments related to this machine, ordered by transaction_date
+      
       const paymentsQuery = `SELECT * FROM payment WHERE machine_id = $1 ORDER BY transaction_date ASC`;
       const paymentsResult = await pool.query(paymentsQuery, [id]);
 
-      // 5. Add track number to each payment
+      
       const payments = paymentsResult.rows.map((payment, index) => ({
         ...payment,
-        track: index + 1, // Starts from 1
+        track: index + 1, 
       }));
 
-      // 6. Attach payments and sell_by_name to the machine object
+      
       machine.payments = payments;
-      machine.sell_by_name = sellByName; // Attach seller's name
+      machine.sell_by_name = sellByName; 
 
       const machineStatus = await pool.query(`SELECT status FROM order_items WHERE machine_id = $1`, [id])
 
@@ -331,9 +325,7 @@ export async function PUT(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-
-
-  const { id } = await params
+  const { id } = await params;
 
   if (!id) {
     return NextResponse.json({ message: "ID is required" }, { status: 400 });
@@ -344,7 +336,6 @@ export async function DELETE(req, { params }) {
   try {
     await client.query("BEGIN");
 
-    // Step 1: Update order_items
     await client.query(
       `UPDATE order_items
        SET machine_id = NULL,
@@ -353,39 +344,47 @@ export async function DELETE(req, { params }) {
            booking_date = NULL,
            booked_by = NULL
        WHERE machine_id = $1`,
-      [id]
+      [id],
     );
 
-    // Step 2: Update logs table
-    await client.query(
-      `UPDATE logs SET sale_id = NULL WHERE sale_id = $1`,
-      [id]
-    );
+    
+    await client.query(`UPDATE logs SET sale_id = NULL WHERE sale_id = $1`, [
+      id,
+    ]);
 
-    // Step 3: Get payment images
+    
     const paymentResult = await client.query(
       `SELECT image FROM payment WHERE machine_id = $1`,
-      [id]
+      [id],
     );
     for (const row of paymentResult.rows) {
       const imagePath = row.image;
       if (imagePath && !imagePath.includes("https")) {
         try {
-          await deleteObject(ref(storage, imagePath));
+          await admin.storage().bucket().file(imagePath).delete()
         } catch (err) {
-          console.warn(`Failed to delete payment image: ${imagePath}`, err.message);
+          console.warn(
+            `Failed to delete payment image: ${imagePath}`,
+            err.message,
+          );
         }
       }
     }
 
-    // Step 4: Delete payments
+    
     await client.query(`DELETE FROM payment WHERE machine_id = $1`, [id]);
 
-    // Step 5: Get sale images to delete
-    const saleResult = await client.query(`SELECT contract_images_png, other_images_png, machine_nameplate_images, final_handover_images, installation_report, handshake_images FROM sale WHERE id = $1`, [id]);
+    
+    const saleResult = await client.query(
+      `SELECT customer_id, contract_images_png, other_images_png, machine_nameplate_images, final_handover_images, installation_report, handshake_images FROM sale WHERE id = $1`,
+      [id],
+    );
+
+    let customer_id = null;
 
     if (saleResult.rowCount > 0) {
       const saleRow = saleResult.rows[0];
+      customer_id = saleRow?.customer_id;
 
       const imageFields = [
         "contract_images_png",
@@ -412,16 +411,42 @@ export async function DELETE(req, { params }) {
       }
     }
 
-    // Step 6: Delete sale
+    if (customer_id) {
+      const saleQuery = await client.query(
+        `
+  SELECT COUNT(*) 
+  FROM sale
+  WHERE customer_id = $1
+  AND id <> $2
+  `,
+        [customer_id, id],
+      );
+
+      const remainingSales = Number(saleQuery.rows[0].count);
+
+      if (remainingSales === 0) {
+        await client.query(`UPDATE customer SET member = $1 WHERE id = $2`, [
+          false,
+          customer_id,
+        ]);
+      }
+    }
+
     await client.query(`DELETE FROM sale WHERE id = $1`, [id]);
 
     await client.query("COMMIT");
 
-    return NextResponse.json({ message: "Machine deleted successfully" }, { status: 200 });
+    return NextResponse.json(
+      { message: "Machine deleted successfully" },
+      { status: 200 },
+    );
   } catch (error) {
     await client.query("ROLLBACK");
     console.error("Error deleting machine:", error);
-    return NextResponse.json({ message: "Error deleting machine" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Error deleting machine" },
+      { status: 500 },
+    );
   } finally {
     client.release();
   }

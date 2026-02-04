@@ -89,7 +89,7 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import AddCheque from "./add-cheque";
 
-export default function Machine({ id, onLoading = () => { }, base }) {
+export default function Machine({ id, onLoading = () => {}, base }) {
   const [data, setData] = useState();
   const [total, setTotal] = useState(0);
   const [received, setReceived] = useState(0);
@@ -103,7 +103,8 @@ export default function Machine({ id, onLoading = () => { }, base }) {
   const [addPayment, setAddPayment] = useState(false);
   const [editPayment, setEditPayment] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
-  const { userID, isAdmin, limited_access, designation, customer_full_access } = useUserDetail();
+  const { userID, isAdmin, limited_access, designation, customer_full_access } =
+    useUserDetail();
   const [editAllowed, setEditAllowed] = useState(false);
   const [zipDownloading, setZipDwonloading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -111,18 +112,14 @@ export default function Machine({ id, onLoading = () => { }, base }) {
   const [installments, setInstallments] = useState([]);
   const [installmentVisible, setInstallmentVisible] = useState(false);
   const [credit, setCredit] = useState(false);
-  const [readyForDelivery, setReadyForDelivery] = useState(null)
-  const [confirmLoading, setConfirmLoading] = useState(false)
+  const [readyForDelivery, setReadyForDelivery] = useState(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   useEffect(() => {
-
     if (id && userID) {
-
       fetchData(id);
     }
   }, [id, userID]);
-
-
 
   async function fetchData(id) {
     if (onLoading) {
@@ -168,7 +165,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
           machine?.payments?.filter((p) => p.clearance_date !== null) || [];
         setPayments(machine?.payments);
         setReceived(
-          payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
+          payments.reduce((sum, p) => sum + Number(p.amount || 0), 0),
         );
       }
 
@@ -268,8 +265,8 @@ export default function Machine({ id, onLoading = () => { }, base }) {
           <div>
             {row.getValue("transaction_date")
               ? moment(new Date(row.getValue("transaction_date"))).format(
-                "YYYY-MM-DD"
-              )
+                  "YYYY-MM-DD",
+                )
               : ""}
           </div>
         ),
@@ -297,8 +294,8 @@ export default function Machine({ id, onLoading = () => { }, base }) {
           >
             {row.getValue("clearance_date")
               ? moment(new Date(row.getValue("clearance_date"))).format(
-                "YYYY-MM-DD"
-              )
+                  "YYYY-MM-DD",
+                )
               : "Pending"}
           </div>
         ),
@@ -405,7 +402,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
         },
       },
     ],
-    [data, editAllowed]
+    [data, editAllowed],
   );
 
   async function handleDownloadLedger() {
@@ -438,8 +435,8 @@ export default function Machine({ id, onLoading = () => { }, base }) {
     if (!id) return;
     setDeleteLoading(true);
     axios.delete(`/${userID}/machine/${id}`).then(() => {
-      onRefresh()
-      setDeleteLoading(false)
+      onRefresh();
+      setDeleteLoading(false);
     });
   }
 
@@ -476,57 +473,67 @@ export default function Machine({ id, onLoading = () => { }, base }) {
       <Card
         className={`bg-gray-100 dark:bg-gray-900 rounded-lg shadow-md p-4 w-full`}
       >
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center justify-between">
-          <div className="hidden md:block" />
-          <div className="flex flex-row flex-wrap gap-2 items-center">
-            {data?.name || "Customer Name"}
-            <span className="text-gray-500 text-sm">
-              {data?.owner && `(${data.owner})`}
-            </span>
-          </div>
-          <div className="flex gap-2">
-            {showAlert && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <div>
-                      <Siren className="text-red-600 h-8 w-8 animate-pulse-opacity" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-red-600 mr-2">
-                    <p className="text-white">Duplicate TID found</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4">
+  {/* Spacer or empty block if needed */}
+  <div className="hidden md:block" />
 
-            {unmatched.length > 0 && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <div>
-                      <InfoIcon className="text-red-600 h-8 w-8 animate-pulse-opacity" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-red-600 mr-2">
-                    {unmatched.map((item, index) => (
-                      <p key={index} className="text-white">
-                        {item.replace(/_/g, " ").toUpperCase()}
-                      </p>
-                    ))}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-          </div>
-        </h2>
-        <h2 className="text-md font-bold text-primary dark:text-white mb-4 flex items-center justify-center">
-          Manager {machine?.sell_by_name || "NA"}
-        </h2>
+  {/* Customer Info */}
+  <div className="flex flex-col gap-1">
+    <div className="flex flex-row flex-wrap gap-2 items-center text-2xl font-bold text-gray-900 dark:text-white">
+      {data?.name || "Customer Name"}
+      {data?.owner && (
+        <span className="text-gray-500 text-sm">({data.owner})</span>
+      )}
+    </div>
+
+    <div className="text-md font-bold text-primary dark:text-white flex flex-wrap gap-2">
+      <span>Sell by: {machine?.sell_by_name || "NA"}</span>
+      <span>Manager: {data?.ownership_name || "NA"}</span>
+    </div>
+  </div>
+
+  {/* Alerts */}
+  <div className="flex gap-2 mt-2 md:mt-0">
+    {showAlert && (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <div>
+              <Siren className="text-red-600 h-8 w-8 animate-pulse-opacity" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="bg-red-600 mr-2">
+            <p className="text-white">Duplicate TID found</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )}
+
+    {unmatched.length > 0 && (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <div>
+              <InfoIcon className="text-red-600 h-8 w-8 animate-pulse-opacity" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="bg-red-600 mr-2">
+            {unmatched.map((item, index) => (
+              <p key={index} className="text-white">
+                {item.replace(/_/g, " ").toUpperCase()}
+              </p>
+            ))}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )}
+  </div>
+</div>
+
 
         <div className="flex flex-1 gap-6 flex-wrap">
           <Card className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            {machine?.type === 'Parts' ?
+            {machine?.type === "Parts" ? (
               <CardContent>
                 <div className="flex gap-2 text-sm items-center">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
@@ -534,32 +541,38 @@ export default function Machine({ id, onLoading = () => { }, base }) {
                   </h3>
                   {machine?.status && (
                     <div>
-                      <Badge variant={machine?.status === 'delivered' ? "default" : "secondary"}>{machine?.status}</Badge>
+                      <Badge
+                        variant={
+                          machine?.status === "delivered"
+                            ? "default"
+                            : "secondary"
+                        }
+                      >
+                        {machine?.status}
+                      </Badge>
                     </div>
                   )}
                 </div>
                 {machine ? (
                   <div className="text-gray-600 dark:text-gray-300 text-sm flex flex-col gap-2">
                     <div
-                      className={`w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${machine?.parts_information?.length > 3
-                        ? 3
-                        : machine?.parts_information?.length || 1
-                        } gap-6`}
+                      className={`w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${
+                        machine?.parts_information?.length > 3
+                          ? 3
+                          : machine?.parts_information?.length || 1
+                      } gap-6`}
                     >
                       {machine?.parts_information?.map((item, i) => (
-                        <div
-                          key={i}
-                          className="flex flex-col gap-2"
-                        >
-                          <h3 className="font-semibold mb-2">
-                            Part {i + 1}
-                          </h3>
+                        <div key={i} className="flex flex-col gap-2">
+                          <h3 className="font-semibold mb-2">Part {i + 1}</h3>
 
                           {Object.entries(item).map(([key, val], ind) => (
                             <div key={ind} className="flex items-start gap-2">
                               <ClipboardList className="h-4 w-4  mt-0.5" />
                               <span className="text-sm ">
-                                {key.charAt(0).toUpperCase() + key.slice(1).replace("_", " ")}:{" "}
+                                {key.charAt(0).toUpperCase() +
+                                  key.slice(1).replace("_", " ")}
+                                :{" "}
                                 <span className="font-medium ">
                                   {val || "N/A"}
                                 </span>
@@ -569,7 +582,6 @@ export default function Machine({ id, onLoading = () => { }, base }) {
                         </div>
                       ))}
                     </div>
-
 
                     <div className="flex items-start gap-2">
                       <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
@@ -588,7 +600,8 @@ export default function Machine({ id, onLoading = () => { }, base }) {
                     No data available
                   </p>
                 )}
-              </CardContent> :
+              </CardContent>
+            ) : (
               <CardContent>
                 <div className="flex gap-2 text-sm items-center">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
@@ -609,11 +622,12 @@ export default function Machine({ id, onLoading = () => { }, base }) {
                           </div>
                         </TooltipTrigger>
                         <TooltipContent className="bg-red-600">
-                          <p className="text-white">{machine?.cancelled_reason}</p>
+                          <p className="text-white">
+                            {machine?.cancelled_reason}
+                          </p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-
                   )}
                 </div>
                 {machine ? (
@@ -678,7 +692,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
                   </p>
                 )}
               </CardContent>
-            }
+            )}
           </Card>
 
           <Card className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
@@ -711,7 +725,9 @@ export default function Machine({ id, onLoading = () => { }, base }) {
                   </p>
                   <p className="text-red-600 font-bold">
                     {" "}
-                    <CurrencyFormatter amount={((payment[0] || 0) - (payment[1] || 0))} />
+                    <CurrencyFormatter
+                      amount={(payment[0] || 0) - (payment[1] || 0)}
+                    />
                   </p>
                 </div>
               </div>
@@ -737,22 +753,22 @@ export default function Machine({ id, onLoading = () => { }, base }) {
   });
 
   async function onRefresh() {
-    setCredit(false)
-    fetchData(id)
+    setCredit(false);
+    fetchData(id);
   }
 
   async function handleReadyforDeliver() {
-
-    setConfirmLoading(true)
-    const response = await axios.put(`/${userID}/machine/${readyForDelivery.id}/delivery`, {
-      ready_for_delivery: true
-    })
-    setReadyForDelivery(null)
-    onRefresh()
-    setConfirmLoading(false)
-
+    setConfirmLoading(true);
+    const response = await axios.put(
+      `/${userID}/machine/${readyForDelivery.id}/delivery`,
+      {
+        ready_for_delivery: true,
+      },
+    );
+    setReadyForDelivery(null);
+    onRefresh();
+    setConfirmLoading(false);
   }
-
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -761,8 +777,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
         machine={data?.machine || null}
         payment={[total, received]}
       >
-        {data && (
-          !data?.machine?.cancelled_detail &&
+        {data && !data?.machine?.cancelled_detail && (
           <div className="w-[150px] shrink-0 flex flex-col gap-2">
             <Button
               size="sm"
@@ -774,16 +789,15 @@ export default function Machine({ id, onLoading = () => { }, base }) {
                   });
                   return;
                 } else {
-                  if (data?.machine?.type === 'Parts') {
-                    setEditParts(true)
+                  if (data?.machine?.type === "Parts") {
+                    setEditParts(true);
                   } else {
                     setEditMachine(true);
                   }
-
                 }
               }}
             >
-              {data?.machine?.type === 'Parts' ? "Edit Parts" : "Edit Machine"}
+              {data?.machine?.type === "Parts" ? "Edit Parts" : "Edit Machine"}
             </Button>
 
             {data?.machine && !data?.machine?.payment_lock && (
@@ -856,7 +870,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
               Credit Cheque
             </Button>
 
-            {data && !data?.machine?.ready_for_delivery &&
+            {data && !data?.machine?.ready_for_delivery && (
               <Button
                 size="sm"
                 onClick={() => {
@@ -865,7 +879,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
               >
                 Apply For Delivery
               </Button>
-            }
+            )}
 
             <CancelDeal machine={data?.machine} onRefresh={onRefresh} />
           </div>
@@ -877,7 +891,7 @@ export default function Machine({ id, onLoading = () => { }, base }) {
           columns={columns}
           data={payments}
           disableInput={true}
-          onRowClick={(val, e) => { }}
+          onRowClick={(val, e) => {}}
         />
       </div>
       <EditMachine
@@ -931,15 +945,14 @@ export default function Machine({ id, onLoading = () => { }, base }) {
         updateData={(id, val) => {
           setInstallments((prevState) =>
             prevState.map((item) =>
-              item.id === id ? { ...item, pending: val } : item
-            )
+              item.id === id ? { ...item, pending: val } : item,
+            ),
           );
         }}
         onDeleteData={(id) => {
           setInstallments((prevState) =>
-            prevState.filter((item) => item.id !== id)
+            prevState.filter((item) => item.id !== id),
           );
-
         }}
         onClose={() => setInstallmentVisible(false)}
       />
@@ -967,58 +980,85 @@ export default function Machine({ id, onLoading = () => { }, base }) {
         />
       )}
 
-      <AddCheque visible={credit} onClose={setCredit} saleID={id} customer_id={data?.customer?.id} onRefresh={onRefresh} />
+      <AddCheque
+        visible={credit}
+        onClose={setCredit}
+        saleID={id}
+        customer_id={data?.customer?.id}
+        onRefresh={onRefresh}
+      />
 
-
-      <ConfimationDialog loading={confirmLoading} open={!!readyForDelivery} title={"Sending for delivery?"} description={"Make sure everything is ready and completed before sending for delivery request"} onPressCancel={() => setReadyForDelivery(null)} onPressYes={handleReadyforDeliver} />
+      <ConfimationDialog
+        loading={confirmLoading}
+        open={!!readyForDelivery}
+        title={"Sending for delivery?"}
+        description={
+          "Make sure everything is ready and completed before sending for delivery request"
+        }
+        onPressCancel={() => setReadyForDelivery(null)}
+        onPressYes={handleReadyforDeliver}
+      />
     </div>
   );
 }
 
 const CancelDeal = ({ machine, onRefresh }) => {
-
-  const [loading, setLoading] = useState(false)
-  const [confirmation, setConfirmation] = useState(false)
-  const [reason, setReason] = useState("")
-  const { userID } = useUserDetail()
+  const [loading, setLoading] = useState(false);
+  const [confirmation, setConfirmation] = useState(false);
+  const [reason, setReason] = useState("");
+  const { userID } = useUserDetail();
 
   async function handleDealCancel() {
+    if (!machine?.id) return;
 
-    if (!machine?.id) return
+    setLoading(true);
 
-    setLoading(true)
-
-    axios.post(`/${userID}/machine/${machine?.id}/dealcancel`, { reason }).then(async () => {
-      await onRefresh()
-      setConfirmation(false)
-    }).finally(() => {
-      setLoading(false)
-    })
-
-
+    axios
+      .post(`/${userID}/machine/${machine?.id}/dealcancel`, { reason })
+      .then(async () => {
+        await onRefresh();
+        setConfirmation(false);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }
 
   return (
     <>
-      {!machine?.cancelled_detail &&
+      {!machine?.cancelled_detail && (
         <Button
           onClick={() => setConfirmation(true)}
           variant="destructive"
-          size="sm">
+          size="sm"
+        >
           Cancel Deal
         </Button>
-      }
+      )}
 
-      <ConfimationDialog valid={!!reason} loading={loading} open={confirmation} title={"Cancel Deal?"} description={"Make sure payments are reversed back to client before cancelling this deal"} onPressCancel={() => setConfirmation(false)} onPressYes={handleDealCancel} >
+      <ConfimationDialog
+        valid={!!reason}
+        loading={loading}
+        open={confirmation}
+        title={"Cancel Deal?"}
+        description={
+          "Make sure payments are reversed back to client before cancelling this deal"
+        }
+        onPressCancel={() => setConfirmation(false)}
+        onPressYes={handleDealCancel}
+      >
         <div>
           <Label>Reason</Label>
-          <Input value={reason} placeholder="Enter reason for cancel" onChange={(e) => setReason(e.target.value)} />
+          <Input
+            value={reason}
+            placeholder="Enter reason for cancel"
+            onChange={(e) => setReason(e.target.value)}
+          />
         </div>
       </ConfimationDialog>
-
     </>
-  )
-}
+  );
+};
 
 const ImageSheet = ({
   payment_lock,
@@ -1030,7 +1070,7 @@ const ImageSheet = ({
   id,
   onRefresh,
   editAllowed,
-  cheque_id
+  cheque_id,
 }) => {
   const [imageOpen, setImageOpen] = useState(false);
   const [localImage, setLocalImage] = useState(null);
@@ -1203,11 +1243,12 @@ const ImageSheet = ({
           <strong>TID</strong>
           <Label>{note}</Label>
 
-          {cheque_id &&
+          {cheque_id && (
             <>
               <strong>Cheque#</strong>
               <Label>{cheque_id}</Label>
-            </>}
+            </>
+          )}
 
           <strong>Remarks</strong>
           <Label>{remarks}</Label>
@@ -1217,7 +1258,13 @@ const ImageSheet = ({
   );
 };
 
-const InstallmentSheet = ({ visible, onClose, data, updateData, onDeleteData }) => {
+const InstallmentSheet = ({
+  visible,
+  onClose,
+  data,
+  updateData,
+  onDeleteData,
+}) => {
   const [imageOpen, setImageOpen] = useState(false);
   const { toast } = useToast();
   const { isAdmin, userID } = useUserDetail();
@@ -1304,7 +1351,10 @@ const InstallmentSheet = ({ visible, onClose, data, updateData, onDeleteData }) 
           {/* Image */}
           <div className="flex flex-col gap-1">
             <Label className="text-xs text-muted-foreground">Image</Label>
-            <RenderInstallmentImage img={item.image} setImageOpen={setImageOpen} />
+            <RenderInstallmentImage
+              img={item.image}
+              setImageOpen={setImageOpen}
+            />
           </div>
 
           {/* Action */}
@@ -1353,7 +1403,9 @@ const InstallmentSheet = ({ visible, onClose, data, updateData, onDeleteData }) 
         <ScrollArea className="h-[calc(100vh-120px)] sm:h-[80vh] px-1">
           <div className="flex flex-1 flex-col gap-3">
             {data.length > 0 ? (
-              data.map((item, index) => <RenderEachRow key={index} item={item} />)
+              data.map((item, index) => (
+                <RenderEachRow key={index} item={item} />
+              ))
             ) : (
               <div className="flex items-center justify-center h-40 text-muted-foreground">
                 No installments found
@@ -1369,7 +1421,7 @@ const InstallmentSheet = ({ visible, onClose, data, updateData, onDeleteData }) 
 const RenderInstallmentImage = memo(({ img, type, setImageOpen }) => {
   const [localImage, setLocalImage] = useState(null);
   const [isZoomed, setIsZoomed] = useState(false);
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const handleZoomChange = useCallback((shouldZoom) => {
     setIsZoomed(shouldZoom);
@@ -1384,12 +1436,14 @@ const RenderInstallmentImage = memo(({ img, type, setImageOpen }) => {
       if (img.includes("http")) {
         setLocalImage(img);
       } else {
-        setLoading(true)
-        getDownloadURL(ref(storage, img)).then((url) => {
-          if (isMounted) setLocalImage(url);
-        }).finally(() => {
-          setLoading(false)
-        })
+        setLoading(true);
+        getDownloadURL(ref(storage, img))
+          .then((url) => {
+            if (isMounted) setLocalImage(url);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
       }
     }
     return () => {
@@ -1399,7 +1453,9 @@ const RenderInstallmentImage = memo(({ img, type, setImageOpen }) => {
 
   return (
     <div className="space-y-2">
-      {loading ? <Spinner /> :
+      {loading ? (
+        <Spinner />
+      ) : (
         <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
           <img
             src={localImage}
@@ -1407,7 +1463,7 @@ const RenderInstallmentImage = memo(({ img, type, setImageOpen }) => {
             className="h-[150px] w-auto object-contain"
           />
         </ControlledZoom>
-      }
+      )}
     </div>
   );
 });
@@ -1433,15 +1489,15 @@ const ViewImagesSheet = ({
   const handshakeImages = useMemo(() => data?.handshake_images || [], [data]);
   const handoverImages = useMemo(
     () => data?.final_handover_images || [],
-    [data]
+    [data],
   );
   const nameplateImages = useMemo(
     () => data?.machine_nameplate_images || [],
-    [data]
+    [data],
   );
   const installationReport = useMemo(
     () => data?.installation_report || [],
-    [data]
+    [data],
   );
 
   const prepareData = useCallback(async (pdfUrls, condition) => {
@@ -1466,7 +1522,7 @@ const ViewImagesSheet = ({
 
           localImages.push(imgData);
         }
-      })
+      }),
     );
     if (condition === "pdf") {
       setContractPdfImages((prevState) => [...prevState, ...localImages]);
@@ -1771,7 +1827,7 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
       {
         message: "Handover User ID is required",
         path: ["handover_user_id"],
-      }
+      },
     );
 
   const form = useForm({
@@ -1788,12 +1844,14 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
     let allProcessedImages = [];
     await Promise.all(
       values.images.map(async (item) => {
-        const name = `${OfficeState.value.data
-          }/customer/${customer_id}/machine/${machine.id}/${values.note
-          }/${moment().valueOf().toString()}.png`;
+        const name = `${
+          OfficeState.value.data
+        }/customer/${customer_id}/machine/${machine.id}/${
+          values.note
+        }/${moment().valueOf().toString()}.png`;
         const imageRefResult = await UploadImage(item, name);
         allProcessedImages.push(name);
-      })
+      }),
     );
     let formData = {};
     if (values.note === "contract") {
@@ -1871,7 +1929,7 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
 
             localImages.push(imgData);
           }
-        })
+        }),
       );
 
       form.setValue("images", localImages);

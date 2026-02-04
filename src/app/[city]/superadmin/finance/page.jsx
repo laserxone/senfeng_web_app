@@ -131,6 +131,31 @@ export default function Page() {
     },
 
     {
+      accessorKey: "machine_contract_date",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Contract Date
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <div>
+          {row.getValue("machine_contract_date")
+            ? moment(new Date(row.getValue("machine_contract_date"))).format(
+                "YYYY-MM-DD",
+              )
+            : "-"}
+        </div>
+      ),
+    },
+
+    {
       accessorKey: "sell_by_name",
       filterFn: "includesString",
       header: ({ column }) => {

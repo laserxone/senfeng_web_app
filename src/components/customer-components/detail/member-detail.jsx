@@ -57,14 +57,16 @@ import "react-circular-progressbar/dist/styles.css";
 import InvoiceDetails from "./invoice-details";
 import CurrencyFormatter from "@/components/currency-formatter";
 import AddParts from "@/components/add-parts";
+import { Scrollbar } from "@radix-ui/react-scroll-area";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function MemberDetail({
   ownership = false,
   from,
   customer_id,
   base,
-  onReturn = () => { },
-  onLoading = () => { },
+  onReturn = () => {},
+  onLoading = () => {},
   route,
   height,
 }) {
@@ -80,6 +82,7 @@ export default function MemberDetail({
   const [profileCompletion, setProfileCompletion] = useState(0);
   const [taskData, setTaskData] = useState([]);
   const [activeTab, setActiveTab] = useState("timeline");
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     if (customer_id && userID) {
@@ -136,7 +139,7 @@ export default function MemberDetail({
 
         const totalMachineCompletion = machines.reduce(
           (sum, item) => sum + Number(item.percentage_completion || 0),
-          0
+          0,
         );
 
         const overallCompletion =
@@ -213,7 +216,7 @@ export default function MemberDetail({
 
   return (
     <div className="flex w-full flex-col">
-      <div className="flex items-center mb-2 justify-between flex-wrap">
+      <div className="flex items-center mb-2 justify-between gap-2 flex-wrap">
         <div className="flex gap-2 items-center">
           <ProfilePicture
             img={data?.image}
@@ -250,7 +253,7 @@ export default function MemberDetail({
           </div>
         </div>
 
-        <div className="flex flex-row items-center gap-2">
+        <div className="flex flex-row flex-wrap items-center gap-2">
           <Label className="text-sm font-bold mb-1 text-gray-700 dark:text-gray-300">
             Overall Profile Completion
           </Label>
@@ -280,26 +283,29 @@ export default function MemberDetail({
         value={activeTab}
         onValueChange={setActiveTab}
       >
-        <TabsList className="justify-start">
-          <TabsTrigger value="timeline">Timeline</TabsTrigger>
-          {designation !== "Dealer" && (
-            <TabsTrigger value="feedback">
-              {data?.member ? "After Sales" : "Feedback"}
-            </TabsTrigger>
-          )}
+         <ScrollArea className={`overflow-x-auto ${isMobile && "max-w-[calc(100vw-32px)]"}`}>
+          <TabsList className=" flex justify-start relative gap-2 px-2">
+            <TabsTrigger value="timeline">Timeline</TabsTrigger>
+            {designation !== "Dealer" && (
+              <TabsTrigger value="feedback">
+                {data?.member ? "After Sales" : "Feedback"}
+              </TabsTrigger>
+            )}
 
-          <TabsTrigger value="machines">Machines</TabsTrigger>
+            <TabsTrigger value="machines">Machines</TabsTrigger>
 
-          <TabsTrigger value="parts">POS</TabsTrigger>
+            <TabsTrigger value="parts">POS</TabsTrigger>
 
-          {designation !== "Dealer" && (
-            <TabsTrigger value="visit">Visit</TabsTrigger>
-          )}
-          {designation !== "Dealer" && (
-            <TabsTrigger value="task">Task</TabsTrigger>
-          )}
-          <TabsTrigger value="about">About</TabsTrigger>
-        </TabsList>
+            {designation !== "Dealer" && (
+              <TabsTrigger value="visit">Visit</TabsTrigger>
+            )}
+            {designation !== "Dealer" && (
+              <TabsTrigger value="task">Task</TabsTrigger>
+            )}
+            <TabsTrigger value="about">About</TabsTrigger>
+          </TabsList>
+          <Scrollbar orientation="horizontal" />
+        </ScrollArea>
 
         <div className="flex flex-1 w-full mt-2">
           {activeTab === "timeline" && (
@@ -394,8 +400,9 @@ const ProfilePicture = ({ img, name, onClick }) => {
 
       <div
         onClick={onClick}
-        className={`absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 rounded-full cursor-pointer ${hover ? "opacity-100" : "opacity-0"
-          }`}
+        className={`absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 rounded-full cursor-pointer ${
+          hover ? "opacity-100" : "opacity-0"
+        }`}
       >
         <Wrench className="h-5 w-5 text-white" />
       </div>
@@ -470,7 +477,6 @@ const InfoRow = ({ icon, label, link }) => (
 );
 
 const BillingInformation = ({ total, received, balance }) => {
-
   return (
     <div className="w-full sm:w-auto p-4 mt-4 bg-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:text-white">
       <h3 className="text-base sm:text-lg font-semibold text-black dark:text-white">
@@ -490,9 +496,15 @@ const BillingInformation = ({ total, received, balance }) => {
       </div>
 
       <div className="grid grid-cols-3 gap-4 text-xs sm:text-sm mt-2 font-bold">
-        <p><CurrencyFormatter amount={total} /></p>
-        <p className="text-green-600"><CurrencyFormatter amount={received} /></p>
-        <p className="text-red-600"><CurrencyFormatter amount={balance} /></p>
+        <p>
+          <CurrencyFormatter amount={total} />
+        </p>
+        <p className="text-green-600">
+          <CurrencyFormatter amount={received} />
+        </p>
+        <p className="text-red-600">
+          <CurrencyFormatter amount={balance} />
+        </p>
       </div>
     </div>
   );
@@ -543,7 +555,7 @@ function CustomersTab({
                   Data completion: {machine?.percentage_completion || 0}%
                 </span>
                 {Number(machine.price) === totalPayments &&
-                  machine?.percentage_completion === 100 ? (
+                machine?.percentage_completion === 100 ? (
                   <CheckCircle className="text-green-500 w-5 h-5 mr-2" />
                 ) : (
                   <Clock className="text-yellow-500 w-5 h-5 mr-2" />
@@ -575,8 +587,8 @@ function CustomersTab({
                   <strong>Contract Date:</strong>{" "}
                   {machine?.created_at
                     ? new Date(machine.contract_date).toLocaleDateString(
-                      "en-GB"
-                    )
+                        "en-GB",
+                      )
                     : ""}
                 </p>
                 {machine?.order_no_arr &&
@@ -628,7 +640,7 @@ function CustomersTab({
                   Data completion: {machine?.percentage_completion || 0}%
                 </span>
                 {Number(machine.price) === totalPayments &&
-                  machine?.percentage_completion === 100 ? (
+                machine?.percentage_completion === 100 ? (
                   <CheckCircle className="text-green-500 w-5 h-5 mr-2" />
                 ) : (
                   <Clock className="text-yellow-500 w-5 h-5 mr-2" />
@@ -660,8 +672,8 @@ function CustomersTab({
                   <strong>Contract Date:</strong>{" "}
                   {machine?.created_at
                     ? new Date(machine.contract_date).toLocaleDateString(
-                      "en-GB"
-                    )
+                        "en-GB",
+                      )
                     : ""}
                 </p>
                 {machine?.order_no_arr &&
@@ -689,12 +701,10 @@ function CustomersTab({
       <CardContent className="p-4 flex flex-1 flex-col">
         <div className="p-4 flex justify-end">
           {user_id && customer_id && (
-
             <div className="flex gap-2">
               <Button onClick={() => setVisibleParts(true)}>Sell Parts</Button>
               <Button onClick={() => setVisible(true)}>Add Machine</Button>
             </div>
-
           )}
           <AddParts
             visible={visibleParts}
@@ -710,22 +720,23 @@ function CustomersTab({
             customer_id={customer_id}
             user_id={user_id}
           />
-
         </div>
         <Accordion type="single" collapsible className="w-full space-y-4">
-          {data.map((machine, index) => (
-            machine.type === 'Machine' ?
+          {data.map((machine, index) =>
+            machine.type === "Machine" ? (
               <RenderEachMachine
                 key={machine.id}
                 machine={machine}
                 index={index + 1}
               />
-              : <RenderEachPart
+            ) : (
+              <RenderEachPart
                 key={machine.id}
                 machine={machine}
                 index={index + 1}
               />
-          ))}
+            ),
+          )}
         </Accordion>
       </CardContent>
     </Card>
@@ -743,8 +754,8 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
       .filter((item) => item?.type === type)
       .sort(
         (a, b) =>
-          moment(b?.created_at).valueOf() - moment(a?.created_at).valueOf()
-      )
+          moment(b?.created_at).valueOf() - moment(a?.created_at).valueOf(),
+      ),
   );
 
   async function handleDelete(id) {
@@ -856,7 +867,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
               <div className="flex gap-5">
                 <Label>
                   {moment(new Date(item.created_at)).format(
-                    "YYYY-MM-DD hh:mm A"
+                    "YYYY-MM-DD hh:mm A",
                   )}
                 </Label>
                 {selectedDelete === item.id ? (
@@ -882,9 +893,11 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
 }
 
 const BillingInformationMachine = ({ payment }) => {
-  const formattedTotal = <CurrencyFormatter amount={payment[0]} />
-  const formattedReceived = <CurrencyFormatter amount={payment[1]} />
-  const formattedBalance = <CurrencyFormatter amount={(payment[0] || 0) - (payment[1] || 0)} />
+  const formattedTotal = <CurrencyFormatter amount={payment[0]} />;
+  const formattedReceived = <CurrencyFormatter amount={payment[1]} />;
+  const formattedBalance = (
+    <CurrencyFormatter amount={(payment[0] || 0) - (payment[1] || 0)} />
+  );
 
   return (
     <div className="p-4 mt-4 bg-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:text-white">
@@ -941,8 +954,9 @@ const RenderTimeline = ({
       localData.push({
         id: `visit-${visit.id}`,
         title: `Visit by ${visit.user_name}`,
-        description: `Problem: ${visit?.problem || "Nil"}, Solution: ${visit?.solution || "Nil"
-          } Note: ${visit.note}`,
+        description: `Problem: ${visit?.problem || "Nil"}, Solution: ${
+          visit?.solution || "Nil"
+        } Note: ${visit.note}`,
         time: visit.created_at,
       });
     });
@@ -958,12 +972,13 @@ const RenderTimeline = ({
 
     if (customerDetail) {
       customerDetail?.machines?.forEach((machine) => {
-        if (machine.type === 'Parts') {
+        if (machine.type === "Parts") {
           localData.push({
             id: `machine-${machine.id}`,
             title: `Sell Parts ${machine.serial_no}`,
-            description: `Power: ${machine.power || "Nil"}, Price: ${machine.price
-              }`,
+            description: `Power: ${machine.power || "Nil"}, Price: ${
+              machine.price
+            }`,
             time: machine.contract_date
               ? machine.contract_date
               : machine.created_at,
@@ -973,22 +988,27 @@ const RenderTimeline = ({
             localData.push({
               id: `payment-${payment.id}`,
               title: `Payment for Parts  ${machine.serial_no}`,
-              description: `Tx: ${payment.note}, Amount: $${payment.amount
-                }, Mode: ${payment.mode}, Received by: ${payment.received_by
-                }, Clearance Date: ${payment.clearance_data
+              description: `Tx: ${payment.note}, Amount: $${
+                payment.amount
+              }, Mode: ${payment.mode}, Received by: ${
+                payment.received_by
+              }, Clearance Date: ${
+                payment.clearance_data
                   ? moment(payment.clearance_data).format("YYYY-MM-DD")
                   : "Pending"
-                }`,
+              }`,
               time: payment.transaction_date,
             });
           });
         } else {
           localData.push({
             id: `machine-${machine.id}`,
-            title: `Sell Machine ${machine.serial_no} (${machine.source || "Nil"
-              })`,
-            description: `Power: ${machine.power || "Nil"}W, Price: ${machine.price
-              }, Order No: ${machine.order_no_arr?.join(", ")}`,
+            title: `Sell Machine ${machine.serial_no} (${
+              machine.source || "Nil"
+            })`,
+            description: `Power: ${machine.power || "Nil"}W, Price: ${
+              machine.price
+            }, Order No: ${machine.order_no_arr?.join(", ")}`,
             time: machine.contract_date
               ? machine.contract_date
               : machine.created_at,
@@ -998,24 +1018,27 @@ const RenderTimeline = ({
             localData.push({
               id: `payment-${payment.id}`,
               title: `Payment for Machine ${machine.serial_no}`,
-              description: `Tx: ${payment.note}, Amount: $${payment.amount
-                }, Mode: ${payment.mode}, Received by: ${payment.received_by
-                }, Clearance Date: ${payment.clearance_data
+              description: `Tx: ${payment.note}, Amount: $${
+                payment.amount
+              }, Mode: ${payment.mode}, Received by: ${
+                payment.received_by
+              }, Clearance Date: ${
+                payment.clearance_data
                   ? moment(payment.clearance_data).format("YYYY-MM-DD")
                   : "Pending"
-                }`,
+              }`,
               time: payment.transaction_date,
             });
           });
         }
-
       });
 
       localData.push({
         id: `customer-${customerDetail.id}`,
         title: `Customer added`,
-        description: `Company ${customerDetail.name || "Nil"}, Owner: ${customerDetail.owner || "Nil"
-          }, Location: ${customerDetail.location}`,
+        description: `Company ${customerDetail.name || "Nil"}, Owner: ${
+          customerDetail.owner || "Nil"
+        }, Location: ${customerDetail.location}`,
         time: customerDetail.created_at,
       });
     }
@@ -1051,20 +1074,21 @@ const RenderTimeline = ({
                   {moment(item.time).format("YYYY-MM-DD")}
                 </TimelineTime>
                 <TimelineTitle
-                  className={`${item.title.toLowerCase().includes("feedback")
-                    ? "text-orange-500"
-                    : item.title.toLowerCase().includes("customer")
-                      ? "text-blue-500"
-                      : item.title.toLowerCase().includes("payment")
-                        ? "text-green-500"
-                        : item.title.toLowerCase().includes("machine")
-                          ? "text-purple-500"
-                          : item.title.toLowerCase().includes("visit")
-                            ? "text-red-500"
-                            : item.title.toLowerCase().includes("task")
-                              ? "text-yellow-500"
-                              : "text-black"
-                    }`}
+                  className={`${
+                    item.title.toLowerCase().includes("feedback")
+                      ? "text-orange-500"
+                      : item.title.toLowerCase().includes("customer")
+                        ? "text-blue-500"
+                        : item.title.toLowerCase().includes("payment")
+                          ? "text-green-500"
+                          : item.title.toLowerCase().includes("machine")
+                            ? "text-purple-500"
+                            : item.title.toLowerCase().includes("visit")
+                              ? "text-red-500"
+                              : item.title.toLowerCase().includes("task")
+                                ? "text-yellow-500"
+                                : "text-black"
+                  }`}
                 >
                   {item.title}
                 </TimelineTitle>

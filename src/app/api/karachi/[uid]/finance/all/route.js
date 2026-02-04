@@ -21,18 +21,20 @@ export async function GET(req, { params }) {
         s.speed_money_amount AS machine_speed_money_amount,
         s.speed_money AS machine_speed_money,
         s.serial_no AS machine_serial_no,
-        s.price AS total_generated,
         s.sell_by,
+        s.contract_date AS machine_contract_date,
         c.id AS customer_id,
         c.name AS customer_name,
         c.owner AS customer_owner,
-        u.name AS sell_by_name
+        c.ownership,
+        COALESCE(ownership_user.name, sell_user.name) AS sell_by_name,
+        COALESCE(ownership_user.id, sell_user.id) AS sell_id
     FROM sale s
-    
-    LEFT JOIN users u ON u.id = s.sell_by
     LEFT JOIN customer c ON c.id = s.customer_id
+    LEFT JOIN users sell_user ON sell_user.id = s.sell_by
+    LEFT JOIN users ownership_user ON ownership_user.id = c.ownership
     
-    WHERE u.office = $1
+    WHERE sell_user.office = $1
     AND NOT EXISTS (
         SELECT 1
         FROM cancelled_machine cm
@@ -42,7 +44,7 @@ export async function GET(req, { params }) {
 
 
       if (user) {
-        query += ` AND s.sell_by = $2`;
+        query += ` AND COALESCE(c.ownership, s.sell_by) = $2`;
         queryParams.push(user);
       }
 
@@ -124,8 +126,6 @@ export async function GET(req, { params }) {
     }
 
     try {
-
-      
       const query = `
     SELECT
         s.id AS machine_id,
@@ -133,18 +133,21 @@ export async function GET(req, { params }) {
         s.speed_money_amount AS machine_speed_money_amount,
         s.speed_money AS machine_speed_money,
         s.serial_no AS machine_serial_no,
-        s.price AS total_generated,
         s.sell_by,
+        s.contract_date AS machine_contract_date,
         c.id AS customer_id,
         c.name AS customer_name,
         c.owner AS customer_owner,
-        u.name AS sell_by_name
+        c.ownership,
+        COALESCE(ownership_user.name, sell_user.name) AS sell_by_name,
+        COALESCE(ownership_user.id, sell_user.id) AS sell_id
     FROM sale s
-    
-    LEFT JOIN users u ON u.id = s.sell_by
     LEFT JOIN customer c ON c.id = s.customer_id
+    LEFT JOIN users sell_user ON sell_user.id = s.sell_by
+    LEFT JOIN users ownership_user ON ownership_user.id = c.ownership
     
-    WHERE u.office = $1 AND s.sell_by = $2
+    WHERE sell_user.office = $1
+    AND COALESCE(c.ownership, s.sell_by) = $2
     AND NOT EXISTS (
         SELECT 1
         FROM cancelled_machine cm

@@ -19,11 +19,11 @@ import {
 } from "@/components/ui/table";
 import { useMemo, useState } from "react";
 
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useIsMobile } from "@/hooks/use-mobile";
-import Spinner from "./ui/spinner";
-import { Button } from "./ui/button";
 import exportToExcel from "@/lib/exportToExcel";
+import { Button } from "./ui/button";
+import Spinner from "./ui/spinner";
 
 const PageTable = ({
   children,
@@ -39,11 +39,10 @@ const PageTable = ({
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
 
   const filteredData = useMemo(() => {
     let filtered = data;
-
-    // Apply column filters
     columnFilters.forEach((filter) => {
       filtered = filtered.filter((row) => {
         const cellValue = row[filter.id];
@@ -54,17 +53,16 @@ const PageTable = ({
       });
     });
 
-    // Apply global search filter
-    if (search) {
+    if (debouncedSearch) {
       filtered = filtered.filter((row) => {
         return Object.values(row).some((value) =>
-          String(value).toLowerCase().includes(search.toLowerCase()),
+          String(value).toLowerCase().includes(debouncedSearch.toLowerCase()),
         );
       });
     }
 
     return filtered;
-  }, [data, columnFilters, search]);
+  }, [data, columnFilters, debouncedSearch]);
 
   const table = useReactTable({
     data: filteredData,
@@ -76,19 +74,15 @@ const PageTable = ({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    globalFilterFn: customGlobalFilter,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
-      globalFilter: search,
     },
     defaultColumn: {
       size: 200,
     },
-    // manualPagination: true,
-    // manualFiltering: true
   });
 
   const isMobile = useIsMobile();
@@ -144,72 +138,71 @@ const PageTable = ({
       <div
         className={`relative flex flex-1 flex-col ${isMobile && "min-h-[500px]"}`}
       >
-          <div className="absolute bottom-0 left-0 right-0 top-0 flex rounded-md border md:overflow-auto custom-scrollbar overflow-auto">
-        {/* <ScrollArea className="relative flex-1 w-[calc(100dvw-40px)]"> */}
-            <Table className="relative">
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
+        <div className="absolute bottom-0 left-0 right-0 top-0 flex rounded-md border md:overflow-auto custom-scrollbar overflow-auto">
+          {/* <ScrollArea className="relative flex-1 w-[calc(100dvw-40px)]"> */}
+          <Table className="relative">
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow
+                  key={headerGroup.id}
+                  className="sticky top-0 z-20 bg-background"
+                >
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      style={{ width: header.getSize() }}
+                      key={header.id}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody className="bg-white dark:bg-gray-900">
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
                   <TableRow
-                    key={headerGroup.id}
-                    className="sticky top-0 z-20 bg-background"
+                    onClick={(e) => onRowClick(row.original, e)}
+                    className="even:bg-gray-100 dark:even:bg-gray-800 dark:text-white text-black cursor-pointer"
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
                   >
-                    {headerGroup.headers.map((header) => (
-                      <TableHead
-                        style={{ width: header.getSize() }}
-                        key={header.id}
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </TableHead>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell className="text-[13px]" key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, {
+                          ...cell.getContext(),
+                          stopRowClick: (e) => e.stopPropagation(),
+                        })}
+                      </TableCell>
                     ))}
                   </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody className="bg-white dark:bg-gray-900">
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      onClick={(e) => onRowClick(row.original, e)}
-                      className="even:bg-gray-100 dark:even:bg-gray-800 dark:text-white text-black cursor-pointer"
-                      key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell className="text-[13px]" key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, {
-                            ...cell.getContext(),
-                            stopRowClick: (e) => e.stopPropagation(),
-                          })}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      {loading ? (
-                        <div className="flex flex-1 justify-center">
-                          <Spinner />
-                        </div>
-                      ) : (
-                        "No results."
-                      )}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-              {/* <ScrollBar orientation="horizontal" />
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    {loading ? (
+                      <div className="flex flex-1 justify-center">
+                        <Spinner />
+                      </div>
+                    ) : (
+                      "No results."
+                    )}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+          {/* <ScrollBar orientation="horizontal" />
         </ScrollArea> */}
-          </div>
-        
+        </div>
       </div>
 
       <div className="flex flex-col items-center justify-end gap-2 space-x-2 py-2 sm:flex-row">
@@ -227,7 +220,7 @@ const PageTable = ({
   );
 };
 
-function customGlobalFilter(row, columnId, filterValue) {
+function customGlobalFilter(row, filterValue) {
   const search = filterValue.toLowerCase();
   return row
     .getAllCells()
