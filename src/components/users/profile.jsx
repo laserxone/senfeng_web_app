@@ -21,6 +21,12 @@ import Spinner from "../ui/spinner";
 import { Textarea } from "../ui/textarea";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import useUserDetail from "@/hooks/use-user-detail";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { CheckCircle } from "lucide-react";
 
 export default function ProfilePage() {
   const { state: UserState, setUser } = useContext(UserContext);
@@ -52,7 +58,7 @@ export default function ProfilePage() {
     police: "",
     resume: "",
     appointment_letter: "",
-    father_cnic: "",
+    father_cnic: "", 
   });
   const inputRef = useRef();
   const { toast } = useToast();
@@ -295,68 +301,55 @@ export default function ProfilePage() {
         }
       };
 
-      return (
+       return (
         <div className="space-y-2">
-          <Label className="font-semibold text-lg">
-            {type?.replace("_", " ").toUpperCase()}
-          </Label>
-
           {loading ? (
             <Skeleton className="h-[50px] w-full" />
           ) : (
-            <div className="flex items-center space-x-4">
-              {!fileUrl ? (
-                <>
-                  <input
-                    type="file"
-                    accept="*"
-                    style={{ display: "none" }}
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                  />
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full"
-                  >
-                    Upload {type.replace("_", " ")}
+            <>
+              <input
+                type="file"
+                accept="*"
+                hidden
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+              />
+
+              <Popover>
+                <PopoverTrigger asChild className="w-full flex gap-4">
+                  <Button variant={"outline"}>
+                    {type?.replace("_", " ").toUpperCase()}{" "}
+                    {fileUrl && <CheckCircle className="text-green-500" />}
                   </Button>
-                </>
-              ) : (
-                <>
-                  <Button variant="outline" asChild>
-                    <a
-                      href={fileUrl}
-                      download={fileName}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full"
+                </PopoverTrigger>
+
+                <PopoverContent className="w-48 p-2">
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant="ghost"
+                      className="justify-start"
+                      onClick={() => fileInputRef.current?.click()}
                     >
-                      Download {fileName}
-                    </a>
-                  </Button>
-                  <input
-                    type="file"
-                    accept="*"
-                    style={{ display: "none" }}
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                  />
-                  {/* <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-[180px]"
-                  >
-                    Update {type}
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={handleFileDelete}
-                    className="w-[180px]"
-                  >
-                    Delete {type}
-                  </Button> */}
-                </>
-              )}
-            </div>
+                      {fileUrl ? "Reupload File" : "Upload File"}
+                    </Button>
+
+                    {/* Download (only if file exists) */}
+                    {fileUrl && (
+                      <Button variant="ghost" className="justify-start" asChild>
+                        <a
+                          href={fileUrl}
+                          download={fileName}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Download File
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </>
           )}
         </div>
       );
@@ -623,7 +616,7 @@ export default function ProfilePage() {
             <CardTitle>Documents</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-1 flex-col space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 ">
               <DocumentCard type={"cnic"} />
               <DocumentCard type={"father_cnic"} />
               <DocumentCard type={"police"} />

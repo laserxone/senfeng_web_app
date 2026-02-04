@@ -6,6 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import Spinner from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
@@ -14,18 +19,22 @@ import { storage } from "@/config/firebase";
 import { useToast } from "@/hooks/use-toast";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { getDownloadURL, ref } from "firebase/storage";
+import { UploadImage } from "@/lib/uploadFunction";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { deleteObject, getDownloadURL, ref } from "firebase/storage";
+import { CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import "react-medium-image-zoom/dist/styles.css";
 
 export default function Page() {
-  const {id} = useParams()
-  const { userID } = useUserDetail()
+  const { id } = useParams();
+  const { userID, email } = useUserDetail();
+  const { state: OfficeState } = useContext(OfficeContext);
   const [joiningDate, setJoiningDate] = useState(null);
   const [leavingDate, setLeavingDate] = useState(null);
-  const [active, setActive] = useState(false)
+  const [active, setActive] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [employeeId, setEmployeeId] = useState(null);
@@ -38,6 +47,8 @@ export default function Page() {
     police: "",
     education: "",
     resume: "",
+    appointment_letter: "",
+    father_cninc: "",
     number: "",
     kin: "",
   });
@@ -46,7 +57,7 @@ export default function Page() {
     monthly_target: "",
     total_salary: "",
     note: "",
-    fuel: 0
+    fuel: 0,
   });
 
   const [checks, setChecks] = useState({
@@ -62,10 +73,21 @@ export default function Page() {
     pos_assigned: false,
     complaint_assigned: false,
     superadmin_cloud_access: false,
-    customer_full_access : false,
-    repairing_and_maintenance : false,
-    team_attendance : false
+    customer_full_access: false,
+    repairing_and_maintenance: false,
+    team_attendance: false,
   });
+
+  const [docsData, setDocsData] = useState({
+    cnic: "",
+    education: "",
+    police: "",
+    resume: "",
+    appointment_letter: "",
+    father_cnic: "",
+    contract: "",
+  });
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -75,7 +97,6 @@ export default function Page() {
   }, [userID, id]);
 
   async function fetchData() {
-
     axios
       .get(`/${userID}/user?user=${id}`)
       .then((response) => {
@@ -84,14 +105,10 @@ export default function Page() {
           setEmployeeId(apiData?.id);
           setFixedData({
             id: apiData?.id,
-            cnic: apiData?.cnic,
             designation: apiData?.designation,
             dp: apiData?.dp,
-            education: apiData?.education,
             email: apiData?.email,
             name: apiData?.name,
-            police: apiData?.police,
-            resume: apiData?.resume,
             number: apiData?.number || "",
             kin: apiData?.kin_number || "",
           });
@@ -108,22 +125,32 @@ export default function Page() {
             full_access: apiData?.full_access,
             pos_assigned: apiData?.pos_assigned,
             complaint_assigned: apiData?.complaint_assigned,
-            superadmin_cloud_access : apiData?.superadmin_cloud_access,
-            customer_full_access : apiData?.customer_full_access,
-             repairing_and_maintenance : apiData?.repairing_and_maintenance,
-             team_attendance : apiData?.false
+            superadmin_cloud_access: apiData?.superadmin_cloud_access,
+            customer_full_access: apiData?.customer_full_access,
+            repairing_and_maintenance: apiData?.repairing_and_maintenance,
+            team_attendance: apiData?.false,
           });
           setForm({
             basic_salary: apiData?.basic_salary || 0,
             monthly_target: apiData?.monthly_target || 0,
             note: apiData?.note || "",
             total_salary: apiData?.total_salary || 0,
-            fuel: apiData?.fuel || 0
+            fuel: apiData?.fuel || 0,
+          });
+
+          setDocsData({
+            cnic: apiData.cnic || "",
+            education: apiData.education || "",
+            police: apiData.police || "",
+            resume: apiData.resume || "",
+            appointment_letter: apiData.appointment_letter || "",
+            father_cnic: apiData.father_cnic || "",
+            contract: apiData?.contract || "",
           });
 
           setJoiningDate(apiData?.joining_date || null);
           setLeavingDate(apiData?.leaving_date || null);
-          setActive(apiData?.active || false)
+          setActive(apiData?.active || false);
         } else {
           toast({
             title: "Employee details not found",
@@ -179,11 +206,11 @@ export default function Page() {
         leaving_date: leavingDate,
         pos_assigned: checks?.pos_assigned,
         complaint_assigned: checks?.complaint_assigned,
-        superadmin_cloud_access : checks?.superadmin_cloud_access,
-        customer_full_access : checks?.customer_full_access,
-        repairing_and_maintenance : checks?.repairing_and_maintenance,
-        team_attendance : checks?.team_attendance,
-        active: active
+        superadmin_cloud_access: checks?.superadmin_cloud_access,
+        customer_full_access: checks?.customer_full_access,
+        repairing_and_maintenance: checks?.repairing_and_maintenance,
+        team_attendance: checks?.team_attendance,
+        active: active,
       })
       .then(() => {
         toast({ title: "Information updated" });
@@ -195,14 +222,18 @@ export default function Page() {
 
   const DocumentCard = useCallback(
     ({ type }) => {
-      const [loading, setLoading] = useState(false); // Track loading state
       const [fileUrl, setFileUrl] = useState(null);
+      const [loading, setLoading] = useState(false);
       const [fileName, setFileName] = useState("");
+      const fileInputRef = useRef();
+
+      const userId = userID;
+      const userEmail = email;
 
       useEffect(() => {
-        if (fixedData[type]) {
+        if (docsData?.[type]) {
           setLoading(true);
-          const filePath = fixedData[type];
+          const filePath = docsData[type];
           if (filePath.includes("http")) {
             setFileUrl(filePath);
             setFileName(filePath.split("/").pop());
@@ -214,48 +245,151 @@ export default function Page() {
                 setFileUrl(url);
                 setFileName(filePath.split("/").pop());
               })
-              .catch((error) => console.error("Error loading image:", error))
+              .catch((error) => console.error("Error loading file:", error))
               .finally(() => setLoading(false));
           }
         }
       }, []);
 
+      const handleFileUpload = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        setLoading(true);
+        try {
+          const extension = file.name.split(".").pop();
+          const newFilePath = `${OfficeState.value.data}/${userId}/profile/${type}.${extension}`;
+
+          // Step 1: Delete old file if exists
+          if (docsData?.[type] && !docsData[type].includes("http")) {
+            const oldFileRef = ref(storage, docsData[type]);
+            await deleteObject(oldFileRef).catch((err) =>
+              console.log("Old file could not be deleted:", err),
+            );
+          }
+
+          // Step 2: Upload new file
+          const uploadedPath = await UploadImage(
+            URL.createObjectURL(file),
+            newFilePath,
+            file.type || "application/octet-stream",
+          );
+
+          const updatedData = {
+            ...docsData,
+            password: undefined,
+            confirmPassword: undefined,
+            currentPassword: undefined,
+            [type]: newFilePath,
+          };
+          await axios.put(`/${userId}/user/${employeeId}`, updatedData);
+
+          toast({ title: "File uploaded successfully" });
+          await fetchData();
+          setFileUrl(URL.createObjectURL(file)); // Optional: for local preview
+          setFileName(file.name);
+        } catch (error) {
+          console.error("Upload failed:", error);
+          toast({ title: "Upload failed", variant: "destructive" });
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const handleFileDelete = async () => {
+        if (!docsData?.[type]) return;
+
+        setLoading(true);
+        try {
+          // Step 1: Delete from storage if it's not a URL
+          if (!docsData[type].includes("http")) {
+            const fileRef = ref(storage, docsData[type]);
+            await deleteObject(fileRef);
+          }
+
+          // Step 2: Update backend with empty string
+          const updatedData = {
+            ...docsData,
+            password: undefined,
+            confirmPassword: undefined,
+            currentPassword: undefined,
+            [type]: "",
+          };
+          await axios.put(`/${userId}`, updatedData);
+
+          // Step 3: Update local state
+          setUser({
+            ...UserState.value.data,
+            ...updatedData,
+          });
+
+          toast({ title: `${type} deleted successfully` });
+
+          // Step 4: Reset local preview
+          setFileUrl(null);
+          setFileName("");
+        } catch (error) {
+          console.error("Delete failed:", error);
+          toast({ title: "Delete failed", variant: "destructive" });
+        } finally {
+          setLoading(false);
+        }
+      };
+
       return (
-        <>
-          <Label className="text-bold text-[20px]">{type?.toUpperCase()}</Label>
+        <div className="space-y-2">
           {loading ? (
             <Skeleton className="h-[50px] w-full" />
           ) : (
-            <div className="flex items-center space-x-4">
-              {!fileUrl ? (
-                <>
-                  <Button variant="outline" asChild>
-                    <a href={"#"} rel="noopener noreferrer" className="w-full">
-                      Nil
-                    </a>
+            <>
+              <input
+                type="file"
+                accept="*"
+                hidden
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+              />
+
+              <Popover>
+                <PopoverTrigger asChild className="w-full flex gap-4">
+                  <Button variant={"outline"}>
+                    {type?.replace("_", " ").toUpperCase()}{" "}
+                    {fileUrl && <CheckCircle className="text-green-500" />}
                   </Button>
-                </>
-              ) : (
-                <>
-                  <Button variant="outline" asChild>
-                    <a
-                      href={fileUrl}
-                      download={fileName}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full"
+                </PopoverTrigger>
+
+                <PopoverContent className="w-48 p-2">
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant="ghost"
+                      className="justify-start"
+                      onClick={() => fileInputRef.current?.click()}
                     >
-                      Download {fileName}
-                    </a>
-                  </Button>
-                </>
-              )}
-            </div>
+                      {fileUrl ? "Reupload File" : "Upload File"}
+                    </Button>
+
+                    {/* Download (only if file exists) */}
+                    {fileUrl && (
+                      <Button variant="ghost" className="justify-start" asChild>
+                        <a
+                          href={fileUrl}
+                          download={fileName}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Download File
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </>
           )}
-        </>
+        </div>
       );
     },
-    [fixedData, userID]
+    [docsData],
   );
 
   return (
@@ -274,10 +408,14 @@ export default function Page() {
                 <p className="text-muted-foreground">
                   {fixedData?.designation}
                 </p>
-                {fixedData?.designation === 'Sales' && <Link href={`/lahore/superadmin/team/${id}/dashboard`} target="blank">
-                  Open Dashboard
-                </Link>
-                }
+                {fixedData?.designation === "Sales" && (
+                  <Link
+                    href={`/lahore/superadmin/team/${id}/dashboard`}
+                    target="blank"
+                  >
+                    Open Dashboard
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -302,7 +440,7 @@ export default function Page() {
                             }
                           />
                         </div>
-                      )
+                      ),
                   )}
                 </CardContent>
               </Card>
@@ -336,14 +474,14 @@ export default function Page() {
                   <Label>PHONE NUMBER</Label>
                   <Input
                     value={fixedData?.number}
-                    onChange={() => { }}
+                    onChange={() => {}}
                     disabled
                   />
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <Label>KINSHIP NUMBER</Label>
-                  <Input value={fixedData?.kin} onChange={() => { }} disabled />
+                  <Input value={fixedData?.kin} onChange={() => {}} disabled />
                 </div>
                 <div className="flex flex-col gap-1">
                   <Label>NOTE</Label>
@@ -371,10 +509,7 @@ export default function Page() {
 
                 <div className="flex flex-row items-center gap-1">
                   <Label>Status</Label>
-                  <Switch
-                    checked={active}
-                    onCheckedChange={setActive}
-                  />
+                  <Switch checked={active} onCheckedChange={setActive} />
                 </div>
               </CardContent>
             </Card>
@@ -395,11 +530,14 @@ export default function Page() {
             <CardTitle>Documents</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-1 flex-col space-y-4 ">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 ">
               <DocumentCard type={"cnic"} />
+              <DocumentCard type={"father_cnic"} />
               <DocumentCard type={"police"} />
               <DocumentCard type={"education"} />
               <DocumentCard type={"resume"} />
+              <DocumentCard type={"appointment_letter"} />
+              <DocumentCard type={"contract"} />
             </div>
           </CardContent>
         </Card>
