@@ -13,6 +13,7 @@ import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
 import { Label } from "../ui/label";
 import { useRef } from "react";
+import CurrencyFormatter from "../currency-formatter";
 
 export default function ViewableInvoice({
   companyName,
@@ -41,6 +42,7 @@ export default function ViewableInvoice({
         nextInvoice={nextInvoice}
         invoiceItems={invoiceItems}
         totalAmount={totalAmount}
+        discount={discount}
       />
     ).toBlob();
 
@@ -263,9 +265,7 @@ export default function ViewableInvoice({
                 }}
               >
                 <Label>
-                  {discount &&
-                   - new Intl.NumberFormat("en-US").format(discount)}
-                  
+                 - <CurrencyFormatter amount={discount} showPKR={false} />
                 </Label>
               </div>
             </div>
@@ -309,8 +309,7 @@ export default function ViewableInvoice({
                 }}
               >
                 <Label>
-                  {totalAmount &&
-                    new Intl.NumberFormat("en-US").format(totalAmount)}
+                <CurrencyFormatter amount={totalAmount} showPKR={true}/>
                   /-
                 </Label>
               </div>

@@ -545,6 +545,7 @@ export default function POS() {
     setOrderStockVisible(true);
   }
 
+
   return loading || customerLoading ? (
     <div className="flex flex-1 w-full items-center justify-center h-[80vh]">
       <Spinner />
@@ -778,7 +779,9 @@ export default function POS() {
 
               <Input
                 value={discount ? discount : ""}
-                onChange={(e) => setDiscount(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value
+                  setDiscount(value ? Number(value) : "")}}
                 type="number"
                 placeholder="Enter discount"
                 className="border-0 shadow-none focus:border-0 focus:ring-0 focus:outline-none focus-visible:ring-0"

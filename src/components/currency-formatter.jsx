@@ -1,11 +1,11 @@
 import React from "react";
 
-export default function CurrencyFormatter({ amount, showDecimals = false }) {
+export default function CurrencyFormatter({ amount, showDecimals = false, showPKR = true }) {
   const numericValue = parseFloat(amount);
 
   // Check if it's a valid number after conversion
   if (isNaN(numericValue)) {
-    return <>0 PKR</>;
+    return <>{showPKR && "PKR "}0</>;
   }
 
   let formattedValue = showDecimals
@@ -15,5 +15,5 @@ export default function CurrencyFormatter({ amount, showDecimals = false }) {
   // Add comma separators (for thousands)
   formattedValue = formattedValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-  return <>PKR {formattedValue}</>;
+  return <>{showPKR && "PKR "}{formattedValue}</>;
 }
