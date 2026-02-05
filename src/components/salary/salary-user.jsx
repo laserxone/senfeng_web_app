@@ -1,16 +1,9 @@
-
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowUpDown } from "lucide-react";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import PageTable from "@/components/app-table-without-pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,18 +50,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import useUserDetail from "@/hooks/use-user-detail";
 import { pdf } from "@react-pdf/renderer";
 import { ScrollArea } from "../ui/scroll-area";
-
 
 const SalaryComponent = ({ onSelectedId }) => {
   const currentDate = new Date();
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
   const [startDate, setStartDate] = useState(
-    moment().startOf("month").toISOString()
+    moment().startOf("month").toISOString(),
   );
   const { userID } = useUserDetail();
   const [endDate, setEndDate] = useState(moment().endOf("month").toISOString());
@@ -85,9 +84,9 @@ const SalaryComponent = ({ onSelectedId }) => {
     commission: 0,
     miscellaneous: 0,
     additional_fine: 0,
-    old_target_achieved: 0
+    old_target_achieved: 0,
   });
-  const [cancelled, setCancelled] = useState(0)
+  const [cancelled, setCancelled] = useState(0);
   const [saveLoading, setSaveLoading] = useState(false);
   const [kpi, setKpi] = useState(0);
   const [lateComingFine, setLateComingFine] = useState(0);
@@ -102,25 +101,25 @@ const SalaryComponent = ({ onSelectedId }) => {
   const [modal, setModal] = useState(false);
   const [ttRate, setTTRate] = useState(1);
   const { toast } = useToast();
-  const [toAccounts, setToAccounts] = useState([])
+  const [toAccounts, setToAccounts] = useState([]);
   const [refresh, setRefresh] = useState(false);
-  const [remainingLoan, setRemainingLoan] = useState(0)
-  const [repayment, setRepayment] = useState(0)
+  const [remainingLoan, setRemainingLoan] = useState(0);
+  const [repayment, setRepayment] = useState(0);
   const years = Array.from(
     { length: 20 },
-    (_, i) => new Date().getFullYear() - 10 + i
+    (_, i) => new Date().getFullYear() - 10 + i,
   );
   const months = Array.from({ length: 12 }, (_, i) =>
-    format(setMonth(new Date(), i), "MMMM")
+    format(setMonth(new Date(), i), "MMMM"),
   );
 
-   useEffect(() => {
-          if (userID) {
-              axios.get(`/${userID}/settings`).then((response) => {
-                  setTTRate(response.data.usd_rate || "")
-              });
-          }
-      }, [userID]);
+  useEffect(() => {
+    if (userID) {
+      axios.get(`/${userID}/settings`).then((response) => {
+        setTTRate(response.data.usd_rate || "");
+      });
+    }
+  }, [userID]);
 
   const updateDate = (month, year) => {
     const start = moment()
@@ -158,10 +157,9 @@ const SalaryComponent = ({ onSelectedId }) => {
     setForm({ ...form, late_fine_per_day: response.data.late_fine * -1 });
     axios
       .get(
-        `/${userID}/salary?user=${user}&start=${startDate}&end=${endDate}&month=${selectedMonth}&year=${selectedYear}`
+        `/${userID}/salary?user=${user}&start=${startDate}&end=${endDate}&month=${selectedMonth}&year=${selectedYear}`,
       )
       .then((response) => {
-
         setData(response.data);
         if (refresh) {
           setChecked(false);
@@ -169,21 +167,21 @@ const SalaryComponent = ({ onSelectedId }) => {
             Number(moment(startDate).format("YYYY")),
             Number(moment(startDate).format("MM")),
             response.data.attendance,
-            true
+            true,
           );
 
           if (response.data?.loan) {
             const totalAmount = response.data.loan.reduce(
               (sum, item) => sum + Number(item.loan_amount),
-              0
+              0,
             );
-            setRemainingLoan(totalAmount)
+            setRemainingLoan(totalAmount);
           }
 
           if (response.data?.reimbursement) {
             const totalAmount = response.data.reimbursement.reduce(
               (sum, item) => sum + Number(item.amount),
-              0
+              0,
             );
             setForm((prevState) => ({
               ...prevState,
@@ -193,18 +191,18 @@ const SalaryComponent = ({ onSelectedId }) => {
           if (response.data?.fines) {
             const totalAmount = response.data.fines.reduce(
               (sum, item) => sum + Number(item.amount),
-              0
+              0,
             );
             setForm((prevState) => ({
               ...prevState,
-              additional_fine: (totalAmount * -1),
+              additional_fine: totalAmount * -1,
             }));
           }
 
           if (response.data?.commission?.length) {
             const totalCommission = response.data.commission.reduce(
               (sum, item) => sum + Number(item.commission_amount),
-              0
+              0,
             );
             setForm((prevState) => ({
               ...prevState,
@@ -233,6 +231,18 @@ const SalaryComponent = ({ onSelectedId }) => {
           if (excludeLateFine) {
             setLateComingFine(0);
           }
+          if (Number(ttRate) > 0 && Array.isArray(response.data?.machines)) {
+            const total = response.data?.machines.reduce(
+              (sum, item) => sum + Number(item.price || 0),
+              0,
+            );
+            const finalTotal = total / Number(ttRate);
+            setForm((prev) => ({
+              ...prev,
+              target_achieved: finalTotal.toFixed(0),
+              old_target_achieved: finalTotal.toFixed(0),
+            }));
+          }
         } else {
           if (response.data?.salary) {
             const existing = response.data.salary;
@@ -246,13 +256,13 @@ const SalaryComponent = ({ onSelectedId }) => {
               reimbursement: Number(existing.reimbursement),
               target_achieved: Number(existing.target_achieved),
             });
-            setRemainingLoan(existing?.loan)
+            setRemainingLoan(existing?.loan);
             setChecked(existing.issued);
             processAttendance(
               Number(moment(startDate).format("YYYY")),
               Number(moment(startDate).format("MM")),
               response.data.attendance,
-              false
+              false,
             );
           } else {
             setChecked(false);
@@ -260,19 +270,19 @@ const SalaryComponent = ({ onSelectedId }) => {
               Number(moment(startDate).format("YYYY")),
               Number(moment(startDate).format("MM")),
               response.data.attendance,
-              true
+              true,
             );
             if (response.data?.loan) {
               const totalAmount = response.data.loan.reduce(
                 (sum, item) => sum + Number(item.loan_amount),
-                0
+                0,
               );
-              setRemainingLoan(totalAmount)
+              setRemainingLoan(totalAmount);
             }
             if (response.data?.reimbursement) {
               const totalAmount = response.data.reimbursement.reduce(
                 (sum, item) => sum + Number(item.amount),
-                0
+                0,
               );
               setForm((prevState) => ({
                 ...prevState,
@@ -282,17 +292,17 @@ const SalaryComponent = ({ onSelectedId }) => {
             if (response.data?.fines) {
               const totalAmount = response.data.fines.reduce(
                 (sum, item) => sum + Number(item.amount),
-                0
+                0,
               );
               setForm((prevState) => ({
                 ...prevState,
-                additional_fine: (totalAmount * -1),
+                additional_fine: totalAmount * -1,
               }));
             }
             if (response.data?.commission) {
               const totalCommission = response.data?.commission.reduce(
                 (sum, item) => sum + Number(item.commission_amount),
-                0
+                0,
               );
               setForm((prevState) => ({
                 ...prevState,
@@ -311,13 +321,24 @@ const SalaryComponent = ({ onSelectedId }) => {
             if (excludeLateFine) {
               setLateComingFine(0);
             }
+            if (Number(ttRate) > 0 && Array.isArray(response.data?.machines)) {
+              const total = response.data?.machines.reduce(
+                (sum, item) => sum + Number(item.price || 0),
+                0,
+              );
+              const finalTotal = total / Number(ttRate);
+              setForm((prev) => ({
+                ...prev,
+                target_achieved: finalTotal.toFixed(0),
+                old_target_achieved: finalTotal.toFixed(0),
+              }));
+            }
           }
         }
       })
       .finally(() => {
         setLoading(false);
         setRefresh(false);
-
       });
   }
 
@@ -328,7 +349,7 @@ const SalaryComponent = ({ onSelectedId }) => {
         const basicSalary = Number(data?.user?.basic_salary) || 0;
         const performanceSalary = totalSalary - basicSalary;
 
-        const targetAchieved = Number(form.target_achieved) || 0;
+        const targetAchieved = Number(form.target_achieved) || 0; // mistake here for target_achieved but double check code again
         const monthlyTarget = Number(data?.user?.monthly_target) || 1;
 
         const feedbacksTaken = Number(data?.feedbacksTakenThisMonth) || 0;
@@ -354,14 +375,14 @@ const SalaryComponent = ({ onSelectedId }) => {
         setKpi(
           ((Number(form.target_achieved) || 0) /
             (Number(data?.user?.monthly_target) || 1)) *
-          ((Number(data?.user?.total_salary) || 0) -
-            (Number(data?.user?.basic_salary) || 0))
+            ((Number(data?.user?.total_salary) || 0) -
+              (Number(data?.user?.basic_salary) || 0)),
         );
       }
 
       if (!excludeLateFine) {
         setLateComingFine(
-          data?.user ? (form.late_fine_per_day || 0) * (form.late || 0) : 0
+          data?.user ? (form.late_fine_per_day || 0) * (form.late || 0) : 0,
         );
       }
 
@@ -369,13 +390,13 @@ const SalaryComponent = ({ onSelectedId }) => {
         setAbsentsFine(
           data?.user
             ? Number(
-              (
-                (data.user.total_salary / 30) *
-                (form.absents || 0) *
-                -1
-              ).toFixed(0)
-            )
-            : 0
+                (
+                  (data.user.total_salary / 30) *
+                  (form.absents || 0) *
+                  -1
+                ).toFixed(0),
+              )
+            : 0,
         );
       }
     }
@@ -394,21 +415,27 @@ const SalaryComponent = ({ onSelectedId }) => {
           Number(form.miscellaneous || 0) +
           Number(form.additional_fine || 0) +
           Number(repayment || 0)
-        ).toFixed(2)
+        ).toFixed(2),
       );
     }
   }, [data, form, kpi, lateComingFine, absentsFine, repayment]);
 
   useEffect(() => {
     if (cancelled && form.target_achieved) {
-      const oldTarget = form.target_achieved * Number(ttRate)
-      const newAmount = (Number(oldTarget) - Number(cancelled))
-      const finalNewTarget = newAmount / Number(ttRate)
-      setForm((prevState) => ({ ...prevState, target_achieved: finalNewTarget.toFixed(0) }))
+      const oldTarget = form.target_achieved * Number(ttRate);
+      const newAmount = Number(oldTarget) - Number(cancelled);
+      const finalNewTarget = newAmount / Number(ttRate);
+      setForm((prevState) => ({
+        ...prevState,
+        target_achieved: finalNewTarget.toFixed(0),
+      }));
     } else {
-      setForm((prevState) => ({ ...prevState, target_achieved: prevState.old_target_achieved }))
+      setForm((prevState) => ({
+        ...prevState,
+        target_achieved: prevState.old_target_achieved,
+      }));
     }
-  }, [cancelled])
+  }, [cancelled]);
 
   const handleInputChange = (field, value) => {
     setForm((prev) => ({
@@ -434,7 +461,8 @@ const SalaryComponent = ({ onSelectedId }) => {
     ) {
       let isSunday = date.isoWeekday() === 7;
 
-      if (!isSunday) totalWorkingDays++; // Count only non-Sunday days
+      if (!isSunday)
+        totalWorkingDays++; // Count only non-Sunday days
       else sundays.push(date.format("YYYY-MM-DD")); // Track Sundays
 
       monthData.push({
@@ -450,7 +478,7 @@ const SalaryComponent = ({ onSelectedId }) => {
       let record = records.find(
         (r) =>
           moment(new Date(r.time_in)).format("YYYY-MM-DD") ===
-          moment(day.date).format("YYYY-MM-DD")
+          moment(day.date).format("YYYY-MM-DD"),
       );
 
       if (record) {
@@ -460,7 +488,7 @@ const SalaryComponent = ({ onSelectedId }) => {
           : null;
 
         let isLate = checkIn.isAfter(
-          moment(day.date + " 10:10", "YYYY-MM-DD HH:mm")
+          moment(day.date + " 10:10", "YYYY-MM-DD HH:mm"),
         );
 
         return {
@@ -474,38 +502,33 @@ const SalaryComponent = ({ onSelectedId }) => {
       return day;
     });
 
-  
-
-   
-
     if (condition) {
+      finalData = finalData.map((day, index, arr) => {
+        if (day.day === "Sunday") {
+          const prevDay = arr[index - 1]; // Saturday
+          const nextDay = arr[index + 1]; // Monday
 
-        finalData = finalData.map((day, index, arr) => {
-      if (day.day === "Sunday") {
-        const prevDay = arr[index - 1]; // Saturday
-        const nextDay = arr[index + 1]; // Monday
-
-        if (
-          prevDay &&
-          nextDay &&
-          prevDay.status === "Absent" &&
-          nextDay.status === "Absent"
-        ) {
-          return {
-            ...day,
-            status: "Absent",
-            sandwich: true,
-          };
+          if (
+            prevDay &&
+            nextDay &&
+            prevDay.status === "Absent" &&
+            nextDay.status === "Absent"
+          ) {
+            return {
+              ...day,
+              status: "Absent",
+              sandwich: true,
+            };
+          }
         }
-      }
-      return day;
-    });
-    
+        return day;
+      });
+
       const totalPresent = finalData.filter(
-        (item) => item.status === "Present" || item.status === "Late"
+        (item) => item.status === "Present" || item.status === "Late",
       );
       const lateCount = finalData.filter(
-        (item) => item.status === "Late"
+        (item) => item.status === "Late",
       ).length;
 
       setForm((prevState) => ({
@@ -515,14 +538,14 @@ const SalaryComponent = ({ onSelectedId }) => {
       }));
     }
 
-     setAttendanceData([...finalData]);
+    setAttendanceData([...finalData]);
   };
 
   async function handleSave() {
     setSaveLoading(true);
 
-    axios
-      .post(`/${userID}/salary`, {
+    try {
+      await axios.post(`/${userID}/salary`, {
         user_id: user,
         year: selectedYear,
         month: selectedMonth,
@@ -539,39 +562,49 @@ const SalaryComponent = ({ onSelectedId }) => {
         payable: payable,
         kpi: kpi,
         fuel: data?.user?.fuel || 0,
-        loan: repayment
-      })
-      .then(() => {
-        toast({ title: "Salary saved" });
-        if (checked) {
-          if (repayment && !isNaN(repayment) && employeeLoan) {
-            axios.post(`/${userID}/loans/repayment`, {
-              loan_id: employeeLoan.id,
-              amount: Number(repayment),
-            });
-          }
-          if (data?.commission) {
-            data.commission.map((item) => {
-              axios.put(`/${userID}/commission/${item.id}`, {
-                commission_issued: true,
-                issue_date: new Date()
-              });
-            });
-          }
-          // if (data?.lead_commission) {
-          //   data.lead_commission.map((item) => {
-          //     axios.put(`/${userID}/commission/${item.id}`, {
-          //       lead_commission_issued: true,
-          //       lead_issue_date: new Date()
-          //     });
-          //   });
-          // }
-        }
-
-      })
-      .finally(() => {
-        setSaveLoading(false);
+        loan: repayment,
       });
+
+      toast({ title: "Salary saved! Updating other entries in background" });
+
+      if (checked) {
+        if (repayment && !isNaN(repayment) && employeeLoan) {
+          const response = await axios.post(`/${userID}/loans/repayment`, {
+            loan_id: employeeLoan.id,
+            amount: Number(repayment),
+          });
+          await axios.post(`/${userID}/salary`, {
+            user_id: user,
+            year: selectedYear,
+            month: selectedMonth,
+            loan_repayment: response.data?.id || null,
+          });
+        }
+        if (data?.commission) {
+          await Promise.all(
+            data.commission.map(async (item) => {
+              await axios.put(`/${userID}/commission/${item.id}`, {
+                commission_issued: true,
+                issue_date: new Date(),
+              });
+            }),
+          );
+
+          const commissionIds = data.commission.map((item) => item.id);
+          console.log(commissionIds);
+          await axios.post(`/${userID}/salary`, {
+            user_id: user,
+            year: selectedYear,
+            month: selectedMonth,
+            issued_commissions: JSON.stringify(commissionIds),
+          });
+        }
+      }
+      toast({ title: "Salary saved successfully." });
+      clearForm();
+    } finally {
+      setSaveLoading(false);
+    }
   }
 
   async function handleAccounts() {
@@ -579,7 +612,7 @@ const SalaryComponent = ({ onSelectedId }) => {
     axios
       .get(`/${userID}/accounts?month=${selectedMonth}&year=${selectedYear}`)
       .then(async (response) => {
-        setToAccounts(response.data)
+        setToAccounts(response.data);
         // const apiData = response.data;
         // const totalPayments = apiData.reduce(
         //   (sum, payment) => sum + Number(payment.payable),
@@ -588,7 +621,7 @@ const SalaryComponent = ({ onSelectedId }) => {
 
         // const blob = await pdf(
         //   <AccountsPdf
-        //     data={apiData} 
+        //     data={apiData}
         //     total={totalPayments}
         //     headings={apiData.length > 0 ? apiData[0].salary_month : {}}
         //   />
@@ -605,7 +638,7 @@ const SalaryComponent = ({ onSelectedId }) => {
   const RenderTTRate = ({ machines }) => {
     const total = machines.reduce(
       (sum, item) => sum + Number(item.price || 0),
-      0
+      0,
     );
     return (
       <div>
@@ -615,10 +648,12 @@ const SalaryComponent = ({ onSelectedId }) => {
     );
   };
 
-  const employeeLoan = data?.loan && Array.isArray(data.loan) && data.loan.length > 0 ? data.loan[0] : null;
+  const employeeLoan =
+    data?.loan && Array.isArray(data.loan) && data.loan.length > 0
+      ? data.loan[0]
+      : null;
 
   return (
-
     <div className="flex flex-1 flex-col gap-4">
       {/* Header + TT Rate */}
       <div className="flex flex-col lg:flex-row justify-between gap-4">
@@ -630,16 +665,18 @@ const SalaryComponent = ({ onSelectedId }) => {
               description={"Manage employee salaries"}
             />
 
-            {data && Array.isArray(data?.machines) && data.machines.length > 0 && (
-              <Card className="w-full sm:w-[280px]">
-                <CardHeader>
-                  <CardTitle>TT Rate</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <RenderTTRate machines={data?.machines || []} />
-                </CardContent>
-              </Card>
-            )}
+            {data &&
+              Array.isArray(data?.machines) &&
+              data.machines.length > 0 && (
+                <Card className="w-full sm:w-[280px]">
+                  <CardHeader>
+                    <CardTitle>TT Rate</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <RenderTTRate machines={data?.machines || []} />
+                  </CardContent>
+                </Card>
+              )}
           </div>
 
           {/* Filters + Actions */}
@@ -706,7 +743,7 @@ const SalaryComponent = ({ onSelectedId }) => {
             {userID && (
               <div className="flex flex-wrap gap-2">
                 <Button
-                  disabled={!user}
+                  disabled={!user || !userID}
                   onClick={() => {
                     clearForm();
                     setModal(true);
@@ -726,13 +763,14 @@ const SalaryComponent = ({ onSelectedId }) => {
                 <Button
                   onClick={() => {
                     clearForm();
-                    setModal(true);
                     setRefresh(true);
+                    setModal(true);
                   }}
                 >
                   Refresh
                 </Button>
                 <Button
+                  disabled={saveLoading}
                   onClick={() => handleSave()}
                   variant="destructive"
                 >
@@ -759,29 +797,31 @@ const SalaryComponent = ({ onSelectedId }) => {
               </CardHeader>
               <CardContent className="pt-5">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {Object.keys(form).map((key) => (
-                    key !== 'old_target_achieved' &&
-                    <div key={key} className="flex flex-col gap-1">
-                      <Label>
-                        {key.replace(/_/g, " ").toUpperCase()}{" "}
-                        {key === "target_achieved" && "(USD)"}
-                      </Label>
-                      {loading ? (
-                        <Skeleton className={"h-[40px] w-[150px]"} />
-                      ) : (
-                        <Input
-                          type="number"
-                          value={form[key]}
-                          onChange={(e) => handleInputChange(key, e.target.value)}
-                        />
-                      )}
-                    </div>
-                  ))}
+                  {Object.keys(form).map(
+                    (key) =>
+                      key !== "old_target_achieved" && (
+                        <div key={key} className="flex flex-col gap-1">
+                          <Label>
+                            {key.replace(/_/g, " ").toUpperCase()}{" "}
+                            {key === "target_achieved" && "(USD)"}
+                          </Label>
+                          {loading ? (
+                            <Skeleton className={"h-[40px] w-[150px]"} />
+                          ) : (
+                            <Input
+                              type="number"
+                              value={form[key]}
+                              onChange={(e) =>
+                                handleInputChange(key, e.target.value)
+                              }
+                            />
+                          )}
+                        </div>
+                      ),
+                  )}
 
                   <div className="flex flex-col gap-1">
-                    <Label>
-                      Deals Cancelled
-                    </Label>
+                    <Label>Deals Cancelled</Label>
                     {loading ? (
                       <Skeleton className={"h-[40px] w-[150px]"} />
                     ) : (
@@ -789,18 +829,18 @@ const SalaryComponent = ({ onSelectedId }) => {
                         type="number"
                         value={cancelled}
                         onChange={(e) => {
-                          const value = e.target.value
-                          setCancelled(value ? (value == "-" ? value : Number(value)) : "")
+                          const value = e.target.value;
+                          setCancelled(
+                            value ? (value == "-" ? value : Number(value)) : "",
+                          );
                         }}
                       />
                     )}
                   </div>
 
-                  {employeeLoan &&
+                  {employeeLoan && (
                     <div className="flex flex-col gap-1">
-                      <Label>
-                        Loan Deduction
-                      </Label>
+                      <Label>Loan Deduction</Label>
                       {loading ? (
                         <Skeleton className={"h-[40px] w-[150px]"} />
                       ) : (
@@ -808,14 +848,19 @@ const SalaryComponent = ({ onSelectedId }) => {
                           type="number"
                           value={repayment}
                           onChange={(e) => {
-                            const value = e.target.value
-                            setRepayment(value ? (value == "-" ? value : Number(value)) : "")
+                            const value = e.target.value;
+                            setRepayment(
+                              value
+                                ? value == "-"
+                                  ? value
+                                  : Number(value)
+                                : "",
+                            );
                           }}
                         />
                       )}
                     </div>
-                  }
-
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -918,12 +963,12 @@ const SalaryComponent = ({ onSelectedId }) => {
                     <Input value={data?.user?.fuel || 0} disabled readOnly />
                   </div>
 
-                  {employeeLoan &&
+                  {employeeLoan && (
                     <div className="flex flex-col gap-1">
                       <Label>Remaining Loan</Label>
                       <Input value={remainingLoan || 0} disabled readOnly />
                     </div>
-                  }
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -941,9 +986,12 @@ const SalaryComponent = ({ onSelectedId }) => {
                 ["Miscellaneous", form.miscellaneous],
                 ["ADDITIONAL FINE", form.additional_fine],
                 ["FUEL", data?.user?.fuel || 0],
-                ...(employeeLoan ? [["LOAN DEDUCTION", repayment]] : [])
+                ...(employeeLoan ? [["LOAN DEDUCTION", repayment]] : []),
               ].map(([label, value]) => (
-                <div key={label} className="grid grid-cols-3 items-center gap-2">
+                <div
+                  key={label}
+                  className="grid grid-cols-3 items-center gap-2"
+                >
                   <Label>{label}</Label>
                   {loading ? (
                     <Skeleton className="h-[40px] w-[300px]" />
@@ -952,7 +1000,6 @@ const SalaryComponent = ({ onSelectedId }) => {
                   )}
                 </div>
               ))}
-
 
               <div className="grid grid-cols-3 items-center gap-2">
                 <Label className="text-lg font-semibold text-green-600 tracking-wide">
@@ -1147,24 +1194,24 @@ const SalaryComponent = ({ onSelectedId }) => {
         </DialogContent>
       </Dialog>
 
-    
-
-      <Accounts visible={toAccounts.length > 0} onClose={() => setToAccounts([])} data={toAccounts} />
-
+      <Accounts
+        visible={toAccounts.length > 0}
+        onClose={() => setToAccounts([])}
+        data={toAccounts}
+      />
     </div>
   );
 };
 
 function SalaryHistory({ data }) {
   if (!data || data.length === 0) {
-    return
+    return;
   }
 
   const totalPayments = data.reduce(
     (sum, payment) => sum + Number(payment.payable),
-    0
+    0,
   );
-
 
   return (
     <ScrollArea className="max-h-[80vh] pr-2 w-[220px]">
@@ -1187,61 +1234,59 @@ function SalaryHistory({ data }) {
             <CardContent className="p-3 pt-2 text-sm space-y-1">
               <div className="flex justify-between gap-1">
                 <span className="text-muted-foreground">Payable</span>
-                <span className="font-medium">{new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: "PKR",
-                }).format(item?.payable || 0)}</span>
+                <span className="font-medium">
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "PKR",
+                  }).format(item?.payable || 0)}
+                </span>
               </div>
               <div className="flex justify-between ">
                 <span className="text-muted-foreground">Created</span>
-                <span>
-                  {moment(item.created_at).format("YYYY-MM-DD")}
-                </span>
+                <span>{moment(item.created_at).format("YYYY-MM-DD")}</span>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
     </ScrollArea>
-  )
+  );
 }
 
 const Accounts = ({ visible, onClose, data }) => {
-
-  const [selected, setSelected] = useState([])
-  const [finalData, setFinalData] = useState([])
-  const [search, setSearch] = useState("")
+  const [selected, setSelected] = useState([]);
+  const [finalData, setFinalData] = useState([]);
+  const [search, setSearch] = useState("");
 
   // keep finalData in sync with selected
   useEffect(() => {
-    const filtered = data.filter(item => selected.includes(item.user_id))
-    setFinalData(filtered)
-  }, [selected, data])
+    const filtered = data.filter((item) => selected.includes(item.user_id));
+    setFinalData(filtered);
+  }, [selected, data]);
 
-  const allSelected = selected.length === data.length
-  const someSelected = selected.length > 0 && !allSelected
+  const allSelected = selected.length === data.length;
+  const someSelected = selected.length > 0 && !allSelected;
 
   const toggleAll = () => {
     if (allSelected) {
-      setSelected([])
+      setSelected([]);
     } else {
-      setSelected(data.map(item => item.user_id))
+      setSelected(data.map((item) => item.user_id));
     }
-  }
+  };
 
   const toggleOne = (id) => {
-    setSelected(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    )
-  }
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
 
   async function handleCreatePdf() {
-
     try {
       const apiData = [...finalData];
       const totalPayments = apiData.reduce(
         (sum, payment) => sum + Number(payment.payable),
-        0
+        0,
       );
 
       const blob = await pdf(
@@ -1249,27 +1294,25 @@ const Accounts = ({ visible, onClose, data }) => {
           data={apiData}
           total={totalPayments}
           headings={apiData.length > 0 ? apiData[0].salary_month : {}}
-        />
+        />,
       ).toBlob();
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank");
       setTimeout(() => URL.revokeObjectURL(url), 600000);
     } catch (e) {
-      console.log(e)
+      console.log(e);
     }
-
-
   }
 
   function handleClose() {
-    setSelected([])
-    setFinalData([])
-    onClose()
+    setSelected([]);
+    setFinalData([]);
+    onClose();
   }
 
-  const filteredData = data.filter(item =>
-    item.name.toLowerCase().includes(search.toLowerCase())
-  )
+  const filteredData = data.filter((item) =>
+    item.name.toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -1291,9 +1334,14 @@ const Accounts = ({ visible, onClose, data }) => {
               <TableRow>
                 <TableHead className="w-[50px]">
                   <Checkbox
-                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    checked={
+                      allSelected
+                        ? true
+                        : someSelected
+                          ? "indeterminate"
+                          : false
+                    }
                     onCheckedChange={toggleAll}
-
                   />
                 </TableHead>
                 <TableHead>Name</TableHead>
@@ -1301,7 +1349,7 @@ const Accounts = ({ visible, onClose, data }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredData.map(item => (
+              {filteredData.map((item) => (
                 <TableRow key={item.user_id}>
                   <TableCell>
                     <Checkbox
@@ -1310,15 +1358,16 @@ const Accounts = ({ visible, onClose, data }) => {
                     />
                   </TableCell>
                   <TableCell>{item.name}</TableCell>
-                  <TableCell className="text-right">
-                    {item.payable}
-                  </TableCell>
+                  <TableCell className="text-right">{item.payable}</TableCell>
                 </TableRow>
               ))}
 
               {filteredData.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={3}
+                    className="text-center text-muted-foreground"
+                  >
                     No users found
                   </TableCell>
                 </TableRow>
@@ -1328,17 +1377,14 @@ const Accounts = ({ visible, onClose, data }) => {
         </div>
 
         <DialogFooter className="justify-start sm:justify-end gap-2 mt-4">
-          <Button
-            disabled={finalData.length === 0}
-            onClick={handleCreatePdf}
-          >
+          <Button disabled={finalData.length === 0} onClick={handleCreatePdf}>
             Ok
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const Fines = ({ passingData }) => {
   const [data, setData] = useState([]);
@@ -1452,16 +1498,11 @@ const Fines = ({ passingData }) => {
       },
       cell: ({ row }) => <div>{row.getValue("reason")}</div>,
     },
-
-
-  ]
-
+  ];
 
   useEffect(() => {
     setData([...passingData]);
   }, [passingData]);
-
-
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -1469,13 +1510,10 @@ const Fines = ({ passingData }) => {
         <PageTable
           columns={columns}
           data={data}
-
           tableHeader={tableHeader}
-          onRowClick={() => { }}
+          onRowClick={() => {}}
         />
       </div>
-
-
     </div>
   );
 };
@@ -1587,7 +1625,6 @@ const Reimbursement = ({ passingData }) => {
           disableInput={true}
           columns={columns}
           data={data}
-
           onRowClick={(val) => {
             setImageURL(val);
             setVisible(true);
@@ -1796,8 +1833,7 @@ const AttendanceRecord = ({ passingData = [] }) => {
           disableInput={true}
           columns={columns}
           data={passingData}
-
-          onRowClick={(val) => { }}
+          onRowClick={(val) => {}}
         ></PageTable>
       </div>
     </div>
@@ -1940,10 +1976,8 @@ const TargetRecord = ({ passingData = [] }) => {
           disableInput={true}
           columns={columns}
           data={passingData}
-
           onRowClick={(val, e) => {
-            const url = `/${base_route}/member/${val.customer_id
-              }/${val.id}`;
+            const url = `/${base_route}/member/${val.customer_id}/${val.id}`;
             window.open(url, "_blank");
           }}
         ></PageTable>
@@ -1952,4 +1986,4 @@ const TargetRecord = ({ passingData = [] }) => {
   );
 };
 
-export default SalaryComponent
+export default SalaryComponent;
