@@ -98,8 +98,9 @@ const OwnerView = () => {
 
   const filteredData = data.filter((item) => {
     if (!search) return true;
-    const allSearch = `${item.customer_name || ""} ${item.user_name || ""} ${item.customer_owner || ""
-      }`;
+    const allSearch = `${item.customer_name || ""} ${item.user_name || ""} ${
+      item.customer_owner || ""
+    }`;
     return allSearch.toLowerCase().includes(search.toLowerCase());
   });
 
@@ -117,7 +118,6 @@ const OwnerView = () => {
       is_approved,
       approval_date,
       commission_amount,
-      lead_commission_amount
     ) {
       if (!id) return;
       setLoading(true);
@@ -126,7 +126,25 @@ const OwnerView = () => {
           is_approved: is_approved,
           approval_date: approval_date,
           commission_amount: commission_amount,
-          // lead_commission_amount: lead_commission_amount,
+        });
+        await onRefresh();
+        setShowManual(false);
+        setManualNumber("");
+        setSelectedPercentage(null);
+      } catch (error) {
+        console.error("Update failed:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function revertIssued(id) {
+      if (!id) return;
+      setLoading(true);
+      try {
+        await axios.put(`/${userID}/commission/${id}`, {
+          commission_issued: false,
+          issue_date: null,
         });
         await onRefresh();
         setShowManual(false);
@@ -219,11 +237,16 @@ const OwnerView = () => {
           {loading ? (
             <Spinner />
           ) : item.commission_issued === true ? (
-            <span className="text-green-600">Issued</span>
+            <div className="flex gap-2 items-center">
+              <span className="text-green-600">Issued</span>
+              <Button onClick={() => revertIssued(item.id)}>Revert</Button>
+            </div>
           ) : item.is_approved === null ? (
             <div className="flex gap-2 items-center">
               <Button
-                disabled={showManual ? manualNumber === "" : !selectedPercentage}
+                disabled={
+                  showManual ? manualNumber === "" : !selectedPercentage
+                }
                 onClick={() =>
                   handleUpdate(
                     item.id,
@@ -232,7 +255,7 @@ const OwnerView = () => {
                     showManual
                       ? Number(manualNumber)
                       : (item.total_amount * (selectedPercentage || 0)) / 100,
-                    item.lead_id ? item.total_amount / 100 : null
+                    item.lead_id ? item.total_amount / 100 : null,
                   )
                 }
               >
@@ -423,7 +446,6 @@ const OtherView = () => {
     const [issueLoading, setIssueLoading] = useState(false);
 
     async function handleApplyCommission(id, amount, item) {
-      
       if (item.customer.profile_completion < 100) {
         toast({
           title: "Incomplete data",
@@ -435,7 +457,7 @@ const OtherView = () => {
               onClick={() => {
                 window.open(
                   `/${base_route}/member/${item.customer.id}`,
-                  "_blank"
+                  "_blank",
                 );
               }}
               altText="Open customer"
@@ -457,7 +479,7 @@ const OtherView = () => {
               onClick={() => {
                 window.open(
                   `/${base_route}/member/${item.customer.id}/${item.id}`,
-                  "_blank"
+                  "_blank",
                 );
               }}
               altText="Open Machine"
@@ -767,8 +789,8 @@ const CrmView = () => {
     const renderCommissionStatus = (item) => {
       // if (item.lead_commission_issued === true) {
       //   return <span className="text-green-600">Issued</span>;
-      // } else 
-        if (item.is_approved === true) {
+      // } else
+      if (item.is_approved === true) {
         return <span className="text-green-600">Approved</span>;
       } else if (item.is_approved === false) {
         return (
