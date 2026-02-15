@@ -149,8 +149,7 @@ export async function GET(req, { params }) {
     LEFT JOIN users sell_user ON sell_user.id = s.sell_by
     LEFT JOIN users ownership_user ON ownership_user.id = c.ownership
     
-    WHERE c.office = $1
-    AND COALESCE(c.ownership, s.sell_by) = $2
+    WHERE COALESCE(c.ownership, s.sell_by) = $1
     AND NOT EXISTS (
         SELECT 1
         FROM cancelled_machine cm
@@ -158,7 +157,7 @@ export async function GET(req, { params }) {
     )
 `;
 
-      const { rows: sales } = await pool.query(query, [office, user]);
+      const { rows: sales } = await pool.query(query, [user]);
 
       const machineIds = sales.map((s) => s.machine_id);
       let payments = [];
