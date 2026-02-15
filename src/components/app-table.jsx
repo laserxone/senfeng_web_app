@@ -30,6 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  memo,
   useMemo,
   useRef,
   useState,
@@ -45,6 +46,7 @@ import {
 } from "@/components/ui/select";
 import Spinner from "./ui/spinner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useDebounce } from "@/hooks/use-debounce";
 
 const PageTable = ({
   children,
@@ -55,42 +57,68 @@ const PageTable = ({
   totalCustomerText,
   onRowClick = ()=>{},
   loading = false,
+  defaultPageSize=20
 }) => {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(defaultPageSize);
   const [search, setSearch] = useState("");
+    const debouncedSearch = useDebounce(search, 500);
   const paginationState = {
     pageIndex: currentPage - 1,
     pageSize: pageSize,
   };
 
-  const filteredData = useMemo(() => {
-    let filtered = data;
+  // const filteredData = useMemo(() => {
+  //   let filtered = data;
 
-    // Apply column filters
-    columnFilters.forEach((filter) => {
-      filtered = filtered.filter(row => {
-        const cellValue = row[filter.id];
-        return cellValue.toString().toLowerCase().includes(filter.value.toLowerCase());
+  //   // Apply column filters
+  //   columnFilters.forEach((filter) => {
+  //     filtered = filtered.filter(row => {
+  //       const cellValue = row[filter.id];
+  //       return cellValue.toString().toLowerCase().includes(filter.value.toLowerCase());
+  //     });
+  //   });
+
+  //   // Apply global search filter
+  //   if (search) {
+  //     filtered = filtered.filter(row => {
+  //       return Object.values(row).some(value =>
+  //         String(value).toLowerCase().includes(search.toLowerCase())
+  //       );
+  //     });
+  //   }
+
+  //   return filtered;
+  // }, [data, columnFilters, search]);
+
+
+
+   const filteredData = useMemo(() => {
+      let filtered = data;
+      columnFilters.forEach((filter) => {
+        filtered = filtered.filter((row) => {
+          const cellValue = row[filter.id];
+          return cellValue
+            .toString()
+            .toLowerCase()
+            .includes(filter.value.toLowerCase());
+        });
       });
-    });
-
-    // Apply global search filter
-    if (search) {
-      filtered = filtered.filter(row => {
-        return Object.values(row).some(value =>
-          String(value).toLowerCase().includes(search.toLowerCase())
-        );
-      });
-    }
-
-    return filtered;
-  }, [data, columnFilters, search]);
-
+  
+      if (debouncedSearch) {
+        filtered = filtered.filter((row) => {
+          return Object.values(row).some((value) =>
+            String(value).toLowerCase().includes(debouncedSearch.toLowerCase()),
+          );
+        });
+      }
+  
+      return filtered;
+    }, [data, columnFilters, debouncedSearch]);
   const pageCount = Math.ceil(filteredData.length / pageSize);
 
   const handlePaginationChange = (updaterOrValue) => {
@@ -114,7 +142,7 @@ const PageTable = ({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    globalFilterFn: customGlobalFilter,
+    // globalFilterFn: customGlobalFilter,
     pageCount: pageCount,
     state: {
       sorting,
@@ -122,7 +150,7 @@ const PageTable = ({
       columnVisibility,
       rowSelection,
       pagination: paginationState,
-      globalFilter: search,
+      // globalFilter: search,
     },
     onPaginationChange: handlePaginationChange,
     defaultColumn : {
@@ -157,12 +185,12 @@ const PageTable = ({
       </div>
 
       <div className={`relative flex flex-1 flex-col ${isMobile && "min-h-[500px]"}`}>
-        <div className="absolute bottom-0 left-0 right-0 top-0 flex overflow-scroll rounded-md border md:overflow-auto">
-          <ScrollArea className="flex-1">
+        <div className="absolute bottom-0 left-0 right-0 top-0 flex rounded-md border md:overflow-auto custom-scrollbar overflow-auto">
+          {/* <ScrollArea className="flex-1"> */}
             <Table className="relative">
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id} className="bg-background">
+                  <TableRow key={headerGroup.id} className="sticky top-0 z-20 bg-background">
                     {headerGroup.headers.map((header) => (
                       <TableHead style={{ width: header.getSize() }} key={header.id}>
                         {header.isPlaceholder
@@ -207,8 +235,8 @@ const PageTable = ({
                 )}
               </TableBody>
             </Table>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+            {/* <ScrollBar orientation="horizontal" />
+          </ScrollArea> */}
         </div>
       </div>
 
@@ -310,4 +338,4 @@ function customGlobalFilter(row, columnId, filterValue) {
     .some((cell) => String(cell.getValue()).toLowerCase().includes(search));
 }
 
-export default PageTable;
+export default memo(PageTable) ;

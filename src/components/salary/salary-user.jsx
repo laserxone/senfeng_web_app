@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PageTable from "@/components/app-table-without-pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Heading } from "@/components/ui/heading";
+import  Heading  from "@/components/ui/heading";
 import {
   Select,
   SelectContent,

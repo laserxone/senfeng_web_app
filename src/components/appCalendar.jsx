@@ -12,8 +12,6 @@ const AppCalendar = ({
   min = new Date("1900-01-01"),
   max = "",
 }) => {
-  console.log(min);
-  console.log(max);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   return (
     <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>

@@ -4,7 +4,7 @@ import PageTable from "@/components/app-table-without-pagination";
 import CurrencyFormatter from "@/components/currency-formatter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heading } from "@/components/ui/heading";
+import  Heading  from "@/components/ui/heading";
 import { Skeleton } from "@/components/ui/skeleton";
 import FilterSheet from "@/components/users/filterSheet";
 import useUserDetail from "@/hooks/use-user-detail";

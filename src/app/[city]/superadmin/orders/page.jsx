@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heading } from "@/components/ui/heading";
+import  Heading  from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import FilterSheet from "@/components/users/filterSheet";
 import useUserDetail from "@/hooks/use-user-detail";

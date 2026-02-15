@@ -9,17 +9,18 @@ export async function GET(req) {
 
   const office = "lahore";
 
-  let whereClause = ` AND s.contract_date BETWEEN $2 AND $3`;
-  const queryParams = [office, start_date, end_date];
+  let whereClause = ``;
+  const queryParams = [start_date, end_date];
 
   if (user) {
-    
-    whereClause += ` AND COALESCE(c.ownership, s.sell_by) = $4`;
+    whereClause += ` AND COALESCE(c.ownership, s.sell_by) = $3`;
     queryParams.push(user);
+  } else {
+    whereClause += ` AND c.office = $3`;
+    queryParams.push(office)
   }
 
   try {
-    
     const query = `
      SELECT
         s.id AS machine_id,
@@ -33,14 +34,14 @@ export async function GET(req) {
         c.name AS customer_name,
         c.owner AS customer_owner,
         c.ownership,
+        c.office,
         COALESCE(ownership_user.name, sell_user.name) AS sell_by_name,
         COALESCE(ownership_user.id, sell_user.id) AS sell_id
     FROM sale s
     LEFT JOIN customer c ON c.id = s.customer_id
     LEFT JOIN users sell_user ON sell_user.id = s.sell_by
     LEFT JOIN users ownership_user ON ownership_user.id = c.ownership
-    
-    WHERE sell_user.office = $1
+    WHERE s.contract_date BETWEEN $1 AND $2
     AND NOT EXISTS (
         SELECT 1
         FROM cancelled_machine cm
@@ -97,7 +98,7 @@ export async function GET(req) {
     return NextResponse.json(pendingMachines, { status: 200 });
   } catch (error) {
     return NextResponse.json(
-      { message: error?.message || "Error filtering data" },
+      { message: error?.message || "Server error" },
       { status: 500 },
     );
   }

@@ -11,6 +11,7 @@ export async function GET(req, { params }) {
   const isAdmin = await checkSuperadmin(uid);
   const queryParams = [];
   queryParams.push(office);
+  
 
   if (isAdmin) {
     try {
@@ -27,6 +28,7 @@ export async function GET(req, { params }) {
         c.name AS customer_name,
         c.owner AS customer_owner,
         c.ownership,
+        c.office,
         COALESCE(ownership_user.name, sell_user.name) AS sell_by_name,
         COALESCE(ownership_user.id, sell_user.id) AS sell_id
     FROM sale s
@@ -34,7 +36,7 @@ export async function GET(req, { params }) {
     LEFT JOIN users sell_user ON sell_user.id = s.sell_by
     LEFT JOIN users ownership_user ON ownership_user.id = c.ownership
     
-    WHERE sell_user.office = $1
+    WHERE c.office = $1
     AND NOT EXISTS (
         SELECT 1
         FROM cancelled_machine cm
@@ -115,7 +117,7 @@ export async function GET(req, { params }) {
       );
     } catch (error) {
       return NextResponse.json(
-        { message: error?.message || "Error filtering data" },
+        { message: error?.message || "Server error" },
         { status: 500 },
       );
     }
@@ -139,6 +141,7 @@ export async function GET(req, { params }) {
         c.name AS customer_name,
         c.owner AS customer_owner,
         c.ownership,
+        c.office,
         COALESCE(ownership_user.name, sell_user.name) AS sell_by_name,
         COALESCE(ownership_user.id, sell_user.id) AS sell_id
     FROM sale s
@@ -146,7 +149,7 @@ export async function GET(req, { params }) {
     LEFT JOIN users sell_user ON sell_user.id = s.sell_by
     LEFT JOIN users ownership_user ON ownership_user.id = c.ownership
     
-    WHERE sell_user.office = $1
+    WHERE c.office = $1
     AND COALESCE(c.ownership, s.sell_by) = $2
     AND NOT EXISTS (
         SELECT 1
@@ -222,7 +225,7 @@ export async function GET(req, { params }) {
       );
     } catch (error) {
       return NextResponse.json(
-        { message: error?.message || "Error filtering data" },
+        { message: error?.message || "Server error" },
         { status: 500 },
       );
     }

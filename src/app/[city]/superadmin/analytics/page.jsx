@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button";
-import { Heading } from "@/components/ui/heading";
+import  Heading  from "@/components/ui/heading";
 import FilterSheet from "@/components/users/filterSheet";
 import useUserDetail from "@/hooks/use-user-detail";
 import { Filter } from "lucide-react";

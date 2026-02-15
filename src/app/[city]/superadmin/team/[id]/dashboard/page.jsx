@@ -7,6 +7,6 @@ export default function Page({ params }) {
     if (!id) return
 
     return (
-        <UserDashboard id={id} />
+        <UserDashboard id={id} owner={true}/>
     )
 }

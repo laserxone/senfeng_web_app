@@ -2,9 +2,9 @@
 import AddCustomerDialog from "@/components/addCustomer";
 import AddQuickAction from "@/components/addQuickAction";
 import ConfimationDialog from "@/components/alert-dialog";
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import { Button } from "@/components/ui/button";
-import { Heading } from "@/components/ui/heading";
+import  Heading  from "@/components/ui/heading";
 import {
   Select,
   SelectContent,
@@ -392,6 +392,7 @@ export default function CustomerMainPage({ onReturn }) {
         </div>
 
         <PageTable
+        defaultPageSize={50}
           columns={columns}
           data={
             additionalFilter === "duplicate"

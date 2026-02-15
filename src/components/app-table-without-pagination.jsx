@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 
 import { useDebounce } from "@/hooks/use-debounce";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -227,4 +227,4 @@ function customGlobalFilter(row, filterValue) {
     .some((cell) => String(cell.getValue()).toLowerCase().includes(search));
 }
 
-export default PageTable;
+export default memo(PageTable);

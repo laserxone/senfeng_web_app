@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Heading } from "@/components/ui/heading";
+import  Heading  from "@/components/ui/heading";
 import FilterSheet from "@/components/users/filterSheet";
 import { toast } from "@/hooks/use-toast";
 import useUserDetail from "@/hooks/use-user-detail";

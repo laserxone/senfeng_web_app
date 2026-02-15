@@ -27,7 +27,7 @@ import PageTable from "@/components/app-table-without-pagination";
 import AppCalendar from "@/components/appCalendar";
 import { RequiredStar } from "@/components/RequiredStar";
 import { Badge } from "@/components/ui/badge";
-import { Heading } from "@/components/ui/heading";
+import  Heading  from "@/components/ui/heading";
 import {
   Select,
   SelectContent,

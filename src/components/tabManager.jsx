@@ -25,7 +25,7 @@ const TabManager = ({
   return (
     <div className="w-full flex flex-1 flex-col">
       {/* Tab bar */}
-      <div className="flex pt-2 border-b bg-muted overflow-x-auto">
+      <div className="flex pt-2 border-b overflow-x-auto">
         {tabs.map((tab) => (
           <div
             key={tab.id}

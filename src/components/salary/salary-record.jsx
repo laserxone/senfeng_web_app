@@ -9,7 +9,7 @@ import {
 
 import PageTable from "@/components/app-table-without-pagination";
 import SalaryPdf from "@/components/salaryPdf";
-import { Heading } from "@/components/ui/heading";
+import  Heading  from "@/components/ui/heading";
 import axios from "@/lib/axios";
 import moment from "moment";
 import { FaRegFilePdf } from "react-icons/fa";

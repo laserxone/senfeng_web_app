@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heading } from "@/components/ui/heading";
+import  Heading  from "@/components/ui/heading";
 import { db } from "@/config/firebase";
 import useUserDetail from "@/hooks/use-user-detail";
 import { NotificationContext } from "@/store/context/NotificationContext";

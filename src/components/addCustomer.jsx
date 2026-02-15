@@ -7,7 +7,7 @@ import { debounce, debouncePromise } from "@/lib/debounce";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Trash } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import AppCalendar from "./appCalendar";
@@ -41,7 +41,7 @@ import {
 import Spinner from "./ui/spinner";
 import { UserSearch } from "./user-search";
 
-const AddCustomerDialog = ({
+function AddCustomerDialog  ({
   onRefresh,
   visible,
   onClose,
@@ -49,7 +49,7 @@ const AddCustomerDialog = ({
   ownership,
   user_designation = null,
   office = "islamabad",
-}) => {
+})  {
   const [numbers, setNumbers] = useState([""]);
   const [numberError, setNumberError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -719,4 +719,4 @@ const AddCustomerDialog = ({
   );
 };
 
-export default AddCustomerDialog;
+export default memo(AddCustomerDialog);

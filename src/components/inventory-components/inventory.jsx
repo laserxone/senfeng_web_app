@@ -21,7 +21,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Heading } from "@/components/ui/heading";
+import  Heading  from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";

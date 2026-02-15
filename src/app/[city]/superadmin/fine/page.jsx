@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UserSearch } from "@/components/user-search";
-import { Heading } from "@/components/ui/heading";
+import  Heading  from "@/components/ui/heading";
 import PageTable from "@/components/app-table-without-pagination";
 import { ArrowUpDown, Filter, Trash2 } from "lucide-react";
 import moment from "moment";

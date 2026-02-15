@@ -2,7 +2,7 @@
 
 import PageTable from "@/components/app-table-without-pagination"
 import { Button } from "@/components/ui/button"
-import { Heading } from "@/components/ui/heading"
+import  Heading  from "@/components/ui/heading"
 import useUserDetail from "@/hooks/use-user-detail"
 import axios from "@/lib/axios"
 import { ArrowUpDown } from "lucide-react"

@@ -46,7 +46,7 @@ import Link from "next/link";
 import { use, useCallback, useEffect, useState } from "react";
 
 
-export default function UserDashboard({id}) {
+export default function UserDashboard({id, owner = false}) {
  
   const [data, setData] = useState();
   const { base_route, userID } = useUserDetail();
@@ -351,7 +351,7 @@ export default function UserDashboard({id}) {
         </Tabs>
       </div>
 
-      <AutoScrollMembers />
+    {!owner && <AutoScrollMembers />}  
 
       <Dialog open={visible} onOpenChange={setVisible}>
         <DialogContent>

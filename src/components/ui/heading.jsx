@@ -1,4 +1,6 @@
-export const Heading = ({ title, description, className }) => {
+import { memo } from "react";
+
+function Heading  ({ title, description, className }) {
   return (
     <div className={className}>
       <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
@@ -6,3 +8,5 @@ export const Heading = ({ title, description, className }) => {
     </div>
   );
 };
+
+export default memo(Heading)

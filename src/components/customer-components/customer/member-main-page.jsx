@@ -2,7 +2,7 @@
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table-without-pagination";
 import { Button } from "@/components/ui/button";
-import { Heading } from "@/components/ui/heading";
+import  Heading  from "@/components/ui/heading";
 import {
   Select,
   SelectContent,

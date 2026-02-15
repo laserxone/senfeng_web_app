@@ -3,7 +3,7 @@ import { ArrowUpDown, Frown, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import PageTable from "@/components/app-table-without-pagination";
-import { Heading } from "@/components/ui/heading";
+import  Heading  from "@/components/ui/heading";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import moment from "moment";

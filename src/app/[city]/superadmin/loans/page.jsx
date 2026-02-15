@@ -9,7 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import useUserDetail from "@/hooks/use-user-detail";
 import { UserSearch } from "@/components/user-search";
-import { Heading } from "@/components/ui/heading";
+import  Heading  from "@/components/ui/heading";
 import { Label } from "@/components/ui/label";
 import { RequiredStar } from "@/components/RequiredStar";
 import { toast } from "sonner";

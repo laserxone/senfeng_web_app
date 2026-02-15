@@ -27,7 +27,7 @@ import { z } from "zod";
 
 import PageTable from "@/components/app-table-without-pagination";
 import { CustomerSearch } from "@/components/customer-search";
-import { Heading } from "@/components/ui/heading";
+import  Heading  from "@/components/ui/heading";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Sheet,
