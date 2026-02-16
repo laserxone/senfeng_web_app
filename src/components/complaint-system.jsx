@@ -29,7 +29,7 @@ import {
   FormLabel,
   FormMessage,
 } from "./ui/form";
-import { Heading } from "./ui/heading";
+import Heading  from "./ui/heading";
 import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
 import { UserSearch } from "./user-search";

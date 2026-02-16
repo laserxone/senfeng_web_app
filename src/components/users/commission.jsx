@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import { Heading } from "../ui/heading";
+import Heading  from "../ui/heading";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import {

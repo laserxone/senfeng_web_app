@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { useEffect, useMemo, useState } from "react";
-import { Heading } from "./ui/heading";
+import Heading  from "./ui/heading";
 import { Label } from "./ui/label";
 import Spinner from "./ui/spinner";
 import PageTable from "./app-table-without-pagination";
