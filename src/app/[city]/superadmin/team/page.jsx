@@ -351,6 +351,7 @@ const AddUserDialog = ({
       value: "Social Media Manager",
     },
     { label: "Office Boy", value: "Office Boy" },
+    { label: "Store Manager", value: "Store Manager" },
   ];
 
   async function handleClose(val) {
