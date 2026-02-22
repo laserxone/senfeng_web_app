@@ -330,6 +330,14 @@ export const dealerNavItems = [
     shortcut: ["m", "e", "m"],
     items: [],
   },
+  {
+    title: "Commission",
+    url: "/commission",
+    icon: "commission",
+    shortcut: ["c", "o", "m"],
+    isActive: false,
+    items: [], // No child items
+  },
 ];
 
 export const branchNavItem = {
