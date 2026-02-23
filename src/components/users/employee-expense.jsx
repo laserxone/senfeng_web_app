@@ -24,7 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import  Heading  from "@/components/ui/heading";
+import Heading from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
@@ -53,6 +53,8 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
 import Spinner from "../ui/spinner";
+import formatCurrency from "@/lib/formatCurrency";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 export default function EmployeeBranchExpenses({ base }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -198,9 +200,16 @@ export default function EmployeeBranchExpenses({ base }) {
         item.note,
         Number(item.amount || 0),
         item.submitted_by_name,
-        item.image
+        item.image,
       ]);
-      exportToExcel(headers, formattedData, "Branch-Expenses.xlsx", false, "", true);
+      exportToExcel(
+        headers,
+        formattedData,
+        "Branch-Expenses.xlsx",
+        false,
+        "",
+        true,
+      );
     } catch (error) {
       console.log("error");
     } finally {
@@ -238,6 +247,8 @@ export default function EmployeeBranchExpenses({ base }) {
     }
   }
 
+  const total = data.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -261,7 +272,6 @@ export default function EmployeeBranchExpenses({ base }) {
         loading={loading}
         columns={columns}
         data={data}
-        
         onRowClick={(val, e) => {
           setImageURL(val);
           setVisible(true);
@@ -269,38 +279,50 @@ export default function EmployeeBranchExpenses({ base }) {
         // filter={true}
         // onFilterClick={() => setFilterVisible(true)}
       >
-        <Button
-          onClick={() => setFilterVisible(true)}
-          variant="ghost"
-          className="p-0 w-8"
-        >
-          <Filter />
-        </Button>
-        <Button
-          variant="destructive"
-          onClick={async () => {
-            setResetLoading(true);
-            const startDate = momentT
-              .tz(TIMEZONE)
-              .startOf("month")
-              .startOf("day")
-              .utc()
-              .toISOString();
-            const endDate = momentT
-              .tz(TIMEZONE)
-              .endOf("month")
-              .endOf("day")
-              .utc()
-              .toISOString();
-            await fetchData(startDate, endDate);
-            setResetLoading(false);
-          }}
-        >
-          {resetLoading && <Spinner />} Reset
-        </Button>
-        <Button onClick={handleDownload}>
-          {downloadLoading && <Spinner />} Download
-        </Button>
+        <div className="flex flex-1 items-center justify-between flex-wrap gap-2">
+          <div className="flex gap-4 flex-wrap">
+            <Button
+              onClick={() => setFilterVisible(true)}
+              variant="ghost"
+              className="p-0 w-8"
+            >
+              <Filter />
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                setResetLoading(true);
+                const startDate = momentT
+                  .tz(TIMEZONE)
+                  .startOf("month")
+                  .startOf("day")
+                  .utc()
+                  .toISOString();
+                const endDate = momentT
+                  .tz(TIMEZONE)
+                  .endOf("month")
+                  .endOf("day")
+                  .utc()
+                  .toISOString();
+                await fetchData(startDate, endDate);
+                setResetLoading(false);
+              }}
+            >
+              {resetLoading && <Spinner />} Reset
+            </Button>
+            <Button onClick={handleDownload}>
+              {downloadLoading && <Spinner />} Download
+            </Button>
+          </div>
+          <Card className="self-end">
+            <CardContent className="px-4 py-2">
+              <CardTitle className="font-medium">
+                Total PKR:{" "}
+                <span className="font-bold">{formatCurrency(total)}</span>
+              </CardTitle>
+            </CardContent>
+          </Card>
+        </div>
       </PageTable>
 
       <FilterSheet
@@ -323,7 +345,12 @@ export default function EmployeeBranchExpenses({ base }) {
               .startOf("day")
               .utc()
               .toISOString(),
-            momentT.tz(TIMEZONE).endOf("month").endOf("day").utc().toISOString()
+            momentT
+              .tz(TIMEZONE)
+              .endOf("month")
+              .endOf("day")
+              .utc()
+              .toISOString(),
           )
         }
       />
@@ -536,7 +563,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
                       <FormLabel>Date</FormLabel>
                       <FormControl>
                         <AppCalendar
-                         max={new Date()}
+                          max={new Date()}
                           date={field.value}
                           onChange={field.onChange}
                         />
