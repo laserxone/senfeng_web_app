@@ -204,6 +204,7 @@ export default function Page() {
       axios
         .get(`/${userID}/user?withbranch=true`)
         .then((response) => {
+          
           setData(response.data);
         })
         .finally(() => {

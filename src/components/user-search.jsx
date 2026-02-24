@@ -22,6 +22,7 @@ import axios from "@/lib/axios";
 import { cn } from "@/lib/utils";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
+import { Checkbox } from "./ui/checkbox";
 
 export function UserSearch({
   value,
@@ -30,17 +31,18 @@ export function UserSearch({
   lead = false,
   className = "",
   remove = false,
-  onReturnName = () => { },
-  onReturnData = () => { },
+  onReturnName = () => {},
+  onReturnData = () => {},
 }) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState([]);
   const [city, setCity] = React.useState("lahore");
+  const [showInactive, setShowInactive] = React.useState(false);
   const { userID, designation, office } = useUserDetail();
 
   React.useEffect(() => {
     async function fetchData() {
-      axios.get(`/${userID}/user?withoutleave=true&active=true`).then((response) => {
+      axios.get(`/${userID}/user`).then((response) => {
         if (response.data.length > 0) {
           if (lead) {
             const finalData = response.data
@@ -81,22 +83,25 @@ export function UserSearch({
         }
       });
     }
-    if (userID)
-      fetchData();
+    if (userID) fetchData();
   }, [userID]);
 
   React.useEffect(() => {
     if (office) {
-      if (designation === 'Sales') {
-        setCity("")
+      if (designation === "Sales") {
+        setCity("");
       } else {
         setCity(office);
       }
-
     }
   }, [office, designation]);
 
-  const filteredData = data.filter((item) => item?.data?.office?.includes(city));
+  const filteredData = data
+    .filter((item) => item?.data?.office?.includes(city))
+    .filter((item) => {
+      if (showInactive) return true;
+      return item?.data?.active;
+    });
 
   return (
     <div className={className}>
@@ -126,6 +131,11 @@ export function UserSearch({
                   }
                 />
                 <Label className="text-sm">Karachi</Label>
+                <Checkbox
+                  checked={showInactive}
+                  onCheckedChange={setShowInactive}
+                />
+                <Label className="text-sm">Inactive</Label>
               </div>
             )}
             <CommandInput placeholder="Search user..." className="h-9" />
@@ -149,7 +159,7 @@ export function UserSearch({
                     <Check
                       className={cn(
                         "ml-auto",
-                        value === item.value ? "opacity-100" : "opacity-0"
+                        value === item.value ? "opacity-100" : "opacity-0",
                       )}
                     />
                   </CommandItem>
