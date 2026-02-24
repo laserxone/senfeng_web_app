@@ -392,6 +392,7 @@ export default function CustomerMainPage({ onReturn }) {
         </div>
 
         <PageTable
+        download={true}
         defaultPageSize={50}
           columns={columns}
           data={
