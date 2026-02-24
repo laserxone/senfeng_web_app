@@ -57,7 +57,8 @@ const PageTable = ({
   totalCustomerText,
   onRowClick = ()=>{},
   loading = false,
-  defaultPageSize=20
+  defaultPageSize=20,
+  download = false
 }) => {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
