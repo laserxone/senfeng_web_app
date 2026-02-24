@@ -8,10 +8,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-} from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
 import {
   DoubleArrowLeftIcon,
@@ -29,12 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  memo,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { memo, useMemo, useRef, useState } from "react";
 
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
@@ -47,6 +39,7 @@ import {
 import Spinner from "./ui/spinner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useDebounce } from "@/hooks/use-debounce";
+import exportToExcel from "@/lib/exportToExcel";
 
 const PageTable = ({
   children,
@@ -55,10 +48,10 @@ const PageTable = ({
   pageSizeOptions = [10, 20, 30, 40, 50],
   disableInput = false,
   totalCustomerText,
-  onRowClick = ()=>{},
+  onRowClick = () => {},
   loading = false,
-  defaultPageSize=20,
-  download = false
+  defaultPageSize = 20,
+  download = false,
 }) => {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
@@ -67,7 +60,7 @@ const PageTable = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
   const [search, setSearch] = useState("");
-    const debouncedSearch = useDebounce(search, 500);
+  const debouncedSearch = useDebounce(search, 500);
   const paginationState = {
     pageIndex: currentPage - 1,
     pageSize: pageSize,
@@ -96,30 +89,28 @@ const PageTable = ({
   //   return filtered;
   // }, [data, columnFilters, search]);
 
-
-
-   const filteredData = useMemo(() => {
-      let filtered = data;
-      columnFilters.forEach((filter) => {
-        filtered = filtered.filter((row) => {
-          const cellValue = row[filter.id];
-          return cellValue
-            .toString()
-            .toLowerCase()
-            .includes(filter.value.toLowerCase());
-        });
+  const filteredData = useMemo(() => {
+    let filtered = data;
+    columnFilters.forEach((filter) => {
+      filtered = filtered.filter((row) => {
+        const cellValue = row[filter.id];
+        return cellValue
+          .toString()
+          .toLowerCase()
+          .includes(filter.value.toLowerCase());
       });
-  
-      if (debouncedSearch) {
-        filtered = filtered.filter((row) => {
-          return Object.values(row).some((value) =>
-            String(value).toLowerCase().includes(debouncedSearch.toLowerCase()),
-          );
-        });
-      }
-  
-      return filtered;
-    }, [data, columnFilters, debouncedSearch]);
+    });
+
+    if (debouncedSearch) {
+      filtered = filtered.filter((row) => {
+        return Object.values(row).some((value) =>
+          String(value).toLowerCase().includes(debouncedSearch.toLowerCase()),
+        );
+      });
+    }
+
+    return filtered;
+  }, [data, columnFilters, debouncedSearch]);
   const pageCount = Math.ceil(filteredData.length / pageSize);
 
   const handlePaginationChange = (updaterOrValue) => {
@@ -133,7 +124,7 @@ const PageTable = ({
   };
 
   const table = useReactTable({
-    data : filteredData,
+    data: filteredData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -154,9 +145,9 @@ const PageTable = ({
       // globalFilter: search,
     },
     onPaginationChange: handlePaginationChange,
-    defaultColumn : {
-      size : 200
-    }
+    defaultColumn: {
+      size: 200,
+    },
     // manualPagination: true,
     // manualFiltering: true
   });
@@ -164,42 +155,41 @@ const PageTable = ({
   const startIndex = paginationState.pageIndex * paginationState.pageSize + 1;
   const endIndex = Math.min(
     (paginationState.pageIndex + 1) * paginationState.pageSize,
-    filteredData.length
+    filteredData.length,
   );
 
-    function handleDownload() {
-      try {
-        if (!filteredData || !filteredData.length) return;
-  
-        const headers = columns
-          .filter((col) => typeof col.accessorKey === "string")
-          .map((col) => col.accessorKey);
-  
-        const formattedData = filteredData.map((row) =>
-          columns.map((col) => {
-            const value = row[col.accessorKey];
-            if (col.type === "date" && value) {
-              return moment(value).format("YYYY-MM-DD");
-            }
-            return value != null ? value : "";
-          }),
-        );
-  
-        exportToExcel(
-          headers,
-          formattedData,
-          "Table-Export.xlsx",
-          false,
-          "",
-          false,
-        );
-      } catch (error) {
-        console.error("Error exporting Excel:", error);
-      }
-    }
-  
+  function handleDownload() {
+    try {
+      if (!filteredData || !filteredData.length) return;
 
-  const isMobile = useIsMobile()
+      const headers = columns
+        .filter((col) => typeof col.accessorKey === "string")
+        .map((col) => col.accessorKey);
+
+      const formattedData = filteredData.map((row) =>
+        columns.map((col) => {
+          const value = row[col.accessorKey];
+          if (col.type === "date" && value) {
+            return moment(value).format("YYYY-MM-DD");
+          }
+          return value != null ? value : "";
+        }),
+      );
+
+      exportToExcel(
+        headers,
+        formattedData,
+        "Table-Export.xlsx",
+        false,
+        "",
+        false,
+      );
+    } catch (error) {
+      console.error("Error exporting Excel:", error);
+    }
+  }
+
+  const isMobile = useIsMobile();
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -214,62 +204,76 @@ const PageTable = ({
             className="w-[60vw] max-w-sm"
           />
         )}
-         {download && <Button onClick={handleDownload}>Download list</Button>}
+        {download && <Button onClick={handleDownload}>Download list</Button>}
         {children}
       </div>
 
-      <div className={`relative flex flex-1 flex-col ${isMobile && "min-h-[500px]"}`}>
+      <div
+        className={`relative flex flex-1 flex-col ${isMobile && "min-h-[500px]"}`}
+      >
         <div className="absolute bottom-0 left-0 right-0 top-0 flex rounded-md border md:overflow-auto custom-scrollbar overflow-auto">
           {/* <ScrollArea className="flex-1"> */}
-            <Table className="relative">
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id} className="sticky top-0 z-20 bg-background">
-                    {headerGroup.headers.map((header) => (
-                      <TableHead style={{ width: header.getSize() }} key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
+          <Table className="relative">
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow
+                  key={headerGroup.id}
+                  className="sticky top-0 z-20 bg-background"
+                >
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      style={{ width: header.getSize() }}
+                      key={header.id}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody className="bg-white dark:bg-gray-900">
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    onClick={(e) => onRowClick(row.original, e)}
+                    className="even:bg-gray-100 dark:even:bg-gray-800 dark:text-white text-black cursor-pointer"
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell className="text-[13px]" key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, {
+                          ...cell.getContext(),
+                          stopRowClick: (e) => e.stopPropagation(),
+                        })}
+                      </TableCell>
                     ))}
                   </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody className="bg-white dark:bg-gray-900">
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      onClick={(e) => onRowClick(row.original, e)}
-                      className="even:bg-gray-100 dark:even:bg-gray-800 dark:text-white text-black cursor-pointer"
-                      key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell className="text-[13px]" key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, {
-                            ...cell.getContext(),
-                            stopRowClick: (e) => e.stopPropagation(),
-                          })}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center">
-                      {loading ? (
-                        <div className="flex flex-1 justify-center">
-                          <Spinner />
-                        </div>
-                      ) : (
-                        "No results."
-                      )}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-            {/* <ScrollBar orientation="horizontal" />
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    {loading ? (
+                      <div className="flex flex-1 justify-center">
+                        <Spinner />
+                      </div>
+                    ) : (
+                      "No results."
+                    )}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+          {/* <ScrollBar orientation="horizontal" />
           </ScrollArea> */}
         </div>
       </div>
@@ -279,7 +283,8 @@ const PageTable = ({
           <div className="flex-1 text-sm text-muted-foreground">
             {filteredData.length > 0 ? (
               <>
-                Showing {startIndex} to {endIndex} of {filteredData.length} entries
+                Showing {startIndex} to {endIndex} of {filteredData.length}{" "}
+                entries
               </>
             ) : (
               "No entries found"
@@ -314,8 +319,9 @@ const PageTable = ({
           <div className="flex sm:w-[250px] items-center justify-center text-sm font-medium">
             {filteredData.length > 0 ? (
               <>
-                {totalCustomerText && `${totalCustomerText} ${filteredData.length}`} Page{" "}
-                {paginationState.pageIndex + 1} of {pageCount}
+                {totalCustomerText &&
+                  `${totalCustomerText} ${filteredData.length}`}{" "}
+                Page {paginationState.pageIndex + 1} of {pageCount}
               </>
             ) : (
               "No pages"
@@ -367,9 +373,9 @@ const PageTable = ({
 
 function customGlobalFilter(row, columnId, filterValue) {
   const search = filterValue.toLowerCase();
- return row
+  return row
     .getAllCells()
     .some((cell) => String(cell.getValue()).toLowerCase().includes(search));
 }
 
-export default memo(PageTable) ;
+export default memo(PageTable);
