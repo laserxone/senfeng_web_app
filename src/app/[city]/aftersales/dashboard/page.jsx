@@ -264,7 +264,7 @@ const CustomerEmployeeAfterSales = ({
   selectedOption,
   setSelectedOption,
 }) => {
-  const { base_route, customer_add_access, designation, office } =
+  const { base_route, customer_add_access, designation, office, route_branch } =
     useUserDetail();
   const [addCustomer, setAddCustomer] = useState(false);
   const router = useRouter();
@@ -478,7 +478,7 @@ const CustomerEmployeeAfterSales = ({
 
         <AddCustomerDialog
           user_designation={designation}
-          office={office}
+          office={route_branch}
           user_id={user_id}
           ownership={true}
           visible={addCustomer}

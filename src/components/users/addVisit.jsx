@@ -59,7 +59,7 @@ export default function VisitTab({
   const [feedbacks, setFeedbacks] = useState(data || []);
   const [addCustomer, setAddCustomer] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const {userID, designation, office, base_route} = useUserDetail()
+  const {userID, designation, office, base_route, route_branch} = useUserDetail()
   const {state : OfficeState} = useContext(OfficeContext)
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedDelete, setSelectedDelete] = useState(null);
@@ -202,7 +202,7 @@ export default function VisitTab({
 
                     <AddCustomerDialog
                     user_designation={designation}
-                     office={office}
+                     office={route_branch}
                       user_id={userID}
                       ownership={
                         designation === "Owner" ||

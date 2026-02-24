@@ -58,7 +58,7 @@ export default function CustomerMainPage({ onReturn }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState([]);
   const [addCustomer, setAddCustomer] = useState(false);
-  const { userID, isAdmin, designation, customer_add_access, customer_delete_access, office } = useUserDetail()
+  const { userID, isAdmin, designation, customer_add_access, customer_delete_access, office, route_branch } = useUserDetail()
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [quickAction, setQuickAction] = useState(false);
@@ -356,7 +356,7 @@ export default function CustomerMainPage({ onReturn }) {
 
           <AddCustomerDialog
             user_id={userID}
-            office={office}
+            office={route_branch}
             ownership={
               isAdmin ||
               designation ===

@@ -52,7 +52,7 @@ export default function CustomerEmployee({
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState([]);
   const [addCustomer, setAddCustomer] = useState(false);
-  const { userID, designation, customer_add_access, office, base_route } =
+  const { userID, designation, customer_add_access, office, base_route, route_branch } =
     useUserDetail();
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -248,7 +248,7 @@ export default function CustomerEmployee({
 
       <AddCustomerDialog
         base={`team/user/${userID}`}
-        office={office}
+        office={route_branch}
         user_id={userID}
         user_designation={designation}
         ownership={ownership}

@@ -1,10 +1,13 @@
 "use client";
 
+import { OfficeContext } from "@/store/context/OfficeContext";
+
 const { UserContext } = require("@/store/context/UserContext");
 const { useContext } = require("react");
 
 const useUserDetail = () => {
   const { state: UserState } = useContext(UserContext);
+  const {state : OfficeState} = useContext(OfficeContext)
 
   const data = UserState.value.data ?? {};
   const isAdmin = (data.designation === "Owner" || data.full_access) ?? false;
@@ -28,6 +31,8 @@ const useUserDetail = () => {
   const superadmin_cloud_access = data.superadmin_cloud_access ?? false
   const customer_full_access = data?.customer_full_access ?? false
 
+  const route_branch = OfficeState?.value?.data ?? null
+
 
   return {
     isAdmin,
@@ -49,7 +54,8 @@ const useUserDetail = () => {
     branch_expenses_delete_access,
     userDp,
     superadmin_cloud_access,
-    customer_full_access
+    customer_full_access,
+    route_branch
   };
 };
 

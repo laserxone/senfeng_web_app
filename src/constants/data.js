@@ -430,6 +430,12 @@ export const Tools = {
       url: "/paymentverification",
       shortcut: ["p", "a", "y"],
     },
+     {
+      title: "Transfer Customers",
+      shortcut: ["t", "r", "a"],
+      url: "/transfer-customers",
+      icon: "login",
+    },
     {
       title: "Old Commissions",
       shortcut: ["o", "l", "d"],
