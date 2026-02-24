@@ -166,6 +166,38 @@ const PageTable = ({
     filteredData.length
   );
 
+    function handleDownload() {
+      try {
+        if (!filteredData || !filteredData.length) return;
+  
+        const headers = columns
+          .filter((col) => typeof col.accessorKey === "string")
+          .map((col) => col.accessorKey);
+  
+        const formattedData = filteredData.map((row) =>
+          columns.map((col) => {
+            const value = row[col.accessorKey];
+            if (col.type === "date" && value) {
+              return moment(value).format("YYYY-MM-DD");
+            }
+            return value != null ? value : "";
+          }),
+        );
+  
+        exportToExcel(
+          headers,
+          formattedData,
+          "Table-Export.xlsx",
+          false,
+          "",
+          false,
+        );
+      } catch (error) {
+        console.error("Error exporting Excel:", error);
+      }
+    }
+  
+
   const isMobile = useIsMobile()
 
   return (
@@ -181,6 +213,7 @@ const PageTable = ({
             className="w-[60vw] max-w-sm"
           />
         )}
+         {download && <Button onClick={handleDownload}>Download list</Button>}
         {children}
       </div>
 
