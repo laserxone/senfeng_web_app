@@ -76,7 +76,7 @@ export function CustomerSearchWithData({ value, onReturn }) {
               item.name,
               item.owner,
               item.location,
-              ...numbers, // safe now
+              ...numbers
             ]
               .filter(Boolean)
               .join(" ")

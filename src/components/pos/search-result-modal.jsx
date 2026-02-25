@@ -20,13 +20,22 @@ import "pdfjs-dist/legacy/web/pdf_viewer.css";
 import { Checkbox } from "../ui/checkbox";
 import Spinner from "../ui/spinner";
 import formatCurrency from "@/lib/formatCurrency";
+import Link from "next/link";
 
-const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh, onReturn }) => {
+const SearchResultModal = ({
+  visible,
+  onClose,
+  data,
+  onselect,
+  onRefresh,
+  onReturn,
+}) => {
   const pageTableRef = useRef();
   const [value, setValue] = useState("");
 
-  const total = data.reduce((sum, item) => sum + (item.total || 0), 0);
-
+  const total = data.reduce((sum, item) => sum + (item.final_amount || 0), 0);
+  const { base_route } = useUserDetail();
+  console.log(data);
   const columns = [
     {
       accessorKey: "created_at",
@@ -130,7 +139,7 @@ const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh, onRetu
     },
 
     {
-      accessorKey: "payment",
+      accessorKey: "status",
       header: ({ column }) => {
         return (
           <Button
@@ -142,14 +151,29 @@ const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh, onRetu
           </Button>
         );
       },
-      cell: ({ row }) => <RenderPaid row={row} onRefresh={onRefresh} onReturn={onReturn} />,
+      cell: ({ row }) => <div>{row.getValue("status")}</div>,
     },
 
     {
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
-        return <Button onClick={() => onselect(row.original)}>Select</Button>;
+        const id = row.original?.id ?? null;
+        return (
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => onselect(row.original)}>
+              Select
+            </Button>
+            {id && (
+              <Link href={`/${base_route}/pos/${id}`} target="_blank">
+                {" "}
+                <Button onClick={() => onselect(row.original)}>
+                  Payment Record
+                </Button>
+              </Link>
+            )}
+          </div>
+        );
       },
     },
   ];
@@ -214,7 +238,7 @@ const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh, onRetu
                       value={framework.value}
                       onClick={() => {
                         setValue(
-                          framework.value === value ? "" : framework.value
+                          framework.value === value ? "" : framework.value,
                         );
                       }}
                     >
@@ -231,8 +255,6 @@ const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh, onRetu
               >
                 Clear
               </Button>
-
-
             </div>
 
             <div className="flex justify-between items-center p-2 w-full max-w-xs border-b border-gray-300 dark:border-gray-700">
@@ -243,7 +265,6 @@ const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh, onRetu
                 {formatCurrency(total || 0)}
               </span>
             </div>
-
           </div>
         </PageTable>
       </DialogContent>
@@ -285,10 +306,10 @@ const RenderPaid = ({ row, onRefresh, onReturn }) => {
       ) : (
         <>
           <Label className="text-lg">{localChecked ? "Paid" : "Unpaid"}</Label>
-          <Checkbox
+          {/* <Checkbox
             checked={localChecked}
             onCheckedChange={handleUpdatePayment}
-          />
+          /> */}
         </>
       )}
     </div>

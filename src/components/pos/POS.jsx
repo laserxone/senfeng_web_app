@@ -41,6 +41,7 @@ import InwardModal from "./inward-modal";
 import OutwardModal from "./outward-modal";
 import DeleteInvoice from "./delete-invoice";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -50,7 +51,7 @@ export default function POS() {
   const [invoiceItems, setInvoiceItems] = useState([]);
   const [stock, setStock] = useState([]);
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [createdAt, setCreatedAt] = useState(new Date())
+  const [createdAt, setCreatedAt] = useState(new Date());
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [address, setAddress] = useState("");
@@ -79,7 +80,7 @@ export default function POS() {
   const [reminder, setReminder] = useState([]);
   const [warranty, setWarranty] = useState(false);
   const [warrantyYear, setWarrantyYear] = useState(1);
-  const { userID, designation } = useUserDetail();
+  const { userID, designation, base_route } = useUserDetail();
   const [selectedRadio, setSelectedRadio] = useState("customer");
   const [selectedUser, setSelectedUser] = useState({ id: null, label: null });
   const [engineerLoading, setEngineerLoading] = useState(false);
@@ -104,7 +105,6 @@ export default function POS() {
   }, [debouncedUserId]);
 
   const handleUpdateInvoice = async () => {
-    
     handleInvoiceBackendData();
     const blob = await pdf(
       <InvoicePDF
@@ -428,7 +428,7 @@ export default function POS() {
       .then((response) => {
         if (response.data.length > 0) {
           const resultWithTotal = response.data.map((item) => {
-            const discount = item.discount || 0;
+            const discount = Number(item.discount || 0).toFixed(0);
             const total = item.fields.reduce(
               (acc, curr) => acc + Number(curr.total),
               0,
@@ -458,13 +458,16 @@ export default function POS() {
       .get(`/${userID}/pos/search`)
       .then((response) => {
         if (response.data.length > 0) {
-          const resultWithTotal = response.data.map((item) => {
+           const resultWithTotal = response.data.map((item) => {
+            const discount = Number(item.discount || 0).toFixed(0);
+            const total = item.fields.reduce(
+              (acc, curr) => acc + Number(curr.total),
+              0,
+            );
             return {
               ...item,
-              total: item.fields.reduce(
-                (acc, curr) => acc + Number(curr.total),
-                0,
-              ),
+              total: total - discount,
+              discount,
             };
           });
           setSearchModal(true);
@@ -548,7 +551,6 @@ export default function POS() {
     setOrderStockVisible(true);
   }
 
-
   return loading || customerLoading ? (
     <div className="flex flex-1 w-full items-center justify-center h-[80vh]">
       <Spinner />
@@ -572,7 +574,7 @@ export default function POS() {
               <Label htmlFor="r2">Engineer</Label>
             </div>
 
-            {selectedRadio === "customer" && (
+            {/* {selectedRadio === "customer" && (
               <div className="flex items-center space-x-2">
                 <div className="flex flex-row items-center gap-2">
                   <h1>Walk-in customer?</h1>
@@ -590,7 +592,7 @@ export default function POS() {
                   />
                 </div>
               </div>
-            )}
+            )} */}
           </RadioGroup>
 
           {selectedRadio === "engineer" && (
@@ -783,8 +785,9 @@ export default function POS() {
               <Input
                 value={discount ? discount : ""}
                 onChange={(e) => {
-                  const value = e.target.value
-                  setDiscount(value ? Number(value) : "")}}
+                  const value = e.target.value;
+                  setDiscount(value ? Number(value) : "");
+                }}
                 type="number"
                 placeholder="Enter discount"
                 className="border-0 shadow-none focus:border-0 focus:ring-0 focus:outline-none focus-visible:ring-0"
@@ -815,7 +818,6 @@ export default function POS() {
               </Label>
               <NotificationBadge
                 count={reminder.length}
-                className="ml-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm font-bold shadow-sm"
               />
             </div>
             <div className="flex flex-row gap-2 items-center mr-2">
@@ -894,6 +896,14 @@ export default function POS() {
             >
               <div>Outward Gatepass</div>
             </Button>
+
+            {/* {selectedSearchItem && selectedSearchItem?.id && (
+              <Link href={`/${base_route}/pos/${selectedSearchItem?.id}`} target="blank">
+                <Button className="h-[100px] w-[100px] text-wrap">
+                  <div>Payment Record</div>
+                </Button>
+              </Link>
+            )} */}
           </div>
 
           {searchInvocie && (
@@ -967,6 +977,7 @@ export default function POS() {
           onClose={setSearchModal}
           data={searchItemsResult}
           onselect={(val) => {
+            console.log(val)
             setSearchModal(false);
             setSelectedSearchItem(val);
             setPhoneNumber(val.phone);
@@ -977,7 +988,7 @@ export default function POS() {
             setInvoiceItems(val.fields);
             setNextInvoice(val.invoicenumber);
             setDiscount(val.discount);
-            setCreatedAt(val.created_at)
+            setCreatedAt(val.created_at);
           }}
           onRefresh={(item, val) => {
             if (val == true) {

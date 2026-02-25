@@ -18,12 +18,41 @@ export async function GET(req) {
         "SELECT * FROM inventory ORDER BY id ASC",
       );
 
-      const reminders = await pool.query(
-        "SELECT * FROM savedinvoices WHERE payment=false",
-      );
+      const query = `
+  SELECT
+    si.*,
+    COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
+  FROM savedinvoices si
+  LEFT JOIN customer_parts cp ON cp.part_id = si.id
+  GROUP BY si.id
+`;
+      const resultQry = await pool.query(query);
+
+      const invoices = resultQry.rows.map((invoice) => {
+        const itemsTotal = Array.isArray(invoice.fields)
+          ? invoice.fields.reduce((sum, item) => {
+              const val = Number(item?.total ?? 0);
+              return sum + (isNaN(val) ? 0 : val);
+            }, 0)
+          : 0;
+        const discount = Number(invoice.discount ?? 0);
+        const finalAmount = itemsTotal - discount;
+        const totalPaid = Number(invoice.total_paid ?? 0);
+        let status = "NA";
+        if (totalPaid === 0) status = "Pending";
+        else if (finalAmount - totalPaid !== 0) status = "Partial";
+        else status = "Paid";
+        return {
+          ...invoice,
+          items_total: itemsTotal,
+          discount,
+          final_amount: finalAmount,
+          status,
+        };
+      });
 
       return NextResponse.json(
-        { stock: result.rows, reminders: reminders.rows },
+        { stock: result.rows, reminders: invoices.filter((item)=> item?.status !== 'Paid') },
         { status: 200 },
       );
     }

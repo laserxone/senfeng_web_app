@@ -473,63 +473,62 @@ export default function Machine({ id, onLoading = () => {}, base }) {
       <Card
         className={`bg-gray-100 dark:bg-gray-900 rounded-lg shadow-md p-4 w-full`}
       >
-       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4">
-  {/* Spacer or empty block if needed */}
-  <div className="hidden md:block" />
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4">
+          {/* Spacer or empty block if needed */}
+          <div className="hidden md:block" />
 
-  {/* Customer Info */}
-  <div className="flex flex-col gap-1">
-    <div className="flex flex-row flex-wrap gap-2 items-center text-2xl font-bold text-gray-900 dark:text-white">
-      {data?.name || "Customer Name"}
-      {data?.owner && (
-        <span className="text-gray-500 text-sm">({data.owner})</span>
-      )}
-    </div>
-
-    <div className="text-md font-bold text-primary dark:text-white flex flex-wrap gap-2">
-      <span>Sell by: {machine?.sell_by_name || "NA"}</span>
-      <span>Manager: {data?.ownership_name || "NA"}</span>
-    </div>
-  </div>
-
-  {/* Alerts */}
-  <div className="flex gap-2 mt-2 md:mt-0">
-    {showAlert && (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger>
-            <div>
-              <Siren className="text-red-600 h-8 w-8 animate-pulse-opacity" />
+          {/* Customer Info */}
+          <div className="flex flex-col gap-1">
+            <div className="flex flex-row flex-wrap gap-2 items-center text-2xl font-bold text-gray-900 dark:text-white">
+              {data?.name || "Customer Name"}
+              {data?.owner && (
+                <span className="text-gray-500 text-sm">({data.owner})</span>
+              )}
             </div>
-          </TooltipTrigger>
-          <TooltipContent className="bg-red-600 mr-2">
-            <p className="text-white">Duplicate TID found</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    )}
 
-    {unmatched.length > 0 && (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger>
-            <div>
-              <InfoIcon className="text-red-600 h-8 w-8 animate-pulse-opacity" />
+            <div className="text-md font-bold text-primary dark:text-white flex flex-wrap gap-2">
+              <span>Sell by: {machine?.sell_by_name || "NA"}</span>
+              <span>Manager: {data?.ownership_name || "NA"}</span>
             </div>
-          </TooltipTrigger>
-          <TooltipContent className="bg-red-600 mr-2">
-            {unmatched.map((item, index) => (
-              <p key={index} className="text-white">
-                {item.replace(/_/g, " ").toUpperCase()}
-              </p>
-            ))}
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    )}
-  </div>
-</div>
+          </div>
 
+          {/* Alerts */}
+          <div className="flex gap-2 mt-2 md:mt-0">
+            {showAlert && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div>
+                      <Siren className="text-red-600 h-8 w-8 animate-pulse-opacity" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-red-600 mr-2">
+                    <p className="text-white">Duplicate TID found</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+
+            {unmatched.length > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div>
+                      <InfoIcon className="text-red-600 h-8 w-8 animate-pulse-opacity" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-red-600 mr-2">
+                    {unmatched.map((item, index) => (
+                      <p key={index} className="text-white">
+                        {item.replace(/_/g, " ").toUpperCase()}
+                      </p>
+                    ))}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        </div>
 
         <div className="flex flex-1 gap-6 flex-wrap">
           <Card className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
@@ -801,7 +800,6 @@ export default function Machine({ id, onLoading = () => {}, base }) {
             </Button>
 
             {data?.machine && !data?.machine?.payment_lock && (
-              
               <Button
                 size="sm"
                 onClick={() => {
@@ -2064,7 +2062,7 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
   );
 };
 
-const MyImg = ({ img }) => {
+export const MyImg = ({ img }) => {
   const [localImage, setLocalImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);

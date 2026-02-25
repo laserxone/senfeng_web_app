@@ -1,50 +1,145 @@
-import pool from '@/config/db';
-import { NextResponse } from 'next/server';
+import pool from "@/config/db";
+import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
   const { searchitem } = await params;
-  const searchParams = req.nextUrl.searchParams
-  const pending = searchParams.get('pending')
-  const all = searchParams.get('all')
- 
+  const searchParams = req.nextUrl.searchParams;
+  const pending = searchParams.get("pending");
+  const all = searchParams.get("all");
 
   try {
-
-    if(all){
-       const query = `
-      SELECT * FROM savedinvoices_karachi`
+    if (all) {
+      const query = `
+  SELECT
+    si.*,
+    COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
+  FROM savedinvoices_karachi si
+  LEFT JOIN customer_parts_karachi cp ON cp.part_id = si.id
+  GROUP BY si.id
+`;
       const result = await pool.query(query);
-      return NextResponse.json(result.rows, { status: 200 });
+
+      const invoices = result.rows.map((invoice) => {
+        const itemsTotal = Array.isArray(invoice.fields)
+          ? invoice.fields.reduce((sum, item) => {
+              const val = Number(item?.total ?? 0);
+              return sum + (isNaN(val) ? 0 : val);
+            }, 0)
+          : 0;
+        const discount = Number(invoice.discount ?? 0);
+        const finalAmount = itemsTotal - discount;
+        const totalPaid = Number(invoice.total_paid ?? 0);
+        let status = "NA";
+        if (totalPaid === 0) status = "Pending";
+        else if (finalAmount - totalPaid !== 0) status = "Partial";
+        else status = "Paid";
+
+        return {
+          ...invoice,
+          items_total: itemsTotal,
+          discount,
+          final_amount: finalAmount,
+          status,
+        };
+      });
+
+      return NextResponse.json(invoices, { status: 200 });
     }
 
-    if (searchitem !== 'null') {
-      
+    if (searchitem !== "null") {
       const query = `
-        SELECT * FROM savedinvoices_karachi 
-  WHERE 
-    name ILIKE $1 OR 
-    company ILIKE $1 OR 
-    phone ILIKE $1 OR 
-    invoicenumber ILIKE $1 OR 
-    EXISTS (
-      SELECT 1 FROM jsonb_array_elements(fields) AS elem
-      WHERE elem->>'name' ILIKE $1
-    )
+       SELECT
+  si.*,
+  COALESCE(p.total_paid, 0) AS total_paid
+FROM savedinvoices_karachi si
+LEFT JOIN (
+  SELECT
+    part_id,
+    SUM(amount::numeric) AS total_paid
+  FROM customer_parts_karachi
+  GROUP BY part_id
+) p ON p.part_id = si.id
+WHERE
+  si.name ILIKE $1 OR
+  si.company ILIKE $1 OR
+  si.phone ILIKE $1 OR
+  si.invoicenumber ILIKE $1 OR
+  EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(si.fields) AS elem
+    WHERE elem->>'name' ILIKE $1
+  );
       `;
 
       const values = [`%${searchitem}%`];
       const result = await pool.query(query, values);
-      return NextResponse.json(result.rows, { status: 200 });
-    } else if(pending) {
-      
+      const invoices = result.rows.map((invoice) => {
+        // Sum totals from fields array
+        const itemsTotal = Array.isArray(invoice.fields)
+          ? invoice.fields.reduce((sum, item) => {
+              const val = Number(item?.total ?? 0);
+              return sum + (isNaN(val) ? 0 : val);
+            }, 0)
+          : 0;
+
+        const discount = Number(invoice.discount ?? 0);
+        const finalAmount = itemsTotal - discount;
+        const totalPaid = Number(invoice.total_paid ?? 0);
+        let status = "NA";
+        if (totalPaid === 0) status = "Pending";
+        else if (finalAmount - totalPaid !== 0) status = "Partial";
+        else status = "Paid";
+
+        return {
+          ...invoice,
+          items_total: itemsTotal,
+          discount,
+          final_amount: finalAmount,
+          status,
+        };
+      });
+
+      return NextResponse.json(invoices, { status: 200 });
+    } else if (pending) {
       const query = `
-      SELECT * FROM savedinvoices_karachi
-      WHERE payment = FALSE`
+  SELECT
+    si.*,
+    COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
+  FROM savedinvoices_karachi si
+  LEFT JOIN customer_parts_karachi cp ON cp.part_id = si.id
+  GROUP BY si.id
+`;
       const result = await pool.query(query);
-      return NextResponse.json(result.rows, { status: 200 });
+
+      const invoices = result.rows.map((invoice) => {
+        const itemsTotal = Array.isArray(invoice.fields)
+          ? invoice.fields.reduce((sum, item) => {
+              const val = Number(item?.total ?? 0);
+              return sum + (isNaN(val) ? 0 : val);
+            }, 0)
+          : 0;
+        const discount = Number(invoice.discount ?? 0);
+        const finalAmount = itemsTotal - discount;
+        const totalPaid = Number(invoice.total_paid ?? 0);
+        let status = "NA";
+        if (totalPaid === 0) status = "Pending";
+        else if (finalAmount - totalPaid !== 0) status = "Partial";
+        else status = "Paid";
+
+        return {
+          ...invoice,
+          items_total: itemsTotal,
+          discount,
+          final_amount: finalAmount,
+          status,
+        };
+      });
+
+      return NextResponse.json(
+        invoices.filter((item) => item.status !== "Paid"),
+        { status: 200 },
+      );
     }
-
-
   } catch (error) {
     console.log(error);
     return NextResponse.json({ message: "Processing error" }, { status: 500 });
