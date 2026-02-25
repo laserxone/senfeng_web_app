@@ -50,6 +50,7 @@ export default function POS() {
   const [invoiceItems, setInvoiceItems] = useState([]);
   const [stock, setStock] = useState([]);
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [createdAt, setCreatedAt] = useState(new Date())
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [address, setAddress] = useState("");
@@ -103,6 +104,7 @@ export default function POS() {
   }, [debouncedUserId]);
 
   const handleUpdateInvoice = async () => {
+    
     handleInvoiceBackendData();
     const blob = await pdf(
       <InvoicePDF
@@ -117,6 +119,7 @@ export default function POS() {
         warranty={warranty}
         warrantyYear={warrantyYear}
         discount={discount}
+        createdAt={createdAt}
       />,
     ).toBlob();
     const url = URL.createObjectURL(blob);
@@ -956,6 +959,7 @@ export default function POS() {
           discount={discount}
           warranty={warranty}
           warrantyYear={warrantyYear}
+          createdAt={createdAt}
         />
 
         <SearchResultModal
@@ -973,6 +977,7 @@ export default function POS() {
             setInvoiceItems(val.fields);
             setNextInvoice(val.invoicenumber);
             setDiscount(val.discount);
+            setCreatedAt(val.created_at)
           }}
           onRefresh={(item, val) => {
             if (val == true) {

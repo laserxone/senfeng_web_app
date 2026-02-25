@@ -196,7 +196,7 @@ const SearchResultModal = ({ visible, onClose, data, onselect, onRefresh, onRetu
           searchName={value ? `Search ${value}...` : "Select filter first..."}
           tableHeader={tableHeader}
         >
-          <div className="flex flex-1 flex-wrap gap-2 flex items-center justify-between">
+          <div className="flex flex-1 flex-wrap gap-2 items-center justify-between">
             <div className="flex gap-4">
               <Select
                 onValueChange={(val) => {

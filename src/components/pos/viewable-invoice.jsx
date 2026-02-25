@@ -27,7 +27,8 @@ export default function ViewableInvoice({
   totalAmount,
   warranty,
   warrantyYear,
-  discount
+  discount,
+  createdAt
 }) {
   const pdfRef = useRef();
 
@@ -91,7 +92,7 @@ export default function ViewableInvoice({
           }}
         >
           {/* Company Details */}
-          <CompanyDetails />
+          <CompanyDetails   createdAt={createdAt}/>
           {/* Form Fields */}
           <FormField
             companyName={companyName}

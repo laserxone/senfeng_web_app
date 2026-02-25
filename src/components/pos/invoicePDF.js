@@ -8,6 +8,7 @@ import {
   View,
 } from "@react-pdf/renderer";
 import CurrencyFormatter from "../currency-formatter";
+import moment from "moment";
 
 const InvoicePDF = ({
   companyName,
@@ -22,7 +23,12 @@ const InvoicePDF = ({
   warrantyYear,
   selectedUser,
   discount,
+  createdAt,
 }) => {
+ 
+const parsed = Number(discount);
+const localDiscount = Number.isFinite(parsed) ? Math.floor(parsed) : 0;
+
   return (
     <Document>
       <Page
@@ -31,7 +37,6 @@ const InvoicePDF = ({
           width: "100%",
         }}
       >
-        {/* Header */}
         <Header />
         <View
           style={{
@@ -43,7 +48,7 @@ const InvoicePDF = ({
           }}
         >
           {/* Company Details */}
-          <CompanyDetails />
+          <CompanyDetails createdAt={createdAt} />
 
           {/* Form Fields */}
           <FormField
@@ -301,7 +306,7 @@ const InvoicePDF = ({
               marginBottom: 5,
             }}
           >
-            {discount && discount !== 0 && (
+            {localDiscount && localDiscount !== 0 && (
               <View style={{ display: "flex", flexDirection: "row" }}>
                 <View
                   style={{
@@ -585,15 +590,43 @@ const FormField = ({
   );
 };
 
-const CompanyDetails = () => {
+const CompanyDetails = ({ createdAt }) => {
   return (
     <View
       style={{
-        alignItems: "flex-end",
+        justifyContent: "space-between",
         display: "flex",
-        flexDirection: "column",
+        flexDirection: "row",
       }}
     >
+      <View
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "flex-start",
+        }}
+      >
+        <Text
+          style={{
+            color: "#7F7F7FFF",
+            marginLeft: 10,
+            fontFamily: "Helvetica-Bold",
+            fontSize: 11,
+          }}
+        >
+          Date:
+        </Text>
+        <Text
+          style={{
+            paddingLeft: 10,
+             fontSize: 11,
+          }}
+        >
+          {createdAt
+            ? moment(new Date(createdAt)).format("YYYY-MM-DD")
+            : moment().format("YYYY-MM-DD")}
+        </Text>
+      </View>
       <View style={{ marginRight: 10, gap: 0, fontSize: "10px" }}>
         <Text
           style={{
