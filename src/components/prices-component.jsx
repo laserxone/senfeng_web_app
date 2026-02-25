@@ -183,7 +183,7 @@ export default function PricesComponent() {
     return (
         <div className="flex flex-1 flex-col space-y-4">
             <div className="flex justify-between flex-wrap">
-                <Heading title="Pricing" description="Manage machine paricings" />
+                <Heading title="Pricing" description="Manage machine pricings" />
             </div>
             {/* <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Price Table</h2>
