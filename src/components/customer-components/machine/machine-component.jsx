@@ -799,7 +799,9 @@ export default function Machine({ id, onLoading = () => {}, base }) {
               {data?.machine?.type === "Parts" ? "Edit Parts" : "Edit Machine"}
             </Button>
 
-            {data?.machine && !data?.machine?.payment_lock && (
+            {data?.machine 
+            // && !data?.machine?.payment_lock 
+            && (
               <Button
                 size="sm"
                 onClick={() => {
