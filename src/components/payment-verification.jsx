@@ -64,7 +64,7 @@ export default function PaymentVerification() {
     try {
       await axios.put(`/${userID}/payment-verification/${paymentId}`, {
         status: "approved",
-        payment_lock: true,
+        // payment_lock: true,
       });
 
       // update the UI
