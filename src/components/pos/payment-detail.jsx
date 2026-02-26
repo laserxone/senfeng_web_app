@@ -13,10 +13,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import AddPOSPayment from "@/components/pos/add-pos-payment";
 import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
 } from "@/components/ui/sheet";
 import Spinner from "@/components/ui/spinner";
 import { storage } from "@/config/firebase";
@@ -26,7 +26,7 @@ import { getDownloadURL, ref } from "firebase/storage";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 
-export default function PaymentDetail({params}) {
+export default function PaymentDetail({ params }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);
@@ -34,7 +34,7 @@ export default function PaymentDetail({params}) {
   const [imageURL, setImageURL] = useState(null);
   const [visible, setVisible] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
- 
+
   useEffect(() => {
     if (userID && params?.id) {
       fetchData();
@@ -46,7 +46,7 @@ export default function PaymentDetail({params}) {
     .toFixed(0);
 
   async function fetchData() {
-    setLoading(true)
+    setLoading(true);
     try {
       const response = await axios.get(`/${userID}/pos/payment/${params.id}`);
       console.log(response.data);
@@ -174,13 +174,13 @@ export default function PaymentDetail({params}) {
   }, [data]);
 
   function calculateStatus() {
-    if (totalAmount == null || paid == null) return "NA";
+  
     if (paid === 0) return "Pending";
-    if (totalAmount - paid !== 0) return "Partial";
-    return "Paid";
+    else if (totalAmount - paid !== 0) return "Partial";
+    else return "Paid";
   }
 
-  const status = calculateStatus()
+  const status = calculateStatus();
   return (
     <div className="flex flex-col gap-6 w-full">
       <div className="flex justify-between gap-2 flex-wrap items-center">
@@ -189,7 +189,7 @@ export default function PaymentDetail({params}) {
           description="Invoice details and payment history"
         />
 
-        <Button onClick={()=> setShow(!show)}>Add Payment</Button>
+        <Button onClick={() => setShow(!show)}>Add Payment</Button>
       </div>
 
       <Card>
@@ -239,7 +239,7 @@ export default function PaymentDetail({params}) {
               <span>Status</span>
               <span
                 className={`font-medium ${
-                  status === 'Paid' ? "text-green-600" : "text-orange-600"
+                  status === "Paid" ? "text-green-600" : "text-orange-600"
                 }`}
               >
                 {status}
