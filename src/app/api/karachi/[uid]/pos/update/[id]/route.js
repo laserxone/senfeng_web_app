@@ -32,8 +32,9 @@ export async function PUT(req, { params }) {
                 invoicenumber = $6,
                 fields = $7,
                 created_at = $8,
-                payment = $9
-             WHERE id = $10`,
+                payment = $9,
+                discount= $10
+             WHERE id = $11`,
             [
                 newitems.name,
                 newitems.company,
@@ -44,6 +45,7 @@ export async function PUT(req, { params }) {
                 JSON.stringify(newitems.fields),
                 new Date(),
                 newitems.payment,
+                newitems.discount,
                 id
             ]
         );

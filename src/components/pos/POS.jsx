@@ -151,6 +151,7 @@ export default function POS() {
           invoicenumber: nextInvoice,
           fields: invoiceItems,
           payment: selectedSearchItem?.payment || false,
+          discount: discount || 0
         },
       })
       .finally(() => {
