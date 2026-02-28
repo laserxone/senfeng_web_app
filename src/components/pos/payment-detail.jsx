@@ -41,9 +41,11 @@ export default function PaymentDetail({ params }) {
     }
   }, [userID, params]);
 
-  const paid = data?.payments
-    ?.reduce((sum, p) => sum + Number(p.amount || 0), 0)
-    .toFixed(0);
+  const paid = Number(
+    data?.payments
+      ?.reduce((sum, p) => sum + Number(p.amount || 0), 0)
+      .toFixed(0) || 0
+  );
 
   async function fetchData() {
     setLoading(true);
@@ -166,15 +168,13 @@ export default function PaymentDetail({ params }) {
       data?.fields?.forEach((item) => {
         total = total + Number(item.total);
       });
-
-      setTotalAmount((total - dis).toFixed(0));
+      setTotalAmount(Number((total - dis).toFixed(0)));
     } else {
       setTotalAmount(0);
     }
   }, [data]);
 
   function calculateStatus() {
-  
     if (paid === 0) return "Pending";
     else if (totalAmount - paid !== 0) return "Partial";
     else return "Paid";
