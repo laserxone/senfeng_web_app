@@ -24,14 +24,15 @@ export default function DeleteInvoice({ item, onRefresh }) {
   }
   if (!item) return null;
   return (
-    <>
+    
       <Button
+      className="h-[100px] w-[100px] text-wrap"
         disabled={loading}
         variant="destructive"
         onClick={() => handleDeleteInvoice()}
       >
         {loading && <Spinner />} Delete
       </Button>
-    </>
+    
   );
 }

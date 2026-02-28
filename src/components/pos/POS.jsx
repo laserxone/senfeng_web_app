@@ -151,7 +151,7 @@ export default function POS() {
           invoicenumber: nextInvoice,
           fields: invoiceItems,
           payment: selectedSearchItem?.payment || false,
-          discount: discount || 0
+          discount: discount || 0,
         },
       })
       .finally(() => {
@@ -459,7 +459,7 @@ export default function POS() {
       .get(`/${userID}/pos/search`)
       .then((response) => {
         if (response.data.length > 0) {
-           const resultWithTotal = response.data.map((item) => {
+          const resultWithTotal = response.data.map((item) => {
             const discount = Number(item.discount || 0).toFixed(0);
             const total = item.fields.reduce(
               (acc, curr) => acc + Number(curr.total),
@@ -817,9 +817,7 @@ export default function POS() {
               <Label className="text-lg font-semibold text-gray-800 cursor-pointer">
                 Pending Payments
               </Label>
-              <NotificationBadge
-                count={reminder.length}
-              />
+              <NotificationBadge count={reminder.length} />
             </div>
             <div className="flex flex-row gap-2 items-center mr-2">
               <Label className="text-lg">Include warranty</Label>
@@ -898,13 +896,19 @@ export default function POS() {
               <div>Outward Gatepass</div>
             </Button>
 
-            {/* {selectedSearchItem && selectedSearchItem?.id && (
-              <Link href={`/${base_route}/pos/${selectedSearchItem?.id}`} target="blank">
+              {selectedSearchItem && selectedSearchItem?.id && (
+              <Link href={`/${base_route}/pos/${selectedSearchItem?.id}`} target="_blank">
                 <Button className="h-[100px] w-[100px] text-wrap">
                   <div>Payment Record</div>
                 </Button>
               </Link>
-            )} */}
+            )}
+
+            <DeleteInvoice
+              item={selectedSearchItem}
+              onRefresh={() => handleReset()}
+            />
+
           </div>
 
           {searchInvocie && (
@@ -948,11 +952,6 @@ export default function POS() {
                   Clear
                 </Button>
               )}
-
-              <DeleteInvoice
-                item={selectedSearchItem}
-                onRefresh={() => handleReset()}
-              />
             </div>
           )}
         </div>
@@ -978,7 +977,7 @@ export default function POS() {
           onClose={setSearchModal}
           data={searchItemsResult}
           onselect={(val) => {
-            console.log(val)
+            console.log(val);
             setSearchModal(false);
             setSelectedSearchItem(val);
             setPhoneNumber(val.phone);

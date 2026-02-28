@@ -166,7 +166,6 @@ const SearchResultModal = ({
             </Button>
             {id && (
               <Link href={`/${base_route}/pos/${id}`} target="_blank">
-                {" "}
                 <Button onClick={() => onselect(row.original)}>
                   Payment Record
                 </Button>
