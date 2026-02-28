@@ -42,7 +42,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
       status: "Order Placed",
       isExisting: false,
       inventory_id: null,
-      show : false
+      show : true
     },
   ]);
   const [errors, setErrors] = useState([]);
@@ -98,7 +98,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
         status: "Order Placed",
         isExisting: false,
         inventory_id: null,
-        show : false
+        show : true
       },
     ]);
   };

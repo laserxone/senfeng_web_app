@@ -100,6 +100,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }) => {
         status: "Order Placed",
         isExisting: false,
         inventory_id: null,
+         show: true
       },
     ]);
   };
