@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function DeleteInvoice({ item, onRefresh }) {
   const [loading, setLoading] = useState(false);
-  const { userID } = useUserDetail();
+  const { userID, isAdmin } = useUserDetail();
   const {toast} = useToast();
 
   async function handleDeleteInvoice() {
@@ -23,6 +23,7 @@ export default function DeleteInvoice({ item, onRefresh }) {
     }
   }
   if (!item) return null;
+  if(!isAdmin) return null
   return (
     
       <Button
