@@ -1098,7 +1098,7 @@ export default function POS() {
         }}
       />
 
-      <OutwardModal
+      {/* <OutwardModal
         visible={outwardModal}
         onClose={setOutwardModal}
         data={stock}
@@ -1106,7 +1106,7 @@ export default function POS() {
           setLoading(true);
           await fetchData();
         }}
-      />
+      /> */}
     </PageContainer>
   );
 }
