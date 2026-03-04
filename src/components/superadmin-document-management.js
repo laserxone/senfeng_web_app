@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import  Heading  from "@/components/ui/heading";
+import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Spinner from "@/components/ui/spinner";
@@ -25,21 +25,16 @@ import { useToast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
 import { supabase } from "@/lib/supabaseClient";
 import { UserContext } from "@/store/context/UserContext";
-import {
-  ChevronRight,
-  List,
-  Table2
-} from "lucide-react";
+import { ChevronRight, List, Table2 } from "lucide-react";
 import moment from "moment";
 import Image from "next/image";
+import { Fragment, useContext, useEffect, useRef, useState } from "react";
 import {
-  Fragment,
-  useContext,
-  useEffect,
-  useRef,
-  useState
-} from "react";
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "./ui/context-menu";
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "./ui/context-menu";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import useUserDetail from "@/hooks/use-user-detail";
 import { useRouter } from "next/navigation";
@@ -48,7 +43,8 @@ import { startHolyLoader } from "holy-loader";
 const SuperadminDocumentManagement = () => {
   const [selectedFile, setSelectedFile] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { userID, name, email, superadmin_cloud_access, isAdmin, base_route } = useUserDetail()
+  const { userID, name, email, superadmin_cloud_access, isAdmin, base_route } =
+    useUserDetail();
   const { toast } = useToast();
   const [uploadLoading, setUploadLoading] = useState(false);
   const fileInputRef = useRef(null);
@@ -58,36 +54,32 @@ const SuperadminDocumentManagement = () => {
   const [allFolders, setAllFolders] = useState([]);
   const [allDocuments, setAllDocuments] = useState([]);
   const [folderBread, setFolderBread] = useState([{ name: "root", id: null }]);
-  const [folderLoading, setFolderLoading] = useState(false)
+  const [folderLoading, setFolderLoading] = useState(false);
   const [selectedFolder, setSelectedFolder] = useState(null);
-  const [newName, setNewName] = useState("")
-  const [view, setView] = useState(false)
-  const [selectedPreview, setSelectedPreview] = useState(null)
-  const [previewLoading, setPreviewLoading] = useState(false)
-  const [preview, setPreview] = useState(false)
-  const router = useRouter()
-
+  const [newName, setNewName] = useState("");
+  const [view, setView] = useState(false);
+  const [selectedPreview, setSelectedPreview] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [preview, setPreview] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-
     if (userID) {
       if (isAdmin || superadmin_cloud_access) {
-        setLoading(true)
-        fetchFiles()
+        setLoading(true);
+        fetchFiles();
       } else {
-          startHolyLoader()
-          router.push(`/restricted`)
+        startHolyLoader();
+        router.push(`/restricted`);
       }
-
     }
-
   }, [userID, currentFolder, superadmin_cloud_access]);
 
   const fetchFiles = async () => {
     return new Promise(async (resolve) => {
       try {
         const response = await axios.get(
-          `/${userID}/cloud/folder?folder=${currentFolder?.id || null}`
+          `/${userID}/cloud/folder?folder=${currentFolder?.id || null}`,
         );
         setAllDocuments(response.data.documents);
         setAllFolders(response.data.folders);
@@ -96,10 +88,9 @@ const SuperadminDocumentManagement = () => {
       } catch (error) {
         console.log(error);
       } finally {
-        resolve()
+        resolve();
       }
-    })
-
+    });
   };
 
   const uploadFile = async () => {
@@ -113,8 +104,6 @@ const SuperadminDocumentManagement = () => {
     setUploadLoading(true);
     handleUpload();
   };
-
-
 
   async function handleUpload() {
     for (const file of selectedFile) {
@@ -135,7 +124,7 @@ const SuperadminDocumentManagement = () => {
         added_by: name || email,
         path: filePath,
         folder_id: currentFolder ? currentFolder.id : undefined,
-        created_by: userID
+        created_by: userID,
       });
     }
 
@@ -146,30 +135,29 @@ const SuperadminDocumentManagement = () => {
 
     await fetchFiles();
     setUploadLoading(false);
-
   }
 
   async function handleCreateFolder() {
-    setFolderLoading(true)
+    setFolderLoading(true);
     axios
       .post(`/${userID}/cloud/folder`, {
         name: folderName,
         parent_folder: currentFolder ? currentFolder?.id : undefined,
-        created_by: userID
+        created_by: userID,
       })
       .then(async () => {
         setFolderName("");
         setVisible(false);
-        await fetchFiles()
-
-      }).finally(() => {
-        setFolderLoading(false)
+        await fetchFiles();
       })
+      .finally(() => {
+        setFolderLoading(false);
+      });
   }
 
   async function handleRenameFolder() {
-    if (!selectedFolder) return
-    setFolderLoading(true)
+    if (!selectedFolder) return;
+    setFolderLoading(true);
     axios
       .put(`/${userID}/cloud/folder/${selectedFolder?.id}`, {
         name: newName,
@@ -177,51 +165,53 @@ const SuperadminDocumentManagement = () => {
       .then(async () => {
         setNewName("");
         setSelectedFolder(false);
-        await fetchFiles()
-      }).finally(() => {
-        setFolderLoading(false)
+        await fetchFiles();
       })
+      .finally(() => {
+        setFolderLoading(false);
+      });
   }
-
-
 
   const RenderEachFile = ({ item, index, view, onPreview }) => {
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [downloadLoading, setDownloadLoading] = useState(false);
-
 
     async function handleDelete(file) {
       const id = file.id;
       await axios
         .delete(`/${userID}/cloud/document/${id}`)
         .then(async () => {
-          await supabase.storage.from("superadmin.documents").remove([file.path]);
+          await supabase.storage
+            .from("superadmin.documents")
+            .remove([file.path]);
           await fetchFiles();
         })
         .finally(() => {
-          setDeleteLoading(false)
+          setDeleteLoading(false);
         });
     }
 
     const RenderFile = ({ path, index }) => {
-      let url = "/file-icon.png"
+      let url = "/file-icon.png";
       if (path?.toLowerCase().includes("pdf")) {
-        url = "/pdf-icon.png"
+        url = "/pdf-icon.png";
       }
 
       if (path?.toLowerCase().includes("doc")) {
-        url = "/docx-icon.png"
+        url = "/docx-icon.png";
       }
 
       if (path?.toLowerCase().includes("xls")) {
-        url = "/xlsx-icon.png"
+        url = "/xlsx-icon.png";
       }
 
       if (path?.toLowerCase().includes("ppt")) {
-        url = "/ppt-icon.png"
+        url = "/ppt-icon.png";
       }
 
-
+      if (path?.toLowerCase().includes("mp4")) {
+        url = "/mp4-icon.png";
+      }
 
       return (
         <>
@@ -230,22 +220,19 @@ const SuperadminDocumentManagement = () => {
             height={view ? 40 : 100}
             width={view ? 40 : 100}
             alt={`${index}-file`}
-
           />
           <Label className={view ? "text-left" : "text-center"}>{path}</Label>
         </>
-      )
-    }
+      );
+    };
 
     return (
-
-
-
       <ContextMenu>
         <ContextMenuTrigger
           onDoubleClick={() => {
-            onPreview(item.path)
-          }}>
+            onPreview(item.path);
+          }}
+        >
           <div
             className={`flex ${view ? "flex-row items-center gap-4" : "flex-col items-center justify-center"} ${view ? "p-0" : "p-2"} rounded cursor-pointer ${view ? "w-full" : "max-w-[150px]"} ${view ? "h-auto" : "min-h-[120px]"} `}
             style={{
@@ -253,17 +240,17 @@ const SuperadminDocumentManagement = () => {
               backgroundColor: "transparent",
             }}
           >
-            {(downloadLoading || deleteLoading) ? <Spinner /> :
+            {downloadLoading || deleteLoading ? (
+              <Spinner />
+            ) : (
               <RenderFile path={item.path} index={index} />
-            }
+            )}
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent>
-
           <ContextMenuItem
-
             onClick={async () => {
-              onPreview(item.path)
+              onPreview(item.path);
             }}
           >
             Preview
@@ -300,24 +287,18 @@ const SuperadminDocumentManagement = () => {
             Delete
           </ContextMenuItem>
 
-
           <ContextMenuItem className="hover:none">
             <div className="flex flex-1 flex-col">
-              <Label>Date : {moment(item.created_at).format("YYYY-MM-DD")}</Label>
+              <Label>
+                Date : {moment(item.created_at).format("YYYY-MM-DD")}
+              </Label>
               <Label>Uploaded by : {item.added_by}</Label>
             </div>
-
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
-
-
-
-
-
     );
   };
-
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -342,21 +323,24 @@ const SuperadminDocumentManagement = () => {
               </Button>
             )}
           </div>
-          <Button onClick={() => setVisible(true)}>
-            Create new folder
-          </Button>
+          <Button onClick={() => setVisible(true)}>Create new folder</Button>
         </div>
-
       </div>
-
-
 
       <div>
         <div className="flex justify-between items-center bg-gray-200 dark:bg-gray-800 mb-2 pr-2">
           <div className="flex space-x-2 p-2 ">
-            <MyBreadcrumb folderBread={folderBread} setCurrentFolder={setCurrentFolder} setFolderBread={setFolderBread} />
+            <MyBreadcrumb
+              folderBread={folderBread}
+              setCurrentFolder={setCurrentFolder}
+              setFolderBread={setFolderBread}
+            />
           </div>
-          {!view ? <Table2 className='cursor-pointer' onClick={() => setView(!view)} /> : <List className='cursor-pointer' onClick={() => setView(!view)} />}
+          {!view ? (
+            <Table2 className="cursor-pointer" onClick={() => setView(!view)} />
+          ) : (
+            <List className="cursor-pointer" onClick={() => setView(!view)} />
+          )}
         </div>
 
         {loading ? (
@@ -364,32 +348,48 @@ const SuperadminDocumentManagement = () => {
             <Spinner />
           </div>
         ) : (
-          <div className={view ? "flex flex-col gap-2" : "flex flex-row gap-4 flex-wrap"}>
+          <div
+            className={
+              view ? "flex flex-col gap-2" : "flex flex-row gap-4 flex-wrap"
+            }
+          >
             {allFolders.map((item, index) => (
-              <RenderEachFolder key={index} item={item} index={index} view={view} setCurrentFolder={setCurrentFolder} setFolderBread={setFolderBread} setNewName={setNewName} setSelectedFolder={setSelectedFolder} fetchFiles={fetchFiles} />
+              <RenderEachFolder
+                key={index}
+                item={item}
+                index={index}
+                view={view}
+                setCurrentFolder={setCurrentFolder}
+                setFolderBread={setFolderBread}
+                setNewName={setNewName}
+                setSelectedFolder={setSelectedFolder}
+                fetchFiles={fetchFiles}
+              />
             ))}
 
             {allDocuments.map((item, index) => (
-              <RenderEachFile key={index} item={item} index={index} view={view} onPreview={async (path) => {
-                setPreviewLoading(true);
-                setPreview(true)
-                try {
-                  const { data, error } = await supabase.storage
-                    .from("superadmin.documents")
-                    .getPublicUrl(path)
-                  if (error) {
-                    console.error("Error downloading file", error);
-                    return;
+              <RenderEachFile
+                key={index}
+                item={item}
+                index={index}
+                view={view}
+                onPreview={async (path) => {
+                  setPreviewLoading(true);
+                  setPreview(true);
+                  try {
+                    const { data, error } = await supabase.storage
+                      .from("superadmin.documents")
+                      .getPublicUrl(path);
+                    if (error) {
+                      console.error("Error downloading file", error);
+                      return;
+                    }
+                    setSelectedPreview(data.publicUrl);
+                  } finally {
+                    setPreviewLoading(false);
                   }
-
-                  setSelectedPreview(data.publicUrl)
-                } finally {
-                  setPreviewLoading(false);
-                }
-
-
-
-              }} />
+                }}
+              />
             ))}
           </div>
         )}
@@ -412,13 +412,17 @@ const SuperadminDocumentManagement = () => {
             <DialogClose asChild>
               <Button variant="outline">Close</Button>
             </DialogClose>
-            <Button onClick={handleCreateFolder}>{folderLoading && <Spinner />}Create</Button>
+            <Button onClick={handleCreateFolder}>
+              {folderLoading && <Spinner />}Create
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-
-      <Dialog open={selectedFolder} onOpenChange={() => setSelectedFolder(null)}>
+      <Dialog
+        open={selectedFolder}
+        onOpenChange={() => setSelectedFolder(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Rename folder</DialogTitle>
@@ -435,53 +439,67 @@ const SuperadminDocumentManagement = () => {
             <DialogClose asChild>
               <Button variant="outline">Close</Button>
             </DialogClose>
-            <Button disabled={!newName || folderLoading} onClick={handleRenameFolder}>{folderLoading && <Spinner />}Save</Button>
+            <Button
+              disabled={!newName || folderLoading}
+              onClick={handleRenameFolder}
+            >
+              {folderLoading && <Spinner />}Save
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <PreviewFile preview={preview} setPreview={setPreview} previewLoading={previewLoading} selectedPreview={selectedPreview} />
+      <PreviewFile
+        preview={preview}
+        setPreview={setPreview}
+        previewLoading={previewLoading}
+        selectedPreview={selectedPreview}
+      />
     </div>
   );
 };
 
-
-const RenderEachFolder = ({ item, index, view, setFolderBread, setCurrentFolder, setSelectedFolder, setNewName, fetchFiles }) => {
-
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const { userID } = useUserDetail()
+const RenderEachFolder = ({
+  item,
+  index,
+  view,
+  setFolderBread,
+  setCurrentFolder,
+  setSelectedFolder,
+  setNewName,
+  fetchFiles,
+}) => {
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   async function handleDeleteFolder(id) {
     try {
-      setDeleteLoading(true)
-      await axios.delete(`/${userID}/cloud/folder/${id}`)
-      await fetchFiles()
+      setDeleteLoading(true);
+      await axios.delete(`/${userID}/cloud/folder/${id}`);
+      await fetchFiles();
     } finally {
-      setDeleteLoading(false)
+      setDeleteLoading(false);
     }
-
   }
 
   const openFolder = () => {
     setFolderBread((prev) => [...prev, { name: item.name, id: item.id }]);
     setCurrentFolder({ name: item.name, id: item.id });
-  }
-
+  };
 
   return (
     <ContextMenu>
-      <ContextMenuTrigger
-        onDoubleClick={openFolder}>
+      <ContextMenuTrigger onDoubleClick={openFolder}>
         <div
           className={`flex ${view ? "flex-row items-center gap-4" : "flex-col items-center justify-center"} ${view ? "p-0" : "p-2"} rounded cursor-pointer ${view ? "w-full" : "max-w-[150px]"} ${view ? "h-auto" : "min-h-[120px]"} `}
           style={{
-            border:
-              "1px solid transparent",
-            backgroundColor:
-              "transparent",
+            border: "1px solid transparent",
+            backgroundColor: "transparent",
           }}
         >
-          {deleteLoading ? <Spinner /> :
+          {deleteLoading ? (
+            <Spinner />
+          ) : (
             <>
               <Image
                 src="/folder-icon.png"
@@ -489,39 +507,32 @@ const RenderEachFolder = ({ item, index, view, setFolderBread, setCurrentFolder,
                 width={view ? 40 : 100}
                 alt={`${index}-folder`}
               />
-              <Label className={view ? "text-left" : "text-center"}>{item.name}</Label>
+              <Label className={view ? "text-left" : "text-center"}>
+                {item.name}
+              </Label>
             </>
-          }
+          )}
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem
-          onClick={openFolder}
-        >
-          Open
-        </ContextMenuItem>
+        <ContextMenuItem onClick={openFolder}>Open</ContextMenuItem>
 
         <ContextMenuItem
           onClick={() => {
-            setSelectedFolder(item)
-            setNewName(item.name)
+            setSelectedFolder(item);
+            setNewName(item.name);
           }}
         >
           Rename
         </ContextMenuItem>
 
-        <ContextMenuItem
-          onClick={() => handleDeleteFolder(item.id)}
-        >
+        <ContextMenuItem onClick={() => handleDeleteFolder(item.id)}>
           Delete
         </ContextMenuItem>
-
-
-
       </ContextMenuContent>
     </ContextMenu>
-  )
-}
+  );
+};
 
 const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
   return (
@@ -532,14 +543,13 @@ const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
             {index !== folderBread.length - 1 && (
               <BreadcrumbItem className="block">
                 <BreadcrumbLink
-
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
                     const path = folderBread.slice(0, index + 1);
                     setFolderBread(path);
                     setCurrentFolder(
-                      path[path.length - 1]?.id ? path[path.length - 1] : null
+                      path[path.length - 1]?.id ? path[path.length - 1] : null,
                     );
                   }}
                   className="text-blue-600 text-lg hover:underline"
@@ -562,39 +572,40 @@ const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
         ))}
       </BreadcrumbList>
     </Breadcrumb>
-  )
-}
+  );
+};
 
-const PreviewFile = ({ preview, setPreview, selectedPreview, previewLoading }) => {
-
-
+const PreviewFile = ({
+  preview,
+  setPreview,
+  selectedPreview,
+  previewLoading,
+}) => {
   return (
     <Dialog open={preview} onOpenChange={setPreview}>
       <DialogContent className="w-[90vw] max-w-[90vw] h-[90vh]">
         <DialogHeader>
-          <DialogTitle>
-            Preview file
-          </DialogTitle>
-          {previewLoading ? <div className="flex flex-1 items-center justify-center"> <Spinner /> </div> :
-            selectedPreview &&
-              selectedPreview.toLowerCase().includes("pdf") ?
-
-              <iframe
-                src={selectedPreview}
-
-                style={{ border: "none", flex: 1 }}
-              />
-              :
-              <iframe
-                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(selectedPreview)}`}
-                style={{ border: "none", flex: 1 }}
-              />
-
-          }
+          <DialogTitle>Preview file</DialogTitle>
+          {previewLoading ? (
+            <div className="flex flex-1 items-center justify-center">
+              {" "}
+              <Spinner />{" "}
+            </div>
+          ) : selectedPreview &&
+            selectedPreview.toLowerCase().includes("pdf") ? (
+            <iframe src={selectedPreview} style={{ border: "none", flex: 1 }} />
+          ) : selectedPreview.toLowerCase().includes("mp4") ? (
+            <iframe src={selectedPreview} style={{ border: "none", flex: 1 }} />
+          ) : (
+            <iframe
+              src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(selectedPreview)}`}
+              style={{ border: "none", flex: 1 }}
+            />
+          )}
         </DialogHeader>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 export default SuperadminDocumentManagement;
