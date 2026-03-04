@@ -155,7 +155,7 @@ export default function Page() {
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Title
+            Purpose
             <ArrowUpDown />
           </Button>
         );
