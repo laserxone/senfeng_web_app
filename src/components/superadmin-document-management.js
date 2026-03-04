@@ -591,16 +591,24 @@ const PreviewFile = ({
               {" "}
               <Spinner />{" "}
             </div>
-          ) : selectedPreview &&
-            selectedPreview.toLowerCase().includes("pdf") ? (
-            <iframe src={selectedPreview} style={{ border: "none", flex: 1 }} />
-          ) : selectedPreview.toLowerCase().includes("mp4") ? (
-            <iframe src={selectedPreview} style={{ border: "none", flex: 1 }} />
           ) : (
-            <iframe
-              src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(selectedPreview)}`}
-              style={{ border: "none", flex: 1 }}
-            />
+            selectedPreview &&
+            (selectedPreview?.toLowerCase()?.includes("pdf") ? (
+              <iframe
+                src={selectedPreview}
+                style={{ border: "none", flex: 1 }}
+              />
+            ) : selectedPreview?.toLowerCase()?.includes("mp4") ? (
+              <iframe
+                src={selectedPreview}
+                style={{ border: "none", flex: 1 }}
+              />
+            ) : (
+              <iframe
+                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(selectedPreview)}`}
+                style={{ border: "none", flex: 1 }}
+              />
+            ))
           )}
         </DialogHeader>
       </DialogContent>
