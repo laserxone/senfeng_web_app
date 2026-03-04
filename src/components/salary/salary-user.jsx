@@ -563,6 +563,7 @@ const SalaryComponent = ({ onSelectedId }) => {
         kpi: kpi,
         fuel: data?.user?.fuel || 0,
         loan: repayment,
+        basic_salary : data?.user?.basic_salary || 0
       });
 
       toast({ title: "Salary saved! Updating other entries in background" });
