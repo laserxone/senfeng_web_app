@@ -18,7 +18,7 @@ export async function GET(req, { params }) {
   JOIN customer c ON s.customer_id = c.id
   JOIN users u ON c.ownership = u.id
   WHERE s.ready_for_delivery IS TRUE 
-    AND s.delivery_date IS NULL
+    AND s.delivery_date IS NULL AND c.office = 'lahore'
 `);
 
         return NextResponse.json(queryResult.rows, { status: 200 })

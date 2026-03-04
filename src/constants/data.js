@@ -383,14 +383,33 @@ export const StoreNavItem = [
     isActive: false,
     items: [], // No child items
   },
-  // {
-  //   title: 'Messages',
-  //   url: '/messages',
-  //   icon: 'messages',
-  //   shortcut: ['m', 's', 'g'],
-  //   isActive: false,
-  //   items: [] // No child items
-  // },
+  {
+    title: "Delivery",
+    url: "#",
+    icon: "truck",
+    isActive: false,
+
+    items: [
+      {
+        title: "Machine Delivery",
+        url: "/delivery/machinedelivery",
+        icon: "userPen",
+        shortcut: ["m", "d", "e"],
+      },
+      {
+        title: "Other Delivery",
+        url: "/delivery/otherdelivery",
+        icon: "member",
+        shortcut: ["o", "d", "e"],
+      },
+      {
+        title: "Delivered",
+        shortcut: ["d", "e", "l"],
+        url: "/delivery/delivered",
+        icon: "login",
+      },
+    ],
+  },
 ];
 
 export const POSNavItem = {
@@ -430,7 +449,7 @@ export const Tools = {
       url: "/paymentverification",
       shortcut: ["p", "a", "y"],
     },
-     {
+    {
       title: "Transfer Customers",
       shortcut: ["t", "r", "a"],
       url: "/transfer-customers",

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -88,6 +89,8 @@ import "pdfjs-dist/build/pdf.worker";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import AddCheque from "./add-cheque";
+import { Textarea } from "@/components/ui/textarea";
+import { RequiredStar } from "@/components/RequiredStar";
 
 export default function Machine({ id, onLoading = () => {}, base }) {
   const [data, setData] = useState();
@@ -756,19 +759,6 @@ export default function Machine({ id, onLoading = () => {}, base }) {
     fetchData(id);
   }
 
-  async function handleReadyforDeliver() {
-    setConfirmLoading(true);
-    const response = await axios.put(
-      `/${userID}/machine/${readyForDelivery.id}/delivery`,
-      {
-        ready_for_delivery: true,
-      },
-    );
-    setReadyForDelivery(null);
-    onRefresh();
-    setConfirmLoading(false);
-  }
-
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <ClientCard
@@ -799,9 +789,8 @@ export default function Machine({ id, onLoading = () => {}, base }) {
               {data?.machine?.type === "Parts" ? "Edit Parts" : "Edit Machine"}
             </Button>
 
-            {data?.machine 
-            // && !data?.machine?.payment_lock 
-            && (
+            {data?.machine && (
+              // && !data?.machine?.payment_lock
               <Button
                 size="sm"
                 onClick={() => {
@@ -875,7 +864,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
               <Button
                 size="sm"
                 onClick={() => {
-                  setReadyForDelivery(data?.machine);
+                  setReadyForDelivery(data);
                 }}
               >
                 Apply For Delivery
@@ -989,19 +978,238 @@ export default function Machine({ id, onLoading = () => {}, base }) {
         onRefresh={onRefresh}
       />
 
-      <ConfimationDialog
-        loading={confirmLoading}
+      <SendForDeliveryDialog
         open={!!readyForDelivery}
-        title={"Sending for delivery?"}
-        description={
-          "Make sure everything is ready and completed before sending for delivery request"
-        }
-        onPressCancel={() => setReadyForDelivery(null)}
-        onPressYes={handleReadyforDeliver}
+        onClose={() => setReadyForDelivery(null)}
+        data={readyForDelivery}
+        onRefresh={onRefresh}
       />
     </div>
   );
 }
+
+const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }) => {
+  const {userID} = useUserDetail()
+  const formSchema = z.object({
+    name: z.string().min(1, "Receiver name is required"),
+    city: z.string().min(1, "City is required"),
+    number: z.string().min(1, "Contact number is required"),
+    address: z.string().min(1, "Address is required"),
+    pin: z.string().min(1, "Google pin is required"),
+    note: z.string().optional(),
+    tod: z.string().min(1, "Delivery time is required"),
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      city: "",
+      number: "",
+      address: "",
+      pin: "",
+      note: "",
+      tod: "",
+    },
+  });
+
+  // ✅ Prefill when data changes
+  useEffect(() => {
+    if (data?.customer?.id) {
+      form.reset({
+        name: data?.customer?.owner || "",
+        city: data?.customer?.location || "",
+        number: data?.customer?.number?.[0] || "",
+        address: data?.customer?.address || "",
+        pin: data?.customer?.pin || "",
+        note: "",
+        tod: "",
+      });
+    }
+  }, [data]);
+
+  async function onSubmit(values) {
+    console.log(values)
+   if (!data?.machine?.id) return;
+
+    setLoading(true);
+    try {
+      await axios.put(`/${userID}/machine/${data.machine.id}/delivery`, {
+        ready_for_delivery: true,
+        delivery_information : {...values,  tod: new Date(values.tod)},
+      
+      });
+       await onRefresh();
+        onClose();
+    } finally {
+      setLoading(false);
+     
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Sending for Delivery</DialogTitle>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit, (err) => {
+              console.log("Validation Errors", err);
+            })}
+          >
+            <ScrollArea className="h-[70vh] pr-2">
+              <div className="grid gap-4 py-4 px-2">
+                {/* Receiver Name */}
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Receiver Name <RequiredStar />
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter receiver name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* City */}
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        City <RequiredStar />
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter city" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Contact No */}
+                <FormField
+                  control={form.control}
+                  name="number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Contact No <RequiredStar />
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter contact number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Delivery Time */}
+                <FormField
+                  control={form.control}
+                  name="tod"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Time of Delivery <RequiredStar />
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="datetime-local" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Address */}
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Address <RequiredStar />
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Enter full address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Google Pin */}
+                <FormField
+                  control={form.control}
+                  name="pin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Google Pin <RequiredStar />
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Paste Google Maps link"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Note */}
+                <FormField
+                  control={form.control}
+                  name="note"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Note</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Additional instructions (optional)"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground">
+                Make sure everything is ready and completed before sending for
+                delivery request.
+              </div>
+            </ScrollArea>
+
+            <DialogFooter className="mt-4">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+
+              <Button type="submit" disabled={loading}>
+                {loading && <Spinner />}
+                Yes
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const CancelDeal = ({ machine, onRefresh }) => {
   const [loading, setLoading] = useState(false);

@@ -277,7 +277,7 @@ const RenderStockItems = ({
             onChange={(e) => setLocalChineseName(e.target.value)}
           />
 
-          <div className="flex justify-between">
+          {/* <div className="flex justify-between">
             <div className="text-[14px]">Quantity</div>
 
             <input
@@ -294,7 +294,7 @@ const RenderStockItems = ({
                 setLocalQty(e.target.value);
               }}
             />
-          </div>
+          </div> */}
 
           <div className="flex justify-between">
             <div className="text-[14px]">Price</div>
