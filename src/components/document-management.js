@@ -168,7 +168,7 @@ const DocumentManagement = () => {
       })
   }
 
-  const RenderEachFile = ({ item, index, view, onPreview }) => {
+  const   RenderEachFile = ({ item, index, view, onPreview }) => {
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [downloadLoading, setDownloadLoading] = useState(false);
 

@@ -14,6 +14,7 @@ const Dropzone = ({
   borderColor,
   noImage=false,
   value,
+  className = ""
 }) => {
   const updateRef = useRef();
 
@@ -56,7 +57,7 @@ const Dropzone = ({
   return (
     <div
       {...getRootProps()}
-      className="w-[300px] flex flex-col items-center justify-center py-2 border rounded-sm"
+      className={`w-[300px] flex flex-col items-center justify-center py-2 border rounded-sm ${className}`}
       style={{ borderColor }}
     >
       <div
