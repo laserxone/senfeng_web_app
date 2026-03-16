@@ -13,6 +13,7 @@ import { ScrollArea } from "./ui/scroll-area";
 import useUserDetail from "@/hooks/use-user-detail";
 import { useToast } from "@/hooks/use-toast";
 import Spinner from "./ui/spinner";
+import moment from "moment";
 
 function FloatingTodoButton({ onClick, pending }) {
   return (
@@ -59,7 +60,7 @@ export default function FloatingTodo() {
       });
 
       setTasks((prev) =>
-        prev.map((t) => (t.id === tempId ? response.data : t))
+        prev.map((t) => (t.id === tempId ? response.data : t)),
       );
     } catch (err) {
       setTasks((prev) => prev.filter((t) => t.id !== tempId));
@@ -70,7 +71,7 @@ export default function FloatingTodo() {
   const toggleTask = async (id, done) => {
     console.log(id, done);
     setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, is_done: done } : t))
+      prev.map((t) => (t.id === id ? { ...t, is_done: done } : t)),
     );
 
     try {
@@ -79,7 +80,7 @@ export default function FloatingTodo() {
       });
     } catch (err) {
       setTasks((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, is_done: !done } : t))
+        prev.map((t) => (t.id === id ? { ...t, is_done: !done } : t)),
       );
       console.error("Failed to update task:", err);
     }
@@ -108,11 +109,12 @@ export default function FloatingTodo() {
         pending={tasks.filter((t) => !t.is_done).length}
       />
 
-     <div
+      <div
         className={`absolute bottom-0 right-0  w-[calc(100vw-30px)] sm:w-96 h-[600px]
     bg-white dark:bg-neutral-900 rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col
-    overflow-hidden border transition-all duration-200 z-10 sm:mx-0 ${isOpen ? "block" : "hidden"
-          }`}
+    overflow-hidden border transition-all duration-200 z-10 sm:mx-0 ${
+      isOpen ? "block" : "hidden"
+    }`}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
           <div className="flex items-center gap-2">
@@ -143,15 +145,24 @@ export default function FloatingTodo() {
                     .map((t) => (
                       <li
                         key={t.id}
-                        className="flex items-center gap-2 rounded-lg border p-2 hover:bg-accent transition"
+                        className="flex flex-col rounded-lg border p-2 hover:bg-accent transition"
                       >
-                        <Checkbox
-                          checked={t.is_done}
-                          onCheckedChange={(checked) =>
-                            toggleTask(t.id, checked)
-                          }
-                        />
-                        <span>{t.title}</span>
+                        <div className="flex gap-2 items-start">
+                          <Checkbox
+                            className="mt-1"
+                            checked={t.is_done}
+                            onCheckedChange={(checked) =>
+                              toggleTask(t.id, checked)
+                            }
+                          />
+                          <span className="word-break break-all">
+                            {t.title}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500 text-right">
+                          {t.created_at &&
+                            moment(t.created_at).format("YYYY-MM-DD")}
+                        </span>
                       </li>
                     ))}
                 </ul>
@@ -180,16 +191,23 @@ export default function FloatingTodo() {
                     .map((t) => (
                       <li
                         key={t.id}
-                        className="flex items-center gap-2 rounded-lg border p-2 bg-muted/50"
+                        className="flex flex-col rounded-lg border p-2 hover:bg-accent transition"
                       >
-                        <Checkbox
-                          checked={t.is_done}
-                          onCheckedChange={(checked) =>
-                            toggleTask(t.id, checked)
-                          }
-                        />
-                        <span className="line-through text-muted-foreground">
-                          {t.title}
+                        <div className="flex gap-2 items-start">
+                          <Checkbox
+                            className="mt-1"
+                            checked={t.is_done}
+                            onCheckedChange={(checked) =>
+                              toggleTask(t.id, checked)
+                            }
+                          />
+                          <span className="word-break break-all">
+                            {t.title}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500 text-right">
+                          {t.created_at &&
+                            moment(t.created_at).format("YYYY-MM-DD")}
                         </span>
                       </li>
                     ))}

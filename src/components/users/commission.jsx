@@ -6,12 +6,22 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { storage } from "@/config/firebase";
 import { toast } from "@/hooks/use-toast";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
+import { Controlled as ControlledZoom } from "react-medium-image-zoom";
+import "react-medium-image-zoom/dist/styles.css";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import {
@@ -21,7 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import Heading  from "../ui/heading";
+import Heading from "../ui/heading";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import {
@@ -47,6 +57,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import { ScrollArea } from "../ui/scroll-area";
+
 
 export default function Commission({ owner, crm }) {
   return owner ? <OwnerView /> : crm ? <CrmView /> : <OtherView />;
@@ -60,6 +72,7 @@ const OwnerView = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [disapproveMsg, setDisapproveMsg] = useState("");
   const [disapproveLoading, setDisapproveLoading] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null)
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -73,6 +86,7 @@ const OwnerView = () => {
       try {
         const route = `/${userID}/commission`;
         const response = await axios.get(route);
+        console.log(response.data);
         setData(response.data);
       } catch (error) {
       } finally {
@@ -106,7 +120,7 @@ const OwnerView = () => {
 
   const groupedData = groupByMonth(filteredData);
 
-  const RenderEachRow = ({ item, onRefresh, onDisapprove }) => {
+  const RenderEachRow = ({ item, onRefresh, onDisapprove, onReturn }) => {
     const [loading, setLoading] = useState(false);
     const { userID, base_route } = useUserDetail();
     const [selectedPercentage, setSelectedPercentage] = useState(null);
@@ -183,8 +197,20 @@ const OwnerView = () => {
             {item.customer_owner}
           </Link>
         </TableCell>
+        <TableCell>{item.customer_group}</TableCell>
         <TableCell>{item.machine_name}</TableCell>
+        <TableCell>{item.order_no_arr?.join(", ")}</TableCell>
         <TableCell>{item.total_amount}</TableCell>
+        <TableCell>
+          <Button
+            onClick={() => {
+              onReturn(item);
+            }}
+            variant="outline"
+          >
+            Open
+          </Button>
+        </TableCell>
         <TableCell>
           <div className="min-h-[40px] flex items-center gap-2">
             {item.is_approved ? (
@@ -351,8 +377,11 @@ const OwnerView = () => {
                           <TableHead>Employee</TableHead>
                           <TableHead>Customer</TableHead>
                           <TableHead>Owner</TableHead>
+                          <TableHead>Group</TableHead>
                           <TableHead>Machine</TableHead>
+                          <TableHead>Order No</TableHead>
                           <TableHead>Price</TableHead>
+                          <TableHead>Images</TableHead>
                           <TableHead>Commission</TableHead>
                           <TableHead>Note</TableHead>
                           <TableHead>Status</TableHead>
@@ -364,6 +393,7 @@ const OwnerView = () => {
                             key={item.id}
                             item={item}
                             onRefresh={fetchData}
+                            onReturn={(i) => setSelectedRow(i)}
                             onDisapprove={() => {
                               setSelectedItem(item);
                               setVisibleDisapprove(true);
@@ -408,6 +438,8 @@ const OwnerView = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ImageSheet data={selectedRow} onClose={()=> setSelectedRow(null)} visible={!!selectedRow}/>
     </div>
   );
 };
@@ -869,3 +901,174 @@ const CrmView = () => {
     </div>
   );
 };
+
+const MyImg = memo(({ img, setImageOpen }) => {
+  const [localImage, setLocalImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [rotation, setRotation] = useState(0);
+
+  useEffect(() => {
+    if (!img) {
+      setLocalImage(null);
+      setError(false);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(false);
+
+    if (img.includes("http")) {
+      setLocalImage(img);
+      setLoading(false);
+    } else {
+      getDownloadURL(ref(storage, img))
+        .then((url) => {
+          setLocalImage(url);
+        })
+        .catch(() => {
+          setError(true);
+          setLocalImage(null);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [img]);
+
+  const handleZoomChange = useCallback((shouldZoom) => {
+    setIsZoomed(shouldZoom);
+    if (!shouldZoom) {
+      setImageOpen(false);
+    }
+  }, []);
+
+  const rotateImageRight = () => {
+    setRotation((prev) => (prev + 90) % 360);
+  };
+
+  const rotateImageLeft = () => {
+    setRotation((prev) => (prev - 90 + 360) % 360);
+  };
+
+  const onPressClose = () => {
+    setIsZoomed(false);
+    setImageOpen(false);
+  };
+
+  if (loading) return <Spinner />;
+  if (!img || error || !localImage) return <p>No image</p>;
+
+  return (
+    <ControlledZoom
+      isZoomed={isZoomed}
+      onZoomChange={handleZoomChange}
+      ZoomContent={({ img }) =>
+        isZoomed ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "column",
+              width: "100vw",
+              height: "100vh",
+              overflow: "hidden",
+              zIndex: 9999,
+              pointerEvents: "auto",
+            }}
+          >
+            <img
+              src={localImage}
+              alt="payment-img"
+              style={{
+                transform: `rotate(${rotation}deg)`,
+                maxWidth: "90vw",
+                maxHeight: "90vh",
+                objectFit: "contain",
+                pointerEvents: "auto",
+              }}
+            />
+            <div
+              className="mt-2 flex gap-5"
+              style={{
+                pointerEvents: "auto",
+                zIndex: 10000,
+              }}
+            >
+              <Button variant="outline" size="sm" onClick={rotateImageLeft}>
+                Rotate Left
+              </Button>
+              <Button variant="outline" size="sm" onClick={rotateImageRight}>
+                Rotate Right
+              </Button>
+
+              <Button variant="outline" size="sm" onClick={onPressClose}>
+                Close
+              </Button>
+            </div>
+          </div>
+        ) : (
+          img
+        )
+      }
+    >
+      <img
+        onClick={() => setImageOpen(true)}
+        src={localImage}
+        alt="payment-img"
+        style={{
+          maxWidth: "100%",
+          maxHeight: "400px",
+          objectFit: "contain",
+          cursor: "zoom-in",
+        }}
+      />
+    </ControlledZoom>
+  );
+});
+
+const ImageSheet = memo(({
+  data,
+  visible,
+  onClose,
+
+}) => {
+  const [imageOpen, setImageOpen] = useState(false);
+
+ 
+  function handleClose() {
+    if (!imageOpen) {
+      onClose();
+    }
+  }
+
+  return (
+    <Sheet open={visible} onOpenChange={handleClose}>
+      <SheetContent>
+        <SheetHeader className="mb-4">
+          <SheetTitle>Images</SheetTitle>
+
+            <ScrollArea className="h-[85vh] px-4">
+
+          {data?.contract_images_png &&
+            data?.contract_images_png?.map((item) => (
+              <div key={item}>
+                <MyImg img={item} setImageOpen={setImageOpen}/>
+              </div>
+            ))}
+
+            {data?.machine_nameplate_images &&
+            data?.machine_nameplate_images?.map((item) => (
+              <div key={item}>
+                <MyImg img={item} setImageOpen={setImageOpen}/>
+              </div>
+            ))}
+            </ScrollArea>
+        </SheetHeader>
+      </SheetContent>
+    </Sheet>
+  );
+});

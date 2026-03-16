@@ -687,6 +687,16 @@ export default function Machine({ id, onLoading = () => {}, base }) {
                         </span>
                       </span>
                     </div>
+
+                    <div className="flex items-start gap-2">
+                      <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
+                      <span>
+                        Group:{" "}
+                        <span className="font-medium">
+                        {data?.customer_group}
+                        </span>
+                      </span>
+                    </div>
                   </div>
                 ) : (
                   <p className="text-gray-500 dark:text-gray-400">

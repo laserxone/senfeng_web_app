@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { storage } from "@/config/firebase";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
+import ConfimationDialog from "./alert-dialog";
 
 export default function PricesComponent() {
   const [loading, setLoading] = useState(false);
@@ -339,6 +340,7 @@ export default function PricesComponent() {
 
 const Attachment = ({ attachment, onRefresh, id, attachment_url }) => {
   const [open, setOpen] = useState(false);
+   const [deleteOpen, setDeleteOpen] = useState(false);
   const { userID, isAdmin } = useUserDetail();
   const { toast } = useToast();
   const [uploadLoading, setUploadLoading] = useState(false);
@@ -407,6 +409,7 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }) => {
       await onRefresh();
     } finally {
       setDeleteLoading(false);
+      setDeleteOpen(false)
     }
   }
 
@@ -423,9 +426,9 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }) => {
               disabled={deleteLoading}
               size="icon"
               variant="destructive"
-              onClick={() => handleDelete()}
+              onClick={() => setDeleteOpen(true)}
             >
-              {deleteLoading ? <Spinner /> : <Trash2 />}
+              <Trash2 />
             </Button>
           )}
         </div>
@@ -459,6 +462,15 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConfimationDialog
+        loading={deleteLoading}
+        open={deleteOpen}
+        title={"Are you sure you want to delete?"}
+        description={"Your action will remove prices from the system"}
+        onPressYes={() => handleDelete()}
+        onPressCancel={() => setDeleteOpen(false)}
+      />
     </>
   );
 };
