@@ -58,6 +58,7 @@ export async function GET(req, { params }) {
                 nav_items.push(POSNavItem)
             } else if (user.designation === 'Dealer') {
                 nav_items = [...dealerNavItems]
+                nav_items.push(FinanceItem)
                 base_route = `${branchOffice}/dealer`
             } else {
                 nav_items = [...employeeNavItems]
