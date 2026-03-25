@@ -630,6 +630,14 @@ const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
 
 const PreviewFile = memo(
   ({ preview, setPreview, selectedPreview, previewLoading }) => {
+    const officeFile = selectedPreview
+      ? selectedPreview
+          ?.toLowerCase()
+          ?.match(/\.(xlsx|xls|csv|doc|docx|ppt|pptx)$/)
+      : false;
+
+    // const officeFile = true
+
     return (
       <Dialog open={preview} onOpenChange={setPreview}>
         <VisuallyHidden>
@@ -645,18 +653,7 @@ const PreviewFile = memo(
                 {" "}
                 <Spinner />{" "}
               </div>
-            ) : selectedPreview &&
-              selectedPreview.toLowerCase().includes("pdf") ? (
-              <iframe
-                src={selectedPreview}
-                style={{
-                  border: "none",
-                  flex: 1,
-                  width: "100%",
-                  height: "100%",
-                }}
-              />
-            ) : selectedPreview?.toLowerCase()?.includes("mp4") ? (
+            ) : selectedPreview && !officeFile ? (
               <iframe
                 src={selectedPreview}
                 style={{

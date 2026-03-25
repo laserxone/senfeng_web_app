@@ -400,6 +400,7 @@ const SuperadminDocumentManagement = () => {
 const RenderEachFile = memo(({ item, index, view, onPreview, onRefresh }) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
+  const {userID} = useUserDetail()
 
   async function handleDelete(file) {
     const id = file.id;
@@ -639,8 +640,15 @@ const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
   );
 };
 
+
+
 const PreviewFile = memo(
   ({ preview, setPreview, selectedPreview, previewLoading }) => {
+
+    const officeFile = selectedPreview? selectedPreview?.toLowerCase()?.match(
+  /\.(xlsx|xls|csv|doc|docx|ppt|pptx)$/
+ ) : false;
+
     return (
       <Dialog open={preview} onOpenChange={setPreview}>
         <DialogContent className="w-[90vw] max-w-[90vw] h-[90vh]">
@@ -657,17 +665,7 @@ const PreviewFile = memo(
               </div>
             ) : (
               selectedPreview &&
-              (selectedPreview?.toLowerCase()?.includes("pdf") ? (
-                <iframe
-                  src={selectedPreview}
-                  style={{
-                    border: "none",
-                    flex: 1,
-                    width: "100%",
-                    height: "100%",
-                  }}
-                />
-              ) : selectedPreview?.toLowerCase()?.includes("mp4") ? (
+              (!officeFile ? (
                 <iframe
                   src={selectedPreview}
                   style={{
