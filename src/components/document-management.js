@@ -45,6 +45,8 @@ import {
 } from "./ui/context-menu";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
+const videoThumbnailCache = {};
+
 const DocumentManagement = () => {
   const [selectedFile, setSelectedFile] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -294,7 +296,7 @@ const DocumentManagement = () => {
         ) : (
           <div
             className={
-              view ? "flex flex-col gap-2" : "flex flex-row gap-4 flex-wrap"
+              view ? "flex flex-col" : "flex flex-row gap-4 flex-wrap"
             }
           >
             {allFolders.map((item, index) => (
@@ -311,13 +313,12 @@ const DocumentManagement = () => {
               />
             ))}
 
-            {allDocuments.map((item, index) => (
-              <RenderEachFile
+            {allDocuments.map((item) => (
+               <RenderEachFile
                 key={item.id}
                 onRefresh={fetchFiles}
                 item={item}
-                index={index}
-                view={view}
+                // view={view}
                 onPreview={handlePreview}
               />
             ))}
@@ -389,7 +390,7 @@ const DocumentManagement = () => {
   );
 };
 
-const RenderEachFile = memo(({ item, index, view, onPreview, onRefresh }) => {
+const RenderEachFile = memo(({ item, onPreview, onRefresh }) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
   const { isAdmin, userID } = useUserDetail();
@@ -407,36 +408,102 @@ const RenderEachFile = memo(({ item, index, view, onPreview, onRefresh }) => {
       });
   }
 
-  const RenderFile = ({ path, index }) => {
+const RenderFile = memo(
+  ({ path }) => {
+    const [thumbnail, setThumbnail] = useState(null);
+    const [loadingThumb, setLoadingThumb] = useState(false);
+    const fileExt = path?.toLowerCase();
+    const isImage = fileExt?.match(/\.(jpg|jpeg|png|gif|webp)$/);
+    const isVideo = fileExt?.match(/\.(mp4|mov|webm|mkv)$/);
+
+    useEffect(() => {
+      if (!isVideo) return;
+
+      if (videoThumbnailCache[path]) {
+        setThumbnail(videoThumbnailCache[path]);
+        return;
+      }
+
+      setLoadingThumb(true);
+
+      const generateThumbnail = async () => {
+        try {
+          const videoUrl = supabase.storage
+            .from("documents")
+            .getPublicUrl(path).data.publicUrl;
+          if (!videoUrl) return;
+
+          const video = document.createElement("video");
+          video.src = videoUrl;
+          video.crossOrigin = "anonymous";
+          video.currentTime = 1;
+          video.muted = true;
+          video.play().catch(() => {});
+
+          video.addEventListener("loadeddata", () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = 100;
+            canvas.height = 100; 
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              const dataUrl = canvas.toDataURL("image/jpeg");
+              videoThumbnailCache[path] = dataUrl;
+              setThumbnail(dataUrl);
+              setLoadingThumb(false);
+            }
+          });
+        } catch (err) {
+          console.error("Error generating video thumbnail", err);
+          setLoadingThumb(false);
+        }
+      };
+
+      generateThumbnail();
+
+    }, [path, isVideo]);
+
     let url = "/file-icon.png";
-    if (path?.toLowerCase().includes("pdf")) {
-      url = "/pdf-icon.png";
-    }
 
-    if (path?.toLowerCase().includes("doc")) {
-      url = "/docx-icon.png";
-    }
-
-    if (path?.toLowerCase().includes("xls")) {
-      url = "/xlsx-icon.png";
-    }
-
-    if (path?.toLowerCase().includes("ppt")) {
-      url = "/ppt-icon.png";
+    if (fileExt.includes("pdf")) url = "/pdf-icon.png";
+    else if (fileExt.includes("doc")) url = "/docx-icon.png";
+    else if (fileExt.includes("xls")) url = "/xlsx-icon.png";
+    else if (fileExt.includes("ppt")) url = "/ppt-icon.png";
+    else if (isImage) {
+      const { data } = supabase.storage
+        .from("superadmin.documents")
+        .getPublicUrl(path);
+      if (data.publicUrl) url = data.publicUrl;
+    } else if (isVideo) {
+      url = thumbnail || "/mp4-icon.png";
     }
 
     return (
-      <div className="max-w-md break-all flex flex-col items-center">
-        <Image
-          src={url}
-          height={view ? 40 : 100}
-          width={view ? 40 : 100}
-          alt={`${index}-file`}
-        />
-        <Label className={view ? "text-left" : "text-center"}>{path}</Label>
+      <div className={`max-w-md break-all flex flex-col`}>
+        {loadingThumb ? (
+          <div
+            className="flex items-center justify-center"
+            style={{ width: 100, height: 100 }}
+          >
+            <Spinner />
+          </div>
+        ) : (
+          <div className="w-[100px] h-[120px] overflow-hidden flex justify-center">
+          <Image
+            src={url}
+            height={100}
+            width={100}
+            alt={`${path}-file`}
+            className="object-cover"
+          />
+          </div>
+        )}
+        <Label className={"mt-1"}>{path}</Label>
       </div>
     );
-  };
+  },
+  (prev, next) => prev.path === next.path,
+);
 
   return (
     <ContextMenu modal={false}>
@@ -446,7 +513,7 @@ const RenderEachFile = memo(({ item, index, view, onPreview, onRefresh }) => {
         }}
       >
         <div
-          className={`flex ${view ? "flex-row items-center gap-4" : "flex-col items-center justify-center"} ${view ? "p-0" : "p-2"} rounded cursor-pointer ${view ? "w-full" : "max-w-[150px]"} ${view ? "h-auto" : "min-h-[120px]"} `}
+          className={`flex flex-col justify-center min-h-[120px] p-2 rounded cursor-pointer max-w-[150px]`}
           style={{
             border: "1px solid transparent",
             backgroundColor: "transparent",
@@ -455,7 +522,7 @@ const RenderEachFile = memo(({ item, index, view, onPreview, onRefresh }) => {
           {downloadLoading || deleteLoading ? (
             <Spinner />
           ) : (
-            <RenderFile path={item.path} index={index} />
+            <RenderFile path={item.path} />
           )}
         </div>
       </ContextMenuTrigger>
