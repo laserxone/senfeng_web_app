@@ -451,7 +451,7 @@ export default function InventoryDetail({ booking_id }) {
                         key === "REMARKS" ? "w-[300px]" : "w-[130px]"
                       } text-black dark:text-white`}
                     >
-                      <ContextMenu>
+                    <ContextMenu modal={false}>
                         <ContextMenuTrigger>
                           <input
                             onFocus={() => setFocusedRow(ind)}

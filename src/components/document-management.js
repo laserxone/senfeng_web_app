@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import  Heading  from "@/components/ui/heading";
+import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Spinner from "@/components/ui/spinner";
@@ -25,25 +25,30 @@ import { useToast } from "@/hooks/use-toast";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { supabase } from "@/lib/supabaseClient";
-import {
-  ChevronRight,
-  List,
-  Table2
-} from "lucide-react";
+import { ChevronRight, List, Table2 } from "lucide-react";
 import moment from "moment";
 import Image from "next/image";
 import {
   Fragment,
+  memo,
+  useCallback,
   useEffect,
   useRef,
-  useState
+  useState,
 } from "react";
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "./ui/context-menu";
+import { ProgressWithLabel } from "./progress-with-label";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "./ui/context-menu";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 const DocumentManagement = () => {
   const [selectedFile, setSelectedFile] = useState([]);
   const [loading, setLoading] = useState(true);
-  const {userID, name, email, dms_write_access, isAdmin} = useUserDetail()
+  const { userID, name, email, dms_write_access, isAdmin } = useUserDetail();
   const { toast } = useToast();
   const [uploadLoading, setUploadLoading] = useState(false);
   const fileInputRef = useRef(null);
@@ -53,41 +58,39 @@ const DocumentManagement = () => {
   const [allFolders, setAllFolders] = useState([]);
   const [allDocuments, setAllDocuments] = useState([]);
   const [folderBread, setFolderBread] = useState([{ name: "root", id: null }]);
-  const [folderLoading, setFolderLoading] = useState(false)
+  const [folderLoading, setFolderLoading] = useState(false);
   const [selectedFolder, setSelectedFolder] = useState(null);
-  const [newName, setNewName] = useState("")
-  const [view, setView] = useState(false)
-  const [selectedPreview, setSelectedPreview] = useState(null)
-  const [previewLoading, setPreviewLoading] = useState(false)
-  const [preview, setPreview] = useState(false)
+  const [newName, setNewName] = useState("");
+  const [view, setView] = useState(false);
+  const [selectedPreview, setSelectedPreview] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [preview, setPreview] = useState(false);
+  const [uploadingStatus, setUploadingStatus] = useState({
+    file: "",
+    progress: 0,
+    track: 0,
+  });
 
   useEffect(() => {
-
     if (userID) {
-      setLoading(true)
-      fetchFiles()
+      setLoading(true);
+      fetchFiles();
     }
-
   }, [userID, currentFolder]);
 
-  const fetchFiles = async () => {
-    return new Promise(async (resolve) => {
-      try {
-        const response = await axios.get(
-          `/${userID}/folder?folder=${currentFolder?.id || null}`
-        );
-        setAllDocuments(response.data.documents);
-        setAllFolders(response.data.folders);
-        setLoading(false);
-        setUploadLoading(false);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        resolve()
-      }
-    })
-
-  };
+  const fetchFiles = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        `/${userID}/folder?folder=${currentFolder?.id || null}`,
+      );
+      setAllDocuments(response.data.documents);
+      setAllFolders(response.data.folders);
+      setLoading(false);
+      setUploadLoading(false);
+    } catch (error) {
+      console.log(error);
+    }
+  }, [userID, currentFolder]);
 
   const uploadFile = async () => {
     if (!selectedFile.length) {
@@ -101,42 +104,87 @@ const DocumentManagement = () => {
     handleUpload();
   };
 
-
-
   async function handleUpload() {
-    for (const file of selectedFile) {
-      const filePath = `${file.name}`;
-      const { error } = await supabase.storage
-        .from("documents")
-        .upload(filePath, file);
-
-      if (error) {
+    for (const [index, file] of selectedFile.entries()) {
+      try {
+        await uploadWithProgress(file, index);
+      } catch (err) {
         toast({
-          title: error?.message || `Error uploading ${file.name}`,
+          title: `Error uploading ${file.name}`,
+          description: JSON.parse(err)?.message,
           variant: "destructive",
         });
         continue;
       }
-
-      await axios.post(`/${userID}/document`, {
-        added_by: name || email,
-        path: filePath,
-        folder_id: currentFolder ? currentFolder.id : undefined,
-      });
     }
 
     setSelectedFile([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+    setUploadingStatus({ file: "", progress: 0, track: 0 });
 
     await fetchFiles();
     setUploadLoading(false);
+  }
 
+  async function uploadWithProgress(file, idx) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      const filePath = file.name;
+      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/documents/${filePath}`;
+
+      xhr.open("POST", url, true);
+      xhr.setRequestHeader(
+        "Authorization",
+        `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+      );
+      xhr.setRequestHeader("Content-Type", file.type);
+
+      let lastProgress = 0;
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          if (percent !== lastProgress) {
+            lastProgress = percent;
+
+            setUploadingStatus({
+              file: file.name,
+              progress: percent,
+              track: idx + 1,
+            });
+          }
+        }
+      };
+
+      xhr.onload = async () => {
+        if (xhr.status === 200) {
+          try {
+            await axios.post(`/${userID}/document`, {
+              added_by: name || email,
+              path: filePath,
+              folder_id: currentFolder ? currentFolder.id : undefined,
+            });
+
+            resolve(true);
+          } catch (err) {
+            reject("DB save failed");
+          }
+        } else {
+          reject(xhr.response);
+        }
+      };
+
+      xhr.onerror = () => reject("Upload failed");
+
+      xhr.send(file);
+    });
   }
 
   async function handleCreateFolder() {
-    setFolderLoading(true)
+    setFolderLoading(true);
     axios
       .post(`/${userID}/folder`, {
         name: folderName,
@@ -145,16 +193,16 @@ const DocumentManagement = () => {
       .then(async () => {
         setFolderName("");
         setVisible(false);
-        await fetchFiles()
-
-      }).finally(() => {
-        setFolderLoading(false)
+        await fetchFiles();
       })
+      .finally(() => {
+        setFolderLoading(false);
+      });
   }
 
   async function handleRenameFolder() {
-    if (!selectedFolder) return
-    setFolderLoading(true)
+    if (!selectedFolder) return;
+    setFolderLoading(true);
     axios
       .put(`/${userID}/folder/${selectedFolder?.id}`, {
         name: newName,
@@ -162,146 +210,31 @@ const DocumentManagement = () => {
       .then(async () => {
         setNewName("");
         setSelectedFolder(false);
-        await fetchFiles()
-      }).finally(() => {
-        setFolderLoading(false)
+        await fetchFiles();
       })
+      .finally(() => {
+        setFolderLoading(false);
+      });
   }
 
-  const   RenderEachFile = ({ item, index, view, onPreview }) => {
-    const [deleteLoading, setDeleteLoading] = useState(false);
-    const [downloadLoading, setDownloadLoading] = useState(false);
+  const handlePreview = useCallback(async (path) => {
+    setPreviewLoading(true);
+    setPreview(true);
+    try {
+      const { data, error } = await supabase.storage
+        .from("documents")
+        .getPublicUrl(path);
 
+      if (error) {
+        console.error("Error downloading file", error);
+        return;
+      }
 
-    async function handleDelete(file) {
-      const id = file.id;
-      await axios
-        .delete(`/${userID}/document/${id}`)
-        .then(async () => {
-          await supabase.storage.from("documents").remove([file.path]);
-          await fetchFiles();
-        })
-        .finally(() => {
-          setDeleteLoading(false)
-        });
+      setSelectedPreview(data.publicUrl);
+    } finally {
+      setPreviewLoading(false);
     }
-
-    const RenderFile = ({ path, index }) => {
-      let url = "/file-icon.png"
-      if (path?.toLowerCase().includes("pdf")) {
-        url = "/pdf-icon.png"
-      }
-
-      if (path?.toLowerCase().includes("doc")) {
-        url = "/docx-icon.png"
-      }
-
-      if (path?.toLowerCase().includes("xls")) {
-        url = "/xlsx-icon.png"
-      }
-
-      if (path?.toLowerCase().includes("ppt")) {
-        url = "/ppt-icon.png"
-      }
-
-
-
-      return (
-        <>
-          <Image
-            src={url}
-            height={view ? 40 : 100}
-            width={view ? 40 : 100}
-            alt={`${index}-file`}
-
-          />
-          <Label className={view ? "text-left" : "text-center"}>{path}</Label>
-        </>
-      )
-    }
-
-    return (
-
-
-
-      <ContextMenu>
-        <ContextMenuTrigger
-          onDoubleClick={() => {
-            onPreview(item.path)
-          }}>
-          <div
-            className={`flex ${view ? "flex-row items-center gap-4" : "flex-col items-center justify-center"} ${view ? "p-0" : "p-2"} rounded cursor-pointer ${view ? "w-full" : "max-w-[150px]"} ${view ? "h-auto" : "min-h-[120px]"} `}
-            style={{
-              border: "1px solid transparent",
-              backgroundColor: "transparent",
-            }}
-          >
-            {(downloadLoading || deleteLoading) ? <Spinner /> :
-              <RenderFile path={item.path} index={index} />
-            }
-          </div>
-        </ContextMenuTrigger>
-        <ContextMenuContent>
-
-          <ContextMenuItem
-
-            onClick={async () => {
-              onPreview(item.path)
-            }}
-          >
-            Preview
-          </ContextMenuItem>
-
-          <ContextMenuItem
-            onClick={async () => {
-              setDownloadLoading(true);
-              const { data, error } = await supabase.storage
-                .from("documents")
-                .download(item.path);
-              if (error) {
-                console.error("Error downloading file", error);
-                return;
-              }
-              const url = URL.createObjectURL(data);
-              const link = document.createElement("a");
-              link.href = url;
-              link.download = item.path;
-              link.click();
-              URL.revokeObjectURL(url);
-              setDownloadLoading(false);
-            }}
-          >
-            Download
-          </ContextMenuItem>
-          {isAdmin && (
-              <ContextMenuItem
-                onClick={async () => {
-                  setDeleteLoading(true);
-                  await handleDelete(item);
-                }}
-              >
-                Delete
-              </ContextMenuItem>
-            )}
-
-          <ContextMenuItem className="hover:none">
-            <div className="flex flex-1 flex-col">
-              <Label>Date : {moment(item.created_at).format("YYYY-MM-DD")}</Label>
-              <Label>Uploaded by : {item.added_by}</Label>
-            </div>
-
-          </ContextMenuItem>
-        </ContextMenuContent>
-      </ContextMenu>
-
-
-
-
-
-    );
-  };
-
-
+  }, []);
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -326,21 +259,32 @@ const DocumentManagement = () => {
                 </Button>
               )}
             </div>
-            <Button onClick={() => setVisible(true)}>
-              Create new folder
-            </Button>
+            <Button onClick={() => setVisible(true)}>Create new folder</Button>
           </div>
         )}
       </div>
 
-
+      {uploadLoading && (
+        <ProgressWithLabel
+          status={uploadingStatus}
+          total={selectedFile?.length}
+        />
+      )}
 
       <div>
         <div className="flex justify-between items-center bg-gray-200 dark:bg-gray-800 mb-2 pr-2">
           <div className="flex space-x-2 p-2 ">
-            <MyBreadcrumb folderBread={folderBread} setCurrentFolder={setCurrentFolder} setFolderBread={setFolderBread} />
+            <MyBreadcrumb
+              folderBread={folderBread}
+              setCurrentFolder={setCurrentFolder}
+              setFolderBread={setFolderBread}
+            />
           </div>
-          {!view ? <Table2 className='cursor-pointer' onClick={() => setView(!view)} /> : <List className='cursor-pointer' onClick={() => setView(!view)} />}
+          {!view ? (
+            <Table2 className="cursor-pointer" onClick={() => setView(!view)} />
+          ) : (
+            <List className="cursor-pointer" onClick={() => setView(!view)} />
+          )}
         </div>
 
         {loading ? (
@@ -348,32 +292,34 @@ const DocumentManagement = () => {
             <Spinner />
           </div>
         ) : (
-          <div className={view ? "flex flex-col gap-2" : "flex flex-row gap-4 flex-wrap"}>
+          <div
+            className={
+              view ? "flex flex-col gap-2" : "flex flex-row gap-4 flex-wrap"
+            }
+          >
             {allFolders.map((item, index) => (
-              <RenderEachFolder key={index} item={item} index={index} view={view} setCurrentFolder={setCurrentFolder} setFolderBread={setFolderBread} setNewName={setNewName} setSelectedFolder={setSelectedFolder} fetchFiles={fetchFiles} />
+              <RenderEachFolder
+                key={item.id}
+                item={item}
+                index={index}
+                view={view}
+                setCurrentFolder={setCurrentFolder}
+                setFolderBread={setFolderBread}
+                setNewName={setNewName}
+                setSelectedFolder={setSelectedFolder}
+                fetchFiles={fetchFiles}
+              />
             ))}
 
             {allDocuments.map((item, index) => (
-              <RenderEachFile key={index} item={item} index={index} view={view} onPreview={async (path) => {
-                setPreviewLoading(true);
-                setPreview(true)
-                try {
-                  const { data, error } = await supabase.storage
-                    .from("documents")
-                    .getPublicUrl(path)
-                  if (error) {
-                    console.error("Error downloading file", error);
-                    return;
-                  }
-
-                  setSelectedPreview(data.publicUrl)
-                } finally {
-                  setPreviewLoading(false);
-                }
-
-
-
-              }} />
+              <RenderEachFile
+                key={item.id}
+                onRefresh={fetchFiles}
+                item={item}
+                index={index}
+                view={view}
+                onPreview={handlePreview}
+              />
             ))}
           </div>
         )}
@@ -396,13 +342,17 @@ const DocumentManagement = () => {
             <DialogClose asChild>
               <Button variant="outline">Close</Button>
             </DialogClose>
-            <Button onClick={handleCreateFolder}>{folderLoading && <Spinner />}Create</Button>
+            <Button onClick={handleCreateFolder}>
+              {folderLoading && <Spinner />}Create
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-
-      <Dialog open={selectedFolder} onOpenChange={() => setSelectedFolder(null)}>
+      <Dialog
+        open={selectedFolder}
+        onOpenChange={() => setSelectedFolder(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Rename folder</DialogTitle>
@@ -419,92 +369,223 @@ const DocumentManagement = () => {
             <DialogClose asChild>
               <Button variant="outline">Close</Button>
             </DialogClose>
-            <Button disabled={!newName || folderLoading} onClick={handleRenameFolder}>{folderLoading && <Spinner />}Save</Button>
+            <Button
+              disabled={!newName || folderLoading}
+              onClick={handleRenameFolder}
+            >
+              {folderLoading && <Spinner />}Save
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <PreviewFile preview={preview} setPreview={setPreview} previewLoading={previewLoading} selectedPreview={selectedPreview} />
+      <PreviewFile
+        preview={preview}
+        setPreview={setPreview}
+        previewLoading={previewLoading}
+        selectedPreview={selectedPreview}
+      />
     </div>
   );
 };
 
+const RenderEachFile = memo(({ item, index, view, onPreview, onRefresh }) => {
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [downloadLoading, setDownloadLoading] = useState(false);
+  const { isAdmin, userID } = useUserDetail();
 
-const RenderEachFolder = ({ item, index, view, setFolderBread, setCurrentFolder, setSelectedFolder, setNewName, fetchFiles }) => {
+  async function handleDelete(file) {
+    const id = file.id;
+    await axios
+      .delete(`/${userID}/document/${id}`)
+      .then(async () => {
+        await supabase.storage.from("documents").remove([file.path]);
+        await onRefresh();
+      })
+      .finally(() => {
+        setDeleteLoading(false);
+      });
+  }
 
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const {userID} = useUserDetail()
-  async function handleDeleteFolder(id) {
-    try {
-      setDeleteLoading(true)
-      await axios.delete(`/${userID}/folder/${id}`)
-      await fetchFiles()
-    } finally {
-      setDeleteLoading(false)
+  const RenderFile = ({ path, index }) => {
+    let url = "/file-icon.png";
+    if (path?.toLowerCase().includes("pdf")) {
+      url = "/pdf-icon.png";
     }
 
-  }
+    if (path?.toLowerCase().includes("doc")) {
+      url = "/docx-icon.png";
+    }
 
-  const openFolder = () => {
-    setFolderBread((prev) => [...prev, { name: item.name, id: item.id }]);
-    setCurrentFolder({ name: item.name, id: item.id });
-  }
+    if (path?.toLowerCase().includes("xls")) {
+      url = "/xlsx-icon.png";
+    }
 
+    if (path?.toLowerCase().includes("ppt")) {
+      url = "/ppt-icon.png";
+    }
+
+    return (
+      <div className="max-w-md break-all flex flex-col items-center">
+        <Image
+          src={url}
+          height={view ? 40 : 100}
+          width={view ? 40 : 100}
+          alt={`${index}-file`}
+        />
+        <Label className={view ? "text-left" : "text-center"}>{path}</Label>
+      </div>
+    );
+  };
 
   return (
-    <ContextMenu>
+    <ContextMenu modal={false}>
       <ContextMenuTrigger
-        onDoubleClick={openFolder}>
+        onDoubleClick={() => {
+          onPreview(item.path);
+        }}
+      >
         <div
           className={`flex ${view ? "flex-row items-center gap-4" : "flex-col items-center justify-center"} ${view ? "p-0" : "p-2"} rounded cursor-pointer ${view ? "w-full" : "max-w-[150px]"} ${view ? "h-auto" : "min-h-[120px]"} `}
           style={{
-            border:
-              "1px solid transparent",
-            backgroundColor:
-              "transparent",
+            border: "1px solid transparent",
+            backgroundColor: "transparent",
           }}
         >
-          {deleteLoading ? <Spinner /> :
-            <>
-              <Image
-                src="/folder-icon.png"
-                height={view ? 40 : 100}
-                width={view ? 40 : 100}
-                alt={`${index}-folder`}
-              />
-              <Label className={view ? "text-left" : "text-center"}>{item.name}</Label>
-            </>
-          }
+          {downloadLoading || deleteLoading ? (
+            <Spinner />
+          ) : (
+            <RenderFile path={item.path} index={index} />
+          )}
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem
-          onClick={openFolder}
-        >
-          Open
-        </ContextMenuItem>
-
-        <ContextMenuItem
-          onClick={() => {
-            setSelectedFolder(item)
-            setNewName(item.name)
+          onClick={async () => {
+            onPreview(item.path);
           }}
         >
-          Rename
+          Preview
         </ContextMenuItem>
 
         <ContextMenuItem
-          onClick={() => handleDeleteFolder(item.id)}
+          onClick={async () => {
+            setDownloadLoading(true);
+            const { data, error } = await supabase.storage
+              .from("documents")
+              .download(item.path);
+            if (error) {
+              console.error("Error downloading file", error);
+              return;
+            }
+            const url = URL.createObjectURL(data);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = item.path;
+            link.click();
+            URL.revokeObjectURL(url);
+            setDownloadLoading(false);
+          }}
         >
-          Delete
+          Download
         </ContextMenuItem>
+        {isAdmin && (
+          <ContextMenuItem
+            onClick={async () => {
+              setDeleteLoading(true);
+              await handleDelete(item);
+            }}
+          >
+            Delete
+          </ContextMenuItem>
+        )}
 
-
-
+        <ContextMenuItem className="hover:none">
+          <div className="flex flex-1 flex-col">
+            <Label>Date : {moment(item.created_at).format("YYYY-MM-DD")}</Label>
+            <Label>Uploaded by : {item.added_by}</Label>
+          </div>
+        </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
-  )
-}
+  );
+});
+
+const RenderEachFolder = memo(
+  ({
+    item,
+    index,
+    view,
+    setFolderBread,
+    setCurrentFolder,
+    setSelectedFolder,
+    setNewName,
+    fetchFiles,
+  }) => {
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const { userID } = useUserDetail();
+    async function handleDeleteFolder(id) {
+      try {
+        setDeleteLoading(true);
+        await axios.delete(`/${userID}/folder/${id}`);
+        await fetchFiles();
+      } finally {
+        setDeleteLoading(false);
+      }
+    }
+
+    const openFolder = () => {
+      setFolderBread((prev) => [...prev, { name: item.name, id: item.id }]);
+      setCurrentFolder({ name: item.name, id: item.id });
+    };
+
+    return (
+      <ContextMenu modal={false}>
+        <ContextMenuTrigger onDoubleClick={openFolder}>
+          <div
+            className={`flex ${view ? "flex-row items-center gap-4" : "flex-col items-center justify-center"} ${view ? "p-0" : "p-2"} rounded cursor-pointer ${view ? "w-full" : "max-w-[150px]"} ${view ? "h-auto" : "min-h-[120px]"} `}
+            style={{
+              border: "1px solid transparent",
+              backgroundColor: "transparent",
+            }}
+          >
+            {deleteLoading ? (
+              <Spinner />
+            ) : (
+              <>
+                <Image
+                  src="/folder-icon.png"
+                  height={view ? 40 : 100}
+                  width={view ? 40 : 100}
+                  alt={`${index}-folder`}
+                />
+                <Label className={view ? "text-left" : "text-center"}>
+                  {item.name}
+                </Label>
+              </>
+            )}
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={openFolder}>Open</ContextMenuItem>
+
+          <ContextMenuItem
+            onClick={() => {
+              setSelectedFolder(item);
+              setNewName(item.name);
+            }}
+          >
+            Rename
+          </ContextMenuItem>
+
+          <ContextMenuItem onClick={() => handleDeleteFolder(item.id)}>
+            Delete
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    );
+  },
+);
 
 const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
   return (
@@ -515,14 +596,13 @@ const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
             {index !== folderBread.length - 1 && (
               <BreadcrumbItem className="block">
                 <BreadcrumbLink
-
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
                     const path = folderBread.slice(0, index + 1);
                     setFolderBread(path);
                     setCurrentFolder(
-                      path[path.length - 1]?.id ? path[path.length - 1] : null
+                      path[path.length - 1]?.id ? path[path.length - 1] : null,
                     );
                   }}
                   className="text-blue-600 text-lg hover:underline"
@@ -545,39 +625,63 @@ const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
         ))}
       </BreadcrumbList>
     </Breadcrumb>
-  )
-}
+  );
+};
 
-const PreviewFile = ({ preview, setPreview, selectedPreview, previewLoading }) => {
+const PreviewFile = memo(
+  ({ preview, setPreview, selectedPreview, previewLoading }) => {
+    return (
+      <Dialog open={preview} onOpenChange={setPreview}>
+        <VisuallyHidden>
+          <DialogHeader>
+            <DialogTitle>Preview</DialogTitle>
+          </DialogHeader>
+        </VisuallyHidden>
 
-
-  return (
-    <Dialog open={preview} onOpenChange={setPreview}>
-      <DialogContent className="w-[90vw] max-w-[90vw] h-[90vh]">
-        <DialogHeader>
-          <DialogTitle>
-            Preview file
-          </DialogTitle>
-          {previewLoading ? <div className="flex flex-1 items-center justify-center"> <Spinner /> </div> :
-            selectedPreview &&
-              selectedPreview.toLowerCase().includes("pdf") ?
-
+        <DialogContent className="w-[90vw] max-w-[90vw] h-[90vh]">
+          <div className="flex-1">
+            {previewLoading ? (
+              <div className="flex flex-1 items-center justify-center">
+                {" "}
+                <Spinner />{" "}
+              </div>
+            ) : selectedPreview &&
+              selectedPreview.toLowerCase().includes("pdf") ? (
               <iframe
                 src={selectedPreview}
-
-                style={{ border: "none", flex: 1 }}
+                style={{
+                  border: "none",
+                  flex: 1,
+                  width: "100%",
+                  height: "100%",
+                }}
               />
-              :
+            ) : selectedPreview?.toLowerCase()?.includes("mp4") ? (
+              <iframe
+                src={selectedPreview}
+                style={{
+                  border: "none",
+                  flex: 1,
+                  width: "100%",
+                  height: "100%",
+                }}
+              />
+            ) : (
               <iframe
                 src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(selectedPreview)}`}
-                style={{ border: "none", flex: 1 }}
+                style={{
+                  border: "none",
+                  flex: 1,
+                  width: "100%",
+                  height: "100%",
+                }}
               />
-
-          }
-        </DialogHeader>
-      </DialogContent>
-    </Dialog>
-  )
-}
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  },
+);
 
 export default DocumentManagement;
