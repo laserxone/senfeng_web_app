@@ -30,7 +30,8 @@ export async function GET(req, { params }) {
         const finalAmount = itemsTotal - discount;
         const totalPaid = Number(invoice.total_paid ?? 0);
         let status = "NA";
-        if (totalPaid === 0) status = "Pending";
+        if(itemsTotal === 0) status = "Paid"
+        else if (totalPaid === 0) status = "Pending";
         else if (finalAmount - totalPaid !== 0) status = "Partial";
         else status = "Paid";
 
@@ -86,7 +87,8 @@ WHERE
         const finalAmount = itemsTotal - discount;
         const totalPaid = Number(invoice.total_paid ?? 0);
         let status = "NA";
-        if (totalPaid === 0) status = "Pending";
+        if(itemsTotal === 0) status = "Paid"
+        else if (totalPaid === 0) status = "Pending";
         else if (finalAmount - totalPaid !== 0) status = "Partial";
         else status = "Paid";
 
@@ -122,7 +124,8 @@ WHERE
         const finalAmount = itemsTotal - discount;
         const totalPaid = Number(invoice.total_paid ?? 0);
         let status = "NA";
-        if (totalPaid === 0) status = "Pending";
+        if(itemsTotal === 0) status = "Paid"
+        else if (totalPaid === 0) status = "Pending";
         else if (finalAmount - totalPaid !== 0) status = "Partial";
         else status = "Paid";
 

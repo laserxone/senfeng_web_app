@@ -44,14 +44,13 @@ export default function PaymentDetail({ params }) {
   const paid = Number(
     data?.payments
       ?.reduce((sum, p) => sum + Number(p.amount || 0), 0)
-      .toFixed(0) || 0
+      .toFixed(0) || 0,
   );
 
   async function fetchData() {
     setLoading(true);
     try {
       const response = await axios.get(`/${userID}/pos/payment/${params.id}`);
-      console.log(response.data);
       setData(response.data);
     } finally {
       setLoading(false);
@@ -175,7 +174,8 @@ export default function PaymentDetail({ params }) {
   }, [data]);
 
   function calculateStatus() {
-    if (paid === 0) return "Pending";
+    if (totalAmount === 0) return "Paid";
+    else if (paid === 0) return "Pending";
     else if (totalAmount - paid !== 0) return "Partial";
     else return "Paid";
   }

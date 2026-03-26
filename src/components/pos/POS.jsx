@@ -977,7 +977,6 @@ export default function POS() {
           onClose={setSearchModal}
           data={searchItemsResult}
           onselect={(val) => {
-            console.log(val);
             setSearchModal(false);
             setSelectedSearchItem(val);
             setPhoneNumber(val.phone);
