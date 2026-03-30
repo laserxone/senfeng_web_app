@@ -35,7 +35,8 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   const [value, setValue] = useState();
   const [total, setTotal] = useState([]);
   const { state: OfficeState } = useContext(OfficeContext);
-  const { office } = useUserDetail()
+  const office = OfficeState.value.data
+
 
   const formSchema = z
     .object({
@@ -48,13 +49,10 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
       speedMoneyNote: z.string().optional(),
       totalPrice: z.number().min(1, { message: "Total price is required." }),
       cnic: z.string().optional(),
-      order_item: z.number().nullable().optional(), // start optional, then refine below
+      order_item: z.number().nullable().optional(),
     })
     .refine(
       (data) => {
-        if (office === "karachi") {
-          return true;
-        }
         return typeof data.order_item === "number" && data.order_item > 0;
       },
       {
@@ -82,9 +80,6 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   function onSubmit(values) {
     setLoading(true);
     let baseLink = `/${user_id}/machine?inventory=${values.order_item}&cheque=${cheque}`
-    if (office === 'karachi') {
-      baseLink = `/${user_id}/machine?cheque=${cheque}`
-    }
     axios
       .post(
         baseLink,
@@ -168,7 +163,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                     })}
                     className="space-y-2"
                   >
-                    {office !== 'karachi' &&
+                   
                       <FormField
                         control={form.control}
                         name="order_item"
@@ -196,7 +191,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                           </FormItem>
                         )}
                       />
-                    }
+                    
 
                     
 
@@ -210,7 +205,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                           </FormLabel>
                           <FormControl>
                             <Input
-                              disabled={office !== 'karachi'}
+                              disabled
                               placeholder="example: SF3015G"
                               {...field}
                             />
@@ -230,7 +225,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                           </FormLabel>
                           <FormControl>
                             <Input
-                              disabled={office !== 'karachi'}
+                              disabled
                               placeholder="example: 3000W/1500W/6000W"
                               {...field}
                             />
@@ -250,7 +245,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                           </FormLabel>
                           <FormControl>
                             <Input
-                              disabled={office !== 'karachi'}
+                              disabled
                               placeholder="example: RAYCUS / MAX /IPG"
                               {...field}
                             />
