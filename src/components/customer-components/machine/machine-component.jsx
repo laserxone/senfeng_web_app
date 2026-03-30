@@ -52,6 +52,7 @@ import EditParts from "@/components/edit-parts";
 import EditMachine from "@/components/editMachine";
 import EditPayment from "@/components/editPayment";
 import InvoicePDF from "@/components/invoicepdf";
+import { RequiredStar } from "@/components/RequiredStar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -64,6 +65,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
@@ -73,7 +75,6 @@ import {
 import { UserSearch } from "@/components/user-search";
 import { storage } from "@/config/firebase";
 import { Colors } from "@/constants/data";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
@@ -89,8 +90,6 @@ import "pdfjs-dist/build/pdf.worker";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import AddCheque from "./add-cheque";
-import { Textarea } from "@/components/ui/textarea";
-import { RequiredStar } from "@/components/RequiredStar";
 
 export default function Machine({ id, onLoading = () => {}, base }) {
   const [data, setData] = useState();
@@ -116,7 +115,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
   const [installmentVisible, setInstallmentVisible] = useState(false);
   const [credit, setCredit] = useState(false);
   const [readyForDelivery, setReadyForDelivery] = useState(null);
-  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
 
   useEffect(() => {
     if (id && userID) {
@@ -438,8 +437,10 @@ export default function Machine({ id, onLoading = () => {}, base }) {
     if (!id) return;
     setDeleteLoading(true);
     axios.delete(`/${userID}/machine/${id}`).then(() => {
-      onRefresh();
+      setOpenDelete(false)
+      setData();
       setDeleteLoading(false);
+        toast({ description: "Machine Deleted" , variant: "destructive", });
     });
   }
 
@@ -693,7 +694,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
                       <span>
                         Group:{" "}
                         <span className="font-medium">
-                        {data?.customer_group}
+                          {data?.customer_group}
                         </span>
                       </span>
                     </div>
@@ -766,6 +767,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
 
   async function onRefresh() {
     setCredit(false);
+    setData();
     fetchData(id);
   }
 
@@ -776,112 +778,124 @@ export default function Machine({ id, onLoading = () => {}, base }) {
         machine={data?.machine || null}
         payment={[total, received]}
       >
-        {data && !data?.machine?.cancelled_detail && (
+        {data && (
           <div className="w-[150px] shrink-0 flex flex-col gap-2">
-            <Button
-              size="sm"
-              onClick={() => {
-                if (!editAllowed) {
-                  toast({
-                    title: "You are not allowed to edit machine",
-                    variant: "destructive",
-                  });
-                  return;
-                } else {
-                  if (data?.machine?.type === "Parts") {
-                    setEditParts(true);
-                  } else {
-                    setEditMachine(true);
-                  }
-                }
-              }}
-            >
-              {data?.machine?.type === "Parts" ? "Edit Parts" : "Edit Machine"}
-            </Button>
+            {!data?.machine?.cancelled_detail && (
+              <>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (!editAllowed) {
+                      toast({
+                        title: "You are not allowed to edit machine",
+                        variant: "destructive",
+                      });
+                      return;
+                    } else {
+                      if (data?.machine?.type === "Parts") {
+                        setEditParts(true);
+                      } else {
+                        setEditMachine(true);
+                      }
+                    }
+                  }}
+                >
+                  {data?.machine?.type === "Parts"
+                    ? "Edit Parts"
+                    : "Edit Machine"}
+                </Button>
 
-            {data?.machine && (
-              // && !data?.machine?.payment_lock
+                {data?.machine && (
+                  // && !data?.machine?.payment_lock
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      if (!editAllowed) {
+                        toast({
+                          title: "You are not allowed to add payment",
+                          variant: "destructive",
+                        });
+                        return;
+                      } else {
+                        setAddPayment(true);
+                      }
+                    }}
+                  >
+                    Add Payment
+                  </Button>
+                )}
+
+                <Button onClick={() => setImagesVisible(true)}>
+                  View Images
+                </Button>
+
+                {payments.length > 0 && (
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      handleDownloadLedger();
+                    }}
+                  >
+                    Download Ledger
+                  </Button>
+                )}
+                {editAllowed && (
+                  <Button
+                    size="sm"
+                    onClick={async () => {
+                      setZipDwonloading(true);
+                      await downloadCustomerZip(data);
+                      setZipDwonloading(false);
+                    }}
+                  >
+                    {zipDownloading && <Spinner />} Download ZIP
+                  </Button>
+                )}
+
+                {installments.length > 0 && (
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setInstallmentVisible(true);
+                    }}
+                  >
+                    Installments
+                  </Button>
+                )}
+
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setCredit(true);
+                  }}
+                >
+                  Credit Cheque
+                </Button>
+
+                {data && !data?.machine?.ready_for_delivery && (
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setReadyForDelivery(data);
+                    }}
+                  >
+                    Apply For Delivery
+                  </Button>
+                )}
+
+                <CancelDeal machine={data?.machine} onRefresh={onRefresh} />
+              </>
+            )}
+
+            {isAdmin && (
               <Button
                 size="sm"
-                onClick={() => {
-                  if (!editAllowed) {
-                    toast({
-                      title: "You are not allowed to add payment",
-                      variant: "destructive",
-                    });
-                    return;
-                  } else {
-                    setAddPayment(true);
-                  }
-                }}
+                variant="destructive"
+                onClick={() => setOpenDelete(true)}
               >
-                Add Payment
+                Delete
               </Button>
             )}
-
-            <Button onClick={() => setImagesVisible(true)}>View Images</Button>
-
-            {payments.length > 0 && (
-              <Button
-                size="sm"
-                onClick={() => {
-                  handleDownloadLedger();
-                }}
-              >
-                Download Ledger
-              </Button>
-            )}
-            {editAllowed && (
-              <Button
-                size="sm"
-                onClick={async () => {
-                  setZipDwonloading(true);
-                  await downloadCustomerZip(data);
-                  setZipDwonloading(false);
-                }}
-              >
-                {zipDownloading && <Spinner />} Download ZIP
-              </Button>
-            )}
-
-            {isAdmin && !data?.machine?.payment_lock && (
-              <Button size="sm" variant="destructive" onClick={deleteMachine}>
-                {deleteLoading && <Spinner />} Delete
-              </Button>
-            )}
-
-            {installments.length > 0 && (
-              <Button
-                size="sm"
-                onClick={() => {
-                  setInstallmentVisible(true);
-                }}
-              >
-                Installments
-              </Button>
-            )}
-
-            <Button
-              size="sm"
-              onClick={() => {
-                setCredit(true);
-              }}
-            >
-              Credit Cheque
-            </Button>
-
-            {data && !data?.machine?.ready_for_delivery && (
-              <Button
-                size="sm"
-                onClick={() => {
-                  setReadyForDelivery(data);
-                }}
-              >
-                Apply For Delivery
-              </Button>
-            )}
-
-            <CancelDeal machine={data?.machine} onRefresh={onRefresh} />
           </div>
         )}
       </ClientCard>
@@ -994,12 +1008,21 @@ export default function Machine({ id, onLoading = () => {}, base }) {
         data={readyForDelivery}
         onRefresh={onRefresh}
       />
+
+      <ConfimationDialog
+        loading={deleteLoading}
+        open={openDelete}
+        title={"Are you sure you want to delete?"}
+        description={"Your action will remove machined from the system"}
+        onPressYes={() => deleteMachine()}
+        onPressCancel={() => setOpenDelete(false)}
+      />
     </div>
   );
 }
 
 const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }) => {
-  const {userID} = useUserDetail()
+  const { userID } = useUserDetail();
   const formSchema = z.object({
     name: z.string().min(1, "Receiver name is required"),
     city: z.string().min(1, "City is required"),
@@ -1041,21 +1064,19 @@ const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }) => {
   }, [data]);
 
   async function onSubmit(values) {
-    console.log(values)
-   if (!data?.machine?.id) return;
+    console.log(values);
+    if (!data?.machine?.id) return;
 
     setLoading(true);
     try {
       await axios.put(`/${userID}/machine/${data.machine.id}/delivery`, {
         ready_for_delivery: true,
-        delivery_information : {...values,  tod: new Date(values.tod)},
-      
+        delivery_information: { ...values, tod: new Date(values.tod) },
       });
-       await onRefresh();
-        onClose();
+      await onRefresh();
+      onClose();
     } finally {
       setLoading(false);
-     
     }
   }
 

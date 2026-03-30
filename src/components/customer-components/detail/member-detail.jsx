@@ -82,7 +82,7 @@ export default function MemberDetail({
   const [profileCompletion, setProfileCompletion] = useState(0);
   const [taskData, setTaskData] = useState([]);
   const [activeTab, setActiveTab] = useState("timeline");
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (customer_id && userID) {
@@ -283,7 +283,9 @@ export default function MemberDetail({
         value={activeTab}
         onValueChange={setActiveTab}
       >
-         <ScrollArea className={`overflow-x-auto ${isMobile && "max-w-[calc(100vw-32px)]"}`}>
+        <ScrollArea
+          className={`overflow-x-auto ${isMobile && "max-w-[calc(100vw-32px)]"}`}
+        >
           <TabsList className=" flex justify-start relative gap-2 px-2">
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
             {designation !== "Dealer" && (
@@ -546,8 +548,13 @@ function CustomersTab({
                 onClick={() => onReturn(machine.id)}
               >
                 <Badge variant={"outline"}>Machine no:{index}</Badge>
-                <h3 className="font-semibold text-lg hover:underline">
+                <h3 className="font-semibold text-lg hover:underline flex items-center gap-2">
                   {machine.serial_no}
+                  {machine.cancelled_detail && (
+                    <span className="text-red-500 text-xs font-medium">
+                      Cancelled
+                    </span>
+                  )}
                 </h3>
               </Link>
               <div className="flex items-center">
