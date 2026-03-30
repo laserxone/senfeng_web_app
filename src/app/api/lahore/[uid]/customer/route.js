@@ -73,8 +73,6 @@ export async function GET(req, { params }) {
 
     const { uid } = await params
 
-
-
     const searchParams = req.nextUrl.searchParams
     const urlQuery = searchParams.get('withoutsale')
     const mapQuery = searchParams.get('map')
@@ -140,9 +138,15 @@ export async function GET(req, { params }) {
                 c.created_at, 
                 c.member,
                 COALESCE(u.name, '') AS ownership_name,
-                COALESCE(json_agg(s.serial_no) FILTER (WHERE s.serial_no IS NOT NULL), '[]') AS machines
+                COALESCE(json_agg(s.serial_no) FILTER (WHERE s.serial_no IS NOT NULL), '[]') AS machines,
+                COALESCE(
+    json_agg(order_nums) 
+    FILTER (WHERE order_nums IS NOT NULL),
+    '[]'
+  ) AS machine_order_numbers
                 FROM customer c
                 LEFT JOIN sale s ON c.id = s.customer_id
+                LEFT JOIN LATERAL unnest(s.order_no_arr) AS order_nums ON TRUE
                 LEFT JOIN users u ON c.ownership = u.id
       `;
                 if (member) {

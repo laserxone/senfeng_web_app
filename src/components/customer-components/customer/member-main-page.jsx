@@ -80,14 +80,16 @@ export default function MemberMainPage({ onReturn }) {
           `/${userID
           }/customer?machines=true&member=true&start_date=${startDate || ""
           }&end_date=${endDate || ""}&user=${user || ""}`
-        )
+        ) 
         .then((response) => {
           const apiData = response.data;
+         
           const temp = apiData
             .map((item) => {
               return {
                 ...item,
                 machines: item.machines.join(", "),
+                order_nums : item?.machine_order_numbers?.join(", "),
                 orignalNumber: item.number,
                 number: item.number.join(", "),
                 sorting: item.owner || item.name,
