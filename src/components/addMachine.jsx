@@ -156,7 +156,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
         </DialogHeader>
 
         <div className="w-full flex flex-1">
-          <ScrollArea className="px-2 w-full max-h-[90vh]">
+          <ScrollArea className="px-2 w-full max-h-[85vh]">
             <div
               className={`flex gap-6 ${
                 cheque ? "flex-row" : "flex-col"
