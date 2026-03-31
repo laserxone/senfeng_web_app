@@ -35,12 +35,14 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   const [value, setValue] = useState();
   const [total, setTotal] = useState([]);
   const { state: OfficeState } = useContext(OfficeContext);
-  const office = OfficeState.value.data
-
+  const [manual, setManual] = useState(false);
+  const { isAdmin } = useUserDetail();
 
   const formSchema = z
     .object({
-      machineModel: z.string().min(1, { message: "Machine model is required." }),
+      machineModel: z
+        .string()
+        .min(1, { message: "Machine model is required." }),
       power: z.string().min(1, { message: "Power is required." }),
       source: z.string().min(1, { message: "Source is required." }),
       contractDate: z.date({ required_error: "Contract date is required." }),
@@ -53,12 +55,15 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
     })
     .refine(
       (data) => {
+        if (manual) {
+          return true;
+        }
         return typeof data.order_item === "number" && data.order_item > 0;
       },
       {
         message: "Machine selection is required",
         path: ["order_item"],
-      }
+      },
     );
 
   const form = useForm({
@@ -79,26 +84,26 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
 
   function onSubmit(values) {
     setLoading(true);
-    let baseLink = `/${user_id}/machine?inventory=${values.order_item}&cheque=${cheque}`
+    let baseLink = `/${user_id}/machine?inventory=${values.order_item}&cheque=${cheque}`;
+    if (manual) {
+      baseLink = `/${user_id}/machine?cheque=${cheque}`;
+    }
     axios
-      .post(
-        baseLink,
-        {
-          customer_id: customer_id,
-          type: "Machine",
-          speed_money_note: values.speedMoneyNote,
-          speed_money: values.isSpeedMoney,
-          speed_money_amount: values.speedMoney ? Number(values.speedMoney) : 0,
-          serial_no: values.machineModel,
-          power: values.power,
-          source: values.source,
-          sell_by: user_id,
-          commission: true,
-          price: values.totalPrice,
-          contract_date: values.contractDate,
-          cnic: values.cnic,
-        }
-      )
+      .post(baseLink, {
+        customer_id: customer_id,
+        type: "Machine",
+        speed_money_note: values.speedMoneyNote,
+        speed_money: values.isSpeedMoney,
+        speed_money_amount: values.speedMoney ? Number(values.speedMoney) : 0,
+        serial_no: values.machineModel,
+        power: values.power,
+        source: values.source,
+        sell_by: user_id,
+        commission: true,
+        price: values.totalPrice,
+        contract_date: values.contractDate,
+        cnic: values.cnic,
+      })
       .then(async (response) => {
         if (response.data?.sale_id) {
           if (cheque) {
@@ -106,10 +111,11 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
 
             const res = await Promise.all(
               total.map(async (item, idx) => {
-                const name = `${OfficeState.value.data
-                  }/customer/${customer_id}/machine/${saleID}/installments/${moment()
-                    .valueOf()
-                    .toString()}_${idx}.png`;
+                const name = `${
+                  OfficeState.value.data
+                }/customer/${customer_id}/machine/${saleID}/installments/${moment()
+                  .valueOf()
+                  .toString()}_${idx}.png`;
                 const imgRef = await UploadImage(item.img, name);
                 return axios.post(`/${user_id}/installments`, {
                   date: item.date,
@@ -117,12 +123,11 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                   amount: item.amount,
                   sale_id: saleID,
                 });
-              })
+              }),
             );
 
             console.log("All installments saved:", res);
           }
-
         }
         onRefresh();
         handleClose(false);
@@ -136,13 +141,15 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
     form.reset();
     onClose(val);
     setSelectedMachine(null);
+    setManual(false);
   }
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent
-        className={`transition-all duration-300 ${cheque ? "max-w-[90vw] w-[90vw]" : "max-w-lg w-full"
-          }`}
+        className={`transition-all duration-300 ${
+          cheque ? "max-w-[90vw] w-[90vw]" : "max-w-lg w-full"
+        }`}
       >
         <DialogHeader>
           <DialogTitle>Add New Machine</DialogTitle>
@@ -151,8 +158,9 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
         <div className="w-full flex flex-1">
           <ScrollArea className="px-2 w-full max-h-[90vh]">
             <div
-              className={`flex gap-6 ${cheque ? "flex-row" : "flex-col"
-                } w-full`}
+              className={`flex gap-6 ${
+                cheque ? "flex-row" : "flex-col"
+              } w-full`}
             >
               {/* Left Side Form */}
               <div className={`${cheque ? "w-1/2" : "w-full"} px-2 space-y-2`}>
@@ -163,7 +171,19 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                     })}
                     className="space-y-2"
                   >
-                   
+                    {isAdmin && (
+                      <div className="flex flex-row items-center gap-2">
+                        <FormLabel>Add Manual ?</FormLabel>
+                        <Checkbox
+                          checked={manual}
+                          onCheckedChange={(checked) => {
+                            setManual(checked);
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    {!manual && (
                       <FormField
                         control={form.control}
                         name="order_item"
@@ -180,7 +200,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                                   field.onChange(val.id);
                                   form.setValue(
                                     "machineModel",
-                                    val.machine_model
+                                    val.machine_model,
                                   );
                                   form.setValue("power", val.machine_power);
                                   form.setValue("source", val.machine_source);
@@ -191,10 +211,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                           </FormItem>
                         )}
                       />
-                    
-
-                    
-
+                    )}
                     <FormField
                       control={form.control}
                       name="machineModel"
@@ -205,7 +222,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                           </FormLabel>
                           <FormControl>
                             <Input
-                              disabled
+                              disabled={!manual}
                               placeholder="example: SF3015G"
                               {...field}
                             />
@@ -225,7 +242,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                           </FormLabel>
                           <FormControl>
                             <Input
-                              disabled
+                              disabled={!manual}
                               placeholder="example: 3000W/1500W/6000W"
                               {...field}
                             />
@@ -245,7 +262,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                           </FormLabel>
                           <FormControl>
                             <Input
-                              disabled
+                              disabled={!manual}
                               placeholder="example: RAYCUS / MAX /IPG"
                               {...field}
                             />
@@ -267,7 +284,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                             <AppCalendar
                               date={field.value}
                               onChange={field.onChange}
-                               max={new Date()}
+                              max={new Date()}
                             />
                           </FormControl>
                           <FormMessage />
@@ -415,7 +432,5 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
     </Dialog>
   );
 };
-
-
 
 export default AddMachine;
