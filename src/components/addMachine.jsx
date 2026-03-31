@@ -144,6 +144,9 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
     setManual(false);
   }
 
+  const isKarachi = OfficeState?.value?.data?.toLowerCase() === "karachi";
+  const manualShow = isAdmin || isKarachi;
+  
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent
@@ -171,7 +174,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
                     })}
                     className="space-y-2"
                   >
-                    {isAdmin && (
+                    {manualShow && (
                       <div className="flex flex-row items-center gap-2">
                         <FormLabel>Add Manual ?</FormLabel>
                         <Checkbox
