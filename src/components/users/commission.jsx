@@ -86,7 +86,7 @@ const OwnerView = () => {
       try {
         const route = `/${userID}/commission`;
         const response = await axios.get(route);
-        console.log(response.data);
+     
         setData(response.data);
       } catch (error) {
       } finally {

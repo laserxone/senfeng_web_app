@@ -32,6 +32,7 @@ import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
 import  OldRecordSheet  from "@/components/users/old-record-sheet";
 import RenderFines from "@/components/users/render-fines";
+import { updateItemPurpose } from "@/lib/updatePurpose";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -175,9 +176,17 @@ export default function Page() {
             id={userID}
             passingData={reimbursementData || []}
             onAddRefresh={(temp) => setReimbursementData([...temp])}
+              onReset={async (start, end) => {
+              await fetchReimbursementData(start, end);
+            }}
             onFilterReturn={async (start, end) =>
               await fetchReimbursementData(start, end)
             }
+
+            onUpdatePurpose={(val) => {
+                          const newData = updateItemPurpose(reimbursementData, val);
+                          setReimbursementData(newData);
+                        }}
           />
         </CardContent>
       </Card>

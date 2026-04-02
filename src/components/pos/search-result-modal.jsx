@@ -35,7 +35,6 @@ const SearchResultModal = ({
 
   const total = data.reduce((sum, item) => sum + (item.final_amount || 0), 0);
   const { base_route } = useUserDetail();
-  console.log(data);
   const columns = [
     {
       accessorKey: "created_at",

@@ -1064,7 +1064,7 @@ const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }) => {
   }, [data]);
 
   async function onSubmit(values) {
-    console.log(values);
+
     if (!data?.machine?.id) return;
 
     setLoading(true);

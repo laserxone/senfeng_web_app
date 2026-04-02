@@ -44,6 +44,7 @@ import { AlertCircle, CheckCircle, Clock } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { use, useCallback, useEffect, useState } from "react";
+import { updateItemPurpose } from "@/lib/updatePurpose";
 
 
 export default function UserDashboard({id, owner = false}) {
@@ -233,6 +234,13 @@ export default function UserDashboard({id, owner = false}) {
             onFilterReturn={async (start, end) =>
               await fetchReimbursementData(start, end)
             }
+              onReset={async (start, end) => {
+              await fetchReimbursementData(start, end);
+            }}
+            onUpdatePurpose={(val) => {
+                          const newData = updateItemPurpose(reimbursementData, val);
+                          setReimbursementData(newData);
+                        }}
           />
         </CardContent>
       </Card>

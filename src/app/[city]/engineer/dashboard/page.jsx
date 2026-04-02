@@ -5,7 +5,7 @@ import Attendance from "@/components/users/attendance";
 import { ProfilePicture } from "@/components/users/ProfilePicture";
 import Reimbursement from "@/components/users/Reimbursement";
 import RenderReturnable from "@/components/users/render-returnable";
-import RenderFines from "@/components/users/render-fines"
+import RenderFines from "@/components/users/render-fines";
 import SalaryRecord from "@/components/users/SalaryRecord";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
@@ -13,6 +13,7 @@ import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
 import RepairAndMaintenance from "@/components/users/repair-and-maintenance";
+import { updateItemPurpose } from "@/lib/updatePurpose";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -20,7 +21,7 @@ export default function Page() {
   const [reimbursementData, setReimbursementData] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
   const [activeTab, setActiveTab] = useState("attendance");
-  const [repairData, setRepairData] = useState([])
+  const [repairData, setRepairData] = useState([]);
 
   useEffect(() => {
     if (userID) {
@@ -29,17 +30,14 @@ export default function Page() {
       fetchData();
       fetchReimbursementData(startDate, endDate);
       fetchAttendanceData(startDate, endDate);
-      fetchRepairingData()
+      fetchRepairingData();
     }
   }, [userID]);
 
   async function fetchRepairingData() {
-
     return new Promise((resolve, reject) => {
       axios
-        .get(
-          `/${userID}/lab?user=${userID}`
-        )
+        .get(`/${userID}/lab?user=${userID}`)
         .then((response) => {
           setRepairData(response.data);
           resolve(true);
@@ -55,7 +53,7 @@ export default function Page() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`,
         )
         .then((response) => {
           setReimbursementData(response.data);
@@ -68,11 +66,13 @@ export default function Page() {
     });
   }
 
+  console.log(reimbursementData);
+
   async function fetchAttendanceData(startDate, endDate) {
     return new Promise((res, rej) => {
       axios
         .get(
-          `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`,
         )
         .then((response) => {
           if (response.data.length > 0) {
@@ -102,6 +102,8 @@ export default function Page() {
     });
   }
 
+
+
   const RenderReimbursement = useCallback(() => {
     return (
       <Card className="flex flex-1">
@@ -115,6 +117,10 @@ export default function Page() {
             }
             onReset={async (start, end) => {
               await fetchReimbursementData(start, end);
+            }}
+            onUpdatePurpose={(val) => {
+              const newData = updateItemPurpose(reimbursementData, val);
+              setReimbursementData(newData);
             }}
           />
         </CardContent>
@@ -140,16 +146,21 @@ export default function Page() {
     );
   }, [attendanceData]);
 
-  const RenderRepair = useCallback(() => (
-    <Card className="flex flex-1">
-      <CardContent className="pt-2 flex flex-1">
-        <RepairAndMaintenance data={repairData} onRefresh={async () => {
-          await fetchRepairingData()
-        }} />
-      </CardContent>
-    </Card>
-
-  ), [repairData])
+  const RenderRepair = useCallback(
+    () => (
+      <Card className="flex flex-1">
+        <CardContent className="pt-2 flex flex-1">
+          <RepairAndMaintenance
+            data={repairData}
+            onRefresh={async () => {
+              await fetchRepairingData();
+            }}
+          />
+        </CardContent>
+      </Card>
+    ),
+    [repairData],
+  );
 
   return (
     <div className="flex flex-1 gap-5">

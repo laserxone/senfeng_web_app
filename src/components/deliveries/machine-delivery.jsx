@@ -171,7 +171,6 @@ export default function MachineDelivery() {
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              console.log(row.original);
               setSelectedDelivery(row.original);
               //   setSelectedCustomerId(currentItem?.id);
               //   setShowConfirmation(true);
@@ -288,7 +287,6 @@ const MachineChecklist = () => {
       const response = await axios.get(`/${userID}/settings`);
       setID(response.data?.id);
       const apiList = response.data?.machine_checklist;
-      console.log(apiList)
       setForm(
         Object.fromEntries(
           machineChecklistKeys.map((key) => [key, apiList?.[key] ?? ""]),

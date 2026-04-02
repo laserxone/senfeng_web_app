@@ -15,6 +15,7 @@ import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
 import RenderFines from "@/components/users/render-fines";
 import OldRecordSheet from "@/components/users/old-record-sheet";
+import { updateItemPurpose } from "@/lib/updatePurpose";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -134,6 +135,13 @@ export default function Page() {
             onFilterReturn={async (start, end) =>
               await fetchReimbursementData(start, end)
             }
+              onReset={async (start, end) => {
+              await fetchReimbursementData(start, end);
+            }}
+            onUpdatePurpose={(val) => {
+                          const newData = updateItemPurpose(reimbursementData, val);
+                          setReimbursementData(newData);
+                        }}
           />
         </CardContent>
       </Card>

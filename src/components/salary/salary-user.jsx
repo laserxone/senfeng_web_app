@@ -592,7 +592,7 @@ const SalaryComponent = ({ onSelectedId }) => {
           );
 
           const commissionIds = data.commission.map((item) => item.id);
-          console.log(commissionIds);
+        
           await axios.post(`/${userID}/salary`, {
             user_id: user,
             year: selectedYear,

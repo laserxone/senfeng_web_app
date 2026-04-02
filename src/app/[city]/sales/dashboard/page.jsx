@@ -48,6 +48,7 @@ import { ProfilePicture } from "@/components/users/ProfilePicture";
 import useUserDetail from "@/hooks/use-user-detail";
 import RenderReturnable from "@/components/users/render-returnable";
 import RenderFines from "@/components/users/render-fines";
+import { updateItemPurpose } from "@/lib/updatePurpose";
 
 export default function Page() {
   const [data, setData] = useState();
@@ -235,6 +236,13 @@ export default function Page() {
             onFilterReturn={async (start, end) =>
               await fetchReimbursementData(start, end)
             }
+              onReset={async (start, end) => {
+              await fetchReimbursementData(start, end);
+            }}
+            onUpdatePurpose={(val) => {
+                          const newData = updateItemPurpose(reimbursementData, val);
+                          setReimbursementData(newData);
+                        }}
           />
         </CardContent>
       </Card>

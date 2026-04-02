@@ -1,8 +1,15 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowUpDown, Filter } from "lucide-react";
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowUpDown, Edit, Edit2, Filter } from "lucide-react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import PageTable from "@/components/app-table-without-pagination";
 import AppCalendar from "@/components/appCalendar";
@@ -49,6 +56,8 @@ import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
 import CurrencyFormatter from "../currency-formatter";
+import useUserDetail from "@/hooks/use-user-detail";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 export default function Reimbursement({
   id,
@@ -56,6 +65,7 @@ export default function Reimbursement({
   onAddRefresh,
   onFilterReturn,
   onReset,
+  onUpdatePurpose,
 }) {
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
@@ -64,6 +74,7 @@ export default function Reimbursement({
   const [reimbursementVisible, setReimbursementVisible] = useState(false);
   const [total, setTotal] = useState(0);
   const [resetLoading, setResetLoading] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
     setData([...passingData]);
@@ -102,12 +113,34 @@ export default function Reimbursement({
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
+            Purpose
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const currentItem = row.original;
+        if (currentItem.customer_id)
+          return <div className="ml-2">{currentItem?.purpose || ""}</div>;
+        else return <div className="ml-2">{row.getValue("title")}</div>;
+      },
+    },
+
+    {
+      accessorKey: "customer",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
             Customer
             <ArrowUpDown />
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("title")}</div>,
+      cell: ({ row }) => <div>{row.getValue("customer")}</div>,
     },
     {
       accessorKey: "city",
@@ -158,6 +191,24 @@ export default function Reimbursement({
       },
       cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
+
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const currentItem = row.original;
+        if (currentItem?.customer_id && !currentItem?.purpose)
+          return (
+            <Edit
+              size={14}
+              className="hover:cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedItem(currentItem);
+              }}
+            />
+          );
+      },
+    },
   ];
 
   function handleDownload() {
@@ -178,7 +229,14 @@ export default function Reimbursement({
       item.description,
       item.submitted_by_name,
     ]);
-    exportToExcel(headers, formattedData, "Reimbursement.xlsx", false, "", false);
+    exportToExcel(
+      headers,
+      formattedData,
+      "Reimbursement.xlsx",
+      false,
+      "",
+      false,
+    );
   }
 
   useEffect(() => {
@@ -191,17 +249,14 @@ export default function Reimbursement({
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-    
       <div className="flex flex-1">
         <PageTable
           columns={columns}
           data={data}
-        
           onRowClick={(val, e) => {
             setImageURL(val);
             setVisible(true);
           }}
-         
         >
           <Button
             onClick={() => setFilterVisible(true)}
@@ -238,13 +293,21 @@ export default function Reimbursement({
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  <CurrencyFormatter amount={total}/>
+                  <CurrencyFormatter amount={total} />
                 </div>
               </CardContent>
             </Card>
           </div>
         </PageTable>
       </div>
+
+      <AddPurpose
+        item={selectedItem}
+        onClose={() => setSelectedItem(null)}
+        visible={!!selectedItem}
+        onUpdate={onUpdatePurpose}
+      />
+
       <FilterSheet
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
@@ -269,7 +332,7 @@ export default function Reimbursement({
             let temp = [...data];
             temp.push(val);
             temp.sort(
-              (a, b) => moment(b.date).valueOf() - moment(a.date).valueOf()
+              (a, b) => moment(b.date).valueOf() - moment(a.date).valueOf(),
             );
             onAddRefresh(temp);
           }
@@ -279,13 +342,20 @@ export default function Reimbursement({
     </div>
   );
 }
-const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
+
+const ImageSheet = ({
+  visible,
+  onClose,
+  img,
+  submittedBy,
+  description,
+}) => {
+
   const [imageOpen, setImageOpen] = useState(false);
   const [localImage, setLocalImage] = useState(null);
   const [isZoomed, setIsZoomed] = useState(false);
   const isMountedRef = useRef(true);
 
-  // Memoized function to fetch image URL (prevents unnecessary re-fetching)
   const fetchImage = useCallback(async () => {
     if (!img) return;
 
@@ -295,7 +365,7 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
       try {
         const storageRef = ref(storage, img);
         const url = await getDownloadURL(storageRef);
-        console.log(url);
+     
         if (isMountedRef.current) setLocalImage(url);
       } catch (error) {
         console.error("Error fetching image URL:", error);
@@ -369,10 +439,9 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
 };
 
 const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
-
   const [selectedRadio, setSelectedRadio] = useState("customer");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const {state : OfficeState} = useContext(OfficeContext)
+  const { state: OfficeState } = useContext(OfficeContext);
   const [loading, setLoading] = useState(false);
   const formSchema = z.object({
     title: z.string().min(1, { message: "Title is required." }),
@@ -466,7 +535,8 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        {selectedRadio == "customer" ? "Customer" : "Other"} <RequiredStar />
+                        {selectedRadio == "customer" ? "Customer" : "Other"}{" "}
+                        <RequiredStar />
                       </FormLabel>
                       <FormControl>
                         {selectedRadio === "other" ? (
@@ -494,7 +564,9 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="city"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>City <RequiredStar /></FormLabel>
+                      <FormLabel>
+                        City <RequiredStar />
+                      </FormLabel>
                       <FormControl>
                         <Input placeholder="Enter city" {...field} />
                       </FormControl>
@@ -508,7 +580,9 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Purpose <RequiredStar /></FormLabel>
+                      <FormLabel>
+                        Purpose <RequiredStar />
+                      </FormLabel>
                       <FormControl>
                         <Textarea placeholder="Enter description" {...field} />
                       </FormControl>
@@ -522,7 +596,9 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Amount <RequiredStar /></FormLabel>
+                      <FormLabel>
+                        Amount <RequiredStar />
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -545,17 +621,19 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="date"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date <RequiredStar /></FormLabel>
+                      <FormLabel>
+                        Date <RequiredStar />
+                      </FormLabel>
                       <FormControl>
                         <AppCalendar
                           date={field.value}
                           onChange={field.onChange}
-                           max={new Date()}
+                          max={new Date()}
                           min={
                             new Date(
                               new Date().getFullYear(),
                               new Date().getMonth(),
-                              1
+                              1,
                             )
                           }
                         />
@@ -570,7 +648,9 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                   name="image"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Image <RequiredStar /></FormLabel>
+                      <FormLabel>
+                        Image <RequiredStar />
+                      </FormLabel>
                       <FormControl>
                         <div className="flex flex-1 items-center justify-center">
                           <Dropzone
@@ -597,6 +677,72 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
             </Form>
           </div>
         </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const AddPurpose = ({ item, visible, onClose, onUpdate }) => {
+  const [purpose, setPurpose] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
+
+  function handleClose() {
+    setPurpose("");
+    setLoading(false);
+    onClose();
+  }
+  async function handleSubmit() {
+    if (!item?.id) return;
+
+    try {
+      setLoading(true);
+      await axios.put(`/${userID}/reimbursement/${item.id}`, { purpose });
+      let updatedItem = {...item}
+      updatedItem.purpose = purpose
+      onUpdate(updatedItem)
+      handleClose()
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
+  }
+  return (
+    <Dialog open={visible} onOpenChange={handleClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Missing Purpose</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 mt-2">
+          <div className="space-y-2">
+            <Label>Select Purpose</Label>
+             <Select onValueChange={setPurpose} value={purpose}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Purpose" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="New Installation">New Installation</SelectItem>
+                <SelectItem value="Complaint">Complaint</SelectItem>
+                 <SelectItem value="Overhauling">Overhauling</SelectItem>
+                <SelectItem value="Sales Meeting">Sales Meeting</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end gap-3 mt-6">
+          <Button variant="outline" onClick={handleClose}>
+            Cancel
+          </Button>
+
+          <Button disabled={loading || !purpose} onClick={handleSubmit}>
+            {loading && <Spinner />}
+            <span className="ml-1">Submit</span>
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

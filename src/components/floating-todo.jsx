@@ -69,7 +69,7 @@ export default function FloatingTodo() {
   };
 
   const toggleTask = async (id, done) => {
-    console.log(id, done);
+
     setTasks((prev) =>
       prev.map((t) => (t.id === id ? { ...t, is_done: done } : t)),
     );

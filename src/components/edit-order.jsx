@@ -144,7 +144,7 @@ const EditOrderDialog = ({
   };
 
   const handleSubmit = async () => {
-    console.log(items)
+  
     if (validateItems()) {
       setLoading(true);
       try {
