@@ -37,7 +37,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import  Heading  from "@/components/ui/heading";
+import Heading from "@/components/ui/heading";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -71,7 +71,6 @@ import { z } from "zod";
 import CurrencyFormatter from "@/components/currency-formatter";
 
 export default function Page() {
-
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
   const [imageURL, setImageURL] = useState(null);
@@ -106,7 +105,7 @@ export default function Page() {
         .get(
           `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${
             user || ""
-          }`
+          }`,
         )
         .then((response) => {
           setData(response.data);
@@ -162,8 +161,9 @@ export default function Page() {
       },
       cell: ({ row }) => {
         const currentItem = row.original;
-        if (!currentItem.customer_id)
-          return <div className="ml-2">{row.getValue("title")}</div>;
+        if (currentItem.customer_id)
+          return <div className="ml-2">{currentItem?.purpose || ""}</div>;
+        else return <div className="ml-2">{row.getValue("title")}</div>;
       },
     },
 
@@ -330,7 +330,14 @@ export default function Page() {
       Number(item.amount || 0),
       item.description,
     ]);
-    exportToExcel(headers, formattedData, "Reimbursement.xlsx", false, "", false);
+    exportToExcel(
+      headers,
+      formattedData,
+      "Reimbursement.xlsx",
+      false,
+      "",
+      false,
+    );
   }
 
   useEffect(() => {
@@ -351,12 +358,12 @@ export default function Page() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              <CurrencyFormatter amount={total}/>
+              <CurrencyFormatter amount={total} />
             </div>
           </CardContent>
         </Card>
       </div>
-    
+
       <div className="flex flex-1 min-h-[600px]">
         <PageTable
           loading={loading}
@@ -366,7 +373,6 @@ export default function Page() {
             setImageURL(val);
             setVisible(true);
           }}
-       
         >
           <Button
             onClick={() => setFilterVisible(true)}
@@ -409,7 +415,7 @@ export default function Page() {
         </PageTable>
       </div>
       <FilterSheet
-      user_disable={false}
+        user_disable={false}
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
@@ -431,14 +437,13 @@ export default function Page() {
       />
 
       <AddReimbursementDialog
-        
         visible={reimbursementVisible}
         onClose={setReimbursementVisible}
         onRefresh={(val) => {
           if (val) {
             let temp = [...data, val];
             temp.sort(
-              (a, b) => moment(b.date).valueOf() - moment(a.date).valueOf()
+              (a, b) => moment(b.date).valueOf() - moment(a.date).valueOf(),
             );
             setData([...temp]);
           }
@@ -581,7 +586,7 @@ const ImageSheet = ({
   );
 };
 
-const AddReimbursementDialog = ({ visible, onClose, onRefresh,}) => {
+const AddReimbursementDialog = ({ visible, onClose, onRefresh }) => {
   const [loading, setLoading] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedRadio, setSelectedRadio] = useState("customer");
@@ -726,7 +731,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh,}) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Purpose <RequiredStar />
+                        Description <RequiredStar />
                       </FormLabel>
                       <FormControl>
                         <Textarea placeholder="Enter description" {...field} />
@@ -773,7 +778,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh,}) => {
                         <AppCalendar
                           date={field.value}
                           onChange={field.onChange}
-                           max={new Date()}
+                          max={new Date()}
                         />
                       </FormControl>
                       <FormMessage />
