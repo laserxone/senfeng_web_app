@@ -323,7 +323,7 @@ export default function Reimbursement({
         submittedBy={imageURL?.submitted_by_name || null}
       />
 
-      <AddReimbursementDialog
+      {/* <AddReimbursementDialog
         id={id}
         visible={reimbursementVisible}
         onClose={setReimbursementVisible}
@@ -338,7 +338,7 @@ export default function Reimbursement({
           }
           setReimbursementVisible(false);
         }}
-      />
+      /> */}
     </div>
   );
 }
