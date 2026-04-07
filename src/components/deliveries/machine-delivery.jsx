@@ -234,12 +234,14 @@ export default function MachineDelivery() {
 
   const generatePDF = async (item) => {
     const PDFData = {
+      order_no : item?.order_no_arr?.join(" "),
       gate_pass: item.id,
       to: item?.customer_name || customer?.owner,
       tod: moment(item?.delivery_date).format("YYYY-MM-DD hh:mm A"),
       driver_number:
         item?.dispatch_information?.other_information?.driverNumber,
       driver_name: item?.dispatch_information?.other_information?.driverName,
+      vehicle_no : item?.dispatch_information?.other_information?.vehicleNo,
       manager: item?.dispatch_information?.other_information?.manager,
       deliver_issued_by: name,
       checklist: item?.dispatch_information?.checklist,
@@ -249,9 +251,11 @@ export default function MachineDelivery() {
       const blob = await pdf(
         <DOPDFGatepass
           from={PDFData.deliver_issued_by}
-          vehicle_no={PDFData.driver_number}
+          vehicle_no={PDFData.vehicle_no}
+          driver_no={PDFData.driver_number}
           driver_name={PDFData.driver_name}
           received_by={PDFData.to}
+          order_no={PDFData.order_no}
           manager={PDFData.manager}
           gatepass={PDFData.gate_pass}
           gatepassType={"Outward Gate Pass"}
@@ -456,6 +460,7 @@ const dispatchSchema = z.object({
   orderNo: z.string().min(1, "Order number is required"),
   driverName: z.string().min(1, "Driver name is required"),
   driverNumber: z.string().min(1, "Driver number is required"),
+  vehicleNo: z.string().min(1, "Driver number is required"),
   dispatchTime: z.string().min(1, "Dispatch time is required"),
   manager: z.string().min(1, "Manager name is required"),
   image: z.string().min(1, "Image is required"),
@@ -481,6 +486,7 @@ function DispatchOrderDialog({ open, onClose, onRefresh, data }) {
       orderNo: "",
       driverName: "",
       driverNumber: "",
+      vehicleNo: "",
       dispatchTime: "",
       manager: "",
       image: "",
@@ -529,6 +535,7 @@ function DispatchOrderDialog({ open, onClose, onRefresh, data }) {
             orderNo: values.orderNo,
             driverName: values.driverName,
             driverNumber: values.driverNumber,
+            vehicleNo : values.vehicleNo,
             dispatchTime: values.dispatchTime,
             manager: values.manager,
             note: values.note,
@@ -621,7 +628,26 @@ function DispatchOrderDialog({ open, onClose, onRefresh, data }) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            Vehicle Number <RequiredStar />
+                            Driver Number <RequiredStar />
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter vehicle number"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="vehicleNo"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Vehicle No <RequiredStar />
                           </FormLabel>
                           <FormControl>
                             <Input

@@ -18,14 +18,14 @@ export default async function DashboardLayout({ children, params }) {
   return (
     <CommonLayout office={city}>
       {children}
-        {/* <FinePopup/>
+        <FinePopup/>
         <EdgePanel width={384} className={"pt-4"}>
         <div className="flex gap-2 w-full justify-evenly">
           <FloatingInformation />
           <FloatingTodo />
           <FloatingChat />
         </div>
-      </EdgePanel>  */}
+      </EdgePanel> 
     </CommonLayout>
   );
 }

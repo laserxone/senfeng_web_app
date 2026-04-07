@@ -3,14 +3,17 @@ import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
 const DOPDFGatepass = ({
   from,
   vehicle_no,
+  driver_no,
   driver_name,
   manager,
   received_by,
   gatepass,
   gatepassType,
+  order_no,
   time,
   items = {},
 }) => {
+
   const now = new Date();
 
   const date = now.toLocaleDateString("en-GB", {
@@ -20,16 +23,15 @@ const DOPDFGatepass = ({
   });
 
   const formattedItems = Object.entries(items || {}).map(([key, value]) => ({
-  name: key
-  .replaceAll("_", " ")
-  .replace(/\b\w/g, (char) => char.toUpperCase()),
-  qty: value,
-  unit: "",
-  remarks: "",
-}));
-const ObjectLength = Object.entries(items).length
+    name: key
+      .replaceAll("_", " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase()),
+    qty: value,
+    unit: "",
+    remarks: "",
+  }));
+  const ObjectLength = Object.entries(items).length;
 
- 
   return (
     <Document>
       <Page style={{ padding: 20, width: "100%" }}>
@@ -41,14 +43,14 @@ const ObjectLength = Object.entries(items).length
             borderWidth: 2,
             borderColor: "#0072BC",
             borderRadius: 20,
-            paddingTop: 20,
+            paddingTop: 10,
           }}
         >
           <View
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
-              marginBottom: 10,
+              marginBottom: 5,
               width: "100%",
               display: "flex",
             }}
@@ -83,6 +85,8 @@ const ObjectLength = Object.entries(items).length
           <FormField
             from={from}
             vehicle_no={vehicle_no}
+            driver_no={driver_no}
+            order_no={order_no}
             driver_name={driver_name}
             manager={manager}
             received_by={received_by}
@@ -126,7 +130,9 @@ const ObjectLength = Object.entries(items).length
                 )}
               </View>
 
-              {Array.from({ length: ObjectLength > 25 ? ObjectLength : 25 }).map((_, index) => {
+              {Array.from({
+                length: ObjectLength > 25 ? ObjectLength : 25,
+              }).map((_, index) => {
                 const item = formattedItems[index] || {
                   name: "",
                   qty: "",
@@ -196,7 +202,7 @@ const ObjectLength = Object.entries(items).length
               </View>
             </View>
 
-            <View style={{ width: "50%", marginTop: 20 }}>
+            <View style={{ width: "50%", marginTop:10 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Text style={{ fontSize: 10, marginRight: 5 }}>
                   Gate In-charge’s Signature:
@@ -240,6 +246,8 @@ const Cell = ({ width, value }) => (
 const FormField = ({
   from,
   vehicle_no,
+  driver_no,
+  order_no,
   driver_name,
   manager,
   received_by,
@@ -250,7 +258,9 @@ const FormField = ({
     { label: "Time of Dispatch", value: time },
     { label: "Vehicle No", value: vehicle_no },
     { label: "Driver Name", value: driver_name },
+    { label: "Driver Number", value: driver_no },
     { label: "Manager", value: manager },
+    { label: "Machine", value: order_no },
     { label: "Delivery Issued By", value: from },
   ];
 
