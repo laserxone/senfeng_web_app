@@ -1,13 +1,13 @@
 "use client";
 
 import PageTable from "@/components/app-table-without-pagination";
+import Dropzone from "@/components/dropzone";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { ArrowUpDown } from "lucide-react";
-import { useEffect, useState } from "react";
-import Dropzone from "@/components/dropzone";
+import { ArrowUpDown, Plus } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -31,15 +31,19 @@ import {
 } from "@/components/ui/form";
 
 import { Input } from "@/components/ui/input";
-import { RequiredStar } from "../RequiredStar";
-import { ScrollArea } from "../ui/scroll-area";
-import { Textarea } from "../ui/textarea";
+import { UploadImage } from "@/lib/uploadFunction";
+import { OfficeContext } from "@/store/context/OfficeContext";
 import moment from "moment";
-import Spinner from "../ui/spinner";
+import { RequiredStar } from "../RequiredStar";
 import { Label } from "../ui/label";
+import { ScrollArea } from "../ui/scroll-area";
+import Spinner from "../ui/spinner";
+import { Textarea } from "../ui/textarea";
+import DOPDFGatepass from "./do-pdf-gatepass";
+import { pdf } from "@react-pdf/renderer";
 
 export default function MachineDelivery() {
-  const { userID } = useUserDetail();
+  const { userID, name } = useUserDetail();
   const [data, setData] = useState([]);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -166,19 +170,33 @@ export default function MachineDelivery() {
       id: "actions",
       header: "Action",
       cell: ({ row }) => {
-        return (
-          <Button
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedDelivery(row.original);
-              //   setSelectedCustomerId(currentItem?.id);
-              //   setShowConfirmation(true);
-            }}
-          >
-            Create Delivery
-          </Button>
-        );
+        if (row.original?.delivery_date) {
+          return (
+            <Button
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                generatePDF(row.original);
+              }}
+            >
+              Open DO
+            </Button>
+          );
+        } else {
+          return (
+            <Button
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedDelivery(row.original);
+                //   setSelectedCustomerId(currentItem?.id);
+                //   setShowConfirmation(true);
+              }}
+            >
+              Create Delivery
+            </Button>
+          );
+        }
       },
     },
   ];
@@ -214,6 +232,40 @@ export default function MachineDelivery() {
     },
   ];
 
+  const generatePDF = async (item) => {
+    const PDFData = {
+      gate_pass: item.id,
+      to: item?.customer_name || customer?.owner,
+      tod: moment(item?.delivery_date).format("YYYY-MM-DD hh:mm A"),
+      driver_number:
+        item?.dispatch_information?.other_information?.driverNumber,
+      driver_name: item?.dispatch_information?.other_information?.driverName,
+      manager: item?.dispatch_information?.other_information?.manager,
+      deliver_issued_by: name,
+      checklist: item?.dispatch_information?.checklist,
+    };
+
+    try {
+      const blob = await pdf(
+        <DOPDFGatepass
+          from={PDFData.deliver_issued_by}
+          vehicle_no={PDFData.driver_number}
+          driver_name={PDFData.driver_name}
+          received_by={PDFData.to}
+          manager={PDFData.manager}
+          gatepass={PDFData.gate_pass}
+          gatepassType={"Outward Gate Pass"}
+          time={PDFData.tod}
+          items={PDFData.checklist}
+        />,
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 600000);
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-start justify-between">
@@ -275,10 +327,7 @@ const MachineChecklist = () => {
   const [open, setOpen] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [ID, setID] = useState(null);
-  const [form, setForm] = useState(
-    Object.fromEntries(machineChecklistKeys.map((key) => [key, ""])),
-  );
-
+  const [form, setForm] = useState({});
 
   async function fetchData() {
     if (!userID) return;
@@ -287,38 +336,68 @@ const MachineChecklist = () => {
       const response = await axios.get(`/${userID}/settings`);
       setID(response.data?.id);
       const apiList = response.data?.machine_checklist;
-      setForm(
-        Object.fromEntries(
-          machineChecklistKeys.map((key) => [key, apiList?.[key] ?? ""]),
-        ),
-      );
-      setOpen(true);
+      (setForm(apiList), setOpen(true));
     } finally {
       setLoading(false);
     }
   }
 
-  function handleChnage(key, val) {
-    setForm((prev) => ({ ...prev, [key]: val }));
+  function handleChange(key, val) {
+    setForm((prev) => ({
+      ...prev,
+      [key]: val,
+    }));
+  }
+
+  function handleChangeKey(oldKey, newKey) {
+    if (!newKey || oldKey === newKey) return;
+
+    setForm((prev) => {
+      const updated = { ...prev };
+      if (updated[newKey]) return prev;
+
+      updated[newKey] = updated[oldKey];
+      delete updated[oldKey];
+
+      return updated;
+    });
+  }
+
+  function handleAddNew() {
+    const newKey = `new_key_${Date.now()}`;
+
+    setForm((prev) => ({
+      ...prev,
+      [newKey]: "",
+    }));
   }
 
   function onClose() {
     setOpen(false);
   }
 
+  function normalizeKey(key) {
+    return key.toLowerCase().trim().replace(/\s+/g, "_");
+  }
+
   async function handleSave() {
     if (!userID || !ID) return;
     setSaveLoading(true);
     try {
+      const formattedForm = Object.fromEntries(
+        Object.entries(form).map(([k, v]) => [normalizeKey(k), v]),
+      );
+
       await axios.put(`/${userID}/settings`, {
         id: ID,
-        machine_checklist: form,
+        machine_checklist: formattedForm,
       });
       onClose();
     } finally {
       setSaveLoading(false);
     }
   }
+
   return (
     <>
       <Button disabled={loading} onClick={fetchData}>
@@ -332,20 +411,31 @@ const MachineChecklist = () => {
             <DialogTitle>Configure Machine Checklist</DialogTitle>
           </DialogHeader>
 
-          <ScrollArea className="h-[70dvh] pr-4">
+          <ScrollArea className="h-[70dvh] pr-4 py-2">
             <div className="space-y-4 px-2">
-              {machineChecklistKeys.map((item) => (
-                <div key={item}>
-                  <Label className="capitalize">
-                    {item.replaceAll("_", " ")}
-                  </Label>
-                  <Input
-                  value={form?.[item]}
-                    placeholder={`Enter ${item.replaceAll("_", " ")}`}
-                    onChange={(e) => handleChnage(item, e.target.value)}
-                  />
+              {Object.entries(form).map(([k, v]) => (
+                <div key={k} className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label>Field Name</Label>
+                    <Input
+                      value={k}
+                      onChange={(e) => handleChangeKey(k, e.target.value)}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label>Field Value</Label>
+                    <Input
+                      value={v}
+                      placeholder={`Enter ${k.replaceAll("_", " ")}`}
+                      onChange={(e) => handleChange(k, e.target.value)}
+                    />
+                  </div>
                 </div>
               ))}
+
+              <Button onClick={handleAddNew}>
+                <Plus /> Add Field
+              </Button>
             </div>
           </ScrollArea>
           <DialogFooter>
@@ -375,6 +465,8 @@ const dispatchSchema = z.object({
 function DispatchOrderDialog({ open, onClose, onRefresh, data }) {
   const [loading, setLoading] = useState(false);
   const [checklistLoading, setChecklistLoading] = useState(false);
+  const [checklist, setChecklist] = useState({});
+  const { state: OfficeState } = useContext(OfficeContext);
   const { userID } = useUserDetail();
 
   useEffect(() => {
@@ -396,21 +488,16 @@ function DispatchOrderDialog({ open, onClose, onRefresh, data }) {
     },
   });
 
-  const [checklist, setChecklist] = useState(
-    Object.fromEntries(machineChecklistKeys.map((key) => [key, ""])),
-  );
-
   async function fetchData() {
     if (!userID) return;
     setChecklistLoading(true);
     try {
       const response = await axios.get(`/${userID}/settings`);
-      const apiList = response.data?.machine_checklist;
-      setChecklist(
-        Object.fromEntries(
-          machineChecklistKeys.map((key) => [key, apiList?.[key] ?? ""]),
-        ),
+      const apiList = response.data?.machine_checklist || {};
+      const sorted = Object.fromEntries(
+        Object.entries(apiList).sort(([a], [b]) => a.localeCompare(b)),
       );
+      setChecklist(sorted);
     } finally {
       setChecklistLoading(false);
     }
@@ -424,13 +511,36 @@ function DispatchOrderDialog({ open, onClose, onRefresh, data }) {
     setLoading(true);
 
     try {
-      await axios.post("/dispatch", {
-        ...values,
-        dispatchTime: new Date(values.dispatchTime),
-      });
+      const name = `${OfficeState.value.data}/customer/${data?.customer_id}/machine/${data?.id}/dispatch/${moment().valueOf().toString()}.png`;
+
+      // const imgName =
+      const imageRefResult = await UploadImage(values.image, name);
+
+      const apiData = {
+        machine_id: data.id,
+        delivery_date: values?.dispatchTime
+          ? new Date(values.dispatchTime)
+          : new Date(),
+        order_no_arr: [values.orderNo],
+        machine_nameplate_images: [name],
+        dispatch_information: {
+          checklist: checklist,
+          other_information: {
+            orderNo: values.orderNo,
+            driverName: values.driverName,
+            driverNumber: values.driverNumber,
+            dispatchTime: values.dispatchTime,
+            manager: values.manager,
+            note: values.note,
+            image: name,
+          },
+        },
+      };
+
+      await axios.post(`/${userID}/delivery`, apiData);
 
       await onRefresh?.();
-      onClose();
+      handleClose();
       form.reset();
     } finally {
       setLoading(false);
@@ -447,24 +557,29 @@ function DispatchOrderDialog({ open, onClose, onRefresh, data }) {
     "note",
   ];
 
+  function handleClose() {
+    setLoading(false);
+    setChecklistLoading(false);
+    setChecklist({});
+    onClose();
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-6xl">
         <DialogHeader>
           <DialogTitle>Dispatch Order</DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* LEFT SIDE - FORM */}
           <div className="md:col-span-2 border rounded-lg">
-            <ScrollArea className="h-[75vh]">
+            <ScrollArea className="h-[85dvh]">
               <div className="p-6">
                 <Form {...form}>
                   <form
                     onSubmit={form.handleSubmit(handleSubmit)}
                     className="space-y-5"
                   >
-                    {/* Order No */}
                     <FormField
                       control={form.control}
                       name="orderNo"
@@ -484,7 +599,6 @@ function DispatchOrderDialog({ open, onClose, onRefresh, data }) {
                       )}
                     />
 
-                    {/* Driver Name */}
                     <FormField
                       control={form.control}
                       name="driverName"
@@ -501,18 +615,17 @@ function DispatchOrderDialog({ open, onClose, onRefresh, data }) {
                       )}
                     />
 
-                    {/* Driver Number */}
                     <FormField
                       control={form.control}
                       name="driverNumber"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            Driver Number <RequiredStar />
+                            Vehicle Number <RequiredStar />
                           </FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Enter driver contact number"
+                              placeholder="Enter vehicle number"
                               {...field}
                             />
                           </FormControl>
@@ -521,7 +634,6 @@ function DispatchOrderDialog({ open, onClose, onRefresh, data }) {
                       )}
                     />
 
-                    {/* Time of Dispatch */}
                     <FormField
                       control={form.control}
                       name="dispatchTime"
@@ -538,7 +650,6 @@ function DispatchOrderDialog({ open, onClose, onRefresh, data }) {
                       )}
                     />
 
-                    {/* Image */}
                     <FormField
                       control={form.control}
                       name="image"
@@ -563,7 +674,6 @@ function DispatchOrderDialog({ open, onClose, onRefresh, data }) {
                       )}
                     />
 
-                    {/* Manager */}
                     <FormField
                       control={form.control}
                       name="manager"
@@ -583,7 +693,6 @@ function DispatchOrderDialog({ open, onClose, onRefresh, data }) {
                       )}
                     />
 
-                    {/* Note */}
                     <FormField
                       control={form.control}
                       name="note"
@@ -603,21 +712,24 @@ function DispatchOrderDialog({ open, onClose, onRefresh, data }) {
 
                     <div className="space-y-4 border border-[#d6d6d6] rounded-md p-4 bg-slate-50">
                       <Label className="font-bold text-lg">CheckList</Label>
-                      {checklistLoading ? <Spinner /> : machineChecklistKeys.map((item) => (
-                        <div key={item}>
-                          <Label className="capitalize">
-                            {item.replaceAll("_", " ")}
-                          </Label>
-                          <Input
-                          value={checklist?.[item]}
-                            placeholder={`Enter ${item.replaceAll("_", " ")}`}
-                            onChange={(e) => handleChnage(item, e.target.value)}
-                          />
-                        </div>
-                      ))}
+                      {checklistLoading ? (
+                        <Spinner />
+                      ) : (
+                        Object.entries(checklist).map(([k, v]) => (
+                          <div key={k}>
+                            <Label className="capitalize">
+                              {k.replaceAll("_", " ")}
+                            </Label>
+                            <Input
+                              value={v}
+                              placeholder={`Enter ${k.replaceAll("_", " ")}`}
+                              onChange={(e) => handleChnage(k, e.target.value)}
+                            />
+                          </div>
+                        ))
+                      )}
                     </div>
 
-                    {/* Footer Buttons */}
                     <div className="flex justify-end gap-3 pt-4 border-t">
                       <Button type="button" variant="outline" onClick={onClose}>
                         Cancel
@@ -633,41 +745,42 @@ function DispatchOrderDialog({ open, onClose, onRefresh, data }) {
             </ScrollArea>
           </div>
 
-          {/* RIGHT SIDE - DELIVERY INFO */}
-          <div className="border rounded-lg p-5 bg-muted/30">
-            <h3 className="text-sm font-semibold mb-4 tracking-wide text-muted-foreground uppercase">
-              Delivery Information
-            </h3>
+          <div className="border rounded-lg  bg-muted/30">
+            <ScrollArea className="h-[85dvh] p-5">
+              <h3 className="text-sm font-semibold mb-4 tracking-wide text-muted-foreground uppercase">
+                Delivery Information
+              </h3>
 
-            {data?.delivery_information ? (
-              <div className="space-y-3 text-sm">
-                {DELIVERY_INFORMATION_KEYS.map((key, i) => (
-                  <div
-                    key={key}
-                    className="grid grid-cols-2 gap-2 border-b pb-2 last:border-none"
-                  >
-                    <p className="text-muted-foreground capitalize">
-                      {key === "tod"
-                        ? "Delivery Time"
-                        : key === "pin"
-                          ? "Google location"
-                          : key.replaceAll("_", " ")}
-                    </p>
-                    <p className="font-medium break-words">
-                      {key === "tod"
-                        ? moment(
-                            new Date(data?.delivery_information[key]),
-                          ).format("YYYY-MM-DD hh:mm A")
-                        : String(data?.delivery_information[key])}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No delivery information available.
-              </p>
-            )}
+              {data?.delivery_information ? (
+                <div className="space-y-3 text-sm">
+                  {DELIVERY_INFORMATION_KEYS.map((key, i) => (
+                    <div
+                      key={key}
+                      className="grid grid-cols-2 gap-2 border-b pb-2 last:border-none"
+                    >
+                      <p className="text-muted-foreground capitalize">
+                        {key === "tod"
+                          ? "Delivery Time"
+                          : key === "pin"
+                            ? "Google location"
+                            : key.replaceAll("_", " ")}
+                      </p>
+                      <p className="font-medium break-words">
+                        {key === "tod"
+                          ? moment(
+                              new Date(data?.delivery_information[key]),
+                            ).format("YYYY-MM-DD hh:mm A")
+                          : String(data?.delivery_information[key])}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No delivery information available.
+                </p>
+              )}
+            </ScrollArea>
           </div>
         </div>
       </DialogContent>
