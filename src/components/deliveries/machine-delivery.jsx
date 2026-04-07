@@ -287,7 +287,7 @@ export default function MachineDelivery() {
       <DispatchOrderDialog
         open={!!selectedDelivery}
         onClose={() => setSelectedDelivery(null)}
-        onRefresh={() => {}}
+        onRefresh={fetchData}
         data={selectedDelivery}
       />
     </div>

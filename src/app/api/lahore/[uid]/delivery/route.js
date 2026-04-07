@@ -49,7 +49,7 @@ export async function POST(req) {
     );
 
     await pool.query(`
-        UPDATE order_items SET status = $1, WHERE machine_id = $2`, ["Dispatched", data.machine_id])
+        UPDATE order_items SET status = $1 WHERE machine_id = $2`, ["Dispatched", data.machine_id])
 
     return NextResponse.json({ message: "Done" }, { status: 200 });
   } catch (error) {

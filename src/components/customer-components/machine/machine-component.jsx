@@ -1867,7 +1867,7 @@ const ViewImagesSheet = ({
                 {handshakeImages.length > 0 ? (
                   handshakeImages.map((item, ind) => (
                     <RenderImage
-                      key={ind}
+                      key={item}
                       img={item}
                       setImageOpen={setImageOpen}
                       onDelete={editAllowed ? handleDeleteImage : null}
@@ -2020,6 +2020,7 @@ const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }) => {
     }
     return () => {
       isMounted = false;
+      setDeleteLoading(false)
     };
   }, [img, type]);
 
