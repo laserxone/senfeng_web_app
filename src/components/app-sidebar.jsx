@@ -55,6 +55,7 @@ import { useContext, useEffect, useState } from "react";
 import { ScrollArea } from "./ui/scroll-area";
 import NotificationBadge from "./NotificationBadge";
 import axios from "@/lib/axios";
+import { useMachineDelivery } from "@/hooks/use-machine-delivery";
 
 export const company = {
   name: "SENFENG",
@@ -73,7 +74,7 @@ export default function AppSidebar({ office }) {
   const { toggleSidebar } = useSidebar();
   const isMobile = useIsMobile();
   const { userID, isAdmin, name, email, base_route, nav_items } = useUserDetail()
-  const [pendingMachine, setPendingMachine] = useState(0)
+  const {pendingDelivery} = useMachineDelivery()
   
 
   useEffect(() => {
@@ -82,12 +83,6 @@ export default function AppSidebar({ office }) {
     });
   }, [office]);
 
-  async function fetchPendingMachines() {
-   
-    axios.get(`/${userID}/delivery`).then((response) => {
-      setPendingMachine(response.data?.length)
-    })
-  }
 
   async function updateData(val) {
     if (val?.user) {
@@ -103,7 +98,6 @@ export default function AppSidebar({ office }) {
 
   useEffect(() => {
     if (userID) {
-      fetchPendingMachines()
       const q = query(
         collection(db, "Notification"),
         where("sendTo", "==", userID),
@@ -177,7 +171,7 @@ export default function AppSidebar({ office }) {
                                     href={`/${base_route}${subItem.url}`}
                                   >
                                     <span className="text-[14px]">
-                                      {subItem.title} {subItem.title === "Machine Delivery" && pendingMachine > 0 && <NotificationBadge count={pendingMachine} className="ml-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm font-bold shadow-sm" />}
+                                      {subItem.title} {subItem.title === "Machine Delivery" && pendingDelivery > 0 && <NotificationBadge count={pendingDelivery} className="ml-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm font-bold shadow-sm" />}
                                     </span>
                                   </Link>
                                 </SidebarMenuSubButton>

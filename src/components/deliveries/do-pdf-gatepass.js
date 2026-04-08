@@ -1,6 +1,7 @@
 import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
 
 const DOPDFGatepass = ({
+  delivery_date,
   from,
   vehicle_no,
   driver_no,
@@ -14,7 +15,7 @@ const DOPDFGatepass = ({
   items = {},
 }) => {
 
-  const now = new Date();
+  const now = delivery_date ? new Date(delivery_date) : new Date();
 
   const date = now.toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -64,7 +65,7 @@ const DOPDFGatepass = ({
                   marginLeft: 10,
                 }}
               >
-                Gate Pass No: DO-{gatepass || ""}
+                Gate Pass No: {gatepass || ""}
               </Text>
 
               <Text

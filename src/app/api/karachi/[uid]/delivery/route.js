@@ -1,4 +1,6 @@
 import pool from "@/config/db";
+import { storage } from "@/config/firebase";
+import { deleteObject, ref } from "firebase/storage";
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
@@ -55,6 +57,7 @@ export async function POST(req) {
       ["Dispatched", data.machine_id],
     );
 
+
     return NextResponse.json({ message: "Done" }, { status: 200 });
   } catch (error) {
     console.log(error);
@@ -89,9 +92,76 @@ export async function PUT(req) {
       ],
     );
 
+   
+
     return NextResponse.json({ message: "Done" }, { status: 200 });
   } catch (error) {
     console.log(error);
+    return NextResponse.json(
+      { message: error?.message || "Server error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(req) {
+  const searchParams = req.nextUrl.searchParams;
+  const id = searchParams.get("id");
+
+  try {
+    if (!id) {
+      return NextResponse.json({ message: "ID is missing" }, { status: 400 });
+    }
+
+    await pool.query("BEGIN");
+
+    const checking = await pool.query(
+      `SELECT machine_nameplate_images, dispatch_information FROM sale WHERE id = $1`,
+      [id],
+    );
+    const namePlate = Array.isArray(
+      checking.rows?.[0]?.machine_nameplate_images,
+    )
+      ? checking.rows[0].machine_nameplate_images
+      : [];
+    const dispatch = checking.rows?.[0]?.dispatch_information ?? null;
+    let newNamePlate = [];
+    let img = null;
+    if (dispatch && typeof dispatch === "object") {
+      img = dispatch?.other_information?.image;
+    }
+
+    if (img) {
+      try {
+        await deleteObject(ref(storage, img));
+      } catch (err) {
+        console.warn("Image delete failed:", err?.message);
+        throw err;
+      }
+      newNamePlate = namePlate?.filter((item) => item !== img);
+    }
+
+    await pool.query(
+      `UPDATE sale SET delivery_date = $1, dispatch_information = '{}'::jsonb, machine_nameplate_images = $2 WHERE id = $3`,
+      [null, newNamePlate, id],
+    );
+    await pool.query(
+      `UPDATE order_items SET status = $1 WHERE machine_id = $2`,
+      ["Delivery Requested", id],
+    );
+
+    await pool.query("COMMIT");
+
+   
+
+    return NextResponse.json(
+      { message: "Deleted successfully" },
+      { status: 200 },
+    );
+  } catch (error) {
+    await pool.query("ROLLBACK");
+    console.log(error);
+
     return NextResponse.json(
       { message: error?.message || "Server error" },
       { status: 500 },
