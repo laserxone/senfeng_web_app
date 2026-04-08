@@ -138,7 +138,7 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }) {
       };
 
       await axios.put(`/${userID}/delivery`, apiData);
-      await TriggerFirebaseForMachine()
+      TriggerFirebaseForMachine()
       await onRefresh?.();
       handleClose();
       form.reset();
@@ -170,7 +170,7 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }) {
     setDeleteLoading(true);
     try {
       await axios.delete(`/${userID}/delivery?id=${data.id}`);
-       await TriggerFirebaseForMachine()
+       TriggerFirebaseForMachine()
       await onRefresh?.();
       handleClose();
     } finally {
@@ -541,7 +541,7 @@ export function DispatchOrderDialog({
       };
 
       await axios.post(`/${userID}/delivery`, apiData);
-       await TriggerFirebaseForMachine()
+       TriggerFirebaseForMachine()
       await openPdf({
         order_no: apiData.order_no_arr,
         gate_pass: `DO-${data?.id}`,
