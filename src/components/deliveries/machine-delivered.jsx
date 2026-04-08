@@ -140,7 +140,7 @@ export default function MachineDelivered() {
     },
 
     {
-      accessorKey: "serial_no",
+      accessorKey: "order_no_arr",
       filterFn: "includesString",
       header: ({ column }) => {
         return (
@@ -148,12 +148,12 @@ export default function MachineDelivered() {
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Serial No
+            Order No
             <ArrowUpDown />
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("serial_no")}</div>,
+      cell: ({ row }) => <div>{row.getValue("order_no_arr")?.join(" ")}</div>,
     },
 
     {
@@ -236,40 +236,6 @@ export default function MachineDelivered() {
     },
   ];
 
-  const tableHeader = [
-    {
-      value: "DO",
-      label: "DO",
-    },
-    {
-      value: "Owner",
-      label: "Owner",
-    },
-    {
-      value: "Name",
-      label: "Company Name",
-    },
-    {
-      value: "Number",
-      label: "Number",
-    },
-    {
-      value: "Industry",
-      label: "Industry",
-    },
-    {
-      value: "customer_group",
-      label: "Group",
-    },
-    {
-      value: "Location",
-      label: "Location",
-    },
-    {
-      value: "Machines",
-      label: "Machines",
-    },
-  ];
 
   const generatePDF = async (item) => {
     const PDFData = {
@@ -322,7 +288,6 @@ export default function MachineDelivered() {
       loading={loading}
         columns={columns}
         data={data}
-        tableHeader={tableHeader}
         onRowClick={(val, event) => {}}
       >
         <MachineChecklist />
