@@ -90,6 +90,7 @@ import "pdfjs-dist/build/pdf.worker";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import AddCheque from "./add-cheque";
+import { TriggerFirebaseForMachine } from "@/lib/triggerFirebase";
 
 export default function Machine({ id, onLoading = () => {}, base }) {
   const [data, setData] = useState();
@@ -1074,6 +1075,7 @@ const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }) => {
         delivery_information: { ...values, tod: new Date(values.tod) },
         delivery_request_date : new Date()
       });
+      await TriggerFirebaseForMachine()
       await onRefresh();
       onClose();
     } finally {
