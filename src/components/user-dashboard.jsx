@@ -230,7 +230,11 @@ export default function UserDashboard({id, owner = false}) {
           <Reimbursement
             id={id}
             passingData={reimbursementData || []}
-            onAddRefresh={(temp) => setReimbursementData([...temp])}
+            onAddRefresh={async () => {
+                        const startDate = moment().startOf("month").toISOString();
+                        const endDate = moment().endOf("month").toISOString();
+                        await fetchReimbursementData(startDate, endDate);
+                      }}
             onFilterReturn={async (start, end) =>
               await fetchReimbursementData(start, end)
             }

@@ -53,7 +53,6 @@ export async function PUT(req, { params }) {
 
     await pool.query(query, values);
 
-    console.log("data updated successfully");
     return NextResponse.json({ message: "Updated successfully" }, { status: 200 });
   } catch (error) {
     console.error("Error updating data:", error);

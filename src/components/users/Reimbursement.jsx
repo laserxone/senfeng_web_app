@@ -126,10 +126,7 @@ export default function Reimbursement({
         );
       },
       cell: ({ row }) => {
-        const currentItem = row.original;
-        if (currentItem.customer_id)
-          return <div className="ml-2">{currentItem?.purpose || ""}</div>;
-        else return <div className="ml-2">{row.getValue("title")}</div>;
+         return <div className="ml-2">{row.getValue("title")}</div>;
       },
     },
 
@@ -330,22 +327,15 @@ export default function Reimbursement({
         submittedBy={imageURL?.submitted_by_name || null}
       />
 
-      {/* <AddReimbursementDialog
+      <AddReimbursementDialog
         id={id}
         visible={reimbursementVisible}
         onClose={setReimbursementVisible}
-        onRefresh={(val) => {
-          if (val) {
-            let temp = [...data];
-            temp.push(val);
-            temp.sort(
-              (a, b) => moment(b.date).valueOf() - moment(a.date).valueOf(),
-            );
-            onAddRefresh(temp);
-          }
+        onRefresh={async () => {
+         await onAddRefresh()
           setReimbursementVisible(false);
         }}
-      /> */}
+      />
     </div>
   );
 }
@@ -441,7 +431,6 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
 const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
   const [selectedRadio, setSelectedRadio] = useState("customer");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-
   const { state: OfficeState } = useContext(OfficeContext);
   const [loading, setLoading] = useState(false);
   const formSchema = z.object({
@@ -491,7 +480,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
         customer_id : selectedRadio === 'customer' ? values.customer : null,
         purpose : true
       });
-      onRefresh(response.data.reimbursement);
+      onRefresh();
       form.reset();
       setSelectedCustomer(null);
       setSelectedRadio("customer");
@@ -547,6 +536,8 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
+                          Customer <RequiredStar />
+                        </FormLabel>
                           <CustomerSearchWithData
                             value={selectedCustomer}
                             onReturn={(val) => {
@@ -558,7 +549,6 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                               form.setValue("title", val.company || val.owner);
                             }}
                           />
-                        </FormLabel>
                       </FormItem>
                     )}
                   />
@@ -739,7 +729,7 @@ const AddPurpose = ({ item, visible, onClose, onUpdate }) => {
 
     try {
       setLoading(true);
-      await axios.put(`/${userID}/reimbursement/${item.id}`, { purpose });
+      await axios.put(`/${userID}/reimbursement/${item.id}`, { title : purpose, purpose : true });
       let updatedItem = { ...item };
       updatedItem.purpose = purpose;
       onUpdate(updatedItem);

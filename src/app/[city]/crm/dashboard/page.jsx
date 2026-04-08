@@ -43,7 +43,7 @@ export default function Page() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`,
         )
         .then((response) => {
           setReimbursementData(response.data);
@@ -60,7 +60,7 @@ export default function Page() {
     return new Promise((res, rej) => {
       axios
         .get(
-          `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`,
         )
         .then((response) => {
           if (response.data.length > 0) {
@@ -131,17 +131,21 @@ export default function Page() {
           <Reimbursement
             id={userID}
             passingData={reimbursementData || []}
-            onAddRefresh={(temp) => setReimbursementData([...temp])}
-              onReset={async (start, end) => {
+            onAddRefresh={async () => {
+              const startDate = moment().startOf("month").toISOString();
+              const endDate = moment().endOf("month").toISOString();
+              await fetchReimbursementData(startDate, endDate);
+            }}
+            onReset={async (start, end) => {
               await fetchReimbursementData(start, end);
             }}
             onFilterReturn={async (start, end) =>
               await fetchReimbursementData(start, end)
             }
             onUpdatePurpose={(val) => {
-                          const newData = updateItemPurpose(reimbursementData, val);
-                          setReimbursementData(newData);
-                        }}
+              const newData = updateItemPurpose(reimbursementData, val);
+              setReimbursementData(newData);
+            }}
           />
         </CardContent>
       </Card>
@@ -187,7 +191,7 @@ export default function Page() {
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="task">Team Task</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
-              <TabsTrigger value="fines">Fines</TabsTrigger>
+            <TabsTrigger value="fines">Fines</TabsTrigger>
           </TabsList>
 
           <div className="flex flex-1 w-full mt-2">
@@ -208,7 +212,7 @@ export default function Page() {
                 </CardContent>
               </Card>
             )}
-            {activeTab === 'fines' && <RenderFines />}
+            {activeTab === "fines" && <RenderFines />}
           </div>
         </Tabs>
       </div>

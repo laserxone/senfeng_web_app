@@ -69,6 +69,14 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
 import CurrencyFormatter from "@/components/currency-formatter";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Page() {
   const [filterVisible, setFilterVisible] = useState(false);
@@ -160,10 +168,7 @@ export default function Page() {
         );
       },
       cell: ({ row }) => {
-        const currentItem = row.original;
-        if (currentItem.customer_id)
-          return <div className="ml-2">{currentItem?.purpose || ""}</div>;
-        else return <div className="ml-2">{row.getValue("title")}</div>;
+        return <div className="ml-2">{row.getValue("title")}</div>;
       },
     },
 
@@ -290,26 +295,6 @@ export default function Page() {
       cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
 
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const currentItem = row.original;
-        if (currentItem.customer_id)
-          return (
-            <Link
-              href={`/${base_route}/customer/${currentItem.customer_id}`}
-              target="blank"
-            >
-              <ChevronsRight
-                className="hover:cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-              />
-            </Link>
-          );
-      },
-    },
   ];
 
   function handleDownload() {
@@ -436,20 +421,26 @@ export default function Page() {
         }}
       />
 
-      {/* <AddReimbursementDialog
+      <AddReimbursementDialog
         visible={reimbursementVisible}
         onClose={setReimbursementVisible}
-        onRefresh={(val) => {
-          if (val) {
-            let temp = [...data, val];
-            temp.sort(
-              (a, b) => moment(b.date).valueOf() - moment(a.date).valueOf(),
-            );
-            setData([...temp]);
-          }
+        onRefresh={async () => {
+          const startDate = momentT
+            .tz(TIMEZONE)
+            .startOf("month")
+            .startOf("day")
+            .utc()
+            .toISOString();
+          const endDate = momentT
+            .tz(TIMEZONE)
+            .endOf("month")
+            .endOf("day")
+            .utc()
+            .toISOString();
+          await fetchData(startDate, endDate);
           setReimbursementVisible(false);
         }}
-      /> */}
+      />
     </div>
   );
 }
@@ -593,17 +584,28 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }) => {
   const { userID } = useUserDetail();
   const { state: OfficeState } = useContext(OfficeContext);
 
-  const formSchema = z.object({
-    title: z.string().min(1, { message: "Title is required." }),
-    description: z.string().min(1, { message: "Description is required." }),
-    amount: z
-      .number()
-      .min(0.01, { message: "Amount must be greater than zero." }),
-    date: z.date({ required_error: "Date is required." }),
-    image: z.string().min(1, { message: "Image is required." }),
-    city: z.string().min(1, { message: "City is required." }),
-    submitted_by: z.number().min(1, { message: "User is required" }),
-  });
+  const formSchema = z
+    .object({
+      title: z.string().min(1, { message: "Purpose is required." }),
+      customer: z.number({ required_error: "Customer is required." }),
+      description: z.string().min(1, { message: "Description is required." }),
+      amount: z
+        .number()
+        .min(0.01, { message: "Amount must be greater than zero." }),
+      date: z.date({ required_error: "Date is required." }),
+      image: z.string().min(1, { message: "Image is required." }),
+      city: z.string().min(1, { message: "City is required." }),
+      submitted_by: z.number().min(1, { message: "User is required" }),
+    })
+    .refine(
+      (data) =>
+        selectedRadio !== "customer" ||
+        (data.customer !== undefined && data.customer !== null),
+      {
+        path: ["customer"],
+        message: "Customer is required.",
+      },
+    );
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -615,6 +617,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }) => {
       image: "",
       city: "",
       submittedBy: null,
+      customer: null,
     },
   });
 
@@ -633,8 +636,10 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }) => {
         image: name,
         date: values.date,
         submitted_by: values.submitted_by,
+        customer_id: selectedRadio === "customer" ? values?.customer : null,
+        purpose: true,
       });
-      onRefresh(response.data.reimbursement);
+      onRefresh();
       form.reset();
       onClose(false);
     } catch (error) {
@@ -653,12 +658,12 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }) => {
         onClose(val);
       }}
     >
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="max-w-[90vw] sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Add New Reimbursement</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[80vh] px-2">
+        <ScrollArea className="h-[80vh] px-2">
           <div className="px-2 space-y-4">
             <RadioGroup
               defaultValue={selectedRadio}
@@ -679,30 +684,65 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }) => {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-4"
               >
+                {selectedRadio === "customer" && (
+                  <FormField
+                    control={form.control}
+                    name="customer"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Customer <RequiredStar />
+                        </FormLabel>
+                        <CustomerSearchWithData
+                          value={selectedCustomer}
+                          onReturn={(val) => {
+                            field.onChange(val.id);
+                            setSelectedCustomer(val);
+                            if (val.location) {
+                              form.setValue("city", val.location);
+                            }
+                            form.setValue("title", val.company || val.owner);
+                          }}
+                        />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
                 <FormField
                   control={form.control}
                   name="title"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        {selectedRadio == "customer" ? "Customer" : "Other"}{" "}
+                        Purpose
                         <RequiredStar />
                       </FormLabel>
                       <FormControl>
-                        {selectedRadio === "other" ? (
-                          <Input placeholder="Type here" {...field} />
-                        ) : (
-                          <CustomerSearchWithData
-                            value={selectedCustomer}
-                            onReturn={(val) => {
-                              setSelectedCustomer(val);
-                              if (val.location) {
-                                form.setValue("city", val.location);
-                              }
-                              form.setValue("title", val.company || val.owner);
-                            }}
-                          />
-                        )}
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Purpose" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectItem value="New Installation">
+                                New Installation
+                              </SelectItem>
+                              <SelectItem value="Complaint">
+                                Complaint
+                              </SelectItem>
+                              <SelectItem value="Overhauling">
+                                Overhauling
+                              </SelectItem>
+                              <SelectItem value="Sales Meeting">
+                                Sales Meeting
+                              </SelectItem>
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
