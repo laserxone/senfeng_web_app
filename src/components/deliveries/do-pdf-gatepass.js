@@ -64,7 +64,7 @@ const DOPDFGatepass = ({
                   marginLeft: 10,
                 }}
               >
-                Gate Pass No: {gatepass || ""}
+                Gate Pass No: DO-{gatepass || ""}
               </Text>
 
               <Text

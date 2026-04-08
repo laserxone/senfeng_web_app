@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { ArrowUpDown, Edit, Edit2, Plus } from "lucide-react";
+import { ArrowUpDown, Edit, Plus } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,8 +31,10 @@ import {
 } from "@/components/ui/form";
 
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
+import { pdf } from "@react-pdf/renderer";
 import moment from "moment";
 import { RequiredStar } from "../RequiredStar";
 import { Label } from "../ui/label";
@@ -40,11 +42,8 @@ import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
 import { Textarea } from "../ui/textarea";
 import DOPDFGatepass from "./do-pdf-gatepass";
-import { pdf } from "@react-pdf/renderer";
-import { GetProfileImage } from "@/lib/getProfileImage";
-import { Progress } from "@/components/ui/progress";
 
-export default function MachineDelivery() {
+export default function MachineDelivered() {
   const { userID, name } = useUserDetail();
   const [data, setData] = useState([]);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
@@ -61,14 +60,33 @@ export default function MachineDelivery() {
     if (!userID) return;
     setLoading(true);
     try {
-      const response = await axios.get(`/${userID}/delivery`);
-      setData(response.data);
+      const response = await axios.get(`/${userID}/delivery/delivered`);
+      const finalData = response.data?.map((item)=>({...item, do : `DO-${item.id}`}))
+      setData(finalData);
     } finally {
       setLoading(false);
     }
   }
 
   const columns = [
+     {
+      accessorKey: "do",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            DO
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="ml-2">{row.getValue("do")}</div>
+      ),
+    },
     {
       accessorKey: "customer_owner",
       filterFn: "includesString",
@@ -220,6 +238,10 @@ export default function MachineDelivery() {
 
   const tableHeader = [
     {
+      value: "DO",
+      label: "DO",
+    },
+    {
       value: "Owner",
       label: "Owner",
     },
@@ -297,7 +319,7 @@ export default function MachineDelivery() {
       </div>
 
       <PageTable
-        loading={loading}
+      loading={loading}
         columns={columns}
         data={data}
         tableHeader={tableHeader}

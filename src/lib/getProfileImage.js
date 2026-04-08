@@ -9,7 +9,7 @@ export async function GetProfileImage(imgLink) {
         const url = await getDownloadURL(ref(storage, imgLink));
         return url;
     } catch (error) {
-        console.error("Error fetching profile image:", error);
+        console.log("Error fetching profile image:", error);
         return null;
     }
 }

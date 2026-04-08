@@ -1,9 +1,11 @@
-"use client"
+"use client";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
+import { GetProfileImage } from "@/lib/getProfileImage";
+import Spinner from "./ui/spinner";
 
 const Dropzone = ({
   onDrop,
@@ -12,9 +14,10 @@ const Dropzone = ({
   description,
   drag,
   borderColor,
-  noImage=false,
+  noImage = false,
   value,
-  className = ""
+  className = "",
+  dbImage = null,
 }) => {
   const updateRef = useRef();
 
@@ -23,15 +26,13 @@ const Dropzone = ({
       const file = acceptedFiles[0];
       onDrop(URL.createObjectURL(file));
     },
-    [onDrop]
+    [onDrop],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDropAccepted,
     accept: "image/*",
   });
- 
- 
 
   useEffect(() => {
     const handlePaste = (event) => {
@@ -40,7 +41,7 @@ const Dropzone = ({
         if (item.type.startsWith("image/")) {
           const file = item.getAsFile();
           const imageUrl = URL.createObjectURL(file);
-        
+
           onDrop(imageUrl);
         }
       }
@@ -50,7 +51,7 @@ const Dropzone = ({
     return () => document.removeEventListener("paste", handlePaste);
   }, []);
 
-  async function handleDelete(){
+  async function handleDelete() {
     onDrop("");
   }
 
@@ -73,24 +74,24 @@ const Dropzone = ({
           <Label>{drag}</Label>
         ) : value ? (
           <>
-          {!noImage &&
-            <img
-              src={value}
-              alt="Selected"
-              className="cursor-pointer w-20 h-20 object-cover"
-            />
-          }
+            {!noImage && dbImage ? (
+              <RenderImage img={dbImage} />
+            ) : (
+              <img
+                src={value}
+                alt="Selected"
+                className="cursor-pointer w-20 h-20 object-cover"
+              />
+            )}
             <div className="mt-2 flex space-x-2 ml-2">
               <button
                 onClick={() => {
-                  handleDelete()
-                 
+                  handleDelete();
                 }}
                 className="text-red-500 text-sm"
               >
                 Delete
               </button>
-
             </div>
           </>
         ) : (
@@ -123,6 +124,44 @@ const Dropzone = ({
         )}
       </div>
     </div>
+  );
+};
+
+const RenderImage = ({ img }) => {
+  const [localImage, setLocalImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    async function fetchImage() {
+      if (img?.includes("http")) {
+        setLocalImage(img);
+      } else {
+        const imgResult = await GetProfileImage(img);
+        setLocalImage(imgResult);
+      }
+      setLoading(false);
+    }
+
+    if (img) {
+      setLoading(true);
+      fetchImage();
+    }
+  }, [img]);
+
+  if (loading) {
+    return (
+      <div className="w-20 h-20 flex items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={localImage}
+      alt="nameplate"
+      className="cursor-pointer w-20 h-20 object-cover"
+    />
   );
 };
 

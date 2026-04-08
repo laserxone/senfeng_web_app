@@ -2,7 +2,7 @@ import { toast } from "@/hooks/use-toast";
 import { ref, uploadBytesResumable } from "firebase/storage";
 import { storage } from "../config/firebase";
 
-export function UploadImage(image, name, contentType = "image/png") {
+export function UploadImage(image, name, contentType = "image/png", onProgress) {
   return new Promise(async (resolve, reject) => {
     try {
       const response = await fetch(image);
@@ -21,6 +21,8 @@ export function UploadImage(image, name, contentType = "image/png") {
           const progress =
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           console.log("Upload is " + progress + "% done");
+
+          if(onProgress) onProgress(progress)
 
           if (snapshot.state === "paused") {
             console.log("Upload is paused");

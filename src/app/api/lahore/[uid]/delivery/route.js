@@ -12,8 +12,9 @@ export async function GET(req, { params }) {
   FROM sale s
   JOIN customer c ON s.customer_id = c.id
   JOIN users u ON c.ownership = u.id
-  WHERE s.ready_for_delivery IS TRUE 
-    AND c.office = 'lahore'
+  WHERE s.ready_for_delivery IS TRUE AND delivery_date IS NULL
+  AND c.office = 'lahore'
+  ORDER BY s.delivery_request_date ASC
 `);
 
     return NextResponse.json(queryResult.rows, { status: 200 });
@@ -48,8 +49,45 @@ export async function POST(req) {
       ],
     );
 
-    await pool.query(`
-        UPDATE order_items SET status = $1 WHERE machine_id = $2`, ["Dispatched", data.machine_id])
+    await pool.query(
+      `
+        UPDATE order_items SET status = $1 WHERE machine_id = $2`,
+      ["Dispatched", data.machine_id],
+    );
+
+    return NextResponse.json({ message: "Done" }, { status: 200 });
+  } catch (error) {
+    console.log(error);
+    return NextResponse.json(
+      { message: error?.message || "Server error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PUT(req) {
+  const data = await req.json();
+
+  try {
+    const existingNamePlate = await pool.query(
+      `SELECT machine_nameplate_images FROM sale WHERE id = $1`,
+      [data.machine_id],
+    );
+    const existing =
+      existingNamePlate.rows?.[0]?.machine_nameplate_images || [];
+    const incoming = data.machine_nameplate_images;
+    const combinedNamePlates = [...new Set([...existing, ...incoming])];
+
+    await pool.query(
+      `UPDATE sale SET machine_nameplate_images = $1, order_no_arr  =$2, delivery_date = $3, dispatch_information = $4 WHERE id = $5`,
+      [
+        combinedNamePlates,
+        data.order_no_arr,
+        data.delivery_date,
+        data.dispatch_information,
+        data.machine_id,
+      ],
+    );
 
     return NextResponse.json({ message: "Done" }, { status: 200 });
   } catch (error) {

@@ -1072,6 +1072,7 @@ const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }) => {
       await axios.put(`/${userID}/machine/${data.machine.id}/delivery`, {
         ready_for_delivery: true,
         delivery_information: { ...values, tod: new Date(values.tod) },
+        delivery_request_date : new Date()
       });
       await onRefresh();
       onClose();
