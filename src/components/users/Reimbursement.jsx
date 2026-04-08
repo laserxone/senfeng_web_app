@@ -57,7 +57,14 @@ import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
 import CurrencyFormatter from "../currency-formatter";
 import useUserDetail from "@/hooks/use-user-detail";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 export default function Reimbursement({
   id,
@@ -343,14 +350,7 @@ export default function Reimbursement({
   );
 }
 
-const ImageSheet = ({
-  visible,
-  onClose,
-  img,
-  submittedBy,
-  description,
-}) => {
-
+const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
   const [imageOpen, setImageOpen] = useState(false);
   const [localImage, setLocalImage] = useState(null);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -365,7 +365,7 @@ const ImageSheet = ({
       try {
         const storageRef = ref(storage, img);
         const url = await getDownloadURL(storageRef);
-     
+
         if (isMountedRef.current) setLocalImage(url);
       } catch (error) {
         console.error("Error fetching image URL:", error);
@@ -441,10 +441,12 @@ const ImageSheet = ({
 const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
   const [selectedRadio, setSelectedRadio] = useState("customer");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+
   const { state: OfficeState } = useContext(OfficeContext);
   const [loading, setLoading] = useState(false);
   const formSchema = z.object({
-    title: z.string().min(1, { message: "Title is required." }),
+    title: z.string().min(1, { message: "Purpose is required." }),
+    customer: z.number({ required_error: "Customer is required." }),
     description: z.string().min(1, { message: "Description is required." }),
     amount: z
       .number()
@@ -452,7 +454,13 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
     date: z.date({ required_error: "Date is required." }),
     image: z.string().min(1, { message: "Image is required." }),
     city: z.string().min(1, { message: "City is required." }),
-  });
+  }).refine(
+  (data) => selectedRadio !== "customer" || (data.customer !== undefined && data.customer !== null),
+  {
+    path: ["customer"],
+    message: "Customer is required.",
+  }
+);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -463,6 +471,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
       date: "",
       image: "",
       city: "",
+      customer: null,
     },
   });
 
@@ -479,6 +488,8 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
         image: name,
         date: values.date,
         submitted_by: id,
+        customer_id : selectedRadio === 'customer' ? values.customer : null,
+        purpose : true
       });
       onRefresh(response.data.reimbursement);
       form.reset();
@@ -529,22 +540,17 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-4"
               >
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {selectedRadio == "customer" ? "Customer" : "Other"}{" "}
-                        <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        {selectedRadio === "other" ? (
-                          <Input placeholder="Type here" {...field} />
-                        ) : (
+                {selectedRadio === "customer" && (
+                  <FormField
+                    control={form.control}
+                    name="customer"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
                           <CustomerSearchWithData
                             value={selectedCustomer}
                             onReturn={(val) => {
+                              field.onChange(val.id);
                               setSelectedCustomer(val);
                               if (val.location) {
                                 form.setValue("city", val.location);
@@ -552,7 +558,43 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
                               form.setValue("title", val.company || val.owner);
                             }}
                           />
-                        )}
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Purpose
+                        <RequiredStar />
+                      </FormLabel>
+                      <FormControl>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Purpose" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectItem value="New Installation">
+                                New Installation
+                              </SelectItem>
+                              <SelectItem value="Complaint">
+                                Complaint
+                              </SelectItem>
+                              <SelectItem value="Overhauling">
+                                Overhauling
+                              </SelectItem>
+                              <SelectItem value="Sales Meeting">
+                                Sales Meeting
+                              </SelectItem>
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -698,10 +740,10 @@ const AddPurpose = ({ item, visible, onClose, onUpdate }) => {
     try {
       setLoading(true);
       await axios.put(`/${userID}/reimbursement/${item.id}`, { purpose });
-      let updatedItem = {...item}
-      updatedItem.purpose = purpose
-      onUpdate(updatedItem)
-      handleClose()
+      let updatedItem = { ...item };
+      updatedItem.purpose = purpose;
+      onUpdate(updatedItem);
+      handleClose();
     } catch (error) {
     } finally {
       setLoading(false);
@@ -716,19 +758,21 @@ const AddPurpose = ({ item, visible, onClose, onUpdate }) => {
         <div className="space-y-4 mt-2">
           <div className="space-y-2">
             <Label>Select Purpose</Label>
-             <Select onValueChange={setPurpose} value={purpose}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Purpose" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="New Installation">New Installation</SelectItem>
-                <SelectItem value="Complaint">Complaint</SelectItem>
-                 <SelectItem value="Overhauling">Overhauling</SelectItem>
-                <SelectItem value="Sales Meeting">Sales Meeting</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+            <Select onValueChange={setPurpose} value={purpose}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Purpose" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="New Installation">
+                    New Installation
+                  </SelectItem>
+                  <SelectItem value="Complaint">Complaint</SelectItem>
+                  <SelectItem value="Overhauling">Overhauling</SelectItem>
+                  <SelectItem value="Sales Meeting">Sales Meeting</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
