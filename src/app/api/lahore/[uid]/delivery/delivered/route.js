@@ -5,7 +5,13 @@ export async function GET(req, { params }) {
   try {
     const queryResult = await pool.query(`
   SELECT 
-    s.*, 
+    s.id,
+    s.order_no_arr,
+    s.delivery_date,
+    s.power,
+    s.source,
+    s.delivery_information,
+    s.dispatch_information, 
     c.name AS customer_name, 
     c.owner AS customer_owner,
     u.name AS ownership_name

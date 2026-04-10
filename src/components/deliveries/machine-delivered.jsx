@@ -191,7 +191,7 @@ export default function MachineDelivered() {
 
   const generatePDF = async (item) => {
     const PDFData = {
-      order_no: item?.order_no_arr?.join(" "),
+      order_no: `${item?.order_no_arr?.join(" ")} - ${item?.power} - ${item?.source}`,
       gate_pass: item?.do || item?.id,
       delivery_date : item?.delivery_date,
       to: item?.customer_name || item?.customer?.owner,
@@ -204,8 +204,6 @@ export default function MachineDelivered() {
       delivery_issued_by: item?.dispatch_information?.other_information?.issuedBy,
       checklist: item?.dispatch_information?.checklist,
     };
-
-    console.log(PDFData)
 
     try {
       const blob = await pdf(
