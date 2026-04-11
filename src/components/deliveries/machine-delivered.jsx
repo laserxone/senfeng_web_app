@@ -191,7 +191,7 @@ export default function MachineDelivered() {
 
   const generatePDF = async (item) => {
     const PDFData = {
-      order_no: `${item?.order_no_arr?.join(" ")} - ${item?.power} - ${item?.source}`,
+      order_no: `${item?.order_no_arr?.join(" ")} - ${item.serial_no} - ${item?.power} - ${item?.source}`,
       gate_pass: item?.do || item?.id,
       delivery_date : item?.delivery_date,
       to: item?.customer_name || item?.customer?.owner,

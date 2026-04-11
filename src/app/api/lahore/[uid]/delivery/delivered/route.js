@@ -10,6 +10,7 @@ export async function GET(req, { params }) {
     s.delivery_date,
     s.power,
     s.source,
+    s.serial_no,
     s.delivery_information,
     s.dispatch_information, 
     c.name AS customer_name, 

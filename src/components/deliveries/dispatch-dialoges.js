@@ -543,7 +543,7 @@ export function DispatchOrderDialog({
       await axios.post(`/${userID}/delivery`, apiData);
        TriggerFirebaseForMachine()
       await openPdf({
-        order_no: `${apiData?.order_no_arr?.join(" ")} - ${data?.power} - ${data?.source}`,
+        order_no: `${apiData?.order_no_arr?.join(" ")} - ${data?.serial_no} - ${data?.power} - ${data?.source}`,
         gate_pass: `DO-${data?.id}`,
         delivery_date: apiData.delivery_date,
         to: data?.customer_name || data?.customer_owner,
