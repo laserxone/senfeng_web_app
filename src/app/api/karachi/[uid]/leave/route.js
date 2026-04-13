@@ -27,6 +27,17 @@ export async function POST(req) {
           return NextResponse.json({ message: "Leave already applied for today" }, { status: 409 });
         }
 
+        const existingAttQuery = `
+          SELECT id FROM attendance 
+          WHERE user_id = $1 AND time_in BETWEEN $2 AND $3
+        `;
+        const existingAttResult = await pool.query(existingAttQuery, [data.user_id, startOfDay, endOfDay]);
+      
+        if (existingAttResult.rows.length > 0) {
+          return NextResponse.json({ message: "Attendance already marked for today" }, { status: 409 });
+        }
+
+
         const fields = Object.keys(data);
         const values = Object.values(data);
         const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");

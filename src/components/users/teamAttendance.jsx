@@ -28,15 +28,15 @@ import momentT from "moment-timezone";
 import { useTheme } from "next-themes";
 import LeaveApproval from "@/components/users/leaveApproval";
 
-export default function Page() {
+export default function TeamAttendance() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
   const [visible, setVisible] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState(null);
   const [resetLoading, setResetLoading] = useState(false);
-  const [approveLeave, setApproveLeave] = useState(null);
   const { userID } = useUserDetail();
+  const [approveLeave, setApproveLeave] = useState(null);
 
   useEffect(() => {
     if (userID) {
@@ -60,7 +60,7 @@ export default function Page() {
     return new Promise((res) => {
       axios
         .get(
-          `/${userID}/attendance?start_date=${start}&end_date=${end}&user=${user || ""}`,
+          `/${userID}/attendance?team=true&start_date=${start}&end_date=${end}&user=${user || ""}`,
         )
         .then((response) => {
           if (response.data.length > 0) {
@@ -298,12 +298,7 @@ export default function Page() {
       cell: ({ row }) => (
         <div
           style={{
-            color:
-              row.getValue("status") === "Present"
-                ? "green"
-                : row.getValue("status") === "Leave Approved"
-                  ? "green"
-                  : "red",
+            color: row.getValue("status") === "Present" ? "green" : "red",
           }}
         >
           {row.getValue("status")}
@@ -344,7 +339,7 @@ export default function Page() {
         columns={columns}
         data={data}
         tableHeader={tableHeader}
-        onRowClick={(val, event) => { 
+        onRowClick={(val, event) => {
           if (val?.time_in) {
             setSelectedAttendance(val);
             setVisible(true);
@@ -412,7 +407,11 @@ export default function Page() {
           setData((prevState) =>
             prevState.map((p) =>
               p?.leave_id === approveLeave?.leave_id
-                ? { ...p, leave_status: `Leave ${newStatus}`, status: `Leave ${newStatus}` }
+                ? {
+                    ...p,
+                    leave_status: `Leave ${newStatus}`,
+                    status: `Leave ${newStatus}`,
+                  }
                 : p,
             ),
           );
