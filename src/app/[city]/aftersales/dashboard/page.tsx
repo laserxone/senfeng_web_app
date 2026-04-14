@@ -33,13 +33,52 @@ import "./styles.css";
 import  OldRecordSheet  from "@/components/users/old-record-sheet";
 import RenderFines from "@/components/users/render-fines";
 import { updateItemPurpose } from "@/lib/updatePurpose";
+type User = {
+  id: number;
+  name: string;
+  designation?: string;
+  dp?: string;
+};
 
+type Customer = {
+  id: number;
+  owner?: string;
+  name?: string;
+  number?: string;
+  location?: string;
+  feedback_date?: string | null;
+  member?: boolean;
+};
+
+type DashboardData = {
+  user: User;
+  withFeedback: Customer[];
+  withoutFeedback: Customer[];
+};
+type CustomerEmployeeAfterSalesProps = {
+  onRefresh: () => Promise<void>;
+  totalCustomerText: string;
+  user_id: number;
+  data: DashboardData | null;
+  onFilterData: (start: Date, end: Date) => void;
+  handleClear: () => void;
+  selectedOption: string;
+  setSelectedOption: (val: string) => void;
+};
+type CustomerExtraDataProps = {
+  data: {
+    withFeedback: Customer[];
+    withoutFeedback: Customer[];
+  };
+  option: string;
+  onSelect: (val: string) => void;
+};
 export default function Page() {
-  const [data, setData] = useState();
-  const [reimbursementData, setReimbursementData] = useState([]);
-  const [attendanceData, setAttendanceData] = useState([]);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [filterData, setFilterData] = useState<DashboardData | null>(null);
+  const [reimbursementData, setReimbursementData] = useState<any[]>([]);
+  const [attendanceData, setAttendanceData] = useState<any[]>([]);
   const [filter, setFilter] = useState({ start: null, end: null });
-  const [filterData, setFilterData] = useState();
   const [selectedOption, setSelectedOption] = useState("withoutFeedback");
   const [activeTab, setActiveTab] = useState("newCustomers");
   const { userID } = useUserDetail();
@@ -129,7 +168,7 @@ export default function Page() {
       const startDate = moment(new Date(filter.start));
       const endDate = moment(new Date(filter.end));
 
-      temp.user = data.user;
+      temp.user = data?.user;
       temp.withoutFeedback = [...data.withoutFeedback];
       temp.withFeedback = [...data.withFeedback].filter((item) => {
         const feedbackDate = moment(new Date(item.feedback_date));
@@ -276,15 +315,15 @@ const CustomerEmployeeAfterSales = ({
   handleClear,
   selectedOption,
   setSelectedOption,
-}) => {
+}: CustomerEmployeeAfterSalesProps) => {
   const { base_route, customer_add_access, designation, office, route_branch } =
     useUserDetail();
   const [addCustomer, setAddCustomer] = useState(false);
   const router = useRouter();
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState("");
-  const [next, setNext] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [next, setNext] = useState<Date | null>(null);
   const [top, setTop] = useState(false);
   const [satisfactory, setSatisfactory] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -572,7 +611,7 @@ const CustomerEmployeeAfterSales = ({
 
 
 
-const CustomerExtraData = ({ data, option, onSelect }) => {
+const CustomerExtraData = ({ data, option, onSelect }: CustomerExtraDataProps) => {
   const menuItems = [
     { key: "pending", label: "Pending", dataKey: "withoutFeedback" },
     { key: "completed", label: "Completed", dataKey: "withFeedback" },
