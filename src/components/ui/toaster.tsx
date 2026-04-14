@@ -1,5 +1,7 @@
 "use client"
 
+import * as React from "react"
+
 import { useToast } from "@/hooks/use-toast"
 import {
   Toast,
@@ -10,14 +12,21 @@ import {
   ToastViewport,
 } from "@/components/ui/toast"
 
+type ToastItem = React.ComponentPropsWithoutRef<typeof Toast> & {
+  id: string | number
+  title?: React.ReactNode
+  description?: React.ReactNode
+  action?: React.ReactNode
+}
+
 export function Toaster() {
   const { toasts } = useToast()
 
   return (
-    (<ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
+    <ToastProvider>
+      {toasts.map(function ({ id, title, description, action, ...props }: ToastItem) {
         return (
-          (<Toast key={id} {...props}>
+          <Toast key={id} {...props}>
             <div className="grid gap-1">
               {title && <ToastTitle>{title}</ToastTitle>}
               {description && (
@@ -26,10 +35,10 @@ export function Toaster() {
             </div>
             {action}
             <ToastClose />
-          </Toast>)
+          </Toast>
         );
       })}
       <ToastViewport />
-    </ToastProvider>)
+    </ToastProvider>
   );
 }

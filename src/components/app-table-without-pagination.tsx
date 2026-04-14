@@ -24,7 +24,16 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import exportToExcel from "@/lib/exportToExcel";
 import { Button } from "./ui/button";
 import Spinner from "./ui/spinner";
-
+type PageTableProps = {
+  children?: React.ReactNode;
+  columns: any[];
+  data: any[];
+  tableHeader?: { value: string; label: string }[];
+  disableInput?: boolean;
+  loading?: boolean;
+  download?: boolean;
+  onRowClick?: (row: any, event: React.MouseEvent<HTMLTableRowElement>) => void;
+};
 const PageTable = ({
   children,
   columns,
@@ -33,7 +42,7 @@ const PageTable = ({
   onRowClick = () => {},
   loading = false,
   download = false,
-}) => {
+}:PageTableProps) => {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});

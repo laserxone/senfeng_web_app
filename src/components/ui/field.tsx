@@ -7,40 +7,50 @@ import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
-function FieldSet({ className, ...props }) {
+type DivProps = React.HTMLAttributes<HTMLDivElement>;
+type FieldsetProps = React.FieldsetHTMLAttributes<HTMLFieldSetElement>;
+type LegendProps = React.HTMLAttributes<HTMLLegendElement>;
+type ParagraphProps = React.HTMLAttributes<HTMLParagraphElement>;
+type SpanProps = React.HTMLAttributes<HTMLSpanElement>;
+
+function FieldSet({ className, ...props }: FieldsetProps) {
   return (
     <fieldset
       data-slot="field-set"
       className={cn(
         "gap-4 has-[>[data-slot=checkbox-group]]:gap-3 has-[>[data-slot=radio-group]]:gap-3 flex flex-col",
-        className,
+        className
       )}
       {...props}
     />
   );
 }
 
-function FieldLegend({ className, variant = "legend", ...props }) {
+function FieldLegend({
+  className,
+  variant = "legend",
+  ...props
+}: LegendProps & { variant?: "legend" | "label" }) {
   return (
     <legend
       data-slot="field-legend"
       data-variant={variant}
       className={cn(
         "mb-1.5 font-medium data-[variant=label]:text-sm data-[variant=legend]:text-base",
-        className,
+        className
       )}
       {...props}
     />
   );
 }
 
-function FieldGroup({ className, ...props }) {
+function FieldGroup({ className, ...props }: DivProps) {
   return (
     <div
       data-slot="field-group"
       className={cn(
         "gap-5 data-[slot=checkbox-group]:gap-3 *:data-[slot=field-group]:gap-4 group/field-group @container/field-group flex w-full flex-col",
-        className,
+        className
       )}
       {...props}
     />
@@ -62,10 +72,18 @@ const fieldVariants = cva(
     defaultVariants: {
       orientation: "vertical",
     },
-  },
+  }
 );
 
-function Field({ className, orientation = "vertical", ...props }) {
+type FieldProps = DivProps & {
+  orientation?: "vertical" | "horizontal" | "responsive";
+};
+
+function Field({
+  className,
+  orientation = "vertical",
+  ...props
+}: FieldProps) {
   return (
     <div
       role="group"
@@ -77,47 +95,47 @@ function Field({ className, orientation = "vertical", ...props }) {
   );
 }
 
-function FieldContent({ className, ...props }) {
+function FieldContent({ className, ...props }: DivProps) {
   return (
     <div
       data-slot="field-content"
       className={cn(
         "gap-0.5 group/field-content flex flex-1 flex-col leading-snug",
-        className,
+        className
       )}
       {...props}
     />
   );
 }
 
-function FieldLabel({ className, ...props }) {
+function FieldLabel({ className, ...props }: React.ComponentProps<typeof Label>) {
   return (
     <Label
       data-slot="field-label"
       className={cn(
         "has-data-checked:bg-primary/5 has-data-checked:border-primary/30 dark:has-data-checked:border-primary/20 dark:has-data-checked:bg-primary/10 gap-2 group-data-[disabled=true]/field:opacity-50 has-[>[data-slot=field]]:rounded-lg has-[>[data-slot=field]]:border *:data-[slot=field]:p-2.5 group/field-label peer/field-label flex w-fit leading-snug",
         "has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col",
-        className,
+        className
       )}
       {...props}
     />
   );
 }
 
-function FieldTitle({ className, ...props }) {
+function FieldTitle({ className, ...props }: DivProps) {
   return (
     <div
       data-slot="field-label"
       className={cn(
         "gap-2 text-sm font-medium group-data-[disabled=true]/field:opacity-50 flex w-fit items-center leading-snug",
-        className,
+        className
       )}
       {...props}
     />
   );
 }
 
-function FieldDescription({ className, ...props }) {
+function FieldDescription({ className, ...props }: ParagraphProps) {
   return (
     <p
       data-slot="field-description"
@@ -125,21 +143,25 @@ function FieldDescription({ className, ...props }) {
         "text-muted-foreground text-left text-sm [[data-variant=legend]+&]:-mt-1.5 leading-normal font-normal group-has-data-horizontal/field:text-balance",
         "last:mt-0 nth-last-2:-mt-1",
         "[&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
-        className,
+        className
       )}
       {...props}
     />
   );
 }
 
-function FieldSeparator({ children, className, ...props }) {
+function FieldSeparator({
+  children,
+  className,
+  ...props
+}: DivProps & { children?: React.ReactNode }) {
   return (
     <div
       data-slot="field-separator"
       data-content={!!children}
       className={cn(
         "-my-2 h-5 text-sm group-data-[variant=outline]/field-group:-mb-2 relative",
-        className,
+        className
       )}
       {...props}
     >
@@ -156,21 +178,23 @@ function FieldSeparator({ children, className, ...props }) {
   );
 }
 
-function FieldError({ className, children, errors, ...props }) {
-  const content = useMemo(() => {
-    if (children) {
-      return children;
-    }
+type FieldErrorProps = {
+  className?: string;
+  children?: React.ReactNode;
+  errors?: { message?: string }[];
+};
 
-    if (!errors?.length) {
-      return null;
-    }
+function FieldError({ className, children, errors, ...props }: FieldErrorProps) {
+  const content = useMemo(() => {
+    if (children) return children;
+
+    if (!errors?.length) return null;
 
     const uniqueErrors = [
-      ...new Map(errors.map((error) => [error?.message, error])).values(),
+      ...new Map(errors.map((e) => [e?.message, e])).values(),
     ];
 
-    if (uniqueErrors?.length == 1) {
+    if (uniqueErrors.length === 1) {
       return uniqueErrors[0]?.message;
     }
 
@@ -178,15 +202,13 @@ function FieldError({ className, children, errors, ...props }) {
       <ul className="ml-4 flex list-disc flex-col gap-1">
         {uniqueErrors.map(
           (error, index) =>
-            error?.message && <li key={index}>{error.message}</li>,
+            error?.message && <li key={index}>{error.message}</li>
         )}
       </ul>
     );
   }, [children, errors]);
 
-  if (!content) {
-    return null;
-  }
+  if (!content) return null;
 
   return (
     <div

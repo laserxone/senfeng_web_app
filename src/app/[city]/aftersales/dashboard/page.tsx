@@ -30,9 +30,10 @@ import moment from "moment";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
-import  OldRecordSheet  from "@/components/users/old-record-sheet";
+import OldRecordSheet from "@/components/users/old-record-sheet";
 import RenderFines from "@/components/users/render-fines";
 import { updateItemPurpose } from "@/lib/updatePurpose";
+
 type User = {
   id: number;
   name: string;
@@ -55,6 +56,7 @@ type DashboardData = {
   withFeedback: Customer[];
   withoutFeedback: Customer[];
 };
+
 type CustomerEmployeeAfterSalesProps = {
   onRefresh: () => Promise<void>;
   totalCustomerText: string;
@@ -65,6 +67,7 @@ type CustomerEmployeeAfterSalesProps = {
   selectedOption: string;
   setSelectedOption: (val: string) => void;
 };
+
 type CustomerExtraDataProps = {
   data: {
     withFeedback: Customer[];
@@ -73,14 +76,20 @@ type CustomerExtraDataProps = {
   option: string;
   onSelect: (val: string) => void;
 };
+
 export default function Page() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [filterData, setFilterData] = useState<DashboardData | null>(null);
   const [reimbursementData, setReimbursementData] = useState<any[]>([]);
   const [attendanceData, setAttendanceData] = useState<any[]>([]);
-  const [filter, setFilter] = useState({ start: null, end: null });
-  const [selectedOption, setSelectedOption] = useState("withoutFeedback");
-  const [activeTab, setActiveTab] = useState("newCustomers");
+  const [filter, setFilter] = useState<{ start: any; end: any }>({
+    start: null,
+    end: null,
+  });
+  const [selectedOption, setSelectedOption] = useState<string>(
+    "withoutFeedback"
+  );
+  const [activeTab, setActiveTab] = useState<string>("newCustomers");
   const { userID } = useUserDetail();
 
   useEffect(() => {
@@ -93,8 +102,8 @@ export default function Page() {
     }
   }, [userID]);
 
-  async function fetchReimbursementData(startDate, endDate) {
-    return new Promise((resolve, reject) => {
+  async function fetchReimbursementData(startDate: string, endDate: string) {
+    return new Promise<boolean>((resolve, reject) => {
       axios
         .get(
           `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`
@@ -105,20 +114,20 @@ export default function Page() {
         })
         .catch((e) => {
           console.log(e);
-          reject(null);
+          reject(false);
         });
     });
   }
 
-  async function fetchAttendanceData(startDate, endDate) {
-    return new Promise((res, rej) => {
+  async function fetchAttendanceData(startDate: string, endDate: string) {
+    return new Promise<boolean>((res, rej) => {
       axios
         .get(
           `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           if (response.data.length > 0) {
-            const apiData = response.data.map((item) => {
+            const apiData = response.data.map((item: any) => {
               return {
                 ...item,
                 date: item?.time_in,
@@ -131,24 +140,32 @@ export default function Page() {
         })
         .catch((e) => {
           console.log(e);
-          rej(null);
+          rej(false);
         });
     });
   }
 
   async function fetchData() {
-    return new Promise(async (resolve) => {
+    return new Promise<boolean>(async (resolve) => {
       try {
         const response = await axios.get(`/${userID}/dashboard`);
 
-        const withFeedbackFixed = response.data.withFeedback.map((item) => {
-          return { ...item, number: item?.number?.join(", ") };
-        });
+        const withFeedbackFixed = response.data.withFeedback.map(
+          (item: Customer) => ({
+            ...item,
+            number: Array.isArray(item?.number)
+              ? item.number.join(", ")
+              : item.number,
+          })
+        );
 
         const withoutFeedbackFixed = response.data.withoutFeedback.map(
-          (item) => {
-            return { ...item, number: item?.number?.join(", ") };
-          }
+          (item: Customer) => ({
+            ...item,
+            number: Array.isArray(item?.number)
+              ? item.number.join(", ")
+              : item.number,
+          })
         );
 
         setData({
@@ -164,19 +181,21 @@ export default function Page() {
 
   useEffect(() => {
     if (filter.start) {
-      let temp = {};
+      const temp: any = {};
       const startDate = moment(new Date(filter.start));
       const endDate = moment(new Date(filter.end));
 
       temp.user = data?.user;
-      temp.withoutFeedback = [...data.withoutFeedback];
-      temp.withFeedback = [...data.withFeedback].filter((item) => {
-        const feedbackDate = moment(new Date(item.feedback_date));
-        return (
-          feedbackDate.isSameOrAfter(startDate) &&
-          feedbackDate.isSameOrBefore(endDate)
-        );
-      });
+      temp.withoutFeedback = [...(data?.withoutFeedback || [])];
+      temp.withFeedback = [...(data?.withFeedback || [])].filter(
+        (item: Customer) => {
+          const feedbackDate = moment(new Date(item.feedback_date as any));
+          return (
+            feedbackDate.isSameOrAfter(startDate) &&
+            feedbackDate.isSameOrBefore(endDate)
+          );
+        }
+      );
 
       setFilterData(temp);
     } else {
@@ -192,7 +211,7 @@ export default function Page() {
             <CustomerEmployeeAfterSales
               data={filterData ? filterData : data}
               totalCustomerText={"Total Members"}
-              user_id={data?.user?.id}
+              user_id={data?.user?.id as any}
               onRefresh={async () => await fetchData()}
               onFilterData={(start, end) => {
                 setFilter({ start: moment(start), end: moment(end) });
@@ -215,21 +234,20 @@ export default function Page() {
             id={userID}
             passingData={reimbursementData || []}
             onAddRefresh={async () => {
-                        const startDate = moment().startOf("month").toISOString();
-                        const endDate = moment().endOf("month").toISOString();
-                        await fetchReimbursementData(startDate, endDate);
-                      }}
-              onReset={async (start, end) => {
+              const startDate = moment().startOf("month").toISOString();
+              const endDate = moment().endOf("month").toISOString();
+              await fetchReimbursementData(startDate, endDate);
+            }}
+            onReset={async (start, end) => {
               await fetchReimbursementData(start, end);
             }}
             onFilterReturn={async (start, end) =>
               await fetchReimbursementData(start, end)
             }
-
-            onUpdatePurpose={(val) => {
-                          const newData = updateItemPurpose(reimbursementData, val);
-                          setReimbursementData(newData);
-                        }}
+            onUpdatePurpose={(val: any) => {
+              const newData = updateItemPurpose(reimbursementData, val);
+              setReimbursementData(newData);
+            }}
           />
         </CardContent>
       </Card>
@@ -259,7 +277,9 @@ export default function Page() {
             <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
             <div>
               <h1 className="text-3xl font-bold">{data?.user?.name}</h1>
-              <p className="text-muted-foreground">{data?.user?.designation}</p>
+              <p className="text-muted-foreground">
+                {data?.user?.designation}
+              </p>
             </div>
           </div>
         </div>
@@ -275,7 +295,7 @@ export default function Page() {
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="task">Team Task</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
-              <TabsTrigger value="fines">Fines</TabsTrigger>
+            <TabsTrigger value="fines">Fines</TabsTrigger>
           </TabsList>
 
           <div className="flex flex-1 w-full mt-2">
@@ -296,7 +316,7 @@ export default function Page() {
                 </CardContent>
               </Card>
             )}
-            {activeTab === 'fines' && <RenderFines />}
+            {activeTab === "fines" && <RenderFines />}
           </div>
         </Tabs>
       </div>
@@ -305,6 +325,8 @@ export default function Page() {
     </div>
   );
 }
+
+/* --- keep rest unchanged (CustomerEmployeeAfterSales + CustomerExtraData + constants) --- */
 
 const CustomerEmployeeAfterSales = ({
   onRefresh,
@@ -578,7 +600,7 @@ const CustomerEmployeeAfterSales = ({
                   <Checkbox
                     checked={top}
                     onCheckedChange={(checked) => {
-                      setTop(checked);
+                      setTop(checked === true);
                     }}
                   />
                 </div>
@@ -588,7 +610,7 @@ const CustomerEmployeeAfterSales = ({
                   <Checkbox
                     checked={satisfactory}
                     onCheckedChange={(checked) => {
-                      setSatisfactory(checked);
+                      setSatisfactory(checked === true);
                     }}
                   />
                 </div>
