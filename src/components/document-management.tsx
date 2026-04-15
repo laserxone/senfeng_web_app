@@ -28,7 +28,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { ChevronRight, List, Table2 } from "lucide-react";
 import moment from "moment";
 import Image from "next/image";
-import {
+import React, {
   Fragment,
   memo,
   useCallback,
@@ -44,7 +44,31 @@ import {
   ContextMenuTrigger,
 } from "./ui/context-menu";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+type FolderItem = {
+  id: string | number;
+  name: string;
+};
 
+type RenderEachFolderProps = {
+  item: FolderItem;
+  index: number;
+  view: boolean;
+  setFolderBread: React.Dispatch<
+    React.SetStateAction<{ name: string; id: string | number }[]>
+  >;
+  setCurrentFolder: React.Dispatch<
+    React.SetStateAction<{ name: string; id: string | number } | null>
+  >;
+  setSelectedFolder: React.Dispatch<any>;
+  setNewName: React.Dispatch<React.SetStateAction<string>>;
+  fetchFiles: () => Promise<void>;
+};
+type PreviewFileProps = {
+  preview: boolean;
+  setPreview: React.Dispatch<React.SetStateAction<boolean>>;
+  selectedPreview: string | null;
+  previewLoading: boolean;
+};
 const videoThumbnailCache = {};
 
 const DocumentManagement = () => {
@@ -223,17 +247,16 @@ const DocumentManagement = () => {
     setPreviewLoading(true);
     setPreview(true);
     try {
-      const { data, error } = await supabase.storage
+      const { data } = await supabase.storage
         .from("documents")
         .getPublicUrl(path);
 
-      if (error) {
-        console.error("Error downloading file", error);
-        return;
-      }
+     
 
       setSelectedPreview(data.publicUrl);
-    } finally {
+    }catch(error) {
+        console.error("Error downloading file", error);
+      } finally {
       setPreviewLoading(false);
     }
   }, []);
@@ -389,8 +412,19 @@ const DocumentManagement = () => {
     </div>
   );
 };
+type FileItem = {
+  id: string | number;
+  path: string;
+  created_at?: string;
+  added_by?: string;
+};
 
-const RenderEachFile = memo(({ item, onPreview, onRefresh }) => {
+type RenderEachFileProps = {
+  item: FileItem;
+  onPreview: (path: string) => void;
+  onRefresh: () => Promise<void> | void;
+};
+const RenderEachFile = memo(({ item, onPreview, onRefresh }:RenderEachFileProps) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
   const { isAdmin, userID } = useUserDetail();
@@ -409,7 +443,7 @@ const RenderEachFile = memo(({ item, onPreview, onRefresh }) => {
   }
 
 const RenderFile = memo(
-  ({ path }) => {
+  ({ path }:{path:string}) => {
     const [thumbnail, setThumbnail] = useState(null);
     const [loadingThumb, setLoadingThumb] = useState(false);
     const fileExt = path?.toLowerCase();
@@ -588,7 +622,7 @@ const RenderEachFolder = memo(
     setSelectedFolder,
     setNewName,
     fetchFiles,
-  }) => {
+  }:RenderEachFolderProps  ) => {
     const [deleteLoading, setDeleteLoading] = useState(false);
     const { userID } = useUserDetail();
     async function handleDeleteFolder(id) {
@@ -695,15 +729,20 @@ const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
   );
 };
 
-const PreviewFile = memo(
-  ({ preview, setPreview, selectedPreview, previewLoading }) => {
+
+
+const PreviewFile = React.memo(
+  ({
+    preview,
+    setPreview,
+    selectedPreview,
+    previewLoading,
+  }: PreviewFileProps) => {
     const officeFile = selectedPreview
       ? selectedPreview
           ?.toLowerCase()
           ?.match(/\.(xlsx|xls|csv|doc|docx|ppt|pptx)$/)
       : false;
-
-    // const officeFile = true
 
     return (
       <Dialog open={preview} onOpenChange={setPreview}>
@@ -717,8 +756,7 @@ const PreviewFile = memo(
           <div className="flex-1">
             {previewLoading ? (
               <div className="flex flex-1 items-center justify-center">
-                {" "}
-                <Spinner />{" "}
+                <Spinner />
               </div>
             ) : selectedPreview && !officeFile ? (
               <iframe
@@ -732,7 +770,9 @@ const PreviewFile = memo(
               />
             ) : (
               <iframe
-                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(selectedPreview)}`}
+                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
+                  selectedPreview || ""
+                )}`}
                 style={{
                   border: "none",
                   flex: 1,
@@ -745,7 +785,7 @@ const PreviewFile = memo(
         </DialogContent>
       </Dialog>
     );
-  },
+  }
 );
 
 export default DocumentManagement;

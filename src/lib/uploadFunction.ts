@@ -2,7 +2,11 @@ import { toast } from "@/hooks/use-toast";
 import { ref, uploadBytesResumable } from "firebase/storage";
 import { storage } from "../config/firebase";
 
-export function UploadImage(image, name, contentType = "image/png", onProgress) {
+export function UploadImage(  
+  image: any,
+  name: any,
+  contentType?: string,
+  onProgress?: (progress: number) => void) {
   return new Promise(async (resolve, reject) => {
     try {
       const response = await fetch(image);

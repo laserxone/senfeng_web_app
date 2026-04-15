@@ -33,13 +33,29 @@ const getSchema = (isClientSelected) =>
       ? z.number({ required_error: "Client is required." }) // Required when "client" is selected
       : z.number().optional().nullable(), // Ensure optional & nullable when "office" is selected
   });
-
+type CustomerTaskProps = {
+  id: any;
+  base?: any;
+  customer_id?: any;
+  height?: string;
+  onFetchData: any;
+  data: any;
+};
+type TaskDetailProps = {
+  detail: any;
+  visible: boolean;
+  onClose: any;
+  onDelete: () => void | Promise<void>;
+  onMark: () => void | Promise<void>;
+  user_id: any;
+  base?: any;
+};
 export default function CustomerTask({
   id,
   height = "min-h-[calc(100dvh-300px)]",
   onFetchData,
   data,
-}) {
+}:CustomerTaskProps) {
  
   const [visible, setVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState({});
@@ -170,9 +186,7 @@ export default function CustomerTask({
         detail={selectedTask}
         visible={visible}
         onClose={setVisible}
-        onDelete={() => {
-          async () => await onFetchData();
-        }}
+        onDelete={onFetchData}
         onMark={async () => await onFetchData()}
       />
     </div>
@@ -187,7 +201,7 @@ const TaskDetail = ({
   onMark,
   user_id,
   base
-}) => {
+}:TaskDetailProps) => {
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const { toast } = useToast();
@@ -221,7 +235,7 @@ const TaskDetail = ({
 
       .finally(() => {
         setDeleteLoading(false);
-        onDelete({ id: detail.id });
+        onDelete();
       });
   }
 

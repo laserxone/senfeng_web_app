@@ -8,10 +8,15 @@ function DraggableGroup({ id, children, position, expanded, onToggle }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id });
 
   // Only vertical movement
-  const y = (position?.y || 0) + (transform?.y || 0);
+const y = (position?.y ?? 0) + (transform?.y ?? 0);
 
-  const style = {
-    transform: CSS.Translate.toString({ x: 0, y }),
+const style = {
+  transform: CSS.Translate.toString({
+    x: 0,
+    y,
+    scaleX: 1,
+    scaleY: 1,
+  }),
     touchAction: "none",
     position: "fixed",
     top: "40%",

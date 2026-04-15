@@ -41,6 +41,13 @@ const tableHeader = [
     label: "Location",
   },
 ];
+type CustomerEmployeeProps = {
+  id?: string | number;
+  customer_data: any;
+  onRefresh: () => void | Promise<void>;
+  ownership: any;
+  totalCustomerText?: string;
+};
 
 export default function CustomerEmployee({
   id,
@@ -48,7 +55,7 @@ export default function CustomerEmployee({
   onRefresh,
   ownership,
   totalCustomerText,
-}) {
+}:CustomerEmployeeProps) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState([]);
   const [addCustomer, setAddCustomer] = useState(false);
@@ -68,9 +75,15 @@ export default function CustomerEmployee({
       setData(customer_data);
     }
   }, [customer_data]);
-
+type ColumnType = {
+  id?: string;
+  accessorKey?: string;
+  filterFn?: string;
+  header?: any;
+  cell: any;
+};
   const columns = useMemo(() => {
-    const baseColumns = [
+    const baseColumns:ColumnType[] = [
       {
         accessorKey: "owner",
         filterFn: "includesString",
@@ -285,7 +298,7 @@ export default function CustomerEmployee({
                 <Checkbox
                   checked={top}
                   onCheckedChange={(checked) => {
-                    setTop(checked);
+                    setTop(checked === true);
                   }}
                 />
               </div>
@@ -295,7 +308,7 @@ export default function CustomerEmployee({
                 <Checkbox
                   checked={satisfactory}
                   onCheckedChange={(checked) => {
-                    setSatisfactory(checked);
+                    setSatisfactory(checked=== true);
                   }}
                 />
               </div>

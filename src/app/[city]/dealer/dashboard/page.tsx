@@ -12,11 +12,24 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { MapProvider } from "@/providers/map-provider";
 import { useEffect, useState } from "react";
+type DashboardData = {
+  total_payment_this_month: number;
+  payment_change_percentage: number;
 
+  total_machines_sold_this_month: number;
+  machines_sold_change_percentage: number;
+
+  total_new_customers_this_month: number;
+  new_customer_change_percentage: number;
+
+  machines_sold_last_3_months: any[]; 
+  recent_sales: any[];
+  industry_count: any[]; 
+};
 export default function Page() {
   
   const [customers, setCustomers] = useState([]);
-  const [data, setData] = useState();
+  const [data, setData] = useState<DashboardData>();
   const [loading, setLoading] = useState(true);
   const {userID} = useUserDetail()
   const debouncedUserId = useDebounce(userID, 1000);

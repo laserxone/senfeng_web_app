@@ -12,9 +12,9 @@ import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
 import RenderFines from "@/components/users/render-fines";
 import { updateItemPurpose } from "@/lib/updatePurpose";
-
+type User = { id: number | string; name: string; designation: string; dp: string | null; }; type PageData = { user: User; }
 export default function Page() {
-  const [data, setData] = useState();
+  const [data, setData] = useState<PageData>();
   const [reimbursementData, setReimbursementData] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
   const [activeTab, setActiveTab] = useState("attendance");

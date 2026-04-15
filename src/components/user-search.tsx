@@ -23,7 +23,16 @@ import { cn } from "@/lib/utils";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
 import { Checkbox } from "./ui/checkbox";
-
+type UserSearchProps = {
+  value?: any;
+  onReturn?: (val: any) => void;
+  onReturnName?: (val: any) => void;
+  onReturnData?: (val: any) => void;
+  placeholder?: string;
+  lead?: boolean;
+  className?: string;
+  remove?: boolean;
+};
 export function UserSearch({
   value,
   onReturn,
@@ -33,7 +42,7 @@ export function UserSearch({
   remove = false,
   onReturnName = () => {},
   onReturnData = () => {},
-}) {
+}:UserSearchProps) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState([]);
   const [city, setCity] = React.useState("lahore");

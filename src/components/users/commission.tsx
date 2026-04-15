@@ -280,8 +280,7 @@ const OwnerView = () => {
                     new Date(),
                     showManual
                       ? Number(manualNumber)
-                      : (item.total_amount * (selectedPercentage || 0)) / 100,
-                    item.lead_id ? item.total_amount / 100 : null,
+                      : item.lead_id? (item.total_amount * (selectedPercentage || 0)) / 100:null,
                   )
                 }
               >
@@ -307,7 +306,7 @@ const OwnerView = () => {
             <div className="flex gap-2 items-center">
               <span className="text-green-600">Approved</span>
               <Button
-                onClick={() => handleUpdate(item.id, null, null, null, null)}
+                onClick={() => handleUpdate(item.id, null, null, null)}
               >
                 Undo
               </Button>
@@ -901,8 +900,11 @@ const CrmView = () => {
     </div>
   );
 };
-
-const MyImg = memo(({ img, setImageOpen }) => {
+type MyImgProps = {
+  img: string;
+  setImageOpen: (value: boolean) => void;
+};
+const MyImg = memo(({ img, setImageOpen }:MyImgProps) => {
   const [localImage, setLocalImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -1029,13 +1031,17 @@ const MyImg = memo(({ img, setImageOpen }) => {
     </ControlledZoom>
   );
 });
-
+type ImageSheetProps = {
+  data: any; 
+  visible: boolean;
+  onClose: () => void;
+};
 const ImageSheet = memo(({
   data,
   visible,
   onClose,
 
-}) => {
+}:ImageSheetProps) => {
   const [imageOpen, setImageOpen] = useState(false);
 
  

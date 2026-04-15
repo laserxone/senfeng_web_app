@@ -86,9 +86,8 @@ export default function Page() {
     start: null,
     end: null,
   });
-  const [selectedOption, setSelectedOption] = useState<string>(
-    "withoutFeedback"
-  );
+  const [selectedOption, setSelectedOption] =
+    useState<string>("withoutFeedback");
   const [activeTab, setActiveTab] = useState<string>("newCustomers");
   const { userID } = useUserDetail();
 
@@ -106,7 +105,7 @@ export default function Page() {
     return new Promise<boolean>((resolve, reject) => {
       axios
         .get(
-          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`,
         )
         .then((response) => {
           setReimbursementData(response.data);
@@ -123,7 +122,7 @@ export default function Page() {
     return new Promise<boolean>((res, rej) => {
       axios
         .get(
-          `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`,
         )
         .then((response) => {
           if (response.data.length > 0) {
@@ -156,7 +155,7 @@ export default function Page() {
             number: Array.isArray(item?.number)
               ? item.number.join(", ")
               : item.number,
-          })
+          }),
         );
 
         const withoutFeedbackFixed = response.data.withoutFeedback.map(
@@ -165,7 +164,7 @@ export default function Page() {
             number: Array.isArray(item?.number)
               ? item.number.join(", ")
               : item.number,
-          })
+          }),
         );
 
         setData({
@@ -194,7 +193,7 @@ export default function Page() {
             feedbackDate.isSameOrAfter(startDate) &&
             feedbackDate.isSameOrBefore(endDate)
           );
-        }
+        },
       );
 
       setFilterData(temp);
@@ -212,7 +211,9 @@ export default function Page() {
               data={filterData ? filterData : data}
               totalCustomerText={"Total Members"}
               user_id={data?.user?.id as any}
-              onRefresh={async () => await fetchData()}
+              onRefresh={async () => {
+                await fetchData();
+              }}
               onFilterData={(start, end) => {
                 setFilter({ start: moment(start), end: moment(end) });
               }}
@@ -260,9 +261,9 @@ export default function Page() {
         <CardContent className="pt-2 flex flex-1">
           <Attendance
             passingData={attendanceData}
-            onFilterReturn={async (start, end) =>
-              await fetchAttendanceData(start, end)
-            }
+            onFilterReturn={async (start, end) => {
+              await fetchAttendanceData(start, end);
+            }}
           />
         </CardContent>
       </Card>
@@ -277,9 +278,7 @@ export default function Page() {
             <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
             <div>
               <h1 className="text-3xl font-bold">{data?.user?.name}</h1>
-              <p className="text-muted-foreground">
-                {data?.user?.designation}
-              </p>
+              <p className="text-muted-foreground">{data?.user?.designation}</p>
             </div>
           </div>
         </div>
@@ -344,7 +343,9 @@ const CustomerEmployeeAfterSales = ({
   const router = useRouter();
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null,
+  );
   const [next, setNext] = useState<Date | null>(null);
   const [top, setTop] = useState(false);
   const [satisfactory, setSatisfactory] = useState(false);
@@ -438,7 +439,7 @@ const CustomerEmployeeAfterSales = ({
         <div>
           {row.getValue("feedback_date")
             ? moment(new Date(row.getValue("feedback_date"))).format(
-                "YYYY-MM-DD"
+                "YYYY-MM-DD",
               )
             : "Not taken"}
         </div>
@@ -631,9 +632,11 @@ const CustomerEmployeeAfterSales = ({
   );
 };
 
-
-
-const CustomerExtraData = ({ data, option, onSelect }: CustomerExtraDataProps) => {
+const CustomerExtraData = ({
+  data,
+  option,
+  onSelect,
+}: CustomerExtraDataProps) => {
   const menuItems = [
     { key: "pending", label: "Pending", dataKey: "withoutFeedback" },
     { key: "completed", label: "Completed", dataKey: "withFeedback" },

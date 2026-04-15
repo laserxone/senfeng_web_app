@@ -49,9 +49,54 @@ import useUserDetail from "@/hooks/use-user-detail";
 import RenderReturnable from "@/components/users/render-returnable";
 import RenderFines from "@/components/users/render-fines";
 import { updateItemPurpose } from "@/lib/updatePurpose";
+type User = {
+  id: number | string;
+  name: string;
+  designation: string;
+  dp: string | null;
+};
+type Payment = {
+  amount: number;
+};
 
+type Machine = {
+  serial_no: string;
+  id: number | string;
+  price: number;
+  percentage_completion: number;
+  payments: Payment[];
+};
+type Customer = {
+  id: number | string;
+  name: string;
+  member?: boolean;
+  profile_completion: number;
+  sales: Machine[];
+};
+type Call = {
+  id: number | string;
+  name?: string;
+  owner?: string;
+  number: string[];
+};
+type PageData = {
+  user: User;
+
+  machinesSoldThisMonth: number;
+  percentageChange: number;
+
+  feedbacksTakenThisMonth: number;
+  totalCustomersWithSale: number;
+  remainingFeedbacks: number;
+
+  totalVisits: number;
+
+  machinesSoldThisMonthDetail: Machine[];
+
+  customers: Customer[];
+};
 export default function Page() {
-  const [data, setData] = useState();
+  const [data, setData] = useState<PageData>();
   const { userID, base_route } = useUserDetail();
   const [visitData, setVisitData] = useState([]);
   const [extraData, setExtraData] = useState({});
@@ -78,7 +123,7 @@ export default function Page() {
   }, [userID]);
 
   async function fetchCallData(startDate, endDate) {
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       axios
         .get(`/${userID}/call?start_date=${startDate}&end_date=${endDate}`)
         .then((response) => {
@@ -108,7 +153,7 @@ export default function Page() {
   }
 
   async function fetchAttendanceData(startDate, endDate) {
-    return new Promise((res, rej) => {
+    return new Promise<void|any>((res, rej) => {
       axios
         .get(
           `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
@@ -134,7 +179,7 @@ export default function Page() {
   }
 
   async function fetchData() {
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       axios
         .get(`/${userID}/dashboard`)
         .then((response) => {
@@ -197,7 +242,7 @@ export default function Page() {
               }}
             />
             <CustomerEmployee
-              user_id={userID}
+              id={userID}
               ownership={false}
               customer_data={
                 selectedOption && extraData ? extraData[selectedOption] : []
@@ -447,7 +492,7 @@ function CustomersTab({ data }) {
 
           <Badge
             variant={
-              Number(machine.price) === totalPayments ? "success" : "warning"
+              Number(machine.price) === totalPayments ? "default" : "destructive"
             }
           >
             {Number(machine.price) === totalPayments ? "Completed" : "Pending"}
@@ -639,7 +684,7 @@ function Calls({ data, onRefresh }) {
                 <Checkbox
                   checked={top}
                   onCheckedChange={(checked) => {
-                    setTop(checked);
+                    setTop(checked===true);
                   }}
                 />
               </div>
@@ -649,7 +694,7 @@ function Calls({ data, onRefresh }) {
                 <Checkbox
                   checked={satisfactory}
                   onCheckedChange={(checked) => {
-                    setSatisfactory(checked);
+                    setSatisfactory(checked===true);
                   }}
                 />
               </div>

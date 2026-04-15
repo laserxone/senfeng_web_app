@@ -14,9 +14,17 @@ import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
 import RepairAndMaintenance from "@/components/users/repair-and-maintenance";
 import { updateItemPurpose } from "@/lib/updatePurpose";
-
+type User = {
+  id: number | string;
+  name: string;
+  designation: string;
+  dp: string | null;
+};
+type PageData = {
+  user: User;
+};
 export default function Page() {
-  const [data, setData] = useState();
+  const [data, setData] = useState<PageData>();
   const { userID } = useUserDetail();
   const [reimbursementData, setReimbursementData] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
@@ -69,7 +77,7 @@ export default function Page() {
   console.log(reimbursementData);
 
   async function fetchAttendanceData(startDate, endDate) {
-    return new Promise((res, rej) => {
+    return new Promise<void|any>((res, rej) => {
       axios
         .get(
           `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`,

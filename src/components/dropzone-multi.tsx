@@ -4,8 +4,16 @@ import { useCallback, useEffect, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-
-const DropzoneMulti = ({ onDrop, title, subheading, description, drag, borderColor, value }) => {
+type DropzoneMultiProps = {
+  onDrop: (files: string[]) => void;
+  title: string;
+  subheading: string;
+  description: string;
+  drag: string;
+  borderColor?: string;
+  value: string[];
+};
+const DropzoneMulti = ({ onDrop, title, subheading, description, drag, borderColor, value }:DropzoneMultiProps) => {
   const updateRefs = useRef({});
 
   const onDropAccepted = useCallback(

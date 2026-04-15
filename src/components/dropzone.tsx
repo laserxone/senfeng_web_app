@@ -6,7 +6,18 @@ import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { GetProfileImage } from "@/lib/getProfileImage";
 import Spinner from "./ui/spinner";
-
+type DropzoneProps = {
+  onDrop: (file: any) => void;
+  title: string;
+  subheading: string;
+  description: string;
+  drag: string;
+  borderColor?: string;
+  noImage?: boolean;
+  value: any;
+  className?: string;
+  dbImage?: any;
+};
 const Dropzone = ({
   onDrop,
   title,
@@ -18,8 +29,8 @@ const Dropzone = ({
   value,
   className = "",
   dbImage = null,
-}) => {
-  const updateRef = useRef();
+}:DropzoneProps) => {
+
 
   const onDropAccepted = useCallback(
     (acceptedFiles) => {

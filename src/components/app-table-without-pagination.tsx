@@ -33,6 +33,9 @@ type PageTableProps = {
   loading?: boolean;
   download?: boolean;
   onRowClick?: (row: any, event: React.MouseEvent<HTMLTableRowElement>) => void;
+
+  totalCustomerText?: string;
+  totalCustomer?: number;
 };
 const PageTable = ({
   children,

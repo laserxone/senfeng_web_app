@@ -53,7 +53,7 @@ const formSchemaClosing = z.object({
   status: z.string().min(1, "Required"),
 });
 
-export default function ComplaintSystem({ base }) {
+export default function ComplaintSystem({ base }:{base?:any}) {
   const [loading, setLoading] = useState(false);
   const {userID, isAdmin, complaint_assigned} = useUserDetail()
   const [visible, setVisible] = useState(false);
@@ -155,7 +155,7 @@ export default function ComplaintSystem({ base }) {
             const startDate = moment().startOf("month").toISOString();
             const endDate = moment().endOf("month").toISOString();
             setDates({
-              state: moment().startOf("month").toDate(),
+              start: moment().startOf("month").toDate(),
               end: moment().endOf("month").toDate(),
             });
             setSearch("");

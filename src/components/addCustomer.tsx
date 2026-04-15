@@ -40,7 +40,16 @@ import {
 } from "./ui/select";
 import Spinner from "./ui/spinner";
 import { UserSearch } from "./user-search";
-
+type AddCustomerDialogProps = {
+  base: string;
+  onRefresh: any;
+  visible: any;
+  onClose: any;
+  user_id: any;
+  ownership: any;
+  user_designation?: any;
+  office?: string;
+};
 function AddCustomerDialog  ({
   onRefresh,
   visible,
@@ -49,7 +58,7 @@ function AddCustomerDialog  ({
   ownership,
   user_designation = null,
   office = "islamabad",
-})  {
+}:AddCustomerDialogProps)  {
   const [numbers, setNumbers] = useState([""]);
   const [numberError, setNumberError] = useState("");
   const [loading, setLoading] = useState(false);

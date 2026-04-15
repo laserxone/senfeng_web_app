@@ -56,7 +56,7 @@ import Spinner from "../ui/spinner";
 import formatCurrency from "@/lib/formatCurrency";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
-export default function EmployeeBranchExpenses({ base }) {
+export default function EmployeeBranchExpenses({ base }:{base?:any}) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState([]);
@@ -367,7 +367,16 @@ export default function EmployeeBranchExpenses({ base }) {
     </div>
   );
 }
-
+type ImageSheetProps = {
+  visible: boolean;
+  onClose: () => void;
+  img: string;
+  submittedBy: string;
+  description: string;
+  onDelete: () => void | Promise<void>;
+  loading?: boolean;
+  date: string | Date;
+};
 const ImageSheet = ({
   visible,
   onClose,
@@ -377,7 +386,7 @@ const ImageSheet = ({
   onDelete,
   loading,
   date,
-}) => {
+}:ImageSheetProps) => {
   const [imageOpen, setImageOpen] = useState(false);
   const [localImage, setLocalImage] = useState(null);
   const { isAdmin, branch_expenses_delete_access } = useUserDetail();
@@ -544,7 +553,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
                           placeholder="Enter amount"
                           value={field.value}
                           onChange={(e) => {
-                            if (!isNaN(e.target.value)) {
+                            if (!isNaN(Number(e.target.value))) {
                               field.onChange(Number(e.target.value));
                             }
                           }}
@@ -564,7 +573,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
                       <FormControl>
                         <AppCalendar
                           max={new Date()}
-                          date={field.value}
+                          date={new Date(field.value)}
                           onChange={field.onChange}
                         />
                       </FormControl>

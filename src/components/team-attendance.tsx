@@ -25,7 +25,7 @@ import moment from "moment";
 import momentT from "moment-timezone";
 import { useTheme } from "next-themes";
 
-export default function TeamAttendance() {
+export default function TeamAttendance(id:{id?:string|number}) {
   const [filterVisible, setFilterVisible] = useState(false);
   const {userID} = useUserDetail()
   const [data, setData] = useState([]);

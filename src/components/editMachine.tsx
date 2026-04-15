@@ -281,7 +281,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data, base }) =>
                             placeholder="Enter total price"
                             value={field.value ? field.value : ""}
                             onChange={(e) => {
-                              if (!isNaN(e.target.value)) {
+                              if (!isNaN(Number(e.target.value))) {
                                 field.onChange(Number(e.target.value));
                               }
                             }}
@@ -304,7 +304,7 @@ const EditMachine = ({ machine_id, visible, onClose, onRefresh, data, base }) =>
                           <Checkbox
                             checked={isSpeedMoney}
                             onCheckedChange={(checked) => {
-                              setIsSpeedMoney(checked);
+                              setIsSpeedMoney(checked===true);
                               field.onChange(checked);
                               if (!checked) {
                                 form.setValue("speedMoney", "");

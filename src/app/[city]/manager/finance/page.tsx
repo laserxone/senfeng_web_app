@@ -200,7 +200,7 @@ export default function Page() {
   ];
 
   async function fetchData(startDate, endDate, user = null) {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       axios
         .get(
           `/${userID}/finance?start_date=${startDate}&end_date=${endDate}&user=${user || ""}`,

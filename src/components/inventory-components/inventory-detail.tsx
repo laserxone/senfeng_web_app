@@ -31,8 +31,30 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+type InventoryRow = {
+  QTY?: string | number;
+  SERIAL?: string | number;
+  MODEL?: string;
+  POWER?: string;
+  SOURCE?: string;
+  CUSTOMER?: string;
+  NUMBER?: string | number;
+  CITY?: string;
+  MANAGER?: string;
+  PRICE?: string | number;
+  DELIVERY?: string;
+  REMARKS?: string;
+  color?: string;
+  [key: string]: any; 
+};
 
-export default function InventoryDetail({ booking_id }) {
+type ApiData = {
+  id: string | number;
+  shipment?: string;
+  data?: InventoryRow[];
+};
+type Field = typeof fieldOrder[number];
+export default function InventoryDetail({ booking_id }:{booking_id?:string|number}) {
   const {userID} = useUserDetail()
   const [focusedRow, setFocusedRow] = useState(null);
   const [focusedBoard, setFocusedBoard] = useState(false);
@@ -41,7 +63,7 @@ export default function InventoryDetail({ booking_id }) {
   const tableRef = useRef(null);
   const [prefetching, setPrefetching] = useState(true);
   const [data, setData] = useState([]);
-  const [apiData, setApiData] = useState({});
+  const [apiData, setApiData] = useState<ApiData>();
   const debouncedData = useDebounce(data, 1000);
   const tableContainerRef = useRef(null);
   const [tableMaxHeight, setTableMaxHeight] = useState("auto");
@@ -346,7 +368,7 @@ export default function InventoryDetail({ booking_id }) {
                 setLoading(true);
                 setTimeout(() => {
                   setLoading(false);
-                }, [1000]);
+                }, 1000);
               }}
               disabled={loading}
             >
@@ -410,14 +432,14 @@ export default function InventoryDetail({ booking_id }) {
                 "PRICE",
                 "DELIVERY",
                 "REMARKS",
-              ].map((item, index) =>
+              ].map((item: Field, index) =>
                 item === "MOBILE" ? (
                   <TooltipProvider key={index}>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div
                           className={` p-2 text-center text-white font-semibold ${
-                            item === "REMARKS" ? "w-[300px]" : "w-[130px]"
+                            "w-[300px]"
                           }`}
                         >
                           {item}
@@ -480,7 +502,7 @@ export default function InventoryDetail({ booking_id }) {
                               const parsedValue =
                                 inputValue.trim() === ""
                                   ? ""
-                                  : isNaN(inputValue)
+                                  : isNaN(Number(inputValue))
                                   ? inputValue
                                   : Number(inputValue);
 

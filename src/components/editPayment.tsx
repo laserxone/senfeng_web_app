@@ -42,7 +42,7 @@ const EditPayment = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
-  const [error, setError] = useState({});
+  const [error, setError] = useState<Record<string,string>>({});
   const formSchema = z.object({
     note: z.string().min(1, { message: "TID is required." }),
     amount: z.number().min(1, { message: "Amount must be greater than 1." }),
@@ -72,7 +72,7 @@ const EditPayment = ({
     if (data) {
       form.reset({
         note: data?.note || "",
-        amount: Number(data.amount),
+        amount: data.amount,
         mode: data.mode || "",
         received_by: data.received_by || "",
         transaction_date: new Date(data.transaction_date),
@@ -169,7 +169,7 @@ const EditPayment = ({
                             placeholder="Enter amount"
                             value={field?.value || ""}
                             onChange={(e) => {
-                              if (!isNaN(e.target.value)) {
+                              if (!isNaN(Number(e.target.value))) {
                                 field.onChange(Number(e.target.value));
                               }
                             }}

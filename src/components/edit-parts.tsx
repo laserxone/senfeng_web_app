@@ -198,13 +198,16 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, base }) => {
                           <Label className="font-semibold text-lg mb-2">
                             Part {index + 1}
                           </Label>
-                          <Button onClick={(e) => {
-                            e.preventDefault()
-                            setNewParts((prevState) => {
-                              const newState = prevState.filter((item, ind) => index !== ind)
-                              return newState
-                            })
-                          }} variant="destructive" size="sm" as="icon">
+                          <Button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setNewParts((prevState) =>
+                                    prevState.filter((item, ind) => index !== ind)
+                                  );
+                                }}
+                                variant="destructive"
+                                size="icon"
+                              >
                             <Trash2 />
                           </Button>
                         </div>
@@ -273,7 +276,7 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, base }) => {
                             placeholder="Enter total price"
                             value={field.value ? field.value : ""}
                             onChange={(e) => {
-                              if (!isNaN(e.target.value)) {
+                              if (!isNaN(Number(e.target.value))) {
                                 field.onChange(Number(e.target.value));
                               }
                             }}
@@ -296,9 +299,12 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, base }) => {
                           <Checkbox
                             checked={isSpeedMoney}
                             onCheckedChange={(checked) => {
-                              setIsSpeedMoney(checked);
-                              field.onChange(checked);
-                              if (!checked) {
+                              const value = checked === true;
+
+                              setIsSpeedMoney(value);
+                              field.onChange(value);
+
+                              if (!value) {
                                 form.setValue("speedMoney", "");
                                 form.setValue("speedMoneyNote", "");
                               }

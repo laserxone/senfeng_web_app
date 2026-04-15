@@ -9,8 +9,18 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 import Spinner from "./ui/spinner";
-
-const ConfimationDialog = ({ title, description, onPressYes,onPressCancel, open, loading, children = null, valid = true }) => {
+import { ReactNode } from "react";
+type ConfirmationDialogProps = {
+  title: string;
+  description: string;
+  onPressYes: () => void;
+  onPressCancel: () => void;
+  open: boolean;
+  loading?: boolean;
+  children?: ReactNode | null;
+  valid?: boolean;
+};
+const ConfimationDialog = ({ title, description, onPressYes,onPressCancel, open, loading, children = null, valid = true }: ConfirmationDialogProps) => {
   return (
     <AlertDialog open={open}>
       {/* <AlertDialogTrigger >{children}</AlertDialogTrigger> */}

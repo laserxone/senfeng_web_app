@@ -17,9 +17,18 @@ import "./styles.css";
 import OldRecordSheet from "@/components/users/old-record-sheet";
 import RenderFines from "@/components/users/render-fines";
 import { updateItemPurpose } from "@/lib/updatePurpose";
+type User = {
+  id?: number | string;
+  name?: string;
+  designation?: string;
+  dp?: string;
+};
 
+type ProfileData = {
+  user?: User;
+};
 export default function Page() {
-  const [data, setData] = useState();
+  const [data, setData] = useState<ProfileData>();
   const { userID } = useUserDetail();
   const [extraData, setExtraData] = useState({});
   const [selectedOption, setSelectedOption] = useState("thisMonth");
@@ -56,7 +65,7 @@ export default function Page() {
     });
   }
 
-  async function fetchAttendanceData(startDate, endDate) {
+  async function fetchAttendanceData(startDate:string, endDate:string) : Promise<void|any>{
     return new Promise((res, rej) => {
       axios
         .get(

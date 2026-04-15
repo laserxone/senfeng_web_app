@@ -16,9 +16,9 @@ import "./styles.css";
 import RenderFines from "@/components/users/render-fines";
 import OldRecordSheet from "@/components/users/old-record-sheet";
 import { updateItemPurpose } from "@/lib/updatePurpose";
-
+type User = { id: number | string; name: string; designation: string; dp: string | null; }; type PageData = { user: User; }
 export default function Page() {
-  const [data, setData] = useState();
+  const [data, setData] = useState<PageData>();
   const [extraData, setExtraData] = useState({});
   const [selectedOption, setSelectedOption] = useState("thisMonth");
   const [oldRecordVisible, setOldRecordVisible] = useState(false)
@@ -56,7 +56,7 @@ export default function Page() {
   }
 
   async function fetchAttendanceData(startDate, endDate) {
-    return new Promise((res, rej) => {
+    return new Promise<void|any>((res, rej) => {
       axios
         .get(
           `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
@@ -111,7 +111,7 @@ export default function Page() {
             />
             <CustomerEmployee
               totalCustomerText={"Total Customers"}
-              user_id={null}
+              id={null}
               ownership={true}
               customer_data={
                 extraData && selectedOption ? extraData[selectedOption] : []

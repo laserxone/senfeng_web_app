@@ -9,7 +9,22 @@ import {
 } from "@react-pdf/renderer";
 import CurrencyFormatter from "../currency-formatter";
 import moment from "moment";
+type InvoicePDFProps = {
+  companyName: string;
+  name: string;
+  phoneNumber: string;
+  address: string;
+  manager: string;
+  nextInvoice: any;
+  invoiceItems: any[];
+  totalAmount: number;
+  warranty: boolean;
+  warrantyYear: number;
+  discount: string;
 
+  selectedUser?: any;
+  createdAt?: Date; 
+};
 const InvoicePDF = ({
   companyName,
   name,
@@ -24,7 +39,7 @@ const InvoicePDF = ({
   selectedUser,
   discount,
   createdAt,
-}) => {
+}:InvoicePDFProps) => {
  
 const parsed = Number(discount);
 const localDiscount = Number.isFinite(parsed) ? Math.floor(parsed) : 0;

@@ -60,7 +60,7 @@ export default function ProfilePage() {
     appointment_letter: "",
     father_cnic: "", 
   });
-  const inputRef = useRef();
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const { toast } = useToast();
 
   const [dp, setDp] = useState("");
@@ -86,6 +86,7 @@ export default function ProfilePage() {
         total_salary: u.total_salary || "",
         designation: u.designation || "",
         email: u.email || "",
+        dp: u.dp || "",
       });
       setDp(u.dp || "");
       setDocsData({
@@ -186,7 +187,7 @@ export default function ProfilePage() {
       const [fileUrl, setFileUrl] = useState(null);
       const [loading, setLoading] = useState(false);
       const [fileName, setFileName] = useState("");
-      const fileInputRef = useRef();
+      const fileInputRef = useRef<HTMLInputElement | null>(null);
 
       const userId = userID;
       const userEmail = UserState.value.data?.email;

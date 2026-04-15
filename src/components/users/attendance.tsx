@@ -17,7 +17,7 @@ import FilterSheet from "./filterSheet";
 type AttendanceProps = {
   passingData: any[];
   onFilterReturn: (start: string, end: string) => Promise<void> | void;
-  onRefresh: (startDate: string, endDate: string) => Promise<void> | void;
+  onRefresh?: (startDate: string, endDate: string) => Promise<void> | void;
 };
 
 export default function Attendance({

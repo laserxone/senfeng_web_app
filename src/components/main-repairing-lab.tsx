@@ -290,6 +290,7 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }) => {
     customer_id: null,
     charges: 0,
     remarks: "",
+    managing_office: ""
   });
   const [loading, setLoading] = useState(false);
   const { state: OfficeState } = useContext(OfficeContext);

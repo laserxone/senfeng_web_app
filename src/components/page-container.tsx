@@ -2,12 +2,16 @@
 import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
-
+type Props = {
+  children: React.ReactNode;
+  scrollable?: boolean;
+  className?: string;
+};
 export default function PageContainer({
   children,
   scrollable = true,
   className,
-}) {
+}:Props) {
   const isMobile = useIsMobile();
   const effectiveScrollable = isMobile ? true : scrollable;
   return (

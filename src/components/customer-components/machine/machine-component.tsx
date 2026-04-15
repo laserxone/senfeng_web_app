@@ -91,12 +91,103 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import AddCheque from "./add-cheque";
 import { TriggerFirebaseForMachine } from "@/lib/triggerFirebase";
+type MachineProps = {
+  id: string | number;
+  base?: string;
+  onLoading?: (val: boolean) => void;
+};
+type MachinePayment = {
+  id?: string | number;
+  amount?: number;
+  note?: string;
+  status?: string;
+  clearance_date?: string | null;
+  transaction_date?: string;
+  image?: string;
+  payment_lock?: boolean;
+};
 
-export default function Machine({ id, onLoading = () => {}, base }) {
-  const [data, setData] = useState();
+type MachineInfo = {
+  id: string | number;
+  serial_no?: string;
+  power?: string;
+  source?: string;
+  price?: number;
+  status?: string;
+  type?: "Machine" | "Parts";
+  sell_by?: string | number;
+  sell_by_name?: string;
+  contract_date?: string;
+  order_no_arr?: string[];
+  ready_for_delivery?: boolean;
+  cancelled_detail?: boolean;
+  cancelled_reason?: string;
+  payments?: MachinePayment[];
+  parts_information?: Record<string, any>[];
+};
+
+type Customer = {
+  id: string | number;
+  name?: string;
+  owner?: string;
+  number?: string[];
+  ownership?: string | number;
+  ownership_name?: string;
+};
+
+type MachineResponse = {
+  machine?: MachineInfo;
+  customer?: Customer;
+  payments?: MachinePayment[];
+  installments?: any[];
+  unmatchedFields?: string[];
+  data?: any[];
+  shipment?: string;
+};
+type ClientCardProps = {
+  data?: {
+    name?: string;
+    owner?: string;
+    ownership_name?: string;
+    customer_group?: string;
+  } | null;
+
+  payment: [number, number];
+
+  machine?: {
+    type?: "Machine" | "Parts";
+    status?: string;
+    sell_by_name?: string;
+    contract_date?: string;
+    serial_no?: string;
+    power?: string;
+    source?: string;
+    order_no_arr?: string[];
+    cancelled_detail?: boolean;
+    cancelled_reason?: string;
+    parts_information?: Record<string, any>[];
+    speed_money?: boolean;
+    speed_money_amount?: number;
+    speed_money_note?: string;
+  } | null;
+
+  children?: React.ReactNode;
+};
+type FormData = {
+  contract_images_png?: string[];
+  other_images_png?: string[];
+  handshake_images?: string[];
+  installation_report?: string[];
+  final_handover_images?: string[];
+  machine_nameplate_images?: string[];
+  handover_user_id?: string | null;
+};
+export default function Machine({ id, onLoading = () => {}, base }:MachineProps) {
+  const [data, setData] = useState<MachineResponse | undefined>();
+  const [payments, setPayments] = useState<MachinePayment[]>([]);
+  const [installments, setInstallments] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [received, setReceived] = useState(0);
-  const [payments, setPayments] = useState([]);
   const { toast } = useToast();
   const [imageURL, setImageURL] = useState(null);
   const [visible, setVisible] = useState(false);
@@ -112,7 +203,6 @@ export default function Machine({ id, onLoading = () => {}, base }) {
   const [zipDownloading, setZipDwonloading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [unmatched, setUnmatched] = useState([]);
-  const [installments, setInstallments] = useState([]);
   const [installmentVisible, setInstallmentVisible] = useState(false);
   const [credit, setCredit] = useState(false);
   const [readyForDelivery, setReadyForDelivery] = useState(null);
@@ -439,17 +529,17 @@ export default function Machine({ id, onLoading = () => {}, base }) {
     setDeleteLoading(true);
     axios.delete(`/${userID}/machine/${id}`).then(() => {
       setOpenDelete(false)
-      setData();
+      setData(undefined);
       setDeleteLoading(false);
         toast({ description: "Machine Deleted" , variant: "destructive", });
     });
   }
 
-  const ClientCard = memo(({ data, payment, machine, children }) => {
+  const ClientCard = memo(({ data, payment, machine, children }:ClientCardProps) => {
     const [showAlert, setShowAlert] = useState(false);
     useEffect(() => {
       if (machine) {
-        const payments = machine.payments;
+        const payments =  machine?.payments ?? [];
         const result = findDuplicateNotes(payments);
         if (result.length > 0) {
           setShowAlert(true);
@@ -768,7 +858,7 @@ export default function Machine({ id, onLoading = () => {}, base }) {
 
   async function onRefresh() {
     setCredit(false);
-    setData();
+    setData(undefined);
     fetchData(id);
   }
 
@@ -1351,7 +1441,7 @@ const ImageSheet = ({
     }
   }, []);
 
-  async function handleDelete() {
+  async function handleDelete(id:string|number) {
     try {
       if (img && !img.includes("https")) {
         await DeleteFromStorage(img);
@@ -1359,7 +1449,7 @@ const ImageSheet = ({
 
       await axios.delete(`/${userID}/payment/${id}`);
       await onRefresh(id);
-      handleClose(false);
+      handleClose();
       toast({ title: "Payment Deleted" });
     } finally {
       setDeleteLoading(false);
@@ -1660,8 +1750,12 @@ const InstallmentSheet = ({
     </Sheet>
   );
 };
-
-const RenderInstallmentImage = memo(({ img, type, setImageOpen }) => {
+type RenderInstallmentImageProps = {
+  img: string;
+  type?: boolean;
+  setImageOpen: (open: boolean) => void;
+};
+const RenderInstallmentImage = memo(({ img, type, setImageOpen }:RenderInstallmentImageProps) => {
   const [localImage, setLocalImage] = useState(null);
   const [isZoomed, setIsZoomed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -1811,7 +1905,9 @@ const ViewImagesSheet = ({
       }
 
       const updatedImages = data[typeKey].filter((i) => i !== imgUrl);
-      let formData = { [typeKey]: updatedImages };
+      let formData: Record<string, any> = {
+        [typeKey]: updatedImages,
+      };
 
       if (typeKey === "final_handover_images") {
         formData.handover_user_id = null;
@@ -1997,8 +2093,14 @@ const ViewImagesSheet = ({
     </Sheet>
   );
 };
-
-const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }) => {
+type RenderImageProps = {
+  img: string;
+  type?: "pdf" | "image" | "video" | "doc" | "excel";
+  setImageOpen: (val: boolean) => void;
+  onDelete?: (img: string, imageType?: string) => void;
+  imageType?: string;
+};
+const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }:RenderImageProps) => {
   const [localImage, setLocalImage] = useState(null);
   const [isZoomed, setIsZoomed] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -2097,7 +2199,7 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
         allProcessedImages.push(name);
       }),
     );
-    let formData = {};
+    let formData:FormData = {};
     if (values.note === "contract") {
       formData.contract_images_png = [
         ...machine.contract_images_png,

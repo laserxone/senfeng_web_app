@@ -138,7 +138,7 @@ export default function TeamAttendance() {
           ...match,
           date: date,
           user_email: user,
-          user_name: match?.user_name || userMap[user] || null,
+          user_name: match?.user_name || userMap[user as string] || null,
           status: match?.status || "Absent",
           time_in: match?.time_in || null,
           time_out: match?.time_out || null,
@@ -152,7 +152,7 @@ export default function TeamAttendance() {
       });
     });
 
-    finalData.sort((a, b) => new Date(b.date) - new Date(a.date));
+    finalData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     const today = moment().format("YYYY-MM-DD");
 
     const filteredData = finalData.filter((item) => item.date <= today);

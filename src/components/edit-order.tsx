@@ -25,6 +25,32 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import "react-medium-image-zoom/dist/styles.css";
 import { InventorySearch } from "./inventory-select";
+interface EditOrderDialogProps {
+  visible: boolean;
+  onClose: (val?: any) => void;
+  user_id?: string | number;
+  onRefresh: () => Promise<void> | void;
+  id: string | number;
+  item?: any;
+}
+interface ItemState {
+  name: string;
+  qty: number | "";
+  price: number | "";
+  buying_price: number | "";
+  threshold: number | "";
+  new_order: number | "";
+  is_machine: boolean;
+  machine_serial: string;
+  machine_model: string;
+  machine_source: string;
+  machine_power: string;
+  status: string;
+  isExisting: boolean;
+  inventory_id: number | null;
+  location: string;
+  show: boolean;
+}
 
 const EditOrderDialog = ({
   visible,
@@ -33,8 +59,8 @@ const EditOrderDialog = ({
   onRefresh,
   id,
   item,
-}) => {
-  const [items, setItems] = useState({
+}:EditOrderDialogProps) => {
+  const [items, setItems] = useState<ItemState>({
     name: "",
     qty: 1,
     price: 0,
@@ -76,10 +102,10 @@ const EditOrderDialog = ({
     }
   }, [item]);
 
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [existingInventory, setExistingInventory] = useState([]);
-  const { userID } = useUserDetail()
+  const [existingInventory, setExistingInventory] = useState<any[]>([]);
+  const { userID } = useUserDetail() as { userID: string }
   const [manual, setManual] = useState(true);
 
   useEffect(() => {
@@ -97,13 +123,13 @@ const EditOrderDialog = ({
     });
   }
 
-  const handleItemChange = (field, value) => {
+  const handleItemChange = <K extends keyof ItemState>(field: K, value:ItemState[K]) => {
     setItems((prevState) => ({ ...prevState, [field]: value }));
     setErrors((prevState) => ({ ...prevState, [field]: "" }));
   };
 
   const validateItems = () => {
-    const itemErrors = {};
+    const itemErrors:Partial<Record<keyof ItemState, string>> = {};
 
     // qty required and positive
     if (!items.qty || items.qty <= 0) {
@@ -160,7 +186,7 @@ const EditOrderDialog = ({
     }
   };
 
-  function handleClose(val) {
+  function handleClose(val?: any) {
     onClose(val);
     setItems({
       name: "",
@@ -257,10 +283,8 @@ const EditOrderDialog = ({
                       type="number"
                       value={items.qty}
                       onChange={(e) =>
-                        handleItemChange(
-                          "qty",
-                          isNaN(e.target.value) ? "" : parseInt(e.target.value)
-                        )
+                        {const val = e.target.value;
+                            handleItemChange("qty", val === "" ? "" : parseFloat(val));}
                       }
                     />
                     {errors?.qty && (
@@ -308,12 +332,8 @@ const EditOrderDialog = ({
                             type="number"
                             value={items.price}
                             onChange={(e) =>
-                              handleItemChange(
-                                "price",
-                                isNaN(e.target.value)
-                                  ? ""
-                                  : parseFloat(e.target.value)
-                              )
+                              {const val = e.target.value;
+                            handleItemChange("price", val === "" ? "" : parseFloat(val));}
                             }
                           />
                         </div>
@@ -323,12 +343,8 @@ const EditOrderDialog = ({
                             type="number"
                             value={items.buying_price}
                             onChange={(e) =>
-                              handleItemChange(
-                                "buying_price",
-                                isNaN(e.target.value)
-                                  ? ""
-                                  : parseFloat(e.target.value)
-                              )
+                            {const val = e.target.value;
+                            handleItemChange("buying_price", val === "" ? "" : parseFloat(val));}
                             }
                           />
                         </div>
@@ -338,12 +354,8 @@ const EditOrderDialog = ({
                             type="number"
                             value={items.threshold}
                             onChange={(e) =>
-                              handleItemChange(
-                                "threshold",
-                                isNaN(e.target.value)
-                                  ? ""
-                                  : parseInt(e.target.value)
-                              )
+                              {const val = e.target.value;
+                            handleItemChange("threshold", val === "" ? "" : parseFloat(val));}
                             }
                           />
                         </div>
@@ -353,12 +365,8 @@ const EditOrderDialog = ({
                             type="number"
                             value={items.new_order}
                             onChange={(e) =>
-                              handleItemChange(
-                                "new_order",
-                                isNaN(e.target.value)
-                                  ? ""
-                                  : parseInt(e.target.value)
-                              )
+                              {const val = e.target.value;
+                            handleItemChange("new_order", val === "" ? "" : parseFloat(val));}
                             }
                           />
                         </div>
@@ -539,14 +547,8 @@ const EditOrderDialog = ({
                           type="number"
                           value={items.qty}
                           onChange={(e) =>
-                            handleItemChange(
-                              "qty",
-                              e.target.value
-                                ? isNaN(e.target.value)
-                                  ? ""
-                                  : parseInt(e.target.value)
-                                : ""
-                            )
+                            {const val = e.target.value;
+                            handleItemChange("qty", val === "" ? "" : parseFloat(val));}
                           }
                         />
                       </div>

@@ -45,8 +45,13 @@ import Link from "next/link";
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
-
+type Customer = {
+  id: number;
+  label?: string;
+  name?: string;
+};
 export default function POS() {
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
   const [invoiceItems, setInvoiceItems] = useState([]);
   const [stock, setStock] = useState([]);
@@ -86,13 +91,12 @@ export default function POS() {
   const [engineerLoading, setEngineerLoading] = useState(false);
   const [allEngineersData, setAllEngineersData] = useState([]);
   const [engineersModal, setEngineersModal] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState(false);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [orderStockVisible, setOrderStockVisible] = useState(false);
   const [walkIn, setWalkIn] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const debouncedUserId = useDebounce(userID, 1000);
-  const [discount, setDiscount] = useState("");
+  const [discount, setDiscount] = useState<number|string>("");
   const [inwardModal, setInwardModal] = useState(false);
   const [outwardModal, setOutwardModal] = useState(false);
   const { toast } = useToast();
@@ -118,7 +122,7 @@ export default function POS() {
         totalAmount={totalAmount}
         warranty={warranty}
         warrantyYear={warrantyYear}
-        discount={discount}
+        discount={`${discount}`}
         createdAt={createdAt}
       />,
     ).toBlob();
@@ -177,7 +181,7 @@ export default function POS() {
           totalAmount={totalAmount}
           warranty={warranty}
           warrantyYear={warrantyYear}
-          discount={discount}
+          discount={`${discount}`}
         />,
       ).toBlob();
       const url = URL.createObjectURL(blob);
@@ -221,7 +225,7 @@ export default function POS() {
 
   const fetchData = async () => {
     clearAll();
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       axios
         .get(`/${userID}/pos`)
         .then((response) => {
@@ -276,12 +280,12 @@ export default function POS() {
   useEffect(() => {
     if (invoiceItems.length > 0) {
       let total = 0;
-      let dis = discount || 0;
+      let dis:Number = Number(discount) || 0;
       invoiceItems.forEach((item) => {
         total = total + Number(item.total);
       });
 
-      setTotalAmount(total - dis);
+      setTotalAmount(total - Number(dis));
     } else {
       setTotalAmount(0);
     }
@@ -292,7 +296,7 @@ export default function POS() {
       setInvoiceItems((prev) => [
         ...prev,
         {
-          total: price * qty,
+          total: Number(price) * Number(qty),
           qty: qty,
           price: price,
           description: other || "",
@@ -436,7 +440,7 @@ export default function POS() {
             );
             return {
               ...item,
-              total: total - discount,
+              total: total - Number(discount),
               discount,
             };
           });
@@ -467,7 +471,7 @@ export default function POS() {
             );
             return {
               ...item,
-              total: total - discount,
+              total: total - Number(discount),
               discount,
             };
           });
@@ -494,7 +498,7 @@ export default function POS() {
   }
 
   async function handlePendingPayments() {
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       axios
         .get(`/${userID}/pos/search/null?pending=true`)
         .then((response) => {
@@ -732,7 +736,7 @@ export default function POS() {
                         name="price"
                         value={item?.price ? Number(item?.price) : ""}
                         onChange={(e) => {
-                          if (!isNaN(e.target.value)) {
+                          if (!isNaN(Number(e.target.value))) {
                             handleChange(e, i);
                           }
                         }}
@@ -821,13 +825,16 @@ export default function POS() {
             </div>
             <div className="flex flex-row gap-2 items-center mr-2">
               <Label className="text-lg">Include warranty</Label>
-              <Checkbox checked={warranty} onCheckedChange={setWarranty} />
+              <Checkbox
+                  checked={warranty}
+                  onCheckedChange={(checked) => setWarranty(!!checked)}
+                />
               {warranty && (
                 <div>
                   <Input
                     type="number"
                     value={warrantyYear}
-                    onChange={(e) => setWarrantyYear(e.target.value)}
+                    onChange={(e) => setWarrantyYear(Number(e.target.value))}
                   />
                 </div>
               )}

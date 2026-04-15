@@ -5,13 +5,18 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Calendar } from "./ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-
+interface AppCalendarProps {
+  date: Date | undefined;
+  onChange: (date: Date) => void;
+  min?: Date;
+  max?: Date | "";
+}
 const AppCalendar = ({
   date,
   onChange,
   min = new Date("1900-01-01"),
   max = "",
-}) => {
+}:AppCalendarProps) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   return (
     <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>

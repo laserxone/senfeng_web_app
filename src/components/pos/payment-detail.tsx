@@ -354,7 +354,7 @@ const ImageSheet = ({
     }
   }, []);
 
-  async function handleDelete() {
+  async function handleDelete(id:string|number) {
     try {
       if (img && !img.includes("https")) {
         await DeleteFromStorage(img);
@@ -362,7 +362,7 @@ const ImageSheet = ({
 
       await axios.delete(`/${userID}/pos/payment/${id}`);
       await onRefresh();
-      handleClose(false);
+      handleClose();
       toast({ title: "Payment Deleted" });
     } finally {
       setDeleteLoading(false);

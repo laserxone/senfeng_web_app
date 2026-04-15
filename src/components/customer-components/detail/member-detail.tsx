@@ -59,6 +59,21 @@ import CurrencyFormatter from "@/components/currency-formatter";
 import AddParts from "@/components/add-parts";
 import { Scrollbar } from "@radix-ui/react-scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
+type InfoRowProps = {
+  icon: React.ReactNode;
+  label: React.ReactNode;
+  link?: string;
+};
+type MemberDetailProps = {
+  ownership?: boolean;
+  from?: any;
+  customer_id?: any;
+  base?: any;
+  onReturn?: () => void;
+  onLoading?: (val: boolean) => void;
+  route?: any;
+  height?: string;
+};
 
 export default function MemberDetail({
   ownership = false,
@@ -66,10 +81,10 @@ export default function MemberDetail({
   customer_id,
   base,
   onReturn = () => {},
-  onLoading = () => {},
+  onLoading = (val: boolean) => {},
   route,
   height,
-}) {
+}: MemberDetailProps) {
   const [data, setData] = useState(null);
   const { userID, designation, base_route } = useUserDetail();
   const [feedback, setFeedback] = useState([]);
@@ -144,7 +159,7 @@ export default function MemberDetail({
 
         const overallCompletion =
           (customerCompletion + totalMachineCompletion) / (machines.length + 1);
-        setProfileCompletion(overallCompletion.toFixed(0));
+        setProfileCompletion(Number(overallCompletion.toFixed(0)));
       })
       .finally(() => {
         if (onLoading) onLoading(false);
@@ -465,7 +480,7 @@ const ClientCard = ({ data }) => {
   );
 };
 
-const InfoRow = ({ icon, label, link }) => (
+const InfoRow = ({ icon, label, link }: InfoRowProps) => (
   <div className="flex items-center gap-3 text-sm">
     <div className="text-muted-foreground">{icon}</div>
     {link ? (
@@ -570,8 +585,8 @@ function CustomersTab({
                 <Badge
                   variant={
                     Number(machine.price) === totalPayments
-                      ? "success"
-                      : "warning"
+                      ? "default"
+                      : "destructive"
                   }
                 >
                   {Number(machine.price) === totalPayments
@@ -655,8 +670,8 @@ function CustomersTab({
                 <Badge
                   variant={
                     Number(machine.price) === totalPayments
-                      ? "success"
-                      : "warning"
+                      ? "default"
+                      : "destructive"
                   }
                 >
                   {Number(machine.price) === totalPayments
@@ -835,14 +850,14 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }) {
             <Checkbox
               checked={topFollow}
               onCheckedChange={(checked) => {
-                setTopFollow(checked);
+                setTopFollow(checked===true);
               }}
             />
             <h1>Satisfactory?</h1>
             <Checkbox
               checked={satisfactory}
               onCheckedChange={(checked) => {
-                setSatisfactory(checked);
+                setSatisfactory(checked===true);
               }}
             />
           </div>

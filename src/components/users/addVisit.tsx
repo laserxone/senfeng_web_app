@@ -44,7 +44,16 @@ const formSchema = z.object({
   image: z.string().min(1, "image cannot be empty"),
   next: z.date(),
 });
-
+type VisitTabProps = {
+  id: any;
+  data: any;
+  onRefresh: any;
+  disable?: boolean;
+  customer_data?: any;
+  height?: string;
+  onFetchData?: any;
+  base?: any;
+};
 export default function VisitTab({
   id,
   data,
@@ -54,7 +63,7 @@ export default function VisitTab({
   height,
   onFetchData,
   base
-}) {
+}:VisitTabProps) {
   const [loading, setLoading] = useState(false);
   const [feedbacks, setFeedbacks] = useState(data || []);
   const [addCustomer, setAddCustomer] = useState(false);
@@ -70,6 +79,10 @@ export default function VisitTab({
       note: "",
       image: "",
       next: null,
+      city:"",
+      name:"",
+      phone:"",
+      company:""
     },
   });
 

@@ -10,14 +10,21 @@ import {
 } from "../ui/dialog";
 import { Label } from "../ui/label";
 import "./Button.css";
-
+type POSModalProps = {
+  modal: boolean;
+  setModal: (value: boolean) => void;
+  checked: boolean;
+  setChecked: (value: any) => void; 
+  onClick: () => void;
+  customer_id?: number | null;
+};
 const POSModal = ({
   modal,
   setModal,
   checked,
   setChecked,
   onClick,
-}) => {
+}:POSModalProps) => {
   return (
     <Dialog open={modal} onOpenChange={setModal}>
       <DialogContent>

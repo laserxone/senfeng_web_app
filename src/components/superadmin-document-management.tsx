@@ -46,31 +46,68 @@ import {
 } from "./ui/context-menu";
 import { ProgressWithLabel } from "./progress-with-label";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+type Folder = {
+  id: string;
+  name: string;
+};
 
+type Document = {
+  id: string;
+  path: string;
+  created_at: string;
+  added_by: string;
+};
+type RenderEachFolderProps = {
+  item: Folder;
+  index: number;
+  view: boolean;
+  setFolderBread: React.Dispatch<any>;
+  setCurrentFolder: (folder: Folder | null) => void;
+  setSelectedFolder: (folder: Folder | null) => void;
+  setNewName: (name: string) => void;
+  fetchFiles: () => Promise<void>;
+};
+type PreviewFileProps = {
+  preview: boolean;
+  setPreview: (open: boolean) => void;
+  selectedPreview: string | null;
+  previewLoading: boolean;
+};
+type FileItem = {
+  id: string;
+  path: string;
+  created_at: string;
+  added_by: string;
+};
+type RenderEachFileProps = {
+  item: FileItem;
+  onPreview: (path: string) => void;
+  onRefresh: () => void;
+};
 const videoThumbnailCache = {};
 
 const SuperadminDocumentManagement = () => {
-  const [selectedFile, setSelectedFile] = useState([]);
+  const [selectedFile, setSelectedFile] = useState<File[]>([]);
+const [allFolders, setAllFolders] = useState<Folder[]>([]);
+const [allDocuments, setAllDocuments] = useState<Document[]>([]);
+const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
+const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { userID, name, email, superadmin_cloud_access, isAdmin, base_route } =
     useUserDetail();
   const { toast } = useToast();
   const [uploadLoading, setUploadLoading] = useState(false);
-  const fileInputRef = useRef(null);
   const [currentFolder, setCurrentFolder] = useState(null);
   const [folderName, setFolderName] = useState("");
   const [visible, setVisible] = useState(false);
-  const [allFolders, setAllFolders] = useState([]);
-  const [allDocuments, setAllDocuments] = useState([]);
   const [folderBread, setFolderBread] = useState([{ name: "root", id: null }]);
   const [folderLoading, setFolderLoading] = useState(false);
-  const [selectedFolder, setSelectedFolder] = useState(null);
   const [newName, setNewName] = useState("");
   const [view, setView] = useState(false);
-  const [selectedPreview, setSelectedPreview] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [preview, setPreview] = useState(false);
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadingStatus, setUploadingStatus] = useState({
     file: "",
     progress: 0,
@@ -222,7 +259,7 @@ const SuperadminDocumentManagement = () => {
       })
       .then(async () => {
         setNewName("");
-        setSelectedFolder(false);
+        setSelectedFolder(null);
         await fetchFiles();
       })
       .finally(() => {
@@ -234,15 +271,14 @@ const SuperadminDocumentManagement = () => {
     setPreviewLoading(true);
     setPreview(true);
     try {
-      const { data, error } = await supabase.storage
+      const { data } = await supabase.storage
         .from("superadmin.documents")
         .getPublicUrl(path);
-      if (error) {
+      setSelectedPreview(data.publicUrl);
+    }catch(error) {
         console.error("Error downloading file", error);
         return;
-      }
-      setSelectedPreview(data.publicUrl);
-    } finally {
+      } finally {
       setPreviewLoading(false);
     }
   }, []);
@@ -359,7 +395,7 @@ const SuperadminDocumentManagement = () => {
       </Dialog>
 
       <Dialog
-        open={selectedFolder}
+        open={!!selectedFolder}
         onOpenChange={() => setSelectedFolder(null)}
       >
         <DialogContent>
@@ -398,7 +434,7 @@ const SuperadminDocumentManagement = () => {
   );
 };
 
-const RenderEachFile = memo(({ item, onPreview, onRefresh }) => {
+const RenderEachFile = memo(({ item, onPreview, onRefresh }: RenderEachFileProps) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
   const { userID } = useUserDetail();
@@ -489,7 +525,7 @@ const RenderEachFile = memo(({ item, onPreview, onRefresh }) => {
 });
 
 const RenderFile = memo(
-  ({ path }) => {
+  ({ path }:{path:string}) => {
     const [thumbnail, setThumbnail] = useState(null);
     const [loadingThumb, setLoadingThumb] = useState(false);
     const fileExt = path?.toLowerCase();
@@ -595,7 +631,7 @@ const RenderEachFolder = memo(
     setSelectedFolder,
     setNewName,
     fetchFiles,
-  }) => {
+  }: RenderEachFolderProps) => {
     const [deleteLoading, setDeleteLoading] = useState(false);
     const { userID } = useUserDetail();
 
@@ -704,7 +740,7 @@ const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
 };
 
 const PreviewFile = memo(
-  ({ preview, setPreview, selectedPreview, previewLoading }) => {
+  ({ preview, setPreview, selectedPreview, previewLoading }:PreviewFileProps ) => {
     const officeFile = selectedPreview
       ? selectedPreview
           ?.toLowerCase()

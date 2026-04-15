@@ -1,25 +1,25 @@
-'use client'
+"use client";
+
 import { createContext, useReducer } from "react";
-import { SET_OFFICE} from '../action/OfficeAction'
-import { myOfficeReducer } from '../reducer/OfficeReducer'
+import { SET_OFFICE } from "../action/OfficeAction";
+import { myOfficeReducer } from "../reducer/OfficeReducer";
 
-export const OfficeContext = createContext()
+export const OfficeContext = createContext<any>(null);
 
-const OfficeContextProvider = (props) => {
+export const OfficeContextProvider = ({ children }: any) => {
+  const [state, dispatch] = useReducer(myOfficeReducer, {
+    value: { data: [] },
+  });
 
-    const [state, dispatch] = useReducer(myOfficeReducer, { value: { data: [] }})
+  const setOffice = (data: any[]) => {
+    dispatch({ type: SET_OFFICE, payload: { data } });
+  };
 
-    const setOffice = (data) => {
-        dispatch({ type: SET_OFFICE, payload: { data: data } })
-    }
-
-    return (
-        <OfficeContext.Provider
-            value={{ state, setOffice }}
-        >
-            {props.children}
-        </OfficeContext.Provider>
-    )
-}
+  return (
+    <OfficeContext.Provider value={{ state, setOffice }}>
+      {children}
+    </OfficeContext.Provider>
+  );
+};
 
 export default OfficeContextProvider
