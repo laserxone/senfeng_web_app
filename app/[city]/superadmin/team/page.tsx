@@ -1,0 +1,512 @@
+"use client";
+import { ArrowUpDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import PageTable from "@/components/app-table-without-pagination";
+import AppCalendar from "@/components/appCalendar";
+import { RequiredStar } from "@/components/RequiredStar";
+import { Badge } from "@/components/ui/badge";
+import  Heading  from "@/components/ui/heading";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import moment from "moment";
+import { useRouter } from "next/navigation";
+
+const columns = [
+  {
+    accessorKey: "name",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Name
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => <div className="ml-2">{row.getValue("name")}</div>,
+  },
+  {
+    accessorKey: "designation",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Designation
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => <div>{row.getValue("designation")}</div>,
+  },
+
+  {
+    accessorKey: "joining_date",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Joining Date
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => (
+      <div>
+        {row.getValue("joining_date")
+          ? moment(row.getValue("joining_date")).format("YYYY-MM-DD")
+          : null}
+      </div>
+    ),
+  },
+
+  {
+    accessorKey: "leaving_date",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Leaving Date
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => (
+      <div>
+        {row.getValue("leaving_date")
+          ? moment(row.getValue("leaving_date")).format("YYYY-MM-DD")
+          : null}
+      </div>
+    ),
+  },
+
+  {
+    accessorKey: "email",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Email
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+  },
+
+  {
+    accessorKey: "office",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Office
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => (
+      <div className="uppercase">{row.getValue("office")}</div>
+    ),
+  },
+
+  {
+    accessorKey: "active",
+    filterFn: "includesString",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Status
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const val = row.getValue("active");
+      return (
+        <Badge variant={val ? "default" : "destructive"}>
+          {val ? "Active" : "Inactive"}
+        </Badge>
+      );
+    },
+  },
+];
+
+export default function Page() {
+  const [open, setOpen] = useState(false);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { userID, office, base_route } = useUserDetail();
+  const [status, setStatus] = useState("Active")
+
+  useEffect(() => {
+    if (userID) fetchData();
+  }, [userID]);
+
+  async function fetchData() {
+    return new Promise((resolve, reject) => {
+      axios
+        .get(`/${userID}/user?withbranch=true`)
+        .then((response) => {
+          
+          setData(response.data);
+        })
+        .finally(() => {
+          resolve(true);
+          setLoading(false);
+        });
+    });
+  }
+
+  return (
+    <div className="flex flex-1 flex-col space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <Heading title="Team" description="Manage team members" />
+        <Button
+          onClick={() => {
+            setOpen(true);
+          }}
+        >
+          Add User
+        </Button>
+      </div>
+      <PageTable
+        loading={loading}
+        columns={columns}
+        data={data.filter((item) => {
+          if (status === 'All') return true;
+          if (status === 'Active') return item.active === true;
+          return item.active === false;
+        })}
+      
+        onRowClick={(val, event) => {
+          if (val.id) {
+            const url = `/${base_route}/team/${val.id}`;
+            if (event.ctrlKey || event.metaKey) {
+              window.open(url, "_blank");
+            } else {
+          
+              router.push(url);
+            }
+          }
+        }}
+      >
+        <div className="w-lg">
+        <Select onValueChange={setStatus} value={status}>
+          <SelectTrigger>
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value="All">All</SelectItem>
+              <SelectItem value="Active">Active</SelectItem>
+              <SelectItem value="Inactive">Inactive</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        </div>
+
+      </PageTable>
+
+      <AddUserDialog
+        visible={open}
+        onClose={setOpen}
+        office={office}
+        onReturn={(newUser) => {
+          let temp = [...data];
+          temp.push(newUser);
+          temp.sort((a, b) => {
+            const nameA = a.name ? a.name.toLowerCase() : "";
+            const nameB = b.name ? b.name.toLowerCase() : "";
+
+            if (!nameA && nameB) return 1;
+            if (nameA && !nameB) return -1;
+
+            return nameA.localeCompare(nameB);
+          });
+          setData([...temp]);
+          toast({ title: "New user added" });
+        }}
+      />
+    </div>
+  );
+}
+
+const AddUserDialog = ({
+  visible,
+  onClose,
+  onReturn,
+  office = "islamabad",
+}) => {
+  const [dataLoading, setDataLoading] = useState(false);
+  const { userID } = useUserDetail();
+  const formSchema = z.object({
+    name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+    email: z.string().email({ message: "Invalid email address." }),
+    designation: z.string().min(1, { message: "Designation missing" }),
+    joining_date: z.date({ required_error: "Joining date is required." }),
+    office: z.string().min(1, { message: "" }),
+    note: z.string().optional(),
+  });
+
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      designation: "",
+      joining_date: "",
+      note: "",
+      office: office,
+    },
+  });
+
+  function onSubmit(values) {
+    setDataLoading(true);
+
+    axios
+      .post(`/${userID}/user`, {
+        ...values,
+        name: values.name.toUpperCase(),
+      })
+      .then(async (response) => {
+        onReturn(response.data);
+        handleClose(false);
+      })
+      .finally(() => {
+        setDataLoading(false);
+      });
+  }
+
+  const designations = [
+    { label: "Manager", value: "Manager" },
+    { label: "Sales", value: "Sales" },
+    { label: "Engineer", value: "Engineer" },
+    { label: "Dealer", value: "Dealer" },
+    {
+      label: "Customer Relationship Manager",
+      value: "Customer Relationship Manager",
+    },
+    {
+      label: "Customer Relationship Manager (After Sales)",
+      value: "Customer Relationship Manager (After Sales)",
+    },
+    {
+      label: "Social Media Manager",
+      value: "Social Media Manager",
+    },
+    { label: "Office Boy", value: "Office Boy" },
+    { label: "Store Manager", value: "Store Manager" },
+  ];
+
+  async function handleClose(val) {
+    onClose(val);
+    form.reset();
+  }
+
+  return (
+    <Dialog open={visible} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Add new user</DialogTitle>
+        </DialogHeader>
+        <div className="py-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Name <RequiredStar />
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Email <RequiredStar />
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="designation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Designation <RequiredStar />
+                    </FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={(e) => {
+                          const value = e;
+                          field.onChange(value);
+                        }}
+                        value={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder="Select designation..."
+                            className="w-full"
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            {designations.map((framework) => (
+                              <SelectItem
+                                key={framework.value}
+                                value={framework.value}
+                              >
+                                {framework.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="office"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Office branch <RequiredStar />
+                    </FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder="Select office"
+                            className="w-full"
+                          />
+                        </SelectTrigger>
+
+                        <SelectContent>
+                          <SelectGroup>
+                            {["lahore", "karachi"].map((item) => (
+                              <SelectItem key={item} value={item}>
+                                {item}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="note"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Additional Note</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Enter personal note" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="joining_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Joining Date <RequiredStar />
+                    </FormLabel>
+                    <AppCalendar date={field.value} onChange={field.onChange} />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button disabled={dataLoading} className="w-full" type="submit">
+                {dataLoading && <Spinner />} Save
+              </Button>
+            </form>
+          </Form>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
