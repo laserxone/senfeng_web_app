@@ -28,7 +28,6 @@ type PageTableProps = {
   children?: React.ReactNode;
   columns: any[];
   data: any[];
-  tableHeader?: { value: string; label: string }[];
   disableInput?: boolean;
   loading?: boolean;
   download?: boolean;

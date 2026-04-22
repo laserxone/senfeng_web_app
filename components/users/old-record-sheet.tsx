@@ -1,15 +1,6 @@
 import AppCalendar from "@/components/appCalendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -32,31 +23,39 @@ import { UserSearch } from "@/components/user-search";
 
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { OldRecordProps } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import moment from "moment";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { DateRange } from "react-day-picker";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import AppCalendarRange from "../appCalendarRange";
+import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 
 
-const OldRecordSheet = ({ visible, onClose, user_id }) => {
+const formSchema = z.object({
+  start: z.date({ error: "Start date is required." }),
+  end: z.date({ error: "End date is required." }),
+  condition: z.string({ error: "type is required" }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClose: (val: boolean) => void, user_id: number }) => {
   const [loading, setLoading] = useState(false);
   const [sendTo, setSendTo] = useState(null);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<OldRecordProps[]>([]);
   const { userID, base_route } = useUserDetail();
   const [sendLoading, setSendLoading] = useState(false);
   const [filterValue, setFilterValue] = useState("All");
-  const [rangeDate, setRangeDate] = useState(null)
+  const [rangeDate, setRangeDate] = useState<DateRange | null | undefined>(null)
 
-  const formSchema = z.object({
-    start: z.date({ required_error: "Start date is required." }),
-    end: z.date({ required_error: "End date is required." }),
-    condition: z.string({ required_error: "type is required" }),
-  });
 
-  const form = useForm({
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       start: moment().startOf("month").toDate(),
@@ -65,7 +64,7 @@ const OldRecordSheet = ({ visible, onClose, user_id }) => {
     },
   });
 
-  async function onSubmit(values) {
+  async function onSubmit(values: FormValues) {
     if (!user_id) return;
     setData([])
     setRangeDate(null)
@@ -89,7 +88,7 @@ const OldRecordSheet = ({ visible, onClose, user_id }) => {
     }
   }
 
-  function handleClose(val) {
+  function handleClose(val: boolean) {
     onClose(val);
     handleClear();
   }
@@ -102,7 +101,7 @@ const OldRecordSheet = ({ visible, onClose, user_id }) => {
     setData([]);
   }
 
-  async function handleSendReport(e) {
+  async function handleSendReport(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
     setSendLoading(true);
 
@@ -125,7 +124,7 @@ const OldRecordSheet = ({ visible, onClose, user_id }) => {
             data: JSON.stringify(formData),
           })
           .then(() => {
-            toast({ title: "Report sent" });
+            toast.success("Report sent");
           });
       }
     } finally {
@@ -144,7 +143,7 @@ const OldRecordSheet = ({ visible, onClose, user_id }) => {
         const start = moment(rangeDate.from).startOf("day")
         const end = moment(rangeDate.to).endOf("day")
 
-        return moment(item.customer_created_at).isBetween(start, end, null, "[]")
+        return moment(item.feedback_date).isBetween(start, end, null, "[]")
 
       }
       return true
@@ -152,200 +151,214 @@ const OldRecordSheet = ({ visible, onClose, user_id }) => {
 
 
 
-
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
-      <SheetContent
-        style={{ width: "100%", maxWidth: "95vw", alignItems: "flex-start" }}
+      <SheetContent className="sm:max-w-[95vw] sm:min-w-[95vw] p-4"
       >
-        <SheetHeader className="mb-4">
+        <SheetHeader className="p-0 m-0">
           <SheetTitle className="text-2xl">Feedbacks Record</SheetTitle>
           <SheetDescription>Filter data</SheetDescription>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="flex flex-row gap-4 items-end flex-wrap"
-            >
-              <FormField
-                control={form.control}
-                name="start"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start date</FormLabel>
-                    <FormControl>
+        </SheetHeader>
+        <ScrollArea className="h-[calc(100dvh-110px)] pr-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+          >
+            <FieldGroup className="flex flex-row items-end flex-wrap">
+              <div>
+                <Controller
+                  name="start"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Start date</FieldLabel>
+
                       <AppCalendar
                         date={field.value}
-                        onChange={(date) => {
-                          field.onChange(date);
-                        }}
+                        onChange={field.onChange}
                       />
 
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </div>
 
+              <div>
+                <Controller
+                  name="end"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>End date</FieldLabel>
 
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="end"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>End date</FormLabel>
-                    <FormControl>
                       <AppCalendar
                         date={field.value}
-                        onChange={(date) => {
-                          field.onChange(date);
-                        }}
+                        onChange={field.onChange}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
-              <FormField
-                control={form.control}
-                name="condition"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Select type</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </div>
+
+              <div className="w-[200px]">
+                <Controller
+                  name="condition"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Select type</FieldLabel>
+
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <SelectTrigger className="w-[200px]">
                           <SelectValue placeholder="Select customer type" />
                         </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Status</SelectLabel>
-                          {["All", "Customer", "Member"].map((item, idx) => (
-                            <SelectItem key={idx} value={item}>
-                              {item}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Status</SelectLabel>
+                            {["All", "Customer", "Member"].map((item, idx) => (
+                              <SelectItem key={idx} value={item}>
+                                {item}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </div>
+              {/* Submit */}
               <Button disabled={loading} type="submit">
                 {loading && <Spinner />} Filter
               </Button>
 
-              {data.length > 0 && (
-                <div className="flex gap-2 items-end">
-                  <div>
-                    <Label>Filter customer date</Label>
-                    <AppCalendarRange
-                      date={rangeDate}
-                      onChange={setRangeDate}
-                    />
-                  </div>
-                  <div className="space-y-2">
+            </FieldGroup>
 
-                    <Select onValueChange={setFilterValue} value={filterValue}>
-                      <SelectTrigger className="w-[200px]">
-                        <SelectValue placeholder="Filter by user" />
-                      </SelectTrigger>
 
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Filter</SelectLabel>
-                          <SelectItem value={"All"}>{"All"}</SelectItem>
-                          {uniqueUserNames.map((item, idx) => (
-                            <SelectItem key={idx} value={item}>
-                              {item}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Select user</Label>
-                    <UserSearch
-                      className="w-[200px]"
-                      onReturn={setSendTo}
-                      value={sendTo}
-                    />
-                  </div>
-                  <Button
-                    disabled={!sendTo || sendLoading}
-                    onClick={handleSendReport}
-                  >
-                    {sendLoading && <Spinner />}Send Report
-                  </Button>
+          </form>
+
+
+          {data.length > 0 && (
+            <div className="flex flex-wrap items-end gap-4 mt-4">
+              <div className="space-y-2">
+                <FieldLabel>Filter customer date</FieldLabel>
+                <AppCalendarRange
+                  date={rangeDate}
+                  onChange={setRangeDate}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Select onValueChange={setFilterValue} value={filterValue}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Filter by user" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Filter</SelectLabel>
+                      <SelectItem value={"All"}>All</SelectItem>
+                      {uniqueUserNames.map((item, idx) => (
+                        <SelectItem key={idx} value={item}>
+                          {item}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <FieldLabel>Select user</FieldLabel>
+                <UserSearch
+                  className="w-[200px]"
+                  onReturn={setSendTo}
+                  value={sendTo}
+                />
+              </div>
+
+              <Button
+                disabled={!sendTo || sendLoading}
+                onClick={handleSendReport}
+              >
+                {sendLoading && <Spinner />} Send Report
+              </Button>
+
+
+            </div>
+          )}
+
+
+
+          {data.length == 0 ? (
+            <div className="flex flex-1 flex-col gap-2 mt-5">
+              <p>No data to display</p>
+            </div>
+          ) : (
+            <div className="px-4 py-6 space-y-2 relative">
+              {visibleData.map((fb, index) => (
+                <div key={fb.id} className="relative pl-6">
+
+                  <div className="absolute left-[-9px] top-2 w-3 h-3 bg-primary rounded-full border-2 border-background shadow-md" />
+
+
+                  <Card className="bg-background border border-border shadow-sm">
+                    <CardHeader className="pb-0">
+                      <div className="text-sm text-muted-foreground">
+                        <span className="mr-2">{fb?.user_name}</span>
+                        {moment(fb.feedback_date).format("YYYY-MM-DD")}
+                      </div>
+                      <Link
+                        target="blank"
+                        href={`/${base_route}/member/${fb.customer_id}`}
+                      >
+                        <div className="text-base font-semibold text-foreground hover:underline">
+                          {`${fb.name} - ${fb.owner} - ${fb.location}`}
+                        </div>
+                      </Link>
+                    </CardHeader>
+
+                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-sm">
+                      <div>
+                        <span className="font-medium text-foreground">
+                          Number:
+                        </span>{" "}
+                        {fb?.number?.join(", ")}
+                      </div>
+                      <div>
+                        <span className="font-medium text-foreground">
+                          Status:
+                        </span>{" "}
+                        {fb.status}
+                      </div>
+
+                      <div className="col-span-full pt-2 border-t mt-2 text-foreground whitespace-pre-line">
+                        <p className="mt-2">
+                          {fb.feedback || (
+                            <em className="text-muted-foreground">
+                              No feedback provided.
+                            </em>
+                          )}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              )}
-            </form>
-          </Form>
-          <ScrollArea className="h-[80vh] px-4">
-            {data.length == 0 ? (
-              <div className="flex flex-1 flex-col gap-2">
-                <p>No data to display</p>
-              </div>
-            ) : (
-              <div className="px-4 py-6 space-y-2 border-l-2 border-muted relative">
-                {visibleData.map((fb, index) => (
-                  <div key={fb.id} className="relative pl-6">
-                    {/* Dot on the timeline */}
-                    <div className="absolute left-[-9px] top-2 w-3 h-3 bg-primary rounded-full border-2 border-background shadow-md" />
-
-                    {/* Card content */}
-                    <Card className="bg-background border border-border shadow-sm">
-                      <CardHeader className="pb-0">
-                        <div className="text-sm text-muted-foreground">
-                          <span className="mr-2">{fb?.user_name}</span>
-                          {moment(fb.feedback_date).format("YYYY-MM-DD")}
-                        </div>
-                        <Link
-                          target="blank"
-                          href={`/${base_route}/member/${fb.customer_id}`}
-                        >
-                          <div className="text-base font-semibold text-foreground hover:underline">
-                            {`${fb.name} - ${fb.owner} - ${fb.location}`}
-                          </div>
-                        </Link>
-                      </CardHeader>
-
-                      <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-sm">
-                        <div>
-                          <span className="font-medium text-foreground">
-                            Number:
-                          </span>{" "}
-                          {fb.number}
-                        </div>
-                        <div>
-                          <span className="font-medium text-foreground">
-                            Status:
-                          </span>{" "}
-                          {fb.status}
-                        </div>
-
-                        <div className="col-span-full pt-2 border-t mt-2 text-foreground whitespace-pre-line">
-                          <p className="mt-2">
-                            {fb.feedback || (
-                              <em className="text-muted-foreground">
-                                No feedback provided.
-                              </em>
-                            )}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </SheetHeader>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );

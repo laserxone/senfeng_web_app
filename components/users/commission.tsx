@@ -59,21 +59,23 @@ import {
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import { toast } from "sonner";
 import { useSidebar } from "../ui/sidebar";
+import { CommissionCRMProps, CommissionMachineItemProps, CommissionOwnerProps } from "@/lib/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 
-export default function Commission({ owner, crm }) {
+export default function Commission({ owner, crm }: { owner?: boolean, crm?: boolean }) {
   return owner ? <OwnerView /> : crm ? <CrmView /> : <OtherView />;
 }
 
 const OwnerView = () => {
   const { userID } = useUserDetail();
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<CommissionOwnerProps[]>([]);
   const [loading, setLoading] = useState(true);
   const [visibleDisapprove, setVisibleDisapprove] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState<CommissionOwnerProps | null>(null);
   const [disapproveMsg, setDisapproveMsg] = useState("");
   const [disapproveLoading, setDisapproveLoading] = useState(false);
-  const [selectedRow, setSelectedRow] = useState(null)
+  const [selectedRow, setSelectedRow] = useState<CommissionOwnerProps | null>(null)
   const [search, setSearch] = useState("");
   const { state } = useSidebar()
   useEffect(() => {
@@ -83,7 +85,7 @@ const OwnerView = () => {
   }, [userID]);
 
   async function fetchData() {
-    return new Promise(async (resolve, reject) => {
+   
       try {
         const route = `/${userID}/commission`;
         const response = await axios.get(route);
@@ -91,14 +93,14 @@ const OwnerView = () => {
         setData(response.data);
       } catch (error) {
       } finally {
-        resolve(true);
+     
         setLoading(false);
       }
-    });
+  
   }
 
-  function groupByMonth(data) {
-    return data.reduce((acc, item) => {
+  function groupByMonth(data : CommissionOwnerProps[]) {
+    return data.reduce((acc : any, item) => {
       const key = item.request_date
         ? moment(item.request_date).format("YYYY-MM")
         : "Unknown";
@@ -118,20 +120,20 @@ const OwnerView = () => {
     return allSearch.toLowerCase().includes(search.toLowerCase());
   });
 
-  const groupedData = groupByMonth(filteredData);
+  const groupedData : Record<string, CommissionOwnerProps[]> = groupByMonth(filteredData);
 
-  const RenderEachRow = ({ item, onRefresh, onDisapprove, onReturn }) => {
+  const RenderEachRow = ({ item, onRefresh, onDisapprove, onReturn } : {item : CommissionOwnerProps, onRefresh : ()=> Promise<void>, onDisapprove : ()=> void, onReturn : (val :CommissionOwnerProps)=> void}) => {
     const [loading, setLoading] = useState(false);
     const { userID, base_route } = useUserDetail();
-    const [selectedPercentage, setSelectedPercentage] = useState(null);
+    const [selectedPercentage, setSelectedPercentage] = useState<null | number>(null);
     const [showManual, setShowManual] = useState(false);
     const [manualNumber, setManualNumber] = useState("");
 
     async function handleUpdate(
-      id,
-      is_approved,
-      approval_date,
-      commission_amount,
+      id : number,
+      is_approved : boolean | null,
+      approval_date : string | Date | null,
+      commission_amount : number | null,
     ) {
       if (!id) return;
       setLoading(true);
@@ -152,7 +154,7 @@ const OwnerView = () => {
       }
     }
 
-    async function revertIssued(id) {
+    async function revertIssued(id : number) {
       if (!id) return;
       setLoading(true);
       try {
@@ -221,10 +223,10 @@ const OwnerView = () => {
                   if (val === "manual") {
                     setShowManual(true);
                   } else {
-                    setSelectedPercentage(val);
+                    setSelectedPercentage(Number(val));
                   }
                 }}
-                value={selectedPercentage || ""}
+                value={String(selectedPercentage) || ""}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select %" />
@@ -370,44 +372,44 @@ const OwnerView = () => {
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="flex-1 min-w-0">
-                    <ScrollArea 
-                    className={`${state === 'expanded' ? "w-[calc(100dvw-310px)]" : "w-[calc(100dvw-100px)]"}  overflow-x-auto`}
-                  
-                    >
-                      <Table className="min-w-max w-max">
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Request Date</TableHead>
-                            <TableHead>Employee</TableHead>
-                            <TableHead>Customer</TableHead>
-                            <TableHead>Owner</TableHead>
-                            <TableHead>Group</TableHead>
-                            <TableHead>Machine</TableHead>
-                            <TableHead>Order No</TableHead>
-                            <TableHead>Price</TableHead>
-                            <TableHead>Images</TableHead>
-                            <TableHead>Commission</TableHead>
-                            <TableHead>Note</TableHead>
-                            <TableHead>Status</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {items.map((item) => (
-                            <RenderEachRow
-                              key={item.id}
-                              item={item}
-                              onRefresh={fetchData}
-                              onReturn={(i) => setSelectedRow(i)}
-                              onDisapprove={() => {
-                                setSelectedItem(item);
-                                setVisibleDisapprove(true);
-                              }}
-                            />
-                          ))}
-                        </TableBody>
-                      </Table>
-                      <ScrollBar orientation="horizontal"/>
-                    </ScrollArea>
+                      <ScrollArea
+                        className={`${state === 'expanded' ? "w-[calc(100dvw-310px)]" : "w-[calc(100dvw-100px)]"}  overflow-x-auto`}
+
+                      >
+                        <Table className="min-w-max w-max">
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Request Date</TableHead>
+                              <TableHead>Employee</TableHead>
+                              <TableHead>Customer</TableHead>
+                              <TableHead>Owner</TableHead>
+                              <TableHead>Group</TableHead>
+                              <TableHead>Machine</TableHead>
+                              <TableHead>Order No</TableHead>
+                              <TableHead>Price</TableHead>
+                              <TableHead>Images</TableHead>
+                              <TableHead>Commission</TableHead>
+                              <TableHead>Note</TableHead>
+                              <TableHead>Status</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {items.map((item) => (
+                              <RenderEachRow
+                                key={item.id}
+                                item={item}
+                                onRefresh={fetchData}
+                                onReturn={(i) => setSelectedRow(i)}
+                                onDisapprove={() => {
+                                  setSelectedItem(item);
+                                  setVisibleDisapprove(true);
+                                }}
+                              />
+                            ))}
+                          </TableBody>
+                        </Table>
+                        <ScrollBar orientation="horizontal" />
+                      </ScrollArea>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -453,7 +455,7 @@ const OwnerView = () => {
 
 const OtherView = () => {
   const { userID } = useUserDetail();
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<CommissionMachineItemProps[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -463,7 +465,7 @@ const OtherView = () => {
     }
   }, [userID]);
 
-  async function fetchData(id) {
+  async function fetchData(id: string | number) {
     setLoading(true);
     return new Promise(async (resolve) => {
       try {
@@ -478,13 +480,17 @@ const OtherView = () => {
     });
   }
 
-  const RenderEachRow = ({ item, onRefresh }) => {
+
+
+  const RenderEachRow = ({ item, onRefresh }: { item: CommissionMachineItemProps, onRefresh: () => Promise<void> }) => {
     const [loading, setLoading] = useState(false);
     const { userID, base_route } = useUserDetail();
-    const [note, setNote] = useState(item?.note || "");
+    const [note, setNote] = useState(item?.commission?.note || "");
     const [issueLoading, setIssueLoading] = useState(false);
+    const { state } = useSidebar()
+    const isMobile = useIsMobile()
 
-    async function handleApplyCommission(id, amount, item) {
+    async function handleApplyCommission(id: number, item: CommissionMachineItemProps) {
       if (item.customer.profile_completion < 100) {
         toast.error("Data incomplete in customer record, kindly enter all data in this customer")
         return;
@@ -528,7 +534,7 @@ const OtherView = () => {
       }
     }
 
-    async function handleApplyCommissionAgain(id) {
+    async function handleApplyCommissionAgain(id: number | undefined) {
       if (!id) return;
       setLoading(true);
 
@@ -554,7 +560,7 @@ const OtherView = () => {
       }
     }
 
-    async function handleAlreadyReceived(val) {
+    async function handleAlreadyReceived(val: CommissionMachineItemProps) {
       if (!val?.id) return;
       setIssueLoading(true);
       try {
@@ -600,7 +606,7 @@ const OtherView = () => {
             </h2>
           </Link>
 
-          <div className="overflow-x-auto">
+          <div className={`${state === 'expanded' ? "w-[calc(100dvw-350px)]" : "w-[calc(100dvw-150px)]"} ${isMobile && "w-full"} overflow-x-auto`}>
             <Table className="table-fixed w-full">
               <TableHeader>
                 <TableRow>
@@ -615,19 +621,19 @@ const OtherView = () => {
               </TableHeader>
               <TableBody>
                 <TableRow>
-                  <TableCell className="align-middle">
+                  <TableCell className="align-middle whitespace-normal break-words">
                     {item.serial_no}
                   </TableCell>
-                  <TableCell className="align-middle">
+                  <TableCell className="align-middle whitespace-normal break-words">
                     {item.created_amount}
                   </TableCell>
-                  <TableCell className="align-middle">
+                  <TableCell className="align-middle whitespace-normal break-words">
                     {item.paid_amount}
                   </TableCell>
-                  <TableCell className="align-middle">{item.balance}</TableCell>
+                  <TableCell className="align-middle whitespace-normal break-words">{item.balance}</TableCell>
 
                   {/* Note column */}
-                  <TableCell className="align-middle">
+                  <TableCell className="align-middle whitespace-normal break-words">
                     {item.balance !== 0 ? null : item.commission?.id ? (
                       <span>{item.commission?.note}</span>
                     ) : (
@@ -641,7 +647,7 @@ const OtherView = () => {
                   </TableCell>
 
                   {/* Commission Status column */}
-                  <TableCell className="align-middle">
+                  <TableCell className="align-middle whitespace-normal break-words">
                     {loading ? (
                       <Spinner />
                     ) : item.commission?.commission_issued === true ? (
@@ -686,7 +692,7 @@ const OtherView = () => {
                     ) : (
                       <Button
                         onClick={() =>
-                          handleApplyCommission(item.id, item.paid_amount, item)
+                          handleApplyCommission(item.id, item)
                         }
                       >
                         Apply for Commission
@@ -766,7 +772,7 @@ const OtherView = () => {
 
 const CrmView = () => {
   const { userID } = useUserDetail();
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<CommissionCRMProps[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -775,7 +781,7 @@ const CrmView = () => {
     }
   }, [userID]);
 
-  async function fetchData(id) {
+  async function fetchData(id: number) {
     return new Promise(async (resolve, reject) => {
       try {
         const route = `/${id}/commission?lead=true`;
@@ -789,11 +795,9 @@ const CrmView = () => {
     });
   }
 
-  const RenderEachRow = ({ item }) => {
-    const renderCommissionStatus = (item) => {
-      // if (item.lead_commission_issued === true) {
-      //   return <span className="text-green-600">Issued</span>;
-      // } else
+  const RenderEachRow = ({ item }: { item: CommissionCRMProps }) => {
+    const renderCommissionStatus = (item: CommissionCRMProps) => {
+
       if (item.is_approved === true) {
         return <span className="text-green-600">Approved</span>;
       } else if (item.is_approved === false) {
@@ -873,12 +877,14 @@ const CrmView = () => {
     </div>
   );
 };
+
+
 type MyImgProps = {
-  img: string;
+  img: string | null;
   setImageOpen: (value: boolean) => void;
 };
 const MyImg = memo(({ img, setImageOpen }: MyImgProps) => {
-  const [localImage, setLocalImage] = useState(null);
+  const [localImage, setLocalImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -913,7 +919,7 @@ const MyImg = memo(({ img, setImageOpen }: MyImgProps) => {
     }
   }, [img]);
 
-  const handleZoomChange = useCallback((shouldZoom) => {
+  const handleZoomChange = useCallback((shouldZoom: boolean) => {
     setIsZoomed(shouldZoom);
     if (!shouldZoom) {
       setImageOpen(false);
@@ -986,7 +992,7 @@ const MyImg = memo(({ img, setImageOpen }: MyImgProps) => {
             </div>
           </div>
         ) : (
-          img
+          img ?? <></>
         )
       }
     >
@@ -1004,17 +1010,18 @@ const MyImg = memo(({ img, setImageOpen }: MyImgProps) => {
     </ControlledZoom>
   );
 });
-type ImageSheetProps = {
-  data: any;
-  visible: boolean;
-  onClose: () => void;
-};
+
+
 const ImageSheet = memo(({
   data,
   visible,
   onClose,
 
-}: ImageSheetProps) => {
+}: {
+   data: CommissionOwnerProps | null;
+  visible: boolean;
+  onClose: () => void;
+}) => {
   const [imageOpen, setImageOpen] = useState(false);
 
 

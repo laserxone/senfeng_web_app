@@ -8,14 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -37,8 +29,31 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import moment from "moment";
 import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
+import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
+
+type ErrorType = {
+  part_id: number
+  errorMessage: string
+}
+
+const formSchema = z.object({
+  note: z.string().min(1, { message: "TID is required." }),
+  amount: z.coerce.number<number>().min(1, "Amount is required"),
+  mode: z.string().min(1, { message: "Payment mode is required." }),
+  received_by: z.string().min(1, { message: "Bank name is required." }),
+  transaction_date: z.date({
+    error: "Transaction date is required.",
+  }),
+  clearance_date: z.date().optional(),
+  image: z.string().min(1, { message: "Image by is required." }),
+  remarks: z.string().optional(),
+  status: z.string().optional()
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 const AddPOSPayment = ({
   visible,
@@ -46,41 +61,37 @@ const AddPOSPayment = ({
   onRefresh,
   part_id,
   customer_id
+}: {
+  visible: boolean,
+  onClose: (val: boolean) => void,
+  onRefresh: () => Promise<void>,
+  part_id: number | null | undefined,
+  customer_id?: number | undefined | null
 }) => {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const { state: OfficeState } = useContext(OfficeContext);
   const { userID, base_route } = useUserDetail();
   const [lockTID, setLockTID] = useState(false);
-  const [error, setError] = useState({});
+  const [error, setError] = useState<ErrorType | null>(null);
 
-  const formSchema = z.object({
-    note: z.string().min(1, { message: "TID is required." }),
-    amount: z.number().min(1, { message: "Amount must be greater than 1." }),
-    mode: z.string().min(1, { message: "Payment mode is required." }),
-    received_by: z.string().min(1, { message: "Bank name is required." }),
-    transaction_date: z.date({
-      required_error: "Transaction date is required.",
-    }),
-    clearance_date: z.date().optional(),
-    image: z.string().min(1, { message: "Image by is required." }),
-    remarks: z.string().optional(),
-  });
 
-  const form = useForm({
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       note: "",
-      amount: "",
+      amount: 0,
       mode: "",
       received_by: "",
       transaction_date: undefined,
       clearance_date: undefined,
-      image: null,
+      image: "",
       remarks: "",
+      status: "Pending"
     },
   });
-  async function onSubmit(values) {
+  async function onSubmit(values: FormValues) {
     setLoading(true);
     try {
       if (values.image) {
@@ -93,7 +104,7 @@ const AddPOSPayment = ({
           part_id,
           image: name,
         });
-        toast({ title: "Payment addedd successfully" });
+        toast.success("Payment addedd successfully");
         onRefresh();
         handleClose(false);
       } else {
@@ -104,7 +115,7 @@ const AddPOSPayment = ({
     }
   }
 
-  function handleClose(val) {
+  function handleClose(val: boolean) {
     form.reset();
     setLoading(false);
     onClose(val);
@@ -122,14 +133,15 @@ const AddPOSPayment = ({
     return () => subscription.unsubscribe();
   }, [form.watch]);
 
-  const checkNumberInDatabase = async (number) => {
+  const checkNumberInDatabase = async (number: string) => {
     setChecking(true);
-    setError({});
+    setError(null);
     try {
       const response = await axios.post(
         `/${userID}/pos/payment-invoice/check-note`,
         { number }
       );
+      console.log(response.data)
       if (Array.isArray(response.data) && response.data.length > 0) {
         setError(response.data[0]);
       }
@@ -147,7 +159,7 @@ const AddPOSPayment = ({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="max-w-[95vw] p-4">
+      <DialogContent className="max-w-[95vw] sm:min-w-[90vw] p-4">
         <DialogHeader>
           <DialogTitle>Add New Payment</DialogTitle>
         </DialogHeader>
@@ -162,237 +174,251 @@ const AddPOSPayment = ({
           <div className="w-full sm:w-[30%] flex">
             <ScrollArea className="px-2 w-full max-h-[90vh]">
               <div className="px-2">
-                <Form {...form}>
-                  <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-2"
-                  >
-                    <FormField
-                      control={form.control}
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-2"
+                >
+                  <FieldGroup>
+
+                    {/* Amount */}
+                    <Controller
                       name="amount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Amount <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="Enter amount"
-                              value={field?.value || ""}
-                              onChange={(e) => {
-                                if (!isNaN(e.target.value)) {
-                                  field.onChange(Number(e.target.value));
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
                       control={form.control}
-                      name="note"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            TID <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <div className="flex">
-                              <Input
-                                disabled={lockTID}
-                                placeholder="Enter TID"
-                                {...field}
-                              />
-                              {checking && <Spinner className={"ml-2"} />}
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>
+                            Amount <RequiredStar />
+                          </FieldLabel>
+
+                          <Input
+                            placeholder="Enter amount"
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                          />
+
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
                       )}
                     />
 
+                    {/* TID */}
+                    <Controller
+                      name="note"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>
+                            TID <RequiredStar />
+                          </FieldLabel>
+
+                          <div className="flex">
+                            <Input
+                              disabled={lockTID}
+                              placeholder="Enter TID"
+                              {...field}
+                            />
+                            {checking && <Spinner className="ml-2" />}
+                          </div>
+
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
+                    />
+
+                    {/* Error Link */}
                     {error?.errorMessage && (
                       <Link
                         target="blank"
                         className="text-red-500 text-sm"
                         href={
-                          `/${base_route}/member/${error.saleData[0]?.customer_id}/${error?.machine_id}` ||
+                          `/${base_route}/pos/${error.part_id}` ||
                           "#"
                         }
                       >
-                        {error?.errorMessage}
+                        {error.errorMessage}
                       </Link>
                     )}
 
                     {/* Payment Mode */}
-                    <FormField
-                      control={form.control}
+                    <Controller
                       name="mode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>
                             Payment Mode <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Select
-                              onValueChange={(val) => {
-                                field.onChange(val);
-                                if (val === "Cash") {
-                                  form.setValue(
-                                    "note",
-                                    moment().format("YYYYMMDDHHmmss").toString()
-                                  );
-                                  setLockTID(true);
-                                } else {
-                                  if (form.getValues("note") && lockTID) {
-                                    setLockTID(false);
-                                  }
+                          </FieldLabel>
+
+                          <Select
+                            onValueChange={(val) => {
+                              field.onChange(val);
+
+                              if (val === "Cash") {
+                                form.setValue(
+                                  "note",
+                                  moment().format("YYYYMMDDHHmmss").toString()
+                                );
+                                setLockTID(true);
+                              } else {
+                                if (form.getValues("note") && lockTID) {
+                                  setLockTID(false);
                                 }
-                              }}
-                              value={field.value}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select payment mode" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {[
-                                  "Cheque",
-                                  "Cash",
-                                  "Deposit",
-                                  "Online",
-                                  "Pay Order",
-                                ].map((user) => (
-                                  <SelectItem key={user} value={user}>
-                                    {user}
+                              }
+                            }}
+                            value={field.value}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select payment mode" />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                              {["Cheque", "Cash", "Deposit", "Online", "Pay Order"].map(
+                                (item) => (
+                                  <SelectItem key={item} value={item}>
+                                    {item}
                                   </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                                )
+                              )}
+                            </SelectContent>
+                          </Select>
+
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
                       )}
                     />
 
-                    {/* Received By */}
-                    <FormField
-                      control={form.control}
+                    {/* Bank Name */}
+                    <Controller
                       name="received_by"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>
                             Bank Name <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter bank name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                          </FieldLabel>
+
+                          <Input placeholder="Enter bank name" {...field} />
+
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
                       )}
                     />
 
                     {/* Transaction Date */}
-                    <FormField
-                      control={form.control}
+                    <Controller
                       name="transaction_date"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>
                             Transaction Date <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <AppCalendar
-                              date={field.value}
-                              onChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                          </FieldLabel>
+
+                          <AppCalendar
+                            date={field.value}
+                            onChange={field.onChange}
+                          />
+
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
                       )}
                     />
 
                     {/* Clearance Date */}
-                    <FormField
-                      control={form.control}
+                    <Controller
                       name="clearance_date"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Clearance Date</FormLabel>
-                          <FormControl>
-                            <AppCalendar
-                              date={field.value}
-                              onChange={(date) => {
-                                field.onChange(date);
-                                if (date) {
-                                  form.setValue("status", "Cleared");
-                                } else {
-                                  form.setValue("status", "Pending");
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Clearance Date</FieldLabel>
+
+                          <AppCalendar
+                            date={field.value}
+                            onChange={(date) => {
+                              field.onChange(date);
+
+                              if (date) {
+                                form.setValue("status", "Cleared");
+                              } else {
+                                form.setValue("status", "Pending");
+                              }
+                            }}
+                          />
+
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
+                    {/* Remarks */}
+                    <Controller
                       name="remarks"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Remarks</FormLabel>
-                          <FormControl>
-                            <Textarea placeholder="Enter remarks" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Image Field */}
-                    <FormField
                       control={form.control}
-                      name="image"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Image <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <div className="flex flex-1 items-center justify-center">
-                              <Dropzone
-                                noImage={true}
-                                value={field.value}
-                                onDrop={(file) => {
-                                  field.onChange(file);
-                                }}
-                                title={"Click to upload"}
-                                subheading={"or drag and drop"}
-                                description={"PNG or JPG"}
-                                drag={"Drop the files here..."}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Remarks</FieldLabel>
+
+                          <Textarea placeholder="Enter remarks" {...field} />
+
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
                       )}
                     />
 
-                    {/* Submit Button */}
+                    {/* Image */}
+                    <Controller
+                      name="image"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>
+                            Image <RequiredStar />
+                          </FieldLabel>
+
+                          <div className="flex flex-1 items-center justify-center">
+                            <Dropzone
+                              noImage
+                              value={field.value}
+                              onDrop={field.onChange}
+                              title="Click to upload"
+                              subheading="or drag and drop"
+                              description="PNG or JPG"
+                              drag="Drop the files here..."
+                            />
+                          </div>
+
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
+                    />
+
+                    {/* Submit */}
                     <Button
-                      disabled={error?.errorMessage || checking || loading}
+                      disabled={!!error?.errorMessage || checking || loading}
                       className="w-full"
                       type="submit"
                     >
                       {loading && <Spinner />} Submit
                     </Button>
-                  </form>
-                </Form>
+
+                  </FieldGroup>
+                </form>
               </div>
             </ScrollArea>
           </div>

@@ -17,6 +17,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
+import { StockProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export default function StockSearch({
@@ -26,6 +27,13 @@ export default function StockSearch({
     className = "",
     onReturnData = () => { },
     passingData
+}: {
+    value: number | string | null,
+    onReturn?: (val: number) => void,
+    placeholder?: string
+    className?: string
+    onReturnData: (item: StockProps) => void,
+    passingData: StockProps[]
 }) {
     const [open, setOpen] = React.useState(false);
 

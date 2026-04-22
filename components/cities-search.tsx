@@ -6,6 +6,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
+  CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
@@ -20,30 +21,35 @@ import {
 import { PakCities } from "@/constants/data";
 import { cn } from "@/lib/utils";
 
-export function CitiesSearch({ value, onReturn }) {
+export function CitiesSearch({ value, onReturn }: { value: string, onReturn: (val: string) => void }) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState(
     PakCities.map((item) => {
-      return {value : item.name , label : item.name};
+      return { value: item.name, label: item.name };
     })
   );
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between"
-        >
-          {value
-            ? data.find((item) => item.value === value)?.label
-            : "Select city..."}
-          <ChevronsUpDown className="opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="py-2 px-0">
+    <>
+      <Button
+        variant="outline"
+        role="combobox"
+        aria-expanded={open}
+        className="w-full justify-between"
+        onClick={(e) => {
+          e.preventDefault()
+          setOpen(!open)
+        }}
+      >
+        {value
+          ? data.find((item) => item.value === value)?.label
+          : "Select city..."}
+        <ChevronsUpDown className="opacity-50" />
+      </Button>
+
+      <CommandDialog open={open} onOpenChange={setOpen}>
+
+
         <Command>
           <CommandInput placeholder="Search city..." className="h-9" />
           <CommandList>
@@ -70,7 +76,8 @@ export function CitiesSearch({ value, onReturn }) {
             </CommandGroup>
           </CommandList>
         </Command>
-      </PopoverContent>
-    </Popover>
+      </CommandDialog>
+
+    </>
   );
 }

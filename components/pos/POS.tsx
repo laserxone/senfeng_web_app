@@ -1,7 +1,7 @@
 "use client";
 import axios from "@/lib/axios";
 import { pdf } from "@react-pdf/renderer";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { FaMinusCircle, FaPlus } from "react-icons/fa";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
@@ -42,34 +42,46 @@ import OutwardModal from "./outward-modal";
 import DeleteInvoice from "./delete-invoice";
 
 import Link from "next/link";
+import { InvoiceItem, MyCustomer, POSCustomer, POSInvoiceReminder, SearchItem, StockProps } from "@/lib/types";
+import { toast } from "sonner";
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
-type Customer = {
-  id: number;
-  label?: string;
-  name?: string;
-};
+// type InvoiceItem = {
+//   id?: number
+//   total?: number,
+//   qty?: string,
+//   price?: string,
+//   description?: string,
+//   type?: string,
+// }
+
+export type SelectedUser = {
+  id: null | string
+  label: null | string
+}
+
+
 export default function POS() {
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(null);
   const [loading, setLoading] = useState(true);
-  const [invoiceItems, setInvoiceItems] = useState([]);
-  const [stock, setStock] = useState([]);
+  const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
+  const [stock, setStock] = useState<StockProps[]>([]);
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [createdAt, setCreatedAt] = useState(new Date());
+  const [createdAt, setCreatedAt] = useState<Date | string>(new Date());
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [address, setAddress] = useState("");
-  const [qty, setQty] = useState("");
-  const [price, setPrice] = useState("");
+  const [qty, setQty] = useState<string | number>("");
+  const [price, setPrice] = useState<string | number>("");
   const [totalAmount, setTotalAmount] = useState(0);
 
   const [other, setOther] = useState("");
   const [showOther, setShowOther] = useState(false);
-  const [customers, setCustomers] = useState([]);
+  const [customers, setCustomers] = useState<POSCustomer[]>([]);
   const [manager, setManager] = useState("");
   const [nextInvoice, setNextInvoice] = useState(`xxxxxxxx-xxx`);
-  const [filteredCustomers, setFilteredCustomers] = useState([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<POSCustomer[]>([]);
   const [showList, setShowList] = useState(false);
   const [customerLoading, setCustomerLoading] = useState(false);
   const [addProductVisible, setAddProductVisible] = useState(false);
@@ -78,28 +90,28 @@ export default function POS() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [pendingLoading, setPendingLoading] = useState(false);
   const [searchModal, setSearchModal] = useState(false);
-  const [searchItemsResult, setSearchItemsResult] = useState([]);
-  const [selectedSearchItem, setSelectedSearchItem] = useState(null);
+  const [searchItemsResult, setSearchItemsResult] = useState<SearchItem[]>([]);
+  const [selectedSearchItem, setSelectedSearchItem] = useState<SearchItem | null>(null);
   const [checked, setChecked] = useState(false);
   const [modal, setModal] = useState(false);
-  const [reminder, setReminder] = useState([]);
+  const [reminder, setReminder] = useState<POSInvoiceReminder[]>([]);
   const [warranty, setWarranty] = useState(false);
   const [warrantyYear, setWarrantyYear] = useState(1);
   const { userID, designation, base_route } = useUserDetail();
   const [selectedRadio, setSelectedRadio] = useState("customer");
-  const [selectedUser, setSelectedUser] = useState({ id: null, label: null });
+  const [selectedUser, setSelectedUser] = useState<SelectedUser>({ id: null, label: null });
   const [engineerLoading, setEngineerLoading] = useState(false);
   const [allEngineersData, setAllEngineersData] = useState([]);
   const [engineersModal, setEngineersModal] = useState(false);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [orderStockVisible, setOrderStockVisible] = useState(false);
   const [walkIn, setWalkIn] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<number | null>(null);
   const debouncedUserId = useDebounce(userID, 1000);
-  const [discount, setDiscount] = useState<number|string>("");
+  const [discount, setDiscount] = useState<number | string>("");
   const [inwardModal, setInwardModal] = useState(false);
   const [outwardModal, setOutwardModal] = useState(false);
- 
+
 
   useEffect(() => {
     if (debouncedUserId) {
@@ -144,7 +156,7 @@ export default function POS() {
       });
 
     axios
-      .put(`/${userID}/pos/update/${selectedSearchItem.id}`, {
+      .put(`/${userID}/pos/update/${selectedSearchItem?.id}`, {
         olditems: selectedSearchItem,
         newitems: {
           name: name,
@@ -246,10 +258,6 @@ export default function POS() {
             resultedData.push({ name: "Plus", id: 2 });
             setStock([...resultedData]);
           }
-          // if (response.data?.lastInventoryId) {
-          //     setNextInvoice(`${moment().format("YYYYMMDD")}-${response.data?.lastInventoryId + 1}`)
-          // }
-
           if (response.data?.reminders) {
             setReminder(response.data.reminders);
           }
@@ -263,6 +271,7 @@ export default function POS() {
         });
     });
   };
+
 
   const fetchDataCustomer = async () => {
     try {
@@ -280,9 +289,9 @@ export default function POS() {
   useEffect(() => {
     if (invoiceItems.length > 0) {
       let total = 0;
-      let dis:Number = Number(discount) || 0;
+      let dis: Number = Number(discount) || 0;
       invoiceItems.forEach((item) => {
-        total = total + Number(item.total);
+        total = total + Number(item?.total);
       });
 
       setTotalAmount(total - Number(dis));
@@ -297,8 +306,8 @@ export default function POS() {
         ...prev,
         {
           total: Number(price) * Number(qty),
-          qty: qty,
-          price: price,
+          qty: Number(qty || 0),
+          price: price.toString(),
           description: other || "",
           type: "other",
         },
@@ -311,31 +320,31 @@ export default function POS() {
     setPrice("");
   };
 
-  function handleChange(e, i) {
+  function handleChange(e: ChangeEvent<HTMLInputElement, HTMLInputElement>, i: number) {
     const { value, name } = e.target;
     setInvoiceItems((prevItems) =>
       prevItems.map((item, index) =>
         index === i
           ? {
-              ...item,
-              [name]: name === "price" ? value : value,
-              total:
-                name === "price"
-                  ? Number(value) * Number(item.qty)
-                  : item.total,
-            }
+            ...item,
+            [name]: name === "price" ? value : value,
+            total:
+              name === "price"
+                ? Number(value) * Number(item.qty)
+                : item.total,
+          }
           : item,
       ),
     );
   }
 
-  function handleIncrease(item) {
-    if (item.qty < 1) return alert("Select a valid item and quantity.");
+  function handleIncrease(item: StockProps) {
+    if (!item.qty || item?.qty < 1) return alert("Select a valid item and quantity.");
 
     setStock((prevStock) =>
       prevStock.map((eachItem) =>
         eachItem.id === item.id
-          ? { ...eachItem, qty: eachItem.qty - 1, modified: true }
+          ? { ...eachItem, qty: (eachItem?.qty || 0) - 1, modified: true }
           : eachItem,
       ),
     );
@@ -345,25 +354,29 @@ export default function POS() {
         (eachItem) => eachItem.id === item.id,
       );
       if (existingItem) {
+
         return prevItems.map((eachItem) =>
           eachItem.id === item.id
             ? {
-                ...eachItem,
-                qty: eachItem.qty + 1,
-                total: eachItem.price * (eachItem.qty + 1),
-              }
+              ...eachItem,
+              qty: (Number(eachItem.qty) + 1),
+              total: Number(eachItem.price || 0) * (Number(eachItem.qty || 0) + 1),
+            }
             : eachItem,
         );
       } else {
         return [
           ...prevItems,
-          { ...item, qty: 1, total: item.price, description: item.name },
+          {
+            ...item,
+            qty: 1, total: Number(item?.price || 0), description: item.name
+          },
         ];
       }
     });
   }
 
-  function handleDecrease(item) {
+  function handleDecrease(item: StockProps) {
     const existing = invoiceItems.find((eachItem) => eachItem.id === item.id);
     if (!existing) return;
     setInvoiceItems((prevItems) =>
@@ -371,25 +384,25 @@ export default function POS() {
         .map((eachItem) =>
           eachItem.id === item.id
             ? {
-                ...eachItem,
-                qty: eachItem.qty - 1,
-                total: eachItem.price * (eachItem.qty - 1),
-              }
+              ...eachItem,
+              qty: (Number(eachItem.qty) - 1),
+              total: Number(eachItem.price || 0) * (Number(eachItem.qty || 0) - 1),
+            }
             : eachItem,
         )
-        .filter((eachItem) => eachItem.qty > 0),
+        .filter((eachItem) => Number(eachItem?.qty || 0) > 0),
     );
 
     setStock((prevStock) =>
       prevStock.map((eachItem) =>
         eachItem.id === item.id
-          ? { ...eachItem, qty: eachItem.qty + 1, modified: true }
+          ? { ...eachItem, qty: (Number(eachItem.qty || 0) + 1), modified: true }
           : eachItem,
       ),
     );
   }
 
-  function handleRemove(i) {
+  function handleRemove(i: number) {
     setInvoiceItems((prevItems) => prevItems.filter((_, ind) => ind !== i));
   }
 
@@ -410,7 +423,7 @@ export default function POS() {
     setSelectedRadio("customer");
   }
 
-  const handlePhoneChange = (e) => {
+  const handlePhoneChange = (e: ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
     const input = e.target.value;
     setPhoneNumber(input);
     const matches = customers.filter((customer) =>
@@ -420,7 +433,7 @@ export default function POS() {
     setFilteredCustomers(matches);
   };
 
-  const handleSelectCustomer = (customer) => {
+  const handleSelectCustomer = (customer: POSCustomer) => {
     setPhoneNumber(customer.phone);
     setName(customer.name);
     setCompanyName(customer.customer);
@@ -432,7 +445,7 @@ export default function POS() {
       .get(`/${userID}/pos/search/${itemSearch}`)
       .then((response) => {
         if (response.data.length > 0) {
-          const resultWithTotal = response.data.map((item) => {
+          const resultWithTotal = response.data.map((item: POSInvoiceReminder) => {
             const discount = Number(item.discount || 0).toFixed(0);
             const total = item.fields.reduce(
               (acc, curr) => acc + Number(curr.total),
@@ -447,7 +460,7 @@ export default function POS() {
           setSearchModal(true);
           setSearchItemsResult(resultWithTotal);
         } else {
-          toast({ title: "No invoice found", variant: "destructive" });
+          toast.info("No invoice found");
         }
       })
       .catch((e) => {
@@ -463,7 +476,7 @@ export default function POS() {
       .get(`/${userID}/pos/search`)
       .then((response) => {
         if (response.data.length > 0) {
-          const resultWithTotal = response.data.map((item) => {
+          const resultWithTotal = response.data.map((item: POSInvoiceReminder) => {
             const discount = Number(item.discount || 0).toFixed(0);
             const total = item.fields.reduce(
               (acc, curr) => acc + Number(curr.total),
@@ -503,7 +516,7 @@ export default function POS() {
         .get(`/${userID}/pos/search/null?pending=true`)
         .then((response) => {
           if (response.data.length > 0) {
-            const resultWithTotal = response.data.map((item) => {
+            const resultWithTotal = response.data.map((item: POSInvoiceReminder) => {
               return {
                 ...item,
                 total: item.fields.reduce(
@@ -578,26 +591,6 @@ export default function POS() {
               <RadioGroupItem value="engineer" id="r2" />
               <Label htmlFor="r2">Engineer</Label>
             </div>
-
-            {/* {selectedRadio === "customer" && (
-              <div className="flex items-center space-x-2">
-                <div className="flex flex-row items-center gap-2">
-                  <h1>Walk-in customer?</h1>
-                  <Checkbox
-                    checked={walkIn}
-                    onCheckedChange={(checked) => {
-                      setWalkIn(checked);
-                      setSelectedCustomer(null);
-                      setPhoneNumber("");
-                      setName("");
-                      setCompanyName("");
-                      setManager("");
-                      setAddress("");
-                    }}
-                  />
-                </div>
-              </div>
-            )} */}
           </RadioGroup>
 
           {selectedRadio === "engineer" && (
@@ -617,7 +610,8 @@ export default function POS() {
               value={selectedCustomer}
               onReturn={(val) => {
                 setSelectedCustomer(val);
-                setPhoneNumber(val.number.length > 0 ? val.number[0] : "");
+                if (val?.number && Array.isArray(val.number))
+                  setPhoneNumber(val.number.length > 0 ? val.number[0] : "");
                 setName(val?.owner || "");
                 setCompanyName(val?.name || "");
                 setManager(val?.ownership_name || "");
@@ -772,7 +766,7 @@ export default function POS() {
                   (item) =>
                     item.threshold != null &&
                     item.threshold !== undefined &&
-                    item.qty <= item.threshold,
+                    (item?.qty || 0) <= item.threshold,
                 )}
                 onRefresh={() => {
                   setStock([]);
@@ -826,9 +820,9 @@ export default function POS() {
             <div className="flex flex-row gap-2 items-center mr-2">
               <Label className="text-lg">Include warranty</Label>
               <Checkbox
-                  checked={warranty}
-                  onCheckedChange={(checked) => setWarranty(!!checked)}
-                />
+                checked={warranty}
+                onCheckedChange={(checked) => setWarranty(!!checked)}
+              />
               {warranty && (
                 <div>
                   <Input
@@ -866,7 +860,7 @@ export default function POS() {
                   }
                 }}
                 disabled={invoiceItems.length === 0}
-                className="h-[100px] w-[100px] text-wrap"
+                className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
               >
                 Print Invoice
               </Button>
@@ -876,7 +870,7 @@ export default function POS() {
               onClick={() => {
                 setSearchInvoice(!searchInvocie);
               }}
-              className="h-[100px] w-[100px] text-wrap"
+             className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
             >
               Search Invoice
             </Button>
@@ -884,26 +878,28 @@ export default function POS() {
             <Button
               variant="outline"
               onClick={handleEngineerItems}
-              className="h-[100px] w-[100px] text-wrap"
+              className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
             >
-              <div> {engineerLoading && <Spinner />}Engineer issued items</div>
+           {engineerLoading && <Spinner />}  <div className="break-words"> Engineer issued items</div>
             </Button>
 
             <Button
               onClick={handleInward}
-              className="h-[100px] w-[100px] text-wrap"
+              className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
             >
-              <div>Inward Gatepass</div>
+              <div className="break-words">
+                Inward Gatepass
+              </div>
             </Button>
 
             <Button
               onClick={handleOutward}
-              className="h-[100px] w-[100px] text-wrap"
+               className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
             >
-              <div>Outward Gatepass</div>
+             <div className="break-words">Outward Gatepass</div>
             </Button>
 
-              {selectedSearchItem && selectedSearchItem?.id && (
+            {selectedSearchItem && selectedSearchItem?.id && (
               <Link href={`/${base_route}/pos/${selectedSearchItem?.id}`} target="_blank">
                 <Button className="h-[100px] w-[100px] text-wrap">
                   <div>Payment Record</div>
@@ -995,35 +991,6 @@ export default function POS() {
             setNextInvoice(val.invoicenumber);
             setDiscount(val.discount);
             setCreatedAt(val.created_at);
-          }}
-          onRefresh={(item, val) => {
-            if (val == true) {
-              setReminder((prevState) => {
-                const updated = prevState.filter((old) => old.id !== item.id);
-                return updated;
-              });
-            } else {
-              setReminder((prevState) => {
-                const newState = [...prevState];
-                newState.push({ ...item, payment: val });
-                return newState;
-              });
-            }
-
-            setSearchItemsResult((prev) => {
-              const updated = prev.map((old) => {
-                if (old.id === item.id) {
-                  return { ...old, payment: val };
-                }
-                return old;
-              });
-              return updated;
-            });
-          }}
-          onReturn={(obj) => {
-            setSearchModal(false);
-            setSelectedCustomer({ id: obj.customer_id });
-            setSelectedInvoice(obj.id);
           }}
         />
       </div>

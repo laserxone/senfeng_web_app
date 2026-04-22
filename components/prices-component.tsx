@@ -23,12 +23,15 @@ import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { storage } from "@/config/firebase";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import ConfimationDialog from "./alert-dialog";
+import { PricesProps } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import { toast } from "sonner";
 
 export default function PricesComponent() {
   const [loading, setLoading] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<PricesProps[]>([]);
 
   const emptyForm = {
     model: "",
@@ -40,7 +43,7 @@ export default function PricesComponent() {
     description: "",
   };
 
-  const [formData, setFormData] = useState(emptyForm);
+  const [formData, setFormData] = useState<typeof emptyForm & { id?: number | null }>(emptyForm);
   const [isEdit, setIsEdit] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
 
@@ -58,7 +61,9 @@ export default function PricesComponent() {
     });
   }
 
-  const handleEditClick = (row) => {
+  console.log(data)
+
+  const handleEditClick = (row: PricesProps) => {
     setFormData(row);
     setIsEdit(true);
     setOpenDialog(true);
@@ -96,7 +101,7 @@ export default function PricesComponent() {
   };
 
   const columns = useMemo(() => {
-    const baseColumns = [
+    const baseColumns: ColumnDef<PricesProps>[] = [
       {
         accessorKey: "model",
         filterFn: "includesString",
@@ -143,74 +148,74 @@ export default function PricesComponent() {
       },
     ];
 
-    const advancedColumns = showAdvanced
+    const advancedColumns: ColumnDef<PricesProps>[] = showAdvanced
       ? [
-          {
-            accessorKey: "fob",
-            header: "FOB",
-            cell: ({ row }) => <div>{row.getValue("fob")}</div>,
-          },
-          {
-            accessorKey: "fob_bottom",
-            header: "FOB Bottom",
-            cell: ({ row }) => <div>{row.getValue("fob_bottom")}</div>,
-          },
-          {
-            accessorKey: "ddp_bottom",
-            header: "DDP Bottom",
-            cell: ({ row }) => <div>{row.getValue("ddp_bottom")}</div>,
-          },
-          {
-            accessorKey: "description",
-            header: "Description",
-            cell: ({ row }) => <div>{row.getValue("description")}</div>,
-          },
-        ]
+        {
+          accessorKey: "fob",
+          header: "FOB",
+          cell: ({ row }) => <div>{row.getValue("fob")}</div>,
+        },
+        {
+          accessorKey: "fob_bottom",
+          header: "FOB Bottom",
+          cell: ({ row }) => <div>{row.getValue("fob_bottom")}</div>,
+        },
+        {
+          accessorKey: "ddp_bottom",
+          header: "DDP Bottom",
+          cell: ({ row }) => <div>{row.getValue("ddp_bottom")}</div>,
+        },
+        {
+          accessorKey: "description",
+          header: "Description",
+          cell: ({ row }) => <div>{row.getValue("description")}</div>,
+        },
+      ]
       : [];
 
-    const adminColumn = isAdmin
+    const adminColumn: ColumnDef<PricesProps>[] = isAdmin
       ? [
-          {
-            id: "actions",
-            header: "Actions",
-            cell: ({ row }) => (
-              <div className="flex gap-2">
-                <Button size="sm" onClick={() => handleEditClick(row.original)}>
-                  Edit
-                </Button>
-                <Attachment
-                  attachment_url={row.original?.attachment_url}
-                  attachment={row.original?.attachment}
-                  onRefresh={async () => {
-                    await fetchData();
-                  }}
-                  id={row.original?.id}
-                />
-              </div>
-            ),
-          },
-        ]
+        {
+          id: "actions",
+          header: "Actions",
+          cell: ({ row }) => (
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => handleEditClick(row.original)}>
+                Edit
+              </Button>
+              <Attachment
+                attachment_url={row.original?.attachment_url}
+                attachment={row.original?.attachment}
+                onRefresh={async () => {
+                  await fetchData();
+                }}
+                id={row.original?.id}
+              />
+            </div>
+          ),
+        },
+      ]
       : [];
 
-    const otherColumn = !isAdmin
+    const otherColumn: ColumnDef<PricesProps>[] = !isAdmin
       ? [
-          {
-            id: "actions",
-            header: "Actions",
-            cell: ({ row }) => (
-              <div className="flex gap-2">
-                <Attachment
-                  attachment_url={row.original?.attachment_url}
-                  attachment={row.original?.attachment}
-                  onRefresh={async () => {
-                    await fetchData();
-                  }}
-                  id={row.original?.id}
-                />
-              </div>
-            ),
-          },
-        ]
+        {
+          id: "actions",
+          header: "Actions",
+          cell: ({ row }) => (
+            <div className="flex gap-2">
+              <Attachment
+                attachment_url={row.original?.attachment_url}
+                attachment={row.original?.attachment}
+                onRefresh={async () => {
+                  await fetchData();
+                }}
+                id={row.original?.id}
+              />
+            </div>
+          ),
+        },
+      ]
       : [];
 
     return [...baseColumns, ...advancedColumns, ...adminColumn, ...otherColumn];
@@ -284,10 +289,10 @@ export default function PricesComponent() {
           loading={loading}
           columns={columns}
           data={data}
-          // onRowClick={(val) => {
-          //     setImageURL(val);
-          //     setVisible(true);
-          // }}
+        // onRowClick={(val) => {
+        //     setImageURL(val);
+        //     setVisible(true);
+        // }}
         >
           <div className="flex space-x-2">
             <Button
@@ -315,7 +320,7 @@ export default function PricesComponent() {
                 </Label>
                 <Input
                   placeholder={"Enter " + field.replaceAll("_", " ")}
-                  value={formData[field]}
+                  value={formData[field as keyof typeof formData] || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, [field]: e.target.value })
                   }
@@ -338,22 +343,19 @@ export default function PricesComponent() {
   );
 }
 
-const Attachment = ({ attachment, onRefresh, id, attachment_url }) => {
+const Attachment = ({ attachment, onRefresh, id, attachment_url }: { attachment?: string | null, onRefresh: () => Promise<void>, id: number, attachment_url?: string | null }) => {
   const [open, setOpen] = useState(false);
-   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const { userID, isAdmin } = useUserDetail();
- 
+
   const [uploadLoading, setUploadLoading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const fileInputRef = useRef(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+ const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const uploadFile = async () => {
     if (!selectedFile) {
-      toast({
-        title: "Please select at least one file to upload.",
-        variant: "destructive",
-      });
+      toast.info("Please select at least one file to upload.")
       return;
     }
 
@@ -382,11 +384,8 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }) => {
 
       await onRefresh();
       setOpen(false);
-    } catch (error) {
-      toast({
-        title: error?.message || "Upload failed",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      toast.error(error?.message || "Upload failed")
       console.error("Upload error:", error);
     } finally {
       setUploadLoading(false);
@@ -394,7 +393,7 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }) => {
   }
 
   async function handleDownload() {
-    window.open(attachment_url, "_blank");
+    window.open(attachment_url || "", "_blank");
   }
 
   async function handleDelete() {
@@ -450,7 +449,10 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }) => {
               <input
                 type="file"
                 ref={fileInputRef}
-                onChange={(e) => setSelectedFile(e.target.files[0])}
+                onChange={(e) => {
+                  if (e.target.files?.length && e.target.files.length > 0)
+                    setSelectedFile(e?.target?.files?.[0])
+                }}
                 className="border p-2 rounded-md w-72"
               />
               {selectedFile && (

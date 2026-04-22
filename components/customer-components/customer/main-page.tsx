@@ -4,7 +4,7 @@ import AddQuickAction from "@/components/addQuickAction";
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
 import { Button } from "@/components/ui/button";
-import  Heading  from "@/components/ui/heading";
+import Heading from "@/components/ui/heading";
 import {
   Select,
   SelectContent,
@@ -18,9 +18,12 @@ import { UserSearch } from "@/components/user-search";
 
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { MyCustomer } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, Trash2 } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const tableHeader = [
   {
@@ -53,17 +56,19 @@ const tableHeader = [
   },
 ];
 
-export default function CustomerMainPage({ onReturn }) {
+
+
+export default function CustomerMainPage({ onReturn } : {onReturn : (val : number)=> void}) {
   const [additionalFilter, setAdditionalFilter] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<MyCustomer[]>([]);
   const [addCustomer, setAddCustomer] = useState(false);
   const { userID, isAdmin, designation, customer_add_access, customer_delete_access, office, route_branch } = useUserDetail()
-  const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [quickAction, setQuickAction] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [numCount, setNumCount] = useState({});
+  const [numCount, setNumCount] = useState<any>({});
   const [myLoading, setMyLoading] = useState(false)
 
   useEffect(() => {
@@ -78,7 +83,7 @@ export default function CustomerMainPage({ onReturn }) {
         .get(`/${userID}/customer?member=false`)
         .then((response) => {
           const apiData = response.data;
-          const temp = apiData.map((item) => {
+          const temp = apiData.map((item: any) => {
             return {
               ...item,
               orignalNumber: item.number,
@@ -95,7 +100,7 @@ export default function CustomerMainPage({ onReturn }) {
     });
   }
 
-  const columns = [
+  const columns: ColumnDef<MyCustomer>[] = [
     {
       accessorKey: "owner",
       filterFn: "includesString",
@@ -267,14 +272,14 @@ export default function CustomerMainPage({ onReturn }) {
     setSelectedUser(null);
   }
 
-  async function handleDelete(id) {
+  async function handleDelete(id: number | null) {
     if (!id) return;
     setDeleteLoading(true);
     try {
       const response = await axios.delete(
         `/${userID}/customer/${id}`
       );
-      toast({ title: "Customer Deleted" });
+      toast.success("Customer Deleted");
       await fetchData();
     } finally {
       setDeleteLoading(false);
@@ -297,12 +302,15 @@ export default function CustomerMainPage({ onReturn }) {
 
   useEffect(() => {
     if (data.length > 0) {
-      const numberCount = {};
+      const numberCount: any = {};
+
 
       data.forEach((item) => {
-        item.orignalNumber.forEach((num) => {
-          numberCount[num] = (numberCount[num] || 0) + 1;
-        });
+        if (item.orignalNumber) {
+          item?.orignalNumber.forEach((num) => {
+            numberCount[num] = (numberCount[num] || 0) + 1;
+          });
+        }
       });
       setNumCount(numberCount);
     }
@@ -318,7 +326,7 @@ export default function CustomerMainPage({ onReturn }) {
       )
       .then((response) => {
         const apiData = response.data;
-        const temp = apiData.map((item) => {
+        const temp = apiData.map((item: any) => {
           return {
             ...item,
             orignalNumber: item.number,
@@ -392,22 +400,20 @@ export default function CustomerMainPage({ onReturn }) {
         </div>
 
         <PageTable
-        download={true}
-        defaultPageSize={50}
+          download={true}
+          defaultPageSize={50}
           columns={columns}
           data={
             additionalFilter === "duplicate"
               ? filteredData.sort((a, b) =>
-                a?.sorting
+                (a?.sorting || "")
                   ?.toLowerCase()
                   ?.localeCompare(b?.sorting?.toLowerCase() || "")
               )
               : filteredData
           }
-          tableHeader={tableHeader}
-          onRowClick={(val, e) => {
+          onRowClick={(val, ) => {
             if (val.id) {
-
               onReturn(val.id);
             }
           }}

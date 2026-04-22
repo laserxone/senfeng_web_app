@@ -1,3 +1,4 @@
+import { UserSalaryProps } from '@/lib/types';
 import { Document, Image, Page, Path, StyleSheet, Svg, Text, View } from '@react-pdf/renderer';
 import moment from 'moment';
 
@@ -147,7 +148,7 @@ const styles = StyleSheet.create({
 })
 
 
-const SalaryPdf = ({ data }) => {
+const SalaryPdf = ({ data } : {data : UserSalaryProps}) => {
 
     return (
         <Document>
@@ -194,7 +195,7 @@ const SalaryPdf = ({ data }) => {
                         </View> */}
 
                         {data?.payments && data?.payments.map((item, index) => (
-                            <View key={index} style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: index % 2 === 0 ? "#f1f1f1" : "white", border: '1px solid #D1D5DB', borderTopWidth: index !== 0 && 0 }}>
+                            <View key={index} style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: index % 2 === 0 ? "#f1f1f1" : "white", border: '1px solid #D1D5DB', borderTopWidth: index !== 0 ? 0 : undefined }}>
                                 <View style={[{ textAlign: 'left', display: 'flex', justifyContent: 'center', height: 20, paddingLeft: 5, width: 100, }]}>
                                     <Text style={{ fontSize: 9, color: 'black' }}>{item?.transaction_date ? moment(item?.transaction_date).format("YYYY-MM-DD") : null}</Text>
                                 </View>
@@ -217,7 +218,7 @@ const SalaryPdf = ({ data }) => {
                         ))}
 
                         {data?.payments && data?.payments.length <= 20 && [...Array(20 - data?.payments.length)].map((_, i) => (
-                            <View key={i} style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: i % 2 === 0 ? "#f1f1f1" : "white", border: '1px solid #D1D5DB', borderTopWidth: i !== 0 && 0 }}>
+                            <View key={i} style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: i % 2 === 0 ? "#f1f1f1" : "white", border: '1px solid #D1D5DB', borderTopWidth: i !== 0 ? 0 : undefined }}>
                                 <View style={[{ textAlign: 'left', display: 'flex', justifyContent: 'center', height: 20, paddingLeft: 5, width: 100, }]}>
                                     <Text style={{ fontSize: 10, color: 'black' }}></Text>
                                 </View>
@@ -247,7 +248,7 @@ const SalaryPdf = ({ data }) => {
 
 
 
-const FormField = ({ data }) => {
+const FormField = ({ data } : {data : UserSalaryProps}) => {
     return (
         <View style={{ marginBottom: 5, flex: 1 }}>
             {[
@@ -333,7 +334,7 @@ const Header = () => {
     return (
         <View style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexDirection: 'row' }}>
             {/* <Text fontSize={60} color={'#0072BC'} fontWeight={'800'}>SENFENG</Text> */}
-            <Image src={"/logo.png"} alt="My Local Image" style={{ height: '40px', width: '200px' }} />
+            <Image src={"/logo.png"} style={{ height: '40px', width: '200px' }} />
             <div style={{ backgroundColor: '#0072BC', borderTopLeftRadius: 20, borderTopRightRadius: 20, marginRight: 70, width: '150px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} >
                 <Text style={{ fontSize: '12px', fontFamily: 'Helvetica-Bold', color: 'white', }}>
                     SALARY SLIP
@@ -370,11 +371,11 @@ const Footer = () => {
     )
 }
 
-function truncateText(text) {
+function truncateText(text : string) {
     return text.length > 13 ? text.slice(0, 13) + "..." : text;
 }
 
-function formatCurrency(number) {
+function formatCurrency(number : number) {
     return new Intl.NumberFormat("en-US", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,

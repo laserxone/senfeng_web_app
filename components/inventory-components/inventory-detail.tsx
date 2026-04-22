@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 import {
   Command,
+  CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
@@ -31,6 +32,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import { MyCustomer } from "@/lib/types";
 type InventoryRow = {
   QTY?: string | number;
   SERIAL?: string | number;
@@ -586,25 +588,28 @@ function CustomPopup({ visible, onClose, children }) {
   );
 }
 
-function CustomerSearch({ value, onReturn, customers }) {
+function CustomerSearch({ value, onReturn, customers } : {value : number, onReturn : (val : number)=> void, customers : (MyCustomer & {value : number})[]}) {
   const [open, setOpen] = useState(false);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+   <>
         <Button
           variant="outline"
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
+           onClick={(e) => {
+          e.preventDefault()
+          setOpen(!open)
+        }}
         >
           {value
             ? customers.find((item) => item.value === value)?.label
             : "Select customer..."}
           <ChevronsUpDown className="opacity-50" />
         </Button>
-      </PopoverTrigger>
-      <PopoverContent className="py-2 px-0">
+
+        <CommandDialog  open={open} onOpenChange={setOpen}>
         <Command>
           <CommandInput placeholder="Search customer..." className="h-9" />
           <CommandList>
@@ -631,8 +636,8 @@ function CustomerSearch({ value, onReturn, customers }) {
             </CommandGroup>
           </CommandList>
         </Command>
-      </PopoverContent>
-    </Popover>
+        </CommandDialog>
+  </>
   );
 }
 

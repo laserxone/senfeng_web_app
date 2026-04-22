@@ -6,7 +6,7 @@ import { Button } from "./ui/button";
 import { Calendar } from "./ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 interface AppCalendarProps {
-  date: Date | undefined;
+  date: Date | undefined | null;
   onChange: (date: Date) => void;
   min?: Date;
   max?: Date | "";
@@ -35,7 +35,7 @@ const AppCalendar = ({
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
-          selected={date}
+          selected={date ?? undefined}
           onSelect={(e) => {
             if (!e) return;
             const now = new Date();

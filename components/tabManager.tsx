@@ -1,30 +1,41 @@
 "use client";
 
+import { TabProps } from "@/lib/types";
 import clsx from "clsx";
 import { X } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Dispatch, SetStateAction } from "react";
 import Spinner from "./ui/spinner";
+
+
+type TabManagerProps = {
+  tabs: TabProps[];
+  activeTabId: string | number | null;
+  setActiveTabId: Dispatch<SetStateAction<string | number | null>>;
+  loading: (string | number)[];
+};
 
 const TabManager = ({
   tabs,
-  setTabs,
   activeTabId,
   setActiveTabId,
   loading,
-}) => {
-  const closeTab = (tabId) => {
-    setTabs((prev) => prev.filter((tab) => tab.id !== tabId));
-    setActiveTabId((prevActive) => {
-      if (prevActive === tabId) {
-        const remaining = tabs.filter((t) => t.id !== tabId);
-        return remaining.length ? remaining[0].id : null;
-      }
-      return prevActive;
-    });
-  };
+}: TabManagerProps) => {
+const searchParams = useSearchParams();
+
+const tabsParam = searchParams.get("tabs");
+ const closeTab = (id: string) => {
+  const currentTabs = tabsParam?.split(",") || [];
+
+  const newTabs = currentTabs.filter((t) => t !== id);
+  const newActive = newTabs[0] || "dashboard";
+  window.history.pushState({}, "", `?tabs=${newTabs.join(",")}&active=${newActive}`);
+ 
+};
 
   return (
     <div className="w-full flex flex-1 flex-col">
-      {/* Tab bar */}
+   
       <div className="flex pt-2 border-b overflow-x-auto">
         {tabs.map((tab) => (
           <div
@@ -39,7 +50,7 @@ const TabManager = ({
           >
             <span className="mr-2 text-sm">{tab.title}</span>
             {loading.filter((item) => item === tab.id).length > 0 && (
-              <Spinner size={16}/>
+              <Spinner />
             )}
             {tab.closable && (
               <button
@@ -54,8 +65,6 @@ const TabManager = ({
           </div>
         ))}
       </div>
-
-      {/* Tab content */}
       <div className="flex flex-1 py-4">
         {tabs.map((tab) => (
           <div

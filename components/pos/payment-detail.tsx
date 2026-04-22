@@ -10,7 +10,6 @@ import axios from "@/lib/axios";
 import { ArrowUpDown, Trash } from "lucide-react";
 import moment from "moment";
 import { useCallback, useEffect, useMemo, useState } from "react";
-
 import AddPOSPayment from "@/components/pos/add-pos-payment";
 import {
   Sheet,
@@ -20,18 +19,21 @@ import {
 } from "@/components/ui/sheet";
 import Spinner from "@/components/ui/spinner";
 import { storage } from "@/config/firebase";
-
 import { DeleteFromStorage } from "@/lib/deleteFunction";
+import { POSPaymentDetailProps, Payment } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 import { getDownloadURL, ref } from "firebase/storage";
+import { Params } from "next/dist/server/request/params";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
+import { toast } from "sonner";
 
-export default function PaymentDetail({ params }) {
-  const [data, setData] = useState(null);
+export default function PaymentDetail({ params }: { params: Params }) {
+  const [data, setData] = useState<POSPaymentDetailProps | null>(null);
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);
   const { userID, isAdmin } = useUserDetail();
-  const [imageURL, setImageURL] = useState(null);
+  const [imageURL, setImageURL] = useState<Payment | null>(null);
   const [visible, setVisible] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
 
@@ -57,7 +59,8 @@ export default function PaymentDetail({ params }) {
     }
   }
 
-  const columns = useMemo(
+
+  const columns: ColumnDef<Payment>[] = useMemo(
     () => [
       {
         accessorKey: "note",
@@ -163,7 +166,7 @@ export default function PaymentDetail({ params }) {
   useEffect(() => {
     if (data && data?.fields?.length > 0) {
       let total = 0;
-      let dis = data?.discount || 0;
+      let dis = Number(data?.discount) || 0;
       data?.fields?.forEach((item) => {
         total = total + Number(item.total);
       });
@@ -238,9 +241,8 @@ export default function PaymentDetail({ params }) {
             <div className="flex justify-between text-sm">
               <span>Status</span>
               <span
-                className={`font-medium ${
-                  status === "Paid" ? "text-green-600" : "text-orange-600"
-                }`}
+                className={`font-medium ${status === "Paid" ? "text-green-600" : "text-orange-600"
+                  }`}
               >
                 {status}
               </span>
@@ -267,7 +269,6 @@ export default function PaymentDetail({ params }) {
             columns={columns}
             data={data?.payments || []}
             disableInput={true}
-            onRowClick={(val, e) => {}}
           />
         </CardContent>
       </Card>
@@ -287,7 +288,6 @@ export default function PaymentDetail({ params }) {
         id={imageURL?.id}
         onRefresh={async () => {
           await fetchData();
-          return true;
         }}
       />
 
@@ -306,6 +306,19 @@ export default function PaymentDetail({ params }) {
   );
 }
 
+type ImageSheetProps = {
+  payment_lock: boolean | undefined,
+  visible: boolean,
+  onClose: () => void,
+  img: string | null,
+  note: string | null,
+  remarks: string | null,
+  id: number | undefined,
+  onRefresh: () => Promise<void>,
+  editAllowed: boolean,
+  cheque_id: string | null,
+}
+
 const ImageSheet = ({
   payment_lock,
   visible,
@@ -317,14 +330,14 @@ const ImageSheet = ({
   onRefresh,
   editAllowed,
   cheque_id,
-}) => {
+}: ImageSheetProps) => {
   const [imageOpen, setImageOpen] = useState(false);
-  const [localImage, setLocalImage] = useState(null);
+  const [localImage, setLocalImage] = useState<null | string>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
   const [rotation, setRotation] = useState(0);
   const { userID } = useUserDetail();
- 
+
 
   useEffect(() => {
     if (img) {
@@ -347,14 +360,14 @@ const ImageSheet = ({
     }
   }
 
-  const handleZoomChange = useCallback((shouldZoom) => {
+  const handleZoomChange = useCallback((shouldZoom: boolean) => {
     setIsZoomed(shouldZoom);
     if (!shouldZoom) {
       setImageOpen(false);
     }
   }, []);
 
-  async function handleDelete(id:string|number) {
+  async function handleDelete(id: string | number) {
     try {
       if (img && !img.includes("https")) {
         await DeleteFromStorage(img);
@@ -363,7 +376,7 @@ const ImageSheet = ({
       await axios.delete(`/${userID}/pos/payment/${id}`);
       await onRefresh();
       handleClose();
-      toast({ title: "Payment Deleted" });
+      toast.success("Payment Deleted");
     } finally {
       setDeleteLoading(false);
     }
@@ -463,7 +476,7 @@ const ImageSheet = ({
                     </div>
                   </div>
                 ) : (
-                  img
+                  img ?? <></>
                 )
               }
             >

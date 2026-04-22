@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import moment from "moment";
 import momentT from "moment-timezone";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import AppCalendar from "../appCalendar";
 import { Button } from "../ui/button";
@@ -25,26 +25,39 @@ import {
 } from "../ui/sheet";
 import Spinner from "../ui/spinner";
 import { UserSearch } from "../user-search";
+import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 
-const FilterSheet = ({ visible, onClose, onReturn, user_disable = true }) => {
+type FilterSheetProps = {
+  visible: boolean,
+  onClose: () => void,
+  user_disable?: boolean,
+  onReturn: (
+    { start, end, user }:
+      { start: string, end: string, user?:  number }) => Promise<void>
+}
+
+const formSchema = z.object({
+  start: z.date({ error: "Start date is required." }),
+  end: z.date({ error: "End date is required." }),
+  user: z.number().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+const FilterSheet = ({ visible, onClose, onReturn, user_disable = true }: FilterSheetProps) => {
   const [loading, setLoading] = useState(false);
-  const { isAdmin } = useUserDetail();
-  const formSchema = z.object({
-    start: z.date({ required_error: "Start date is required." }),
-    end: z.date({ required_error: "End date is required." }),
-    user: z.number().nullable().optional(),
-  });
 
-  const form = useForm({
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       start: moment().startOf("month").toDate(),
       end: moment().endOf("month").toDate(),
-      user: null,
+      user: undefined,
     },
   });
 
-  async function onSubmit(values) {
+  async function onSubmit(values: FormValues) {
     setLoading(true);
     let start = values.start;
     let end = values.end;
@@ -59,7 +72,7 @@ const FilterSheet = ({ visible, onClose, onReturn, user_disable = true }) => {
     handleClear();
   }
 
-  function handleClose(val) {
+  function handleClose() {
     onClose();
     handleClear();
   }
@@ -68,82 +81,86 @@ const FilterSheet = ({ visible, onClose, onReturn, user_disable = true }) => {
     form.reset({
       start: moment().startOf("month").toDate(),
       end: moment().endOf("month").toDate(),
-      user: null,
+      user: undefined,
     });
   }
 
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
       <SheetContent>
-        <SheetHeader className="mb-4">
+        <SheetHeader >
           <SheetTitle>Filter</SheetTitle>
           <SheetDescription>Filter data</SheetDescription>
         </SheetHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 px-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 px-4">
+          <FieldGroup>
+
             {!user_disable && (
-              <FormField
-                control={form.control}
+              <Controller
                 name="user"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Select User</FormLabel>
-                    <FormControl>
-                      <UserSearch
-                        value={field.value}
-                        onReturn={field.onChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Select User</FieldLabel>
+
+                    <UserSearch
+                      value={field.value}
+                      onReturn={field.onChange}
+                    />
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
                 )}
               />
             )}
 
-            <FormField
-              control={form.control}
+            <Controller
               name="start"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start date</FormLabel>
-                  <FormControl>
-                    <AppCalendar
-                      date={field.value}
-                      onChange={(date) => {
-                        field.onChange(date);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Start date</FieldLabel>
+
+                  <AppCalendar
+                    date={field.value}
+                    onChange={field.onChange}
+                  />
+
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
               )}
             />
 
-            <FormField
-              control={form.control}
+            <Controller
               name="end"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>End date</FormLabel>
-                  <FormControl>
-                    <AppCalendar
-                      date={field.value}
-                      onChange={(date) => {
-                        field.onChange(date);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>End date</FieldLabel>
+
+                  <AppCalendar
+                    date={field.value}
+                    onChange={field.onChange}
+                  />
+
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
               )}
             />
 
             <Button disabled={loading} className="w-full" type="submit">
               {loading && <Spinner />} Filter
             </Button>
-          </form>
-        </Form>
+
+          </FieldGroup>
+        </form>
       </SheetContent>
     </Sheet>
   );

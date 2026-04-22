@@ -4,12 +4,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import axios from "@/lib/axios";
 import { useState } from "react";
 import Spinner from "../ui/spinner";
+import { UserAttendanceRecord } from "@/lib/types";
 
-export default function LeaveApproval({ data, visible, onClose, onRefresh }) {
+export default function LeaveApproval({ data, visible, onClose, onRefresh } : {data : UserAttendanceRecord | null, visible : boolean, onClose : ()=> void, onRefresh ?: (val : string)=> void}) {
   const { userID } = useUserDetail();
   const [loading, setLoading] = useState(false);
 
-  async function UpdateStatus(status) {
+  async function UpdateStatus(status : string) {
     if (!data?.leave_id) return;
     setLoading(true);
     try {

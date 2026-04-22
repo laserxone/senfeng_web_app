@@ -7,8 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { auth, storage } from "@/config/firebase";
 
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { UploadImage } from "@/lib/uploadFunction";
+import { OfficeContext } from "@/store/context/OfficeContext";
 import { UserContext } from "@/store/context/UserContext";
 import {
   EmailAuthProvider,
@@ -16,17 +23,11 @@ import {
   updatePassword,
 } from "firebase/auth";
 import { deleteObject, getDownloadURL, ref } from "firebase/storage";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { CheckCircle } from "lucide-react";
+import { ChangeEvent, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import Spinner from "../ui/spinner";
 import { Textarea } from "../ui/textarea";
-import { OfficeContext } from "@/store/context/OfficeContext";
-import useUserDetail from "@/hooks/use-user-detail";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CheckCircle } from "lucide-react";
 
 export default function ProfilePage() {
   const { state: UserState, setUser } = useContext(UserContext);
@@ -58,10 +59,10 @@ export default function ProfilePage() {
     police: "",
     resume: "",
     appointment_letter: "",
-    father_cnic: "", 
+    father_cnic: "",
   });
   const inputRef = useRef<HTMLInputElement | null>(null);
- 
+
 
   const [dp, setDp] = useState("");
   const [formLoading, setFormLoading] = useState(false);
@@ -101,7 +102,7 @@ export default function ProfilePage() {
   }, [userID]);
 
   const RenderProfilePicture = useCallback(() => {
-    const [localImage, setLocalImage] = useState(null);
+    const [localImage, setLocalImage] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -124,7 +125,8 @@ export default function ProfilePage() {
       }
     }, []);
 
-    const handleImage = async (event) => {
+    const handleImage = async (event: ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
+      if (!event.target.files) return
       setLoading(true);
       try {
         const fileList = Array.from(event.target.files);
@@ -145,8 +147,9 @@ export default function ProfilePage() {
           confirmPassword: undefined,
           currentPassword: undefined,
         });
-        toast({ title: "Profile Updated" });
-      } catch (error) {
+        toast.success("Profile Updated");
+      } catch (error: any) {
+        toast.error(error?.message || "Error updating image")
         console.log(error);
       } finally {
         setLoading(false);
@@ -165,8 +168,8 @@ export default function ProfilePage() {
                 if (inputRef.current) inputRef.current.click();
               }}
             >
-              <AvatarImage src={localImage} />
-              <AvatarFallback>{name.substring(0, 2)}</AvatarFallback>
+              <AvatarImage src={localImage || ""} />
+              <AvatarFallback>{UserState.value.data?.name.substring(0, 2)}</AvatarFallback>
             </Avatar>
           )}
         </div>
@@ -183,19 +186,18 @@ export default function ProfilePage() {
   }, [dp]);
 
   const DocumentCard = useCallback(
-    ({ type }) => {
-      const [fileUrl, setFileUrl] = useState(null);
+    ({ type }: { type: string }) => {
+      const [fileUrl, setFileUrl] = useState<string | null>(null);
       const [loading, setLoading] = useState(false);
-      const [fileName, setFileName] = useState("");
+      const [fileName, setFileName] = useState<string | undefined>("");
       const fileInputRef = useRef<HTMLInputElement | null>(null);
 
       const userId = userID;
-      const userEmail = UserState.value.data?.email;
 
       useEffect(() => {
-        if (docsData?.[type]) {
+        if (docsData?.[type as keyof typeof docsData]) {
           setLoading(true);
-          const filePath = docsData[type];
+          const filePath = docsData[type as keyof typeof docsData];
           if (filePath.includes("http")) {
             setFileUrl(filePath);
             setFileName(filePath.split("/").pop());
@@ -213,8 +215,8 @@ export default function ProfilePage() {
         }
       }, []);
 
-      const handleFileUpload = async (event) => {
-        const file = event.target.files[0];
+      const handleFileUpload = async (event: ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
+        const file = event?.target?.files?.[0];
         if (!file) return;
 
         setLoading(true);
@@ -223,8 +225,8 @@ export default function ProfilePage() {
           const newFilePath = `${OfficeState.value.data}/${userId}/profile/${type}.${extension}`;
 
           // Step 1: Delete old file if exists
-          if (docsData?.[type] && !docsData[type].includes("http")) {
-            const oldFileRef = ref(storage, docsData[type]);
+          if (docsData?.[type as keyof typeof docsData] && !docsData[type as keyof typeof docsData].includes("http")) {
+            const oldFileRef = ref(storage, docsData[type as keyof typeof docsData]);
             await deleteObject(oldFileRef).catch((err) =>
               console.log("Old file could not be deleted:", err)
             );
@@ -251,58 +253,17 @@ export default function ProfilePage() {
             ...updatedData,
           });
 
-          toast({ title: "File uploaded successfully" });
-          setFileUrl(URL.createObjectURL(file)); // Optional: for local preview
+          toast.success("File uploaded successfully");
+          setFileUrl(URL.createObjectURL(file))
           setFileName(file.name);
         } catch (error) {
-          console.error("Upload failed:", error);
-          toast({ title: "Upload failed", variant: "destructive" });
+          toast.error("Upload failed");
         } finally {
           setLoading(false);
         }
       };
 
-      const handleFileDelete = async () => {
-        if (!docsData?.[type]) return;
-
-        setLoading(true);
-        try {
-          // Step 1: Delete from storage if it's not a URL
-          if (!docsData[type].includes("http")) {
-            const fileRef = ref(storage, docsData[type]);
-            await deleteObject(fileRef);
-          }
-
-          // Step 2: Update backend with empty string
-          const updatedData = {
-            ...docsData,
-            password: undefined,
-            confirmPassword: undefined,
-            currentPassword: undefined,
-            [type]: "",
-          };
-          await axios.put(`/${userId}`, updatedData);
-
-          // Step 3: Update local state
-          setUser({
-            ...UserState.value.data,
-            ...updatedData,
-          });
-
-          toast({ title: `${type} deleted successfully` });
-
-          // Step 4: Reset local preview
-          setFileUrl(null);
-          setFileName("");
-        } catch (error) {
-          console.error("Delete failed:", error);
-          toast({ title: "Delete failed", variant: "destructive" });
-        } finally {
-          setLoading(false);
-        }
-      };
-
-       return (
+      return (
         <div className="space-y-2">
           {loading ? (
             <Skeleton className="h-[50px] w-full" />
@@ -358,7 +319,7 @@ export default function ProfilePage() {
     [docsData]
   );
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement, HTMLInputElement> | ChangeEvent<HTMLTextAreaElement, HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
@@ -380,7 +341,7 @@ export default function ProfilePage() {
         confirmPassword: undefined,
         currentPassword: undefined,
       });
-      toast({ title: "Profile Updated" });
+      toast.success("Profile Updated");
     } catch (error) {
     } finally {
       setFormLoading(false);
@@ -395,15 +356,12 @@ export default function ProfilePage() {
       return;
     }
     if (formData.password !== formData.confirmPassword) {
-      toast({
-        variant: "destructive",
-        title: "Password do not match",
-      });
+      toast.info("Password do not match");
       return;
     }
 
     const user = auth.currentUser;
-    if (user) {
+    if (user?.email) {
       setPasswordLoading(true);
       const credential = EmailAuthProvider.credential(
         user.email,
@@ -414,7 +372,7 @@ export default function ProfilePage() {
         .then(() => {
           updatePassword(user, formData.password).then(() => {
             handlePasswordResetToggle();
-            toast({ title: "Password changed" });
+            toast.success("Password changed");
             setFormData({
               ...formData,
               currentPassword: "",
@@ -424,7 +382,7 @@ export default function ProfilePage() {
           });
         })
         .catch((error) => {
-          toast({ title: error?.message || "Error", variant: "destructive" });
+          toast.error(error?.message || "Error");
           console.log(error);
         })
         .finally(() => {

@@ -2,7 +2,6 @@
 import AddCustomerDialog from "@/components/addCustomer";
 import PageTable from "@/components/app-table-without-pagination";
 import AppCalendar from "@/components/appCalendar";
-import AutoScrollMembers from "@/components/autoScroll";
 import { RequiredStar } from "@/components/RequiredStar";
 import TeamTask from "@/components/teamTask";
 import { Button } from "@/components/ui/button";
@@ -19,68 +18,50 @@ import Spinner from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Attendance from "@/components/users/attendance";
 import FilterSheet from "@/components/users/filterSheet";
+import OldRecordSheet from "@/components/users/old-record-sheet";
 import { ProfilePicture } from "@/components/users/ProfilePicture";
 import Reimbursement from "@/components/users/Reimbursement";
+import RenderFines from "@/components/users/render-fines";
 import SalaryRecord from "@/components/users/SalaryRecord";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { updateItemPurpose } from "@/lib/updatePurpose";
 import { ArrowUpDown, Filter } from "lucide-react";
 import moment from "moment";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useEffect, useState } from "react";
 import "./styles.css";
-import OldRecordSheet from "@/components/users/old-record-sheet";
-import RenderFines from "@/components/users/render-fines";
-import { updateItemPurpose } from "@/lib/updatePurpose";
+import { MyCustomer, MyCustomerResolved, UserAttendanceRecord, UserDashboard, UserReimbursementType } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import { Badge } from "@/components/ui/badge";
 
-type User = {
-  id: number;
-  name: string;
-  designation?: string;
-  dp?: string;
-};
-
-type Customer = {
-  id: number;
-  owner?: string;
-  name?: string;
-  number?: string;
-  location?: string;
-  feedback_date?: string | null;
-  member?: boolean;
-};
+type WithFeedbackProps = MyCustomerResolved & {
+  feedback_date: string
+}
 
 type DashboardData = {
-  user: User;
-  withFeedback: Customer[];
-  withoutFeedback: Customer[];
-};
+  user: UserDashboard
+  withFeedback: WithFeedbackProps[]
+  withoutFeedback: MyCustomerResolved[]
+}
 
 type CustomerEmployeeAfterSalesProps = {
-  onRefresh: () => Promise<void>;
-  totalCustomerText: string;
-  user_id: number;
-  data: DashboardData | null;
-  onFilterData: (start: Date, end: Date) => void;
-  handleClear: () => void;
-  selectedOption: string;
-  setSelectedOption: (val: string) => void;
-};
+  onRefresh: () => Promise<void>,
+  user_id: number,
+  data: DashboardData | null,
+  onFilterData: (a: string, b: string) => void,
+  handleClear: () => void,
+  selectedOption: string,
+  setSelectedOption: Dispatch<SetStateAction<string>>,
+}
 
-type CustomerExtraDataProps = {
-  data: {
-    withFeedback: Customer[];
-    withoutFeedback: Customer[];
-  };
-  option: string;
-  onSelect: (val: string) => void;
-};
+type DataKeys = Exclude<keyof DashboardData, "user">;
 
 export default function Page() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [filterData, setFilterData] = useState<DashboardData | null>(null);
-  const [reimbursementData, setReimbursementData] = useState<any[]>([]);
-  const [attendanceData, setAttendanceData] = useState<any[]>([]);
+  const [reimbursementData, setReimbursementData] = useState<UserReimbursementType[]>([]);
+  const [attendanceData, setAttendanceData] = useState<UserAttendanceRecord[]>([]);
   const [filter, setFilter] = useState<{ start: any; end: any }>({
     start: null,
     end: null,
@@ -149,7 +130,7 @@ export default function Page() {
         const response = await axios.get(`/${userID}/dashboard`);
 
         const withFeedbackFixed = response.data.withFeedback.map(
-          (item: Customer) => ({
+          (item: MyCustomer) => ({
             ...item,
             number: Array.isArray(item?.number)
               ? item.number.join(", ")
@@ -158,7 +139,7 @@ export default function Page() {
         );
 
         const withoutFeedbackFixed = response.data.withoutFeedback.map(
-          (item: Customer) => ({
+          (item: MyCustomer) => ({
             ...item,
             number: Array.isArray(item?.number)
               ? item.number.join(", ")
@@ -177,6 +158,8 @@ export default function Page() {
     });
   }
 
+
+
   useEffect(() => {
     if (filter.start) {
       const temp: any = {};
@@ -186,8 +169,8 @@ export default function Page() {
       temp.user = data?.user;
       temp.withoutFeedback = [...(data?.withoutFeedback || [])];
       temp.withFeedback = [...(data?.withFeedback || [])].filter(
-        (item: Customer) => {
-          const feedbackDate = moment(new Date(item.feedback_date as any));
+        (item: WithFeedbackProps) => {
+          const feedbackDate = moment(new Date(item.feedback_date));
           return (
             feedbackDate.isSameOrAfter(startDate) &&
             feedbackDate.isSameOrBefore(endDate)
@@ -208,7 +191,6 @@ export default function Page() {
           <div className="flex flex-1 gap-5">
             <CustomerEmployeeAfterSales
               data={filterData ? filterData : data}
-              totalCustomerText={"Total Members"}
               user_id={data?.user?.id as any}
               onRefresh={async () => {
                 await fetchData();
@@ -241,8 +223,7 @@ export default function Page() {
             onReset={async (start, end) => {
               await fetchReimbursementData(start, end);
             }}
-            onFilterReturn={async (start, end) =>
-              await fetchReimbursementData(start, end)
+            onFilterReturn={async (start, end) => { await fetchReimbursementData(start, end) }
             }
             onUpdatePurpose={(val: any) => {
               const newData = updateItemPurpose(reimbursementData, val);
@@ -319,16 +300,13 @@ export default function Page() {
         </Tabs>
       </div>
 
-      <AutoScrollMembers />
+      {/* <AutoScrollMembers /> */}
     </div>
   );
 }
 
-/* --- keep rest unchanged (CustomerEmployeeAfterSales + CustomerExtraData + constants) --- */
-
 const CustomerEmployeeAfterSales = ({
   onRefresh,
-  totalCustomerText,
   user_id,
   data,
   onFilterData,
@@ -336,23 +314,23 @@ const CustomerEmployeeAfterSales = ({
   selectedOption,
   setSelectedOption,
 }: CustomerEmployeeAfterSalesProps) => {
-  const { base_route, customer_add_access, designation, office, route_branch } =
+  const { base_route, customer_add_access, designation, route_branch } =
     useUserDetail();
   const [addCustomer, setAddCustomer] = useState(false);
   const router = useRouter();
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+  const [selectedCustomer, setSelectedCustomer] = useState<WithFeedbackProps | null>(
     null,
   );
-  const [next, setNext] = useState<Date | null>(null);
+  const [next, setNext] = useState<Date | undefined>(undefined);
   const [top, setTop] = useState(false);
   const [satisfactory, setSatisfactory] = useState(false);
   const [loading, setLoading] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [oldRecordVisible, setOldRecordVisible] = useState(false);
 
-  const columns = [
+  const columns: ColumnDef<WithFeedbackProps>[] = [
     {
       accessorKey: "owner",
       filterFn: "includesString",
@@ -438,8 +416,8 @@ const CustomerEmployeeAfterSales = ({
         <div>
           {row.getValue("feedback_date")
             ? moment(new Date(row.getValue("feedback_date"))).format(
-                "YYYY-MM-DD",
-              )
+              "YYYY-MM-DD",
+            )
             : "Not taken"}
         </div>
       ),
@@ -470,7 +448,6 @@ const CustomerEmployeeAfterSales = ({
     axios
       .post(`/${user_id}/feedback`, {
         feedback: feedback,
-        top_follow: false,
         type: "aftersales",
         customer_id: selectedCustomer?.id,
         user_id: user_id,
@@ -504,17 +481,15 @@ const CustomerEmployeeAfterSales = ({
         <div className="flex flex-1">
           <PageTable
             columns={columns}
-            data={data?.[selectedOption] || []}
-            tableHeader={tableHeader}
+            data={data?.[selectedOption as DataKeys] || []}
             onRowClick={(val, event) => {
               if (val?.id) {
-                const url = `/${base_route}/${
-                  val.member ? "member" : "customer"
-                }/${val.id}`;
+                const url = `/${base_route}/${val.member ? "member" : "customer"
+                  }/${val.id}`;
                 if (event.ctrlKey || event.metaKey) {
                   window.open(url, "_blank");
                 } else {
-                
+
                   router.push(url);
                 }
               }
@@ -557,8 +532,8 @@ const CustomerEmployeeAfterSales = ({
           ownership={true}
           visible={addCustomer}
           onClose={setAddCustomer}
-          onRefresh={() => {
-            onRefresh();
+          onRefresh={async () => {
+            await onRefresh();
           }}
         />
 
@@ -566,7 +541,7 @@ const CustomerEmployeeAfterSales = ({
           visible={filterVisible}
           onClose={() => setFilterVisible(false)}
           onReturn={async (val) => {
-            await onFilterData(val.start, val.end);
+            onFilterData(val.start, val.end);
           }}
         />
 
@@ -599,8 +574,8 @@ const CustomerEmployeeAfterSales = ({
                   <h1>Top Follow up</h1>
                   <Checkbox
                     checked={top}
-                    onCheckedChange={(checked) => {
-                      setTop(checked === true);
+                    onCheckedChange={(checked: boolean) => {
+                      setTop(checked);
                     }}
                   />
                 </div>
@@ -609,8 +584,8 @@ const CustomerEmployeeAfterSales = ({
                   <h1>Satisfactory?</h1>
                   <Checkbox
                     checked={satisfactory}
-                    onCheckedChange={(checked) => {
-                      setSatisfactory(checked === true);
+                    onCheckedChange={(checked: boolean) => {
+                      setSatisfactory(checked);
                     }}
                   />
                 </div>
@@ -635,87 +610,49 @@ const CustomerExtraData = ({
   data,
   option,
   onSelect,
-}: CustomerExtraDataProps) => {
+}: {
+  data: { withFeedback: WithFeedbackProps[], withoutFeedback: MyCustomerResolved[] },
+  option: string
+  onSelect: (a: string) => void
+}) => {
   const menuItems = [
     { key: "pending", label: "Pending", dataKey: "withoutFeedback" },
     { key: "completed", label: "Completed", dataKey: "withFeedback" },
   ];
 
   return (
-    // <Card>
-    //   <CardContent>
-    <div className="flex flex-col gap-10 mt-5">
+    <div className="flex flex-col gap-5 mt-5">
       <div className="py-2 px-5 bg-gray-100 rounded-lg dark:bg-gray-800">
         <h2 className="text-2xl font-bold tracking-tight">
           {"Customer Group"}
         </h2>
       </div>
-      <>
-        {menuItems.map(({ key, label, dataKey }) => (
+
+      {menuItems.map(({ key, label, dataKey }) => {
+        const count = data?.[dataKey as keyof typeof data]?.length ?? 0;
+        return (
           <div
             onClick={() => {
               onSelect(dataKey);
             }}
             key={key}
             className={`flex items-center justify-between py-2 px-5 cursor-pointer rounded-lg transition-all duration-300
-          ${
-            option === dataKey
-              ? "bg-[hsl(180,85%,30%)] text-white"
-              : "hover:bg-[hsl(180,85%,90%)] hover:text-[hsl(180,85%,30%)]"
-          }
+          ${option === dataKey
+                ? "bg-[hsl(180,85%,30%)] text-white"
+                : "hover:bg-[hsl(180,85%,90%)] hover:text-[hsl(180,85%,30%)]"
+              }
         `}
           >
             <h1 className="text-lg font-medium">{label}</h1>
-            {data?.[dataKey]?.length > 0 && (
-              <div
-                className={`h-8 w-8 flex items-center justify-center font-semibold rounded-full shadow-md ml-2 text-[12px]
-              ${
-                option === dataKey
-                  ? "bg-white text-[hsl(180,85%,30%)]"
-                  : "bg-[hsl(180,85%,30%)] text-white"
-              }
-            `}
-              >
-                {data?.[dataKey]?.length ?? 0}
-              </div>
+            {data?.[dataKey as keyof typeof data]?.length > 0 && (
+              <Badge variant={option === dataKey ? "secondary" : "default"}>
+                {count > 500 ? "500+" : count}
+              </Badge>
             )}
           </div>
-        ))}
-      </>
+        )
+      })}
+
     </div>
   );
-};
-
-const tableHeader = [
-  {
-    value: "Name",
-    label: "Name",
-  },
-  {
-    value: "Owner",
-    label: "Owner",
-  },
-  {
-    value: "Number",
-    label: "Number",
-  },
-  {
-    value: "Location",
-    label: "Location",
-  },
-];
-
-const thStyle = {
-  padding: "0.75rem",
-  textAlign: "left",
-  borderBottom: "1px solid #444",
-};
-
-const tdStyle = {
-  padding: "0.75rem",
-  borderBottom: "1px solid #ddd",
-};
-
-const trStyle = {
-  backgroundColor: "#fff",
 };

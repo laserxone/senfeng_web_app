@@ -23,7 +23,7 @@ export async function TriggerFirebaseForMachine() {
   });
 }
 
-export async function TriggerFirebaseForFine(id: string) {
+export async function TriggerFirebaseForFine(id: string | number | undefined) {
   if (id) {
     await setDoc(doc(db, "fine_notification", id.toString()), {
       updated: serverTimestamp(),

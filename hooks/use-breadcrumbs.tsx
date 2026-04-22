@@ -4,17 +4,8 @@ import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
 
 // This allows to add custom title as well
-const routeMapping = {
-  '/dashboard': [{ title: 'Dashboard', link: '/dashboard' }],
-  '/dashboard/employee': [
-    { title: 'Dashboard', link: '/dashboard' },
-    { title: 'Employee', link: '/dashboard/employee' }
-  ],
-  '/dashboard/product': [
-    { title: 'Dashboard', link: '/dashboard' },
-    { title: 'Product', link: '/dashboard/product' }
-  ]
-  // Add more custom mappings as needed
+const routeMapping : any = {
+
 };
 
 export function useBreadcrumbs() {

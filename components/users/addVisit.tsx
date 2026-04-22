@@ -5,6 +5,7 @@ import {
   Form,
   FormControl,
   FormField,
+  FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
@@ -26,7 +27,7 @@ import {
 import moment from "moment";
 import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import Zoom from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
@@ -38,21 +39,30 @@ import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
+import { MyCustomer, SalesVisitTypes } from "@/lib/types";
+import { Field, FieldError, FieldLabel } from "../ui/field";
 
 const formSchema = z.object({
   note: z.string().min(1, "Note cannot be empty"),
   image: z.string().min(1, "image cannot be empty"),
   next: z.date(),
+  city: z.string().min(1, "City is required"),
+  name: z.string().min(1, "Name is required"),
+  phone: z.string().min(1, "Phone is required"),
+  company: z.string().min(1, "Company is required")
 });
+
+type FormValues = z.infer<typeof formSchema>;
+
+
 type VisitTabProps = {
   id: any;
   data: any;
   onRefresh: any;
   disable?: boolean;
-  customer_data?: any;
+  customer_data?: number | null;
   height?: string;
   onFetchData?: any;
-  base?: any;
 };
 export default function VisitTab({
   id,
@@ -62,27 +72,27 @@ export default function VisitTab({
   customer_data,
   height,
   onFetchData,
-  base
-}:VisitTabProps) {
+}: VisitTabProps) {
   const [loading, setLoading] = useState(false);
-  const [feedbacks, setFeedbacks] = useState(data || []);
+  const [feedbacks] = useState<SalesVisitTypes[]>(data || []);
   const [addCustomer, setAddCustomer] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const {userID, designation, office, base_route, route_branch} = useUserDetail()
-  const {state : OfficeState} = useContext(OfficeContext)
+  const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(null);
+  const { userID, designation, office, base_route, route_branch } = useUserDetail()
+  const { state: OfficeState } = useContext(OfficeContext)
   const [filterVisible, setFilterVisible] = useState(false);
-  const [selectedDelete, setSelectedDelete] = useState(null);
+  const [selectedDelete, setSelectedDelete] = useState<number | null>(null);
   const [selectedSignature, setSelectedSignature] = useState(null);
-  const form = useForm({
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       note: "",
       image: "",
-      next: null,
-      city:"",
-      name:"",
-      phone:"",
-      company:""
+      next: undefined,
+      city: "",
+      name: "",
+      phone: "",
+      company: ""
     },
   });
 
@@ -92,14 +102,14 @@ export default function VisitTab({
     }
   }, [customer_data]);
 
-  const onSubmit = async (values) => {
+  const onSubmit = async (values: FormValues) => {
     setLoading(true);
     try {
       if (values.image) {
         const name = `${OfficeState.value.data}/customer/${selectedCustomer?.id}/visit/${moment()
           .valueOf()
           .toString()}.png`;
-        const uploadRef = await UploadImage(values.image, name); 
+        const uploadRef = await UploadImage(values.image, name);
         const response = await axios.post(`/${id}/visit`, {
           ...values,
           user_id: id,
@@ -133,16 +143,16 @@ export default function VisitTab({
         value={selectedCustomer}
         onReturn={(val) => {
           setSelectedCustomer(val);
-          form.setValue("city", val.location);
-          form.setValue("name", val.owner);
-          form.setValue("phone", val.number.join(", "));
-          form.setValue("company", val.name);
+          form.setValue("city", val?.location || "");
+          form.setValue("name", val?.owner || "");
+          form.setValue("phone", val.number ? val?.number?.join(", ") : "");
+          form.setValue("company", val?.name || "");
         }}
       />
     );
   }, [selectedCustomer]);
 
-  async function handleDelete(item) {
+  async function handleDelete(item: SalesVisitTypes) {
     try {
       setSelectedDelete(item.id);
       DeleteFromStorage(item.image);
@@ -165,147 +175,140 @@ export default function VisitTab({
         <Card>
           <CardContent className="p-4 space-y-4">
             <h2 className="font-semibold">Remarks</h2>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit, (err) => {
-                  console.log("Validation Errors", err);
-                })}
-                className="space-y-3"
-              >
-                {!disable && (
-                  <div className="flex flex-row gap-2 items-end flex-wrap">
-                    <div>
-                      <FormLabel>Select Customer</FormLabel>
-                      <RenderCustomerSearch />
-                    </div>
-
-                    <Button onClick={() => setAddCustomer(true)}>
-                      Add new customer
-                    </Button>
-
-                    <Button
-                      variant="destructive"
-                      onClick={() => {
-                        setSelectedCustomer(null);
-                        form.reset();
-                      }}
-                    >
-                      Clear
-                    </Button>
-
-                    <Button
-                      onClick={() => setFilterVisible(true)}
-                      variant="ghost"
-                      className="p-0 w-8"
-                    >
-                      <Filter />
-                    </Button>
-
-                    <FilterSheet
-                      visible={filterVisible}
-                      onClose={() => setFilterVisible(false)}
-                      onReturn={async (val) => {
-                        await onFetchData(
-                          val.start,
-                          val.end,
-                          val.user
-                        );
-                      }}
-                    />
-
-                    <AddCustomerDialog
-                    user_designation={designation}
-                     office={route_branch}
-                      user_id={userID}
-                      ownership={
-                        designation === "Owner" ||
-                        designation ===
-                          "Customer Relationship Manager" ||
-                        designation ===
-                          "Customer Relationship Manager (After Sales)"
-                      }
-                      visible={addCustomer}
-                      onClose={setAddCustomer}
-                      onRefresh={async (newRow) => {
-                        const finalData = {
-                          ...newRow,
-                          search: newRow.name || newRow.owner,
-                        };
-                        setSelectedCustomer(finalData);
-
-                        // setData([]);
-                        // await fetchData();
-                      }}
-                    />
+            <form
+              onSubmit={form.handleSubmit(onSubmit, (err) => {
+                console.log("Validation Errors", err);
+              })}
+              className="space-y-3"
+            >
+              {!disable && (
+                <div className="flex flex-row gap-2 items-end flex-wrap">
+                  <div>
+                    <Label>Select Customer</Label>
+                    <RenderCustomerSearch />
                   </div>
-                )}
-                <div className="flex flex-1 gap-5 flex-wrap">
-                  <FormField
-                    control={form.control}
-                    name="image"
-                    render={({ field }) => (
-                      <div>
-                        <FormLabel>Image</FormLabel>
-                        <FormControl>
-                          <div className="flex flex-1 items-center justify-center">
-                            <Dropzone
-                              value={field.value}
-                              onDrop={(file) => {
-                                field.onChange(file);
-                              }}
-                              title={"Click to upload"}
-                              subheading={"or drag and drop"}
-                              description={"PNG or JPG"}
-                              drag={"Drop the files here..."}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </div>
-                    )}
+
+                  <Button onClick={() => setAddCustomer(true)}>
+                    Add new customer
+                  </Button>
+
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      setSelectedCustomer(null);
+                      form.reset();
+                    }}
+                  >
+                    Clear
+                  </Button>
+
+                  <Button
+                    onClick={() => setFilterVisible(true)}
+                    variant="ghost"
+                    className="p-0 w-8"
+                  >
+                    <Filter />
+                  </Button>
+
+                  <FilterSheet
+                    visible={filterVisible}
+                    onClose={() => setFilterVisible(false)}
+                    onReturn={async (val) => {
+                      await onFetchData(val.start, val.end, val.user);
+                    }}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="next"
-                    render={({ field }) => (
-                      <div>
-                        <FormLabel>Next follow Up</FormLabel>
-                        <FormControl>
-                          <AppCalendar
-                            date={field.value}
-                            onChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </div>
-                    )}
+                  <AddCustomerDialog
+                    user_designation={designation}
+                    office={route_branch}
+                    user_id={userID}
+                    ownership={
+                      designation === "Owner" ||
+                      designation === "Customer Relationship Manager" ||
+                      designation === "Customer Relationship Manager (After Sales)"
+                    }
+                    visible={addCustomer}
+                    onClose={setAddCustomer}
+                    onRefresh={async (newRow) => {
+                      const finalData = {
+                        ...newRow,
+                        search: newRow.name || newRow.owner,
+                      };
+                      setSelectedCustomer(finalData);
+                    }}
                   />
                 </div>
+              )}
 
-                <FormField
+              <div className="flex flex-1 gap-5 flex-wrap">
+                <Controller
+                  name="image"
                   control={form.control}
-                  name="note"
-                  render={({ field }) => (
-                    <div>
-                      <FormLabel>Write something</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          rows={3}
-                          placeholder="Write something..."
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Image</FieldLabel>
+                      <div className="flex flex-1 items-center justify-center">
+                        <Dropzone
+                          value={field.value}
+                          onDrop={(file) => field.onChange(file)}
+                          title={"Click to upload"}
+                          subheading={"or drag and drop"}
+                          description={"PNG or JPG"}
+                          drag={"Drop the files here..."}
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </div>
+                      </div>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
                   )}
                 />
 
-                <Button disabled={!selectedCustomer?.id || loading} type="submit" className="mt-2 w-full">
-                  {loading && <Spinner />} Post
-                </Button>
-              </form>
-            </Form>
+                <Controller
+                  name="next"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Next follow Up</FieldLabel>
+                      <AppCalendar
+                        date={field.value}
+                        onChange={field.onChange}
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </div>
+
+              <Controller
+                name="note"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Write something</FieldLabel>
+                    <Textarea
+                      {...field}
+                      rows={3}
+                      placeholder="Write something..."
+                      aria-invalid={fieldState.invalid}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Button
+                disabled={!selectedCustomer?.id || loading}
+                type="submit"
+                className="mt-2 w-full"
+              >
+                {loading && <Spinner />} Post
+              </Button>
+            </form>
           </CardContent>
         </Card>
 
@@ -334,7 +337,7 @@ export default function VisitTab({
                         )}
                       </Label>
                       {selectedDelete === feedback.id ? (
-                        <Spinner size={16} />
+                        <Spinner />
                       ) : (
                         <Trash2
                           size={16}
@@ -349,9 +352,8 @@ export default function VisitTab({
                 <CardContent className="p-4">
                   <Link
                     target="blank"
-                    href={`/${base_route}/${
-                      feedback.customer_member ? "member" : "customer"
-                    }${feedback.customer_id}`}
+                    href={`/${base_route}/${feedback.customer_member ? "member" : "customer"
+                      }${feedback.customer_id}`}
                   >
                     <p className="text-sm text-gray-500">
                       {feedback?.customer_name || feedback?.customer_owner} -{" "}
@@ -378,7 +380,7 @@ export default function VisitTab({
                     ) : (
                       <MapPinOff className="text-red-500 h-5 w-5 opacity-50" />
                     )}
-                     {feedback.signature && <MyImg img={feedback.signature} />}
+                    {feedback.signature && <MyImg img={feedback.signature} />}
                     {feedback.image && <MyImg img={feedback.image} />}
                   </div>
                 </CardContent>
@@ -389,16 +391,16 @@ export default function VisitTab({
       </div>
 
       <Dialog
-        open={selectedSignature}
+        open={!!selectedSignature}
         onOpenChange={() => setSelectedSignature(null)}
       >
-        
+
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Signature</DialogTitle>
           </DialogHeader>
           <div className="flex flex-1 items-center justify-center">
-          <RenderSignature img={selectedSignature}/>
+            <RenderSignature img={selectedSignature} />
           </div>
         </DialogContent>
       </Dialog>
@@ -406,8 +408,8 @@ export default function VisitTab({
   );
 }
 
-const RenderSignature = ({ img }) => {
-  const [localImage, setLocalImage] = useState(null);
+const RenderSignature = ({ img }: { img: string | null }) => {
+  const [localImage, setLocalImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -450,14 +452,14 @@ const RenderSignature = ({ img }) => {
   );
 };
 
-export const MyImg = ({ img }) => {
-  const [localImage, setLocalImage] = useState(null);
+export const MyImg = ({ img }: { img: string }) => {
+  const [localImage, setLocalImage] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     if (!img) {
-      setLocalImage(null);
+      setLocalImage("");
       setError(false);
       setLoading(false);
       return;
@@ -476,9 +478,9 @@ export const MyImg = ({ img }) => {
           setLocalImage(url);
         })
         .catch((e) => {
-          console.log("error loading image",e)
+          console.log("error loading image", e)
           setError(true);
-          setLocalImage(null);
+          setLocalImage("");
         })
         .finally(() => {
           setLoading(false);
@@ -487,12 +489,12 @@ export const MyImg = ({ img }) => {
   }, [img]);
 
   if (loading) return <Spinner />;
-  if (!img && !localImage) return <p>No image</p>;
+  if (!img || !localImage) return <p>No image</p>;
   if (error) return <p>Failed to load image</p>
 
   return (
     <Zoom>
-      <img alt="visit image" src={localImage} className="h-[100px] w-auto object-contain" />
+      <img alt="image" src={localImage} className="h-[100px] w-auto object-contain" />
     </Zoom>
   );
 };

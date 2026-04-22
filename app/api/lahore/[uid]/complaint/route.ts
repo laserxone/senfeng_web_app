@@ -22,6 +22,7 @@ export async function GET(req : NextRequest, { params } : {params : Promise<{ ui
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
+    console.log(user.designation)
 
     if (user.complaint_assigned || isAdmin) {
       query = `
@@ -136,7 +137,13 @@ export async function GET(req : NextRequest, { params } : {params : Promise<{ ui
         FROM complaints c
         LEFT JOIN customer cu ON c.customer_id = cu.id
         LEFT JOIN users owner_user ON cu.ownership = owner_user.id
-        LEFT JOIN complaint_assignments ca ON ca.complaint_id = c.id
+        LEFT JOIN LATERAL (
+  SELECT *
+  FROM complaint_assignments
+  WHERE complaint_id = c.id
+  ORDER BY created_at DESC
+  LIMIT 1
+) ca ON true
         LEFT JOIN users engineer ON ca.engineer_id = engineer.id
         LEFT JOIN users assigned_by_user ON ca.assigned_by = assigned_by_user.id
         WHERE cu.ownership = $1
@@ -157,17 +164,14 @@ export async function GET(req : NextRequest, { params } : {params : Promise<{ ui
     const result = await pool.query(query, queryParams);
     return NextResponse.json(result.rows, { status: 200 });
 
-  } catch (error) {
+  } catch (error : any) {
     console.log(error)
     return NextResponse.json({ message: error.message || "Error occured" }, { status: 500 })
   }
 }
 
-export async function POST(req, { params }) {
+export async function POST(req : NextRequest) {
   const data = await req.json()
-
-  const { uid } = await params
-
 
 
   try {
@@ -188,15 +192,15 @@ export async function POST(req, { params }) {
 
     const { rows } = await pool.query(query, values);
     return NextResponse.json(rows[0], { status: 200 });
-  } catch (error) {
+  } catch (error : any) {
     return NextResponse.json({ message: error.message || "Error occured" }, { status: 500 });
   }
 
 }
 
-export async function PUT(req, { params }) {
+export async function PUT(req : NextRequest) {
 
-  const { uid } = await params
+ 
 
 
 
@@ -208,7 +212,7 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
-    const fields = [];
+    const fields : any[] = [];
     const values = [];
 
     Object.entries(updates).forEach(([key, value], index) => {

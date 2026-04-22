@@ -6,36 +6,39 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
+  CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-export function InventorySearch({ value, onReturn, data }) {
+type InventoryProp = {
+  id: number
+  name: string
+}
+
+export function InventorySearch({ value, onReturn, data }: { value: number, onReturn: (val: InventoryProp) => void, data: InventoryProp[] }) {
   const [open, setOpen] = React.useState(false);
- 
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between"
-        >
-          {value ? data.find((item)=> item.id === value)?.name : "Select item..."}
-          <ChevronsUpDown className="opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="py-2 px-0">
+    <>
+      <Button
+        variant="outline"
+        role="combobox"
+        aria-expanded={open}
+        className="w-full justify-between"
+        onClick={(e) => {
+          e.preventDefault()
+          setOpen(!open)
+        }}
+      >
+        {value ? data.find((item) => item.id === value)?.name : "Select item..."}
+        <ChevronsUpDown className="opacity-50" />
+      </Button>
+      <CommandDialog open={open} onOpenChange={setOpen}>
         <Command>
           <CommandInput placeholder="Search item..." className="h-9" />
           <CommandList>
@@ -46,7 +49,7 @@ export function InventorySearch({ value, onReturn, data }) {
                   key={index}
                   value={item.name}
                   onSelect={() => {
-                    onReturn(item); // return full object
+                    onReturn(item);
                     setOpen(false);
                   }}
                 >
@@ -62,7 +65,8 @@ export function InventorySearch({ value, onReturn, data }) {
             </CommandGroup>
           </CommandList>
         </Command>
-      </PopoverContent>
-    </Popover>
+      </CommandDialog>
+
+    </>
   );
 }

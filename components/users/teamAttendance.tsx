@@ -27,16 +27,17 @@ import moment from "moment";
 import momentT from "moment-timezone";
 import { useTheme } from "next-themes";
 import LeaveApproval from "@/components/users/leaveApproval";
+import { UserAttendanceRecord } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 
 export default function TeamAttendance() {
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<UserAttendanceRecord[]>([]);
   const [visible, setVisible] = useState(false);
-  const [selectedAttendance, setSelectedAttendance] = useState(null);
+  const [selectedAttendance, setSelectedAttendance] = useState<UserAttendanceRecord | null>(null);
   const [resetLoading, setResetLoading] = useState(false);
   const { userID } = useUserDetail();
-  const [approveLeave, setApproveLeave] = useState(null);
+  const [approveLeave, setApproveLeave] = useState<UserAttendanceRecord| null>(null);
 
   useEffect(() => {
     if (userID) {
@@ -56,7 +57,7 @@ export default function TeamAttendance() {
     }
   }, [userID]);
 
-  async function fetchData(start, end, user = null) {
+  async function fetchData(start : string, end : string, user : string| undefined | null | number = null) {
     return new Promise((res) => {
       axios
         .get(
@@ -64,7 +65,7 @@ export default function TeamAttendance() {
         )
         .then((response) => {
           if (response.data.length > 0) {
-            const apiData = response.data.map((item) => {
+            const apiData = response.data.map((item : any) => {
               let status = item?.leave_status
                 ? `Leave ${item?.leave_status}`
                 : "Absent";
@@ -102,7 +103,7 @@ export default function TeamAttendance() {
     });
   }
 
-  function generateAttendanceData(rawData, start, end) {
+  function generateAttendanceData(rawData :UserAttendanceRecord[], start : string, end : string) {
     const start_date = moment(start);
     const end_date = moment(end);
 
@@ -110,16 +111,16 @@ export default function TeamAttendance() {
       new Set(rawData.map((item) => item.user_email)),
     );
 
-    const datesInMonth = [];
+    const datesInMonth : string[] = [];
     let current = moment(start_date);
     while (current.isSameOrBefore(end_date)) {
       datesInMonth.push(current.format("YYYY-MM-DD"));
       current.add(1, "day");
     }
 
-    const finalData = [];
+    const finalData : any = [];
 
-    const userMap = {};
+    const userMap : any = {};
     rawData.forEach((item) => {
       if (!userMap[item.user_email]) {
         userMap[item.user_email] = item.user_name;
@@ -152,15 +153,15 @@ export default function TeamAttendance() {
       });
     });
 
-    finalData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    finalData.sort((a : any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
     const today = moment().format("YYYY-MM-DD");
 
-    const filteredData = finalData.filter((item) => item.date <= today);
+    const filteredData = finalData.filter((item : any) => item.date <= today);
 
     return filteredData;
   }
 
-  const columns = [
+  const columns : ColumnDef<UserAttendanceRecord>[] = [
     {
       accessorKey: "date",
       filterFn: "includesString",
@@ -332,7 +333,6 @@ export default function TeamAttendance() {
       <PageTable
         columns={columns}
         data={data}
-        tableHeader={tableHeader}
         onRowClick={(val, event) => {
           if (val?.time_in) {
             setSelectedAttendance(val);
@@ -415,7 +415,7 @@ export default function TeamAttendance() {
   );
 }
 
-export const AttendanceDetail = ({ detail, visible, onClose }) => {
+export const AttendanceDetail = ({ detail, visible, onClose } : {detail : UserAttendanceRecord | null,visible : boolean, onClose : (val : boolean)=> void}) => {
   return (
     <Dialog open={visible} onOpenChange={onClose}>
       <DialogContent
@@ -467,8 +467,8 @@ export const AttendanceDetail = ({ detail, visible, onClose }) => {
   );
 };
 
-const RenderImage = ({ img }) => {
-  const [localImage, setLocalImage] = useState(null);
+const RenderImage = ({ img } : {img : string | null}) => {
+  const [localImage, setLocalImage] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchImage() {
@@ -485,6 +485,8 @@ const RenderImage = ({ img }) => {
     }
   }, [img]);
 
+  if(!localImage) return null
+
   return (
     <img
       src={localImage}
@@ -494,7 +496,8 @@ const RenderImage = ({ img }) => {
   );
 };
 
-const LocationMap = ({ position }) => {
+const LocationMap = ({ position }  : {position : number[] | null}) => {
+  if(!position) return null
   const { theme } = useTheme();
 
   const defaultMapContainerStyle = {
@@ -503,7 +506,7 @@ const LocationMap = ({ position }) => {
     borderRadius: "15px 0px 0px 15px",
   };
 
-  const defaultMapCenter = {
+  const defaultMapCenter : google.maps.LatLngLiteral = {
     lat: position[0],
     lng: position[1],
   };
@@ -532,7 +535,7 @@ const LocationMap = ({ position }) => {
   }, [theme]);
 
   const RenderMap = useCallback(
-    ({ position }) => {
+    ({ position } : { position: number[] }) => {
       return (
         <GoogleMap
           mapContainerStyle={defaultMapContainerStyle}
@@ -542,8 +545,8 @@ const LocationMap = ({ position }) => {
         >
           <Marker
             position={{
-              lat: parseFloat(position[0]),
-              lng: parseFloat(position[1]),
+              lat: position[0],
+              lng: position[1],
             }}
           />
         </GoogleMap>

@@ -3,10 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   ArrowUpDown,
-  ChevronsRight,
   Filter,
   Loader2,
-  Trash,
+  Trash
 } from "lucide-react";
 import {
   useCallback,
@@ -19,6 +18,7 @@ import {
 
 import PageTable from "@/components/app-table-without-pagination";
 import AppCalendar from "@/components/appCalendar";
+import CurrencyFormatter from "@/components/currency-formatter";
 import { CustomerSearchWithData } from "@/components/customer-search-with-data";
 import Dropzone from "@/components/dropzone";
 import { RequiredStar } from "@/components/RequiredStar";
@@ -29,18 +29,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import Heading from "@/components/ui/heading";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -57,6 +58,7 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import exportToExcel from "@/lib/exportToExcel";
+import { MyCustomer } from "@/lib/types";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -64,19 +66,10 @@ import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import momentT from "moment-timezone";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
-import CurrencyFormatter from "@/components/currency-formatter";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export default function Page() {
   const [filterVisible, setFilterVisible] = useState(false);
@@ -111,8 +104,7 @@ export default function Page() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${
-            user || ""
+          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${user || ""
           }`,
         )
         .then((response) => {
@@ -191,9 +183,8 @@ export default function Page() {
         if (currentItem.customer_id)
           return (
             <Link
-              href={`/${base_route}/${
-                currentItem.customer_member ? "member" : "customer"
-              }/${currentItem.customer_id}`}
+              href={`/${base_route}/${currentItem.customer_member ? "member" : "customer"
+                }/${currentItem.customer_id}`}
               target="blank"
               onClick={(e) => e.stopPropagation()}
             >
@@ -577,9 +568,9 @@ const ImageSheet = ({
   );
 };
 
-const AddReimbursementDialog = ({ visible, onClose, onRefresh }) => {
+const AddReimbursementDialog = ({ visible, onClose, onRefresh }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void> }) => {
   const [loading, setLoading] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(null);
   const [selectedRadio, setSelectedRadio] = useState("customer");
   const { userID } = useUserDetail();
   const { state: OfficeState } = useContext(OfficeContext);
@@ -587,46 +578,43 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }) => {
   const formSchema = z
     .object({
       title: z.string().min(1, { message: "Purpose is required." }),
-      customer: z.number({ required_error: "Customer is required." }),
+      customer: z.number({ error: "Customer is required." }).nullable(),
       description: z.string().min(1, { message: "Description is required." }),
-      amount: z
-        .number()
-        .min(0.01, { message: "Amount must be greater than zero." }),
-      date: z.date({ required_error: "Date is required." }),
+      amount: z.coerce.number<number>().min(0, "Amount is required"),
+      date: z.date({ error: "Date is required." }),
       image: z.string().min(1, { message: "Image is required." }),
       city: z.string().min(1, { message: "City is required." }),
       submitted_by: z.number().min(1, { message: "User is required" }),
     })
     .refine(
-      (data) =>
-        selectedRadio !== "customer" ||
-        (data.customer !== undefined && data.customer !== null),
+      (data) => selectedRadio !== "customer" || (data.customer !== undefined && data.customer !== null),
       {
         path: ["customer"],
         message: "Customer is required.",
-      },
+      }
     );
 
-  const form = useForm({
+  type FormValues = z.infer<typeof formSchema>;
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
       description: "",
-      amount: "",
-      date: "",
+      amount: 0,
+      date: undefined,
       image: "",
       city: "",
-      submittedBy: null,
+      submitted_by: undefined,
       customer: null,
     },
   });
 
-  async function onSubmit(values) {
+  async function onSubmit(values: FormValues) {
     setLoading(true);
     try {
-      const name = `${OfficeState.value.data}/${
-        values.submitted_by
-      }/reimbursement/${moment().valueOf().toString()}.png`;
+      const name = `${OfficeState.value.data}/${values.submitted_by
+        }/reimbursement/${moment().valueOf().toString()}.png`;
       const imgRef = await UploadImage(values.image, name);
       const response = await axios.post(`/${userID}/reimbursement`, {
         amount: values.amount,
@@ -679,204 +667,223 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }) => {
                 <Label htmlFor="r2">Other</Label>
               </div>
             </RadioGroup>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FieldGroup>
+
+                {/* Customer (conditional) */}
                 {selectedRadio === "customer" && (
-                  <FormField
-                    control={form.control}
+                  <Controller
                     name="customer"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>
                           Customer <RequiredStar />
-                        </FormLabel>
+                        </FieldLabel>
+
                         <CustomerSearchWithData
                           value={selectedCustomer}
                           onReturn={(val) => {
                             field.onChange(val.id);
                             setSelectedCustomer(val);
+
                             if (val.location) {
                               form.setValue("city", val.location);
                             }
-                            form.setValue("title", val.company || val.owner);
+
+                            form.setValue("title", val?.company || val?.owner || "");
                           }}
                         />
-                      </FormItem>
+
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
                     )}
                   />
                 )}
 
-                <FormField
-                  control={form.control}
+                
+                <Controller
                   name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Purpose
-                        <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select Purpose" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectItem value="New Installation">
-                                New Installation
-                              </SelectItem>
-                              <SelectItem value="Complaint">
-                                Complaint
-                              </SelectItem>
-                              <SelectItem value="Overhauling">
-                                Overhauling
-                              </SelectItem>
-                              <SelectItem value="Sales Meeting">
-                                Sales Meeting
-                              </SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>
+                        Purpose <RequiredStar />
+                      </FieldLabel>
+
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Purpose" />
+                        </SelectTrigger>
+
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem value="New Installation">
+                              New Installation
+                            </SelectItem>
+                            <SelectItem value="Complaint">
+                              Complaint
+                            </SelectItem>
+                            <SelectItem value="Overhauling">
+                              Overhauling
+                            </SelectItem>
+                            <SelectItem value="Sales Meeting">
+                              Sales Meeting
+                            </SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
+                {/* City */}
+                <Controller
                   name="city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field>
+                      <FieldLabel>
                         City <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter city" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                      </FieldLabel>
+
+                      <Input placeholder="Enter city" {...field} />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
+                {/* Description */}
+                <Controller
                   name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field>
+                      <FieldLabel>
                         Description <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Enter description" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                      </FieldLabel>
+
+                      <Textarea placeholder="Enter description" {...field} />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
+                {/* Amount */}
+                <Controller
                   name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field>
+                      <FieldLabel>
                         Amount <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Enter amount"
-                          value={field?.value ? field.value : ""}
-                          onChange={(e) => {
-                            if (!isNaN(e.target.value)) {
-                              field.onChange(Number(e.target.value));
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                      </FieldLabel>
+
+                      <Input
+                        type="number"
+                        placeholder="Enter amount"
+                        value={field.value ?? ""}
+                        onChange={(e) => {
+                          if (!isNaN(Number(e.target.value))) {
+                            field.onChange(Number(e.target.value));
+                          }
+                        }}
+                      />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
+                {/* Date */}
+                <Controller
                   name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field>
+                      <FieldLabel>
                         Date <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <AppCalendar
-                          date={field.value}
-                          onChange={field.onChange}
-                          max={new Date()}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                      </FieldLabel>
+
+                      <AppCalendar
+                        date={field.value}
+                        onChange={field.onChange}
+                        max={new Date()}
+                      />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
+                {/* Submitted By */}
+                <Controller
                   name="submitted_by"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Select User <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <UserSearch
-                          value={field.value}
-                          onReturn={field.onChange}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
                   control={form.control}
-                  name="image"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Image <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <div className="flex flex-1 items-center justify-center">
-                          <Dropzone
-                            value={field.value}
-                            onDrop={(file) => {
-                              field.onChange(file);
-                            }}
-                            title={"Click to upload"}
-                            subheading={"or drag and drop"}
-                            description={"PNG or JPG"}
-                            drag={"Drop the files here..."}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                  render={({ field, fieldState }) => (
+                    <Field>
+                      <FieldLabel>
+                        Select User <RequiredStar />
+                      </FieldLabel>
+
+                      <UserSearch value={field.value} onReturn={field.onChange} />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
                   )}
                 />
 
+                {/* Image */}
+                <Controller
+                  name="image"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field>
+                      <FieldLabel>
+                        Image <RequiredStar />
+                      </FieldLabel>
+
+                      <Dropzone
+                        value={field.value}
+                        onDrop={(file) => field.onChange(file)}
+                        title="Click to upload"
+                        subheading="or drag and drop"
+                        description="PNG or JPG"
+                        drag="Drop the files here..."
+                      />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+
+                {/* Submit */}
                 <Button className="w-full" type="submit">
                   {loading && <Spinner />} Submit
                 </Button>
-              </form>
-            </Form>
+
+              </FieldGroup>
+            </form>
           </div>
         </ScrollArea>
       </DialogContent>

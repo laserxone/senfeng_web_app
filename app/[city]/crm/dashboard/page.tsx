@@ -17,23 +17,19 @@ import "./styles.css";
 import OldRecordSheet from "@/components/users/old-record-sheet";
 import RenderFines from "@/components/users/render-fines";
 import { updateItemPurpose } from "@/lib/updatePurpose";
-type User = {
-  id?: number | string;
-  name?: string;
-  designation?: string;
-  dp?: string;
-};
+import { UserAttendanceRecord, UserDashboard, UserExtraTypes, UserReimbursementType } from "@/lib/types";
+
 
 type ProfileData = {
-  user?: User;
+  user?: UserDashboard;
 };
 export default function Page() {
   const [data, setData] = useState<ProfileData>();
   const { userID } = useUserDetail();
-  const [extraData, setExtraData] = useState({});
+  const [extraData, setExtraData] = useState<UserExtraTypes>();
   const [selectedOption, setSelectedOption] = useState("thisMonth");
-  const [reimbursementData, setReimbursementData] = useState([]);
-  const [attendanceData, setAttendanceData] = useState([]);
+  const [reimbursementData, setReimbursementData] = useState<UserReimbursementType[]>([]);
+  const [attendanceData, setAttendanceData] = useState<UserAttendanceRecord[]>([]);
   const [oldRecordVisible, setOldRecordVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("newCustomers");
 
@@ -48,7 +44,7 @@ export default function Page() {
     }
   }, [userID]);
 
-  async function fetchReimbursementData(startDate, endDate) {
+  async function fetchReimbursementData(startDate: string, endDate: string) {
     return new Promise((resolve, reject) => {
       axios
         .get(
@@ -65,7 +61,7 @@ export default function Page() {
     });
   }
 
-  async function fetchAttendanceData(startDate:string, endDate:string) : Promise<void|any>{
+  async function fetchAttendanceData(startDate: string, endDate: string): Promise<void | any> {
     return new Promise((res, rej) => {
       axios
         .get(
@@ -73,7 +69,7 @@ export default function Page() {
         )
         .then((response) => {
           if (response.data.length > 0) {
-            const apiData = response.data.map((item) => {
+            const apiData = response.data.map((item: UserAttendanceRecord) => {
               return {
                 ...item,
                 date: item?.time_in,
@@ -123,7 +119,7 @@ export default function Page() {
               totalCustomerText={"Total Customers"}
               ownership={true}
               customer_data={
-                extraData && selectedOption ? extraData[selectedOption] : []
+                selectedOption && extraData ? extraData[selectedOption as Exclude<keyof UserExtraTypes, "user">] : []
               }
               onRefresh={() => fetchExtraCustomerOptions()}
             />
@@ -148,9 +144,9 @@ export default function Page() {
             onReset={async (start, end) => {
               await fetchReimbursementData(start, end);
             }}
-            onFilterReturn={async (start, end) =>
+            onFilterReturn={async (start, end) => {
               await fetchReimbursementData(start, end)
-            }
+            }}
             onUpdatePurpose={(val) => {
               const newData = updateItemPurpose(reimbursementData, val);
               setReimbursementData(newData);
@@ -232,7 +228,7 @@ export default function Page() {
         user_id={userID}
       />
 
-      <AutoScrollMembers />
+      {/* <AutoScrollMembers /> */}
     </div>
   );
 }

@@ -19,7 +19,15 @@ import { Switch } from "../ui/switch";
 import InvoicePDFGatepass from "./invoice-pdf-gatepass";
 import StockSearch from "./stock-search";
 
-const emptyItem = {
+type EmptyType = {
+    name: string
+    qty: string
+    unit?: string
+    isExisting: boolean
+    inventory_id: null | number
+    remarks: string
+}
+const emptyItem: EmptyType = {
     name: "",
     qty: "",
     unit: "",
@@ -28,7 +36,9 @@ const emptyItem = {
     inventory_id: null,
 };
 
-const InwardModal = ({ visible, onClose, data = [], onRefresh }) => {
+const InwardModal = ({ visible, onClose, data = [], onRefresh }: {
+    visible: boolean, onClose: (val: boolean) => void, data: any[], onRefresh: () => Promise<void>
+}) => {
 
     const [items, setItems] = useState([emptyItem]);
     const [loading, setLoading] = useState(false)
@@ -36,16 +46,16 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }) => {
 
     const stock = data.length > 0 ? data.slice(0, -2) : [];
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true)
-
-        const formData = {
-            from: e.target.from.value,
-            vehicle_no: e.target.vehicle_no.value,
-            driver_name: e.target.driver_name.value,
-            manager: e.target.manager.value,
-            received_by: e.target.received_by.value,
+        const formData = new FormData(e.currentTarget);
+        const data = {
+            from: formData.get("from") as string,
+            vehicle_no: formData.get("vehicle_no") as string,
+            driver_name: formData.get("driver_name") as string,
+            manager: formData.get("manager") as string,
+            received_by: formData.get("received_by") as string,
             items: items,
         };
 
@@ -53,11 +63,11 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }) => {
             const response = await axios.post(`/${userID}/pos/inward`, formData)
             const blob = await pdf(
                 <InvoicePDFGatepass
-                    from={formData.from}
-                    vehicle_no={formData.vehicle_no}
-                    driver_name={formData.driver_name}
-                    received_by={formData.received_by}
-                    manager={formData.manager}
+                    from={data.from}
+                    vehicle_no={data.vehicle_no}
+                    driver_name={data.driver_name}
+                    received_by={data.received_by}
+                    manager={data.manager}
                     gatepass={response.data.id}
                     gatepassType={"Inward Gate Pass"}
                     items={items}
@@ -74,10 +84,6 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }) => {
         setLoading(false)
         onRefresh()
         onClose(false)
-
-
-
-
     };
 
     useEffect(() => {
@@ -91,13 +97,13 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }) => {
 
 
     const handleItemChange = (
-        index,
-        field,
-        value
+        index: number,
+        field: string,
+        value: string | boolean | number
     ) => {
         if (field === "isExisting") {
             const copy = [...items];
-            copy[index] = { ...copy[index], [field]: value, name: "", qty: "", remarks: "", unit: "", inventory_id: null };
+            copy[index] = { ...copy[index], [field as string]: value, name: "", qty: "", remarks: "", unit: "", inventory_id: null };
             setItems(copy);
         } else {
             const copy = [...items];
@@ -108,18 +114,17 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }) => {
     };
 
     const addItem = () => setItems([...items, emptyItem]);
-    const removeItem = (index) =>
+    const removeItem = (index: number) =>
         items.length > 1 ? setItems(items.filter((_, i) => i !== index)) : null;
 
     return (
         <Dialog open={visible} onOpenChange={onClose}>
-            <DialogContent className="p-4 max-w-4xl">
+            <DialogContent className="p-4 w-full sm:max-w-4xl">
                 <DialogHeader>
                     <DialogTitle>Inward Gatepass</DialogTitle>
                 </DialogHeader>
                 <ScrollArea className="max-h-[90vh] w-full pr-2">
                     <form onSubmit={handleSubmit} className="space-y-4 ">
-                        {/* Top Fields */}
                         <div className="grid grid-cols-2 gap-4 px-2">
                             <div>
                                 <label className="text-sm font-medium">From</label>

@@ -2,7 +2,7 @@ import { storage } from "@/config/firebase";
 import axios from "@/lib/axios";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { Minus, PencilIcon, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import "./Button.css";
 import Dropzone from "./dropzone";
@@ -13,6 +13,25 @@ import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
 import Spinner from "../ui/spinner";
 import AddNewProduct from "./add-new-product";
+import { InvoiceItem, StockProps } from "@/lib/types";
+import { toast } from "sonner";
+
+type RenderStockItemsProps = {
+  designation: string,
+  item: StockProps,
+  index: number,
+  invoiceItems: InvoiceItem[],
+  handleDecrease: (item: StockProps) => void,
+  handleIncrease: (item: StockProps) => void,
+  showOther: boolean,
+  setShowOther: Dispatch<SetStateAction<boolean>>,
+  setPrice: Dispatch<SetStateAction<string | number>>,
+  setQty: Dispatch<SetStateAction<string | number>>,
+  setOther: Dispatch<SetStateAction<string>>,
+  visible: boolean,
+  onClose: (val: boolean) => void,
+  onRefresh: () => void,
+}
 
 const RenderStockItems = ({
   designation,
@@ -29,23 +48,23 @@ const RenderStockItems = ({
   visible,
   onClose,
   onRefresh,
-}) => {
+}: RenderStockItemsProps) => {
   const [localName, setLocalName] = useState("");
   const [localChineseName, setLocalChineseName] = useState("");
-  const [localQty, setLocalQty] = useState("");
+  const [localQty, setLocalQty] = useState<number | string>("");
   const [localPrice, setLocalPrice] = useState("");
-  const [localImage, setLocalImage] = useState(null);
+  const [localImage, setLocalImage] = useState<File | null>(null);
   const [editable, setEditable] = useState(false);
   const [remarks, setRemarks] = useState("")
   const [loading, setLoading] = useState(false);
-  const [itemImg, setImg] = useState(null);
-  const [threshold, setThreshold] = useState("");
-  const [newOrder, setNewOrder] = useState("");
+  const [itemImg, setImg] = useState<string | null>(null);
+  const [threshold, setThreshold] = useState<number | string>("");
+  const [newOrder, setNewOrder] = useState<string | number>("");
   const [buying, setBuying] = useState("");
   const { userID } = useUserDetail();
 
   useEffect(() => {
-    async function getImage(refImage) {
+    async function getImage(refImage: string) {
       const starsRef = ref(storage, `products/${refImage}`);
       getDownloadURL(starsRef)
         .then((url) => {
@@ -76,7 +95,7 @@ const RenderStockItems = ({
     }
   }, []);
 
-  const uploadFiles = async (item, imgRef) => {
+  const uploadFiles = async (item: Blob | null, imgRef: string | null | undefined) => {
     let name = "";
     if (imgRef) {
       name = imgRef;
@@ -123,56 +142,36 @@ const RenderStockItems = ({
     });
   };
 
-  async function handleSave(id, imgRef) {
+  async function handleSave(id: number, imgRef: string | null | undefined) {
     if (localPrice && isNaN(Number(localPrice))) {
-      toast({
-        title: "Error",
-        description: "Price must be a number",
-        variant: "destructive",
-      });
+      toast.error("Price must be a number");
       return;
     }
 
     if (localQty && isNaN(Number(localQty))) {
-      toast({
-        title: "Error",
-        description: "Quantity must be a number",
-        variant: "destructive",
-      });
+      toast.error("Quantity must be a number");
       return;
     }
 
     if (threshold && isNaN(Number(threshold))) {
-      toast({
-        title: "Error",
-        description: "Threshold must be a number",
-        variant: "destructive",
-      });
+      toast.error("Threshold must be a number");
       return;
     }
 
     if (newOrder && isNaN(Number(newOrder))) {
-      toast({
-        title: "Error",
-        description: "New order must be a number",
-        variant: "destructive",
-      });
+      toast.error("New order must be a number");
       return;
     }
 
     if (buying && isNaN(Number(buying))) {
-      toast({
-        title: "Error",
-        description: "Buying price must be a number",
-        variant: "destructive",
-      });
+      toast.error("Buying price must be a number");
       return;
     }
 
-    const formData = {
+    const formData: any = {
       name: localName,
       chinese_name: localChineseName,
-      remarks : remarks
+      remarks: remarks
     };
 
     if (!isNaN(Number(localPrice))) {
@@ -205,11 +204,7 @@ const RenderStockItems = ({
 
       onRefresh();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to upload image or data. Try again",
-        variant: "destructive",
-      });
+      toast.error("Failed to upload image or data. Try again");
     } finally {
       setLoading(false);
     }
@@ -236,10 +231,10 @@ const RenderStockItems = ({
     <AddNewProduct visible={visible} onClose={onClose} onRefresh={onRefresh} />
   ) : (
     <div
-      className={`w-[300px] border border-gray-300 rounded-lg shadow-md p-5 flex flex-col ${
-        invoiceItems.find((eachItem) => eachItem.id === item.id)?.qty > 0 &&
-        "bg-blue-100"
-      }`}
+      className={`w-[300px] border border-gray-300 rounded-lg shadow-md p-5 flex flex-col ${(invoiceItems?.find((eachItem) => eachItem.id === item.id)?.qty ?? 0) > 0
+          ? "bg-blue-100"
+          : ""
+        }`}
     >
       {!editable ? (
         <div className="flex flex-1 flex-col">
@@ -277,25 +272,6 @@ const RenderStockItems = ({
             onChange={(e) => setLocalChineseName(e.target.value)}
           />
 
-          {/* <div className="flex justify-between">
-            <div className="text-[14px]">Quantity</div>
-
-            <input
-              placeholder={item?.qty || "Enter qty"}
-              style={{
-                borderWidth: 1,
-                borderColor: "#cccccc",
-                fontSize: "14px",
-                width: "50%",
-              }}
-              value={localQty}
-              className="px-2 "
-              onChange={(e) => {
-                setLocalQty(e.target.value);
-              }}
-            />
-          </div> */}
-
           <div className="flex justify-between">
             <div className="text-[14px]">Price</div>
             <input
@@ -316,7 +292,7 @@ const RenderStockItems = ({
           <div className="flex justify-between">
             <div className="text-[14px]">Threshold</div>
             <input
-              placeholder={item?.threshold || "Enter threshold"}
+              placeholder={item?.threshold?.toString() || "Enter threshold"}
               style={{
                 borderWidth: 1,
                 borderColor: "#cccccc",
@@ -333,7 +309,7 @@ const RenderStockItems = ({
           <div className="flex justify-between">
             <div className="text-[14px]">New order</div>
             <input
-              placeholder={item?.threshold || "Enter new order"}
+              placeholder={item?.threshold?.toString() || "Enter new order"}
               style={{
                 borderWidth: 1,
                 borderColor: "#cccccc",
@@ -368,7 +344,7 @@ const RenderStockItems = ({
             </div>
           )}
 
-           {designation === "Owner" && (
+          {designation === "Owner" && (
             <div className="flex justify-between">
               <div className="text-[14px]">Remarks</div>
               <input

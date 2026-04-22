@@ -2,7 +2,7 @@
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table-without-pagination";
 import { Button } from "@/components/ui/button";
-import  Heading  from "@/components/ui/heading";
+import Heading from "@/components/ui/heading";
 import {
   Select,
   SelectContent,
@@ -17,50 +17,24 @@ import FilterSheet from "@/components/users/filterSheet";
 
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { ArrowUpDown, Filter, Trash2 } from "lucide-react";
+import { MyCustomer, MyCustomerResolved } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown, Filter, PcCase, Trash2 } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-const tableHeader = [
-  {
-    value: "Owner",
-    label: "Owner",
-  },
-  {
-    value: "Name",
-    label: "Company Name",
-  },
-  {
-    value: "Number",
-    label: "Number",
-  },
-  {
-    value: "Industry",
-    label: "Industry",
-  },
-  {
-    value: "customer_group",
-    label: "Group",
-  },
-  {
-    value: "Location",
-    label: "Location",
-  },
-  {
-    value: "Machines",
-    label: "Machines",
-  },
-];
 
-export default function MemberMainPage({ onReturn }) {
+
+export default function MemberMainPage({ onReturn }: { onReturn: (val: number) => void }) {
   const [additionalFilter, setAdditionalFilter] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<MyCustomerResolved[]>([]);
   const { userID, isAdmin, designation, customer_delete_access, } = useUserDetail()
-  const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [numCount, setNumCount] = useState({});
+  const [numCount, setNumCount] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [resetLoading, setResetLoading] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
@@ -73,29 +47,29 @@ export default function MemberMainPage({ onReturn }) {
       });
   }, [userID]);
 
-  async function fetchData(startDate, endDate, user) {
+  async function fetchData(startDate?: string, endDate?: string, user?: number) {
     return new Promise((resolve, reject) => {
       axios
         .get(
           `/${userID
           }/customer?machines=true&member=true&start_date=${startDate || ""
           }&end_date=${endDate || ""}&user=${user || ""}`
-        ) 
+        )
         .then((response) => {
-          const apiData = response.data;
-         
+          const apiData: MyCustomer[] = response.data;
+
           const temp = apiData
             .map((item) => {
               return {
                 ...item,
-                machines: item.machines.join(", "),
-                order_nums : item?.machine_order_numbers?.join(", "),
-                orignalNumber: item.number,
-                number: item.number.join(", "),
+                machines: item?.machines?.join(", "),
+                order_nums: item?.machine_order_numbers?.join(", "),
+                orignalNumber: item?.number,
+                number: item?.number?.join(", "),
                 sorting: item.owner || item.name,
               };
             })
-            .filter((item) => item.member);
+            .filter((item) => item?.member);
           setData([...temp]);
         })
         .finally(() => {
@@ -104,7 +78,7 @@ export default function MemberMainPage({ onReturn }) {
     });
   }
 
-  const columns = [
+  const columns: ColumnDef<MyCustomerResolved>[] = [
     {
       accessorKey: "owner",
       filterFn: "includesString",
@@ -294,14 +268,14 @@ export default function MemberMainPage({ onReturn }) {
     setSelectedUser(null);
   }
 
-  async function handleDelete(id) {
+  async function handleDelete(id: number | null) {
     if (!id) return;
     setDeleteLoading(true);
     try {
       const response = await axios.delete(
         `/${userID}/customer/${id}`
       );
-      toast({ title: "Customer Deleted" });
+      toast.success("Customer Deleted");
       await fetchData();
     } finally {
       setDeleteLoading(false);
@@ -323,12 +297,15 @@ export default function MemberMainPage({ onReturn }) {
     );
   useEffect(() => {
     if (data.length > 0) {
-      const numberCount = {};
+      const numberCount: any = {};
 
       data.forEach((item) => {
-        item.orignalNumber.forEach((num) => {
-          numberCount[num] = (numberCount[num] || 0) + 1;
-        });
+        if (item.orignalNumber) {
+          item.orignalNumber.forEach((num) => {
+            numberCount[num] = (numberCount[num] || 0) + 1;
+          });
+        }
+
       });
       setNumCount(numberCount);
     }
@@ -343,15 +320,16 @@ export default function MemberMainPage({ onReturn }) {
         }/customer?machines=true&member=true&mycustomer=true`
       )
       .then((response) => {
-        const apiData = response.data;
+        const apiData : MyCustomer[] = response.data;
         const temp = apiData
           .map((item) => {
             return {
               ...item,
-              machines: item.machines.join(", "),
+              machines: item?.machines?.join(", "),
               orignalNumber: item.number,
-              number: item.number.join(", "),
+              number: item?.number?.join(", "),
               sorting: item.owner || item.name,
+              order_nums: item?.machine_order_numbers?.join(", "),
             };
           })
           .filter((item) => item.member);
@@ -377,13 +355,13 @@ export default function MemberMainPage({ onReturn }) {
           data={
             additionalFilter === "duplicate"
               ? filteredData.sort((a, b) =>
-                a?.sorting
+                (a?.sorting || "")
                   ?.toLowerCase()
                   ?.localeCompare(b?.sorting?.toLowerCase() || "")
               )
               : filteredData
           }
-          tableHeader={tableHeader}
+          
           onRowClick={(val, e) => {
             if (val.id) {
 
@@ -443,7 +421,7 @@ export default function MemberMainPage({ onReturn }) {
                   >
                     Clear
                   </Button>
-                
+
                 </>
               )}
 
@@ -471,7 +449,7 @@ export default function MemberMainPage({ onReturn }) {
                       handleMyCustomers()
                     }}
                   >
-                  {myLoading && <Spinner />}  Show My Customers
+                    {myLoading && <Spinner />}  Show My Customers
                   </Button>
                 }
               </div>
@@ -493,7 +471,7 @@ export default function MemberMainPage({ onReturn }) {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(val.start, val.end, val.user);
+          await fetchData(val.start, val.end, val?.user);
         }}
       />
     </>

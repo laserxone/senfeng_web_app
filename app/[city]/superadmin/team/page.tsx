@@ -18,13 +18,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import PageTable from "@/components/app-table-without-pagination";
 import AppCalendar from "@/components/appCalendar";
 import { RequiredStar } from "@/components/RequiredStar";
 import { Badge } from "@/components/ui/badge";
-import  Heading  from "@/components/ui/heading";
+import Heading from "@/components/ui/heading";
 import {
   Select,
   SelectContent,
@@ -39,6 +39,7 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import moment from "moment";
 import { useRouter } from "next/navigation";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 
 const columns = [
   {
@@ -198,7 +199,7 @@ export default function Page() {
       axios
         .get(`/${userID}/user?withbranch=true`)
         .then((response) => {
-          
+
           setData(response.data);
         })
         .finally(() => {
@@ -228,32 +229,32 @@ export default function Page() {
           if (status === 'Active') return item.active === true;
           return item.active === false;
         })}
-      
+
         onRowClick={(val, event) => {
           if (val.id) {
             const url = `/${base_route}/team/${val.id}`;
             if (event.ctrlKey || event.metaKey) {
               window.open(url, "_blank");
             } else {
-          
+
               router.push(url);
             }
           }
         }}
       >
         <div className="w-lg">
-        <Select onValueChange={setStatus} value={status}>
-          <SelectTrigger>
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="All">All</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Inactive">Inactive</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+          <Select onValueChange={setStatus} value={status}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="All">All</SelectItem>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Inactive">Inactive</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
 
       </PageTable>
@@ -287,14 +288,14 @@ const AddUserDialog = ({
   onClose,
   onReturn,
   office = "islamabad",
-}) => {
+}: { visible: boolean, onClose: (val: boolean) => void, onReturn: (item: any) => void, office: string }) => {
   const [dataLoading, setDataLoading] = useState(false);
   const { userID } = useUserDetail();
   const formSchema = z.object({
     name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-    email: z.string().email({ message: "Invalid email address." }),
+    email: z.email({ message: "Invalid email address." }),
     designation: z.string().min(1, { message: "Designation missing" }),
-    joining_date: z.date({ required_error: "Joining date is required." }),
+    joining_date: z.date({ error: "Joining date is required." }),
     office: z.string().min(1, { message: "" }),
     note: z.string().optional(),
   });
@@ -305,7 +306,7 @@ const AddUserDialog = ({
       name: "",
       email: "",
       designation: "",
-      joining_date: "",
+      joining_date: undefined,
       note: "",
       office: office,
     },
@@ -349,7 +350,7 @@ const AddUserDialog = ({
     { label: "Store Manager", value: "Store Manager" },
   ];
 
-  async function handleClose(val) {
+  async function handleClose(val: boolean) {
     onClose(val);
     form.reset();
   }
@@ -361,150 +362,162 @@ const AddUserDialog = ({
           <DialogTitle>Add new user</DialogTitle>
         </DialogHeader>
         <div className="py-4">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FieldGroup>
+
+              {/* Name */}
+              <Controller
                 name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>
                       Name <RequiredStar />
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                    </FieldLabel>
+
+                    <Input placeholder="Enter name" {...field} />
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
                 )}
               />
 
-              <FormField
-                control={form.control}
+              {/* Email */}
+              <Controller
                 name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>
                       Email <RequiredStar />
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                    </FieldLabel>
+
+                    <Input placeholder="Enter email" {...field} />
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
                 )}
               />
 
-              <FormField
-                control={form.control}
+              {/* Designation */}
+              <Controller
                 name="designation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>
                       Designation <RequiredStar />
-                    </FormLabel>
-                    <FormControl>
-                      <Select
-                        onValueChange={(e) => {
-                          const value = e;
-                          field.onChange(value);
-                        }}
-                        value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder="Select designation..."
-                            className="w-full"
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            {designations.map((framework) => (
-                              <SelectItem
-                                key={framework.value}
-                                value={framework.value}
-                              >
-                                {framework.label}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                    </FieldLabel>
+
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select designation..." />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectGroup>
+                          {designations.map((item) => (
+                            <SelectItem key={item.value} value={item.value}>
+                              {item.label}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
                 )}
               />
 
-              <FormField
-                control={form.control}
+              {/* Office */}
+              <Controller
                 name="office"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>
                       Office branch <RequiredStar />
-                    </FormLabel>
-                    <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder="Select office"
-                            className="w-full"
-                          />
-                        </SelectTrigger>
+                    </FieldLabel>
 
-                        <SelectContent>
-                          <SelectGroup>
-                            {["lahore", "karachi"].map((item) => (
-                              <SelectItem key={item} value={item}>
-                                {item}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select office" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectGroup>
+                          {["lahore", "karachi"].map((item) => (
+                            <SelectItem key={item} value={item}>
+                              {item}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
                 )}
               />
 
-              <FormField
-                control={form.control}
+              {/* Note */}
+              <Controller
                 name="note"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Additional Note</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Enter personal note" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
                 control={form.control}
-                name="joining_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Joining Date <RequiredStar />
-                    </FormLabel>
-                    <AppCalendar date={field.value} onChange={field.onChange} />
-                    <FormMessage />
-                  </FormItem>
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Additional Note</FieldLabel>
+
+                    <Textarea placeholder="Enter personal note" {...field} />
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
                 )}
               />
 
+              {/* Joining Date */}
+              <Controller
+                name="joining_date"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>
+                      Joining Date <RequiredStar />
+                    </FieldLabel>
+
+                    <AppCalendar
+                      date={field.value}
+                      onChange={field.onChange}
+                    />
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              {/* Submit */}
               <Button disabled={dataLoading} className="w-full" type="submit">
                 {dataLoading && <Spinner />} Save
               </Button>
-            </form>
-          </Form>
+
+            </FieldGroup>
+          </form>
         </div>
       </DialogContent>
     </Dialog>

@@ -13,17 +13,15 @@ import {
 import { auth } from "@/config/firebase";
 import { useProfileImage } from "@/hooks/use-profile-image";
 import useUserDetail from "@/hooks/use-user-detail";
-import { NotificationContext } from "@/store/context/NotificationContext";
 import { signOut } from "firebase/auth";
 import Link from "next/link";
-import { useContext } from "react";
 import NotificationDropdown from "./notification-dropdown";
 export function UserNav() {
 
-  const {base_route, name, email} = useUserDetail()
-  
+  const { base_route, name, email } = useUserDetail()
+
   const profileImage = useProfileImage();
-  const { state: NotificationState } = useContext(NotificationContext);
+
   return (
     <div className="flex items-center space-x-2">
       <DropdownMenu>
@@ -67,7 +65,6 @@ export function UserNav() {
         </DropdownMenuContent>
       </DropdownMenu>
       <NotificationDropdown
-        NotificationState={NotificationState}
       />
     </div>
   );

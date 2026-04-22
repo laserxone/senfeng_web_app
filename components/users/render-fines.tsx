@@ -9,9 +9,11 @@ import momentT from "moment-timezone";
 import { useEffect, useState } from "react";
 import FilterSheet from "./filterSheet";
 import axios from "@/lib/axios";
+import { ColumnDef } from "@tanstack/react-table";
+import { UserFines } from "@/lib/types";
 
 
-const columns = [
+const columns : ColumnDef<UserFines>[] = [
   {
     accessorKey: "created_at",
     filterFn: "includesString",
@@ -103,25 +105,6 @@ const columns = [
   },
 ];
 
-const tableHeader = [
-  {
-    value: "customer_name",
-    label: "Customer",
-  },
-  {
-    value: "user_name",
-    label: "Employee",
-  },
-  {
-    value: "amount",
-    label: "Amount",
-  },
-  {
-    value: "reason",
-    label: "Reason",
-  },
-];
-
 const RenderFines = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -145,7 +128,7 @@ const RenderFines = () => {
     }
   }, [userID]);
 
-  async function fetchData(startDate, endDate) {
+  async function fetchData(startDate : string, endDate : string) {
     setLoading(true);
     return new Promise((resolve, reject) => {
       axios
@@ -173,7 +156,6 @@ const RenderFines = () => {
               loading={loading}
               columns={columns}
               data={data}
-              tableHeader={tableHeader}
             >
               <Button
                 onClick={() => setFilterVisible(true)}

@@ -13,9 +13,11 @@ import PageTable from "@/components/app-table-without-pagination";
 import moment from "moment";
 import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
+import { UserAttendanceRecord } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 
 type AttendanceProps = {
-  passingData: any[];
+  passingData: UserAttendanceRecord[];
   onFilterReturn: (start: string, end: string) => Promise<void> | void;
   onRefresh?: (startDate: string, endDate: string) => Promise<void> | void;
 };
@@ -25,17 +27,18 @@ export default function Attendance({
   onFilterReturn,
   onRefresh,
 }: AttendanceProps) {
-  const [filterVisible, setFilterVisible] = useState<boolean>(false);
-  const [data, setData] = useState<any[]>([]);
-  const [visible, setVisible] = useState<boolean>(false);
-  const [selectedAttendance, setSelectedAttendance] = useState<any>(null);
-  const [resetLoading, setResetLoading] = useState<boolean>(false);
+
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [data, setData] = useState<UserAttendanceRecord[]>([]);
+  const [visible, setVisible] = useState(false);
+  const [selectedAttendance, setSelectedAttendance] = useState<UserAttendanceRecord | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
     setData(passingData);
   }, [passingData]);
 
-  const columns = [
+  const columns : ColumnDef<UserAttendanceRecord>[] = [
     {
       accessorKey: "date",
       filterFn: "includesString",
@@ -222,7 +225,7 @@ export default function Attendance({
                   setResetLoading(true);
                   const startDate = moment().startOf("month").toISOString();
                   const endDate = moment().endOf("month").toISOString();
-                  await onRefresh(startDate, endDate);
+                  await onRefresh?.(startDate, endDate);
                   setResetLoading(false);
                 }}
               >

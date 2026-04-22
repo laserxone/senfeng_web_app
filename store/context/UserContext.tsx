@@ -27,10 +27,12 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
       if (authData.full_access || authData.designation === 'Owner') {
         if (!pathname.includes("superadmin")) {
           router.replace(`/${authData.office.toLowerCase()}/superadmin/dashboard`)
+          return
         }
       } else {
         if (!pathname.includes(authData.base_route)) {
           router.replace(`/${authData.base_route}/dashboard`)
+          return
         }
       }
       setUser(authData)

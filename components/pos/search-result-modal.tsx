@@ -1,9 +1,7 @@
-import axios from "@/lib/axios";
 import { ArrowUpDown } from "lucide-react";
-import { useRef, useState } from "react";
+import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Label } from "../ui/label";
 import {
   Select,
   SelectContent,
@@ -15,27 +13,36 @@ import "./Button.css";
 import PageTable from "./app-table";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 import useUserDetail from "@/hooks/use-user-detail";
+import formatCurrency from "@/lib/formatCurrency";
+import { SearchItem } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import Link from "next/link";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
-import { Checkbox } from "../ui/checkbox";
-import Spinner from "../ui/spinner";
-import formatCurrency from "@/lib/formatCurrency";
-import Link from "next/link";
+
+type PageTableRef = {
+  handleClear: () => void;
+};
 
 const SearchResultModal = ({
   visible,
   onClose,
   data,
   onselect,
-  onRefresh,
-  onReturn,
+}: {
+  visible: boolean,
+  onClose: Dispatch<SetStateAction<boolean>>,
+  data: SearchItem[],
+  onselect: (item: SearchItem) => void,
+
 }) => {
-  const pageTableRef = useRef();
+  const pageTableRef = useRef<PageTableRef | null>(null);
   const [value, setValue] = useState("");
 
   const total = data.reduce((sum, item) => sum + (item.final_amount || 0), 0);
   const { base_route } = useUserDetail();
-  const columns = [
+
+  const columns: ColumnDef<SearchItem>[] = [
     {
       accessorKey: "created_at",
       header: ({ column }) => {
@@ -197,14 +204,14 @@ const SearchResultModal = ({
 
   function handleClear() {
     if (pageTableRef.current) {
-      pageTableRef.current.handleClear();
+      pageTableRef.current?.handleClear();
       setValue("");
     }
   }
 
   return (
     <Dialog open={visible} onOpenChange={onClose}>
-      <DialogContent className="max-w-[90vw] h-[90vh]">
+      <DialogContent className="max-w-[90vw] h-[90vh] min-w-[90vw]">
         <DialogHeader className={"hidden"}>
           <DialogTitle>Select Invoice</DialogTitle>
         </DialogHeader>
@@ -270,48 +277,5 @@ const SearchResultModal = ({
   );
 };
 
-const RenderPaid = ({ row, onRefresh, onReturn }) => {
-  const { userID } = useUserDetail();
-
-  async function handleUpdatePayment(checked) {
-    if (!row.original?.customer_id) {
-      setLocalLoading(true);
-      await axios
-        .put(`/${userID}/pos/payment/${row.original.id}`, {
-          payment: checked,
-        })
-        .then(async () => {
-          setLocalChecked(checked);
-          await onRefresh(row.original, checked);
-        })
-        .catch((e) => {
-          console.log(e);
-        })
-        .finally(() => {
-          setLocalLoading(false);
-        });
-    } else {
-      onReturn(row.original);
-    }
-  }
-
-  const [localChecked, setLocalChecked] = useState(row.getValue("payment"));
-  const [localLoading, setLocalLoading] = useState(false);
-  return (
-    <div className="flex flex-row gap-2 items-center">
-      {localLoading ? (
-        <Spinner />
-      ) : (
-        <>
-          <Label className="text-lg">{localChecked ? "Paid" : "Unpaid"}</Label>
-          {/* <Checkbox
-            checked={localChecked}
-            onCheckedChange={handleUpdatePayment}
-          /> */}
-        </>
-      )}
-    </div>
-  );
-};
 
 export default SearchResultModal;

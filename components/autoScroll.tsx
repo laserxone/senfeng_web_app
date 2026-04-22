@@ -10,12 +10,14 @@ import {
   CardTitle
 } from "./ui/card";
 import { Label } from "./ui/label";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const AutoScrollMembers = () => {
   const {userID, base_route} = useUserDetail()
-  const [localData, setLocalData] = useState([]);
-  const scrollRef = useRef(null);
+  const [localData, setLocalData] = useState<{id : number, member : boolean, name : string }[]>([]);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     async function fetchData() {
@@ -56,7 +58,7 @@ const AutoScrollMembers = () => {
 
     let scrollSpeed = 1;
     let direction = 1;
-    let interval;
+    let interval : any;
 
     const scroll = () => {
       if (!isHovered) {
@@ -112,13 +114,15 @@ const AutoScrollMembers = () => {
   if (localData.length == 0) return null;
 
   const duplicatedList = [...localData, ...localData];
+  if(isMobile) return null
   return (
-    <Card style={{ height: "100%" }}>
-      <CardHeader>
+    <Card className="mt-1">
+     
+      <CardContent>
+         <CardHeader>
         <CardTitle>Members</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div ref={scrollRef} className="h-[calc(100dvh-200px)] no-scrollbar overflow-y-auto">
+        <div ref={scrollRef} className="h-[calc(100dvh-100px)] no-scrollbar overflow-y-auto">
           {duplicatedList.map((item, index) => {
             const randomColor = colors[index % colors.length];
             return (

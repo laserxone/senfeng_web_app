@@ -11,19 +11,18 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import VisitTab from "@/components/users/addVisit";
 import Attendance from "@/components/users/attendance";
 import CustomerEmployee from "@/components/users/customer";
 import Reimbursement from "@/components/users/Reimbursement";
-import { GetProfileImage } from "@/lib/getProfileImage";
-import { UserContext } from "@/store/context/UserContext";
 
+import AppCalendar from "@/components/appCalendar";
+import { RequiredStar } from "@/components/RequiredStar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -34,77 +33,31 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import Spinner from "@/components/ui/spinner";
+import { CustomerExtraData } from "@/components/users/ExtraData";
+import { ProfilePicture } from "@/components/users/ProfilePicture";
+import RenderFines from "@/components/users/render-fines";
+import RenderReturnable from "@/components/users/render-returnable";
 import SalaryRecord from "@/components/users/SalaryRecord";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { SalesCustomer, SalesCustomerMachines, SalesDashboard, SalesMachine, SalesVisitTypes, UserAttendanceRecord, UserCallData, UserExtraTypes, UserReimbursementType } from "@/lib/types";
+import { updateItemPurpose } from "@/lib/updatePurpose";
 import { AlertCircle, CheckCircle, Clock } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
-import AppCalendar from "@/components/appCalendar";
-import { RequiredStar } from "@/components/RequiredStar";
-import { CustomerExtraData } from "@/components/users/ExtraData";
-import { ProfilePicture } from "@/components/users/ProfilePicture";
-import useUserDetail from "@/hooks/use-user-detail";
-import RenderReturnable from "@/components/users/render-returnable";
-import RenderFines from "@/components/users/render-fines";
-import { updateItemPurpose } from "@/lib/updatePurpose";
-type User = {
-  id: number | string;
-  name: string;
-  designation: string;
-  dp: string | null;
-};
-type Payment = {
-  amount: number;
-};
 
-type Machine = {
-  serial_no: string;
-  id: number | string;
-  price: number;
-  percentage_completion: number;
-  payments: Payment[];
-};
-type Customer = {
-  id: number | string;
-  name: string;
-  member?: boolean;
-  profile_completion: number;
-  sales: Machine[];
-};
-type Call = {
-  id: number | string;
-  name?: string;
-  owner?: string;
-  number: string[];
-};
-type PageData = {
-  user: User;
-
-  machinesSoldThisMonth: number;
-  percentageChange: number;
-
-  feedbacksTakenThisMonth: number;
-  totalCustomersWithSale: number;
-  remainingFeedbacks: number;
-
-  totalVisits: number;
-
-  machinesSoldThisMonthDetail: Machine[];
-
-  customers: Customer[];
-};
-export default function Page() {
-  const [data, setData] = useState<PageData>();
+export default function Page() { 
+  const [data, setData] = useState<SalesDashboard>();
   const { userID, base_route } = useUserDetail();
-  const [visitData, setVisitData] = useState([]);
-  const [extraData, setExtraData] = useState({});
+  const [visitData, setVisitData] = useState<SalesVisitTypes[]>([]);
+  const [extraData, setExtraData] = useState<UserExtraTypes>();
   const [selectedOption, setSelectedOption] = useState("thisMonth");
-  const [reimbursementData, setReimbursementData] = useState([]);
-  const [attendanceData, setAttendanceData] = useState([]);
-  const [callData, setCallData] = useState([]);
-  const [machineData, setMachineData] = useState([]);
+  const [reimbursementData, setReimbursementData] = useState<UserReimbursementType[]>([]);
+  const [attendanceData, setAttendanceData] = useState<UserAttendanceRecord[]>([]);
+  const [callData, setCallData] = useState<UserCallData[]>([]);
+  const [machineData, setMachineData] = useState<SalesMachine[]>([]);
   const [visible, setVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("newCustomers");
 
@@ -122,7 +75,7 @@ export default function Page() {
     }
   }, [userID]);
 
-  async function fetchCallData(startDate, endDate) {
+  async function fetchCallData(startDate: string, endDate: string) {
     return new Promise<void>((resolve) => {
       axios
         .get(`/${userID}/call?start_date=${startDate}&end_date=${endDate}`)
@@ -135,7 +88,7 @@ export default function Page() {
     });
   }
 
-  async function fetchReimbursementData(startDate, endDate) {
+  async function fetchReimbursementData(startDate: string, endDate: string) {
     return new Promise((resolve, reject) => {
       axios
         .get(
@@ -152,15 +105,15 @@ export default function Page() {
     });
   }
 
-  async function fetchAttendanceData(startDate, endDate) {
-    return new Promise<void|any>((res, rej) => {
+  async function fetchAttendanceData(startDate: string, endDate: string) {
+    return new Promise<void | any>((res, rej) => {
       axios
         .get(
           `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           if (response.data.length > 0) {
-            const apiData = response.data.map((item) => {
+            const apiData = response.data.map((item : any) => {
               return {
                 ...item,
                 date: item?.time_in,
@@ -191,7 +144,7 @@ export default function Page() {
     });
   }
 
-  async function fetchVisitData(start, end) {
+  async function fetchVisitData(start: string, end: string) {
     return new Promise((res, rej) => {
       axios
         .get(`/${userID}/visit?start_date=${start}&end_date=${end}`)
@@ -222,7 +175,7 @@ export default function Page() {
           await fetchVisitData(startDate, endDate);
           await fetchData();
         }}
-        onFetchData={async (start, end, userId) => {
+        onFetchData={async (start: string, end: string) => {
           await fetchVisitData(start, end);
         }}
       />
@@ -242,10 +195,10 @@ export default function Page() {
               }}
             />
             <CustomerEmployee
-              id={userID}
+             
               ownership={false}
               customer_data={
-                selectedOption && extraData ? extraData[selectedOption] : []
+                selectedOption && extraData ? extraData[selectedOption as Exclude<keyof UserExtraTypes, "user">] : []
               }
               onRefresh={() => fetchData()}
             />
@@ -277,21 +230,20 @@ export default function Page() {
           <Reimbursement
             id={userID}
             passingData={reimbursementData || []}
-              onAddRefresh={async () => {
-                          const startDate = moment().startOf("month").toISOString();
-                          const endDate = moment().endOf("month").toISOString();
-                          await fetchReimbursementData(startDate, endDate);
-                        }}
-            onFilterReturn={async (start, end) =>
-              await fetchReimbursementData(start, end)
+            onAddRefresh={async () => {
+              const startDate = moment().startOf("month").toISOString();
+              const endDate = moment().endOf("month").toISOString();
+              await fetchReimbursementData(startDate, endDate);
+            }}
+            onFilterReturn={async (start, end) => { await fetchReimbursementData(start, end) }
             }
-              onReset={async (start, end) => {
+            onReset={async (start: string, end: string) => {
               await fetchReimbursementData(start, end);
             }}
             onUpdatePurpose={(val) => {
-                          const newData = updateItemPurpose(reimbursementData, val);
-                          setReimbursementData(newData);
-                        }}
+              const newData = updateItemPurpose(reimbursementData, val);
+              setReimbursementData(newData);
+            }}
           />
         </CardContent>
       </Card>
@@ -384,7 +336,7 @@ export default function Page() {
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
             <TabsTrigger value="issued">Returnable</TabsTrigger>
-              <TabsTrigger value="fines">Fines</TabsTrigger>
+            <TabsTrigger value="fines">Fines</TabsTrigger>
           </TabsList>
 
           <div className="flex flex-1 w-full mt-2">
@@ -410,42 +362,13 @@ export default function Page() {
       </div>
 
       <AutoScrollMembers />
-
-      <Dialog open={visible} onOpenChange={setVisible}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Machines Sold</DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="h-[70vh]">
-            <div className="flex flex-1 flex-col gap-2">
-              <div className="grid grid-cols-3 font-semibold border-b pb-2">
-                <div>Serial No</div>
-                <div>Company</div>
-                <div>Owner</div>
-              </div>
-
-              {machineData.map((item, index) => (
-                <Link
-                  key={index}
-                  target="_blank"
-                  href={`/${base_route}/member/${item.customer_id}/${item.id}`}
-                  className="grid grid-cols-3 hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded"
-                >
-                  <div>{item.serial_no}</div>
-                  <div>{item.customer_name || "-"}</div>
-                  <div>{item.customer_owner || "-"}</div>
-                </Link>
-              ))}
-            </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
+      <MachinesSold visible={visible} setVisible={setVisible} machineData={machineData} base_route={base_route}/>
     </div>
   );
 }
 
-function CustomersTab({ data }) {
-  const [localData, setLocalData] = useState([]);
+function CustomersTab({ data }: {data : SalesCustomer[]}) {
+  const [localData, setLocalData] = useState<(SalesCustomer & {overall : string})[]>([]);
   const { base_route } = useUserDetail();
 
   useEffect(() => {
@@ -468,7 +391,7 @@ function CustomersTab({ data }) {
     }
   }, [data]);
 
-  const RenderEachMachine = ({ machine, customer_id }) => {
+  const RenderEachMachine = ({ machine, customer_id } : {machine : SalesCustomerMachines, customer_id : number}) => {
     const totalPayments = machine.payments.reduce(
       (sum, payment) => sum + Number(payment.amount),
       0
@@ -484,7 +407,7 @@ function CustomersTab({ data }) {
             Data completion: {machine?.percentage_completion || 0}%
           </span>
           {Number(machine.price) === totalPayments &&
-          machine?.percentage_completion === 100 ? (
+            machine?.percentage_completion === 100 ? (
             <CheckCircle className="text-green-500 w-5 h-5 mr-2" />
           ) : (
             <Clock className="text-yellow-500 w-5 h-5 mr-2" />
@@ -503,8 +426,8 @@ function CustomersTab({ data }) {
   };
 
   return (
-    <ScrollArea className="h-[calc(100dvh-250px)] p-5 w-full">
-      <Accordion type="single" collapsible className="w-full space-y-4">
+    <ScrollArea className="h-[calc(100dvh-250px)] w-full">
+      <Accordion type="single" collapsible className="w-full space-y-4 p-2">
         {localData.length == 0 ? (
           <Label>No Data found</Label>
         ) : (
@@ -519,9 +442,8 @@ function CustomersTab({ data }) {
                     <AccordionTrigger className="px-4 py-2 hover:no-underline">
                       <div className="flex justify-between items-center w-full">
                         <Link
-                          href={`/${base_route}/${
-                            customer.member ? "member" : "customer"
-                          }/${customer.id}`}
+                          href={`/${base_route}/${customer.member ? "member" : "customer"
+                            }/${customer.id}`}
                         >
                           <h3 className="font-semibold text-lg hover:underline">
                             {customer.name}
@@ -580,14 +502,14 @@ function CustomersTab({ data }) {
   );
 }
 
-function Calls({ data, onRefresh }) {
+function Calls({ data, onRefresh } : {data : UserCallData[], onRefresh : () => Promise<void>}) {
   const [visible, setVisible] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<UserCallData | null>(null);
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [satisfactory, setSatisfactory] = useState(false);
-  const [next, setNext] = useState(null);
+  const [next, setNext] = useState<Date | undefined>(undefined);
   const [top, setTop] = useState(false);
   const { userID } = useUserDetail();
 
@@ -596,7 +518,6 @@ function Calls({ data, onRefresh }) {
     axios
       .post(`/${userID}/feedback`, {
         feedback: feedback,
-        top_follow: false,
         type: "feedback",
         customer_id: selectedCustomer?.id,
         user_id: userID,
@@ -612,7 +533,7 @@ function Calls({ data, onRefresh }) {
       });
   }
 
-  const RenderEachCall = ({ call }) => {
+  const RenderEachCall = ({ call } : {call : UserCallData}) => {
     return (
       <Card key={call.id} className="w-full">
         <CardContent className="py-4 px-6">
@@ -684,7 +605,7 @@ function Calls({ data, onRefresh }) {
                 <Checkbox
                   checked={top}
                   onCheckedChange={(checked) => {
-                    setTop(checked===true);
+                    setTop(checked === true);
                   }}
                 />
               </div>
@@ -694,7 +615,7 @@ function Calls({ data, onRefresh }) {
                 <Checkbox
                   checked={satisfactory}
                   onCheckedChange={(checked) => {
-                    setSatisfactory(checked===true);
+                    setSatisfactory(checked === true);
                   }}
                 />
               </div>
@@ -712,4 +633,39 @@ function Calls({ data, onRefresh }) {
       </Dialog>
     </div>
   );
+}
+
+function MachinesSold ({visible, setVisible, machineData, base_route} : {visible : boolean, setVisible : (val : boolean)=> void, machineData : SalesMachine[], base_route : string}) {
+
+  return (
+     <Dialog open={visible} onOpenChange={setVisible}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Machines Sold</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[70vh]">
+            <div className="flex flex-1 flex-col gap-2">
+              <div className="grid grid-cols-3 font-semibold border-b pb-2">
+                <div>Serial No</div>
+                <div>Company</div>
+                <div>Owner</div>
+              </div>
+
+              {machineData.map((item, index) => (
+                <Link
+                  key={index}
+                  target="_blank"
+                  href={`/${base_route}/member/${item.customer_id}/${item.id}`}
+                  className="grid grid-cols-3 hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded"
+                >
+                  <div>{item.serial_no}</div>
+                  <div>{item.customer_name || "-"}</div>
+                  <div>{item.customer_owner || "-"}</div>
+                </Link>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+  )
 }

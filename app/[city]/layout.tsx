@@ -24,14 +24,14 @@ export default async function DashboardLayout({ children, params }: {
       <PageContainer>
         {children}
       </PageContainer>
-      <FinePopup />
+      {/* <FinePopup />
       <EdgePanel width={384} className={"pt-4"}>
         <div className="flex gap-2 w-full justify-evenly">
           <FloatingInformation />
           <FloatingTodo />
           <FloatingChat />
         </div>
-      </EdgePanel>
+      </EdgePanel> */}
     </CommonLayout>
   );
 }

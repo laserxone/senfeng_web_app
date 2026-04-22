@@ -2,19 +2,19 @@
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
-
 import PageTable from "@/components/app-table-without-pagination";
 import SalaryPdf from "@/components/salaryPdf";
 import axios from "@/lib/axios";
 import moment from "moment";
 import { FaRegFilePdf } from "react-icons/fa";
 import "react-medium-image-zoom/dist/styles.css";
-
 import { pdf } from "@react-pdf/renderer";
+import { UserSalaryProps } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 
-const SalaryRecord = ({ id }) => {
+const SalaryRecord = ({ id }: { id: number }) => {
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<UserSalaryProps[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -22,7 +22,7 @@ const SalaryRecord = ({ id }) => {
     }
   }, [id]);
 
-  async function fetchData(id) {
+  async function fetchData(id: number) {
     axios
       .get(`/${id}/record`)
       .then((response) => {
@@ -33,7 +33,7 @@ const SalaryRecord = ({ id }) => {
       });
   }
 
-  const columns = [
+  const columns : ColumnDef<UserSalaryProps>[] = [
     {
       accessorKey: "salary_month",
       filterFn: "includesString",
@@ -92,7 +92,7 @@ const SalaryRecord = ({ id }) => {
     },
   ];
 
-  async function handleDownload(item) {
+  async function handleDownload(item : UserSalaryProps) {
     const blob = await pdf(<SalaryPdf data={item} />).toBlob();
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
@@ -107,14 +107,7 @@ const SalaryRecord = ({ id }) => {
           loading={loading}
           columns={columns}
           data={data}
-        
-          onRowClick={(val, e) => {
-            // setImageURL(val);
-            // setVisible(true);
-          }}
-          // filter={true}
-          // onFilterClick={() => setFilterVisible(true)}
-        ></PageTable>
+        />
       </div>
     </div>
   );

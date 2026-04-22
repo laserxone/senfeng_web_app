@@ -25,6 +25,8 @@ import Spinner from "@/components/ui/spinner";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { supabase } from "@/lib/supabaseClient";
+import { FileProps, FoldersProps } from "@/lib/types";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { ChevronRight, List, Table2 } from "lucide-react";
 import moment from "moment";
 import Image from "next/image";
@@ -36,6 +38,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { toast } from "sonner";
 import { ProgressWithLabel } from "./progress-with-label";
 import {
   ContextMenu,
@@ -43,54 +46,35 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "./ui/context-menu";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-type FolderItem = {
-  id: string | number;
-  name: string;
-};
 
-type RenderEachFolderProps = {
-  item: FolderItem;
-  index: number;
-  view: boolean;
-  setFolderBread: React.Dispatch<
-    React.SetStateAction<{ name: string; id: string | number }[]>
-  >;
-  setCurrentFolder: React.Dispatch<
-    React.SetStateAction<{ name: string; id: string | number } | null>
-  >;
-  setSelectedFolder: React.Dispatch<any>;
-  setNewName: React.Dispatch<React.SetStateAction<string>>;
-  fetchFiles: () => Promise<void>;
-};
-type PreviewFileProps = {
-  preview: boolean;
-  setPreview: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedPreview: string | null;
-  previewLoading: boolean;
-};
-const videoThumbnailCache = {};
+const videoThumbnailCache: any = {};
+
+type FolderBread = {
+  name: string
+  id: number | null
+}
 
 const DocumentManagement = () => {
-  const [selectedFile, setSelectedFile] = useState([]);
+  const [selectedFile, setSelectedFile] = useState<File[]>([]);
+  const [allFolders, setAllFolders] = useState<FoldersProps[]>([]);
+  const [allDocuments, setAllDocuments] = useState<FileProps[]>([]);
+  const [selectedFolder, setSelectedFolder] = useState<FoldersProps | null>(null);
+  const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const { userID, name, email, dms_write_access, isAdmin } = useUserDetail();
- 
+  const { userID, name, email, dms_write_access } =
+    useUserDetail();
+
   const [uploadLoading, setUploadLoading] = useState(false);
-  const fileInputRef = useRef(null);
-  const [currentFolder, setCurrentFolder] = useState(null);
+  const [currentFolder, setCurrentFolder] = useState<FoldersProps | null>(null);
   const [folderName, setFolderName] = useState("");
   const [visible, setVisible] = useState(false);
-  const [allFolders, setAllFolders] = useState([]);
-  const [allDocuments, setAllDocuments] = useState([]);
-  const [folderBread, setFolderBread] = useState([{ name: "root", id: null }]);
+  const [folderBread, setFolderBread] = useState<FolderBread[]>([{ name: "root", id: null }]);
   const [folderLoading, setFolderLoading] = useState(false);
-  const [selectedFolder, setSelectedFolder] = useState(null);
   const [newName, setNewName] = useState("");
   const [view, setView] = useState(false);
-  const [selectedPreview, setSelectedPreview] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [preview, setPreview] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadingStatus, setUploadingStatus] = useState({
     file: "",
     progress: 0,
@@ -120,10 +104,7 @@ const DocumentManagement = () => {
 
   const uploadFile = async () => {
     if (!selectedFile.length) {
-      toast({
-        title: "Please select at least one file to upload.",
-        variant: "destructive",
-      });
+      toast.info("Please select at least one file to upload.")
       return;
     }
     setUploadLoading(true);
@@ -135,11 +116,7 @@ const DocumentManagement = () => {
       try {
         await uploadWithProgress(file, index);
       } catch (err) {
-        toast({
-          title: `Error uploading ${file.name}`,
-          description: JSON.parse(err)?.message,
-          variant: "destructive",
-        });
+        toast.error(`Error uploading ${file.name}`)
         continue;
       }
     }
@@ -154,7 +131,7 @@ const DocumentManagement = () => {
     setUploadLoading(false);
   }
 
-  async function uploadWithProgress(file, idx) {
+  async function uploadWithProgress(file: File, idx: number) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
 
@@ -235,7 +212,7 @@ const DocumentManagement = () => {
       })
       .then(async () => {
         setNewName("");
-        setSelectedFolder(false);
+        setSelectedFolder(null);
         await fetchFiles();
       })
       .finally(() => {
@@ -243,7 +220,7 @@ const DocumentManagement = () => {
       });
   }
 
-  const handlePreview = useCallback(async (path) => {
+  const handlePreview = useCallback(async (path: string) => {
     setPreviewLoading(true);
     setPreview(true);
     try {
@@ -251,12 +228,12 @@ const DocumentManagement = () => {
         .from("documents")
         .getPublicUrl(path);
 
-     
+
 
       setSelectedPreview(data.publicUrl);
-    }catch(error) {
-        console.error("Error downloading file", error);
-      } finally {
+    } catch (error) {
+      console.error("Error downloading file", error);
+    } finally {
       setPreviewLoading(false);
     }
   }, []);
@@ -275,7 +252,7 @@ const DocumentManagement = () => {
                 type="file"
                 multiple
                 ref={fileInputRef}
-                onChange={(e) => setSelectedFile(Array.from(e.target.files))}
+                onChange={(e) => setSelectedFile(Array.isArray(e.target.files) ? e.target.files : [])}
                 className="border p-2 rounded-md w-72"
               />
               {selectedFile.length > 0 && (
@@ -337,7 +314,7 @@ const DocumentManagement = () => {
             ))}
 
             {allDocuments.map((item) => (
-               <RenderEachFile
+              <RenderEachFile
                 key={item.id}
                 onRefresh={fetchFiles}
                 item={item}
@@ -374,7 +351,7 @@ const DocumentManagement = () => {
       </Dialog>
 
       <Dialog
-        open={selectedFolder}
+        open={!!selectedFolder}
         onOpenChange={() => setSelectedFolder(null)}
       >
         <DialogContent>
@@ -412,24 +389,13 @@ const DocumentManagement = () => {
     </div>
   );
 };
-type FileItem = {
-  id: string | number;
-  path: string;
-  created_at?: string;
-  added_by?: string;
-};
 
-type RenderEachFileProps = {
-  item: FileItem;
-  onPreview: (path: string) => void;
-  onRefresh: () => Promise<void> | void;
-};
-const RenderEachFile = memo(({ item, onPreview, onRefresh }:RenderEachFileProps) => {
+const RenderEachFile = memo(({ item, onPreview, onRefresh }: { item: FileProps, onPreview: (val: string) => void, onRefresh: () => Promise<void> }) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
   const { isAdmin, userID } = useUserDetail();
 
-  async function handleDelete(file) {
+  async function handleDelete(file: FileProps) {
     const id = file.id;
     await axios
       .delete(`/${userID}/document/${id}`)
@@ -442,102 +408,102 @@ const RenderEachFile = memo(({ item, onPreview, onRefresh }:RenderEachFileProps)
       });
   }
 
-const RenderFile = memo(
-  ({ path }:{path:string}) => {
-    const [thumbnail, setThumbnail] = useState(null);
-    const [loadingThumb, setLoadingThumb] = useState(false);
-    const fileExt = path?.toLowerCase();
-    const isImage = fileExt?.match(/\.(jpg|jpeg|png|gif|webp)$/);
-    const isVideo = fileExt?.match(/\.(mp4|mov|webm|mkv)$/);
+  const RenderFile = memo(
+    ({ path }: { path: string }) => {
+      const [thumbnail, setThumbnail] = useState<string | null>(null);
+      const [loadingThumb, setLoadingThumb] = useState(false);
+      const fileExt = path?.toLowerCase();
+      const isImage = fileExt?.match(/\.(jpg|jpeg|png|gif|webp)$/);
+      const isVideo = fileExt?.match(/\.(mp4|mov|webm|mkv)$/);
 
-    useEffect(() => {
-      if (!isVideo) return;
+      useEffect(() => {
+        if (!isVideo) return;
 
-      if (videoThumbnailCache[path]) {
-        setThumbnail(videoThumbnailCache[path]);
-        return;
+        if (videoThumbnailCache[path]) {
+          setThumbnail(videoThumbnailCache[path]);
+          return;
+        }
+
+        setLoadingThumb(true);
+
+        const generateThumbnail = async () => {
+          try {
+            const videoUrl = supabase.storage
+              .from("documents")
+              .getPublicUrl(path).data.publicUrl;
+            if (!videoUrl) return;
+
+            const video = document.createElement("video");
+            video.src = videoUrl;
+            video.crossOrigin = "anonymous";
+            video.currentTime = 1;
+            video.muted = true;
+            video.play().catch(() => { });
+
+            video.addEventListener("loadeddata", () => {
+              const canvas = document.createElement("canvas");
+              canvas.width = 100;
+              canvas.height = 100;
+              const ctx = canvas.getContext("2d");
+              if (ctx) {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const dataUrl = canvas.toDataURL("image/jpeg");
+                videoThumbnailCache[path] = dataUrl;
+                setThumbnail(dataUrl);
+                setLoadingThumb(false);
+              }
+            });
+          } catch (err) {
+            console.error("Error generating video thumbnail", err);
+            setLoadingThumb(false);
+          }
+        };
+
+        generateThumbnail();
+
+      }, [path, isVideo]);
+
+      let url = "/file-icon.png";
+
+      if (fileExt.includes("pdf")) url = "/pdf-icon.png";
+      else if (fileExt.includes("doc")) url = "/docx-icon.png";
+      else if (fileExt.includes("xls")) url = "/xlsx-icon.png";
+      else if (fileExt.includes("ppt")) url = "/ppt-icon.png";
+      else if (isImage) {
+        const { data } = supabase.storage
+          .from("superadmin.documents")
+          .getPublicUrl(path);
+        if (data.publicUrl) url = data.publicUrl;
+      } else if (isVideo) {
+        url = thumbnail || "/mp4-icon.png";
       }
 
-      setLoadingThumb(true);
-
-      const generateThumbnail = async () => {
-        try {
-          const videoUrl = supabase.storage
-            .from("documents")
-            .getPublicUrl(path).data.publicUrl;
-          if (!videoUrl) return;
-
-          const video = document.createElement("video");
-          video.src = videoUrl;
-          video.crossOrigin = "anonymous";
-          video.currentTime = 1;
-          video.muted = true;
-          video.play().catch(() => {});
-
-          video.addEventListener("loadeddata", () => {
-            const canvas = document.createElement("canvas");
-            canvas.width = 100;
-            canvas.height = 100; 
-            const ctx = canvas.getContext("2d");
-            if (ctx) {
-              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-              const dataUrl = canvas.toDataURL("image/jpeg");
-              videoThumbnailCache[path] = dataUrl;
-              setThumbnail(dataUrl);
-              setLoadingThumb(false);
-            }
-          });
-        } catch (err) {
-          console.error("Error generating video thumbnail", err);
-          setLoadingThumb(false);
-        }
-      };
-
-      generateThumbnail();
-
-    }, [path, isVideo]);
-
-    let url = "/file-icon.png";
-
-    if (fileExt.includes("pdf")) url = "/pdf-icon.png";
-    else if (fileExt.includes("doc")) url = "/docx-icon.png";
-    else if (fileExt.includes("xls")) url = "/xlsx-icon.png";
-    else if (fileExt.includes("ppt")) url = "/ppt-icon.png";
-    else if (isImage) {
-      const { data } = supabase.storage
-        .from("superadmin.documents")
-        .getPublicUrl(path);
-      if (data.publicUrl) url = data.publicUrl;
-    } else if (isVideo) {
-      url = thumbnail || "/mp4-icon.png";
-    }
-
-    return (
-      <div className={`max-w-md break-all flex flex-col`}>
-        {loadingThumb ? (
-          <div
-            className="flex items-center justify-center"
-            style={{ width: 100, height: 100 }}
-          >
-            <Spinner />
-          </div>
-        ) : (
-          <div className="w-[100px] h-[120px] overflow-hidden flex justify-center">
-          <Image
-            src={url}
-            height={100}
-            width={100}
-            alt={`${path}-file`}
-            className="object-cover"
-          />
-          </div>
-        )}
-        <Label className={"mt-1"}>{path}</Label>
-      </div>
-    );
-  },
-  (prev, next) => prev.path === next.path,
-);
+      return (
+        <div className={`max-w-md break-all flex flex-col`}>
+          {loadingThumb ? (
+            <div
+              className="flex items-center justify-center"
+              style={{ width: 100, height: 100 }}
+            >
+              <Spinner />
+            </div>
+          ) : (
+            <div className="w-[100px] h-[120px] overflow-hidden flex justify-center">
+              <Image
+                src={url}
+                height={100}
+                width={100}
+                alt={`${path}-file`}
+                className="object-cover"
+              />
+            </div>
+          )}
+          <Label className={"mt-1"}>{path}</Label>
+        </div>
+      );
+    },
+    (prev, next) => prev.path === next.path,
+  );
 
   return (
     <ContextMenu modal={false}>
@@ -612,6 +578,17 @@ const RenderFile = memo(
   );
 });
 
+type RenderEachFolderProps = {
+  item: FoldersProps,
+  index: number,
+  view: boolean,
+  setFolderBread: (val: any) => void,
+  setCurrentFolder: (val: any) => void,
+  setSelectedFolder: (val: FoldersProps) => void,
+  setNewName: (val: string) => void,
+  fetchFiles: () => Promise<void>,
+}
+
 const RenderEachFolder = memo(
   ({
     item,
@@ -622,10 +599,10 @@ const RenderEachFolder = memo(
     setSelectedFolder,
     setNewName,
     fetchFiles,
-  }:RenderEachFolderProps  ) => {
+  }: RenderEachFolderProps) => {
     const [deleteLoading, setDeleteLoading] = useState(false);
     const { userID } = useUserDetail();
-    async function handleDeleteFolder(id) {
+    async function handleDeleteFolder(id: number) {
       try {
         setDeleteLoading(true);
         await axios.delete(`/${userID}/folder/${id}`);
@@ -636,7 +613,7 @@ const RenderEachFolder = memo(
     }
 
     const openFolder = () => {
-      setFolderBread((prev) => [...prev, { name: item.name, id: item.id }]);
+      setFolderBread((prev: FoldersProps[]) => [...prev, { name: item.name, id: item.id }]);
       setCurrentFolder({ name: item.name, id: item.id });
     };
 
@@ -688,7 +665,7 @@ const RenderEachFolder = memo(
   },
 );
 
-const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
+const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }: { folderBread: FolderBread[], setFolderBread: (val: any) => void, setCurrentFolder: (val: any) => void }) => {
   return (
     <Breadcrumb>
       <BreadcrumbList>
@@ -737,11 +714,11 @@ const PreviewFile = React.memo(
     setPreview,
     selectedPreview,
     previewLoading,
-  }: PreviewFileProps) => {
+  }: { preview: boolean, setPreview: (val: boolean) => void, selectedPreview: string | null, previewLoading: boolean }) => {
     const officeFile = selectedPreview
       ? selectedPreview
-          ?.toLowerCase()
-          ?.match(/\.(xlsx|xls|csv|doc|docx|ppt|pptx)$/)
+        ?.toLowerCase()
+        ?.match(/\.(xlsx|xls|csv|doc|docx|ppt|pptx)$/)
       : false;
 
     return (

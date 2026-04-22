@@ -38,7 +38,7 @@ const EditPayment = ({
   machine_id,
   customer_id,
   data,
-  base,
+  
 }) => {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);

@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowUpDown, Edit, Edit2, Filter } from "lucide-react";
+import { ArrowUpDown, Edit, Filter } from "lucide-react";
 import {
   useCallback,
   useContext,
@@ -38,25 +38,25 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { storage } from "@/config/firebase";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import exportToExcel from "@/lib/exportToExcel";
+import { MyCustomer, UserReimbursementType, UserReimbursementTypes } from "@/lib/types";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ColumnDef } from "@tanstack/react-table";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
+import CurrencyFormatter from "../currency-formatter";
 import { CustomerSearchWithData } from "../customer-search-with-data";
 import { RequiredStar } from "../RequiredStar";
 import { Label } from "../ui/label";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-import Spinner from "../ui/spinner";
-import FilterSheet from "./filterSheet";
-import CurrencyFormatter from "../currency-formatter";
-import useUserDetail from "@/hooks/use-user-detail";
 import {
   Select,
   SelectContent,
@@ -65,6 +65,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import Spinner from "../ui/spinner";
+import FilterSheet from "./filterSheet";
+import { Field, FieldGroup, FieldLabel } from "../ui/field";
 
 export default function Reimbursement({
   id,
@@ -73,21 +76,21 @@ export default function Reimbursement({
   onFilterReturn,
   onReset,
   onUpdatePurpose,
-}) {
+}: UserReimbursementTypes) {
   const [filterVisible, setFilterVisible] = useState(false);
-  const [data, setData] = useState([]);
-  const [imageURL, setImageURL] = useState(null);
+  const [data, setData] = useState<UserReimbursementType[]>([]);
+  const [imageURL, setImageURL] = useState<{ submitted_by_name: string, description: string, image: string } | null>(null);
   const [visible, setVisible] = useState(false);
   const [reimbursementVisible, setReimbursementVisible] = useState(false);
   const [total, setTotal] = useState(0);
   const [resetLoading, setResetLoading] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState<UserReimbursementType | null>(null);
 
   useEffect(() => {
     setData([...passingData]);
   }, [passingData]);
 
-  const columns = [
+  const columns: ColumnDef<UserReimbursementType>[] = [
     {
       accessorKey: "date",
       filterFn: "includesString",
@@ -126,7 +129,7 @@ export default function Reimbursement({
         );
       },
       cell: ({ row }) => {
-         return <div className="ml-2">{row.getValue("title")}</div>;
+        return <div className="ml-2">{row.getValue("title")}</div>;
       },
     },
 
@@ -290,12 +293,9 @@ export default function Reimbursement({
           <div className="flex flex-1 justify-between items-center">
             <Button onClick={handleDownload}>Download</Button>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Amount
-                </CardTitle>
-              </CardHeader>
+
               <CardContent>
+                <h1>Total Amount</h1>
                 <div className="text-2xl font-bold">
                   <CurrencyFormatter amount={total} />
                 </div>
@@ -332,7 +332,7 @@ export default function Reimbursement({
         visible={reimbursementVisible}
         onClose={setReimbursementVisible}
         onRefresh={async () => {
-         await onAddRefresh()
+          await onAddRefresh()
           setReimbursementVisible(false);
         }}
       />
@@ -340,9 +340,9 @@ export default function Reimbursement({
   );
 }
 
-const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
+const ImageSheet = ({ visible, onClose, img, submittedBy, description }: { visible: boolean, onClose: () => void, img: string | null, submittedBy: string | null, description: string | null }) => {
   const [imageOpen, setImageOpen] = useState(false);
-  const [localImage, setLocalImage] = useState(null);
+  const [localImage, setLocalImage] = useState<string | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
   const isMountedRef = useRef(true);
 
@@ -382,7 +382,7 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
   }, [imageOpen, onClose]);
 
   // Memoized function for zoom change
-  const handleZoomChange = useCallback((shouldZoom) => {
+  const handleZoomChange = useCallback((shouldZoom: boolean) => {
     setIsZoomed(shouldZoom);
     if (!shouldZoom) {
       setImageOpen(false);
@@ -428,43 +428,45 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
   );
 };
 
-const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
+const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, id: number | string }) => {
   const [selectedRadio, setSelectedRadio] = useState("customer");
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(null);
   const { state: OfficeState } = useContext(OfficeContext);
   const [loading, setLoading] = useState(false);
+
   const formSchema = z.object({
     title: z.string().min(1, { message: "Purpose is required." }),
-    customer: z.number({ required_error: "Customer is required." }),
+    customer: z.number({ error: "Customer is required." }).nullable(),
     description: z.string().min(1, { message: "Description is required." }),
-    amount: z
-      .number()
-      .min(0.01, { message: "Amount must be greater than zero." }),
-    date: z.date({ required_error: "Date is required." }),
+    amount: z.coerce.number<number>().min(0, "Amount is required"),
+    date: z.date({ error: "Date is required." }),
     image: z.string().min(1, { message: "Image is required." }),
     city: z.string().min(1, { message: "City is required." }),
-  }).refine(
-  (data) => selectedRadio !== "customer" || (data.customer !== undefined && data.customer !== null),
-  {
-    path: ["customer"],
-    message: "Customer is required.",
-  }
-);
+  })
+    .refine(
+      (data) => selectedRadio !== "customer" || (data.customer !== undefined && data.customer !== null),
+      {
+        path: ["customer"],
+        message: "Customer is required.",
+      }
+    );
 
-  const form = useForm({
+  type FormValues = z.infer<typeof formSchema>;
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
       description: "",
-      amount: "",
-      date: "",
+      amount: 0,
+      date: undefined,
       image: "",
       city: "",
       customer: null,
     },
   });
 
-  async function onSubmit(values) {
+  async function onSubmit(values: FormValues) {
     setLoading(true);
     try {
       const name = `${OfficeState.value.data}/${id}/reimbursement/${moment().valueOf().toString()}.png`;
@@ -477,8 +479,8 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
         image: name,
         date: values.date,
         submitted_by: id,
-        customer_id : selectedRadio === 'customer' ? values.customer : null,
-        purpose : true
+        customer_id: selectedRadio === 'customer' ? values.customer : null,
+        purpose: true
       });
       onRefresh();
       form.reset();
@@ -499,7 +501,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
         setSelectedCustomer(null);
         setSelectedRadio("customer");
         setLoading(false);
-        onClose(val);
+        onClose(false);
       }}
     >
       <DialogContent className="sm:max-w-[425px]">
@@ -524,189 +526,181 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
               </div>
             </RadioGroup>
 
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FieldGroup>
+
+                {/* Customer (conditional) */}
                 {selectedRadio === "customer" && (
-                  <FormField
-                    control={form.control}
+                  <Controller
                     name="customer"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>
                           Customer <RequiredStar />
-                        </FormLabel>
-                          <CustomerSearchWithData
-                            value={selectedCustomer}
-                            onReturn={(val) => {
-                              field.onChange(val.id);
-                              setSelectedCustomer(val);
-                              if (val.location) {
-                                form.setValue("city", val.location);
-                              }
-                              form.setValue("title", val.company || val.owner);
-                            }}
-                          />
-                      </FormItem>
+                        </FieldLabel>
+
+                        <CustomerSearchWithData
+                          value={selectedCustomer}
+                          onReturn={(val) => {
+                            field.onChange(val.id);
+                            setSelectedCustomer(val);
+
+                            if (val.location) {
+                              form.setValue("city", val.location);
+                            }
+
+                            form.setValue("title", val?.company || val?.owner || "");
+                          }}
+                        />
+                      </Field>
                     )}
                   />
                 )}
 
-                <FormField
-                  control={form.control}
+                {/* Purpose */}
+                <Controller
                   name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Purpose
-                        <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Purpose" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectItem value="New Installation">
-                                New Installation
-                              </SelectItem>
-                              <SelectItem value="Complaint">
-                                Complaint
-                              </SelectItem>
-                              <SelectItem value="Overhauling">
-                                Overhauling
-                              </SelectItem>
-                              <SelectItem value="Sales Meeting">
-                                Sales Meeting
-                              </SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>
+                        Purpose <RequiredStar />
+                      </FieldLabel>
+
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Purpose" />
+                        </SelectTrigger>
+
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem value="New Installation">
+                              New Installation
+                            </SelectItem>
+                            <SelectItem value="Complaint">
+                              Complaint
+                            </SelectItem>
+                            <SelectItem value="Overhauling">
+                              Overhauling
+                            </SelectItem>
+                            <SelectItem value="Sales Meeting">
+                              Sales Meeting
+                            </SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </Field>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
+                {/* City */}
+                <Controller
                   name="city"
+                  control={form.control}
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
+                    <Field>
+                      <FieldLabel>
                         City <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter city" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                      </FieldLabel>
+
+                      <Input placeholder="Enter city" {...field} />
+                    </Field>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
+                {/* Description */}
+                <Controller
                   name="description"
+                  control={form.control}
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
+                    <Field>
+                      <FieldLabel>
                         Description <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Enter description" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                      </FieldLabel>
+
+                      <Textarea placeholder="Enter description" {...field} />
+                    </Field>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
+                {/* Amount */}
+                <Controller
                   name="amount"
+                  control={form.control}
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
+                    <Field>
+                      <FieldLabel>
                         Amount <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Enter amount"
-                          value={field?.value ? field.value : ""}
-                          onChange={(e) => {
-                            if (!isNaN(e.target.value)) {
-                              field.onChange(Number(e.target.value));
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                      </FieldLabel>
+
+                      <Input
+                        type="number"
+                        placeholder="Enter amount"
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </Field>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
+                {/* Date */}
+                <Controller
                   name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Date <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <AppCalendar
-                          date={field.value}
-                          onChange={field.onChange}
-                          max={new Date()}
-                          min={
-                            new Date(
-                              new Date().getFullYear(),
-                              new Date().getMonth(),
-                              1,
-                            )
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
                   control={form.control}
-                  name="image"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Image <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <div className="flex flex-1 items-center justify-center">
-                          <Dropzone
-                            value={field.value}
-                            onDrop={(file) => {
-                              field.onChange(file);
-                            }}
-                            title={"Click to upload"}
-                            subheading={"or drag and drop"}
-                            description={"PNG or JPG"}
-                            drag={"Drop the files here..."}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                    <Field>
+                      <FieldLabel>
+                        Date <RequiredStar />
+                      </FieldLabel>
+
+                      <AppCalendar
+                        date={field.value}
+                        onChange={field.onChange}
+                        max={new Date()}
+                        min={
+                          new Date(
+                            new Date().getFullYear(),
+                            new Date().getMonth(),
+                            1
+                          )
+                        }
+                      />
+                    </Field>
                   )}
                 />
 
+                {/* Image */}
+                <Controller
+                  name="image"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Field>
+                      <FieldLabel>
+                        Image <RequiredStar />
+                      </FieldLabel>
+
+                      <div className="flex flex-1 items-center justify-center">
+                        <Dropzone
+                          value={field.value}
+                          onDrop={(file) => field.onChange(file)}
+                          title="Click to upload"
+                          subheading="or drag and drop"
+                          description="PNG or JPG"
+                          drag="Drop the files here..."
+                        />
+                      </div>
+                    </Field>
+                  )}
+                />
+
+                {/* Submit */}
                 <Button className="w-full" type="submit" disabled={loading}>
                   {loading && <Spinner />} Submit
                 </Button>
-              </form>
-            </Form>
+
+              </FieldGroup>
+            </form>
           </div>
         </ScrollArea>
       </DialogContent>
@@ -714,7 +708,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }) => {
   );
 };
 
-const AddPurpose = ({ item, visible, onClose, onUpdate }) => {
+const AddPurpose = ({ item, visible, onClose, onUpdate }: { item: UserReimbursementType | null, visible: boolean, onClose: () => void, onUpdate: (val: UserReimbursementType) => void }) => {
   const [purpose, setPurpose] = useState("");
   const [loading, setLoading] = useState(false);
   const { userID } = useUserDetail();
@@ -729,7 +723,7 @@ const AddPurpose = ({ item, visible, onClose, onUpdate }) => {
 
     try {
       setLoading(true);
-      await axios.put(`/${userID}/reimbursement/${item.id}`, { title : purpose, purpose : true });
+      await axios.put(`/${userID}/reimbursement/${item.id}`, { title: purpose, purpose: true });
       let updatedItem = { ...item };
       updatedItem.purpose = purpose;
       onUpdate(updatedItem);

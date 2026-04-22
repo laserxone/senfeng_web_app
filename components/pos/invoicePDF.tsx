@@ -18,12 +18,11 @@ type InvoicePDFProps = {
   nextInvoice: any;
   invoiceItems: any[];
   totalAmount: number;
-  warranty: boolean;
-  warrantyYear: number;
-  discount: string;
-
+  warranty?: boolean;
+  warrantyYear?: number;
+  discount: string | number;
   selectedUser?: any;
-  createdAt?: Date; 
+  createdAt?: Date | string; 
 };
 const InvoicePDF = ({
   companyName,
@@ -99,7 +98,7 @@ const localDiscount = Number.isFinite(parsed) ? Math.floor(parsed) : 0;
                         height: 25,
                         paddingLeft: 5,
                         width: index == 0 ? 30 : index == 1 ? 200 : 100,
-                        borderLeftWidth: index !== 0 && 1,
+                        borderLeftWidth: index !== 0 ? 1 : undefined,
                         borderLeftColor: "#D1D5DB",
                       },
                     ]}
@@ -127,7 +126,7 @@ const localDiscount = Number.isFinite(parsed) ? Math.floor(parsed) : 0;
                   flexDirection: "row",
                   backgroundColor: index % 2 === 0 ? "#f1f1f1" : "white",
                   border: "1px solid #D1D5DB",
-                  borderTopWidth: index !== 0 && 0,
+                  borderTopWidth: index !== 0 ? 0 : undefined,
                 }}
               >
                 <View
@@ -232,7 +231,7 @@ const localDiscount = Number.isFinite(parsed) ? Math.floor(parsed) : 0;
                     flexDirection: "row",
                     backgroundColor: i % 2 === 0 ? "#f1f1f1" : "white",
                     border: "1px solid #D1D5DB",
-                    borderTopWidth: i !== 0 && 0,
+                    borderTopWidth: i !== 0 ? 0 : undefined,
                   }}
                 >
                   <View
@@ -495,7 +494,7 @@ const BankDetail = () => {
           style={{
             display: "flex",
             flexDirection: "row",
-            backgroundColor: (index + 1) % 2 === 0 && "#FFE4E1",
+            backgroundColor: (index + 1) % 2 === 0 ? "#FFE4E1" : undefined,
             borderWidth: 1,
             borderColor: "#cccccc",
           }}
@@ -544,6 +543,14 @@ const FormField = ({
   manager,
   inv,
   selectedUser,
+}:{
+   phoneNumber : string,
+  address : string,
+  companyName : string,
+  name : string,
+  manager : string,
+  inv : string,
+  selectedUser : {id : number, label : string},
 }) => {
   return (
     <View style={{ marginBottom: 5 }}>
@@ -605,7 +612,7 @@ const FormField = ({
   );
 };
 
-const CompanyDetails = ({ createdAt }) => {
+const CompanyDetails = ({ createdAt } : {createdAt ?: Date | string}) => {
   return (
     <View
       style={{
@@ -679,7 +686,6 @@ const Header = () => {
       {/* <Text fontSize={60} color={'#0072BC'} fontWeight={'800'}>SENFENG</Text> */}
       <Image
         src={"/logo.png"}
-        alt="My Local Image"
         style={{ height: "40px", width: "200px" }}
       />
       <View

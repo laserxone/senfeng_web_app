@@ -1,16 +1,25 @@
 "use client";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useDropzone } from "react-dropzone";
+import { ChangeEventHandler, useCallback, useEffect, useRef, useState } from "react";
+import { Accept, useDropzone } from "react-dropzone";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 
-const Dropzone = ({ onDrop, title, subheading, description, drag, borderColor, value }) => {
-  const updateRef = useRef(null);
+type DropzoneProps = {
+  onDrop: (val: File | null) => void,
+  title: string
+  subheading: string
+  description: string
+  drag: string,
+  borderColor?: string,
+  value: string | null
+}
+const Dropzone = ({ onDrop, title, subheading, description, drag, borderColor, value }: DropzoneProps) => {
+  const updateRef = useRef<HTMLInputElement | null>(null);
 
   const onDropAccepted = useCallback(
-    (acceptedFiles) => {
-     
+    (acceptedFiles: File[]) => {
+
       onDrop(acceptedFiles[0]);
     },
     [onDrop]
@@ -18,12 +27,15 @@ const Dropzone = ({ onDrop, title, subheading, description, drag, borderColor, v
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDropAccepted,
-    accept: "image/*",
-    multiple: false, // Allow only a single file
+    accept: {
+      "image/*": [],
+    },
+    multiple: false,
   });
 
-  const handlePaste = useCallback((event) => {
-    const items = event.clipboardData.items;
+  const handlePaste = useCallback((event: ClipboardEvent) => {
+    const items = event?.clipboardData?.items;
+    if (!items) return
     for (let item of items) {
       if (item.type.startsWith("image/")) {
         const file = item.getAsFile();
@@ -44,10 +56,10 @@ const Dropzone = ({ onDrop, title, subheading, description, drag, borderColor, v
     }
   };
 
-  const handleFileChange = (event) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const newFile = event.target.files[0];
-    
+
       onDrop(newFile);
     }
   };

@@ -1,51 +1,53 @@
 "use client";
 
-import { createContext, useReducer, ReactNode, Dispatch } from "react";
-import { SET_Notification } from "../action/NotificationAction";
-import { myNotificationReducer } from "../reducer/NotificationReducer";
+import { db } from "@/config/firebase";
+import useUserDetail from "@/hooks/use-user-detail";
+import { collection, onSnapshot, orderBy, query, where } from "firebase/firestore";
+import { createContext, useContext, useEffect, useState } from "react";
 
-type NotificationItem = any; 
+type NotificationItem = {
+  id : string
+  page:  string
+  title : string
+}
 
-type State = {
-  value: {
-    data: NotificationItem[];
-  };
+type NotificationContextType = {
+    NotificationData: NotificationItem[]
 };
 
-type Action = {
-  type: string;
-  payload: {
-    data: NotificationItem[];
-  };
+const NotificationContext = createContext<NotificationContextType>({
+    NotificationData: []
+});
+
+export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {
+
+    const [NotificationData, setNotificationData] = useState<NotificationItem[]>([])
+    const {userID} = useUserDetail()
+
+    useEffect(() => {
+    if (userID) {
+      const q = query(
+        collection(db, "Notification"),
+        where("sendTo", "==", userID),
+        where("read", "==", false),
+        orderBy("TimeStamp", "desc")
+      );
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        let list : any[] = [];
+        querySnapshot.forEach((doc) => {
+          list.push({ ...doc.data(), id: doc.id });
+        });
+        setNotificationData(list);
+      });
+      return () => unsubscribe();
+    }
+  }, [userID]);
+
+    return (
+        <NotificationContext.Provider value={{ NotificationData }}>
+            {children}
+        </NotificationContext.Provider>
+    );
 };
 
-type ContextType = {
-  state: State;
-  setNotification: (data: NotificationItem[]) => void;
-};
-
-export const NotificationContext = createContext<ContextType | undefined>(
-  undefined
-);
-
-type Props = {
-  children: ReactNode;
-};
-
-const NotificationContextProvider = ({ children }: Props) => {
-  const [state, dispatch] = useReducer(myNotificationReducer, {
-    value: { data: [] },
-  });
-
-  const setNotification = (data: NotificationItem[]) => {
-    dispatch({ type: SET_Notification, payload: { data } });
-  };
-
-  return (
-    <NotificationContext.Provider value={{ state, setNotification }}>
-      {children}
-    </NotificationContext.Provider>
-  );
-};
-
-export default NotificationContextProvider;
+export const useNotification = () => useContext(NotificationContext);

@@ -1,9 +1,6 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import PageTable from "@/components/app-table-without-pagination";
 import { CustomerSearch } from "@/components/customer-search";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,60 +11,34 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
+import Spinner from "@/components/ui/spinner";
 import { UserSearch } from "@/components/user-search";
-import  Heading  from "@/components/ui/heading";
-import PageTable from "@/components/app-table-without-pagination";
-import { ArrowUpDown, Filter, Trash2 } from "lucide-react";
-import moment from "moment";
+import FilterSheet from "@/components/users/filterSheet";
+import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import FilterSheet from "@/components/users/filterSheet";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowUpDown, Filter, Trash2 } from "lucide-react";
+import moment from "moment";
 import momentT from "moment-timezone";
-import { TIMEZONE } from "@/constants/data";
-import Spinner from "@/components/ui/spinner";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import * as z from "zod";
 
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { TriggerFirebaseForFine } from "@/lib/triggerFirebase";
 import { toast } from "sonner";
 
 const formSchema = z.object({
-  user_id: z.number({ required_error: "User is required." }),
-  customer_id: z.number({ required_error: "Customer is required." }),
-  amount: z
-    .string()
-    .refine(
-      (val) => !isNaN(Number(val)) && Number(val) > 0,
-      "Enter a valid amount"
-    ),
+  user_id: z.number({ error: "User is required." }),
+  customer_id: z.number({ error: "Customer is required." }),
+  amount: z.coerce.number<number>().min(0, "Amount is required"),
   reason: z.string().min(3, "Reason must be at least 3 characters"),
 });
 
-const tableHeader = [
-  {
-    value: "customer_name",
-    label: "Customer",
-  },
-  {
-    value: "user_name",
-    label: "Employee",
-  },
-  {
-    value: "amount",
-    label: "Amount",
-  },
-  {
-    value: "reason",
-    label: "Reason",
-  },
-];
+type FormValues = z.infer<typeof formSchema>;
 
 export default function Page() {
   const [open, setOpen] = useState(false);
@@ -75,7 +46,7 @@ export default function Page() {
   const { userID } = useUserDetail();
   const [loading, setLoading] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
-  const [selectedFine, setSelectedFine] = useState(null);
+  const [selectedFine, setSelectedFine] = useState<number | null>(null);
 
 
   useEffect(() => {
@@ -96,13 +67,12 @@ export default function Page() {
     }
   }, [userID]);
 
-  async function fetchData(startDate, endDate, user = null) {
+  async function fetchData(startDate: string, endDate: string, user: number | null = null) {
     setLoading(true);
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/${userID}/fine?start_date=${startDate}&end_date=${endDate}&user=${
-            user || ""
+          `/${userID}/fine?start_date=${startDate}&end_date=${endDate}&user=${user || ""
           }`
         )
         .then((response) => {
@@ -251,7 +221,7 @@ export default function Page() {
     },
   ]
 
-  async function handleDelete(id) {
+  async function handleDelete(id: number | null) {
     if (!id) return;
     setSelectedFine(id);
     try {
@@ -273,8 +243,7 @@ export default function Page() {
         loading={loading}
         columns={columns}
         data={data}
-        tableHeader={tableHeader}
-        onRowClick={() => {}}
+        onRowClick={() => { }}
       >
         <Button
           onClick={() => setFilterVisible(true)}
@@ -287,7 +256,7 @@ export default function Page() {
       </PageTable>
 
       <FilterSheet
-      user_disable={false}
+        user_disable={false}
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
@@ -305,20 +274,20 @@ export default function Page() {
   );
 }
 
-const AddFine = ({ open, setOpen, onRefresh, userID }) => {
+const AddFine = ({ open, setOpen, onRefresh, userID }: { open: boolean, setOpen: (val: boolean) => void, onRefresh: () => Promise<void>, userID: number }) => {
   const [loading, setLoading] = useState(false);
 
-  const form = useForm({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      user_id: null,
-      customer_id: null,
-      amount: "",
+      user_id: undefined,
+      customer_id: undefined,
+      amount: 0,
       reason: "",
     },
   });
 
-  const onSubmit = (values) => {
+  const onSubmit = (values: FormValues) => {
     if (!userID) return;
 
     setLoading(true);
@@ -327,7 +296,7 @@ const AddFine = ({ open, setOpen, onRefresh, userID }) => {
       .then(async () => {
         await onRefresh();
         handleOpenChange(false);
-        TriggerFirebaseForFine(values.user_id)
+        TriggerFirebaseForFine(values?.user_id)
       })
       .catch((e) => {
         console.log(e);
@@ -337,7 +306,7 @@ const AddFine = ({ open, setOpen, onRefresh, userID }) => {
       });
   };
 
-  const handleOpenChange = (val) => {
+  const handleOpenChange = (val: boolean) => {
     form.reset();
     setOpen(val);
   };
@@ -353,85 +322,93 @@ const AddFine = ({ open, setOpen, onRefresh, userID }) => {
           </DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit, (err) => {
-              console.log("Validation Errors", err);
-            })}
-            className="space-y-4"
-          >
-            {/* User Select */}
-            <FormField
-              control={form.control}
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FieldGroup>
+
+            {/* User */}
+            <Controller
               name="user_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>User</FormLabel>
-                  <FormControl>
-                    <UserSearch value={field.value} onReturn={field.onChange} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>User</FieldLabel>
+
+                  <UserSearch
+                    value={field.value}
+                    onReturn={field.onChange}
+                  />
+
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
               )}
             />
 
-            {/* Customer Select */}
-            <FormField
-              control={form.control}
+            {/* Customer */}
+            <Controller
               name="customer_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Customer</FormLabel>
-                  <FormControl>
-                    <CustomerSearch
-                      value={field.value}
-                      onReturn={(val) => field.onChange(val)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Customer</FieldLabel>
+
+                  <CustomerSearch
+                    value={field.value}
+                    onReturn={field.onChange}
+                  />
+
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
               )}
             />
 
-            {/* Amount Input */}
-            <FormField
-              control={form.control}
+            {/* Amount */}
+            <Controller
               name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Amount</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter amount"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Reason Input */}
-            <FormField
               control={form.control}
-              name="reason"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Reason</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter reason" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Amount</FieldLabel>
+
+                  <Input
+                    placeholder="Enter amount"
+                    {...field}
+                  />
+
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
               )}
             />
 
+            {/* Reason */}
+            <Controller
+              name="reason"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Reason</FieldLabel>
+
+                  <Input placeholder="Enter reason" {...field} />
+
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+
+            {/* Submit */}
             <Button type="submit" disabled={loading} className="w-full">
               {loading && <Spinner />} Submit
             </Button>
-          </form>
-        </Form>
+
+          </FieldGroup>
+        </form>
       </DialogContent>
     </Dialog>
   );

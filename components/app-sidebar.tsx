@@ -31,31 +31,22 @@ import {
 } from "@/components/ui/sidebar";
 
 import { Icons } from "@/components/icons";
-import { auth, db } from "@/config/firebase";
+import { auth } from "@/config/firebase";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfileImage } from "@/hooks/use-profile-image";
 import useUserDetail from "@/hooks/use-user-detail";
 import { setUserOffice } from "@/lib/axios";
 
-import { NotificationContext } from "@/store/context/NotificationContext";
+import { useMachineDelivery } from "@/hooks/use-machine-delivery";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { UserContext } from "@/store/context/UserContext";
 import { signOut } from "firebase/auth";
-import {
-  collection,
-  onSnapshot,
-  orderBy,
-  query,
-  where
-} from "firebase/firestore";
 import { ChevronRight, ChevronsUpDown, CreditCard, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useContext, useEffect, useState } from "react";
-import { ScrollArea } from "./ui/scroll-area";
+import { useContext, useEffect } from "react";
 import NotificationBadge from "./NotificationBadge";
-import axios from "@/lib/axios";
-import { useMachineDelivery } from "@/hooks/use-machine-delivery";
+import { ScrollArea } from "./ui/scroll-area";
 
 export const company = {
   name: "SENFENG",
@@ -63,47 +54,24 @@ export const company = {
   plan: "Pakistan",
 };
 
-export default function AppSidebar({ office }) {
+export default function AppSidebar({ office }: { office: string }) {
   const pathname = usePathname();
 
   const { state: UserState, setUser } = useContext(UserContext);
-  const { state: OfficeState, setOffice } = useContext(OfficeContext);
-  const { state: NotificationState, setNotification } =
-    useContext(NotificationContext);
+  const { state: OfficeState, setOffice } = useContext(OfficeContext)
   const profileImage = useProfileImage();
   const { toggleSidebar } = useSidebar();
   const isMobile = useIsMobile();
   const { userID, isAdmin, name, email, base_route, nav_items } = useUserDetail()
-  const {pendingDelivery} = useMachineDelivery()
-  
-
-  useEffect(() => {
-   if (office) {
-        setUserOffice(`/${office}`);
-        setOffice(office);
-      }
-  }, [office]);
+  const { pendingDelivery } = useMachineDelivery()
 
 
   useEffect(() => {
-    if (userID) {
-      const q = query(
-        collection(db, "Notification"),
-        where("sendTo", "==", userID),
-        where("read", "==", false),
-        orderBy("TimeStamp", "desc")
-      );
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        let list = [];
-        querySnapshot.forEach((doc) => {
-          list.push({ ...doc.data(), id: doc.id });
-        });
-        setNotification(list);
-      });
-      return () => unsubscribe();
+    if (office) {
+      setUserOffice(`/${office}`);
+      setOffice(office);
     }
-  }, [userID]);
-
+  }, [office]);
 
 
   return (

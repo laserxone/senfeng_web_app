@@ -41,6 +41,7 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import exportToExcel from "@/lib/exportToExcel";
+import formatCurrency from "@/lib/formatCurrency";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,19 +49,22 @@ import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import momentT from "moment-timezone";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
+import { Card, CardContent, CardTitle } from "../ui/card";
 import Spinner from "../ui/spinner";
-import formatCurrency from "@/lib/formatCurrency";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { ColumnDef } from "@tanstack/react-table";
+import { OfficeExpenseProps } from "@/lib/types";
+import { toast } from "sonner";
+import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 
-export default function EmployeeBranchExpenses({ base }:{base?:any}) {
+export default function EmployeeBranchExpenses() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
-  const [data, setData] = useState([]);
-  const [imageURL, setImageURL] = useState(null);
+  const [data, setData] = useState<OfficeExpenseProps[]>([]);
+  const [imageURL, setImageURL] = useState<OfficeExpenseProps | null>(null);
   const [visible, setVisible] = useState(false);
   const {
     userID,
@@ -97,7 +101,7 @@ export default function EmployeeBranchExpenses({ base }:{base?:any}) {
     }
   }, [userID]);
 
-  async function fetchData(startDate, endDate) {
+  async function fetchData(startDate: string, endDate: string) {
     return new Promise((resolve, reject) => {
       axios
         .get(`/${userID}/expenses?start_date=${startDate}&end_date=${endDate}`)
@@ -114,7 +118,9 @@ export default function EmployeeBranchExpenses({ base }:{base?:any}) {
     });
   }
 
-  const columns = [
+
+
+  const columns: ColumnDef<OfficeExpenseProps>[] = [
     {
       accessorKey: "date",
       filterFn: "includesString",
@@ -217,7 +223,7 @@ export default function EmployeeBranchExpenses({ base }:{base?:any}) {
     }
   }
 
-  async function handleDelete(id) {
+  async function handleDelete(id: number | undefined) {
     if (!id) return;
     setDeleteLoading(true);
     try {
@@ -225,7 +231,7 @@ export default function EmployeeBranchExpenses({ base }:{base?:any}) {
         DeleteFromStorage(imageURL.image);
       }
       const response = await axios.delete(`/${userID}/expenses/${id}`);
-      toast({ title: "Branch Expense Deleted" });
+      toast.success("Branch Expense Deleted")
       const startDate = momentT
         .tz(TIMEZONE)
         .startOf("month")
@@ -264,7 +270,7 @@ export default function EmployeeBranchExpenses({ base }:{base?:any}) {
         open={showConfirmation}
         title={"Are you sure you want to delete?"}
         description={"Your action will remove branch expense from the system"}
-        onPressYes={async () => await handleDelete(imageURL.id)}
+        onPressYes={async () => await handleDelete(imageURL?.id)}
         onPressCancel={() => setShowConfirmation(false)}
         loading={deleteLoading}
       />
@@ -276,8 +282,8 @@ export default function EmployeeBranchExpenses({ base }:{base?:any}) {
           setImageURL(val);
           setVisible(true);
         }}
-        // filter={true}
-        // onFilterClick={() => setFilterVisible(true)}
+      // filter={true}
+      // onFilterClick={() => setFilterVisible(true)}
       >
         <div className="flex flex-1 items-center justify-between flex-wrap gap-2">
           <div className="flex gap-4 flex-wrap">
@@ -327,7 +333,7 @@ export default function EmployeeBranchExpenses({ base }:{base?:any}) {
 
       <FilterSheet
         visible={filterVisible}
-        onClose={setFilterVisible}
+        onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
           await fetchData(val.start, val.end);
         }}
@@ -337,7 +343,7 @@ export default function EmployeeBranchExpenses({ base }:{base?:any}) {
         visible={visibleAdd}
         onClose={setVisibleAdd}
         user_id={userID}
-        onRefresh={async () =>
+        onRefresh={async () => {
           await fetchData(
             momentT
               .tz(TIMEZONE)
@@ -353,13 +359,13 @@ export default function EmployeeBranchExpenses({ base }:{base?:any}) {
               .toISOString(),
           )
         }
+        }
       />
 
       <ImageSheet
         visible={visible}
         onClose={() => setVisible(false)}
         img={imageURL?.image || null}
-        description={imageURL?.description || null}
         submittedBy={imageURL?.submitted_by_name || null}
         onDelete={() => setShowConfirmation(true)}
         date={imageURL?.date}
@@ -370,25 +376,23 @@ export default function EmployeeBranchExpenses({ base }:{base?:any}) {
 type ImageSheetProps = {
   visible: boolean;
   onClose: () => void;
-  img: string;
-  submittedBy: string;
-  description: string;
-  onDelete: () => void | Promise<void>;
+  img: string | null;
+  submittedBy: string | null;
+  onDelete: () => void;
   loading?: boolean;
-  date: string | Date;
+  date: string | Date | undefined;
 };
 const ImageSheet = ({
   visible,
   onClose,
   img,
   submittedBy,
-  description,
   onDelete,
   loading,
   date,
-}:ImageSheetProps) => {
+}: ImageSheetProps) => {
   const [imageOpen, setImageOpen] = useState(false);
-  const [localImage, setLocalImage] = useState(null);
+  const [localImage, setLocalImage] = useState<null | string>(null);
   const { isAdmin, branch_expenses_delete_access } = useUserDetail();
 
   const hasPermission = isAdmin || branch_expenses_delete_access;
@@ -418,7 +422,7 @@ const ImageSheet = ({
 
   const [isZoomed, setIsZoomed] = useState(false);
 
-  const handleZoomChange = useCallback((shouldZoom) => {
+  const handleZoomChange = useCallback((shouldZoom: boolean) => {
     setIsZoomed(shouldZoom);
     if (!shouldZoom) {
       setImageOpen(false);
@@ -434,18 +438,18 @@ const ImageSheet = ({
           <strong>Submitted by</strong>
           <Label>{submittedBy}</Label>
 
-          <strong>Description</strong>
-          <Label>{description}</Label>
+          {localImage &&
 
-          <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
-            <img
-              onClick={() => setImageOpen(true)}
-              className="hover:cursor-pointer"
-              src={localImage}
-              alt="officeexpenses-img"
-              style={{ flex: 1 }}
-            />
-          </ControlledZoom>
+            <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
+              <img
+                onClick={() => setImageOpen(true)}
+                className="hover:cursor-pointer"
+                src={localImage}
+                alt="officeexpenses-img"
+                style={{ flex: 1 }}
+              />
+            </ControlledZoom>
+          }
           {isAllowed && (
             <Button variant="destructive" onClick={onDelete}>
               {loading && <Spinner />} Delete
@@ -457,29 +461,31 @@ const ImageSheet = ({
   );
 };
 
-const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
+const formSchema = z.object({
+  note: z.string().min(1, { message: "TID is required." }),
+  amount: z.coerce.number<number>().min(0, "Amount is required"),
+  date: z.date({ error: "Date is required." }),
+  image: z.string().min(1, { message: "Image is required." }),
+});
+
+type ExpenseFormValues = z.infer<typeof formSchema>;
+
+const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, user_id: number | null }) => {
   const [loading, setLoading] = useState(false);
   const { state: OfficeState } = useContext(OfficeContext);
-  const formSchema = z.object({
-    note: z.string().min(1, { message: "TID is required." }),
-    amount: z
-      .number()
-      .min(0.01, { message: "Amount must be greater than zero." }),
-    date: z.date({ required_error: "Date is required." }),
-    image: z.string().min(1, { message: "Image is required." }),
-  });
 
-  const form = useForm({
+
+  const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       note: "",
-      amount: "",
-      date: "",
+      amount: 0,
+      date: undefined,
       image: "",
     },
   });
 
-  async function onSubmit(values) {
+  async function onSubmit(values: ExpenseFormValues) {
     setLoading(true);
     try {
       if (values.image) {
@@ -507,7 +513,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
     }
   }
 
-  function handleClose(val) {
+  function handleClose(val: boolean) {
     form.reset();
     setLoading(false);
     onClose(val);
@@ -522,96 +528,101 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }) => {
 
         <ScrollArea className="max-h-[80vh] px-2">
           <div className="px-2">
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FieldGroup>
+
+                {/* Note */}
+                <Controller
                   name="note"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Note</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Enter note" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Note</FieldLabel>
+
+
+                      <Textarea placeholder="Enter note" {...field} />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
+                {/* Amount */}
+                <Controller
                   name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Amount</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Enter amount"
-                          value={field.value}
-                          onChange={(e) => {
-                            if (!isNaN(Number(e.target.value))) {
-                              field.onChange(Number(e.target.value));
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Amount</FieldLabel>
+
+                      <Input
+                        placeholder="Enter amount"
+                        {...field}
+                      />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
+                {/* Date */}
+                <Controller
                   name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date</FormLabel>
-                      <FormControl>
-                        <AppCalendar
-                          max={new Date()}
-                          date={new Date(field.value)}
-                          onChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
                   control={form.control}
-                  name="image"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Image</FormLabel>
-                      <FormControl>
-                        <div className="flex flex-1 items-center justify-center">
-                          <Dropzone
-                            value={field.value}
-                            onDrop={(file) => {
-                              field.onChange(file);
-                            }}
-                            title={"Click to upload"}
-                            subheading={"or drag and drop"}
-                            description={"PNG or JPG"}
-                            drag={"Drop the files here..."}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Date</FieldLabel>
+
+                      <AppCalendar
+                        max={new Date()}
+                        date={field.value ? new Date(field.value) : undefined}
+                        onChange={field.onChange}
+                      />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
                   )}
                 />
 
+                {/* Image */}
+                <Controller
+                  name="image"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Image</FieldLabel>
+
+                      <div className="flex flex-1 items-center justify-center">
+                        <Dropzone
+                          value={field.value}
+                          onDrop={field.onChange}
+                          title="Click to upload"
+                          subheading="or drag and drop"
+                          description="PNG or JPG"
+                          drag="Drop the files here..."
+                        />
+                      </div>
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+
+                {/* Submit */}
                 <Button className="w-full" type="submit" disabled={loading}>
                   {loading && <Spinner />} Submit
                 </Button>
-              </form>
-            </Form>
+
+              </FieldGroup>
+            </form>
           </div>
         </ScrollArea>
       </DialogContent>

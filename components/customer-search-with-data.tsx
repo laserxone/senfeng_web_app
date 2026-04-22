@@ -6,6 +6,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
+  CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandItem,
@@ -23,17 +24,18 @@ import { cn } from "@/lib/utils";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
+import { MyCustomer } from "@/lib/types";
 
-export function CustomerSearchWithData({ value, onReturn }) {
+export function CustomerSearchWithData({ value, onReturn }: { value: MyCustomer | null, onReturn: (val: MyCustomer) => void }) {
   const [open, setOpen] = React.useState(false);
-  const [customers, setCustomers] = React.useState([]);
+  const [customers, setCustomers] = React.useState<MyCustomer[]>([]);
   const { userID, designation, office } = useUserDetail();
   const [search, setSearch] = React.useState("");
   const [city, setCity] = React.useState("lahore");
 
   React.useEffect(() => {
     async function fetchData() {
-      const response = await axios.get(`/${userID}/mycustomer`);
+      const response: { data: MyCustomer[] } = await axios.get(`/${userID}/mycustomer`);
       if (response.data.length > 0) {
         const apiData = response.data
           .filter((item) => {
@@ -54,7 +56,7 @@ export function CustomerSearchWithData({ value, onReturn }) {
             return {
               ...item,
               label: hasValidName
-                ? item.name.trim() + " " + numbers.join(" ")
+                ? item?.name?.trim() + " " + numbers.join(" ")
                 : `${item.owner?.trim() || ""} ${item.location?.trim() || ""
                   }`.trim() +
                 " " +
@@ -109,24 +111,27 @@ export function CustomerSearchWithData({ value, onReturn }) {
     return customers
       .filter((item) => item?.office?.includes(city))
       .filter((item) =>
-        item.search.toLowerCase().includes(debouncedSearch.toLowerCase())
+        item?.search?.toLowerCase().includes(debouncedSearch.toLowerCase())
       );
   }, [customers, debouncedSearch, city]);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between overflow-hidden"
-        >
-          {value ? value?.label : "Select customer..."}
-          <ChevronsUpDown className="opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="py-2 px-0">
+    <>
+      <Button
+        variant="outline"
+        role="combobox"
+        aria-expanded={open}
+        className="w-full justify-between overflow-hidden"
+        onClick={(e) => {
+          e.preventDefault()
+          setOpen(!open)
+        }}
+      >
+        {value ? value?.label : "Select customer..."}
+        <ChevronsUpDown className="opacity-50" />
+      </Button>
+
+      <CommandDialog open={open} onOpenChange={setOpen}>
         <Command>
           {designation !== "Sales" && (
             <div className="flex items-center justify-center gap-2 px-2 py-1 border-b">
@@ -170,7 +175,7 @@ export function CustomerSearchWithData({ value, onReturn }) {
             </CommandGroup>
           </CommandList>
         </Command>
-      </PopoverContent>
-    </Popover>
+      </CommandDialog>
+    </>
   );
 }

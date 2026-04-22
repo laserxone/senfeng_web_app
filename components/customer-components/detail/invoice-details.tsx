@@ -18,13 +18,14 @@ import {
 } from "@/components/ui/table";
 import { storage } from "@/config/firebase";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { PartsProps } from "@/lib/types";
 import { Scrollbar } from "@radix-ui/react-scroll-area";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 
-export default function InvoiceDetails({ invoice }) {
+export default function InvoiceDetails({ invoice } : {invoice : PartsProps}) {
   const isMobile = useIsMobile();
 
   return (
@@ -124,8 +125,8 @@ export default function InvoiceDetails({ invoice }) {
   );
 }
 
-const RenderImage = ({ img }) => {
-  const [localImage, setLocalImage] = useState(null);
+const RenderImage = ({ img } :{img : string}) => {
+  const [localImage, setLocalImage] = useState<string | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
   const [rotation, setRotation] = useState(0);
 
@@ -143,7 +144,7 @@ const RenderImage = ({ img }) => {
     }
   }, [img]);
 
-  const handleZoomChange = useCallback((shouldZoom) => {
+  const handleZoomChange = useCallback((shouldZoom : boolean) => {
     setIsZoomed(shouldZoom);
   }, []);
 
@@ -210,7 +211,7 @@ const RenderImage = ({ img }) => {
               </div>
             </div>
           ) : (
-            img
+            img ??<></>
           )
         }
       >

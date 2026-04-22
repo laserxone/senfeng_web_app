@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import  Heading  from "@/components/ui/heading";
+import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,8 +18,10 @@ import { UserSearch } from "@/components/user-search";
 import { useDebounce } from "@/hooks/use-debounce";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { TOMORROW, YESTERDAY, yesterday } from "@/lib/utils";
+import { AssignForm, RepairingProps } from "@/lib/types";
+import { YESTERDAY } from "@/lib/utils";
 import { OfficeContext } from "@/store/context/OfficeContext";
+import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, Trash2 } from "lucide-react";
 import moment from "moment";
 import { useContext, useEffect, useState } from "react";
@@ -34,16 +36,16 @@ import {
 } from "./ui/select";
 
 export default function MainRepairingLab() {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<RepairingProps[]>([]);
   const [loading, setLoading] = useState(false);
 
   const { userID } = useUserDetail();
   const debouncedUserId = useDebounce(userID, 1000);
   const [assignTask, setAssignTask] = useState(false);
-  const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedTask, setSelectedTask] = useState<RepairingProps | null>(null);
   const [filter, setFilter] = useState("all");
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [selectedTaskDelete, setSelectedTaskDelete] = useState(null);
+  const [selectedTaskDelete, setSelectedTaskDelete] = useState<number | null>(null);
 
   useEffect(() => {
     if (debouncedUserId) {
@@ -51,7 +53,7 @@ export default function MainRepairingLab() {
     }
   }, [debouncedUserId]);
 
-  function fetchData() {
+  async function fetchData() {
     setLoading(true);
     axios
       .get(`/${debouncedUserId}/lab`)
@@ -63,7 +65,7 @@ export default function MainRepairingLab() {
       });
   }
 
-  const columns = [
+  const columns: ColumnDef<RepairingProps>[] = [
     {
       accessorKey: "assign_date",
       filterFn: "includesString",
@@ -79,9 +81,8 @@ export default function MainRepairingLab() {
       cell: ({ row }) => (
         <div className="flex gap-2 items-center">
           <div
-            className={`${
-              row.original.status === "pending" ? "bg-red-500" : "bg-green-500"
-            } border border-white h-3 w-3`}
+            className={`${row.original.status === "pending" ? "bg-red-500" : "bg-green-500"
+              } border border-white h-3 w-3`}
           />{" "}
           <div>
             {moment(new Date(row.getValue("assign_date"))).format("YYYY-MM-DD")}
@@ -206,7 +207,8 @@ export default function MainRepairingLab() {
     },
   ];
 
-  async function handleDelete(labID) {
+  async function handleDelete(labID: number | null) {
+    if (!labID) return
     setDeleteLoading(true);
     axios
       .delete(`/${userID}/lab/${labID}`)
@@ -282,10 +284,10 @@ export default function MainRepairingLab() {
   );
 }
 
-const AssignTasksModal = ({ open, onChange, userID, onRefresh }) => {
-  const [form, setForm] = useState({
-    assign_date: null,
-    deliver_date: null,
+const AssignTasksModal = ({ open, onChange, userID, onRefresh }: { open: boolean, onChange: (val: boolean) => void, userID: number, onRefresh: () => Promise<void> }) => {
+  const [form, setForm] = useState<AssignForm>({
+    assign_date: undefined,
+    deliver_date: undefined,
     user_id: null,
     customer_id: null,
     charges: 0,
@@ -295,7 +297,7 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }) => {
   const [loading, setLoading] = useState(false);
   const { state: OfficeState } = useContext(OfficeContext);
 
-  const updateForm = (key, value) => {
+  const updateForm = (key: string, value: string | Date | number) => {
     setForm((prev) => ({
       ...prev,
       [key]: value,
@@ -311,8 +313,8 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }) => {
       .then(() => {
         onRefresh();
         setForm({
-          assign_date: null,
-          deliver_date: null,
+          assign_date: undefined,
+          deliver_date: undefined,
           user_id: null,
           customer_id: null,
           charges: 0,
@@ -341,7 +343,7 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }) => {
                 date={form.assign_date}
                 onChange={(date) => updateForm("assign_date", date)}
                 min={YESTERDAY}
-               
+
               />
             </div>
 
@@ -422,7 +424,7 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }) => {
   );
 };
 
-const UpdateTaskModal = ({ open, onChange, userID, onRefresh, task_id }) => {
+const UpdateTaskModal = ({ open, onChange, userID, onRefresh, task_id }: { open: boolean, onChange: (val: boolean) => void, userID: number, onRefresh: () => Promise<void>, task_id: number | undefined }) => {
   useEffect(() => {
     if (open) {
       setForm({ status: null, remarks_other: "" });
@@ -435,14 +437,13 @@ const UpdateTaskModal = ({ open, onChange, userID, onRefresh, task_id }) => {
   });
   const [loading, setLoading] = useState(false);
 
-  const updateForm = (key, value) => {
+  const updateForm = (key: string, value: Date | string | number) => {
     setForm((prev) => ({
       ...prev,
       [key]: value,
     }));
   };
 
-  // Placeholder function for API call
   const handleSaveTask = async () => {
     setLoading(true);
 

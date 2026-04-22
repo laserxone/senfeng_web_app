@@ -2,7 +2,7 @@ import {
     List,
     Table2
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import {
     Dialog,
@@ -18,6 +18,30 @@ import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
 import RenderStockItems from "./render-stock-items";
 import RenderStockItemsOtherView from "./render-stock-items-other-view";
+import { InvoiceItem, StockProps } from "@/lib/types";
+
+type AddItemDialogProp = {
+   designation : string,
+  visible : boolean,
+  onClose : (val : boolean)=> void,
+  handleDecrease : (item : StockProps)=> void,
+  showOther : boolean,
+  setShowOther : Dispatch<SetStateAction<boolean>>,
+  stock : StockProps[],
+  invoiceItems: InvoiceItem[],
+  price : string | number,
+  setPrice : Dispatch<SetStateAction<string | number>>,
+  setQty : Dispatch<SetStateAction<string | number>>,
+  qty : string | number,
+  other :string,
+  setOther : Dispatch<SetStateAction<string>>,
+  handleIncrease : (item : StockProps)=> void,
+  handleAddToInvoice : ()=> void,
+  onRefresh : ()=> void,
+  handleOrderStock : ()=> void,
+  dialogVisible : boolean,
+  onCloseDialog : Dispatch<SetStateAction<boolean>>,
+}
 
 const AddItemDialog = ({
   designation,
@@ -40,7 +64,7 @@ const AddItemDialog = ({
   handleOrderStock,
   dialogVisible,
   onCloseDialog,
-}) => {
+} : AddItemDialogProp) => {
   const [search, setSearch] = useState("");
   const [lowStockStatus, setLowStockStatus] = useState(false);
   const [clickedLowStock, setClickedLowStock] = useState(false);
@@ -52,7 +76,7 @@ const AddItemDialog = ({
         (item) =>
           item.threshold != null &&
           item.threshold !== undefined &&
-          item.threshold <= item.qty
+          item.threshold <= (item?.qty || 0)
       );
       setLowStockStatus(hasLowStock);
     }
@@ -76,7 +100,7 @@ const AddItemDialog = ({
               }
             }}
             variant="destructive"
-            className={lowStockStatus && "blinking-button"}
+            className={lowStockStatus ? "blinking-button" : ""}
           >
             Low Stock
           </Button>
@@ -102,7 +126,7 @@ const AddItemDialog = ({
                   clickedLowStock
                     ? item.threshold != null &&
                       item.threshold !== undefined &&
-                      item.qty <= item.threshold
+                     ( item.qty || 0) <= item.threshold
                     : item
                 )
                 .filter((item) =>
@@ -198,12 +222,6 @@ const AddItemDialog = ({
           </div>
         </ScrollArea>
 
-        {/* 
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>
-                        Close
-                    </Button>
-                </DialogFooter> */}
       </DialogContent>
     </Dialog>
   );

@@ -45,6 +45,9 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import moment from "moment";
 import momentT from "moment-timezone";
+import { AddTaskTeam } from "@/components/teamTask";
+import TaskDetail from "@/components/users/taskDetail";
+import { TaskProps } from "@/lib/types";
 
 const columns = [
   {
@@ -168,7 +171,7 @@ export default function Page() {
   const { userID } = useUserDetail();
   const [data, setData] = useState([]);
   const [visible, setVisible] = useState(false);
-  const [selectedTask, setSelectedTask] = useState({});
+    const [selectedTask, setSelectedTask] = useState<TaskProps | null>(null);
   const [addTaskVisible, setAddTaskVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
@@ -244,7 +247,7 @@ export default function Page() {
           Add Task
         </Button>
 
-        <AddTask
+        <AddTaskTeam
           onRefresh={() => {
             const startDate = momentT
               .tz(TIMEZONE)
@@ -292,10 +295,6 @@ export default function Page() {
         detail={selectedTask}
         visible={visible}
         onClose={setVisible}
-        onDelete={(val) => {
-          const temp = [...data.filter((item) => item.id !== val.id)];
-          setData([...temp]);
-        }}
         onMark={() => handleUpdateMark()}
       />
 
@@ -330,290 +329,4 @@ const TaskRadio = ({ onSelection, value }) => {
   );
 };
 
-const TaskDetail = ({
-  detail,
-  visible,
-  onClose,
-  onDelete,
-  onMark,
-  user_id,
-}) => {
-  const [loading, setLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
- 
 
-  async function handleUpdateStatus(values) {
-    setLoading(true);
-    axios
-      .put(`/${user_id}/task/${detail.id}`, {
-        id: values.id,
-        status: values.status,
-      })
-      .then(() => {
-        toast({ title: "Status updated" });
-        onClose(false);
-      })
-      .finally(() => {
-        setLoading(false);
-        onMark();
-      });
-  }
-
-  async function handleDelete() {
-    setDeleteLoading(true);
-    axios
-      .delete(`/${user_id}/task/${detail.id}`)
-      .then(() => {
-        onClose(false);
-        toast({ title: "Task deleted" });
-      })
-
-      .finally(() => {
-        setDeleteLoading(false);
-        onDelete({ id: detail.id });
-      });
-  }
-
-  return (
-    <Sheet
-      open={visible}
-      onOpenChange={onClose}
-      onDelete={onDelete}
-      onMark={onMark}
-    >
-      <SheetContent
-        className="w-[50vw] max-w-[50vw]"
-        style={{ width: "100%", maxWidth: "50vw" }}
-      >
-        <SheetHeader>
-          <SheetTitle>Task Detail</SheetTitle>
-          <SheetDescription>Check task details</SheetDescription>
-          <div className="w-full flex justify-end">
-            <Button onClick={handleDelete}>
-              {deleteLoading && <Spinner />} Delete
-            </Button>
-          </div>
-        </SheetHeader>
-        <div className="w-full py-6 px-4 bg-white rounded-lg shadow-lg mt-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="flex flex-col gap-4">
-              <h3 className="text-sm font-medium text-gray-600">Status</h3>
-              <h3 className="text-sm font-medium text-gray-600">
-                Assigned Date
-              </h3>
-              {/* <h3 className="text-sm font-medium text-gray-600">Assigned To</h3>
-              <h3 className="text-sm font-medium text-gray-600">
-                Assignee Email
-              </h3> */}
-              <h3 className="text-sm font-medium text-gray-600">
-                Assigned Task
-              </h3>
-            </div>
-
-            <div className="flex flex-col gap-4">
-              <Label htmlFor="status" className="text-sm text-gray-800">
-                {detail?.status}
-              </Label>
-              <Label htmlFor="assign_date" className="text-sm text-gray-800">
-                {detail?.created_at
-                  ? moment(detail?.created_at).format("DD/MM/YYYY")
-                  : ""}
-              </Label>
-              {/* <Label htmlFor="assigned_to" className="text-sm text-gray-800">
-                {detail?.assigned_to_name}
-              </Label>
-              <Label htmlFor="assignee_email" className="text-sm text-gray-800">
-                {detail?.assigned_to_email}
-              </Label> */}
-              <Label htmlFor="assigned_task" className="text-sm text-gray-800">
-                {detail?.task_name}
-              </Label>
-
-              {detail?.problem && (
-                <>
-                  <Label htmlFor="problem" className="text-sm text-gray-800">
-                    {detail?.problem}
-                  </Label>
-                  <Label htmlFor="solution" className="text-sm text-gray-800">
-                    {detail?.solution}
-                  </Label>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <SheetFooter className={"mt-4"}>
-          <Button
-            onClick={() => {
-              handleUpdateStatus({
-                ...detail,
-                status:
-                  detail?.status !== "Completed" ? "Completed" : "Pending",
-              });
-            }}
-          >
-            {loading && <Spinner />}
-            {detail?.status !== "Completed"
-              ? "Mark as Completed"
-              : "Mark as Pending"}
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
-  );
-};
-
-const AddTask = ({ visible, onClose, onRefresh, assigned_by }) => {
-  const [selectedRadio, setSelectedRadio] = useState("office");
-  const [loading, setLoading] = useState(false);
- 
-  const { userID } = useUserDetail();
-
-  const form = useForm({
-    resolver: zodResolver(getSchema(selectedRadio === "client")),
-    defaultValues: {
-      radio: "office",
-      task: "",
-      client: null,
-      user: null,
-    },
-  });
-
-  const { watch, reset, handleSubmit, control, getValues } = form;
-
-  useEffect(() => {
-    reset(
-      {
-        ...getValues(),
-        client: selectedRadio === "client" ? getValues().client : null,
-      },
-      {
-        resolver: zodResolver(getSchema(selectedRadio === "client")),
-      }
-    );
-  }, [selectedRadio, reset, getValues]);
-
-  const onSubmit = (values) => {
-    setLoading(true);
-    axios
-      .post(`/${userID}/task`, {
-        task_name: values.task,
-        type: values.radio == "office" ? "Office Task" : "Client Task",
-        client: values.client,
-        status: "Pending",
-        assigned_to: values.user,
-        assigned_by: assigned_by,
-      })
-      .then(() => {
-        onRefresh();
-        handleClose(false);
-        toast({ title: "Task created successfully" });
-      })
-
-      .finally(() => {
-        setLoading(false);
-      });
-  };
-
-  function handleClose(val) {
-    reset({
-      radio: "office",
-      task: "",
-      client: null,
-      user: null,
-    });
-    onClose(val);
-  }
-
-  return (
-    <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add new task</DialogTitle>
-        </DialogHeader>
-        <div className="py-4">
-          <Form {...form}>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={control}
-                name="radio"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Type</FormLabel>
-                    <FormControl>
-                      <TaskRadio
-                        value={field.value}
-                        onSelection={(e) => {
-                          field.onChange(e);
-                          setSelectedRadio(e);
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Task Input */}
-              <FormField
-                control={control}
-                name="task"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Task</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter task" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={control}
-                name="user"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Select Employee</FormLabel>
-                    <FormControl>
-                      <UserSearch
-                        value={field.value}
-                        onReturn={field.onChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Client Selection (Only When "Client" is Selected) */}
-              {selectedRadio === "client" && (
-                <FormField
-                  control={control}
-                  name="client"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Client</FormLabel>
-                      <FormControl>
-                        <CustomerSearch
-                          value={field.value}
-                          onReturn={(val) => field.onChange(val)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              <Button disabled={loading} className="w-full" type="submit">
-                {loading && <Spinner />} Submit
-              </Button>
-            </form>
-          </Form>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};

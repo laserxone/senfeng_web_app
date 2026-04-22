@@ -10,7 +10,7 @@ import { Filter, MapPin, MapPinOff } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useContext, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { CustomerSearch } from "./customer-search";
 import { RequiredStar } from "./RequiredStar";
@@ -26,16 +26,19 @@ import {
   Form,
   FormControl,
   FormField,
+  FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import Heading  from "@/components/ui/heading";
+import Heading from "@/components/ui/heading";
 import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
 import { UserSearch } from "./user-search";
 import { MyImg } from "./users/addVisit";
 import FilterSheet from "./users/filterSheet";
 import { OfficeContext } from "@/store/context/OfficeContext";
+import { ComplaintProps } from "@/lib/types";
+import { Field, FieldError, FieldGroup, FieldLabel } from "./ui/field";
 
 const formSchema = z.object({
   title: z.string().min(1, "Required"),
@@ -53,12 +56,12 @@ const formSchemaClosing = z.object({
   status: z.string().min(1, "Required"),
 });
 
-export default function ComplaintSystem({ base }:{base?:any}) {
+export default function ComplaintSystem() {
   const [loading, setLoading] = useState(false);
-  const {userID, isAdmin, complaint_assigned} = useUserDetail()
+  const { userID, isAdmin, complaint_assigned } = useUserDetail()
   const [visible, setVisible] = useState(false);
-  const [data, setData] = useState([]);
-  const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [data, setData] = useState<ComplaintProps[]>([]);
+  const [selectedComplaint, setSelectedComplaint] = useState<number | null>(null);
   const [closeLoading, setCloseLoading] = useState(null);
   const [filterVisible, setFilterVisible] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
@@ -68,9 +71,9 @@ export default function ComplaintSystem({ base }:{base?:any}) {
     end: moment().endOf("month").toDate(),
   });
   const [selectedComplaintForClose, setSelectedComplaintForClose] =
-    useState(null);
+    useState<number | null>(null);
 
-  
+
 
   useEffect(() => {
     if (userID) {
@@ -78,7 +81,7 @@ export default function ComplaintSystem({ base }:{base?:any}) {
     }
   }, [userID]);
 
-  async function fetchData(startDate, endDate) {
+  async function fetchData(startDate: string, endDate: string) {
     setLoading(true);
     axios
       .get(
@@ -92,20 +95,9 @@ export default function ComplaintSystem({ base }:{base?:any}) {
       });
   }
 
-  const handleAssignEngineer = (complaintId) => {
+  const handleAssignEngineer = (complaintId: number) => {
     setSelectedComplaint(complaintId);
   };
-
-  async function handleCloseComplaint(id) {
-    if (!id) return;
-    setCloseLoading(id);
-    await axios.put(`/${userID}/complaint`, {
-      id: id,
-      status: "completed",
-    });
-    await fetchData(dates.start.toISOString(), dates.end.toISOString());
-    setCloseLoading(null);
-  }
 
   console.log(data)
 
@@ -113,7 +105,7 @@ export default function ComplaintSystem({ base }:{base?:any}) {
     if (!search) return true;
     const searchLower = search.toLowerCase();
     return (
-      (item?.title || "").toLowerCase().includes(searchLower) ||
+      (item?.complaint_title || "").toLowerCase().includes(searchLower) ||
       (item?.customer_name || "").toLowerCase().includes(searchLower) ||
       (item?.customer_owner || "").toLowerCase().includes(searchLower) ||
       (item?.customer_ownership_name || "").toLowerCase().includes(searchLower)
@@ -176,7 +168,7 @@ export default function ComplaintSystem({ base }:{base?:any}) {
           </div>
         ) : (
           <Accordion type="single" className="w-full space-y-4">
-            {filteredData.map((complaint, index) => {
+            {filteredData.map((complaint) => {
               const statusColor = {
                 pending: "bg-red-100 text-red-800",
                 assigned: "bg-blue-100 text-blue-800",
@@ -187,15 +179,15 @@ export default function ComplaintSystem({ base }:{base?:any}) {
 
               return (
                 <AccordionItem
-                  key={complaint.id}
-                  value={`complaint-${complaint.id}`}
+                  key={complaint.complaint_id}
+                  value={`complaint-${complaint.complaint_id}`}
                   className="border rounded-lg shadow-sm"
                 >
                   <AccordionTrigger className="text-left px-4 py-3 font-semibold text-lg hover:bg-muted transition-colors rounded-md">
                     <div className="w-full flex flex-col sm:flex-row sm:justify-between gap-2">
                       <div>
                         <p className="text-base font-medium">
-                          {complaint?.title}
+                          {complaint?.complaint_title}
                         </p>
                         <p className="text-sm text-muted-foreground">
                           Manager: {complaint?.customer_ownership_name}
@@ -216,20 +208,19 @@ export default function ComplaintSystem({ base }:{base?:any}) {
                     <div className="flex items-center gap-2">
                       <span className="font-semibold">Status:</span>
                       <span
-                        className={`text-xs px-2 py-1 rounded-full font-medium ${
-                          statusColor[complaint.status?.toLowerCase()] ||
+                        className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor[complaint.complaint_status?.toLowerCase() as keyof typeof statusColor] ||
                           "bg-gray-100 text-gray-800"
-                        }`}
+                          }`}
                       >
-                        {complaint.status}
+                        {complaint.complaint_status}
                       </span>
-                      {complaint.status !== "completed" && (
+                      {complaint.complaint_status !== "completed" && (
                         <Button
                           size="sm"
                           disabled={!!closeLoading}
                           onClick={() =>
                             // handleCloseComplaint(complaint.id)
-                            setSelectedComplaintForClose(complaint.id)
+                            setSelectedComplaintForClose(complaint.complaint_id)
                           }
                         >
                           {/* {closeLoading === complaint.id && <Spinner />} */}
@@ -237,14 +228,14 @@ export default function ComplaintSystem({ base }:{base?:any}) {
                         </Button>
                       )}
                     </div>
-                    {complaint?.problem && (
+                    {complaint?.complaint_problem && (
                       <div>
-                        <strong>Problem:</strong> {complaint.problem}
+                        <strong>Problem:</strong> {complaint.complaint_problem}
                       </div>
                     )}
-                    {complaint?.solution && (
+                    {complaint?.complaint_solution && (
                       <div>
-                        <strong>Solution:</strong> {complaint.solution || "N/A"}
+                        <strong>Solution:</strong> {complaint.complaint_solution || "N/A"}
                       </div>
                     )}
 
@@ -298,7 +289,7 @@ export default function ComplaintSystem({ base }:{base?:any}) {
                     ) : (
                       <Button
                         className="mt-2"
-                        onClick={() => handleAssignEngineer(complaint.id)}
+                        onClick={() => handleAssignEngineer(complaint.complaint_id)}
                       >
                         Assign Engineer
                       </Button>
@@ -370,7 +361,7 @@ export default function ComplaintSystem({ base }:{base?:any}) {
         onRefresh={() =>
           fetchData(dates.start.toISOString(), dates.end.toISOString())
         }
-        base={base}
+
       />
 
       <AssignEngineerModal
@@ -380,7 +371,7 @@ export default function ComplaintSystem({ base }:{base?:any}) {
         onRefresh={() =>
           fetchData(dates.start.toISOString(), dates.end.toISOString())
         }
-        base={base}
+
       />
 
       <CloseComplaint
@@ -390,36 +381,38 @@ export default function ComplaintSystem({ base }:{base?:any}) {
         onRefresh={() =>
           fetchData(dates.start.toISOString(), dates.end.toISOString())
         }
-        base={base}
+
       />
     </div>
   );
 }
 
-const AddNewComplaint = ({ visible, onClose, onRefresh, base }) => {
+type FormValues = z.infer<typeof formSchema>;
+
+const AddNewComplaint = ({ visible, onClose, onRefresh }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void> }) => {
   const [loading, setLoading] = useState(false);
-  const {userID} = useUserDetail()
+  const { userID } = useUserDetail()
   const { state: OfficeState } = useContext(OfficeContext);
 
-  const form = useForm({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
-      customer_id: null,
+      customer_id: undefined,
       problem: "",
       solution: "",
       installation: false,
     },
   });
 
-  const onSubmit = async (values) => {
+  const onSubmit = async (values: FormValues) => {
     setLoading(true);
     try {
-      const response = await axios.post(
+      await axios.post(
         `/${userID}/complaint`,
         {
           ...values,
-          managing_office : OfficeState.value.data || "lahore",
+          managing_office: OfficeState.value.data || "lahore",
           status: "pending",
         }
       );
@@ -430,7 +423,7 @@ const AddNewComplaint = ({ visible, onClose, onRefresh, base }) => {
     }
   };
 
-  function handleClose(val) {
+  function handleClose(val: boolean) {
     onClose(val);
     form.reset();
   }
@@ -442,116 +435,121 @@ const AddNewComplaint = ({ visible, onClose, onRefresh, base }) => {
           <DialogTitle>New registration</DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit, (err) => {
-              console.log("Validation Errors", err);
-            })}
-            className="space-y-3"
-          >
-            <FormField
-              control={form.control}
+        <form id="complaint-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+          <FieldGroup>
+
+            {/* Installation */}
+            <Controller
               name="installation"
-              render={({ field }) => (
-                <div className="flex flex-row items-center gap-2">
-                  <FormLabel>
-                    Machine Installation? <RequiredStar />
-                  </FormLabel>
-                  <FormControl>
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <div className="flex items-center gap-2">
+                    <FieldLabel>
+                      Machine Installation? <RequiredStar />
+                    </FieldLabel>
+
                     <Checkbox
                       checked={field.value}
-                      onCheckedChange={(checked) => {
-                        field.onChange(checked);
-                      }}
+                      onCheckedChange={(checked) => field.onChange(checked)}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+                  </div>
+
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
               )}
             />
 
-            <FormField
-              control={form.control}
+            {/* Title / Complaint */}
+            <Controller
               name="title"
-              render={({ field }) => (
-                <div>
-                  <FormLabel>
-                    {form.watch("installation") === true
-                      ? "Title"
-                      : "Complaint"}{" "}
-                    <RequiredStar />
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={`Enter ${
-                        form.watch("installation") === true
-                          ? "title"
-                          : "complaint"
-                      }`}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </div>
-              )}
-            />
-
-            <FormField
               control={form.control}
-              name="customer_id"
-              render={({ field }) => (
-                <div>
-                  <FormLabel>
-                    Select Customer <RequiredStar />
-                  </FormLabel>
-                  <FormControl>
-                    <CustomerSearch
-                      value={field.value}
-                      onReturn={(val) => field.onChange(val)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="complaint-title">
+                    {form.watch("installation") ? "Title" : "Complaint"} <RequiredStar />
+                  </FieldLabel>
+
+                  <Input
+                    {...field}
+                    id="complaint-title"
+                    placeholder={`Enter ${form.watch("installation") ? "title" : "complaint"}`}
+                    aria-invalid={fieldState.invalid}
+                  />
+
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
               )}
             />
 
-            {form.watch("installation") === false && (
+            {/* Customer */}
+            <Controller
+              name="customer_id"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>
+                    Select Customer <RequiredStar />
+                  </FieldLabel>
+
+                  <CustomerSearch
+                    value={field.value}
+                    onReturn={(val) => field.onChange(val)}
+                  />
+
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+
+            {/* Problem (only if NOT installation) */}
+            {!form.watch("installation") && (
               <>
-                <FormField
-                  control={form.control}
+                <Controller
                   name="problem"
-                  render={({ field }) => (
-                    <div>
-                      <FormLabel>Problem</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter problem" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </div>
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Problem</FieldLabel>
+
+                      <Input
+                        {...field}
+                        placeholder="Enter problem"
+                        aria-invalid={fieldState.invalid}
+                      />
+
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
+                <Controller
                   name="solution"
-                  render={({ field }) => (
-                    <div>
-                      <FormLabel>Solution</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter solution" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </div>
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Solution</FieldLabel>
+
+                      <Input
+                        {...field}
+                        placeholder="Enter solution"
+                        aria-invalid={fieldState.invalid}
+                      />
+
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
                   )}
                 />
               </>
             )}
 
-            <Button disabled={loading} type="submit" className="mt-2 w-full">
+            {/* Submit */}
+            <Button disabled={loading} type="submit" className="w-full">
               {loading && <Spinner />} Save
             </Button>
-          </form>
-        </Form>
+
+          </FieldGroup>
+        </form>
       </DialogContent>
     </Dialog>
   );
@@ -562,18 +560,18 @@ const AssignEngineerModal = ({
   onClose,
   onRefresh,
   complaint_id,
-  base,
-}) => {
+
+}: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, complaint_id: number | null }) => {
   const [loading, setLoading] = useState(false);
-  const {userID} = useUserDetail()
+  const { userID } = useUserDetail()
   const form = useForm({
     resolver: zodResolver(formSchemaEngineer),
     defaultValues: {
-      engineer_id: null,
+      engineer_id: undefined,
     },
   });
 
-  const onSubmit = async (values) => {
+  const onSubmit = async (values: { engineer_id: number }) => {
     setLoading(true);
     try {
       const response = await axios.post(
@@ -591,7 +589,7 @@ const AssignEngineerModal = ({
     }
   };
 
-  function handleClose(val) {
+  function handleClose(val: boolean) {
     onClose(val);
     form.reset();
   }
@@ -603,34 +601,36 @@ const AssignEngineerModal = ({
           <DialogTitle>Assign Engineer</DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit, (err) => {
-              console.log("Validation Errors", err);
-            })}
-            className="space-y-3"
-          >
-            <FormField
-              control={form.control}
+        <form id="engineer-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+          <FieldGroup>
+
+            <Controller
               name="engineer_id"
-              render={({ field }) => (
-                <div>
-                  <FormLabel>
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>
                     Engineer <RequiredStar />
-                  </FormLabel>
-                  <FormControl>
-                    <UserSearch value={field.value} onReturn={field.onChange} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+                  </FieldLabel>
+
+                  <UserSearch
+                    value={field.value}
+                    onReturn={field.onChange}
+                  />
+
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
               )}
             />
 
-            <Button disabled={loading} type="submit" className="mt-2 w-full">
+            <Button disabled={loading} type="submit" className="w-full">
               {loading && <Spinner />} Save
             </Button>
-          </form>
-        </Form>
+
+          </FieldGroup>
+        </form>
       </DialogContent>
     </Dialog>
   );
@@ -641,10 +641,10 @@ const CloseComplaint = ({
   onClose,
   onRefresh,
   complaint_id,
-  base,
-}) => {
+
+}: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, complaint_id: number | null }) => {
   const [loading, setLoading] = useState(false);
-  const {userID} = useUserDetail()
+  const { userID } = useUserDetail()
   const form = useForm({
     resolver: zodResolver(formSchemaClosing),
     defaultValues: {
@@ -652,7 +652,8 @@ const CloseComplaint = ({
     },
   });
 
-  const onSubmit = async (values) => {
+  const onSubmit = async (values: { status: string }) => {
+    if (!complaint_id) return
     setLoading(true);
     try {
       const responseLog = await axios.post(
@@ -677,7 +678,7 @@ const CloseComplaint = ({
     }
   };
 
-  function handleClose(val) {
+  function handleClose(val: boolean) {
     onClose(val);
     form.reset();
   }
@@ -689,34 +690,36 @@ const CloseComplaint = ({
           <DialogTitle>Close Complaint</DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit, (err) => {
-              console.log("Validation Errors", err);
-            })}
-            className="space-y-3"
-          >
-            <FormField
-              control={form.control}
+        <form id="closing-remarks-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+          <FieldGroup>
+
+            <Controller
               name="status"
-              render={({ field }) => (
-                <div>
-                  <FormLabel>
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>
                     Closing Remarks <RequiredStar />
-                  </FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+                  </FieldLabel>
+
+                  <Input
+                    {...field}
+                    aria-invalid={fieldState.invalid}
+                  />
+
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
               )}
             />
 
-            <Button disabled={loading} type="submit" className="mt-2 w-full">
+            <Button disabled={loading} type="submit" className="w-full">
               {loading && <Spinner />} Save
             </Button>
-          </form>
-        </Form>
+
+          </FieldGroup>
+        </form>
       </DialogContent>
     </Dialog>
   );

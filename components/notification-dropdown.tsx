@@ -11,21 +11,23 @@ import Link from "next/link";
 import { BellNotification } from "./NotificationBadge";
 import { Button } from "./ui/button";
 import useUserDetail from "@/hooks/use-user-detail";
+import { useNotification } from "@/store/context/NotificationContext";
 
-export default function NotificationDropdown({ NotificationState }) {
+export default function NotificationDropdown() {
   const { base_route } = useUserDetail()
+   const {NotificationData} = useNotification()
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button size="icon" variant="outline" className="relative">
-          <BellNotification count={NotificationState?.value?.data?.length} />
+          <BellNotification count={NotificationData.length} />
         </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="p-0 w-96">
         <ScrollArea className="h-60 w-full">
           <div className="p-2 space-y-2">
-            {NotificationState?.value?.data
+            {NotificationData
               ?.slice(0, 10)
               .map((notification) => (
                 <div

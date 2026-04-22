@@ -25,7 +25,7 @@ import { Textarea } from "./ui/textarea";
 import useUserDetail from "@/hooks/use-user-detail";
 import { RequiredStar } from "./RequiredStar";
 
-const EditParts = ({ machine_id, visible, onClose, onRefresh, data, base }) => {
+const EditParts = ({ machine_id, visible, onClose, onRefresh, data, }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
   const [orderNumbers, setOrderNumbers] = useState([""]);

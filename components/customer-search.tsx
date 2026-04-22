@@ -6,6 +6,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
+  CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
@@ -22,75 +23,86 @@ import axios from "@/lib/axios";
 import { cn } from "@/lib/utils";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
-export function CustomerSearch({ value, onReturn }) {
+import { MyCustomer } from "@/lib/types";
+
+type LocalMyCustomer = MyCustomer & {value : number | string} 
+
+export function CustomerSearch({ value, onReturn }: { value: number | string | null | undefined, onReturn: (val: number | string) => void }) {
   const [open, setOpen] = React.useState(false);
-  const [customers, setCustomers] = React.useState([]);
+  const [customers, setCustomers] = React.useState<LocalMyCustomer[]>([]);
   const { userID, designation, office } = useUserDetail();
   const [city, setCity] = React.useState("lahore");
 
+
   React.useEffect(() => {
     async function fetchData() {
-      axios.get(`/${userID}/mycustomer`).then((response) => {
-        if (response.data.length > 0) {
-          const apiData = response.data
-            .filter((item) => {
-              const hasValidName = item.name && item.name.trim() !== "";
-              const hasValidOwner = item.owner && item.owner.trim() !== "";
-              return hasValidName || hasValidOwner;
-            })
-            .map((item) => {
-              const hasValidName = item.name && item.name.trim() !== "";
-              return {
-                ...item,
-                label: hasValidName
-                  ? item.name.trim()
-                  : `${item.owner?.trim() || ""} ${
-                      item.location?.trim() || ""
-                    }`.trim(),
-              };
-            })
-            .filter((item) => !!item.label)
-            .sort((a, b) => a.label.localeCompare(b.label));
+      const response = await axios.get<LocalMyCustomer[]>(
+        `/${userID}/mycustomer`
+      );
 
-          const finalData = apiData.map((item) => {
-            return { ...item, value: item.id, label: item.label };
-          });
-          setCustomers(finalData);
-        }
-      });
+      const data = response.data;
+
+      if (data.length > 0) {
+        const apiData = data
+          .filter((item) => {
+            const hasValidName = item.name && item.name.trim() !== "";
+            const hasValidOwner = item.owner && item.owner.trim() !== "";
+            return hasValidName || hasValidOwner;
+          })
+          .map((item) => {
+            const hasValidName = item?.name && item?.name?.trim() !== "";
+            return {
+              ...item,
+              label: hasValidName
+                ? item?.name?.trim()
+                : `${item.owner?.trim() || ""} ${item.location?.trim() || ""
+                  }`.trim(),
+            };
+          })
+          .filter((item) => !!item.label)
+          .sort((a, b) => (a.label || "").localeCompare(b.label || ""));
+
+        const finalData = apiData.map((item) => {
+          return { ...item, value: item.id, label: item.label };
+        });
+        setCustomers(finalData);
+      }
+
     }
     if (userID) fetchData();
   }, [userID]);
 
-   React.useEffect(() => {
-     if (office) {
-       if (designation === 'Sales') {
-         setCity("")
-       } else {
-         setCity(office);
-       }
- 
-     }
-   }, [office, designation]);
+  React.useEffect(() => {
+    if (office) {
+      if (designation === 'Sales') {
+        setCity("")
+      } else {
+        setCity(office);
+      }
+
+    }
+  }, [office, designation]);
 
   const filteredData = customers.filter((item) => item?.office?.includes(city));
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between"
-        >
-          {value
-            ? filteredData.find((item) => item.value === value)?.label
-            : "Select customer..."}
-          <ChevronsUpDown className="opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="py-2 px-0">
+    <>
+      <Button
+        variant="outline"
+        role="combobox"
+        aria-expanded={open}
+        className="w-full justify-between"
+        onClick={(e) => {
+          e.preventDefault()
+          setOpen(!open)
+        }}
+      >
+        {value
+          ? filteredData.find((item) => item?.value === value)?.label
+          : "Select customer..."}
+        <ChevronsUpDown className="opacity-50" />
+      </Button>
+      <CommandDialog open={open} onOpenChange={setOpen}>
         <Command>
           {designation !== "Sales" && (
             <div className="flex items-center justify-center gap-2 px-2 py-1 border-b">
@@ -129,7 +141,7 @@ export function CustomerSearch({ value, onReturn }) {
             </CommandGroup>
           </CommandList>
         </Command>
-      </PopoverContent>
-    </Popover>
+      </CommandDialog>
+    </>
   );
 }

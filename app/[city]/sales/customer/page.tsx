@@ -1,5 +1,5 @@
 import CustomerBaseComponent from "@/components/customer-components/customerBasComponent";
 
 export default function Page() {
-  return <CustomerBaseComponent base={"team/user"}/>;
+  return <CustomerBaseComponent/>;
 }

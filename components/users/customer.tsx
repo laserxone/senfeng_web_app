@@ -9,6 +9,8 @@ import PageTable from "@/components/app-table-without-pagination";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 
+import { ExtraCustomer } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 import moment from "moment";
 import { useRouter } from "next/navigation";
 import { RequiredStar } from "../RequiredStar";
@@ -19,52 +21,31 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
 import Spinner from "../ui/spinner";
 
-const tableHeader = [
-  {
-    value: "Name",
-    label: "Name",
-  },
-  {
-    value: "Owner",
-    label: "Owner",
-  },
-  {
-    value: "Industry",
-    label: "Industry",
-  },
-  {
-    value: "Group",
-    label: "Group",
-  },
-  {
-    value: "Location",
-    label: "Location",
-  },
-];
+
 type CustomerEmployeeProps = {
-  id?: string | number;
-  customer_data: any;
+
+  customer_data: ExtraCustomer[];
   onRefresh: () => void | Promise<void>;
-  ownership: any;
+  ownership: boolean;
   totalCustomerText?: string;
 };
 
 export default function CustomerEmployee({
-  id,
+
   customer_data,
   onRefresh,
   ownership,
   totalCustomerText,
-}:CustomerEmployeeProps) {
+}: CustomerEmployeeProps) {
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<ExtraCustomer[]>([]);
   const [addCustomer, setAddCustomer] = useState(false);
-  const { userID, designation, customer_add_access, office, base_route, route_branch } =
+  const { userID, designation, customer_add_access, base_route, route_branch } =
     useUserDetail();
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<ExtraCustomer | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState("");
-  const [next, setNext] = useState(null);
+  const [next, setNext] = useState<Date | null>(null);
   const [top, setTop] = useState(false);
   const [satisfactory, setSatisfactory] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -75,15 +56,10 @@ export default function CustomerEmployee({
       setData(customer_data);
     }
   }, [customer_data]);
-type ColumnType = {
-  id?: string;
-  accessorKey?: string;
-  filterFn?: string;
-  header?: any;
-  cell: any;
-};
+
+
   const columns = useMemo(() => {
-    const baseColumns:ColumnType[] = [
+    const baseColumns: ColumnDef<ExtraCustomer>[] = [
       {
         accessorKey: "owner",
         filterFn: "includesString",
@@ -205,7 +181,6 @@ type ColumnType = {
     axios
       .post(`/${userID}/feedback`, {
         feedback: feedback,
-        top_follow: false,
         type: "feedback",
         customer_id: selectedCustomer?.id,
         user_id: userID,
@@ -230,18 +205,15 @@ type ColumnType = {
           totalCustomer={data.length}
           columns={columns}
           data={data}
-         
-          tableHeader={tableHeader}
           onRowClick={(val, event) => {
             if (val?.id) {
-              const url = `/${base_route}/${
-                val.member ? "member" : "customer"
-              }/${val.id}`;
+              const url = `/${base_route}/${val.member ? "member" : "customer"
+                }/${val.id}`;
 
               if (event.ctrlKey || event.metaKey) {
                 window.open(url, "_blank");
               } else {
-      
+
                 router.push(url);
               }
             }
@@ -260,17 +232,16 @@ type ColumnType = {
       </div>
 
       <AddCustomerDialog
-        base={`team/user/${userID}`}
         office={route_branch}
         user_id={userID}
         user_designation={designation}
         ownership={ownership}
         visible={addCustomer}
         onClose={setAddCustomer}
-        onRefresh={() => {
+        onRefresh={async () => {
           setData([]);
 
-          onRefresh();
+          await onRefresh();
         }}
       />
 
@@ -308,7 +279,7 @@ type ColumnType = {
                 <Checkbox
                   checked={satisfactory}
                   onCheckedChange={(checked) => {
-                    setSatisfactory(checked=== true);
+                    setSatisfactory(checked === true);
                   }}
                 />
               </div>

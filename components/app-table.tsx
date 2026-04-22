@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ColumnDef,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -26,7 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { memo, useMemo, useRef, useState } from "react";
+import { memo, ReactNode, useMemo, useRef, useState } from "react";
 
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
@@ -48,10 +49,21 @@ const PageTable = ({
   pageSizeOptions = [10, 20, 30, 40, 50],
   disableInput = false,
   totalCustomerText,
-  onRowClick = () => {},
+  onRowClick,
   loading = false,
   defaultPageSize = 20,
   download = false,
+}: {
+  children: ReactNode;
+  columns: ColumnDef<any>[]
+  data: any
+  pageSizeOptions?: number[]
+  disableInput?: boolean
+  totalCustomerText?: string
+  onRowClick?: (item : any, e: any) => void
+  loading ?: boolean
+  defaultPageSize ?: number
+  download ?: boolean
 }) => {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
@@ -228,9 +240,9 @@ const PageTable = ({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -240,7 +252,7 @@ const PageTable = ({
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
                   <TableRow
-                    onClick={(e) => onRowClick(row.original, e)}
+                    onClick={(e) => onRowClick?.(row.original, e)}
                     className="even:bg-gray-100 dark:even:bg-gray-800 dark:text-white text-black cursor-pointer"
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}

@@ -42,7 +42,7 @@ const AddParts = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
   const formSchema = z
     .object({
       serial_no: z.string().min(1, { message: "Name is required." }),
-      contractDate: z.date({ required_error: "Contract date is required." }),
+      contractDate: z.date({ error: "Contract date is required." }),
       isSpeedMoney: z.boolean().default(false),
       speedMoney: z.string().optional(),
       speedMoneyNote: z.string().optional(),

@@ -31,6 +31,7 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
       className={cn("antialiased", fontMono.variable, "font-sans", inter.variable, nunitoSansHeading.variable)}
+      
     >
       <body>
         <Suspense fallback={<SenfengLogoLoader />}>

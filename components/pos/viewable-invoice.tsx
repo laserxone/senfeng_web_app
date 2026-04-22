@@ -14,6 +14,24 @@ import "pdfjs-dist/legacy/web/pdf_viewer.css";
 import { Label } from "../ui/label";
 import { useRef } from "react";
 import CurrencyFormatter from "../currency-formatter";
+import { InvoiceItem } from "@/lib/types";
+import { SelectedUser } from "./POS";
+
+type ViewableInvoice = {
+  companyName: string
+  name: string
+  phoneNumber: string
+  address: string
+  manager: string
+  selectedUser: SelectedUser
+  nextInvoice: string
+  invoiceItems: InvoiceItem[]
+  totalAmount: number
+  warranty: boolean
+  warrantyYear: number
+  discount: string | number
+  createdAt: string | Date
+}
 
 export default function ViewableInvoice({
   companyName,
@@ -29,8 +47,8 @@ export default function ViewableInvoice({
   warrantyYear,
   discount,
   createdAt
-}) {
-  const pdfRef = useRef();
+}: ViewableInvoice) {
+  const pdfRef = useRef(null);
 
   const captureAndCopyToClipboard = async () => {
     const blob = await pdf(
@@ -60,9 +78,12 @@ export default function ViewableInvoice({
     canvas.height = viewport.height;
     canvas.width = viewport.width;
 
-    await page.render({ canvasContext: context, viewport }).promise;
+    if (context) {
+      await page.render({ canvasContext: context, viewport, canvas }).promise;
+    }
 
     canvas.toBlob(async (blob) => {
+      if (!blob) return
       const item = new ClipboardItem({ "image/png": blob });
       await navigator.clipboard.write([item]);
       alert("Image copied to clipboard!");
@@ -92,7 +113,7 @@ export default function ViewableInvoice({
           }}
         >
           {/* Company Details */}
-          <CompanyDetails   createdAt={createdAt}/>
+          <CompanyDetails createdAt={createdAt} />
           {/* Form Fields */}
           <FormField
             companyName={companyName}
@@ -226,8 +247,8 @@ export default function ViewableInvoice({
             </table>
           </div>
 
-        
-            <div
+
+          <div
             style={{
               display: "flex",
               justifyContent: "flex-end",
@@ -238,7 +259,7 @@ export default function ViewableInvoice({
               <div
                 style={{
                   flex: 1,
-                  
+
                   backgroundColor: "#0072BC",
                   color: "white",
                   paddingLeft: 5,
@@ -253,7 +274,7 @@ export default function ViewableInvoice({
               <div
                 style={{
                   flex: 1,
-                 
+
                   backgroundColor: "#0072BC",
                   color: "white",
                   paddingLeft: 10,
@@ -266,7 +287,7 @@ export default function ViewableInvoice({
                 }}
               >
                 <Label>
-                 - <CurrencyFormatter amount={discount} showPKR={false} />
+                  - <CurrencyFormatter amount={discount} showPKR={false} />
                 </Label>
               </div>
             </div>
@@ -282,7 +303,6 @@ export default function ViewableInvoice({
               <div
                 style={{
                   flex: 1,
-                  height: "200px",
                   backgroundColor: "#0072BC",
                   color: "white",
                   paddingLeft: 5,
@@ -297,7 +317,6 @@ export default function ViewableInvoice({
               <div
                 style={{
                   flex: 1,
-                  height: "200px",
                   backgroundColor: "#0072BC",
                   color: "white",
                   paddingLeft: 10,
@@ -310,7 +329,7 @@ export default function ViewableInvoice({
                 }}
               >
                 <Label>
-                <CurrencyFormatter amount={totalAmount} showPKR={true}/>
+                  <CurrencyFormatter amount={totalAmount} showPKR={true} />
                   /-
                 </Label>
               </div>

@@ -9,6 +9,7 @@ import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import {
   Command,
+  CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
@@ -23,11 +24,11 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Input } from "./ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
+import { MyCustomer } from "@/lib/types";
 
-const AddQuickAction = ({ data, visible, onClose, onRefresh }) => {
+const AddQuickAction = ({ data, visible, onClose, onRefresh } : {data : MyCustomer[], visible : boolean, onClose : (val : boolean)=> void, onRefresh : (a : number,b : number)=> void }) => {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [localData, setLocalData] = useState(data);
@@ -294,21 +295,21 @@ export function CustomUserSearch({ value, onReturn, data }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
+    <div className="flex flex-col space-y-4">
+      <Button
           variant="outline"
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
+          onClick={()=> setOpen(!open)}
         >
           {value
             ? data.find((item) => item.value === value)?.label
             : "Select user..."}
           <ChevronsUpDown className="opacity-50" />
         </Button>
-      </PopoverTrigger>
-      <PopoverContent className="py-2 px-0">
+  
+        <CommandDialog open={open} onOpenChange={setOpen}>
         <Command>
           <CommandInput placeholder="Search user..." className="h-9" />
           <CommandList>
@@ -335,8 +336,9 @@ export function CustomUserSearch({ value, onReturn, data }) {
             </CommandGroup>
           </CommandList>
         </Command>
-      </PopoverContent>
-    </Popover>
+        </CommandDialog>
+     
+    </div>
   );
 }
 

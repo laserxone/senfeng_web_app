@@ -26,6 +26,8 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { supabase } from "@/lib/supabaseClient";
 
+import { FileProps, FoldersProps } from "@/lib/types";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { ChevronRight, List, Table2 } from "lucide-react";
 import moment from "moment";
 import Image from "next/image";
@@ -38,69 +40,37 @@ import {
   useRef,
   useState,
 } from "react";
+import { toast } from "sonner";
+import { ProgressWithLabel } from "./progress-with-label";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
 } from "./ui/context-menu";
-import { ProgressWithLabel } from "./progress-with-label";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-type Folder = {
-  id: string;
-  name: string;
-};
 
-type Document = {
-  id: string;
-  path: string;
-  created_at: string;
-  added_by: string;
-};
-type RenderEachFolderProps = {
-  item: Folder;
-  index: number;
-  view: boolean;
-  setFolderBread: React.Dispatch<any>;
-  setCurrentFolder: (folder: Folder | null) => void;
-  setSelectedFolder: (folder: Folder | null) => void;
-  setNewName: (name: string) => void;
-  fetchFiles: () => Promise<void>;
-};
-type PreviewFileProps = {
-  preview: boolean;
-  setPreview: (open: boolean) => void;
-  selectedPreview: string | null;
-  previewLoading: boolean;
-};
-type FileItem = {
-  id: string;
-  path: string;
-  created_at: string;
-  added_by: string;
-};
-type RenderEachFileProps = {
-  item: FileItem;
-  onPreview: (path: string) => void;
-  onRefresh: () => void;
-};
-const videoThumbnailCache = {};
+const videoThumbnailCache: any = {};
+
+type FolderBread = {
+  name: string
+  id: number | null
+}
 
 const SuperadminDocumentManagement = () => {
   const [selectedFile, setSelectedFile] = useState<File[]>([]);
-const [allFolders, setAllFolders] = useState<Folder[]>([]);
-const [allDocuments, setAllDocuments] = useState<Document[]>([]);
-const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
-const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
+  const [allFolders, setAllFolders] = useState<FoldersProps[]>([]);
+  const [allDocuments, setAllDocuments] = useState<FileProps[]>([]);
+  const [selectedFolder, setSelectedFolder] = useState<FoldersProps | null>(null);
+  const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const { userID, name, email, superadmin_cloud_access, isAdmin, base_route } =
+  const { userID, name, email, superadmin_cloud_access, isAdmin } =
     useUserDetail();
- 
+
   const [uploadLoading, setUploadLoading] = useState(false);
-  const [currentFolder, setCurrentFolder] = useState(null);
+  const [currentFolder, setCurrentFolder] = useState<FoldersProps | null>(null);
   const [folderName, setFolderName] = useState("");
   const [visible, setVisible] = useState(false);
-  const [folderBread, setFolderBread] = useState([{ name: "root", id: null }]);
+  const [folderBread, setFolderBread] = useState<FolderBread[]>([{ name: "root", id: null }]);
   const [folderLoading, setFolderLoading] = useState(false);
   const [newName, setNewName] = useState("");
   const [view, setView] = useState(false);
@@ -120,7 +90,7 @@ const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
         setLoading(true);
         fetchFiles();
       } else {
-   
+
         router.push(`/restricted`);
       }
     }
@@ -142,10 +112,7 @@ const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
 
   const uploadFile = async () => {
     if (!selectedFile.length) {
-      toast({
-        title: "Please select at least one file to upload.",
-        variant: "destructive",
-      });
+      toast.info("Please select at least one file to upload.")
       return;
     }
     setUploadLoading(true);
@@ -157,11 +124,7 @@ const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
       try {
         await uploadWithProgress(file, index);
       } catch (err) {
-        toast({
-          title: `Error uploading ${file.name}`,
-          description: JSON.parse(err)?.message,
-          variant: "destructive",
-        });
+        toast.error(`Error uploading ${file.name}`)
         continue;
       }
     }
@@ -176,7 +139,7 @@ const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
     setUploadLoading(false);
   }
 
-  async function uploadWithProgress(file, idx) {
+  async function uploadWithProgress(file: File, idx: number) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
 
@@ -267,7 +230,7 @@ const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
       });
   }
 
-  const handlePreview = useCallback(async (path) => {
+  const handlePreview = useCallback(async (path: string) => {
     setPreviewLoading(true);
     setPreview(true);
     try {
@@ -275,10 +238,10 @@ const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
         .from("superadmin.documents")
         .getPublicUrl(path);
       setSelectedPreview(data.publicUrl);
-    }catch(error) {
-        console.error("Error downloading file", error);
-        return;
-      } finally {
+    } catch (error) {
+      console.error("Error downloading file", error);
+      return;
+    } finally {
       setPreviewLoading(false);
     }
   }, []);
@@ -297,7 +260,7 @@ const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
               type="file"
               multiple
               ref={fileInputRef}
-              onChange={(e) => setSelectedFile(Array.from(e.target.files))}
+              onChange={(e) => setSelectedFile(Array.isArray(e.target.files) ? e.target.files : [])}
               className="border p-2 rounded-md w-72"
             />
             {selectedFile.length > 0 && (
@@ -434,12 +397,12 @@ const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   );
 };
 
-const RenderEachFile = memo(({ item, onPreview, onRefresh }: RenderEachFileProps) => {
+const RenderEachFile = memo(({ item, onPreview, onRefresh }: { item: FileProps, onPreview: (val: string) => void, onRefresh: () => Promise<void> }) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
   const { userID } = useUserDetail();
 
-  async function handleDelete(file) {
+  async function handleDelete(file: FileProps) {
     const id = file.id;
     await axios
       .delete(`/${userID}/cloud/document/${id}`)
@@ -525,8 +488,8 @@ const RenderEachFile = memo(({ item, onPreview, onRefresh }: RenderEachFileProps
 });
 
 const RenderFile = memo(
-  ({ path }:{path:string}) => {
-    const [thumbnail, setThumbnail] = useState(null);
+  ({ path }: { path: string }) => {
+    const [thumbnail, setThumbnail] = useState<string | null>(null);
     const [loadingThumb, setLoadingThumb] = useState(false);
     const fileExt = path?.toLowerCase();
     const isImage = fileExt?.match(/\.(jpg|jpeg|png|gif|webp)$/);
@@ -554,12 +517,12 @@ const RenderFile = memo(
           video.crossOrigin = "anonymous";
           video.currentTime = 1;
           video.muted = true;
-          video.play().catch(() => {});
+          video.play().catch(() => { });
 
           video.addEventListener("loadeddata", () => {
             const canvas = document.createElement("canvas");
             canvas.width = 100;
-            canvas.height = 100; 
+            canvas.height = 100;
             const ctx = canvas.getContext("2d");
             if (ctx) {
               ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -605,13 +568,13 @@ const RenderFile = memo(
           </div>
         ) : (
           <div className="w-[100px] h-[120px] overflow-hidden flex justify-center">
-          <Image
-            src={url}
-            height={100}
-            width={100}
-            alt={`${path}-file`}
-            className="object-cover"
-          />
+            <Image
+              src={url}
+              height={100}
+              width={100}
+              alt={`${path}-file`}
+              className="object-cover"
+            />
           </div>
         )}
         <Label className={"mt-1"}>{path}</Label>
@@ -620,6 +583,17 @@ const RenderFile = memo(
   },
   (prev, next) => prev.path === next.path,
 );
+
+type RenderEachFolderProps = {
+  item: FoldersProps,
+  index: number,
+  view: boolean,
+  setFolderBread: (val: any) => void,
+  setCurrentFolder: (val: any) => void,
+  setSelectedFolder: (val: FoldersProps) => void,
+  setNewName: (val: string) => void,
+  fetchFiles: () => Promise<void>,
+}
 
 const RenderEachFolder = memo(
   ({
@@ -635,7 +609,7 @@ const RenderEachFolder = memo(
     const [deleteLoading, setDeleteLoading] = useState(false);
     const { userID } = useUserDetail();
 
-    async function handleDeleteFolder(id) {
+    async function handleDeleteFolder(id: number) {
       try {
         setDeleteLoading(true);
         await axios.delete(`/${userID}/cloud/folder/${id}`);
@@ -646,7 +620,7 @@ const RenderEachFolder = memo(
     }
 
     const openFolder = () => {
-      setFolderBread((prev) => [...prev, { name: item.name, id: item.id }]);
+      setFolderBread((prev: FoldersProps[]) => [...prev, { name: item.name, id: item.id }]);
       setCurrentFolder({ name: item.name, id: item.id });
     };
 
@@ -698,7 +672,7 @@ const RenderEachFolder = memo(
   },
 );
 
-const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
+const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }: { folderBread: FolderBread[], setFolderBread: (val: any) => void, setCurrentFolder: (val: any) => void }) => {
   return (
     <Breadcrumb>
       <BreadcrumbList>
@@ -740,11 +714,11 @@ const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }) => {
 };
 
 const PreviewFile = memo(
-  ({ preview, setPreview, selectedPreview, previewLoading }:PreviewFileProps ) => {
+  ({ preview, setPreview, selectedPreview, previewLoading }: { preview: boolean, setPreview: (val: boolean) => void, selectedPreview: string | null, previewLoading: boolean }) => {
     const officeFile = selectedPreview
       ? selectedPreview
-          ?.toLowerCase()
-          ?.match(/\.(xlsx|xls|csv|doc|docx|ppt|pptx)$/)
+        ?.toLowerCase()
+        ?.match(/\.(xlsx|xls|csv|doc|docx|ppt|pptx)$/)
       : false;
 
     return (

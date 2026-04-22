@@ -41,7 +41,6 @@ const AddPayment = ({
   onRefresh,
   machine_id,
   customer_id,
-  base
 }) => {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);

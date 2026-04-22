@@ -6,6 +6,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
+  CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
@@ -20,26 +21,41 @@ import {
 import { CountriesList } from "@/constants/data";
 import { cn } from "@/lib/utils";
 
-export function NumberSearch  ({ value, onReturn }) {
-  const [open, setOpen] = React.useState(false);
-  const [numbers, setNumbers] = React.useState(CountriesList);
+type CountriesType = {
+  flag: string
+  name: string
+  code: string
+  num: string
+}
 
-  
+export function NumberSearch({ value, onReturn }: { value: string, onReturn: (val: string) => void }) {
+  const [open, setOpen] = React.useState(false);
+  const [numbers, setNumbers] = React.useState<CountriesType[]>([]);
+  React.useEffect(() => {
+    if (CountriesList) {
+      setNumbers(CountriesList)
+    }
+  }, [CountriesList])
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between"
-        >
-          {value ? numbers.find((some)=>some.num === value).num : "Select country..."}
-          <ChevronsUpDown className="opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="py-2 px-0">
+    <div className="flex flex-col gap-4">
+      <Button
+      type="button"
+        variant="outline"
+        role="combobox"
+        aria-expanded={open}
+        className="w-full justify-between"
+        onClick={(e) => {
+          e.preventDefault()
+          setOpen(true)
+        }}
+      >
+        {numbers.length > 0 && value
+          ? numbers.find((some) => some.num === value)?.num ?? "Select country..."
+          : "Select country..."}
+        <ChevronsUpDown className="opacity-50" />
+      </Button>
+      <CommandDialog open={open} onOpenChange={setOpen}>
         <Command>
           <CommandInput placeholder="Search country..." className="h-9" />
           <CommandList>
@@ -55,18 +71,15 @@ export function NumberSearch  ({ value, onReturn }) {
                   }}
                 >
                   {item.name} {item.num}
-                  <Check
-                    className={cn(
-                      "ml-auto",
-                      value?.num === item.num ? "opacity-100" : "opacity-0"
-                    )}
-                  />
+
                 </CommandItem>
               ))}
             </CommandGroup>
           </CommandList>
         </Command>
-      </PopoverContent>
-    </Popover>
+      </CommandDialog>
+
+
+    </div>
   );
 }

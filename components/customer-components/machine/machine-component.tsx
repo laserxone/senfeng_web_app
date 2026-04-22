@@ -8,14 +8,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,13 +25,14 @@ import {
 } from "lucide-react";
 import {
   memo,
+  ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
 } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import AddPayment from "@/components/addPayment";
@@ -76,136 +69,50 @@ import { UserSearch } from "@/components/user-search";
 import { storage } from "@/config/firebase";
 import { Colors } from "@/constants/data";
 
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
+import { TriggerFirebaseForMachine } from "@/lib/triggerFirebase";
+import { InstallmentProps, MachinePayment, MachineProps, MachineResponse, MyCustomer } from "@/lib/types";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { pdf } from "@react-pdf/renderer";
+import { ColumnDef } from "@tanstack/react-table";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import Image from "next/image";
-import * as pdfjsLib from "pdfjs-dist/build/pdf";
-import "pdfjs-dist/build/pdf.worker";
+import * as pdfjsLib from "pdfjs-dist/build/pdf.mjs";
+import "pdfjs-dist/build/pdf.worker.mjs";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
+import { toast } from "sonner";
 import AddCheque from "./add-cheque";
-import { TriggerFirebaseForMachine } from "@/lib/triggerFirebase";
-type MachineProps = {
-  id: string | number;
-  base?: string;
-  onLoading?: (val: boolean) => void;
-};
-type MachinePayment = {
-  id?: string | number;
-  amount?: number;
-  note?: string;
-  status?: string;
-  clearance_date?: string | null;
-  transaction_date?: string;
-  image?: string;
-  payment_lock?: boolean;
-};
 
-type MachineInfo = {
-  id: string | number;
-  serial_no?: string;
-  power?: string;
-  source?: string;
-  price?: number;
-  status?: string;
-  type?: "Machine" | "Parts";
-  sell_by?: string | number;
-  sell_by_name?: string;
-  contract_date?: string;
-  order_no_arr?: string[];
-  ready_for_delivery?: boolean;
-  cancelled_detail?: boolean;
-  cancelled_reason?: string;
-  payments?: MachinePayment[];
-  parts_information?: Record<string, any>[];
-};
-
-type Customer = {
-  id: string | number;
-  name?: string;
-  owner?: string;
-  number?: string[];
-  ownership?: string | number;
-  ownership_name?: string;
-};
-
-type MachineResponse = {
-  machine?: MachineInfo;
-  customer?: Customer;
-  payments?: MachinePayment[];
-  installments?: any[];
-  unmatchedFields?: string[];
-  data?: any[];
-  shipment?: string;
-};
-type ClientCardProps = {
-  data?: {
-    name?: string;
-    owner?: string;
-    ownership_name?: string;
-    customer_group?: string;
-  } | null;
-
-  payment: [number, number];
-
-  machine?: {
-    type?: "Machine" | "Parts";
-    status?: string;
-    sell_by_name?: string;
-    contract_date?: string;
-    serial_no?: string;
-    power?: string;
-    source?: string;
-    order_no_arr?: string[];
-    cancelled_detail?: boolean;
-    cancelled_reason?: string;
-    parts_information?: Record<string, any>[];
-    speed_money?: boolean;
-    speed_money_amount?: number;
-    speed_money_note?: string;
-  } | null;
-
-  children?: React.ReactNode;
-};
-type FormData = {
-  contract_images_png?: string[];
-  other_images_png?: string[];
-  handshake_images?: string[];
-  installation_report?: string[];
-  final_handover_images?: string[];
-  machine_nameplate_images?: string[];
-  handover_user_id?: string | null;
-};
-export default function Machine({ id, onLoading = () => {}, base }:MachineProps) {
-  const [data, setData] = useState<MachineResponse | undefined>();
+export default function Machine({ id, onLoading }: { id: string | number, onLoading?: (val: boolean) => void }) {
+  const [data, setData] = useState<MachineResponse>();
   const [payments, setPayments] = useState<MachinePayment[]>([]);
-  const [installments, setInstallments] = useState<any[]>([]);
+  const [installments, setInstallments] = useState<InstallmentProps[]>([]);
   const [total, setTotal] = useState(0);
   const [received, setReceived] = useState(0);
- 
-  const [imageURL, setImageURL] = useState(null);
+
+  const [imageURL, setImageURL] = useState<MachinePayment | null>(null);
   const [visible, setVisible] = useState(false);
   const [imagesVisible, setImagesVisible] = useState(false);
   const [editMachine, setEditMachine] = useState(false);
   const [editParts, setEditParts] = useState(false);
   const [addPayment, setAddPayment] = useState(false);
   const [editPayment, setEditPayment] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [selectedPayment, setSelectedPayment] = useState<MachinePayment | null>(null);
   const { userID, isAdmin, limited_access, designation, customer_full_access } =
     useUserDetail();
   const [editAllowed, setEditAllowed] = useState(false);
   const [zipDownloading, setZipDwonloading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [unmatched, setUnmatched] = useState([]);
+  const [unmatched, setUnmatched] = useState<string[]>([]);
   const [installmentVisible, setInstallmentVisible] = useState(false);
   const [credit, setCredit] = useState(false);
-  const [readyForDelivery, setReadyForDelivery] = useState(null);
+  const [readyForDelivery, setReadyForDelivery] = useState<MachineResponse | null>(null);
   const [openDelete, setOpenDelete] = useState(false);
 
   useEffect(() => {
@@ -214,12 +121,12 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
     }
   }, [id, userID]);
 
-  async function fetchData(id) {
-    if (onLoading) {
-      onLoading(true);
-    }
+  async function fetchData(id: number | string) {
+    
+      onLoading?.(true);
+    
     try {
-      const response = await axios.get(`/${userID}/machine/${id}`);
+      const response: { data: MachineResponse } = await axios.get(`/${userID}/machine/${id}`);
 
       const machine = response.data?.machine;
       if (response.data?.installments) {
@@ -258,7 +165,7 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
           machine?.payments?.filter((p) => p.clearance_date !== null) || [];
         setPayments(machine?.payments);
         setReceived(
-          payments.reduce((sum, p) => sum + Number(p.amount || 0), 0),
+          payments?.reduce((sum, p) => sum + Number(p.amount || 0), 0),
         );
       }
 
@@ -266,11 +173,11 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
     } catch (e) {
       return null;
     } finally {
-      if (onLoading) onLoading(false);
+      onLoading?.(false);
     }
   }
 
-  const columns = useMemo(
+  const columns: ColumnDef<MachinePayment>[] = useMemo(
     () => [
       {
         accessorKey: "track",
@@ -358,8 +265,8 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
           <div>
             {row.getValue("transaction_date")
               ? moment(new Date(row.getValue("transaction_date"))).format(
-                  "YYYY-MM-DD",
-                )
+                "YYYY-MM-DD",
+              )
               : ""}
           </div>
         ),
@@ -387,8 +294,8 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
           >
             {row.getValue("clearance_date")
               ? moment(new Date(row.getValue("clearance_date"))).format(
-                  "YYYY-MM-DD",
-                )
+                "YYYY-MM-DD",
+              )
               : "Pending"}
           </div>
         ),
@@ -486,7 +393,6 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
                   item={currentItem}
                   onRefresh={async () => {
                     await fetchData(id);
-                    return true;
                   }}
                 />
               )}
@@ -502,14 +408,14 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
     let runningBalance = total;
 
     const convertedPayment = payments.map((payment) => {
-      runningBalance -= payment.amount;
+      runningBalance -= Number(payment.amount);
       return { ...payment, balance: runningBalance };
     });
 
     const finalData = {
       customer: data?.customer?.name,
       name: data?.customer?.owner,
-      contact: data?.customer.number?.join(", "),
+      contact: data?.customer?.number?.join(", "),
       model: data?.machine?.serial_no,
       serial: data?.machine?.order_no_arr?.join(", "),
       manager: data?.machine?.sell_by_name || "NA",
@@ -531,15 +437,15 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
       setOpenDelete(false)
       setData(undefined);
       setDeleteLoading(false);
-        toast({ description: "Machine Deleted" , variant: "destructive", });
+      toast.success("Machine Deleted");
     });
   }
 
-  const ClientCard = memo(({ data, payment, machine, children }:ClientCardProps) => {
+  const ClientCard = memo(({ data, payment, machine, children }: { data: MyCustomer | null, payment: [number, number], machine: MachineProps | null, children: ReactNode }) => {
     const [showAlert, setShowAlert] = useState(false);
     useEffect(() => {
       if (machine) {
-        const payments =  machine?.payments ?? [];
+        const payments = machine?.payments ?? [];
         const result = findDuplicateNotes(payments);
         if (result.length > 0) {
           setShowAlert(true);
@@ -549,7 +455,7 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
       }
     }, [machine]);
 
-    function findDuplicateNotes(array) {
+    function findDuplicateNotes(array: MachinePayment[]) {
       const noteMap = new Map();
       const duplicates = [];
 
@@ -650,17 +556,16 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
                 {machine ? (
                   <div className="text-gray-600 dark:text-gray-300 text-sm flex flex-col gap-2">
                     <div
-                      className={`w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${
-                        machine?.parts_information?.length > 3
-                          ? 3
-                          : machine?.parts_information?.length || 1
-                      } gap-6`}
+                      className={`w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${machine?.parts_information?.length > 3
+                        ? 3
+                        : machine?.parts_information?.length || 1
+                        } gap-6`}
                     >
-                      {machine?.parts_information?.map((item, i) => (
+                      {machine?.parts_information?.map((item: any, i: number) => (
                         <div key={i} className="flex flex-col gap-2">
                           <h3 className="font-semibold mb-2">Part {i + 1}</h3>
 
-                          {Object.entries(item).map(([key, val], ind) => (
+                          {Object.entries(item).map(([key, val]: any, ind) => (
                             <div key={ind} className="flex items-start gap-2">
                               <ClipboardList className="h-4 w-4  mt-0.5" />
                               <span className="text-sm ">
@@ -877,10 +782,7 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
                   size="sm"
                   onClick={() => {
                     if (!editAllowed) {
-                      toast({
-                        title: "You are not allowed to edit machine",
-                        variant: "destructive",
-                      });
+                      toast.info("You are not allowed to edit machine");
                       return;
                     } else {
                       if (data?.machine?.type === "Parts") {
@@ -902,10 +804,7 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
                     size="sm"
                     onClick={() => {
                       if (!editAllowed) {
-                        toast({
-                          title: "You are not allowed to add payment",
-                          variant: "destructive",
-                        });
+                        toast.info("You are not allowed to add payment");
                         return;
                       } else {
                         setAddPayment(true);
@@ -996,11 +895,11 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
           columns={columns}
           data={payments}
           disableInput={true}
-          onRowClick={(val, e) => {}}
+          onRowClick={(val, e) => { }}
         />
       </div>
       <EditMachine
-        base={base}
+
         visible={editMachine}
         onClose={setEditMachine}
         machine_id={id}
@@ -1009,7 +908,7 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
       />
 
       <EditParts
-        base={base}
+
         visible={editParts}
         onClose={setEditParts}
         machine_id={id}
@@ -1032,16 +931,15 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
         id={imageURL?.id}
         onRefresh={async () => {
           await fetchData(id);
-          return true;
         }}
       />
       <ViewImagesSheet
         editAllowed={editAllowed}
         visible={imagesVisible}
-        data={data?.machine || {}}
+        data={data?.machine}
         customer_id={data?.customer?.id}
         onClose={() => setImagesVisible(false)}
-        onRefresh={async () => await fetchData(id)}
+        onRefresh={async () => { await fetchData(id) }}
       />
 
       <InstallmentSheet
@@ -1063,7 +961,7 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
       />
 
       <AddPayment
-        base={base}
+
         customer_id={data?.customer?.id}
         visible={addPayment}
         onClose={setAddPayment}
@@ -1072,10 +970,10 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
       />
       {selectedPayment && (
         <EditPayment
-          base={base}
+
           customer_id={data?.customer?.id}
           visible={editPayment}
-          onClose={(val) => {
+          onClose={(val: boolean) => {
             setEditPayment(val);
             setSelectedPayment(null);
           }}
@@ -1112,8 +1010,9 @@ export default function Machine({ id, onLoading = () => {}, base }:MachineProps)
   );
 }
 
-const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }) => {
+const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }: { open: boolean, onClose: () => void, onRefresh: () => Promise<void>, data: MachineResponse | null }) => {
   const { userID } = useUserDetail();
+
   const formSchema = z.object({
     name: z.string().min(1, "Receiver name is required"),
     city: z.string().min(1, "City is required"),
@@ -1124,9 +1023,11 @@ const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }) => {
     tod: z.string().min(1, "Delivery time is required"),
   });
 
+  type FormValues = z.infer<typeof formSchema>;
+
   const [loading, setLoading] = useState(false);
 
-  const form = useForm({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -1139,7 +1040,6 @@ const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }) => {
     },
   });
 
-  // ✅ Prefill when data changes
   useEffect(() => {
     if (data?.customer?.id) {
       form.reset({
@@ -1154,7 +1054,7 @@ const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }) => {
     }
   }, [data]);
 
-  async function onSubmit(values) {
+  async function onSubmit(values: FormValues) {
 
     if (!data?.machine?.id) return;
 
@@ -1163,7 +1063,7 @@ const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }) => {
       await axios.put(`/${userID}/machine/${data.machine.id}/delivery`, {
         ready_for_delivery: true,
         delivery_information: { ...values, tod: new Date(values.tod) },
-        delivery_request_date : new Date()
+        delivery_request_date: new Date()
       });
       await TriggerFirebaseForMachine()
       await onRefresh();
@@ -1180,162 +1080,176 @@ const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }) => {
           <DialogTitle>Sending for Delivery</DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit, (err) => {
-              console.log("Validation Errors", err);
-            })}
-          >
-            <ScrollArea className="h-[70vh] pr-2">
-              <div className="grid gap-4 py-4 px-2">
-                {/* Receiver Name */}
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Receiver Name <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter receiver name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        <form
+          onSubmit={form.handleSubmit(onSubmit, (err) => {
+            console.log("Validation Errors", err);
+          })}
+        >
+          <ScrollArea className="h-[70vh] pr-2">
+            <div className="grid gap-4 py-4 px-2">
 
-                {/* City */}
-                <FormField
-                  control={form.control}
-                  name="city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        City <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter city" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <Controller
+                name="name"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>
+                      Receiver Name <RequiredStar />
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      placeholder="Enter receiver name"
+                      aria-invalid={fieldState.invalid}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
 
-                {/* Contact No */}
-                <FormField
-                  control={form.control}
-                  name="number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Contact No <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter contact number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <Controller
+                name="city"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>
+                      City <RequiredStar />
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      placeholder="Enter city"
+                      aria-invalid={fieldState.invalid}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
 
-                {/* Delivery Time */}
-                <FormField
-                  control={form.control}
-                  name="tod"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Time of Delivery <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <Input type="datetime-local" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <Controller
+                name="number"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>
+                      Contact No <RequiredStar />
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      placeholder="Enter contact number"
+                      aria-invalid={fieldState.invalid}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
 
-                {/* Address */}
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Address <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Enter full address" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <Controller
+                name="tod"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>
+                      Time of Delivery <RequiredStar />
+                    </FieldLabel>
+                    <Input
+                      type="datetime-local"
+                      {...field}
+                      aria-invalid={fieldState.invalid}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
 
-                {/* Google Pin */}
-                <FormField
-                  control={form.control}
-                  name="pin"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Google Pin <RequiredStar />
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Paste Google Maps link"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <Controller
+                name="address"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>
+                      Address <RequiredStar />
+                    </FieldLabel>
+                    <Textarea
+                      {...field}
+                      placeholder="Enter full address"
+                      aria-invalid={fieldState.invalid}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
 
-                {/* Note */}
-                <FormField
-                  control={form.control}
-                  name="note"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Note</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Additional instructions (optional)"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <Controller
+                name="pin"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>
+                      Google Pin <RequiredStar />
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      placeholder="Paste Google Maps link"
+                      aria-invalid={fieldState.invalid}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
 
-              <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground">
-                Make sure everything is ready and completed before sending for
-                delivery request.
-              </div>
-            </ScrollArea>
+              <Controller
+                name="note"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Note</FieldLabel>
+                    <Textarea
+                      {...field}
+                      placeholder="Additional instructions (optional)"
+                      aria-invalid={fieldState.invalid}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </div>
 
-            <DialogFooter className="mt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
+            <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground">
+              Make sure everything is ready and completed before sending for
+              delivery request.
+            </div>
+          </ScrollArea>
 
-              <Button type="submit" disabled={loading}>
-                {loading && <Spinner />}
-                Yes
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+          <DialogFooter className="mt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+
+            <Button type="submit" disabled={loading}>
+              {loading && <Spinner />}
+              Yes
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
 };
 
-const CancelDeal = ({ machine, onRefresh }) => {
+const CancelDeal = ({ machine, onRefresh }: { machine: MachineProps, onRefresh: () => Promise<void> }) => {
   const [loading, setLoading] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
   const [reason, setReason] = useState("");
@@ -1393,6 +1307,19 @@ const CancelDeal = ({ machine, onRefresh }) => {
   );
 };
 
+type ImageSheetProps = {
+  payment_lock: boolean | undefined,
+  visible: boolean,
+  onClose: () => void,
+  img: string | null,
+  note: string | null,
+  remarks: string | null,
+  id: number | undefined,
+  onRefresh: () => Promise<void>,
+  editAllowed: boolean,
+  cheque_id: string | null,
+}
+
 const ImageSheet = ({
   payment_lock,
   visible,
@@ -1404,14 +1331,14 @@ const ImageSheet = ({
   onRefresh,
   editAllowed,
   cheque_id,
-}) => {
+}: ImageSheetProps) => {
   const [imageOpen, setImageOpen] = useState(false);
-  const [localImage, setLocalImage] = useState(null);
+  const [localImage, setLocalImage] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
   const [rotation, setRotation] = useState(0);
   const { userID } = useUserDetail();
- 
+
 
   useEffect(() => {
     if (img) {
@@ -1434,23 +1361,23 @@ const ImageSheet = ({
     }
   }
 
-  const handleZoomChange = useCallback((shouldZoom) => {
+  const handleZoomChange = useCallback((shouldZoom: boolean) => {
     setIsZoomed(shouldZoom);
     if (!shouldZoom) {
       setImageOpen(false);
     }
   }, []);
 
-  async function handleDelete(id:string|number) {
+  async function handleDelete(id: string | number) {
     try {
       if (img && !img.includes("https")) {
         await DeleteFromStorage(img);
       }
 
       await axios.delete(`/${userID}/payment/${id}`);
-      await onRefresh(id);
+      await onRefresh();
       handleClose();
-      toast({ title: "Payment Deleted" });
+      toast.success("Payment Deleted");
     } finally {
       setDeleteLoading(false);
     }
@@ -1469,6 +1396,7 @@ const ImageSheet = ({
     setImageOpen(false);
   };
 
+  if (!localImage) return null
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
       <SheetContent>
@@ -1553,7 +1481,7 @@ const ImageSheet = ({
                     </div>
                   </div>
                 ) : (
-                  img
+                  img ?? <></>
                 )
               }
             >
@@ -1597,9 +1525,15 @@ const InstallmentSheet = ({
   data,
   updateData,
   onDeleteData,
+}: {
+  visible: boolean,
+  onClose: () => void
+  data: InstallmentProps[]
+  updateData: (id: number, val: boolean) => void
+  onDeleteData: (id: number) => void
 }) => {
   const [imageOpen, setImageOpen] = useState(false);
- 
+
   const { isAdmin, userID } = useUserDetail();
 
   const handleClose = useCallback(() => {
@@ -1608,11 +1542,11 @@ const InstallmentSheet = ({
     }
   }, [imageOpen, onClose]);
 
-  const RenderEachRow = ({ item }) => {
+  const RenderEachRow = ({ item }: { item: InstallmentProps }) => {
     const [loading, setLoading] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
 
-    async function handlePaid(id) {
+    async function handlePaid(id: number) {
       if (!id || !userID) return;
       setLoading(true);
 
@@ -1621,18 +1555,12 @@ const InstallmentSheet = ({
           pending: false,
         });
         updateData(id, false);
-      } catch (error) {
-        toast({
-          title: "Failed to update status",
-          description: error.message || "An error occurred",
-          variant: "destructive",
-        });
       } finally {
         setLoading(false);
       }
     }
 
-    async function handleDelete(id) {
+    async function handleDelete(id: number) {
       if (!id || !userID) return;
       setDeleteLoading(true);
 
@@ -1643,12 +1571,6 @@ const InstallmentSheet = ({
       try {
         await axios.delete(`/${userID}/reminders/${id}`);
         onDeleteData(id);
-      } catch (error) {
-        toast({
-          title: "Failed to delete installment",
-          description: error.message || "An error occurred",
-          variant: "destructive",
-        });
       } finally {
         setDeleteLoading(false);
       }
@@ -1755,12 +1677,12 @@ type RenderInstallmentImageProps = {
   type?: boolean;
   setImageOpen: (open: boolean) => void;
 };
-const RenderInstallmentImage = memo(({ img, type, setImageOpen }:RenderInstallmentImageProps) => {
-  const [localImage, setLocalImage] = useState(null);
+const RenderInstallmentImage = memo(({ img, type, setImageOpen }: RenderInstallmentImageProps) => {
+  const [localImage, setLocalImage] = useState<string | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleZoomChange = useCallback((shouldZoom) => {
+  const handleZoomChange = useCallback((shouldZoom: boolean) => {
     setIsZoomed(shouldZoom);
     setImageOpen(shouldZoom);
   }, []);
@@ -1793,13 +1715,14 @@ const RenderInstallmentImage = memo(({ img, type, setImageOpen }:RenderInstallme
       {loading ? (
         <Spinner />
       ) : (
-        <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
-          <img
-            src={localImage}
-            alt="payment-img"
-            className="h-[150px] w-auto object-contain"
-          />
-        </ControlledZoom>
+        !localImage ? null :
+          <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
+            <img
+              src={localImage}
+              alt="payment-img"
+              className="h-[150px] w-auto object-contain"
+            />
+          </ControlledZoom>
       )}
     </div>
   );
@@ -1812,14 +1735,23 @@ const ViewImagesSheet = ({
   data,
   onRefresh,
   customer_id,
+}: {
+  editAllowed: boolean,
+  visible: boolean,
+  onClose: () => void
+  onRefresh: () => Promise<void>
+  data: MachineProps | undefined
+  customer_id: number | undefined
 }) => {
+
+  if (!data) return null
   const [imageOpen, setImageOpen] = useState(false);
-  const [contractPdfImages, setContractPdfImages] = useState([]);
-  const [otherPdfImages, setOtherPdfImages] = useState([]);
+  const [contractPdfImages, setContractPdfImages] = useState<string[]>([]);
+  const [otherPdfImages, setOtherPdfImages] = useState<string[]>([]);
   const [addImageVisible, setAddImageVisible] = useState(false);
 
   const { userID } = useUserDetail();
- 
+
 
   const contractImages = useMemo(() => data?.contract_images_png || [], [data]);
   const otherImages = useMemo(() => data?.other_images_png || [], [data]);
@@ -1837,8 +1769,8 @@ const ViewImagesSheet = ({
     [data],
   );
 
-  const prepareData = useCallback(async (pdfUrls, condition) => {
-    let localImages = [];
+  const prepareData = useCallback(async (pdfUrls: File[], condition: string) => {
+    let localImages: string[] = [];
     await Promise.all(
       pdfUrls.map(async (pdfUrl) => {
         const pdfData = await fetchPdfData(pdfUrl);
@@ -1890,7 +1822,7 @@ const ViewImagesSheet = ({
     }
   }, [imageOpen, onClose]);
 
-  const handleDeleteImage = async (imgUrl, typeKey) => {
+  const handleDeleteImage = async (imgUrl: string, typeKey: string) => {
     try {
       if (!imgUrl || !typeKey) return;
       let storagePath = "";
@@ -1904,7 +1836,7 @@ const ViewImagesSheet = ({
         await DeleteFromStorage(storagePath);
       }
 
-      const updatedImages = data[typeKey].filter((i) => i !== imgUrl);
+      const updatedImages = data[typeKey as keyof MachineProps].filter((i: string) => i !== imgUrl);
       let formData: Record<string, any> = {
         [typeKey]: updatedImages,
       };
@@ -1915,14 +1847,10 @@ const ViewImagesSheet = ({
 
       await axios.put(`/${userID}/machine/${data.id}`, formData);
 
-      toast({ title: "Image deleted successfully." });
+      toast.success("Image deleted successfully.");
       await onRefresh();
     } catch (error) {
-      toast({
-        title: "Failed to delete image",
-        description: error.message || "An error occurred",
-        variant: "destructive",
-      });
+      toast.error("Failed to delete image");
     }
   };
 
@@ -1940,10 +1868,7 @@ const ViewImagesSheet = ({
                 if (editAllowed) {
                   setAddImageVisible(true);
                 } else {
-                  toast({
-                    title: "You are not allowed to perform this action ",
-                    variant: "destructive",
-                  });
+                  toast.error("You are not allowed to perform this action ");
                 }
               }}
             >
@@ -1969,7 +1894,10 @@ const ViewImagesSheet = ({
                       key={item}
                       img={item}
                       setImageOpen={setImageOpen}
-                      onDelete={editAllowed ? handleDeleteImage : null}
+                      onDelete={(a, b) => {
+                        if (editAllowed)
+                          handleDeleteImage(a, b)
+                      }}
                       imageType="handshake_images"
                     />
                   ))
@@ -1987,7 +1915,10 @@ const ViewImagesSheet = ({
                       key={ind}
                       img={item}
                       setImageOpen={setImageOpen}
-                      onDelete={editAllowed ? handleDeleteImage : null}
+                      onDelete={(a, b) => {
+                        if (editAllowed)
+                          handleDeleteImage(a, b)
+                      }}
                       imageType="machine_nameplate_images"
                     />
                   ))
@@ -2006,7 +1937,10 @@ const ViewImagesSheet = ({
                       key={ind}
                       img={item}
                       setImageOpen={setImageOpen}
-                      onDelete={editAllowed ? handleDeleteImage : null}
+                      onDelete={(a, b) => {
+                        if (editAllowed)
+                          handleDeleteImage(a, b)
+                      }}
                       imageType="final_handover_images"
                     />
                   ))
@@ -2024,7 +1958,10 @@ const ViewImagesSheet = ({
                       key={ind}
                       img={item}
                       setImageOpen={setImageOpen}
-                      onDelete={editAllowed ? handleDeleteImage : null}
+                      onDelete={(a, b) => {
+                        if (editAllowed)
+                          handleDeleteImage(a, b)
+                      }}
                       imageType="installation_report"
                     />
                   ))
@@ -2043,7 +1980,10 @@ const ViewImagesSheet = ({
                       key={ind}
                       img={item}
                       setImageOpen={setImageOpen}
-                      onDelete={editAllowed ? handleDeleteImage : null}
+                      onDelete={(a, b) => {
+                        if (editAllowed)
+                          handleDeleteImage(a, b)
+                      }}
                       imageType="contract_images_png"
                     />
                   ))
@@ -2070,7 +2010,10 @@ const ViewImagesSheet = ({
                       key={ind}
                       img={item}
                       setImageOpen={setImageOpen}
-                      onDelete={editAllowed ? handleDeleteImage : null}
+                      onDelete={(a, b) => {
+                        if (editAllowed)
+                          handleDeleteImage(a, b)
+                      }}
                       imageType="other_images_png"
                     />
                   ))
@@ -2094,18 +2037,19 @@ const ViewImagesSheet = ({
   );
 };
 type RenderImageProps = {
+
   img: string;
-  type?: "pdf" | "image" | "video" | "doc" | "excel";
+  type?: string;
   setImageOpen: (val: boolean) => void;
-  onDelete?: (img: string, imageType?: string) => void;
+  onDelete?: (img: string, imageType: string) => void;
   imageType?: string;
 };
-const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }:RenderImageProps) => {
-  const [localImage, setLocalImage] = useState(null);
+const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }: RenderImageProps) => {
+  const [localImage, setLocalImage] = useState<string | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const handleZoomChange = useCallback((shouldZoom) => {
+  const handleZoomChange = useCallback((shouldZoom: boolean) => {
     setIsZoomed(shouldZoom);
     setImageOpen(shouldZoom);
   }, []);
@@ -2133,7 +2077,7 @@ const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }:Rende
     <div className="space-y-2">
       <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
         <img
-          src={localImage}
+          src={localImage || ""}
           alt="payment-img"
           className="h-[150px] w-auto object-contain"
         />
@@ -2144,7 +2088,8 @@ const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }:Rende
           size="icon"
           onClick={(e) => {
             setDeleteLoading(true);
-            onDelete(img, imageType);
+            if (imageType)
+              onDelete(img, imageType);
           }}
         >
           {deleteLoading ? <Spinner /> : <Trash size={16} />}
@@ -2154,52 +2099,56 @@ const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }:Rende
   );
 });
 
-const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
+type FormValues = {
+  note: string;
+  images: string[];
+  handover_user_id?: number | null;
+};
+
+const formSchema = z
+  .object({
+    note: z.string().min(1, { message: "Type is required." }),
+    images: z.array(z.string()).min(1, { message: "one image is required" }),
+    handover_user_id: z.number().nullable().optional(),
+  })
+  .refine(
+    (data) =>
+      data.note !== "handover" ||
+      (data.handover_user_id !== null && data.handover_user_id !== undefined),
+    {
+      message: "Handover User ID is required",
+      path: ["handover_user_id"],
+    }
+  );
+
+const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }: { customer_id: number | undefined, machine: MachineProps, visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void> }) => {
   const [loading, setLoading] = useState(false);
   const { userID } = useUserDetail();
   const { state: OfficeState } = useContext(OfficeContext);
-  const formSchema = z
-    .object({
-      note: z.string().min(1, { message: "Type is required." }),
-      images: z
-        .array(z.string().url())
-        .min(1, { message: "one image is required" }),
-      handover_user_id: z.number().nullable().optional(),
-    })
-    .refine(
-      (data) =>
-        data.note !== "handover" ||
-        (data.handover_user_id !== null && data.handover_user_id !== undefined),
-      {
-        message: "Handover User ID is required",
-        path: ["handover_user_id"],
-      },
-    );
 
-  const form = useForm({
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: "",
+      note: "",
       images: [],
       handover_user_id: null,
     },
   });
 
-  async function onSubmit(values) {
+  async function onSubmit(values: FormValues) {
     setLoading(true);
-    let allProcessedImages = [];
+    let allProcessedImages: string[] = [];
     await Promise.all(
       values.images.map(async (item) => {
-        const name = `${
-          OfficeState.value.data
-        }/customer/${customer_id}/machine/${machine.id}/${
-          values.note
-        }/${moment().valueOf().toString()}.png`;
+        const name = `${OfficeState.value.data
+          }/customer/${customer_id}/machine/${machine.id}/${values.note
+          }/${moment().valueOf().toString()}.png`;
         const imageRefResult = await UploadImage(item, name);
         allProcessedImages.push(name);
       }),
     );
-    let formData:FormData = {};
+    let formData: Partial<MachineProps> = {};
     if (values.note === "contract") {
       formData.contract_images_png = [
         ...machine.contract_images_png,
@@ -2244,16 +2193,16 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
       });
   }
 
-  function handleClose(val) {
+  function handleClose(val: boolean) {
     form.reset();
     onClose(val);
   }
 
-  const handleFileChange = async (event) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
-      const files = Array.from(event.target.files);
+      const files: File[] = Array.from(event.target.files);
 
-      let localImages = [];
+      let localImages: any[] = [];
 
       await Promise.all(
         files.map(async (file) => {
@@ -2282,10 +2231,7 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
     }
   };
 
-  const fetchPdfData = async (file) => {
-    const arrayBuffer = await file.arrayBuffer();
-    return new Uint8Array(arrayBuffer);
-  };
+
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -2296,112 +2242,105 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
         </DialogHeader>
         <ScrollArea className="max-h-[80vh] px-2">
           <div className="px-2">
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-2"
-              >
-                <FormField
-                  control={form.control}
-                  name="note"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <RadioGroup
-                          defaultValue={field.value}
-                          onValueChange={field.onChange}
-                          className="flex flex-wrap"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="contract" id="r1" />
-                            <Label htmlFor="r1">Contract</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="handshake" id="r2" />
-                            <Label htmlFor="r2">Handshake</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="nameplate" id="r2" />
-                            <Label htmlFor="r2">Machine nameplate</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="handover" id="r2" />
-                            <Label htmlFor="r2">Final handover</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="installation" id="r2" />
-                            <Label htmlFor="r2">Installation report</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="additional" id="r2" />
-                            <Label htmlFor="r2">Additional</Label>
-                          </div>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
 
-                {form.watch("note") === "handover" && (
-                  <FormField
-                    control={form.control}
-                    name="handover_user_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Handover User</FormLabel>
-                        <FormControl>
-                          <UserSearch
-                            value={field.value}
-                            onReturn={field.onChange}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+              {/* NOTE (Radio) */}
+              <Controller
+                name="note"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <RadioGroup
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      className="flex flex-wrap"
+                    >
+                      {[
+                        { label: "Contract", value: "contract" },
+                        { label: "Handshake", value: "handshake" },
+                        { label: "Machine nameplate", value: "nameplate" },
+                        { label: "Final handover", value: "handover" },
+                        { label: "Installation report", value: "installation" },
+                        { label: "Additional", value: "additional" },
+                      ].map((item, i) => (
+                        <div key={i} className="flex items-center space-x-2">
+                          <RadioGroupItem value={item.value} id={item.value} />
+                          <Label htmlFor={item.value}>{item.label}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
                     )}
-                  />
+                  </Field>
                 )}
+              />
 
-                <FormField
+              {/* HANDOVER USER */}
+              {form.watch("note") === "handover" && (
+                <Controller
+                  name="handover_user_id"
                   control={form.control}
-                  name="images"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Add Images</FormLabel>
-                      <FormControl>
-                        <DropzoneMulti
-                          value={field.value || []}
-                          onDrop={(files) => {
-                            field.onChange(files);
-                          }}
-                          title="Click to upload"
-                          subheading="or drag and drop"
-                          description="PNG or JPG"
-                          drag="Drop the files here..."
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Handover User</FieldLabel>
+                      <UserSearch
+                        value={field.value}
+                        onReturn={field.onChange}
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
                   )}
                 />
-                <div className="flex flex-1 gap-2 items-center">
-                  <Separator className="flex flex-1" />
-                  <Label className="mx-2 text-[16px]">or</Label>
-                  <Separator className="flex flex-1" />
-                </div>
-                <Label className="font-medium text-[16px]">Select Pdf</Label>
-                <input
-                  multiple
-                  type="file"
-                  accept="application/pdf"
-                  onChange={(e) => handleFileChange(e)}
-                />
+              )}
 
-                <Button className="w-full" type="submit" disabled={loading}>
-                  {loading && <Spinner />} Submit
-                </Button>
-              </form>
-            </Form>
+              {/* IMAGES */}
+              <Controller
+                name="images"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Add Images</FieldLabel>
+
+                    <DropzoneMulti
+                      value={field.value || []}
+                      onDrop={(files) => field.onChange(files)}
+                      title="Click to upload"
+                      subheading="or drag and drop"
+                      description="PNG or JPG"
+                      drag="Drop the files here..."
+                    />
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              {/* PDF */}
+              <div className="flex flex-1 gap-2 items-center">
+                <Separator className="flex flex-1" />
+                <Label className="mx-2 text-[16px]">or</Label>
+                <Separator className="flex flex-1" />
+              </div>
+
+              <Label className="font-medium text-[16px]">Select Pdf</Label>
+
+              <input
+                multiple
+                type="file"
+                accept="application/pdf"
+                onChange={handleFileChange}
+              />
+
+              <Button className="w-full" type="submit" disabled={loading}>
+                {loading && <Spinner />} Submit
+              </Button>
+            </form>
           </div>
         </ScrollArea>
       </DialogContent>
@@ -2409,8 +2348,8 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }) => {
   );
 };
 
-export const MyImg = ({ img }) => {
-  const [localImage, setLocalImage] = useState(null);
+export const MyImg = ({ img }: { img: string | null }) => {
+  const [localImage, setLocalImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -2449,10 +2388,10 @@ export const MyImg = ({ img }) => {
   return <Image alt="payment image" src={localImage} width={50} height={50} />;
 };
 
-const RenderVerifyButton = ({ item, onRefresh }) => {
+const RenderVerifyButton = ({ item, onRefresh }: { item: MachinePayment, onRefresh: () => Promise<void> }) => {
   const [loading, setLoading] = useState(false);
   const { userID } = useUserDetail();
-  async function handleVerify(item) {
+  async function handleVerify(item: MachinePayment) {
     setLoading(true);
     await axios
       .put(`/${userID}/payment-verification/${item.id}`, {
@@ -2476,4 +2415,10 @@ const RenderVerifyButton = ({ item, onRefresh }) => {
       {loading && <Spinner />} {loading ? "Verifying" : "Verify"}
     </Button>
   );
+};
+
+
+const fetchPdfData = async (file: File) => {
+  const arrayBuffer = await file.arrayBuffer();
+  return new Uint8Array(arrayBuffer);
 };

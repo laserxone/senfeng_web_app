@@ -2,6 +2,8 @@ import PageTable from "@/components/app-table-without-pagination";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import useIssuedItem from "@/hooks/use-issued-items";
+import { UserReturnableField, UserReturnableType } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import moment from "moment";
 
@@ -23,7 +25,7 @@ const RenderReturnable = () => {
     },
   ];
 
-  const columns = [
+  const columns : ColumnDef<UserReturnableType>[] = [
     {
       accessorKey: "created_at",
       filterFn: "includesString",
@@ -78,7 +80,7 @@ const RenderReturnable = () => {
         );
       },
       cell: ({ row }) => {
-        const items = row.original.fields || [];
+        const items : UserReturnableField[] = row.original.fields || [];
         return (
           <div className="ml-2">
             <ul className="list-disc list-inside text-sm space-y-1">

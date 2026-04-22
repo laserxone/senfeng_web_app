@@ -7,6 +7,7 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { debounce } from "@/lib/debounce";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
+import { MyCustomer } from "@/lib/types";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,7 +16,8 @@ import { Trash } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { RequiredStar } from "./RequiredStar";
 import AppCalendar from "./appCalendar";
@@ -27,27 +29,53 @@ import StarRating from "./startRating";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "./ui/form";
+import { Field, FieldError, FieldGroup, FieldLabel } from "./ui/field";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "./ui/select";
 import Spinner from "./ui/spinner";
 import { UserSearch } from "./user-search";
+
+type EditCustomerDialogProps = {
+
+  onRefresh: () => Promise<void>;
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  data: MyCustomer;
+  ownership: boolean | null;
+  onClickDelete: () => void
+};
+
+const formSchema = z.object({
+  company: z.string().min(1, { message: "Company name is required" }),
+  owner: z.string().min(1, { message: "Owner name is required" }),
+  email: z.email().optional(),
+  city: z.string().min(1, { message: "City is required" }),
+  industry: z.string().optional(),
+  remarks: z.string().optional(),
+  address: z.string().optional(),
+  group: z.string().optional(),
+  other: z.string().optional(),
+  lead: z.number().nullable().optional(),
+  platform: z.string().optional(),
+  pin: z.string().optional(),
+  rating: z.number().optional(),
+  member: z.boolean().optional(),
+  ownership: z.number().nullable().optional(),
+  created_at: z.date().optional(),
+  office: z.string().min(1, { message: "Office is required" }),
+  image: z.string().optional()
+
+})
+
+type FormSchemaValues = z.infer<typeof formSchema>;
 
 const EditCustomerDialog = ({
   onRefresh,
@@ -56,44 +84,23 @@ const EditCustomerDialog = ({
   data,
   ownership,
   onClickDelete,
-  base,
-}) => {
+}: EditCustomerDialogProps) => {
   const [numbers, setNumbers] = useState([""]);
   const [numberError, setNumberError] = useState("");
   const [loading, setLoading] = useState(false);
   const { userID, isAdmin, customer_delete_access, designation, base_route } =
     useUserDetail();
   const [checking, setChecking] = useState(false);
-  const [customerInfo, setCustomerInfo] = useState([]);
+  const [customerInfo, setCustomerInfo] = useState<MyCustomer[]>([]);
   const [selectedNumber, setSelectedNumber] = useState(["+92"]);
-  const [imageUrl, setImageUrl] = useState(null);
-  const [originalUrl, setOriginalUrl] = useState(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [originalUrl, setOriginalUrl] = useState<string | null>(null);
   const { state: OfficeState } = useContext(OfficeContext);
 
   const canDelete = isAdmin || customer_delete_access;
 
-  const formSchema = z.object({
-    company: z.string().min(1, { message: "" }), // Optional field without min(1)
-    owner: z.string().min(1, { message: "" }), // Required field
-    email: z.string().optional(), // Optional but must be a valid email if provided
-    city: z.string().min(1, { message: "" }), // Required field
-    industry: z.string().optional(), // Optional field
-    remarks: z.string().optional(), // Optional field
-    address: z.string().optional(), // Optional field
-    group: z.string().optional(), // Optional field
-    other: z.string().optional(),
-    lead: z.number().nullable().optional(),
-    platform: z.string().optional(),
-    pin: z.string().optional(),
-    rating: z.number().optional(),
-    image: z.string().optional(),
-    member: z.boolean().optional(),
-    ownership: z.number().nullable().optional(),
-    created_at: z.date().nullable().optional(),
-    office: z.string().min(1, { message: "" })
-  });
 
-  const form = useForm({
+  const form = useForm<FormSchemaValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       company: "",
@@ -112,19 +119,19 @@ const EditCustomerDialog = ({
       image: "",
       member: false,
       ownership: null,
-      created_at: null,
-      office : "islamabad"
+      created_at: undefined,
+      office: "islamabad"
     },
   });
 
-  const { control, setValue, getValues } = form;
+  const { control } = form;
 
   useEffect(() => {
     if (data) {
-      let tempNumbers = [];
-      let tempSelectedNumber = [];
+      let tempNumbers: string[] = [];
+      let tempSelectedNumber: string[] = [];
 
-      data.number.forEach((num) => {
+      data?.number?.forEach((num) => {
         let found = false;
         for (let country of CountriesList) {
           if (num.startsWith(country.num)) {
@@ -166,19 +173,19 @@ const EditCustomerDialog = ({
         other: data?.other || "",
         pin: data?.pin || "",
         platform: data?.platform || "",
-        created_at: data?.created_at ? new Date(data.created_at) : null,
-        office : data?.office || ""
+        created_at: data?.created_at ? new Date(data.created_at) : undefined,
+        office: data?.office || ""
       });
     }
   }, [data, form]);
 
-  function handleClose(val) {
+  function handleClose(val: boolean) {
     form.reset();
     setLoading(false);
     onClose(val);
   }
 
-  async function onSubmit(values) {
+  async function onSubmit(values: FormSchemaValues) {
     const hasInvalidNumber = selectedNumber.some((code, index) => {
       const number = numbers[index];
       if (!number) return true;
@@ -218,7 +225,7 @@ const EditCustomerDialog = ({
       platform: values.platform,
       pin: values.pin,
       created_at: values.created_at,
-      office : values.office
+      office: values.office
     };
 
     try {
@@ -230,9 +237,8 @@ const EditCustomerDialog = ({
           image: null,
         });
       } else if (imageUrl && !data.image) {
-        const name = `${OfficeState.value.data}/customer/${
-          data.id
-        }/profile/${moment().valueOf().toString()}.png`;
+        const name = `${OfficeState.value.data}/customer/${data.id
+          }/profile/${moment().valueOf().toString()}.png`;
         const uploadRef = await UploadImage(imageUrl, name);
         const response = await axios.put(backendRoute, {
           ...apiData,
@@ -245,7 +251,7 @@ const EditCustomerDialog = ({
         const response = await axios.put(backendRoute, apiData);
       }
 
-      toast({ title: "Customer Edited successfully" });
+      toast.success("Customer Edited successfully");
       await onRefresh();
       handleClose(false);
     } finally {
@@ -258,14 +264,14 @@ const EditCustomerDialog = ({
     setSelectedNumber((prevState) => [...prevState, "+92"]);
   };
 
-  const removeNumberField = (index) => {
+  const removeNumberField = (index: number) => {
     setNumbers((prevState) => prevState.filter((_, ind) => ind !== index));
     setSelectedNumber((prevState) =>
       prevState.filter((_, ind) => ind !== index)
     );
   };
 
-  const handleNumberChange = (index, value) => {
+  const handleNumberChange = (index: number, value: string) => {
     if (numberError) {
       setNumberError("");
     }
@@ -277,7 +283,7 @@ const EditCustomerDialog = ({
     if (value) debouncedCheckNumber(selectedNumber[index] + value);
   };
 
-  const handlePrefixChange = (index, value) => {
+  const handlePrefixChange = (index: number, value: string) => {
     setSelectedNumber((prevState) => {
       const newState = [...prevState];
       newState[index] = value;
@@ -285,12 +291,12 @@ const EditCustomerDialog = ({
     });
   };
 
-  const checkNumberInDatabase = async (number) => {
+  const checkNumberInDatabase = async (number: string) => {
     setCustomerInfo([]);
     setChecking(true);
     try {
       const response = await axios.post(`/${userID}/check-number`, { number });
-      const finalData = response.data.filter((item) => item.id !== data.id);
+      const finalData = response.data.filter((item: { id: number }) => item.id !== data.id);
       setCustomerInfo(finalData);
     } catch (error) {
       console.log("Error checking number:", error);
@@ -306,479 +312,394 @@ const EditCustomerDialog = ({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="w-full sm:max-w-[80vw]">
+      <DialogContent className="w-full sm:w-[90vw] sm:max-w-[90vw]">
         <DialogHeader>
           <DialogTitle>Edit customer</DialogTitle>
         </DialogHeader>
         <div>
           <ScrollArea className="h-[85vh] px-2">
             <div className="px-2">
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
-                >
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FieldGroup>
                   <div className="flex flex-1 gap-10 flex-wrap">
+
+                    {/* LEFT SIDE */}
                     <div className="flex flex-1 flex-col space-y-4">
-                      <div>
-                        <FormItem>
-                          <FormLabel
-                            style={{ color: numberError ? "red" : "black" }}
-                          >
-                            Phone Number <RequiredStar />
-                          </FormLabel>
-                          {numbers.map((num, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center gap-2"
-                            >
-                              <div className="w-[200px]">
-                                <NumberSearch
-                                  value={selectedNumber[index]}
-                                  onReturn={(val) =>
-                                    handlePrefixChange(index, val)
-                                  }
-                                />
-                              </div>
-                              <FormControl className="flex-1">
-                                <Input
-                                  type="number"
-                                  disabled={!selectedNumber[index]}
-                                  placeholder="xxxxxxxxx"
-                                  value={num}
-                                  onChange={(e) =>
-                                    handleNumberChange(index, e.target.value)
-                                  }
-                                />
-                              </FormControl>
-                              {index > 0 && (
-                                <Button
-                                  variant="destructive"
-                                  size="icon"
-                                  onClick={() => {
-                                    removeNumberField(index);
-                                    setCustomerInfo([]);
-                                  }}
-                                >
-                                  <Trash size={16} />
-                                </Button>
-                              )}
-                              {checking && <Spinner />}
+
+                      {/* Phone Numbers (custom, no Controller needed) */}
+                      <Field>
+                        <FieldLabel style={{ color: numberError ? "red" : "black" }}>
+                          Phone Number <RequiredStar />
+                        </FieldLabel>
+
+                        {numbers.map((num, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <div className="w-[200px]">
+                              <NumberSearch
+                                value={selectedNumber[index]}
+                                onReturn={(val) => handlePrefixChange(index, val)}
+                              />
                             </div>
-                          ))}
-                          <Button
-                            disabled={customerInfo.length > 0 || checking}
-                            type="button"
-                            onClick={addNumberField}
-                            className="mt-2"
-                          >
-                            + Add Number
-                          </Button>
-                        </FormItem>
-                        {customerInfo.length > 0 && (
-                          <div className="mt-2 p-3 bg-red-100 dark:bg-red-900 rounded-lg border border-red-400">
-                            <Label className="text-red-700 dark:text-red-300 font-medium text-sm">
-                              ⚠️ Number exists with the following:
-                            </Label>
-                            <div className="mt-1 space-y-1">
-                              {customerInfo.map((item, index) => (
-                                <Link
-                                  key={index}
-                                  target="_blank"
-                                  href={`/${base_route}/${
-                                    item.member ? "member" : "customer"
-                                  }/${item?.id}`}
-                                  className="block text-red-600 dark:text-red-400 text-sm font-medium hover:underline"
-                                >
-                                  {item?.name || item?.owner} -{" "}
-                                  {item?.number.join(", ")}
-                                </Link>
-                              ))}
-                            </div>
-                          </div>
-                        )}
 
-                        <Label style={{ color: "red" }}>{numberError}</Label>
-                      </div>
+                            <Input
+                              type="number"
+                              disabled={!selectedNumber[index]}
+                              placeholder="xxxxxxxxx"
+                              value={num}
+                              onChange={(e) =>
+                                handleNumberChange(index, e.target.value)
+                              }
+                              className="flex-1"
+                            />
 
-                      <FormField
-                        control={control}
-                        name="owner"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              Customer <RequiredStar />
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter customer name"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="company"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              Company <RequiredStar />
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter company name"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="group"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Group</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter group name"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="city"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              City <RequiredStar />
-                            </FormLabel>
-                            <FormControl>
-                              <CitiesSearch
-                                value={field.value}
-                                onReturn={(val) => field.onChange(val)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {ownership && (
-                        <FormField
-                          control={control}
-                          name="ownership"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Ownership</FormLabel>
-                              <FormControl>
-                                <UserSearch
-                                  value={field.value}
-                                  onReturn={(val) => field.onChange(val)}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-                      {designation === "Sales" ? null : (
-                        <FormField
-                          control={control}
-                          name="lead"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Lead Generated By</FormLabel>
-                              <FormControl>
-                                <UserSearch
-                                  lead={true}
-                                  value={field.value}
-                                  onReturn={(val) => field.onChange(val)}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-
-                      {!(
-                        designation === "Sales" ||
-                        designation === "Dealer"
-                      ) && (
-                        <FormField
-                          control={control}
-                          name="office"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>
-                                Office branch <RequiredStar />
-                              </FormLabel>
-                              <FormControl>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  value={field.value}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select office" />
-                                  </SelectTrigger>
-
-                                  <SelectContent>
-                                    <SelectGroup>
-                                      {["lahore", "karachi"].map((item) => (
-                                        <SelectItem key={item} value={item}>
-                                          {item}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectGroup>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-                      <div className="flex flex-row gap-10">
-                        <FormField
-                          control={control}
-                          name="rating"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Rating</FormLabel>
-                              <FormControl>
-                                <StarRating
-                                  value={field.value}
-                                  onChange={field.onChange}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        {(isAdmin ||
-                          designation === "Customer Relationship Manager") && (
-                          <FormField
-                            control={form.control}
-                            name="created_at"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Date</FormLabel>
-                                <FormControl>
-                                  <AppCalendar
-                                    date={field.value}
-                                    onChange={field.onChange}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )}
-                        {designation === "Sales" ? null : (
-                          <FormField
-                            control={control}
-                            name="member"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="pr-2">Member?</FormLabel>
-                                <FormControl>
-                                  <Checkbox
-                                    className="mt-5"
-                                    checked={field.value}
-                                    onCheckedChange={(checked) => {
-                                      field.onChange(checked);
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-1 flex-col space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="image"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Image</FormLabel>
-                            <FormControl>
-                              <div className="flex flex-1 items-center justify-center">
-                                <Dropzone
-                                  value={imageUrl}
-                                  onDrop={(file) => {
-                                    setImageUrl(file);
-                                  }}
-                                  title={"Click to upload"}
-                                  subheading={"or drag and drop"}
-                                  description={"PNG or JPG"}
-                                  drag={"Drop the files here..."}
-                                />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter email" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="other"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Other IDs</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="wechat / qq / facebook / twitter"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="address"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Address</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter address" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="industry"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Industry</FormLabel>
-                            <FormControl>
-                              <IndustrySearch
-                                value={field.value}
-                                onReturn={(val) => field.onChange(val)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="remarks"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Remarks</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter remarks" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={control}
-                        name="platform"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Platform</FormLabel>
-                            <FormControl>
-                              <Select
-                                onValueChange={field.onChange}
-                                value={field.value}
+                            {index > 0 && (
+                              <Button
+                                variant="destructive"
+                                size="icon"
+                                onClick={() => {
+                                  removeNumberField(index);
+                                  setCustomerInfo([]);
+                                }}
                               >
+                                <Trash size={16} />
+                              </Button>
+                            )}
+
+                            {checking && <Spinner />}
+                          </div>
+                        ))}
+
+                        <Button
+                          disabled={customerInfo.length > 0 || checking}
+                          type="button"
+                          onClick={addNumberField}
+                          className="mt-2"
+                        >
+                          + Add Number
+                        </Button>
+                      </Field>
+
+                      {/* Existing customer warning */}
+                      {customerInfo.length > 0 && (
+                        <div className="mt-2 p-3 bg-red-100 dark:bg-red-900 rounded-lg border border-red-400">
+                          <Label className="text-red-700 dark:text-red-300 text-sm">
+                            ⚠️ Number exists with:
+                          </Label>
+
+                          {customerInfo.map((item, index) => (
+                            <Link
+                              key={index}
+                              target="_blank"
+                              href={`/${base_route}/${item.member ? "member" : "customer"}/${item.id}`}
+                              className="block text-red-600 text-sm hover:underline"
+                            >
+                              {item.name || item.owner} - {item.number?.join(", ")}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+
+                      <Label style={{ color: "red" }}>{numberError}</Label>
+
+                      {/* Owner */}
+                      <Controller
+                        name="owner"
+                        control={control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel>
+                              Customer <RequiredStar />
+                            </FieldLabel>
+                            <Input placeholder="Enter customer name" {...field} />
+                            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                          </Field>
+                        )}
+                      />
+
+                      {/* Company */}
+                      <Controller
+                        name="company"
+                        control={control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel>
+                              Company <RequiredStar />
+                            </FieldLabel>
+                            <Input placeholder="Enter company name" {...field} />
+                            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                          </Field>
+                        )}
+                      />
+
+                      {/* Group */}
+                      <Controller
+                        name="group"
+                        control={control}
+                        render={({ field }) => (
+                          <Field>
+                            <FieldLabel>Group</FieldLabel>
+                            <Input placeholder="Enter group name" {...field} />
+                          </Field>
+                        )}
+                      />
+
+                      {/* City */}
+                      <Controller
+                        name="city"
+                        control={control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel>
+                              City <RequiredStar />
+                            </FieldLabel>
+                            <CitiesSearch value={field.value} onReturn={field.onChange} />
+                            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                          </Field>
+                        )}
+                      />
+
+                      {/* Ownership */}
+                      {ownership && (
+                        <Controller
+                          name="ownership"
+                          control={control}
+                          render={({ field }) => (
+                            <Field>
+                              <FieldLabel>Ownership</FieldLabel>
+                              <UserSearch value={field.value} onReturn={field.onChange} />
+                            </Field>
+                          )}
+                        />
+                      )}
+
+                      {/* Lead */}
+                      {designation !== "Sales" && (
+                        <Controller
+                          name="lead"
+                          control={control}
+                          render={({ field }) => (
+                            <Field>
+                              <FieldLabel>Lead Generated By</FieldLabel>
+                              <UserSearch lead value={field.value} onReturn={field.onChange} />
+                            </Field>
+                          )}
+                        />
+                      )}
+
+                      {/* Office */}
+                      {!(designation === "Sales" || designation === "Dealer") && (
+                        <Controller
+                          name="office"
+                          control={control}
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                              <FieldLabel>
+                                Office branch <RequiredStar />
+                              </FieldLabel>
+
+                              <Select value={field.value} onValueChange={field.onChange}>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select platform" />
+                                  <SelectValue placeholder="Select office" />
                                 </SelectTrigger>
 
                                 <SelectContent>
-                                  <SelectGroup>
-                                    {["SOCIAL MEDIA", "SENFENG", "DIRECT"].map(
-                                      (item) => (
-                                        <SelectItem key={item} value={item}>
-                                          {item}
-                                        </SelectItem>
-                                      )
-                                    )}
-                                  </SelectGroup>
+                                  {["lahore", "karachi"].map((item) => (
+                                    <SelectItem key={item} value={item}>
+                                      {item}
+                                    </SelectItem>
+                                  ))}
                                 </SelectContent>
                               </Select>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
+
+                              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                            </Field>
+                          )}
+                        />
+                      )}
+
+                      {/* Rating + Date + Member */}
+                      <div className="flex gap-10 flex-wrap">
+
+                        <Controller
+                          name="rating"
+                          control={control}
+                          render={({ field }) => (
+                            <Field>
+                              <FieldLabel>Rating</FieldLabel>
+                              <StarRating value={field.value} onChange={field.onChange} />
+                            </Field>
+                          )}
+                        />
+
+                        {(isAdmin || designation === "Customer Relationship Manager") && (
+                          <Controller
+                            name="created_at"
+                            control={control}
+                            render={({ field }) => (
+                              <Field>
+                                <FieldLabel>Date</FieldLabel>
+                                <AppCalendar date={field.value} onChange={field.onChange} />
+                              </Field>
+                            )}
+                          />
+                        )}
+
+                        {designation !== "Sales" && (
+                          <Controller
+                            name="member"
+                            control={control}
+                            render={({ field }) => (
+                              <Field>
+                                <FieldLabel>Member?</FieldLabel>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </Field>
+                            )}
+                          />
+                        )}
+
+                      </div>
+                    </div>
+
+                    {/* RIGHT SIDE */}
+                    <div className="flex flex-1 flex-col space-y-4">
+
+                      {/* Image */}
+                      <Controller
+                        name="image"
+                        control={control}
+                        render={({ field }) => (
+                          <Field>
+                            <FieldLabel>Image</FieldLabel>
+                            <Dropzone
+                              value={imageUrl}
+                              onDrop={(file) => setImageUrl(file)}
+                              title="Click to upload"
+                              subheading="or drag and drop"
+                              description="PNG or JPG"
+                              drag="Drop the files here..."
+                            />
+                          </Field>
                         )}
                       />
 
-                      <FormField
+                      {/* Email */}
+                      <Controller
+                        name="email"
                         control={control}
-                        name="pin"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Google Location Pin</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter pin location"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
+                          <Field>
+                            <FieldLabel>Email</FieldLabel>
+                            <Input placeholder="Enter email" {...field} />
+                          </Field>
                         )}
                       />
+
+                      {/* Other */}
+                      <Controller
+                        name="other"
+                        control={control}
+                        render={({ field }) => (
+                          <Field>
+                            <FieldLabel>Other IDs</FieldLabel>
+                            <Input placeholder="wechat / qq / facebook / twitter" {...field} />
+                          </Field>
+                        )}
+                      />
+
+                      {/* Address */}
+                      <Controller
+                        name="address"
+                        control={control}
+                        render={({ field }) => (
+                          <Field>
+                            <FieldLabel>Address</FieldLabel>
+                            <Input placeholder="Enter address" {...field} />
+                          </Field>
+                        )}
+                      />
+
+                      {/* Industry */}
+                      <Controller
+                        name="industry"
+                        control={control}
+                        render={({ field }) => (
+                          <Field>
+                            <FieldLabel>Industry</FieldLabel>
+                            <IndustrySearch value={field.value} onReturn={field.onChange} />
+                          </Field>
+                        )}
+                      />
+
+                      {/* Remarks */}
+                      <Controller
+                        name="remarks"
+                        control={control}
+                        render={({ field }) => (
+                          <Field>
+                            <FieldLabel>Remarks</FieldLabel>
+                            <Input placeholder="Enter remarks" {...field} />
+                          </Field>
+                        )}
+                      />
+
+                      {/* Platform */}
+                      <Controller
+                        name="platform"
+                        control={control}
+                        render={({ field }) => (
+                          <Field>
+                            <FieldLabel>Platform</FieldLabel>
+
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select platform" />
+                              </SelectTrigger>
+
+                              <SelectContent>
+                                {["SOCIAL MEDIA", "SENFENG", "DIRECT"].map((item) => (
+                                  <SelectItem key={item} value={item}>
+                                    {item}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </Field>
+                        )}
+                      />
+
+                      {/* Pin */}
+                      <Controller
+                        name="pin"
+                        control={control}
+                        render={({ field }) => (
+                          <Field>
+                            <FieldLabel>Google Location Pin</FieldLabel>
+                            <Input placeholder="Enter pin location" {...field} />
+                          </Field>
+                        )}
+                      />
+
                     </div>
                   </div>
 
+                  {/* Submit */}
                   <Button
                     disabled={
                       customerInfo.length > 0 ||
                       checking ||
-                      numbers.filter((item) => {
-                        if (item) return item;
-                      }).length === 0
+                      numbers.filter((item) => item).length === 0
                     }
                     className="w-full mt-10"
                     type="submit"
                   >
                     {loading && <Spinner />} Submit
                   </Button>
-                </form>
-              </Form>
+
+                </FieldGroup>
+              </form>
               {canDelete && (
                 <Button
                   onClick={(e) => {

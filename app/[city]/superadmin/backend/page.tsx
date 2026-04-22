@@ -28,6 +28,7 @@ import {
 import  Heading  from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
+import Spinner from "@/components/ui/spinner";
 
 
 
@@ -43,6 +44,7 @@ export default function BackendPage() {
 
   const [search, setSearch] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "" });
+  const [saveLoading, setSaveLoading] = useState(false)
 
 const isMobile = useIsMobile()
   const [page, setPage] = useState(1);
@@ -175,6 +177,7 @@ const isMobile = useIsMobile()
     if (!selected || !userID) return;
     if (!hasChanges) return;
 
+    setSaveLoading(true)
     try {
       await axios.patch(`/${userID}/backend/save/${selected}`, { changes: editedRows });
 
@@ -188,6 +191,8 @@ const isMobile = useIsMobile()
     } catch (err) {
       console.error("Save failed", err);
 
+    } finally {
+      setSaveLoading(false)
     }
   }
 
@@ -386,7 +391,7 @@ function renderCellInput(row, col) {
           {hasChanges && (
             <>
               <Button onClick={saveAllChanges} className="bg-green-600">
-                Save changes
+             {saveLoading && <Spinner />}   Save changes
               </Button>
               <Button variant="outline" onClick={discardAll}>
                 Discard changes
@@ -429,7 +434,7 @@ function renderCellInput(row, col) {
         </div>
       </div>
        <div
-        className={`relative flex flex-1 flex-col ${isMobile && "min-h-[500px]"}`}
+        className={`relative flex flex-1 flex-col min-h-[calc(100dvh-290px)] ${isMobile && "min-h-[500px]"}`}
       >
         <div className="absolute bottom-0 left-0 right-0 top-0 flex rounded-md border md:overflow-auto custom-scrollbar overflow-auto">
 
@@ -437,7 +442,7 @@ function renderCellInput(row, col) {
             {selected ? (
              
                 <Table className="relative">
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 z-99 bg-background">
                     <TableRow>
                       {columns.map((col) => (
                         <TableHead

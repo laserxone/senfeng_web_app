@@ -1,26 +1,25 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import  Heading  from "@/components/ui/heading";
+import Heading from "@/components/ui/heading";
 import { db } from "@/config/firebase";
 import useUserDetail from "@/hooks/use-user-detail";
-import { NotificationContext } from "@/store/context/NotificationContext";
+import { useNotification } from "@/store/context/NotificationContext";
 import { deleteDoc, doc } from "firebase/firestore";
 import { Bell, CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { useContext } from "react";
 
 export default function Notification() {
-  const { state: NotificationState } = useContext(NotificationContext);
-  const {base_route} = useUserDetail()
+  const { NotificationData } = useNotification()
+  const { base_route } = useUserDetail()
 
-  const markAsRead = async (id) => {
+  const markAsRead = async (id: string) => {
     await deleteDoc(doc(db, "Notification", id));
   };
 
   const markAllAsRead = async () => {
     await Promise.all(
-      NotificationState.value.data.map(
+      NotificationData.map(
         async (eachNotification) =>
           await deleteDoc(doc(db, "Notification", eachNotification.id))
       )
@@ -36,7 +35,7 @@ export default function Notification() {
         />
       </div>
       <div className="flex flex-col space-y-4 p-4 w-full">
-        {NotificationState.value.data.length > 0 ? (
+        {NotificationData.length > 0 ? (
           <>
             <Button
               onClick={markAllAsRead}
@@ -45,27 +44,30 @@ export default function Notification() {
             >
               <CheckCircle className="w-4 h-4 mr-2" /> Mark all as read
             </Button>
-            {NotificationState.value.data.map((notification) => (
+            {NotificationData.map((notification) => (
               <Card
                 key={notification.id}
-                className="border p-3 flex items-center justify-between"
+                className="border p-3"
               >
-                <CardContent className="flex items-center space-x-3 p-0">
-                  <Bell className="w-5 h-5 text-blue-500" />
-                  <Link
-                    href={`/${base_route}/${notification.page}`}
-                  >
-                    <span>{notification.title}</span>
-                  </Link>
-                </CardContent>
+                <CardContent className="flex justify-between items-center space-x-3 p-0">
 
-                <Button
-                  onClick={() => markAsRead(notification.id)}
-                  size="sm"
-                  variant="outline"
-                >
-                  Mark as read
-                </Button>
+                  <div className="flex gap-2 items-center">
+                    <Bell className="w-5 h-5 text-blue-500" />
+                    <Link
+                      href={`/${base_route}/${notification.page}`}
+                    >
+                      <span>{notification.title}</span>
+                    </Link>
+                  </div>
+
+                  <Button
+                    onClick={() => markAsRead(notification.id)}
+                    size="sm"
+                    variant="outline"
+                  >
+                    Mark as read
+                  </Button>
+                </CardContent>
               </Card>
             ))}
           </>
