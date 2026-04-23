@@ -1,30 +1,18 @@
 "use client";
-import { ArrowUpDown } from "lucide-react";
+import PageTable from "@/components/app-table-without-pagination";
+import AppCalendar from "@/components/appCalendar";
+import { RequiredStar } from "@/components/RequiredStar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
-import { z } from "zod";
-import PageTable from "@/components/app-table-without-pagination";
-import AppCalendar from "@/components/appCalendar";
-import { RequiredStar } from "@/components/RequiredStar";
-import { Badge } from "@/components/ui/badge";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import Heading from "@/components/ui/heading";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -37,11 +25,18 @@ import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { Team } from "@/lib/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown } from "lucide-react";
 import moment from "moment";
 import { useRouter } from "next/navigation";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
-const columns = [
+const columns : ColumnDef<Team>[] = [
   {
     accessorKey: "name",
     filterFn: "includesString",
@@ -184,7 +179,7 @@ const columns = [
 
 export default function Page() {
   const [open, setOpen] = useState(false);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { userID, office, base_route } = useUserDetail();
@@ -208,6 +203,8 @@ export default function Page() {
         });
     });
   }
+
+
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -276,12 +273,23 @@ export default function Page() {
             return nameA.localeCompare(nameB);
           });
           setData([...temp]);
-          toast({ title: "New user added" });
+          toast.success("New user added" );
         }}
       />
     </div>
   );
 }
+
+ const formSchema = z.object({
+    name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+    email: z.email({ message: "Invalid email address." }),
+    designation: z.string().min(1, { message: "Designation missing" }),
+    joining_date: z.date({ error: "Joining date is required." }),
+    office: z.string().min(1, { message: "" }),
+    note: z.string().optional(),
+  });
+
+  type FormValues = z.infer<typeof formSchema>;
 
 const AddUserDialog = ({
   visible,
@@ -291,16 +299,9 @@ const AddUserDialog = ({
 }: { visible: boolean, onClose: (val: boolean) => void, onReturn: (item: any) => void, office: string }) => {
   const [dataLoading, setDataLoading] = useState(false);
   const { userID } = useUserDetail();
-  const formSchema = z.object({
-    name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-    email: z.email({ message: "Invalid email address." }),
-    designation: z.string().min(1, { message: "Designation missing" }),
-    joining_date: z.date({ error: "Joining date is required." }),
-    office: z.string().min(1, { message: "" }),
-    note: z.string().optional(),
-  });
+ 
 
-  const form = useForm({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -312,7 +313,7 @@ const AddUserDialog = ({
     },
   });
 
-  function onSubmit(values) {
+  function onSubmit(values : FormValues) {
     setDataLoading(true);
 
     axios
@@ -365,7 +366,6 @@ const AddUserDialog = ({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FieldGroup>
 
-              {/* Name */}
               <Controller
                 name="name"
                 control={form.control}

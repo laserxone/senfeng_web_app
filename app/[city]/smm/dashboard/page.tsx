@@ -16,14 +16,15 @@ import "./styles.css";
 import RenderFines from "@/components/users/render-fines";
 import OldRecordSheet from "@/components/users/old-record-sheet";
 import { updateItemPurpose } from "@/lib/updatePurpose";
-type User = { id: number | string; name: string; designation: string; dp: string | null; }; type PageData = { user: User; }
+import { UserAttendanceRecord, UserDashboard, UserExtraTypes, UserReimbursementType } from "@/lib/types";
+
 export default function Page() {
-  const [data, setData] = useState<PageData>();
-  const [extraData, setExtraData] = useState({});
+  const [data, setData] = useState<{ user: UserDashboard }>();
+  const [extraData, setExtraData] = useState<UserExtraTypes>();
   const [selectedOption, setSelectedOption] = useState("thisMonth");
   const [oldRecordVisible, setOldRecordVisible] = useState(false)
-  const [reimbursementData, setReimbursementData] = useState([]);
-  const [attendanceData, setAttendanceData] = useState([]);
+  const [reimbursementData, setReimbursementData] = useState<UserReimbursementType[]>([]);
+  const [attendanceData, setAttendanceData] = useState<UserAttendanceRecord[]>([]);
   const [activeTab, setActiveTab] = useState("newCustomers");
   const { userID } = useUserDetail();
 
@@ -38,7 +39,7 @@ export default function Page() {
     }
   }, [userID]);
 
-  async function fetchReimbursementData(startDate, endDate) {
+  async function fetchReimbursementData(startDate: string, endDate: string) {
     return new Promise((resolve, reject) => {
       axios
         .get(
@@ -55,19 +56,34 @@ export default function Page() {
     });
   }
 
-  async function fetchAttendanceData(startDate, endDate) {
-    return new Promise<void|any>((res, rej) => {
+  async function fetchAttendanceData(startDate: string, endDate: string) {
+    return new Promise<void | any>((res, rej) => {
       axios
         .get(
           `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
         )
         .then((response) => {
           if (response.data.length > 0) {
-            const apiData = response.data.map((item) => {
+            const apiData = response.data.map((item: UserAttendanceRecord) => {
+              let status = item?.leave_status
+                ? `Leave ${item?.leave_status}`
+                : "Absent";
+
+              if (item?.time_in) {
+                const checkInTime = new Date(item.time_in);
+                const threshold = new Date(item.time_in);
+                threshold.setHours(10, 10, 0, 0);
+
+                if (checkInTime > threshold) {
+                  status = "Late";
+                } else {
+                  status = "Present";
+                }
+              }
               return {
                 ...item,
-                date: item?.time_in,
-                status: item?.time_in ? "Present" : "Absent",
+                date: item?.time_in || item?.leave_date,
+                status,
               };
             });
             setAttendanceData(apiData);
@@ -110,11 +126,11 @@ export default function Page() {
               }}
             />
             <CustomerEmployee
+              height="min-h-[calc(100dvh-470px)]"
               totalCustomerText={"Total Customers"}
-              id={null}
               ownership={true}
               customer_data={
-                extraData && selectedOption ? extraData[selectedOption] : []
+                extraData && selectedOption ? extraData[selectedOption as Exclude<keyof UserExtraTypes, "user">] : []
               }
               onRefresh={() => fetchExtraCustomerOptions()}
             />
@@ -127,25 +143,26 @@ export default function Page() {
   const RenderReimbursement = useCallback(() => {
     return (
       <Card className="flex flex-1">
-        <CardContent className="pt-5 flex flex-1">
+        <CardContent className="pt-0 flex flex-1">
           <Reimbursement
             id={userID}
+              height="min-h-[calc(100dvh-420px)]"
             passingData={reimbursementData || []}
-             onAddRefresh={async () => {
-                         const startDate = moment().startOf("month").toISOString();
-                         const endDate = moment().endOf("month").toISOString();
-                         await fetchReimbursementData(startDate, endDate);
-                       }}
-            onFilterReturn={async (start, end) =>
+            onAddRefresh={async () => {
+              const startDate = moment().startOf("month").toISOString();
+              const endDate = moment().endOf("month").toISOString();
+              await fetchReimbursementData(startDate, endDate);
+            }}
+            onFilterReturn={async (start, end) => {
               await fetchReimbursementData(start, end)
-            }
-              onReset={async (start, end) => {
+            }}
+            onReset={async (start, end) => {
               await fetchReimbursementData(start, end);
             }}
             onUpdatePurpose={(val) => {
-                          const newData = updateItemPurpose(reimbursementData, val);
-                          setReimbursementData(newData);
-                        }}
+              const newData = updateItemPurpose(reimbursementData, val);
+              setReimbursementData(newData);
+            }}
           />
         </CardContent>
       </Card>
@@ -154,23 +171,24 @@ export default function Page() {
 
   const RenderAttendance = useCallback(() => {
     return (
-      <Card className="flex flex-1">
-        <CardContent className="pt-5 flex flex-1">
-          <Attendance
-            passingData={attendanceData}
-            onFilterReturn={async (start, end) =>
-              await fetchAttendanceData(start, end)
-            }
-          />
-        </CardContent>
-      </Card>
+       <Card className="flex flex-1 p-0">
+               <CardContent className="pt-0 flex flex-1">
+                 <Attendance
+                   height="min-h-[calc(100dvh-360px)]"
+                   passingData={attendanceData}
+                   onFilterReturn={async (start, end) =>
+                     await fetchAttendanceData(start, end)
+                   }
+                 />
+               </CardContent>
+             </Card>
     );
   }, [attendanceData]);
 
   return (
     <div className="flex flex-1 gap-5">
-      <div className="flex flex-1 flex-col">
-        <div className="flex justify-between mb-8 flex-wrap">
+      <div className="flex flex-1 flex-col gap-4">
+        <div className="flex justify-between flex-wrap">
           <div className="flex items-center ">
             <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
             <div>
@@ -198,13 +216,13 @@ export default function Page() {
             {activeTab === "reimbursement" && <RenderReimbursement />}
             {activeTab === "attendance" && <RenderAttendance />}
             {activeTab === "salary" && (
-              <Card className="flex flex-1">
+              <Card className="flex flex-1 p-0">
                 <CardContent className="pt-2 flex flex-1">
-                  <SalaryRecord id={userID} />
+                  <SalaryRecord id={userID} height="min-h-[calc(100dvh-320px)]"/>
                 </CardContent>
               </Card>
             )}
-            {activeTab === 'fines' && <RenderFines />}
+              {activeTab === 'fines' && <RenderFines height="min-h-[calc(100dvh-370px)]"/>}
           </div>
         </Tabs>
       </div>
@@ -214,7 +232,7 @@ export default function Page() {
         onClose={setOldRecordVisible}
         user_id={userID}
       />
-      <AutoScrollMembers />
+      {/* <AutoScrollMembers /> */}
     </div>
   );
 }

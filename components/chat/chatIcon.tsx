@@ -1,17 +1,17 @@
 "use client";
 
+import { db } from "@/config/firebase";
 import axios from "@/lib/axios";
+import { ConversationType, UserConversation } from "@/lib/types";
 import { doc, onSnapshot } from "firebase/firestore";
 import moment from "moment";
 import { useEffect, useState } from "react";
-import { ProfilePicture } from "../users/ProfilePicture";
-import { db } from "@/config/firebase";
 import { ScrollArea } from "../ui/scroll-area";
-import { Input } from "../ui/input";
 import { Separator } from "../ui/separator";
+import { ProfilePicture } from "../users/ProfilePicture";
 
-export default function UserChatIcon({ myId, onChatSelected }) {
-  const [conversations, setConversations] = useState([]);
+export default function UserChatIcon({ myId, onChatSelected }: { myId: number, onChatSelected: (val: UserConversation) => void }) {
+  const [conversations, setConversations] = useState<UserConversation[]>([]);
   const [search, setSearch] = useState("");
 
   const fetchConversations = async () => {
@@ -77,10 +77,10 @@ export default function UserChatIcon({ myId, onChatSelected }) {
                 </div>
                 <div className="text-xs text-right">
                   <p>
-                    {item?.converstion?.last_updated
+                    {item?.conversation?.last_updated
                       ? moment(
-                          new Date(item?.converstion?.last_updated)
-                        ).format("YYYY-MM-DD hh:mm A")
+                        new Date(item?.conversation?.last_updated)
+                      ).format("YYYY-MM-DD hh:mm A")
                       : null}
                   </p>
                   <RenderReadCount unread={item?.conversation?.unreadCount} />
@@ -94,7 +94,7 @@ export default function UserChatIcon({ myId, onChatSelected }) {
   );
 }
 
-const RenderReadCount = ({ unread }) => {
+const RenderReadCount = ({ unread }: { unread: number }) => {
   if (unread && Number(unread) > 0)
     return (
       <div className="h-4 w-4 bg-red-500 text-white rounded grid place-items-center text-[10px] font-semibold">

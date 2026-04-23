@@ -1,33 +1,33 @@
 "use client"
 
+import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { ReactNode, useEffect, useId, useRef, useState } from "react"
 
 type EdgePanelProps = {
-  children: ReactNode;
-  width?: number;
-  initialY?: number;
-  className?: string;
-  handleAriaLabel?: string;
+    children: ReactNode;
+    width?: number;
+    initialY?: number;
+    className?: string;
+    handleAriaLabel?: string;
 };
 
 
 export function EdgePanel(
-   {
-  children,
-  width = 100,
-  initialY,
-  className = "",
-  handleAriaLabel = "Edge panel handle",
-}: EdgePanelProps) {
+    {
+        children,
+        width = 100,
+        initialY,
+        className = "",
+        handleAriaLabel = "Edge panel handle",
+    }: EdgePanelProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [top, setTop] = useState(initialY ?? 100)
     const isDraggingRef = useRef(false)
     const dragStartOffsetRef = useRef(0)
     const movedRef = useRef(false)
-    const containerRef = useRef(null)
+    const containerRef = useRef<HTMLDivElement | null>(null)
     const contentId = useId()
     const isMobile = useIsMobile()
     const [vw, setVw] = useState(typeof window !== "undefined" ? window.innerWidth : 0);
@@ -47,9 +47,9 @@ export function EdgePanel(
 
     useEffect(() => {
         if (!isOpen) return
-        function onDocPointerDown(e) {
+        function onDocPointerDown(e: PointerEvent) {
             if (!containerRef.current) return
-            if (!containerRef.current.contains(e.target)) {
+            if (!containerRef.current.contains(e.target as Node)) {
                 setIsOpen(false)
             }
         }
@@ -58,7 +58,7 @@ export function EdgePanel(
     }, [isOpen])
 
     useEffect(() => {
-        function onMove(e) {
+        function onMove(e: PointerEvent) {
             if (!isDraggingRef.current) return
             movedRef.current = true
             const handleHeight = 120
@@ -87,13 +87,13 @@ export function EdgePanel(
         }
     }, [])
 
-    function onHandlePointerDown(e) {
+    function onHandlePointerDown(e: React.PointerEvent<HTMLButtonElement>) {
 
         isDraggingRef.current = true
         movedRef.current = false
         const handleRect = (e.currentTarget).getBoundingClientRect()
-        dragStartOffsetRef.current = e.clientY - handleRect.top
-            ; (e.currentTarget).setPointerCapture?.(e.pointerId)
+        dragStartOffsetRef.current = e.clientY - handleRect.top;
+        (e.currentTarget).setPointerCapture?.(e.pointerId)
         e.preventDefault()
     }
 
@@ -103,7 +103,7 @@ export function EdgePanel(
         setIsOpen((v) => !v)
     }
 
-    function onHandleKeyDown(e) {
+    function onHandleKeyDown(e: React.KeyboardEvent<HTMLButtonElement>) {
         if (e.key === "Enter" || e.key === " ") {
             e.preventDefault()
             setIsOpen((v) => !v)

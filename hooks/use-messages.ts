@@ -5,9 +5,10 @@ import axios from '@/lib/axios';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import useUserDetail from './use-user-detail';
+import { Messages } from '@/lib/types';
 
-export function useMessages(conversationId : number | string) {
-    const [messages, setMessages] = useState([]);
+export function useMessages(conversationId : number | string | undefined) {
+    const [messages, setMessages] = useState<Messages[]>([]);
     const [loading, setLoading] = useState(true)
     const {userID} = useUserDetail()
 
@@ -16,6 +17,8 @@ export function useMessages(conversationId : number | string) {
         setMessages(response.data);
         setLoading(false)
     };
+
+    
 
     useEffect(() => {
         if (!conversationId) {

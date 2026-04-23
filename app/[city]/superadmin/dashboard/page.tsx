@@ -8,31 +8,32 @@ import CurrencyFormatter from "@/components/currency-formatter";
 import { CustomerMapComponent } from "@/components/customerMapComponent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PakCities } from "@/constants/data";
 import { useDebounce } from "@/hooks/use-debounce";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { AdminDashboard, AdminDashboardCustomers, AdminTeamTasks, TeamTaskForAdmin } from "@/lib/types";
 import { MapProvider } from "@/providers/map-provider";
+import { OfficeContext } from "@/store/context/OfficeContext";
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
-export default function Page({ params }) {
-  const [customers, setCustomers] = useState([]);
-  const [data, setData] = useState();
+export default function Page() {
+  const [customers, setCustomers] = useState<AdminDashboardCustomers[]>([]);
+  const [data, setData] = useState<AdminDashboard>();
   const [loading, setLoading] = useState(false);
-  const [userTaskData, setUserTaskData] = useState([]);
+  const [userTaskData, setUserTaskData] = useState<AdminTeamTasks[]>([]);
   const { userID } = useUserDetail()
   const debouncedUserId = useDebounce(userID, 1000);
-  const [selectedOffice, setSelectedOffice] = useState("lahore");
+  const { state: OfficeState } = useContext(OfficeContext)
 
   useEffect(() => {
-    if (debouncedUserId && selectedOffice) {
+    if (debouncedUserId && OfficeState.value.data) {
       fetchData();
     }
-  }, [debouncedUserId, selectedOffice]);
+  }, [debouncedUserId, OfficeState]);
 
   function fetchData() {
     setLoading(true)
@@ -42,7 +43,7 @@ export default function Page({ params }) {
 
   async function fetchDashboardData() {
     axios
-      .get(`/${debouncedUserId}/dashboard?office=${selectedOffice}`)
+      .get(`/${debouncedUserId}/dashboard?office=${OfficeState.value.data}`)
       .then((response) => {
         setData(response.data);
         if (response.data?.team_task) {
@@ -55,13 +56,13 @@ export default function Page({ params }) {
           const todayEnd = new Date(today);
           todayEnd.setHours(23, 59, 59, 999);
 
-          const splitTasksByDay = response.data.team_task.map((user) => {
-            const yesterdayTasks = user.tasks.filter((task) => {
+          const splitTasksByDay = response.data.team_task.map((user: { tasks: TeamTaskForAdmin[] }) => {
+            const yesterdayTasks = user.tasks.filter((task: TeamTaskForAdmin) => {
               const createdAt = new Date(task.created_at);
               return createdAt >= yesterday && createdAt < today;
             });
 
-            const todayTasks = user.tasks.filter((task) => {
+            const todayTasks = user.tasks.filter((task: TeamTaskForAdmin) => {
               const createdAt = new Date(task.created_at);
               return createdAt >= today && createdAt <= todayEnd;
             });
@@ -82,9 +83,11 @@ export default function Page({ params }) {
       });
   }
 
+
+
   async function fetchCustomerList() {
     try {
-      axios.get(`/${debouncedUserId}/customer?map=true&office=${selectedOffice}`).then((response) => {
+      axios.get(`/${debouncedUserId}/customer?map=true&office=${OfficeState.value.data}`).then((response) => {
         const customerList = response.data;
         const newArray = mergeArrays(customerList, PakCities);
 
@@ -95,7 +98,7 @@ export default function Page({ params }) {
     }
   }
 
-  function mergeArrays(array1, array2) {
+  function mergeArrays(array1: any[], array2: any[]) {
     return array1
       .map((obj1) => {
         const matchingCity = array2.find(
@@ -121,19 +124,6 @@ export default function Page({ params }) {
         <h2 className="text-2xl font-bold tracking-tight">
           Hi, Welcome back 👋
         </h2>
-        <div className="w-[200px]">
-          <Select onValueChange={setSelectedOffice} value={selectedOffice}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select office" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="lahore">lahore</SelectItem>
-                <SelectItem value="karachi">karachi</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
       </div>
       <div className="flex flex-row justify-between flex-wrap gap-4">
         <Card className="w-full sm:w-auto sm:min-w-[350px]">
@@ -325,7 +315,7 @@ export default function Page({ params }) {
   );
 }
 
-const renderTaskCard = (tasks, label) => (
+const renderTaskCard = (tasks: TeamTaskForAdmin[], label: string) => (
   <Card className="w-full">
     <CardHeader className="text-base font-semibold">{label}</CardHeader>
     <CardContent className="space-y-2">

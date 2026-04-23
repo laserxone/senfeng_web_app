@@ -8,7 +8,7 @@ import {
 } from "firebase/auth";
 import { usePathname } from "next/navigation";
 import { useRouter } from 'nextjs-toploader/app';
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 type AuthContextType = {
@@ -29,14 +29,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const pathname = usePathname();
     const [authData, setAuthData] = useState<any | null>(null)
+    const lastUserRef = useRef<string | null>(null);
+    const cacheRef = useRef<Record<string, any>>({});
+
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async (fbUser) => {
+            const email = fbUser?.email ?? null;
+            if (lastUserRef.current === email) return;
+            lastUserRef.current = email;
             setLoading(true);
             try {
-                if (fbUser?.email) {
-                    const response = await axios.get(`/userdetail/${fbUser?.email}`);
-                    const userData = response.data;
+                if (email) {
+
+                    if (!cacheRef.current[email]) {
+                        const res = await axios.get(`/userdetail/${email}`);
+                        cacheRef.current[email] = res.data;
+                    }
+                    const userData = cacheRef.current[email];
                     if (userData?.designation) {
                         setAuthData({ ...userData, ...fbUser })
                     } else {

@@ -12,7 +12,7 @@ import { pdf } from "@react-pdf/renderer";
 import { UserSalaryProps } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 
-const SalaryRecord = ({ id }: { id: number }) => {
+const SalaryRecord = ({ id, height }: { id: number, height ?:string }) => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<UserSalaryProps[]>([]);
 
@@ -103,6 +103,7 @@ const SalaryRecord = ({ id }: { id: number }) => {
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex flex-1">
         <PageTable
+        height={height}
           disableInput={true}
           loading={loading}
           columns={columns}

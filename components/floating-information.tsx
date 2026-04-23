@@ -1,17 +1,23 @@
 "use client";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
 import { X } from "lucide-react";
+import moment from "moment";
 import Link from "next/link";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { BadgeCount } from "./NotificationBadge";
 import { ScrollArea } from "./ui/scroll-area";
-import moment from "moment";
-import useUserDetail from "@/hooks/use-user-detail";
+
+type InfoProps = {
+  id: number
+  link: string
+  title: string
+  date: string
+}
 
 const FloatingInformation = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [info, setInfo] = useState([]);
+  const [info, setInfo] = useState<InfoProps[]>([]);
   const { base_route, userID } = useUserDetail();
   useEffect(() => {
     if (userID) {
@@ -41,7 +47,7 @@ const FloatingInformation = () => {
         visible={info.length > 0}
       />
 
-       <div
+      <div
         className={`absolute bottom-0 right-0  w-[calc(100vw-30px)] sm:w-96 h-[600px]
     bg-white dark:bg-neutral-900 rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col
     overflow-hidden border transition-all duration-200 z-10 sm:mx-0 ${isOpen ? "block" : "hidden"
@@ -135,7 +141,7 @@ const FloatingInformation = () => {
   );
 };
 
-const FloatingInfoButton = ({ pending, onClick, visible }) => {
+const FloatingInfoButton = ({ pending, onClick, visible }: { pending: number, visible: boolean, onClick: () => void }) => {
   if (visible)
     return (
       <div>

@@ -159,7 +159,7 @@ const AddPOSPayment = ({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="max-w-[95vw] sm:min-w-[90vw] p-4">
+      <DialogContent className="w-full sm:max-w-[95vw] p-4">
         <DialogHeader>
           <DialogTitle>Add New Payment</DialogTitle>
         </DialogHeader>

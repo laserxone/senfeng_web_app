@@ -8,6 +8,7 @@ export type UserReimbursementTypes = {
     onFilterReturn: (start: string, end: string) => Promise<void>
     onReset: (start: string, end: string) => Promise<void>
     onUpdatePurpose: (val: UserReimbursementType) => void
+    height?: string
 }
 
 export type SalesMachine = {
@@ -269,6 +270,7 @@ export type UserFines = {
     customer_name: string;
     amount: string;
     reason: string;
+    id?: number
 }
 
 export type AvailableMachinesProps = {
@@ -295,7 +297,7 @@ export type Payment = {
     comment: string | null;
     payment_lock: boolean;
     cheque_id: string | null;
-    part_id ?: number
+    part_id?: number
 };
 
 export type FinanceProps = {
@@ -579,6 +581,9 @@ export type MachineProps = {
     payments: MachinePayment[];
     sell_by_name: string;
     status: string;
+    owner?: string
+    user_name?: string
+    sale_id?: number
 };
 
 export type InstallmentProps = {
@@ -881,19 +886,192 @@ export type EngineerIssuedItems = {
 }
 
 export type POSPaymentDetailProps = {
-id: number;
-  name: string;
-  company: string;
-  phone: string;
-  address: string;
-  invoicenumber: string;
-  manager: string;
-  fields: InvoiceItem[];
-  created_at: string; 
-  payment: boolean;
-  customer_id: number | null;
-  discount: string;
-  payments: Payment[];
+    id: number;
+    name: string;
+    company: string;
+    phone: string;
+    address: string;
+    invoicenumber: string;
+    manager: string;
+    fields: InvoiceItem[];
+    created_at: string;
+    payment: boolean;
+    customer_id: number | null;
+    discount: string;
+    payments: Payment[];
 }
+
+export type UserFine = {
+    id: number
+    amount: number
+    reason: string
+}
+
+export type UserConversation = {
+    name: string,
+    dp: string,
+    conversation: {
+        last_message: string
+        last_updated: string
+        unreadCount: number
+    }
+    id: number
+}
+
+export type ConversationType = {
+    id: number
+    user: UserConversation
+}
+
+export type Messages = {
+    id: number | string;
+    conversation_id?: number;
+    sender_id: number;
+    message: string;
+    created_at: string | Date;
+    is_read?: boolean;
+    data?: any
+    pending?: boolean
+}
+
+export type UserRepairing = {
+    assign_date: string
+    id: number
+    user_name: string
+    deliver_date: string
+    customer_name: string
+    owner_name: string
+    remarks: string
+    remarks_other: string
+    status: string
+}
+
+
+export type TeamTaskForAdmin = {
+    id: number;
+    title: string;
+    status: string;
+    created_at: string;
+    customer_id: number | null;
+    customer_name: string | null;
+    customer_owner: string | null;
+}
+
+export type AdminDashboard = {
+    feedback_status_last_6_months: {
+        month: string
+        satisfactory: number
+        unsatisfactory: string
+    }[]
+    industry_count: {
+        customer_count: string
+        industry: string
+    }[]
+    machines_sold_change_percentage: string
+    machines_sold_last_3_months: {
+        date: string
+        total_machines_sold: number
+    }[]
+    new_customer_change_percentage: string
+    payment_change_percentage: string
+    total_machines_sold_this_month: string
+    total_new_customers_this_month: string
+    total_payment_this_month: string
+    recent_sales: {
+        contract_date: string
+        customer_id: number
+        customer_name: string
+        customer_owner: string
+        price: string
+        seller_dp: string
+        seller_email: string
+        seller_name: string
+    }[]
+    team_progress: {
+        id: number;
+        name: string;
+        email: string;
+        monthly_target: string;
+        total_sale_price: string;
+        total_members: string;
+        total_feedbacks: string;
+        total_visits: string;
+    }[]
+    team_task: {
+        assigned_user_id: number;
+        assigned_user_name: string;
+        total_tasks: string;
+        tasks: TeamTaskForAdmin[];
+    }
+}
+
+export type AdminTeamTasks = {
+    assigned_user_id: number
+    assigned_user_name: string
+    total_tasks: string
+    tasks: TeamTaskForAdmin[]
+    todayTasks: TeamTaskForAdmin[]
+    yesterdayTasks: TeamTaskForAdmin[]
+}
+
+export type AdminDashboardCustomers = {
+    id: number;
+    name: string;
+    owner: string;
+    location: string;
+    office: string;
+    ownership: number | null;
+    ownership_name: string | null;
+    latitude: string;
+    longitude: string;
+}
+
+export type News = {
+    id: number
+    start_date: string
+    end_date: string
+    news: string
+}
+
+export type Team = {
+    id: number
+    active: boolean
+    designatin: string
+    joining_date: string
+    leaving_date: string
+    name: string
+    office: string
+}
+
+type LoanPayment = {
+    id: number;
+    loan_id: number;
+    payment_date: string;
+    amount: string;
+};
+
+export type Loan = {
+    id: number;
+    user_id: number;
+    loan_amount: string;
+    issued_date: string;
+    remaining_amount: string;
+    status: string;
+    description: string;
+    user_name: string;
+    payments: LoanPayment[];
+};
+
+export type UserMap = {
+    id: number;
+    created_at: string;
+    location: [number, number];
+    user_id: number;
+    user_name: string;
+    user_dp: string | null;
+}
+
+
+
 
 

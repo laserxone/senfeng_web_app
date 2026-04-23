@@ -28,6 +28,7 @@ type CustomerEmployeeProps = {
   onRefresh: () => void | Promise<void>;
   ownership: boolean;
   totalCustomerText?: string;
+  height ?:string
 };
 
 export default function CustomerEmployee({
@@ -36,6 +37,7 @@ export default function CustomerEmployee({
   onRefresh,
   ownership,
   totalCustomerText,
+  height
 }: CustomerEmployeeProps) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState<ExtraCustomer[]>([]);
@@ -201,6 +203,7 @@ export default function CustomerEmployee({
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex flex-1">
         <PageTable
+        height={height}
           totalCustomerText={totalCustomerText}
           totalCustomer={data.length}
           columns={columns}

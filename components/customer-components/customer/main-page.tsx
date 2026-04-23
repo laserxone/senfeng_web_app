@@ -25,39 +25,6 @@ import moment from "moment";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-const tableHeader = [
-  {
-    value: "Owner",
-    label: "Owner",
-  },
-  {
-    value: "Name",
-    label: "Company Name",
-  },
-  {
-    value: "Number",
-    label: "Number",
-  },
-  {
-    value: "Industry",
-    label: "Industry",
-  },
-  {
-    value: "customer_group",
-    label: "Group",
-  },
-  {
-    value: "Location",
-    label: "Location",
-  },
-  {
-    value: "Machines",
-    label: "Machines",
-  },
-];
-
-
-
 export default function CustomerMainPage({ onReturn } : {onReturn : (val : number)=> void}) {
   const [additionalFilter, setAdditionalFilter] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);

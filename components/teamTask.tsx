@@ -141,7 +141,7 @@ const columns: ColumnDef<TaskProps>[] = [
 
 
 
-export default function TeamTask() {
+export default function TeamTask({height}  : {height ?:string}) {
   const { userID } = useUserDetail()
   const [data, setData] = useState<TaskProps[]>([]);
   const [visible, setVisible] = useState(false);
@@ -212,6 +212,7 @@ export default function TeamTask() {
     <div className="flex flex-1 flex-col pt-2">
       <div className="flex flex-1">
         <PageTable
+        height={height}
           loading={dataLoading}
           columns={columns}
           data={data}

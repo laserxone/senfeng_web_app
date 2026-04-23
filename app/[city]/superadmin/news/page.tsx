@@ -2,25 +2,26 @@
 import AppCalendar from "@/components/appCalendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import  Heading  from "@/components/ui/heading";
+import Heading from "@/components/ui/heading";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { News } from "@/lib/types";
 import { Trash } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
 
 export default function NewsPage() {
-  const [newsList, setNewsList] = useState([]);
+  const [newsList, setNewsList] = useState<News[]>([]);
   const [newsText, setNewsText] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [loading, setLoading] = useState(false);
-  const {userID} = useUserDetail()
-  
+  const { userID } = useUserDetail()
+
 
   useEffect(() => {
     if (userID) {
@@ -51,8 +52,8 @@ export default function NewsPage() {
 
       await fetchData();
       setNewsText("");
-      setStartDate("");
-      setEndDate("");
+      setStartDate(null);
+      setEndDate(null);
     } catch (error) {
       console.error("Submit Error:", error);
     } finally {
@@ -60,15 +61,15 @@ export default function NewsPage() {
     }
   };
 
-    async function handleDelete(id) {
+  async function handleDelete(id: number) {
     try {
       await axios.delete(`/${userID}/news/${id}`);
       await fetchData();
     } catch (error) {
       console.error("Submit Error:", error);
-    } 
+    }
   }
-  
+
 
   return (
     <div className="flex flex-1 flex-col space-y-6 p-4">
@@ -110,7 +111,7 @@ export default function NewsPage() {
       <ScrollArea className="h-[calc(100dvh-450px)] pr-4">
         <div className="space-y-4">
           {newsList.length > 0 ? (
-            newsList.map((item) => <RenderEachRow key={item.id} item={item} handleDelete={handleDelete}/>)
+            newsList.map((item) => <RenderEachRow key={item.id} item={item} handleDelete={handleDelete} />)
           ) : (
             <div className="text-gray-500 text-center">No news available</div>
           )}
@@ -120,7 +121,7 @@ export default function NewsPage() {
   );
 }
 
-const RenderEachRow = ({item, handleDelete}) => {
+const RenderEachRow = ({ item, handleDelete }: { item: News, handleDelete: (id: number) => Promise<void> }) => {
 
   const [deleteLoading, setDeleteLoading] = useState(false);
 

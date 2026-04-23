@@ -1,45 +1,46 @@
 "use client";
 
 import { storage } from "@/config/firebase";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
+import { UserMap } from "@/lib/types";
 import { GoogleMap, InfoWindow, OverlayView } from "@react-google-maps/api";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import { useTheme } from "next-themes";
 import { useParams } from "next/navigation";
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import useUserDetail from "@/hooks/use-user-detail";
 
 const MapComponent = () => {
   const { userID } = useUserDetail();
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<UserMap[]>([]);
   const { theme } = useTheme();
   const { city } = useParams();
 
   useEffect(() => {
-    async function fetchData() {
-      const response = await axios.get(`/${userID}/locations`);
-
-      const resolvedData = await Promise.all(
-        response.data.map(async (item) => {
-          if (item?.user_dp && !item.user_dp?.includes("http")) {
-            const storageRef = ref(storage, item?.user_dp);
-            const url = await getDownloadURL(storageRef);
-            return { ...item, user_dp: url };
-          }
-          return item;
-        })
-      );
-
-      setData(resolvedData);
-    }
-
     if (userID) {
       fetchData();
     }
   }, [userID]);
+
+  async function fetchData() {
+    const response = await axios.get(`/${userID}/locations`);
+
+    const resolvedData = await Promise.all(
+      response.data.map(async (item: UserMap) => {
+        if (item?.user_dp && !item.user_dp?.includes("http")) {
+          const storageRef = ref(storage, item?.user_dp);
+          const url = await getDownloadURL(storageRef);
+          return { ...item, user_dp: url };
+        }
+        return item;
+      })
+    );
+
+    setData(resolvedData);
+  }
+
 
   const defaultMapContainerStyle = {
     width: "100%",
@@ -84,8 +85,8 @@ const MapComponent = () => {
   }, [theme]);
 
   const RenderMap = useCallback(
-    ({ list }) => {
-      const [selectedMarker, setSelectedMarker] = useState(null);
+    ({ list }: { list: UserMap[] }) => {
+      const [selectedMarker, setSelectedMarker] = useState<UserMap | null>(null);
       return (
         <GoogleMap
           mapContainerStyle={defaultMapContainerStyle}
@@ -98,8 +99,8 @@ const MapComponent = () => {
               <OverlayView
                 key={index}
                 position={{
-                  lat: parseFloat(item.location[0]),
-                  lng: parseFloat(item.location[1]),
+                  lat: item.location[0],
+                  lng: item.location[1],
                 }}
                 mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
               >
@@ -110,8 +111,8 @@ const MapComponent = () => {
                         headerDisabled: true,
                       }}
                       position={{
-                        lat: parseFloat(selectedMarker.location[0]),
-                        lng: parseFloat(selectedMarker.location[1]),
+                        lat: selectedMarker.location[0],
+                        lng: selectedMarker.location[1],
                       }}
                     >
                       <div
@@ -139,7 +140,7 @@ const MapComponent = () => {
                     }
                     className="h-10 w-10 cursor-pointer"
                   >
-                    <AvatarImage src={item.user_dp} alt={"User-dp"} />
+                    <AvatarImage src={item.user_dp || ""} alt={"User-dp"} />
                     <AvatarFallback className="rounded-lg bg-gray-700 text-white dark:bg-gray-100 dark:text-black">
                       {item?.user_name.substring(0, 2)}
                     </AvatarFallback>

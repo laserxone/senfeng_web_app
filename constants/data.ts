@@ -25,20 +25,20 @@ export const ownerNavItems = [
       {
         title: "Customer",
         url: "/customer",
-        icon: "userPen",
+        
         shortcut: ["c", "u", "s"],
       },
       {
         title: "Member",
         url: "/member",
-        icon: "member",
+        
         shortcut: ["m", "e", "m"],
       },
       {
         title: "Feedback",
         shortcut: ["f", "e", "e"],
         url: "/feedback",
-        icon: "login",
+        
       },
       // {
       //   title: 'Quotation',
@@ -66,50 +66,42 @@ export const ownerNavItems = [
       {
         title: "Attendance",
         url: "/attendance",
-        icon: "userPen",
         shortcut: ["a", "t", "t"],
       },
       {
         title: "Salary",
         shortcut: ["s", "a", "l"],
         url: "/salary",
-        icon: "login",
       },
       {
         title: "Reimbursement",
         shortcut: ["r", "e", "i"],
         url: "/reimbursement",
-        icon: "login",
       },
       {
         title: "Commission",
         shortcut: ["c", "o", "m"],
         url: "/commission",
-        icon: "commission",
       },
       {
         title: "Team",
         url: "/team",
-        icon: "team",
         shortcut: ["t", "e", "a"],
       },
       {
         title: "Fine",
         url: "/fine",
-        icon: "fine",
         shortcut: ["f", "i", "n", "e"],
       },
       {
         title: "Loans",
         url: "/loans",
-        icon: "fine",
         shortcut: ["l", "o", "a", "n"],
       },
 
       {
         title: "Analytics",
         url: "/analytics",
-        icon: "fine",
         shortcut: ["f", "i", "n", "e"],
       },
     ],
@@ -124,14 +116,12 @@ export const ownerNavItems = [
       {
         title: "Assign Task",
         url: "/task",
-        icon: "userPen",
         shortcut: ["a", "s", "s"],
       },
       {
         title: "Map View",
         shortcut: ["m", "a", "p"],
         url: "/map",
-        icon: "login",
       },
     ],
   },
@@ -188,20 +178,17 @@ export const ownerNavItems = [
       {
         title: "Machine Delivery",
         url: "/delivery/machinedelivery",
-        icon: "userPen",
         shortcut: ["m", "d", "e"],
       },
       {
         title: "Other Delivery",
         url: "/delivery/otherdelivery",
-        icon: "member",
         shortcut: ["o", "d", "e"],
       },
       {
         title: "Delivered",
         shortcut: ["d", "e", "l"],
         url: "/delivery/delivered",
-        icon: "login",
       },
     ],
   },
@@ -379,7 +366,7 @@ export const StoreNavItem = [
     icon: "dms",
     shortcut: ["d", "m", "s"],
     isActive: false,
-    items: [], // No child items
+    items: [], 
   },
   {
     title: "Delivery",
@@ -391,20 +378,20 @@ export const StoreNavItem = [
       {
         title: "Machine Delivery",
         url: "/delivery/machinedelivery",
-        icon: "userPen",
+       
         shortcut: ["m", "d", "e"],
       },
       {
         title: "Other Delivery",
         url: "/delivery/otherdelivery",
-        icon: "member",
+       
         shortcut: ["o", "d", "e"],
       },
       {
         title: "Delivered",
         shortcut: ["d", "e", "l"],
         url: "/delivery/delivered",
-        icon: "login",
+       
       },
     ],
   },
@@ -451,25 +438,25 @@ export const Tools = {
       title: "Transfer Customers",
       shortcut: ["t", "r", "a"],
       url: "/transfer-customers",
-      icon: "login",
+      
     },
     {
       title: "Old Commissions",
       shortcut: ["o", "l", "d"],
       url: "/oldcommissions",
-      icon: "login",
+     
     },
     {
       title: "Configuration",
       shortcut: ["o", "l", "d"],
       url: "/configuration",
-      icon: "login",
+      
     },
     {
       title: "Backend",
       shortcut: ["b", "a", "c"],
       url: "/backend",
-      icon: "login",
+      
     },
     // {
     //   title: 'Multiple TID',

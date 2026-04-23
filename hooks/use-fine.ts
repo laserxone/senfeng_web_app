@@ -5,9 +5,10 @@ import axios from '@/lib/axios';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import useUserDetail from './use-user-detail';
+import { UserFine } from '@/lib/types';
 
 export function useFines() {
-    const [fine, setFine] = useState({})
+    const [fine, setFine] = useState<UserFine | null>()
     const { userID, isAdmin } = useUserDetail()
 
     const fetchFines = async () => {

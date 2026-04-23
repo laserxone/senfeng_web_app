@@ -16,7 +16,6 @@ import Spinner from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { storage } from "@/config/firebase";
-
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { UploadImage } from "@/lib/uploadFunction";
@@ -25,30 +24,35 @@ import { deleteObject, getDownloadURL, ref } from "firebase/storage";
 import { CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useCallback, useContext, useEffect, useRef, useState } from "react";
 import "react-medium-image-zoom/dist/styles.css";
+import { toast } from "sonner";
+
+type UserProfile = {
+  id?: number;
+  designation: string;
+  dp: string;
+  email: string;
+  name: string;
+  number: string;
+  kin: string;
+};
 
 export default function Page() {
   const { id } = useParams();
-  const { userID, email } = useUserDetail();
+  const { userID } = useUserDetail();
   const { state: OfficeState } = useContext(OfficeContext);
-  const [joiningDate, setJoiningDate] = useState(null);
-  const [leavingDate, setLeavingDate] = useState(null);
+  const [joiningDate, setJoiningDate] = useState<Date | null>(null);
+  const [leavingDate, setLeavingDate] = useState<Date | null>(null);
   const [active, setActive] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [employeeId, setEmployeeId] = useState(null);
-  const [fixedData, setFixedData] = useState({
+  const [fixedData, setFixedData] = useState<UserProfile>({
     designation: "",
     dp: "",
     email: "",
     name: "",
-    cnic: "",
-    police: "",
-    education: "",
-    resume: "",
-    appointment_letter: "",
-    father_cninc: "",
     number: "",
     kin: "",
   });
@@ -88,7 +92,7 @@ export default function Page() {
     contract: "",
   });
 
- 
+
 
   useEffect(() => {
     if (userID && id) {
@@ -152,10 +156,7 @@ export default function Page() {
           setLeavingDate(apiData?.leaving_date || null);
           setActive(apiData?.active || false);
         } else {
-          toast({
-            title: "Employee details not found",
-            variant: "destructive",
-          });
+          toast.error("Employee details not found");
         }
       })
       .finally(() => {
@@ -163,14 +164,14 @@ export default function Page() {
       });
   }
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field: string, value: string) => {
     setForm((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleCheck = (field, value) => {
+  const handleCheck = (field: string, value: boolean) => {
     setChecks((prev) => ({
       ...prev,
       [field]: value,
@@ -213,7 +214,7 @@ export default function Page() {
         active: active,
       })
       .then(() => {
-        toast({ title: "Information updated" });
+        toast.success("Information updated");
       })
       .finally(() => {
         setDataLoading(false);
@@ -221,19 +222,18 @@ export default function Page() {
   }
 
   const DocumentCard = useCallback(
-    ({ type }) => {
-      const [fileUrl, setFileUrl] = useState(null);
+    ({ type }: { type: string }) => {
+      const [fileUrl, setFileUrl] = useState<string | null>(null);
       const [loading, setLoading] = useState(false);
-      const [fileName, setFileName] = useState("");
-      const fileInputRef = useRef();
+      const [fileName, setFileName] = useState<string | undefined>("");
+      const fileInputRef = useRef<HTMLInputElement | null>(null);
 
       const userId = userID;
-      const userEmail = email;
 
       useEffect(() => {
-        if (docsData?.[type]) {
+        if (docsData?.[type as keyof typeof docsData]) {
           setLoading(true);
-          const filePath = docsData[type];
+          const filePath = docsData[type as keyof typeof docsData];
           if (filePath.includes("http")) {
             setFileUrl(filePath);
             setFileName(filePath.split("/").pop());
@@ -251,8 +251,8 @@ export default function Page() {
         }
       }, []);
 
-      const handleFileUpload = async (event) => {
-        const file = event.target.files[0];
+      const handleFileUpload = async (event: ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
+        const file = event?.target?.files?.[0];
         if (!file) return;
 
         setLoading(true);
@@ -261,8 +261,8 @@ export default function Page() {
           const newFilePath = `${OfficeState.value.data}/${userId}/profile/${type}.${extension}`;
 
           // Step 1: Delete old file if exists
-          if (docsData?.[type] && !docsData[type].includes("http")) {
-            const oldFileRef = ref(storage, docsData[type]);
+          if (docsData?.[type as keyof typeof docsData] && !docsData[type as keyof typeof docsData].includes("http")) {
+            const oldFileRef = ref(storage, docsData[type as keyof typeof docsData]);
             await deleteObject(oldFileRef).catch((err) =>
               console.log("Old file could not be deleted:", err),
             );
@@ -284,53 +284,12 @@ export default function Page() {
           };
           await axios.put(`/${userId}/user/${employeeId}`, updatedData);
 
-          toast({ title: "File uploaded successfully" });
+          toast.success("File uploaded successfully");
           await fetchData();
-          setFileUrl(URL.createObjectURL(file)); // Optional: for local preview
+          setFileUrl(URL.createObjectURL(file));
           setFileName(file.name);
         } catch (error) {
-          console.error("Upload failed:", error);
-          toast({ title: "Upload failed", variant: "destructive" });
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      const handleFileDelete = async () => {
-        if (!docsData?.[type]) return;
-
-        setLoading(true);
-        try {
-          // Step 1: Delete from storage if it's not a URL
-          if (!docsData[type].includes("http")) {
-            const fileRef = ref(storage, docsData[type]);
-            await deleteObject(fileRef);
-          }
-
-          // Step 2: Update backend with empty string
-          const updatedData = {
-            ...docsData,
-            password: undefined,
-            confirmPassword: undefined,
-            currentPassword: undefined,
-            [type]: "",
-          };
-          await axios.put(`/${userId}`, updatedData);
-
-          // Step 3: Update local state
-          setUser({
-            ...UserState.value.data,
-            ...updatedData,
-          });
-
-          toast({ title: `${type} deleted successfully` });
-
-          // Step 4: Reset local preview
-          setFileUrl(null);
-          setFileName("");
-        } catch (error) {
-          console.error("Delete failed:", error);
-          toast({ title: "Delete failed", variant: "destructive" });
+          toast.error("Upload failed");
         } finally {
           setLoading(false);
         }
@@ -392,145 +351,144 @@ export default function Page() {
     [docsData],
   );
 
+
+
   return (
-    <div className="flex flex-1 justify-center items-center p-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <Card>
-          <CardContent>
-            <div className="flex items-center gap-4 border-b pb-4 mb-6 mt-2">
-              <ProfilePictureTeam
-                img={fixedData?.dp}
-                name={fixedData?.name}
-                loading={loading}
-              />
-              <div>
-                <h1 className="text-2xl font-semibold">{fixedData?.name}</h1>
-                <p className="text-muted-foreground">
-                  {fixedData?.designation}
-                </p>
-                {fixedData?.designation === "Sales" && (
-                  <Link
-                    href={`/lahore/superadmin/team/${id}/dashboard`}
-                    target="blank"
-                  >
-                    Open Dashboard
-                  </Link>
-                )}
-              </div>
-            </div>
+    <div className="flex w-full justify-center">
+      <div className="w-full space-y-6">
 
-            {/* Profile Editing Sections */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              {/* Edit Profile Info */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Personal Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {Object.keys(form).map(
-                    (key) =>
-                      key !== "note" && (
-                        <div key={key} className="flex flex-col gap-1">
-                          <Label>{key.replace(/_/g, " ").toUpperCase()}</Label>
-                          <Input
-                            className="rounded-lg"
-                            value={form[key]}
-                            onChange={(e) =>
-                              handleInputChange(key, e.target.value)
-                            }
-                          />
-                        </div>
-                      ),
-                  )}
-                </CardContent>
-              </Card>
+        <div className="flex flex-col md:flex-row md:items-center gap-4 border-b pb-6">
+          <ProfilePictureTeam
+            img={fixedData?.dp}
+            name={fixedData?.name}
+            loading={loading}
+          />
 
-              {/* Edit Preferences */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Preferences</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {Object.keys(checks).map((key) => (
-                    <div key={key} className="flex items-center gap-3">
-                      <Checkbox
-                        className="scale-110"
-                        checked={checks[key]}
-                        onCheckedChange={(checked) => handleCheck(key, checked)}
-                      />
-                      <Label>{key.replace(/_/g, " ").toUpperCase()}</Label>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
+          <div className="flex-1">
+            <h1 className="text-2xl font-semibold">{fixedData?.name}</h1>
+            <p className="text-muted-foreground">{fixedData?.designation}</p>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Additional</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex flex-col gap-1">
-                  <Label>PHONE NUMBER</Label>
-                  <Input
-                    value={fixedData?.number}
-                    onChange={() => {}}
-                    disabled
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <Label>KINSHIP NUMBER</Label>
-                  <Input value={fixedData?.kin} onChange={() => {}} disabled />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label>NOTE</Label>
-                  <Textarea
-                    className="rounded-lg"
-                    value={form.note}
-                    onChange={(e) => handleInputChange("note", e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label>JOINING DATE</Label>
-                  <AppCalendar
-                    date={joiningDate}
-                    onChange={(date) => setJoiningDate(date)}
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <Label>LEAVING DATE</Label>
-                  <AppCalendar
-                    date={leavingDate}
-                    onChange={(date) => setLeavingDate(date)}
-                  />
-                </div>
-
-                <div className="flex flex-row items-center gap-1">
-                  <Label>Status</Label>
-                  <Switch checked={active} onCheckedChange={setActive} />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Save Button */}
-            <div className="flex justify-end mt-6">
-              <Button
-                onClick={handleSave}
-                className="px-6 py-2 font-semibold rounded-lg shadow-md hover:shadow-lg"
+            {fixedData?.designation === "Sales" && (
+              <Link
+                href={`/lahore/superadmin/team/${id}/dashboard`}
+                target="blank"
+                className="text-sm text-blue-500 hover:underline mt-1 inline-block"
               >
-                {dataLoading && <Spinner />} Save
-              </Button>
+                Open Dashboard
+              </Link>
+            )}
+          </div>
+
+          <div className="flex justify-end">
+            <Button
+              onClick={handleSave}
+            >
+              {dataLoading && <Spinner />} Save Changes
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Personal Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {Object.keys(form).map(
+                (key) =>
+                  key !== "note" && (
+                    <div key={key} className="space-y-1">
+                      <Label>{key.replace(/_/g, " ").toUpperCase()}</Label>
+                      <Input
+                        className="rounded-lg"
+                        value={form[key as keyof typeof form]}
+                        onChange={(e) =>
+                          handleInputChange(key, e.target.value)
+                        }
+                      />
+                    </div>
+                  ),
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Preferences</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {Object.keys(checks).map((key) => (
+                <div key={key} className="flex items-center gap-3">
+                  <Checkbox
+                    className="scale-110"
+                    checked={checks[key as keyof typeof checks]}
+                    onCheckedChange={(checked: boolean) =>
+                      handleCheck(key, checked)
+                    }
+                  />
+                  <Label>{key.replace(/_/g, " ").toUpperCase()}</Label>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Additional Details</CardTitle>
+          </CardHeader>
+
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label>PHONE NUMBER</Label>
+              <Input value={fixedData?.number} disabled />
+            </div>
+
+            <div className="space-y-1">
+              <Label>KINSHIP NUMBER</Label>
+              <Input value={fixedData?.kin} disabled />
+            </div>
+
+            <div className="space-y-1 md:col-span-2">
+              <Label>NOTE</Label>
+              <Textarea
+                className="rounded-lg"
+                value={form.note}
+                onChange={(e) => handleInputChange("note", e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label>JOINING DATE</Label>
+              <AppCalendar
+                date={joiningDate}
+                onChange={(date) => setJoiningDate(date)}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label>LEAVING DATE</Label>
+              <AppCalendar
+                date={leavingDate}
+                onChange={(date) => setLeavingDate(date)}
+              />
+            </div>
+
+            <div className="flex items-center gap-3 md:col-span-2">
+              <Label>Status</Label>
+              <Switch checked={active} onCheckedChange={setActive} />
             </div>
           </CardContent>
         </Card>
+
+
+
         <Card>
           <CardHeader>
             <CardTitle>Documents</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 ">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               <DocumentCard type={"cnic"} />
               <DocumentCard type={"father_cnic"} />
               <DocumentCard type={"police"} />
@@ -541,6 +499,7 @@ export default function Page() {
             </div>
           </CardContent>
         </Card>
+
       </div>
     </div>
   );

@@ -1,20 +1,24 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import  Heading  from "@/components/ui/heading";
+import Heading from "@/components/ui/heading";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import FilterSheet from "@/components/users/filterSheet";
-
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { UserMap } from "@/lib/types";
 import { MapProvider } from "@/providers/map-provider";
 import {
   GoogleMap,
   InfoWindow,
   Marker,
   Polyline,
+  MarkerClusterer
 } from "@react-google-maps/api";
 import { Filter } from "lucide-react";
+import moment from "moment";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 const containerStyle = {
   width: "100%",
@@ -22,10 +26,22 @@ const containerStyle = {
 };
 
 export default function Page() {
-  const [data, setData] = useState([]);
+  const [maps, setMaps] = useState<UserMap[]>([]);
   const { theme } = useTheme();
   const [filterVisible, setFilterVisible] = useState(false);
   const { userID } = useUserDetail();
+  const PAGE_SIZE = 20;
+
+  const [page, setPage] = useState(0);
+
+  const paginatedData = useMemo(() => {
+    return filterClosePoints(maps, 100)
+  }, [maps]);
+
+  const filteredData = paginatedData.slice(
+    page * PAGE_SIZE,
+    (page + 1) * PAGE_SIZE
+  );
 
   const [defaultMapOptions, setDefaultMapOptions] = useState({
     zoomControl: true,
@@ -49,21 +65,18 @@ export default function Page() {
     }
   }, [theme]);
 
-  async function fetchData(start, end, user) {
+  async function fetchData(start: string, end: string, user?: number) {
     if (!start || !end || !user) {
-      toast({
-        title: "User is required",
-        variant: "destructive",
-      });
+      toast.info("User is required");
       return;
     }
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       axios
         .get(
           `/${userID}/locations?start_date=${start}&end_date=${end}&user=${user}`
         )
         .then((response) => {
-          setData(response.data);
+          setMaps(response.data);
         })
         .finally(() => {
           resolve();
@@ -72,8 +85,8 @@ export default function Page() {
   }
 
   const MapWithPath = useCallback(
-    ({ data }) => {
-      const [selected, setSelected] = useState(null);
+    ({ data }: { data: UserMap[] }) => {
+      const [selected, setSelected] = useState<number | null>(null);
 
       if (!data.length) return <p>No data to show</p>;
 
@@ -82,10 +95,10 @@ export default function Page() {
         lng: item.location[1],
       }));
 
-      const center = path[1];
+      const center = path[0];
 
       return (
-        <div className="flex flex-1 flex-col gap-4 sm:flex-row overflow-y-auto">
+        <div className="flex flex-1 flex-col gap-4 sm:flex-row">
           <MapProvider>
             <GoogleMap
               mapContainerStyle={containerStyle}
@@ -93,29 +106,35 @@ export default function Page() {
               zoom={12}
               options={defaultMapOptions}
             >
-              {/* Polyline connecting the path */}
+
               <Polyline
                 path={path}
-                options={{ strokeColor: "#007bff", strokeWeight: 4 }}
+                options={{ strokeColor: "#2F9C9C", strokeWeight: 1 }}
               />
 
-              {/* Markers with labels and time tooltips */}
-              {data.map((item, index) => (
-                <Marker
-                  key={index}
-                  position={{ lat: item.location[0], lng: item.location[1] }}
-                  label={{
-                    text:
-                      index === 0
-                        ? "Start"
-                        : index === data.length - 1
-                        ? "End"
-                        : `${index + 1}`,
-                    color: "white",
-                  }}
-                  onClick={() => setSelected(index)}
-                />
-              ))}
+              <MarkerClusterer>
+                {(clusterer) =>
+                  <>
+                    {data.map((item, index) => (
+                      <Marker
+                        key={index}
+                        clusterer={clusterer}
+                        position={{ lat: item.location[0], lng: item.location[1] }}
+                        label={{
+                          text:
+                            index === 0
+                              ? "Start"
+                              : index === data.length - 1
+                                ? "End"
+                                : `${index + 1}`,
+                          color: "white",
+                        }}
+                        onClick={() => setSelected(index)}
+                      />
+                    ))}
+                  </>
+                }
+              </MarkerClusterer>
 
               {selected !== null && (
                 <InfoWindow
@@ -137,43 +156,44 @@ export default function Page() {
               )}
             </GoogleMap>
           </MapProvider>
-          <div className="flex flex-col gap-4 overflow-y-auto w-full h-[500px] sm:w-[400px] sm:h-[80vh]">
+          <ScrollArea className="flex flex-col w-full h-[500px] sm:w-[400px] sm:h-[80vh] pr-2">
             {data.map((item, index) => {
-              let labelText = "";
-              if (index === 0) {
-                labelText = "Starting Point";
-              } else if (index === data.length - 1) {
-                labelText = "End Point";
-              } else {
-                labelText = `Position ${index + 1}`;
-              }
+              const label =
+                index === 0
+                  ? "Start"
+                  : index === data.length - 1
+                    ? "End"
+                    : `#${index + 1}`;
 
               return (
                 <div
                   key={index}
-                  className={`p-4 ${
-                    theme == "dark" ? "bg-gray-900" : "bg-gray-100"
-                  }   rounded-lg shadow-md  cursor-pointer hover:opacity-60`}
                   onClick={() => setSelected(index)}
+                  className={`mb-2 cursor-pointer rounded-md px-3 py-2 border transition hover:opacity-70 ${theme === "dark"
+                    ? "bg-gray-900 border-gray-800"
+                    : "bg-gray-100 border-gray-200"
+                    }`}
                 >
-                  <div className="text-xs font-semibold text-blue-600 mb-1">
-                    {labelText}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-blue-500">
+                      {label}
+                    </span>
+                    <span className="text-[10px] text-gray-500">
+                      {moment(item.created_at).format("YYYY-MM-DD hh:mm A")}
+                    </span>
                   </div>
-                  <div className="font-medium text-lg">{item.user_name}</div>
-                  {/* <div className="text-sm text-gray-600">
-                    Latitude: {item.location[0]}, Longitude: {item.location[1]}
-                  </div> */}
-                  <div className="text-sm text-gray-500">
-                    Time: {new Date(item.created_at).toLocaleString()}
+
+                  <div className="text-sm font-medium truncate">
+                    {item.user_name}
                   </div>
                 </div>
               );
             })}
-          </div>
+          </ScrollArea>
         </div>
       );
     },
-    [data, defaultMapOptions]
+    [filteredData, defaultMapOptions]
   );
 
   return (
@@ -182,18 +202,41 @@ export default function Page() {
         <Heading title="Map record" description="View user locations record" />
         <div>
           {userID && (
-            <Button onClick={() => setFilterVisible(true)}>
-              <Filter /> Filter user and date
-            </Button>
+            <div className="flex gap-2">
+
+              <Button onClick={() => { setFilterVisible(true) }}>
+                <Filter /> Filter user and date
+              </Button>
+              {filteredData.length > 0 &&
+                <div className="flex items-center gap-4">
+                  <Button
+                    disabled={page === 0}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    Previous
+                  </Button>
+
+                  <span className="text-sm">
+                    Page {page + 1} of {Math.ceil(paginatedData.length / PAGE_SIZE)}
+                  </span>
+
+                  <Button
+                    disabled={(page + 1) * PAGE_SIZE >= paginatedData.length}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              }
+            </div>
           )}
         </div>
       </div>
 
-      {/* <div className="flex flex-col gap-4 h-auto lg:max-h-[90vh] overflow-y-auto pr-2"></div> */}
-      {data.length > 0 && <MapWithPath data={data} />}
+      {maps.length > 0 && <MapWithPath data={filteredData} />}
 
       <FilterSheet
-      user_disable={false}
+        user_disable={false}
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
@@ -202,4 +245,47 @@ export default function Page() {
       />
     </div>
   );
+}
+
+function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371e3; // meters
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) *
+    Math.cos(φ2) *
+    Math.sin(Δλ / 2) *
+    Math.sin(Δλ / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // meters
+}
+
+function filterClosePoints(data: UserMap[], threshold = 20) {
+  if (!data.length) return [];
+
+  const filtered = [data[0]];
+
+  for (let i = 1; i < data.length; i++) {
+    const prev = filtered[filtered.length - 1];
+    const curr = data[i];
+
+    const dist = getDistance(
+      prev.location[0],
+      prev.location[1],
+      curr.location[0],
+      curr.location[1]
+    );
+
+    if (dist > threshold) {
+      filtered.push(curr);
+    }
+  }
+
+  return filtered;
 }

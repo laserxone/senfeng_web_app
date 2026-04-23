@@ -116,13 +116,13 @@ const AutoScrollMembers = () => {
   const duplicatedList = [...localData, ...localData];
   if(isMobile) return null
   return (
-    <Card className="mt-1">
-     
+    <div className="w-[310px]">
+    <Card className="mt-1 fixed">
       <CardContent>
          <CardHeader>
         <CardTitle>Members</CardTitle>
       </CardHeader>
-        <div ref={scrollRef} className="h-[calc(100dvh-100px)] no-scrollbar overflow-y-auto">
+        <div ref={scrollRef} className="h-[calc(100dvh-150px)] no-scrollbar overflow-y-auto">
           {duplicatedList.map((item, index) => {
             const randomColor = colors[index % colors.length];
             return (
@@ -149,6 +149,7 @@ const AutoScrollMembers = () => {
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 };
 

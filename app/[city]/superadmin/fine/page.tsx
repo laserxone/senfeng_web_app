@@ -30,6 +30,8 @@ import * as z from "zod";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { TriggerFirebaseForFine } from "@/lib/triggerFirebase";
 import { toast } from "sonner";
+import { ColumnDef } from "@tanstack/react-table";
+import { UserFine, UserFines } from "@/lib/types";
 
 const formSchema = z.object({
   user_id: z.number({ error: "User is required." }),
@@ -42,7 +44,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function Page() {
   const [open, setOpen] = useState(false);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<UserFines[]>([]);
   const { userID } = useUserDetail();
   const [loading, setLoading] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
@@ -105,7 +107,7 @@ export default function Page() {
     await fetchData(startDate, endDate);
   }
 
-  const columns = [
+  const columns : ColumnDef<UserFines>[] = [
     {
       accessorKey: "created_at",
       filterFn: "includesString",
@@ -207,7 +209,7 @@ export default function Page() {
             variant="ghost"
             onClick={(e) => {
               e.stopPropagation();
-              handleDelete(currentItem.id);
+              handleDelete(currentItem?.id);
             }}
           >
             {selectedFine ? (
@@ -221,7 +223,7 @@ export default function Page() {
     },
   ]
 
-  async function handleDelete(id: number | null) {
+  async function handleDelete(id?: number) {
     if (!id) return;
     setSelectedFine(id);
     try {

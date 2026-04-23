@@ -5,35 +5,29 @@ import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import moment from "moment";
 import { useContext, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import AppCalendar from "./appCalendar";
 import { AvailableMachines } from "./available-machines";
 import ChequeCredit from "./customer-components/machine/cheque-credit";
-import { RequiredStar } from "./RequiredStar";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "./ui/form";
+import { Field, FieldError, FieldGroup, FieldLabel } from "./ui/field";
 import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
 import { Textarea } from "./ui/textarea";
 
-const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
+type Installment = { date: string, img: string, amount: number }
+
+const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { customer_id?: number, user_id: number, visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void> }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selectedMachine, setSelectedMachine] = useState(null);
+  const [selectedMachine, setSelectedMachine] = useState<number | null>(null);
   const [cheque, setCheque] = useState(false);
   const [value, setValue] = useState();
-  const [total, setTotal] = useState([]);
+  const [total, setTotal] = useState<Installment[]>([]);
   const { state: OfficeState } = useContext(OfficeContext);
   const [manual, setManual] = useState(false);
   const { isAdmin } = useUserDetail();
@@ -45,11 +39,11 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
         .min(1, { message: "Machine model is required." }),
       power: z.string().min(1, { message: "Power is required." }),
       source: z.string().min(1, { message: "Source is required." }),
-      contractDate: z.date({ required_error: "Contract date is required." }),
-      isSpeedMoney: z.boolean().default(false),
-      speedMoney: z.string().optional(),
+      contractDate: z.date({ error: "Contract date is required." }),
+      isSpeedMoney: z.boolean(),
+      speedMoney: z.coerce.number<number>().optional(),
       speedMoneyNote: z.string().optional(),
-      totalPrice: z.number().min(1, { message: "Total price is required." }),
+      totalPrice: z.coerce.number<number>({ error: "Price is required" }),
       cnic: z.string().optional(),
       order_item: z.number().nullable().optional(),
     })
@@ -66,7 +60,10 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
       },
     );
 
-  const form = useForm({
+
+  type FormValues = z.infer<typeof formSchema>;
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       machineModel: "",
@@ -74,15 +71,15 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
       source: "",
       contractDate: undefined,
       isSpeedMoney: false,
-      speedMoney: "",
+      speedMoney: 0,
       speedMoneyNote: "",
-      totalPrice: "",
+      totalPrice: 0,
       cnic: "",
       order_item: null,
     },
   });
 
-  function onSubmit(values) {
+  function onSubmit(values: FormValues) {
     setLoading(true);
     let baseLink = `/${user_id}/machine?inventory=${values.order_item}&cheque=${cheque}`;
     if (manual) {
@@ -111,11 +108,10 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
 
             const res = await Promise.all(
               total.map(async (item, idx) => {
-                const name = `${
-                  OfficeState.value.data
-                }/customer/${customer_id}/machine/${saleID}/installments/${moment()
-                  .valueOf()
-                  .toString()}_${idx}.png`;
+                const name = `${OfficeState.value.data
+                  }/customer/${customer_id}/machine/${saleID}/installments/${moment()
+                    .valueOf()
+                    .toString()}_${idx}.png`;
                 const imgRef = await UploadImage(item.img, name);
                 return axios.post(`/${user_id}/installments`, {
                   date: item.date,
@@ -137,7 +133,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
       });
   }
 
-  function handleClose(val) {
+  function handleClose(val: boolean) {
     form.reset();
     onClose(val);
     setSelectedMachine(null);
@@ -146,277 +142,262 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }) => {
 
   const isKarachi = OfficeState?.value?.data?.toLowerCase() === "karachi";
   const manualShow = isAdmin || isKarachi;
-  
+
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent
-        className={`transition-all duration-300 ${
-          cheque ? "max-w-[90vw] w-[90vw]" : "max-w-lg w-full"
-        }`}
+        className={`transition-all duration-300 ${cheque ? "sm:max-w-[90vw] w-[90vw]" : "sm:max-w-lg w-full"
+          }`}
       >
         <DialogHeader>
           <DialogTitle>Add New Machine</DialogTitle>
         </DialogHeader>
 
         <div className="w-full flex flex-1">
-          <ScrollArea className="px-2 w-full max-h-[85vh]">
+          <ScrollArea className="px-2 w-full max-h-[85dvh]">
             <div
-              className={`flex gap-6 ${
-                cheque ? "flex-row" : "flex-col"
-              } w-full`}
+              className={`flex gap-6 ${cheque ? "flex-row" : "flex-col"
+                } w-full`}
             >
-              {/* Left Side Form */}
               <div className={`${cheque ? "w-1/2" : "w-full"} px-2 space-y-2`}>
-                <Form {...form}>
-                  <form
-                    onSubmit={form.handleSubmit(onSubmit, (errors) => {
-                      console.log("Form validation errors:", errors);
-                    })}
-                    className="space-y-2"
-                  >
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FieldGroup>
+
                     {manualShow && (
-                      <div className="flex flex-row items-center gap-2">
-                        <FormLabel>Add Manual ?</FormLabel>
-                        <Checkbox
-                          checked={manual}
-                          onCheckedChange={(checked) => {
-                            setManual(checked);
-                          }}
-                        />
-                      </div>
+                      <Field>
+                        <div className="flex gap-4 items-center">
+                          <FieldLabel>Add Manual?</FieldLabel>
+                          <Checkbox
+                            checked={manual}
+                            onCheckedChange={(checked: boolean) => setManual(checked)}
+                          />
+                        </div>
+                      </Field>
                     )}
 
                     {!manual && (
-                      <FormField
-                        control={form.control}
+                      <Controller
                         name="order_item"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              Select Machine <RequiredStar />
-                            </FormLabel>
-                            <FormControl>
-                              <AvailableMachines
-                                onReturn={setSelectedMachine}
-                                value={selectedMachine}
-                                onReturnItem={(val) => {
-                                  field.onChange(val.id);
-                                  form.setValue(
-                                    "machineModel",
-                                    val.machine_model,
-                                  );
-                                  form.setValue("power", val.machine_power);
-                                  form.setValue("source", val.machine_source);
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel>Select Machine</FieldLabel>
+
+                            <AvailableMachines
+                              value={selectedMachine}
+                              onReturn={setSelectedMachine}
+                              onReturnItem={(val) => {
+                                field.onChange(val.id);
+                                form.setValue("machineModel", val.machine_model);
+                                form.setValue("power", val.machine_power);
+                                form.setValue("source", val.machine_source);
+                              }}
+                            />
+
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
                         )}
                       />
                     )}
-                    <FormField
-                      control={form.control}
+
+                    <Controller
                       name="machineModel"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Machine Model <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              disabled={!manual}
-                              placeholder="example: SF3015G"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Machine Model</FieldLabel>
+
+                          <Input
+                            disabled={!manual}
+                            placeholder="SF3015G"
+                            {...field}
+                          />
+
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
+                    <Controller
                       name="power"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Power <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              disabled={!manual}
-                              placeholder="example: 3000W/1500W/6000W"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Power</FieldLabel>
+
+                          <Input
+                            disabled={!manual}
+                            placeholder="3000W / 1500W"
+                            {...field}
+                          />
+
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
+                    <Controller
                       name="source"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Source <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              disabled={!manual}
-                              placeholder="example: RAYCUS / MAX /IPG"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Source</FieldLabel>
+
+                          <Input
+                            disabled={!manual}
+                            placeholder="RAYCUS / IPG"
+                            {...field}
+                          />
+
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
+                    <Controller
                       name="contractDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Contract Date <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <AppCalendar
-                              date={field.value}
-                              onChange={field.onChange}
-                              max={new Date()}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Contract Date</FieldLabel>
+
+                          <AppCalendar
+                            date={field.value}
+                            onChange={field.onChange}
+                            max={new Date()}
+                          />
+
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
+                    <Controller
                       name="totalPrice"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Total Price <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="Enter total price"
-                              value={field.value ? field.value : ""}
-                              onChange={(e) => {
-                                if (!isNaN(e.target.value)) {
-                                  field.onChange(Number(e.target.value));
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Total Price</FieldLabel>
+
+                          <Input
+
+                            placeholder="Enter amount"
+                            {...field}
+                          />
+
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
+                    <Controller
                       name="isSpeedMoney"
+                      control={form.control}
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="pr-2">
-                            Include Speed Money
-                          </FormLabel>
-                          <FormControl>
+                        <Field>
+                          <div className="flex gap-4 items-center">
+                            <FieldLabel>Include Speed Money</FieldLabel>
+
                             <Checkbox
                               checked={isSpeedMoney}
-                              onCheckedChange={(checked) => {
+                              onCheckedChange={(checked: boolean) => {
                                 setIsSpeedMoney(checked);
                                 field.onChange(checked);
+
                                 if (!checked) {
-                                  form.setValue("speedMoney", "");
+                                  form.setValue("speedMoney", 0);
                                   form.setValue("speedMoneyNote", "");
                                 }
                               }}
                             />
-                          </FormControl>
-                        </FormItem>
+                          </div>
+                        </Field>
                       )}
                     />
 
-                    <div>
-                      <FormLabel className="pr-2">Cheque Credit</FormLabel>
-                      <Checkbox
-                        checked={cheque}
-                        onCheckedChange={(checked) => {
-                          setCheque(checked);
-                        }}
-                      />
-                    </div>
+                    <Field>
+                      <div className="flex gap-4 items-center">
+                        <FieldLabel>Cheque Credit</FieldLabel>
+                        <Checkbox
+                          checked={cheque}
+                          onCheckedChange={(checked: boolean) => setCheque(checked)}
+                        />
+                      </div>
+                    </Field>
 
                     {isSpeedMoney && (
                       <>
-                        <FormField
-                          control={form.control}
+                        <Controller
                           name="speedMoney"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Speed Money</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Enter speed money"
-                                  value={field.value ? field.value : ""}
-                                  onChange={(e) => {
-                                    if (!isNaN(Number(e.target.value))) {
-                                      field.onChange(e.target.value);
-                                    }
-                                  }}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
+                          control={form.control}
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                              <FieldLabel>Speed Money</FieldLabel>
+
+                              <Input
+                                placeholder="Amount"
+                                {...field}
+                              />
+
+                              {fieldState.invalid && (
+                                <FieldError errors={[fieldState.error]} />
+                              )}
+                            </Field>
                           )}
                         />
 
-                        <FormField
-                          control={form.control}
+                        <Controller
                           name="speedMoneyNote"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Speed Money Note</FormLabel>
-                              <FormControl>
-                                <Textarea placeholder="Enter note" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
+                          control={form.control}
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                              <FieldLabel>Note</FieldLabel>
+
+                              <Textarea placeholder="Optional note" {...field} />
+
+                              {fieldState.invalid && (
+                                <FieldError errors={[fieldState.error]} />
+                              )}
+                            </Field>
                           )}
                         />
                       </>
                     )}
 
-                    <FormField
-                      control={form.control}
+                    <Controller
                       name="cnic"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cnic</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="example: 1234567891234"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>CNIC</FieldLabel>
+
+                          <Input placeholder="1234567891234" {...field} />
+
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
                       )}
                     />
 
-                    <Button className="w-full" type="submit" disabled={loading}>
+                    <Button type="submit" disabled={loading} className="w-full">
                       {loading && <Spinner />} Submit
                     </Button>
-                  </form>
-                </Form>
+
+                  </FieldGroup>
+                </form>
               </div>
               {cheque && (
                 <div className="w-1/2 border-l pl-4">

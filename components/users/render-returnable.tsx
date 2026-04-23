@@ -7,25 +7,10 @@ import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import moment from "moment";
 
-const RenderReturnable = () => {
+const RenderReturnable = ({ height }: { height?: string }) => {
   const { issuedItems } = useIssuedItem();
 
-  const tableHeader = [
-    {
-      value: "created_at",
-      label: "Issue date",
-    },
-    {
-      value: "company",
-      label: "Company",
-    },
-    {
-      value: "items",
-      label: "Items",
-    },
-  ];
-
-  const columns : ColumnDef<UserReturnableType>[] = [
+  const columns: ColumnDef<UserReturnableType>[] = [
     {
       accessorKey: "created_at",
       filterFn: "includesString",
@@ -80,7 +65,7 @@ const RenderReturnable = () => {
         );
       },
       cell: ({ row }) => {
-        const items : UserReturnableField[] = row.original.fields || [];
+        const items: UserReturnableField[] = row.original.fields || [];
         return (
           <div className="ml-2">
             <ul className="list-disc list-inside text-sm space-y-1">
@@ -97,14 +82,14 @@ const RenderReturnable = () => {
   ];
 
   return (
-    <Card className="flex flex-1">
-      <CardContent className="pt-2 flex flex-1">
+    <Card className="flex flex-1 p-0">
+      <CardContent className="pt-0 flex flex-1">
         <div className="flex flex-1 flex-col space-y-4">
           <div className="flex flex-1">
             <PageTable
+              height={height}
               columns={columns}
               data={issuedItems}
-              tableHeader={tableHeader}
               disableInput={true}
             />
           </div>

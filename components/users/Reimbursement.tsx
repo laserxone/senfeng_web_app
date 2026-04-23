@@ -76,6 +76,7 @@ export default function Reimbursement({
   onFilterReturn,
   onReset,
   onUpdatePurpose,
+  height
 }: UserReimbursementTypes) {
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState<UserReimbursementType[]>([]);
@@ -258,6 +259,7 @@ export default function Reimbursement({
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex flex-1">
         <PageTable
+        height={height}
           columns={columns}
           data={data}
           onRowClick={(val, e) => {

@@ -14,54 +14,44 @@ import { auth, provider } from "@/config/firebase";
 import { cn } from "@/lib/utils";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { Eye, EyeOff } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import Spinner from "./ui/spinner";
 
-export function LoginForm({ className, ...props }) {
- 
+export function LoginForm() {
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter();
+
 
   async function handleGoogleLogin() {
     setLoading(true);
     await signInWithPopup(auth, provider)
       .then(() => {
-        toast({
-          description: "Login successful",
-        });
+        toast.success("Login successful");
       })
       .catch((err) => {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: err?.message || "Error login",
-        });
+        toast.error(err?.message || "Error login",
+        );
       })
       .finally(() => {
         setLoading(false);
       });
   }
 
-  async function handleEmailLogin(event) {
-    setLoading(true);
+  async function handleEmailLogin(event: React.FormEvent<HTMLFormElement>) {
+
     event.preventDefault();
+    setLoading(true);
     await signInWithEmailAndPassword(auth, email, password)
       .then(() => {
-        toast({
-          description: "Login successful",
-        });
+        toast.success("Login successful");
       })
       .catch((err) => {
         console.log(err.message);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: err?.message || "Error login",
-        });
+        toast.error(err?.message || "Error login");
       })
       .finally(() => {
         setLoading(false);
@@ -87,8 +77,9 @@ export function LoginForm({ className, ...props }) {
     // }
   }
 
+
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-6")} >
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome back</CardTitle>
@@ -111,7 +102,7 @@ export function LoginForm({ className, ...props }) {
                   </svg>
                   Login with Google
                 </Button>
-               
+
               </div>
               <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
                 <span className="relative z-10 bg-background px-2 text-muted-foreground">

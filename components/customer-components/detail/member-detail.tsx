@@ -330,7 +330,7 @@ export default function MemberDetail({
           )}
 
           {activeTab === "feedback" && (
-            <ScrollArea className={`${height} w-full`}>
+            <ScrollArea className={`${height} w-full pr-2`}>
               <RenderFeedbackTabs />
             </ScrollArea>
           )}
@@ -882,7 +882,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }: { userID: nu
       </Card>
 
       {localData.map((item, index) => (
-        <Card key={index}>
+        <Card key={index} className="p-0">
           <CardHeader className="p-0 flex overflow-hidden">
             <div
               className="flex flex-1 justify-between items-center bg-gray-200 dark:bg-gray-700 py-2 px-4"
@@ -922,7 +922,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }: { userID: nu
   );
 }
 
-const BillingInformationMachine = ({ payment } : {payment : [number, number]}) => {
+const BillingInformationMachine = ({ payment }: { payment: [number, number] }) => {
   const formattedTotal = <CurrencyFormatter amount={payment[0]} />;
   const formattedReceived = <CurrencyFormatter amount={payment[1]} />;
   const formattedBalance = (
@@ -965,17 +965,17 @@ const RenderTimeline = ({
   taskData,
   customerDetail,
   height,
-} : {
-   feedbackData : CustomerFeedbackProps[],
-  visitData : CustomerVisitProps[],
-  taskData : CustomerTaskProps[],
-  customerDetail : LocalCustomerDetailProps | null,
-  height ?: string,
+}: {
+  feedbackData: CustomerFeedbackProps[],
+  visitData: CustomerVisitProps[],
+  taskData: CustomerTaskProps[],
+  customerDetail: LocalCustomerDetailProps | null,
+  height?: string,
 }) => {
-  const [timelineData, setTimelineData] = useState<{id : string ,time : string, title : string, description : string}[]>([]);
+  const [timelineData, setTimelineData] = useState<{ id: string, time: string, title: string, description: string }[]>([]);
 
   useEffect(() => {
-    const localData : any[] = [];
+    const localData: any[] = [];
 
     taskData.forEach((task) => {
       localData.push({
@@ -1076,7 +1076,7 @@ const RenderTimeline = ({
       if (dateA.isAfter(dateB)) return -1;
 
       // Same date: prioritize by type
-      const getPriority = (id : string) => {
+      const getPriority = (id: string) => {
         if (id.startsWith("payment-")) return 1;
         if (id.startsWith("machine-")) return 2;
         return 3;
@@ -1128,9 +1128,12 @@ const RenderTimeline = ({
   );
 };
 
-const PartsTab = ({ data, height }:{data ?: PartsProps[], height ?:string}) => {
+const PartsTab = ({ data, height }: { data?: PartsProps[], height?: string }) => {
+
   return (
     <Card className="flex flex-1 shadow-lg rounded-2xl p-4 self-center">
+      {data?.length === 0 ?
+        <div>No data found</div> :
       <ScrollArea className={`flex flex-1 ${height}`}>
         <Accordion type="single" collapsible className="w-full space-y-2">
           {data?.map((item, index) => (
@@ -1138,11 +1141,12 @@ const PartsTab = ({ data, height }:{data ?: PartsProps[], height ?:string}) => {
           ))}
         </Accordion>
       </ScrollArea>
+}
     </Card>
   );
 };
 
 function toMyCustomer(data: LocalCustomerDetailProps): MyCustomer {
   const { bill_received, bill_total, profile_completion, parts, ...rest } = data;
-  return {...rest, machines : [""]};
+  return { ...rest, machines: [""] };
 }

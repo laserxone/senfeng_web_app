@@ -1,11 +1,10 @@
 "use client";
-import { ArrowUpDown, Filter } from "lucide-react";
+import { Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useCallback, useEffect, useState } from "react";
 
-import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table-without-pagination";
 import {
   Dialog,
@@ -16,22 +15,21 @@ import {
 import Heading from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
+import { columns } from "@/components/users/AttendanceColumns";
 import FilterSheet from "@/components/users/filterSheet";
+import LeaveApproval from "@/components/users/leaveApproval";
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { GetProfileImage } from "@/lib/getProfileImage";
+import { AttendanceTableRow, UserAttendanceRecord } from "@/lib/types";
 import { MapProvider } from "@/providers/map-provider";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import moment from "moment";
 import momentT from "moment-timezone";
 import { useTheme } from "next-themes";
-import LeaveApproval from "@/components/users/leaveApproval";
-import { AttendanceTableRow, UserAttendanceRecord } from "@/lib/types";
-import { ColumnDef } from "@tanstack/react-table";
 
 export default function Page() {
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState<AttendanceTableRow[]>([]);
   const [visible, setVisible] = useState(false);
@@ -164,173 +162,6 @@ export default function Page() {
     return filteredData;
   }
 
-  const columns: ColumnDef<UserAttendanceRecord>[] = [
-    {
-      accessorKey: "date",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Date
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => (
-        <div>
-          {row.getValue("date")
-            ? moment(new Date(row.getValue("date"))).format("YYYY-MM-DD")
-            : ""}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "user_name",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Employee
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div>{row.getValue("user_name")}</div>,
-    },
-    {
-      accessorKey: "time_in",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Time In
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => (
-        <div className="ml-2">
-          {row.getValue("time_in")
-            ? moment(new Date(row.getValue("time_in"))).format("hh:mm A")
-            : ""}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "time_out",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Time Out
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => (
-        <div className="ml-2">
-          {row.getValue("time_out")
-            ? new Date(row.getValue("time_out")).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-            : ""}
-        </div>
-      ),
-    },
-
-    {
-      accessorKey: "note_time_in",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Note Time In
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div>{row.getValue("note_time_in")}</div>,
-    },
-
-    {
-      accessorKey: "note_time_out",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Note Time Out
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div>{row.getValue("note_time_out")}</div>,
-    },
-
-    {
-      accessorKey: "status",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Status
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => (
-        <div
-          style={{
-            color:
-              row.getValue("status") === "Present"
-                ? "green"
-                : row.getValue("status") === "Leave Approved"
-                  ? "green"
-                  : "red",
-          }}
-        >
-          {row.getValue("status")}
-        </div>
-      ),
-    },
-  ];
-
-  const tableHeader = [
-    {
-      value: "user_name",
-      label: "User",
-    },
-    {
-      value: "note_time_in",
-      label: "Note Time In",
-    },
-    {
-      value: "note_time_out",
-      label: "Note Time Out",
-    },
-  ];
-
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-start justify-between">
@@ -424,8 +255,8 @@ export const AttendanceDetail = ({ detail, visible, onClose }: { detail: UserAtt
     <Dialog open={visible} onOpenChange={onClose}>
       <DialogContent
         className={`${detail?.time_out
-            ? " sm:max-w-4xl lg:max-w-5xl"
-            : "sm:max-w-2xl lg:max-w-xl"
+          ? " sm:max-w-4xl lg:max-w-5xl"
+          : "sm:max-w-2xl lg:max-w-xl"
           } `}
       >
         <DialogHeader>

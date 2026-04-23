@@ -2,54 +2,28 @@
 import { ArrowUpDown, BadgeCheck, CircleDashed, Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import PageTable from "@/components/app-table-without-pagination";
-import { CustomerSearch } from "@/components/customer-search";
-import  Heading  from "@/components/ui/heading";
+import Heading from "@/components/ui/heading";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import Spinner from "@/components/ui/spinner";
-import { UserSearch } from "@/components/user-search";
 import FilterSheet from "@/components/users/filterSheet";
 import { TIMEZONE } from "@/constants/data";
 
+
+import TaskDetail from "@/components/users/taskDetail";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { TaskProps } from "@/lib/types";
 import moment from "moment";
 import momentT from "moment-timezone";
-import { AddTaskTeam } from "@/components/teamTask";
-import TaskDetail from "@/components/users/taskDetail";
-import { TaskProps } from "@/lib/types";
+import { AddTaskTeam } from "@/components/users/addTaskTeam";
+import { ColumnDef } from "@tanstack/react-table";
 
-const columns = [
+const columns: ColumnDef<TaskProps>[] = [
   {
     accessorKey: "status",
     filterFn: "includesString",
@@ -157,21 +131,13 @@ const columns = [
   },
 ];
 
-const getSchema = (isClientSelected) =>
-  z.object({
-    radio: z.enum(["office", "client"]),
-    task: z.string().min(5, { message: "Task must be at least 5 characters." }),
-    user: z.number({ required_error: "User is required." }),
-    client: isClientSelected
-      ? z.number({ required_error: "Client is required." })
-      : z.number().optional().nullable(),
-  });
+
 
 export default function Page() {
   const { userID } = useUserDetail();
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<TaskProps[]>([]);
   const [visible, setVisible] = useState(false);
-    const [selectedTask, setSelectedTask] = useState<TaskProps | null>(null);
+  const [selectedTask, setSelectedTask] = useState<TaskProps | null>(null);
   const [addTaskVisible, setAddTaskVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
@@ -194,7 +160,7 @@ export default function Page() {
     }
   }, [userID]);
 
-  async function fetchData(user, start_date, end_date) {
+  async function fetchData(user: number | null | string, start_date: string, end_date: string) {
     setDataLoading(true);
     return new Promise((resolve, reject) => {
       axios
@@ -202,7 +168,7 @@ export default function Page() {
           `/${userID}/task?start_date=${start_date}&end_date=${end_date}&user=${user}`
         )
         .then((response) => {
-          const apiData = response.data.map((item) => {
+          const apiData = response.data.map((item: TaskProps) => {
             return { ...item, created_at_time: item.created_at };
           });
 
@@ -248,7 +214,7 @@ export default function Page() {
         </Button>
 
         <AddTaskTeam
-          onRefresh={() => {
+          onRefresh={async () => {
             const startDate = momentT
               .tz(TIMEZONE)
               .subtract(2, "months")
@@ -265,7 +231,6 @@ export default function Page() {
 
             fetchData("", startDate, endDate);
           }}
-          defaultRadio={"office"}
           visible={addTaskVisible}
           onClose={setAddTaskVisible}
           assigned_by={userID}
@@ -299,7 +264,7 @@ export default function Page() {
       />
 
       <FilterSheet
-      user_disable={false}
+        user_disable={false}
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
@@ -309,24 +274,5 @@ export default function Page() {
     </div>
   );
 }
-
-const TaskRadio = ({ onSelection, value }) => {
-  return (
-    <RadioGroup
-      defaultValue={value}
-      onValueChange={onSelection}
-      className="flex"
-    >
-      <div className="flex items-center space-x-2">
-        <RadioGroupItem value="office" id="r1" />
-        <Label htmlFor="r1">Office</Label>
-      </div>
-      <div className="flex items-center space-x-2">
-        <RadioGroupItem value="client" id="r2" />
-        <Label htmlFor="r2">Client</Label>
-      </div>
-    </RadioGroup>
-  );
-};
 
 

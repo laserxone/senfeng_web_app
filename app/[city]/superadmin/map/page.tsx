@@ -10,12 +10,11 @@ export default function Page() {
   const {base_route} = useUserDetail()
   
   return (
-    <div className="flex flex-1 relative">
+    <div className="flex flex-1 h-[calc(100dvh-80px)] relative">
       <MapProvider>
         <MapComponent />
       </MapProvider>
 
-      {/* Bottom Centered Button */}
       <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 ">
         {base_route && (
           <Link href={`/${base_route}/map/record`}>

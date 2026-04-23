@@ -4,10 +4,12 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import exportToExcel from "@/lib/exportToExcel";
 import { TriggerFirebase } from "@/lib/triggerFirebase";
+import { Messages, UserConversation } from "@/lib/types";
 import { Clock, Send } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -15,14 +17,20 @@ import { ScrollArea } from "../ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
 import Spinner from "../ui/spinner";
 
-const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
+type ChatComponentType = {
+  id: number | undefined
+  user: UserConversation | null | undefined
+  onSetLoading: (val: boolean) => void
+  stateLoading: boolean
+}
+const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }: ChatComponentType) => {
 
-  const {userID} = useUserDetail()
+  const { userID } = useUserDetail()
   const { messages: realMessages, loading } = useMessages(id);
   const [input, setInput] = useState("");
-  const [tempMessages, setTempMessages] = useState([]);
-  const bottomRef = useRef(null);
-  const [selectedContent, setSelectedContent] = useState(null);
+  const [tempMessages, setTempMessages] = useState<Messages[]>([]);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const [selectedContent, setSelectedContent] = useState<any | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -112,7 +120,7 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
   const combinedMessages = [...realMessages, ...tempMessages];
 
   return (
-    <div className="flex flex-col w-full h-full bg-muted/40 ">
+    <div className="flex flex-col w-full h-full bg-muted/40 z-99999">
       {stateLoading ? (
         <div className="flex-1 flex items-center justify-center text-muted-foreground">
           <Spinner />
@@ -124,16 +132,14 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
             return (
               <div
                 key={index}
-                className={`flex flex-col gap-1 max-w-[80%] my-2 ${
-                  isMe ? "ml-auto items-end" : "mr-auto items-start"
-                }`}
+                className={`flex flex-col gap-1 max-w-[80%] my-2 ${isMe ? "ml-auto items-end" : "mr-auto items-start"
+                  }`}
               >
                 <div
-                  className={`rounded-xl px-4 py-2 text-sm shadow-sm transition-all ${
-                    isMe
-                      ? "bg-primary text-white"
-                      : "bg-accent text-accent-foreground"
-                  }`}
+                  className={`rounded-xl px-4 py-2 text-sm shadow-sm transition-all ${isMe
+                    ? "bg-primary text-white"
+                    : "bg-accent text-accent-foreground"
+                    }`}
                 >
                   <div className="text-sm">{item.message}</div>
                   {item.data && item.data.trim() && (
@@ -197,10 +203,10 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }) => {
   );
 };
 
-const RenderSelectedContent = ({ visible, onClose, data, type }) => {
+const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: boolean, onClose: (val: boolean) => void, data: any | null, type: string }) => {
 
   const [loading, setLoading] = useState(false);
-  const {base_route} = useUserDetail()
+  const { base_route } = useUserDetail()
 
   async function handleCreateExcel() {
     setLoading(true);
@@ -215,15 +221,12 @@ const RenderSelectedContent = ({ visible, onClose, data, type }) => {
 
     try {
       if (data.length === 0) {
-        toast({
-          title: "No items selected",
-          description: "Please select items first.",
-        });
+        toast.info("Please select items first.");
         return;
       }
       await exportToExcel(
         headers,
-        data.map((item) => [
+        data.map((item: any) => [
           item.chinese_name,
           item.name,
           item.new_order,
@@ -236,10 +239,7 @@ const RenderSelectedContent = ({ visible, onClose, data, type }) => {
         true
       );
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error || "Error creating excel",
-      });
+      toast.error("Error creating excel");
     } finally {
       setLoading(false);
     }
@@ -265,7 +265,7 @@ const RenderSelectedContent = ({ visible, onClose, data, type }) => {
                 </div>
               ) : (
                 <div className="px-4 py-6 space-y-2 border-l-2 border-muted relative">
-                  {data.map((fb, index) => (
+                  {data.map((fb: any) => (
                     <div key={fb.id} className="relative pl-6">
                       {/* Dot on the timeline */}
                       <div className="absolute left-[-9px] top-2 w-3 h-3 bg-primary rounded-full border-2 border-background shadow-md" />
@@ -288,7 +288,7 @@ const RenderSelectedContent = ({ visible, onClose, data, type }) => {
                         </CardHeader>
 
                         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-sm">
-                         <div>
+                          <div>
                             <span className="font-medium text-foreground">
                               Manager:
                             </span>{" "}
@@ -351,7 +351,7 @@ const RenderSelectedContent = ({ visible, onClose, data, type }) => {
                 </div>
               ) : (
                 <div className="px-4 py-6 space-y-2 border-l-2 border-muted relative">
-                  {data.map((item, index) => (
+                  {data.map((item: any, index: number) => (
                     <RenderOtherStockItems key={index} item={item} />
                   ))}
                 </div>
@@ -363,7 +363,7 @@ const RenderSelectedContent = ({ visible, onClose, data, type }) => {
     );
 };
 
-const RenderOtherStockItems = ({ item }) => {
+const RenderOtherStockItems = ({ item }: { item: any }) => {
   return (
     <div
       className={`w-full border border-gray-300 rounded-lg shadow-md p-5 flex flex-col`}

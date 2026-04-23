@@ -32,7 +32,7 @@ type PageTableProps = {
   loading?: boolean;
   download?: boolean;
   onRowClick?: (row: any, event: React.MouseEvent<HTMLTableRowElement>) => void;
-
+  height?: string
   totalCustomerText?: string;
   totalCustomer?: number;
 };
@@ -44,6 +44,7 @@ const PageTable = ({
   onRowClick = () => { },
   loading = false,
   download = false,
+  height = "min-h-[calc(100dvh-280px)]"
 }: PageTableProps) => {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
@@ -147,7 +148,7 @@ const PageTable = ({
       </div>
 
       <div
-        className={`relative flex flex-1 min-h-[calc(100dvh-280px)] ${isMobile && "w-[calc(100vw-44px)]"}`}
+        className={`relative flex flex-1 ${height} ${isMobile && "w-[calc(100vw-44px)]"}`}
       >
         <div className="absolute bottom-0 left-0 right-0 top-0 flex rounded-md border md:overflow-auto custom-scrollbar overflow-auto">
           <Table className="relative">
@@ -155,7 +156,7 @@ const PageTable = ({
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow
                   key={headerGroup.id}
-                  className="sticky top-0 z-20 bg-background"
+                  className="sticky top-0 z-1 bg-background"
                 >
                   {headerGroup.headers.map((header) => (
                     <TableHead

@@ -1,15 +1,15 @@
 "use client";
 import AutoScrollMembers from "@/components/autoScroll";
 import {
-    FeedbackTakenCard,
-    MachinesSoldCard,
-    VisitsDoneCard,
+  FeedbackTakenCard,
+  MachinesSoldCard,
+  VisitsDoneCard,
 } from "@/components/dashboardCards";
 import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,10 +26,10 @@ import { RequiredStar } from "@/components/RequiredStar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import Spinner from "@/components/ui/spinner";
@@ -40,24 +40,25 @@ import RenderReturnable from "@/components/users/render-returnable";
 import SalaryRecord from "@/components/users/SalaryRecord";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { SalesCustomer, SalesCustomerMachines, SalesDashboard, SalesMachine, SalesVisitTypes, UserAttendanceRecord, UserCallData, UserExtraTypes, UserReimbursementType } from "@/lib/types";
+import { updateItemPurpose } from "@/lib/updatePurpose";
 import { AlertCircle, CheckCircle, Clock } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
-import { use, useCallback, useEffect, useState } from "react";
-import { updateItemPurpose } from "@/lib/updatePurpose";
+import { useCallback, useEffect, useState } from "react";
 
 
-export default function UserDashboard({id, owner = false}) {
- 
-  const [data, setData] = useState();
+export default function UserDashboard({ id, owner = false }: { id: string | null, owner: boolean }) {
+
+  const [data, setData] = useState<SalesDashboard>();
   const { base_route, userID } = useUserDetail();
-  const [visitData, setVisitData] = useState([]);
-  const [extraData, setExtraData] = useState({});
+  const [visitData, setVisitData] = useState<SalesVisitTypes[]>([]);
+  const [extraData, setExtraData] = useState<UserExtraTypes>();
   const [selectedOption, setSelectedOption] = useState("thisMonth");
-  const [reimbursementData, setReimbursementData] = useState([]);
-  const [attendanceData, setAttendanceData] = useState([]);
-  const [callData, setCallData] = useState([]);
-  const [machineData, setMachineData] = useState([]);
+  const [reimbursementData, setReimbursementData] = useState<UserReimbursementType[]>([]);
+  const [attendanceData, setAttendanceData] = useState<UserAttendanceRecord[]>([]);
+  const [callData, setCallData] = useState<UserCallData[]>([]);
+  const [machineData, setMachineData] = useState<SalesMachine[]>([]);
   const [visible, setVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("newCustomers");
 
@@ -75,8 +76,9 @@ export default function UserDashboard({id, owner = false}) {
     }
   }, [id, userID]);
 
-  async function fetchCallData(startDate, endDate) {
-    return new Promise((resolve) => {
+  async function fetchCallData(startDate: string, endDate: string) {
+
+    return new Promise<void>((resolve) => {
       axios
         .get(`/${id}/call?start_date=${startDate}&end_date=${endDate}`)
         .then((response) => {
@@ -88,7 +90,7 @@ export default function UserDashboard({id, owner = false}) {
     });
   }
 
-  async function fetchReimbursementData(startDate, endDate) {
+  async function fetchReimbursementData(startDate: string, endDate: string) {
     return new Promise((resolve, reject) => {
       axios
         .get(
@@ -105,7 +107,7 @@ export default function UserDashboard({id, owner = false}) {
     });
   }
 
-  async function fetchAttendanceData(startDate, endDate) {
+  async function fetchAttendanceData(startDate: string, endDate: string) {
     return new Promise((res, rej) => {
       axios
         .get(
@@ -113,11 +115,26 @@ export default function UserDashboard({id, owner = false}) {
         )
         .then((response) => {
           if (response.data.length > 0) {
-            const apiData = response.data.map((item) => {
+            const apiData = response.data.map((item: UserAttendanceRecord) => {
+              let status = item?.leave_status
+                ? `Leave ${item?.leave_status}`
+                : "Absent";
+
+              if (item?.time_in) {
+                const checkInTime = new Date(item.time_in);
+                const threshold = new Date(item.time_in);
+                threshold.setHours(10, 10, 0, 0);
+
+                if (checkInTime > threshold) {
+                  status = "Late";
+                } else {
+                  status = "Present";
+                }
+              }
               return {
                 ...item,
-                date: item?.time_in,
-                status: item?.time_in ? "Present" : "Absent",
+                date: item?.time_in || item?.leave_date,
+                status,
               };
             });
             setAttendanceData(apiData);
@@ -132,7 +149,7 @@ export default function UserDashboard({id, owner = false}) {
   }
 
   async function fetchData() {
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       axios
         .get(`/${id}/dashboard`)
         .then((response) => {
@@ -144,7 +161,7 @@ export default function UserDashboard({id, owner = false}) {
     });
   }
 
-  async function fetchVisitData(start, end) {
+  async function fetchVisitData(start: string, end: string) {
     return new Promise((res, rej) => {
       axios
         .get(`/${id}/visit?start_date=${start}&end_date=${end}`)
@@ -195,10 +212,10 @@ export default function UserDashboard({id, owner = false}) {
               }}
             />
             <CustomerEmployee
-              user_id={id}
+
               ownership={false}
               customer_data={
-                selectedOption && extraData ? extraData[selectedOption] : []
+                selectedOption && extraData ? extraData[selectedOption as Exclude<keyof UserExtraTypes, "user">] : []
               }
               onRefresh={() => fetchData()}
             />
@@ -225,26 +242,27 @@ export default function UserDashboard({id, owner = false}) {
 
   const RenderReimbursement = useCallback(() => {
     return (
-      <Card className="flex flex-1">
-        <CardContent className="pt-2 flex flex-1">
+     <Card className="flex flex-1">
+        <CardContent className="pt-0 flex flex-1">
           <Reimbursement
-            id={id}
+            id={Number(id) ?? null}
+              height="min-h-[calc(100dvh-420px)]"
             passingData={reimbursementData || []}
             onAddRefresh={async () => {
-                        const startDate = moment().startOf("month").toISOString();
-                        const endDate = moment().endOf("month").toISOString();
-                        await fetchReimbursementData(startDate, endDate);
-                      }}
-            onFilterReturn={async (start, end) =>
+              const startDate = moment().startOf("month").toISOString();
+              const endDate = moment().endOf("month").toISOString();
+              await fetchReimbursementData(startDate, endDate);
+            }}
+            onFilterReturn={async (start, end) => {
               await fetchReimbursementData(start, end)
-            }
-              onReset={async (start, end) => {
+            }}
+            onReset={async (start, end) => {
               await fetchReimbursementData(start, end);
             }}
             onUpdatePurpose={(val) => {
-                          const newData = updateItemPurpose(reimbursementData, val);
-                          setReimbursementData(newData);
-                        }}
+              const newData = updateItemPurpose(reimbursementData, val);
+              setReimbursementData(newData);
+            }}
           />
         </CardContent>
       </Card>
@@ -253,13 +271,14 @@ export default function UserDashboard({id, owner = false}) {
 
   const RenderAttendance = useCallback(() => {
     return (
-      <Card className="flex flex-1">
-        <CardContent className="pt-2 flex flex-1">
+        <Card className="flex flex-1 p-0">
+        <CardContent className="pt-0 flex flex-1">
           <Attendance
+            height="min-h-[calc(100dvh-420px)]"
             passingData={attendanceData}
-            onFilterReturn={async (start, end) =>
+            onFilterReturn={async (start, end) => {
               await fetchAttendanceData(start, end)
-            }
+            }}
           />
         </CardContent>
       </Card>
@@ -271,7 +290,7 @@ export default function UserDashboard({id, owner = false}) {
       <Card className="flex flex-1">
         <CardContent className="pt-2 flex flex-1">
           <Calls
-          id={id}
+            id={id}
             data={callData}
             onRefresh={async () => {
               const startDate = moment().startOf("month").toISOString();
@@ -287,9 +306,9 @@ export default function UserDashboard({id, owner = false}) {
 
   return (
     <div className="flex flex-1 gap-5">
-      <div className="flex flex-1 flex-col">
-        <div className="flex justify-between mb-8 flex-wrap gap-2">
-          <Link href={base_route ? `/${base_route}/profile` : "#"}>
+     <div className="flex flex-1 flex-col gap-4">
+        <div className="flex justify-between flex-wrap">
+         
             <div className="flex items-center">
               <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
               <div>
@@ -299,7 +318,7 @@ export default function UserDashboard({id, owner = false}) {
                 </p>
               </div>
             </div>
-          </Link>
+       
 
           <MachinesSoldCard
             value={data?.machinesSoldThisMonth || 0}
@@ -338,7 +357,7 @@ export default function UserDashboard({id, owner = false}) {
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="salary">Salary</TabsTrigger>
             <TabsTrigger value="issued">Returnable</TabsTrigger>
-              <TabsTrigger value="fines">Fines</TabsTrigger>
+            <TabsTrigger value="fines">Fines</TabsTrigger>
           </TabsList>
 
           <div className="flex flex-1 w-full mt-2">
@@ -353,7 +372,7 @@ export default function UserDashboard({id, owner = false}) {
             {activeTab === "salary" && (
               <Card className="flex flex-1">
                 <CardContent className="pt-2 flex flex-1">
-                  <SalaryRecord id={id} />
+                  <SalaryRecord id={Number(id) ?? null} />
                 </CardContent>
               </Card>
             )}
@@ -363,7 +382,7 @@ export default function UserDashboard({id, owner = false}) {
         </Tabs>
       </div>
 
-    {!owner && <AutoScrollMembers />}  
+      {!owner && <AutoScrollMembers />}
 
       <Dialog open={visible} onOpenChange={setVisible}>
         <DialogContent>
@@ -398,8 +417,8 @@ export default function UserDashboard({id, owner = false}) {
   );
 }
 
-function CustomersTab({ data }) {
-  const [localData, setLocalData] = useState([]);
+function CustomersTab({ data }: { data: SalesCustomer[] }) {
+  const [localData, setLocalData] = useState<(SalesCustomer & { overall: string })[]>([]);
   const { base_route } = useUserDetail();
 
   useEffect(() => {
@@ -422,7 +441,7 @@ function CustomersTab({ data }) {
     }
   }, [data]);
 
-  const RenderEachMachine = ({ machine, customer_id }) => {
+  const RenderEachMachine = ({ machine, customer_id }: { machine: SalesCustomerMachines, customer_id: number }) => {
     const totalPayments = machine.payments.reduce(
       (sum, payment) => sum + Number(payment.amount),
       0
@@ -438,7 +457,7 @@ function CustomersTab({ data }) {
             Data completion: {machine?.percentage_completion || 0}%
           </span>
           {Number(machine.price) === totalPayments &&
-          machine?.percentage_completion === 100 ? (
+            machine?.percentage_completion === 100 ? (
             <CheckCircle className="text-green-500 w-5 h-5 mr-2" />
           ) : (
             <Clock className="text-yellow-500 w-5 h-5 mr-2" />
@@ -446,7 +465,7 @@ function CustomersTab({ data }) {
 
           <Badge
             variant={
-              Number(machine.price) === totalPayments ? "success" : "warning"
+              Number(machine.price) === totalPayments ? "default" : "destructive"
             }
           >
             {Number(machine.price) === totalPayments ? "Completed" : "Pending"}
@@ -473,9 +492,8 @@ function CustomersTab({ data }) {
                     <AccordionTrigger className="px-4 py-2 hover:no-underline">
                       <div className="flex justify-between items-center w-full">
                         <Link
-                          href={`/${base_route}/${
-                            customer.member ? "member" : "customer"
-                          }/${customer.id}`}
+                          href={`/${base_route}/${customer.member ? "member" : "customer"
+                            }/${customer.id}`}
                         >
                           <h3 className="font-semibold text-lg hover:underline">
                             {customer.name}
@@ -534,14 +552,14 @@ function CustomersTab({ data }) {
   );
 }
 
-function Calls({ data, onRefresh, id }) {
+function Calls({ data, onRefresh, id }: { data: UserCallData[], onRefresh: () => Promise<void>, id: string | null | number }) {
   const [visible, setVisible] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<UserCallData | null>(null);
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [satisfactory, setSatisfactory] = useState(false);
-  const [next, setNext] = useState(null);
+  const [next, setNext] = useState<Date | undefined>(undefined);
   const [top, setTop] = useState(false);
 
   async function handleSaveFeedback() {
@@ -549,7 +567,6 @@ function Calls({ data, onRefresh, id }) {
     axios
       .post(`/${id}/feedback`, {
         feedback: feedback,
-        top_follow: false,
         type: "feedback",
         customer_id: selectedCustomer?.id,
         user_id: id,
@@ -565,7 +582,7 @@ function Calls({ data, onRefresh, id }) {
       });
   }
 
-  const RenderEachCall = ({ call }) => {
+  const RenderEachCall = ({ call }: { call: UserCallData }) => {
     return (
       <Card key={call.id} className="w-full">
         <CardContent className="py-4 px-6">
@@ -636,7 +653,7 @@ function Calls({ data, onRefresh, id }) {
                 <h1>Top Follow Up?</h1>
                 <Checkbox
                   checked={top}
-                  onCheckedChange={(checked) => {
+                  onCheckedChange={(checked: boolean) => {
                     setTop(checked);
                   }}
                 />
@@ -646,7 +663,7 @@ function Calls({ data, onRefresh, id }) {
                 <h1>Satisfactory?</h1>
                 <Checkbox
                   checked={satisfactory}
-                  onCheckedChange={(checked) => {
+                  onCheckedChange={(checked: boolean) => {
                     setSatisfactory(checked);
                   }}
                 />

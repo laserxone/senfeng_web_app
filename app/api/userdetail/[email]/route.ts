@@ -1,10 +1,10 @@
 import pool from "@/config/db";
 import { branchNavItem, complaintItem, dealerNavItems, employeeNavItems, FinanceItem, myCloud, ownerNavItems, POSNavItem, Prices, RepairAndMaintenance, StoreNavItem, teamAttendance, Tools } from "@/constants/data";
 import admin from "@/lib/firebaseAdmin";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
-export async function GET(req, { params }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ email: string }> }) {
     const { email } = await params
     const referrer = req.headers.get('referer')
     let city = ""
@@ -55,7 +55,6 @@ export async function GET(req, { params }) {
             if (user.designation == 'Store Manager') {
                 base_route = `${branchOffice}/store`
                 nav_items = [...StoreNavItem]
-                nav_items.push(POSNavItem)
             } else if (user.designation === 'Dealer') {
                 nav_items = [...dealerNavItems]
                 nav_items.push(FinanceItem)
@@ -78,7 +77,7 @@ export async function GET(req, { params }) {
             if (user.superadmin_cloud_access) {
                 nav_items.push(myCloud)
             }
-             if (user.team_attendance) {
+            if (user.team_attendance) {
                 nav_items.push(teamAttendance)
             }
             if (user.designation == 'Engineer') {
@@ -87,7 +86,7 @@ export async function GET(req, { params }) {
             if (user.designation == 'Sales') {
                 base_route = `${branchOffice}/sales`
                 nav_items.push(Prices)
-                 nav_items.push(FinanceItem)
+                nav_items.push(FinanceItem)
             }
             if (user.designation == 'Customer Relationship Manager') {
                 base_route = `${branchOffice}/crm`
@@ -110,20 +109,20 @@ export async function GET(req, { params }) {
 
         return NextResponse.json({ ...user, nav_items: nav_items, base_route: base_route, version_code: version_code, route_url: route_url }, { status: 200 })
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error inserting data: ', error);
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }
 
 }
 
-async function deleteUserFromFirebase(email) {
+async function deleteUserFromFirebase(email: string) {
 
     try {
         const user = await admin.auth().getUserByEmail(email);
         await admin.auth().deleteUser(user.uid);
         console.log(`Firebase user deleted: ${email}`);
-    } catch (error) {
+    } catch (error: any) {
         console.log(`Error deleting Firebase user: ${email}`, error?.message || error);
     }
 }

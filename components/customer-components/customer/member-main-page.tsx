@@ -19,7 +19,7 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { MyCustomer, MyCustomerResolved } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, Filter, PcCase, Trash2 } from "lucide-react";
+import { ArrowUpDown, Filter, Trash2 } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -320,7 +320,7 @@ export default function MemberMainPage({ onReturn }: { onReturn: (val: number) =
         }/customer?machines=true&member=true&mycustomer=true`
       )
       .then((response) => {
-        const apiData : MyCustomer[] = response.data;
+        const apiData: MyCustomer[] = response.data;
         const temp = apiData
           .map((item) => {
             return {
@@ -361,7 +361,7 @@ export default function MemberMainPage({ onReturn }: { onReturn: (val: number) =
               )
               : filteredData
           }
-          
+
           onRowClick={(val, e) => {
             if (val.id) {
 

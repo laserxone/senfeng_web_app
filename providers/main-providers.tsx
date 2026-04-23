@@ -8,6 +8,7 @@ import UserContextProvider from "@/store/context/UserContext";
 import NextTopLoader from 'nextjs-toploader';
 
 import { ReactNode } from "react";
+import { Toaster } from "sonner";
 
 
 export default function MainProviders({ children }: { children: ReactNode }) {
@@ -23,6 +24,7 @@ export default function MainProviders({ children }: { children: ReactNode }) {
                                 <NextTopLoader
                                     showSpinner={false} />
                                 {children}
+                                <Toaster richColors />
                             </TooltipProvider>
                         </ThemeProvider>
                     </NotificationProvider>

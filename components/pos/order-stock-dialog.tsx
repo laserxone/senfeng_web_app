@@ -27,6 +27,7 @@ import { Checkbox } from "../ui/checkbox";
 import Spinner from "../ui/spinner";
 import { UserSearch } from "../user-search";
 import RenderOtherStockItems from "./render-other-stock-items";
+import { toast } from "sonner";
 
 const OrderStockDialog = ({
   dialogVisible,
@@ -79,18 +80,12 @@ const OrderStockDialog = ({
 
     try {
       if (formattedData.length === 0) {
-        toast({
-          title: "No items selected",
-          description: "Please select items first.",
-        });
+        toast.info("No items selected");
         return;
       }
       await exportToExcel(headers, formattedData, "New Order.xlsx", true, "products", true);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error || "Error creating excel",
-      });
+      toast.error("Error creating excel");
     } finally {
       setLoading(false);
     }

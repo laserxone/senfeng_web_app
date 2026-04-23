@@ -13,15 +13,10 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { cn } from "@/lib/utils";
 import { AvailableMachinesProps } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 type LocalAvailableMachines = AvailableMachinesProps & {
   baseLabel: string;
@@ -38,7 +33,7 @@ export function AvailableMachines({
   placeholder = "Select machine...",
 
   onReturnItem = () => { },
-}: { value: number, onReturn: (val: number) => void, onReturnItem: (val: LocalAvailableMachines) => void, placeholder?: string }) {
+}: { value: number | null, onReturn: React.Dispatch<React.SetStateAction<number | null>>, onReturnItem: (val: LocalAvailableMachines) => void, placeholder?: string }) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState<LocalAvailableMachines[]>([]);
   const { userID } = useUserDetail();

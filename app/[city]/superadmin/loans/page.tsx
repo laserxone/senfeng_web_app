@@ -1,22 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import axios from "@/lib/axios";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import useUserDetail from "@/hooks/use-user-detail";
-import { UserSearch } from "@/components/user-search";
-import  Heading  from "@/components/ui/heading";
-import { Label } from "@/components/ui/label";
 import { RequiredStar } from "@/components/RequiredStar";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import Heading from "@/components/ui/heading";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { UserSearch } from "@/components/user-search";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { Loan } from "@/lib/types";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+type LoansByUser = {
+    [userId: number]: {
+        name: string;
+        loans: Loan[];
+    };
+};
 
 export default function EmployeeLoans() {
-    const [loans, setLoans] = useState([]);
+    const [loans, setLoans] = useState<Loan[]>([]);
     const { userID } = useUserDetail();
 
     useEffect(() => {
@@ -28,7 +35,8 @@ export default function EmployeeLoans() {
         setLoans(res.data);
     };
 
-    const loansByUser = loans.reduce((acc, loan) => {
+
+    const loansByUser = loans.reduce<LoansByUser>((acc, loan) => {
         if (!acc[loan.user_id]) acc[loan.user_id] = { name: loan.user_name, loans: [] };
         acc[loan.user_id].loans.push(loan);
         return acc;
@@ -49,7 +57,7 @@ export default function EmployeeLoans() {
 
 
 
-export function LoanIssueModal({ userID, onSuccess }) {
+export function LoanIssueModal({ userID, onSuccess }: { userID: number, onSuccess: () => Promise<void> }) {
     const [open, setOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [loanAmount, setLoanAmount] = useState("");
@@ -58,8 +66,8 @@ export function LoanIssueModal({ userID, onSuccess }) {
 
 
     const createLoan = async () => {
-        if (!selectedUser || !loanAmount) return   
-         toast.error( "Employee and amount required");
+        if (!selectedUser || !loanAmount) return
+        toast.error("Employee and amount required");
         setLoading(true);
         try {
             await axios.post(`/${userID}/loans`, {
@@ -88,11 +96,11 @@ export function LoanIssueModal({ userID, onSuccess }) {
                 </DialogHeader>
                 <div className="space-y-4 mt-2">
                     <div>
-                        <Label>Select Employee <RequiredStar/></Label>
+                        <Label>Select Employee <RequiredStar /></Label>
                         <UserSearch value={selectedUser} onReturn={setSelectedUser} />
                     </div>
                     <div>
-                        <Label>Loan amount <RequiredStar/></Label>
+                        <Label>Loan amount <RequiredStar /></Label>
                         <Input
                             type="number"
                             placeholder="Loan Amount"
@@ -118,7 +126,7 @@ export function LoanIssueModal({ userID, onSuccess }) {
     );
 }
 
-export function LoanPaymentModal({ userID, loan, onSuccess }) {
+export function LoanPaymentModal({ userID, loan, onSuccess }: { userID: number, loan: Loan, onSuccess: () => Promise<void> }) {
     const [open, setOpen] = useState(false);
     const [repaymentAmount, setRepaymentAmount] = useState("");
     const [loading, setLoading] = useState(false);
@@ -185,7 +193,7 @@ export function LoanPaymentModal({ userID, loan, onSuccess }) {
 }
 
 
-export function LoanAccordion({ loansByUser, userID, onUpdate }) {
+export function LoanAccordion({ loansByUser, userID, onUpdate }: { loansByUser: LoansByUser, userID: number, onUpdate: () => Promise<void> }) {
     return (
         <Accordion type="single" collapsible className="w-full space-y-2">
             {Object.entries(loansByUser).map(([userId, userData]) => (

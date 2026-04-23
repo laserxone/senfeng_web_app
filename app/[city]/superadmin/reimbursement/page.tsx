@@ -58,10 +58,11 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import exportToExcel from "@/lib/exportToExcel";
-import { MyCustomer } from "@/lib/types";
+import { MyCustomer, UserReimbursementType } from "@/lib/types";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ColumnDef } from "@tanstack/react-table";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import momentT from "moment-timezone";
@@ -73,8 +74,8 @@ import { z } from "zod";
 
 export default function Page() {
   const [filterVisible, setFilterVisible] = useState(false);
-  const [data, setData] = useState([]);
-  const [imageURL, setImageURL] = useState(null);
+  const [data, setData] = useState<UserReimbursementType[]>([]);
+  const [imageURL, setImageURL] = useState<UserReimbursementType | null>(null);
   const [visible, setVisible] = useState(false);
   const [reimbursementVisible, setReimbursementVisible] = useState(false);
   const [total, setTotal] = useState(0);
@@ -100,7 +101,7 @@ export default function Page() {
     }
   }, [userID]);
 
-  async function fetchData(startDate, endDate, user = null) {
+  async function fetchData(startDate: string, endDate: string, user: null | number = null) {
     return new Promise((resolve, reject) => {
       axios
         .get(
@@ -121,7 +122,7 @@ export default function Page() {
     });
   }
 
-  const columns = [
+  const columns: ColumnDef<UserReimbursementType>[] = [
     {
       accessorKey: "date",
       filterFn: "includesString",
@@ -443,9 +444,17 @@ const ImageSheet = ({
   description,
   id,
   onRefresh,
+}: {
+  visible: boolean,
+  onClose: () => void,
+  img: string | null,
+  submittedBy: string | null,
+  description: string | null,
+  id: number | null
+  onRefresh: (id: number) => void
 }) => {
   const [imageOpen, setImageOpen] = useState(false);
-  const [localImage, setLocalImage] = useState(null);
+  const [localImage, setLocalImage] = useState<string | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
   const isMountedRef = useRef(true);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -483,7 +492,7 @@ const ImageSheet = ({
     }
   }, [imageOpen, onClose]);
 
-  const handleZoomChange = useCallback((shouldZoom) => {
+  const handleZoomChange = useCallback((shouldZoom: boolean) => {
     setIsZoomed(shouldZoom);
     if (!shouldZoom) {
       setImageOpen(false);
@@ -500,19 +509,20 @@ const ImageSheet = ({
       }
     }
     axios.delete(`/${userID}/reimbursement/${id}`).then(async () => {
-      await onRefresh(id);
+      if (id)
+        onRefresh(id);
       setDeleteLoading(false);
-      handleClose(false);
+      handleClose();
     });
   }
 
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
       <SheetContent>
-        <SheetHeader className="mb-4">
+        <SheetHeader>
           <SheetTitle>Bill Detail</SheetTitle>
         </SheetHeader>
-        <ScrollArea className="flex flex-1 h-[90vh]">
+        <ScrollArea className="flex flex-1 h-[90vh] px-4">
           <div className="flex flex-col">
             <Button
               className="mb-2"
@@ -524,7 +534,7 @@ const ImageSheet = ({
                 // setShowConfirmation(true);
                 if (!id) return;
                 setDeleteLoading(true);
-                handleDelete(id);
+                handleDelete();
               }}
             >
               {deleteLoading ? (
@@ -703,7 +713,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }: { visible: bool
                   />
                 )}
 
-                
+
                 <Controller
                   name="title"
                   control={form.control}

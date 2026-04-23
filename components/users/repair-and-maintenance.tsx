@@ -8,25 +8,27 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { UserRepairing } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
-export default function RepairAndMaintenance({ data = [], onRefresh }) {
+export default function RepairAndMaintenance({ data = [], onRefresh, height }: { data: UserRepairing[], onRefresh: () => Promise<void>, height?: string }) {
 
 
-    const [selectedTask, setSelectedTask] = useState();
+    const [selectedTask, setSelectedTask] = useState<UserRepairing | null>(null);
     const { userID } = useUserDetail()
     const [filter, setFilter] = useState("all")
 
 
-    const columns = [
+    const columns: ColumnDef<UserRepairing>[] = [
         {
             accessorKey: "assign_date",
             filterFn: "includesString",
@@ -161,6 +163,7 @@ export default function RepairAndMaintenance({ data = [], onRefresh }) {
                 <PageTable
                     onRowClick={(val) => setSelectedTask(val)}
                     loading={false}
+                    height={height}
                     columns={columns}
                     data={filteredData}
                 >
@@ -195,7 +198,14 @@ export default function RepairAndMaintenance({ data = [], onRefresh }) {
     );
 }
 
-const UpdateTaskModal = ({ open, onChange, userID, onRefresh, task_id }) => {
+type UpdateTaskModal = {
+    open: boolean
+    onChange: () => void
+    onRefresh: () => Promise<void>
+    task_id?: number
+    userID: number
+}
+const UpdateTaskModal = ({ open, onChange, userID, onRefresh, task_id }: UpdateTaskModal) => {
     useEffect(() => {
         if (open) {
             setForm({ status: null, remarks_other: "" });
@@ -208,14 +218,13 @@ const UpdateTaskModal = ({ open, onChange, userID, onRefresh, task_id }) => {
     });
     const [loading, setLoading] = useState(false);
 
-    const updateForm = (key, value) => {
+    const updateForm = (key: string, value: string) => {
         setForm((prev) => ({
             ...prev,
             [key]: value,
         }));
     };
 
-    // Placeholder function for API call
     const handleSaveTask = async () => {
         setLoading(true);
 
@@ -227,7 +236,7 @@ const UpdateTaskModal = ({ open, onChange, userID, onRefresh, task_id }) => {
                     status: null,
                     remarks_other: "",
                 });
-                onChange(false);
+                onChange();
             })
             .finally(() => {
                 setLoading(false);
@@ -240,7 +249,7 @@ const UpdateTaskModal = ({ open, onChange, userID, onRefresh, task_id }) => {
                 <DialogHeader>
                     <DialogTitle>Update Task</DialogTitle>
                     <div className="flex flex-1 flex-col gap-4">
-                        {/* Status Buttons */}
+
                         <div>
                             <h1>
                                 Status <RequiredStar />
@@ -261,7 +270,7 @@ const UpdateTaskModal = ({ open, onChange, userID, onRefresh, task_id }) => {
                             </div>
                         </div>
 
-                        {/* Remarks */}
+
                         <div>
                             <h1>Remarks</h1>
                             <Textarea
@@ -271,7 +280,7 @@ const UpdateTaskModal = ({ open, onChange, userID, onRefresh, task_id }) => {
                             />
                         </div>
 
-                        {/* Save Button */}
+
                         <Button disabled={!form.status} onClick={handleSaveTask}>
                             {loading && <Spinner />} Save
                         </Button>

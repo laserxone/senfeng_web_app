@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import  Heading  from "@/components/ui/heading";
+import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -21,9 +21,8 @@ import Spinner from "@/components/ui/spinner";
 import { UserSearch } from "@/components/user-search";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
 import moment from "moment";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "react-medium-image-zoom/dist/styles.css";
 
 export default function Page() {

@@ -8,26 +8,31 @@ import { BadgeCount } from "../NotificationBadge";
 import Chatcomponent from "./chat-component";
 import UserChatIcon from "./chatIcon";
 import { playNotificationSound } from "../playNotificationSound";
+import { ConversationType, UserConversation } from "@/lib/types";
+
+
 
 export default function FloatingChat() {
   const { userID } = useUserDetail();
   const [open, setOpen] = useState(false);
-  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [selectedConversation, setSelectedConversation] = useState<ConversationType | null>(null);
   const [loading, setLoading] = useState(false);
   const { conversations } = useMessagesNotification();
 
-  const handleStartConversation = async (item) => {
-    const response = await axios.post(`/${userID}/conversations`, {
+  const handleStartConversation = async (item: UserConversation) => {
+    axios.post(`/${userID}/conversations`, {
       user1: userID,
       user2: item.id,
-    });
+    }).then((response) => {
+      if (response.data.id) {
+        setSelectedConversation({
+          id: response.data.id,
+          user: response.data?.otherUser,
+        });
+      }
+    })
 
-    if (response.data.id) {
-      setSelectedConversation({
-        id: response.data.id,
-        user: response.data?.otherUser,
-      });
-    }
+
   };
 
   useEffect(() => {
@@ -99,13 +104,13 @@ export default function FloatingChat() {
           </div>
 
           <div
-            className={`${!selectedConversation ? "hidden" : "block"} h-full`}
+            className={`${loading ? "block" : !selectedConversation ? "hidden" : "block"} h-full`}
           >
             <Chatcomponent
               id={selectedConversation?.id}
               user={selectedConversation?.user}
               stateLoading={loading}
-              onSetLoading={() => setLoading(false)}
+              onSetLoading={(val) => setLoading(val)}
             />
           </div>
         </div>

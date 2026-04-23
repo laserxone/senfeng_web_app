@@ -1,11 +1,11 @@
 'use client'
 
-import { createContext, useReducer, ReactNode, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
+import { createContext, ReactNode, useEffect, useReducer } from "react";
 import { SET_User } from "../action/UserAction";
 import { myUserReducer } from "../reducer/UserReducer";
 import { useAuth } from "./UserAuthContext";
-import { usePathname } from "next/navigation";
-import { useRouter } from "nextjs-toploader/app";
 
 export const UserContext = createContext<any>(undefined);
 

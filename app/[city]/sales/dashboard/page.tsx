@@ -48,7 +48,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
 
-export default function Page() { 
+export default function Page() {
   const [data, setData] = useState<SalesDashboard>();
   const { userID, base_route } = useUserDetail();
   const [visitData, setVisitData] = useState<SalesVisitTypes[]>([]);
@@ -113,11 +113,26 @@ export default function Page() {
         )
         .then((response) => {
           if (response.data.length > 0) {
-            const apiData = response.data.map((item : any) => {
+            const apiData = response.data.map((item: UserAttendanceRecord) => {
+              let status = item?.leave_status
+                ? `Leave ${item?.leave_status}`
+                : "Absent";
+
+              if (item?.time_in) {
+                const checkInTime = new Date(item.time_in);
+                const threshold = new Date(item.time_in);
+                threshold.setHours(10, 10, 0, 0);
+
+                if (checkInTime > threshold) {
+                  status = "Late";
+                } else {
+                  status = "Present";
+                }
+              }
               return {
                 ...item,
-                date: item?.time_in,
-                status: item?.time_in ? "Present" : "Absent",
+                date: item?.time_in || item?.leave_date,
+                status,
               };
             });
             setAttendanceData(apiData);
@@ -166,7 +181,7 @@ export default function Page() {
   const RenderVisitTab = useCallback(() => {
     return (
       <VisitTab
-        height="h-[calc(100dvh-260px)]"
+        height="h-[calc(100dvh-360px)]"
         id={userID}
         data={visitData}
         onRefresh={async () => {
@@ -175,7 +190,7 @@ export default function Page() {
           await fetchVisitData(startDate, endDate);
           await fetchData();
         }}
-        onFetchData={async (start: string, end: string) => {
+        onFetchData={async (start, end) => {
           await fetchVisitData(start, end);
         }}
       />
@@ -195,7 +210,7 @@ export default function Page() {
               }}
             />
             <CustomerEmployee
-             
+             height="min-h-[calc(100dvh-470px)]"
               ownership={false}
               customer_data={
                 selectedOption && extraData ? extraData[selectedOption as Exclude<keyof UserExtraTypes, "user">] : []
@@ -211,8 +226,9 @@ export default function Page() {
   const RenderMembers = useCallback(() => {
     return (
       <Card className="flex flex-1">
-        <CardContent className="p-0 flex flex-1">
+        <CardContent className="pt-0 pr-0 flex flex-1">
           <CustomersTab
+          height="h-[calc(100dvh-380px)]"
             data={
               data?.customers.filter((customer) => customer.sales.length > 0) ||
               []
@@ -226,9 +242,10 @@ export default function Page() {
   const RenderReimbursement = useCallback(() => {
     return (
       <Card className="flex flex-1">
-        <CardContent className="pt-2 flex flex-1">
+        <CardContent className="pt-0 flex flex-1">
           <Reimbursement
             id={userID}
+            height="min-h-[calc(100dvh-530px)]"
             passingData={reimbursementData || []}
             onAddRefresh={async () => {
               const startDate = moment().startOf("month").toISOString();
@@ -252,13 +269,14 @@ export default function Page() {
 
   const RenderAttendance = useCallback(() => {
     return (
-      <Card className="flex flex-1">
-        <CardContent className="pt-2 flex flex-1">
+      <Card className="flex flex-1 p-0">
+        <CardContent className="pt-0 flex flex-1">
           <Attendance
+            height="min-h-[calc(100dvh-470px)]"
             passingData={attendanceData}
-            onFilterReturn={async (start, end) =>
+            onFilterReturn={async (start, end) => {
               await fetchAttendanceData(start, end)
-            }
+            }}
           />
         </CardContent>
       </Card>
@@ -268,7 +286,7 @@ export default function Page() {
   const RenderCallTab = useCallback(() => {
     return (
       <Card className="flex flex-1">
-        <CardContent className="pt-2 flex flex-1">
+        <CardContent className="pt-0 flex flex-1">
           <Calls
             data={callData}
             onRefresh={async () => {
@@ -285,19 +303,17 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 gap-5">
-      <div className="flex flex-1 flex-col">
-        <div className="flex justify-between mb-8 flex-wrap gap-2">
-          <Link href={base_route ? `/${base_route}/profile` : "#"}>
-            <div className="flex items-center">
-              <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
-              <div>
-                <h1 className="text-3xl font-bold">{data?.user?.name}</h1>
-                <p className="text-muted-foreground">
-                  {data?.user?.designation}
-                </p>
-              </div>
-            </div>
-          </Link>
+      <div className="flex flex-1 flex-col gap-4">
+        <div className="flex items-center">
+          <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
+          <div>
+            <h1 className="text-3xl font-bold">{data?.user?.name}</h1>
+            <p className="text-muted-foreground">
+              {data?.user?.designation}
+            </p>
+          </div>
+        </div>
+        <div className="flex justify-between gap-4 flex-wrap">
 
           <MachinesSoldCard
             value={data?.machinesSoldThisMonth || 0}
@@ -349,26 +365,26 @@ export default function Page() {
 
             {activeTab === "attendance" && <RenderAttendance />}
             {activeTab === "salary" && (
-              <Card className="flex flex-1">
-                <CardContent className="pt-2 flex flex-1">
-                  <SalaryRecord id={userID} />
+              <Card className="flex flex-1 p-0">
+                <CardContent className="pt-0 flex flex-1">
+                  <SalaryRecord id={userID} height="min-h-[calc(100dvh-420px)]" />
                 </CardContent>
               </Card>
             )}
-            {activeTab === "issued" && <RenderReturnable />}
-            {activeTab === 'fines' && <RenderFines />}
+            {activeTab === "issued" && <RenderReturnable height="min-h-[calc(100dvh-420px)]" />}
+            {activeTab === 'fines' && <RenderFines height="min-h-[calc(100dvh-480px)]" />}
           </div>
         </Tabs>
       </div>
 
-      <AutoScrollMembers />
-      <MachinesSold visible={visible} setVisible={setVisible} machineData={machineData} base_route={base_route}/>
+      {/* <AutoScrollMembers /> */}
+      <MachinesSold visible={visible} setVisible={setVisible} machineData={machineData} base_route={base_route} />
     </div>
   );
 }
 
-function CustomersTab({ data }: {data : SalesCustomer[]}) {
-  const [localData, setLocalData] = useState<(SalesCustomer & {overall : string})[]>([]);
+function CustomersTab({ data, height = "h-[calc(100dvh-250px)]" }: { data: SalesCustomer[], height ?:string }) {
+  const [localData, setLocalData] = useState<(SalesCustomer & { overall: string })[]>([]);
   const { base_route } = useUserDetail();
 
   useEffect(() => {
@@ -391,7 +407,7 @@ function CustomersTab({ data }: {data : SalesCustomer[]}) {
     }
   }, [data]);
 
-  const RenderEachMachine = ({ machine, customer_id } : {machine : SalesCustomerMachines, customer_id : number}) => {
+  const RenderEachMachine = ({ machine, customer_id }: { machine: SalesCustomerMachines, customer_id: number }) => {
     const totalPayments = machine.payments.reduce(
       (sum, payment) => sum + Number(payment.amount),
       0
@@ -426,7 +442,7 @@ function CustomersTab({ data }: {data : SalesCustomer[]}) {
   };
 
   return (
-    <ScrollArea className="h-[calc(100dvh-250px)] w-full">
+    <ScrollArea className={`${height} w-full pr-4`}>
       <Accordion type="single" collapsible className="w-full space-y-4 p-2">
         {localData.length == 0 ? (
           <Label>No Data found</Label>
@@ -491,9 +507,6 @@ function CustomersTab({ data }: {data : SalesCustomer[]}) {
                   </Card>
                 </AccordionItem>
               </div>
-              {/* <Button variant="outline" className="mt-1">
-                Satisfaction
-              </Button> */}
             </div>
           ))
         )}
@@ -502,7 +515,7 @@ function CustomersTab({ data }: {data : SalesCustomer[]}) {
   );
 }
 
-function Calls({ data, onRefresh } : {data : UserCallData[], onRefresh : () => Promise<void>}) {
+function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Promise<void> }) {
   const [visible, setVisible] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<UserCallData | null>(null);
   const [feedback, setFeedback] = useState("");
@@ -533,10 +546,10 @@ function Calls({ data, onRefresh } : {data : UserCallData[], onRefresh : () => P
       });
   }
 
-  const RenderEachCall = ({ call } : {call : UserCallData}) => {
+  const RenderEachCall = ({ call }: { call: UserCallData }) => {
     return (
-      <Card key={call.id} className="w-full">
-        <CardContent className="py-4 px-6">
+      <Card key={call.id} className="w-full p-0">
+        <CardContent className="px-4 py-2">
           <div className="grid grid-cols-12 gap-4 items-center">
             {/* Name / Owner */}
             <div className="col-span-4 font-semibold text-lg truncate">
@@ -569,11 +582,11 @@ function Calls({ data, onRefresh } : {data : UserCallData[], onRefresh : () => P
 
   return (
     <div className="w-full">
-      <ScrollArea className="h-[calc(100dvh-290px)] p-5 ">
+      <ScrollArea className="h-[calc(100dvh-380px)] p-4 ">
         {data.length === 0 ? (
           <Label>No calls remaining</Label>
         ) : (
-          <div className="space-y-3">
+          <div className="flex flex-col gap-4 p-2">
             {data.map((call) => (
               <RenderEachCall call={call} key={call.id} />
             ))}
@@ -604,8 +617,8 @@ function Calls({ data, onRefresh } : {data : UserCallData[], onRefresh : () => P
                 <h1>Top Follow Up?</h1>
                 <Checkbox
                   checked={top}
-                  onCheckedChange={(checked) => {
-                    setTop(checked === true);
+                  onCheckedChange={(checked: boolean) => {
+                    setTop(checked);
                   }}
                 />
               </div>
@@ -614,8 +627,8 @@ function Calls({ data, onRefresh } : {data : UserCallData[], onRefresh : () => P
                 <h1>Satisfactory?</h1>
                 <Checkbox
                   checked={satisfactory}
-                  onCheckedChange={(checked) => {
-                    setSatisfactory(checked === true);
+                  onCheckedChange={(checked: boolean) => {
+                    setSatisfactory(checked);
                   }}
                 />
               </div>
@@ -635,37 +648,37 @@ function Calls({ data, onRefresh } : {data : UserCallData[], onRefresh : () => P
   );
 }
 
-function MachinesSold ({visible, setVisible, machineData, base_route} : {visible : boolean, setVisible : (val : boolean)=> void, machineData : SalesMachine[], base_route : string}) {
+function MachinesSold({ visible, setVisible, machineData, base_route }: { visible: boolean, setVisible: (val: boolean) => void, machineData: SalesMachine[], base_route: string }) {
 
   return (
-     <Dialog open={visible} onOpenChange={setVisible}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Machines Sold</DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="h-[70vh]">
-            <div className="flex flex-1 flex-col gap-2">
-              <div className="grid grid-cols-3 font-semibold border-b pb-2">
-                <div>Serial No</div>
-                <div>Company</div>
-                <div>Owner</div>
-              </div>
-
-              {machineData.map((item, index) => (
-                <Link
-                  key={index}
-                  target="_blank"
-                  href={`/${base_route}/member/${item.customer_id}/${item.id}`}
-                  className="grid grid-cols-3 hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded"
-                >
-                  <div>{item.serial_no}</div>
-                  <div>{item.customer_name || "-"}</div>
-                  <div>{item.customer_owner || "-"}</div>
-                </Link>
-              ))}
+    <Dialog open={visible} onOpenChange={setVisible}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Machines Sold</DialogTitle>
+        </DialogHeader>
+        <ScrollArea className="h-[70vh]">
+          <div className="flex flex-1 flex-col gap-2">
+            <div className="grid grid-cols-3 font-semibold border-b pb-2">
+              <div>Serial No</div>
+              <div>Company</div>
+              <div>Owner</div>
             </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
+
+            {machineData.map((item, index) => (
+              <Link
+                key={index}
+                target="_blank"
+                href={`/${base_route}/member/${item.customer_id}/${item.id}`}
+                className="grid grid-cols-3 hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded"
+              >
+                <div>{item.serial_no}</div>
+                <div>{item.customer_name || "-"}</div>
+                <div>{item.customer_owner || "-"}</div>
+              </Link>
+            ))}
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
   )
 }

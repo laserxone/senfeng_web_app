@@ -1,4 +1,3 @@
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,37 +8,31 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-import { useState } from "react";
-import { sendPasswordResetEmail } from "firebase/auth";
+import { cn } from "@/lib/utils";
 import { auth } from "@/config/firebase";
-import { Loader2 } from "lucide-react";
+import { sendPasswordResetEmail } from "firebase/auth";
+import React, { useState } from "react";
+import { toast } from "sonner";
 import Spinner from "./ui/spinner";
 
-export function ForgetPasswordForm({ className, ...props }) {
- 
+export function ForgetPasswordForm() {
+
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleResetEmail(event) {
-    setLoading(true);
+  async function handleResetEmail(event: React.FormEvent<HTMLFormElement>) {
+
     event.preventDefault();
+    setLoading(true);
     await sendPasswordResetEmail(auth, email, {
-      url : `https://app.senfenglaserpk.com/login`
+      url: `https://app.senfenglaserpk.com/login`
     })
       .then(() => {
-        toast({
-          title: "Email sent",
-          description: "Check your email for reset link.",
-        });
+        toast.success("Check your email for reset link.");
       })
       .catch((err) => {
         console.log(err.message);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: err?.message || "Error sending reset link",
-        });
+        toast.error(err?.message || "Error sending reset link",);
       })
       .finally(() => {
         setLoading(false);
@@ -47,7 +40,7 @@ export function ForgetPasswordForm({ className, ...props }) {
   }
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-6")}>
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Forgor your password?</CardTitle>

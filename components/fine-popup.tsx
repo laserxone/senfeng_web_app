@@ -23,7 +23,8 @@ export default function FinePopup() {
     }
   }, [fine]);
 
-  async function handleRead(id) {
+  async function handleRead(id : number | undefined) {
+    if(!id) return
     setOpen(false);
     axios.put(`/${userID}/fine/${id}`, { is_read: true });
   }
@@ -43,7 +44,7 @@ export default function FinePopup() {
         <p className="text-lg mb-6">
           <span className="font-semibold">Reason:</span> {fine?.reason}
         </p>
-        <Button onClick={() => handleRead(fine.id)} className="w-full">
+        <Button onClick={() => handleRead(fine?.id)} className="w-full">
           OK, Got it
         </Button>
       </DialogContent>

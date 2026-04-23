@@ -56,25 +56,16 @@ const TaskDetail = ({
       });
   }
 
- 
-
   return (
     <Sheet open={visible} onOpenChange={onClose}>
       <SheetContent
-        className="w-[50vw] max-w-[50vw]"
-        style={{ width: "100%", maxWidth: "50vw" }}
       >
         <SheetHeader>
           <SheetTitle>Task Detail</SheetTitle>
           <SheetDescription>Check task details</SheetDescription>
-          {/* <div className="w-full flex justify-end">
-            <Button onClick={handleDelete}>
-              {deleteLoading && <Spinner />} Delete
-            </Button>
-          </div> */}
         </SheetHeader>
-        <div className="w-full py-6 px-4 bg-white rounded-lg shadow-lg mt-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+       
+          <div className="px-4 grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="flex flex-col gap-4">
               <h3 className="text-sm font-medium text-gray-600">Status</h3>
               <h3 className="text-sm font-medium text-gray-600">
@@ -120,7 +111,7 @@ const TaskDetail = ({
               )}
             </div>
           </div>
-        </div>
+       
 
         <SheetFooter className={"mt-4"}>
           {detail?.status !== "Completed" && (

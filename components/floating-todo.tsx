@@ -1,21 +1,22 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { useTodos } from "@/hooks/use-todos";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
 import { X } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { BadgeCount } from "./NotificationBadge";
 import { Checkbox } from "./ui/checkbox";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
-import useUserDetail from "@/hooks/use-user-detail";
 
-import Spinner from "./ui/spinner";
 import moment from "moment";
+import Spinner from "./ui/spinner";
 
-function FloatingTodoButton({ onClick, pending }) {
+
+
+function FloatingTodoButton({ onClick, pending }: { onClick: (e: React.MouseEvent<HTMLDivElement, MouseEvent> | undefined) => void, pending: number }) {
   return (
     <div>
       <BadgeCount count={pending} offset={{ top: 0, right: 0 }}>
@@ -34,13 +35,14 @@ function FloatingTodoButton({ onClick, pending }) {
   );
 }
 
+
 export default function FloatingTodo() {
   const [isOpen, setIsOpen] = useState(false);
   const { tasks, setTasks, fetchTasks } = useTodos();
   const [newTask, setNewTask] = useState("");
   const { userID } = useUserDetail();
   const [loading, setLoading] = useState(false);
- 
+
 
   useEffect(() => {
     if (userID) fetchTasks();
@@ -68,7 +70,7 @@ export default function FloatingTodo() {
     }
   };
 
-  const toggleTask = async (id, done) => {
+  const toggleTask = async (id: number, done: boolean) => {
 
     setTasks((prev) =>
       prev.map((t) => (t.id === id ? { ...t, is_done: done } : t)),
@@ -91,12 +93,6 @@ export default function FloatingTodo() {
     try {
       await axios.get(`/${userID}/todo/clear`);
       await fetchTasks();
-    } catch (error) {
-      toast({
-        title: "Failed to clear",
-        description: error.message || "An error occurred",
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
@@ -112,9 +108,8 @@ export default function FloatingTodo() {
       <div
         className={`absolute bottom-0 right-0  w-[calc(100vw-30px)] sm:w-96 h-[600px]
     bg-white dark:bg-neutral-900 rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col
-    overflow-hidden border transition-all duration-200 z-10 sm:mx-0 ${
-      isOpen ? "block" : "hidden"
-    }`}
+    overflow-hidden border transition-all duration-200 z-10 sm:mx-0 ${isOpen ? "block" : "hidden"
+          }`}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
           <div className="flex items-center gap-2">
@@ -151,7 +146,7 @@ export default function FloatingTodo() {
                           <Checkbox
                             className="mt-1"
                             checked={t.is_done}
-                            onCheckedChange={(checked) =>
+                            onCheckedChange={(checked: boolean) =>
                               toggleTask(t.id, checked)
                             }
                           />
@@ -197,7 +192,7 @@ export default function FloatingTodo() {
                           <Checkbox
                             className="mt-1"
                             checked={t.is_done}
-                            onCheckedChange={(checked) =>
+                            onCheckedChange={(checked: boolean) =>
                               toggleTask(t.id, checked)
                             }
                           />

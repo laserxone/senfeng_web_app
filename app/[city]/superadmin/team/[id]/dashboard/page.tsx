@@ -1,12 +1,12 @@
 import UserDashboard from "@/components/user-dashboard"
-import { use } from "react"
+import { useParams } from "next/navigation"
 
-export default function Page({ params }) {
-    const { id } = use(params)
+export default function Page() {
+    const { id } = useParams()
 
     if (!id) return
 
     return (
-        <UserDashboard id={id} owner={true}/>
+        <UserDashboard id={id} owner={true} />
     )
 }

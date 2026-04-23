@@ -13,7 +13,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { UserFines } from "@/lib/types";
 
 
-const columns : ColumnDef<UserFines>[] = [
+const columns: ColumnDef<UserFines>[] = [
   {
     accessorKey: "created_at",
     filterFn: "includesString",
@@ -105,7 +105,7 @@ const columns : ColumnDef<UserFines>[] = [
   },
 ];
 
-const RenderFines = () => {
+const RenderFines = ({ height }: { height?: string }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
@@ -128,7 +128,7 @@ const RenderFines = () => {
     }
   }, [userID]);
 
-  async function fetchData(startDate : string, endDate : string) {
+  async function fetchData(startDate: string, endDate: string) {
     setLoading(true);
     return new Promise((resolve, reject) => {
       axios
@@ -149,10 +149,11 @@ const RenderFines = () => {
 
   return (
     <Card className="flex flex-1">
-      <CardContent className="pt-2 flex flex-1">
+      <CardContent className="pt-0 flex flex-1">
         <div className="flex flex-1 flex-col space-y-4">
           <div className="flex flex-1">
             <PageTable
+              height={height}
               loading={loading}
               columns={columns}
               data={data}

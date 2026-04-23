@@ -844,7 +844,7 @@ export default function POS() {
                   handleUpdateInvoice();
                 }}
                 disabled={invoiceItems.length === 0}
-                className="h-[100px] w-[100px] text-wrap"
+                className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
               >
                 Update Invoice
               </Button>
@@ -901,7 +901,7 @@ export default function POS() {
 
             {selectedSearchItem && selectedSearchItem?.id && (
               <Link href={`/${base_route}/pos/${selectedSearchItem?.id}`} target="_blank">
-                <Button className="h-[100px] w-[100px] text-wrap">
+                <Button  className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center">
                   <div>Payment Record</div>
                 </Button>
               </Link>

@@ -82,7 +82,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import Image from "next/image";
-import * as pdfjsLib from "pdfjs-dist/build/pdf.mjs";
+import * as pdfjsLib from "pdfjs-dist";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
@@ -122,9 +122,9 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
   }, [id, userID]);
 
   async function fetchData(id: number | string) {
-    
-      onLoading?.(true);
-    
+
+    onLoading?.(true);
+
     try {
       const response: { data: MachineResponse } = await axios.get(`/${userID}/machine/${id}`);
 
@@ -200,44 +200,43 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
           return (
             <div className="flex items-center ml-2">
               {currentItem?.status === "rejected" ? (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <div>
-                        <TriangleAlert className="text-red-600 h-5 w-5 animate-pulse-opacity mr-2" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-red-600">
-                      <p className="text-white">{currentItem?.comment}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+
+                    <TriangleAlert className="text-red-600 h-5 w-5 animate-pulse-opacity mr-2" />
+
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-red-600" arrowColor="bg-red-600 fill-red-600">
+                    <p className="text-white">{currentItem?.comment}</p>
+                  </TooltipContent>
+                </Tooltip>
+
               ) : currentItem?.status === "approved" ? (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <div>
-                        <ShieldCheck className="text-green-600 h-5 w-5" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-green-600 mr-2">
-                      <p className="text-white">Payment verified</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+
+                <Tooltip>
+                  <TooltipTrigger>
+
+                    <ShieldCheck className="text-green-600 h-5 w-5" />
+
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-green-600 mr-2" arrowColor="bg-green-600 fill-green-600">
+                    <p className="text-white">Payment verified</p>
+                  </TooltipContent>
+                </Tooltip>
               ) : (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <div>
-                        <Info className="text-orange-600 h-5 w-5 animate-pulse-opacity mr-2" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-orange-600">
-                      <p className="text-white">Need verification</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+
+                <Tooltip>
+                  <TooltipTrigger>
+
+                    <Info className="text-orange-600 h-5 w-5 animate-pulse-opacity mr-2" />
+
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-orange-600" arrowColor="bg-orange-600 fill-orange-600">
+                    <p className="text-white">Need verification</p>
+                  </TooltipContent>
+                </Tooltip>
+
               )}
               <div>{row.getValue("track")}</div>
             </div>
@@ -496,37 +495,39 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
           {/* Alerts */}
           <div className="flex gap-2 mt-2 md:mt-0">
             {showAlert && (
-              <TooltipProvider>
+              
                 <Tooltip>
-                  <TooltipTrigger>
-                    <div>
+                  <TooltipTrigger asChild>
+                    
                       <Siren className="text-red-600 h-8 w-8 animate-pulse-opacity" />
-                    </div>
+                    
                   </TooltipTrigger>
-                  <TooltipContent className="bg-red-600 mr-2">
+                  <TooltipContent className="bg-red-600 mr-2" arrowColor="bg-red-600 fill-red-600">
                     <p className="text-white">Duplicate TID found</p>
                   </TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
+              
             )}
 
             {unmatched.length > 0 && (
-              <TooltipProvider>
+              
                 <Tooltip>
-                  <TooltipTrigger>
-                    <div>
+                  <TooltipTrigger asChild>
+                    
                       <InfoIcon className="text-red-600 h-8 w-8 animate-pulse-opacity" />
-                    </div>
+                    
                   </TooltipTrigger>
-                  <TooltipContent className="bg-red-600 mr-2">
+                  <TooltipContent className="bg-red-600 mr-2" arrowColor="bg-red-600 fill-red-600">
+                    <div>
                     {unmatched.map((item, index) => (
                       <p key={index} className="text-white">
                         {item.replace(/_/g, " ").toUpperCase()}
                       </p>
                     ))}
+                    </div>
                   </TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
+              
             )}
           </div>
         </div>
@@ -613,20 +614,20 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                   )}
 
                   {machine?.cancelled_detail && (
-                    <TooltipProvider>
+                    
                       <Tooltip>
                         <TooltipTrigger>
                           <div>
                             <Badge variant={"destructive"}>Cancelled</Badge>
                           </div>
                         </TooltipTrigger>
-                        <TooltipContent className="bg-red-600">
+                        <TooltipContent className="bg-red-600" arrowColor="bg-red-600 fill-red-600">
                           <p className="text-white">
                             {machine?.cancelled_reason}
                           </p>
                         </TooltipContent>
                       </Tooltip>
-                    </TooltipProvider>
+                    
                   )}
                 </div>
                 {machine ? (
@@ -966,7 +967,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
         visible={addPayment}
         onClose={setAddPayment}
         machine_id={id}
-        onRefresh={async () => await fetchData(id)}
+        onRefresh={async () => { await fetchData(id) }}
       />
       {selectedPayment && (
         <EditPayment
@@ -979,7 +980,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
           }}
           machine_id={id}
           data={selectedPayment}
-          onRefresh={async () => await fetchData(id)}
+          onRefresh={async () => { await fetchData(id) }}
         />
       )}
 
@@ -1785,8 +1786,8 @@ const ViewImagesSheet = ({
           const ctx = canvas.getContext("2d");
           canvas.width = viewport.width;
           canvas.height = viewport.height;
-
-          await page.render({ canvasContext: ctx, viewport }).promise;
+          if (!ctx) return
+          await page.render({ canvasContext: ctx, viewport, canvas }).promise;
           const imgData = canvas.toDataURL("image/jpeg");
 
           localImages.push(imgData);
@@ -2218,8 +2219,8 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }: { cust
             const ctx = canvas.getContext("2d");
             canvas.width = viewport.width;
             canvas.height = viewport.height;
-
-            await page.render({ canvasContext: ctx, viewport }).promise;
+            if (!ctx) return
+            await page.render({ canvasContext: ctx, viewport, canvas }).promise;
             const imgData = canvas.toDataURL("image/jpeg");
 
             localImages.push(imgData);

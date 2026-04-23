@@ -3,7 +3,7 @@
 import { db } from "@/config/firebase";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 
-export async function TriggerFirebase(id : string, sender = null) {
+export async function TriggerFirebase(id : string, sender : undefined | string ) {
   if (id) {
     await setDoc(doc(db, "messages_meta", id), {
       updated: serverTimestamp(),

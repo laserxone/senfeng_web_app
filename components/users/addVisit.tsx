@@ -56,13 +56,13 @@ type FormValues = z.infer<typeof formSchema>;
 
 
 type VisitTabProps = {
-  id: any;
-  data: any;
-  onRefresh: any;
+  id: number | null | string;
+  data: SalesVisitTypes[];
+  onRefresh: () => Promise<void>;
   disable?: boolean;
   customer_data?: number | null;
   height?: string;
-  onFetchData?: any;
+  onFetchData?: (a: string, b: string, c?: number) => Promise<void>;
 };
 export default function VisitTab({
   id,
@@ -170,7 +170,7 @@ export default function VisitTab({
   }
 
   return (
-    <ScrollArea className={`${height} w-full px-4`}>
+    <div className="w-full">
       <div className="space-y-4 w-full">
         <Card>
           <CardContent className="p-4 space-y-4">
@@ -214,7 +214,7 @@ export default function VisitTab({
                     visible={filterVisible}
                     onClose={() => setFilterVisible(false)}
                     onReturn={async (val) => {
-                      await onFetchData(val.start, val.end, val.user);
+                      await onFetchData?.(val.start, val.end, val.user);
                     }}
                   />
 
@@ -315,41 +315,43 @@ export default function VisitTab({
         {feedbacks.length > 0 && (
           <div className="space-y-3">
             {feedbacks.map((feedback, index) => (
-              <Card key={index}>
-                <CardHeader className="p-0 flex overflow-hidden">
-                  <div
-                    className="flex flex-1 justify-between items-center bg-gray-200 dark:bg-gray-700 py-2 px-4"
-                    style={{
-                      borderTopRightRadius: 10,
-                      borderTopLeftRadius: 10,
-                    }}
-                  >
-                    <div className="flex gap-5">
-                      <Label style={{ fontWeight: 600, fontSize: "16px" }}>
-                        Visit Record
-                      </Label>
-                      <Label>Operated by: {feedback?.user_name}</Label>
-                    </div>
-                    <div className="flex gap-5">
-                      <Label>
-                        {moment(new Date(feedback.created_at)).format(
-                          "YYYY-MM-DD hh:mm A"
+              <Card key={index} className="p-0">
+
+                <CardContent className="p-0">
+                  <CardHeader className="p-0 flex overflow-hidden">
+                    <div
+                      className="flex flex-1 justify-between items-center bg-gray-200 dark:bg-gray-700 py-2 px-4"
+                      style={{
+                        borderTopRightRadius: 10,
+                        borderTopLeftRadius: 10,
+                      }}
+                    >
+                      <div className="flex gap-5">
+                        <Label style={{ fontWeight: 600, fontSize: "16px" }}>
+                          Visit Record
+                        </Label>
+                        <Label>Operated by: {feedback?.user_name}</Label>
+                      </div>
+                      <div className="flex gap-5">
+                        <Label>
+                          {moment(new Date(feedback.created_at)).format(
+                            "YYYY-MM-DD hh:mm A"
+                          )}
+                        </Label>
+                        {selectedDelete === feedback.id ? (
+                          <Spinner />
+                        ) : (
+                          <Trash2
+                            size={16}
+                            color="red"
+                            className="hover:opacity-70 cursor-pointer"
+                            onClick={() => handleDelete(feedback)}
+                          />
                         )}
-                      </Label>
-                      {selectedDelete === feedback.id ? (
-                        <Spinner />
-                      ) : (
-                        <Trash2
-                          size={16}
-                          color="red"
-                          className="hover:opacity-70 cursor-pointer"
-                          onClick={() => handleDelete(feedback)}
-                        />
-                      )}
+                      </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4">
+                  </CardHeader>
+                  <div className="p-2">
                   <Link
                     target="blank"
                     href={`/${base_route}/${feedback.customer_member ? "member" : "customer"
@@ -383,6 +385,7 @@ export default function VisitTab({
                     {feedback.signature && <MyImg img={feedback.signature} />}
                     {feedback.image && <MyImg img={feedback.image} />}
                   </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -404,7 +407,8 @@ export default function VisitTab({
           </div>
         </DialogContent>
       </Dialog>
-    </ScrollArea>
+
+    </div>
   );
 }
 

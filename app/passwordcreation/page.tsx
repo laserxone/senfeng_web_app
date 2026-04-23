@@ -17,6 +17,7 @@ import { confirmPasswordReset } from "firebase/auth";
 import { CircleCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function Page() {
   const [password, setPassword] = useState("");
@@ -25,7 +26,7 @@ export default function Page() {
   const [matched, setMatched] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
- 
+
 
   useEffect(() => {
     if (password.length > 7) {
@@ -72,31 +73,24 @@ export default function Page() {
     try {
       const oobCode = new URLSearchParams(window.location.search).get(
         "oobCode"
-      );
+      ) ?? "";
       const mode = new URLSearchParams(window.location.search).get("mode");
       const continueUrl = new URLSearchParams(window.location.search).get(
         "continueUrl"
-      );
+      ) ?? "";
       confirmPasswordReset(auth, oobCode, password)
         .then(() => {
-          setLoading(false); 
-          toast({
-            title: "Successs",
-            description: "Password creation successfull, login to continue",
-          });
+          setLoading(false);
+          toast.success("Password creation successfull, login to continue");
           router.replace(continueUrl);
         })
         .catch((e) => {
-            console.log(e)
+          console.log(e)
           setLoading(false);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: e?.message || "Error password creation",
-          });
+          toast.error(e?.message || "Error password creation");
         });
     } catch (error) {
-        console.log(error)
+      console.log(error)
     }
     // setShowSuccessfull(true);
   }
@@ -113,66 +107,66 @@ export default function Page() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-             
+
+              <div className="grid gap-6">
                 <div className="grid gap-6">
-                  <div className="grid gap-6">
-                    <div className="grid gap-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="*********"
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <div className="flex items-center">
-                        <Label htmlFor="password">Confirm password</Label>
-                      </div>
-                      <Input
-                        placeholder="*********"
-                        id="confirmpassword"
-                        type="password"
-                        required
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <div className="flex flex-row gap-2 items-center">
-                        <CircleCheck
-                          color={validation[0] ? "#66b2b2" : "#CED3DB"}
-                        />
-                        <Label style={{color :validation[0] ? "green" : "#475467"}}>
-                          Must be at least 8 characters
-                        </Label>
-                      </div>
-                      <div className="flex flex-row gap-2 items-center">
-                        <CircleCheck
-                          color={validation[1] ? "#66b2b2" : "#CED3DB"}
-                        />
-                        <Label style={{color :validation[1] ? "green" : "#475467"}} >
-                          Must contain one number
-                        </Label>
-                      </div>
-                    </div>
-
-                    <Button onClick={handlePasswordCreation} disabled={!validation[0] || !validation[1] || !matched || loading} type="submit" className="w-full">
-                      {loading && <Spinner />}
-                      Proceed
-                    </Button>
+                  <div className="grid gap-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="*********"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
                   </div>
-                  <div className="text-center text-sm">
-                    Already have an account?{" "}
-                    <a href="/login" className="underline underline-offset-4">
-                      Login
-                    </a>
+                  <div className="grid gap-2">
+                    <div className="flex items-center">
+                      <Label htmlFor="password">Confirm password</Label>
+                    </div>
+                    <Input
+                      placeholder="*********"
+                      id="confirmpassword"
+                      type="password"
+                      required
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
                   </div>
+
+                  <div className="flex flex-col gap-2">
+                    <div className="flex flex-row gap-2 items-center">
+                      <CircleCheck
+                        color={validation[0] ? "#66b2b2" : "#CED3DB"}
+                      />
+                      <Label style={{ color: validation[0] ? "green" : "#475467" }}>
+                        Must be at least 8 characters
+                      </Label>
+                    </div>
+                    <div className="flex flex-row gap-2 items-center">
+                      <CircleCheck
+                        color={validation[1] ? "#66b2b2" : "#CED3DB"}
+                      />
+                      <Label style={{ color: validation[1] ? "green" : "#475467" }} >
+                        Must contain one number
+                      </Label>
+                    </div>
+                  </div>
+
+                  <Button onClick={handlePasswordCreation} disabled={!validation[0] || !validation[1] || !matched || loading} type="submit" className="w-full">
+                    {loading && <Spinner />}
+                    Proceed
+                  </Button>
                 </div>
-            
+                <div className="text-center text-sm">
+                  Already have an account?{" "}
+                  <a href="/login" className="underline underline-offset-4">
+                    Login
+                  </a>
+                </div>
+              </div>
+
             </CardContent>
           </Card>
         </div>

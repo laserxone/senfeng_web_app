@@ -1,8 +1,19 @@
 "use client"
 import { LoginForm } from "@/components/login-form"
+import Spinner from "@/components/ui/spinner"
+import { useAuth } from "@/store/context/UserAuthContext"
 
-import { useEffect } from "react"
 export default function LoginPage() {
+
+  const { loading: AuthLoading } = useAuth()
+
+  if (AuthLoading) {
+    return (
+      <div className="w-screen h-screen flex items-center justify-center">
+        <Spinner />
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10 w-full">

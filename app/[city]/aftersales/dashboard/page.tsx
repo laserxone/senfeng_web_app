@@ -53,6 +53,7 @@ type CustomerEmployeeAfterSalesProps = {
   handleClear: () => void,
   selectedOption: string,
   setSelectedOption: Dispatch<SetStateAction<string>>,
+  height ?:string
 }
 
 type DataKeys = Exclude<keyof DashboardData, "user">;
@@ -106,11 +107,26 @@ export default function Page() {
         )
         .then((response) => {
           if (response.data.length > 0) {
-            const apiData = response.data.map((item: any) => {
+            const apiData = response.data.map((item: UserAttendanceRecord) => {
+              let status = item?.leave_status
+                ? `Leave ${item?.leave_status}`
+                : "Absent";
+
+              if (item?.time_in) {
+                const checkInTime = new Date(item.time_in);
+                const threshold = new Date(item.time_in);
+                threshold.setHours(10, 10, 0, 0);
+
+                if (checkInTime > threshold) {
+                  status = "Late";
+                } else {
+                  status = "Present";
+                }
+              }
               return {
                 ...item,
-                date: item?.time_in,
-                status: item?.time_in ? "Present" : "Absent",
+                date: item?.time_in || item?.leave_date,
+                status,
               };
             });
             setAttendanceData(apiData);
@@ -158,6 +174,7 @@ export default function Page() {
     });
   }
 
+  console.log(data)
 
 
   useEffect(() => {
@@ -190,6 +207,7 @@ export default function Page() {
         <CardContent className="pt-5 flex flex-1">
           <div className="flex flex-1 gap-5">
             <CustomerEmployeeAfterSales
+             height="min-h-[calc(100dvh-400px)]"
               data={filterData ? filterData : data}
               user_id={data?.user?.id as any}
               onRefresh={async () => {
@@ -210,10 +228,11 @@ export default function Page() {
 
   const RenderReimbursement = useCallback(() => {
     return (
-      <Card className="flex flex-1">
-        <CardContent className="pt-5 flex flex-1">
+    <Card className="flex flex-1">
+        <CardContent className="pt-0 flex flex-1">
           <Reimbursement
             id={userID}
+              height="min-h-[calc(100dvh-420px)]"
             passingData={reimbursementData || []}
             onAddRefresh={async () => {
               const startDate = moment().startOf("month").toISOString();
@@ -237,9 +256,10 @@ export default function Page() {
 
   const RenderAttendance = useCallback(() => {
     return (
-      <Card className="flex flex-1">
-        <CardContent className="pt-2 flex flex-1">
+       <Card className="flex flex-1 p-0">
+        <CardContent className="pt-0 flex flex-1">
           <Attendance
+          height="min-h-[calc(100dvh-360px)]"
             passingData={attendanceData}
             onFilterReturn={async (start, end) => {
               await fetchAttendanceData(start, end);
@@ -252,8 +272,8 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 gap-5">
-      <div className="flex flex-1 flex-col">
-        <div className="flex justify-between mb-4 flex-wrap">
+      <div className="flex flex-1 flex-col gap-4">
+        <div className="flex justify-between flex-wrap">
           <div className="flex items-center ">
             <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
             <div>
@@ -282,20 +302,20 @@ export default function Page() {
             {activeTab === "reimbursement" && <RenderReimbursement />}
             {activeTab === "attendance" && <RenderAttendance />}
             {activeTab === "task" && (
-              <Card className="flex flex-1">
-                <CardContent className="pt-2 flex flex-1">
-                  <TeamTask />
-                </CardContent>
-              </Card>
+              <Card className="flex flex-1 p-0">
+                             <CardContent className="pt-2 flex flex-1">
+                               <TeamTask height="min-h-[calc(100dvh-360px)]" />
+                             </CardContent>
+                           </Card>
             )}
             {activeTab === "salary" && (
-              <Card className="flex flex-1">
+               <Card className="flex flex-1 p-0">
                 <CardContent className="pt-2 flex flex-1">
-                  <SalaryRecord id={userID} />
+                  <SalaryRecord id={userID} height="min-h-[calc(100dvh-320px)]"/>
                 </CardContent>
               </Card>
             )}
-            {activeTab === "fines" && <RenderFines />}
+           {activeTab === 'fines' && <RenderFines height="min-h-[calc(100dvh-370px)]"/>}
           </div>
         </Tabs>
       </div>
@@ -313,6 +333,7 @@ const CustomerEmployeeAfterSales = ({
   handleClear,
   selectedOption,
   setSelectedOption,
+  height
 }: CustomerEmployeeAfterSalesProps) => {
   const { base_route, customer_add_access, designation, route_branch } =
     useUserDetail();
@@ -480,6 +501,7 @@ const CustomerEmployeeAfterSales = ({
 
         <div className="flex flex-1">
           <PageTable
+          height={height}
             columns={columns}
             data={data?.[selectedOption as DataKeys] || []}
             onRowClick={(val, event) => {
