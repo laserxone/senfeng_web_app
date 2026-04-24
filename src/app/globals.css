@@ -37,14 +37,14 @@ body {
     --ring: 220 12% 40%; /* Slightly visible ring */
 
     /* Chart Colors - More vibrant and visually distinct */
-    --chart-1: 15 85% 55%; /* Warm orange */
-    --chart-2: 160 65% 38%; /* Rich green */
-    --chart-3: 205 50% 30%; /* Deep ocean blue */
-    --chart-4: 45 85% 62%; /* Soft golden yellow */
-    --chart-5: 30 90% 60%; /* Vibrant mango */
-    --chart-6: 340 80% 50%; /* Bold pink */
-    --chart-7: 210 95% 45%; /* Electric blue */
-    --chart-8: 260 75% 55%; /* Vibrant purple */
+    --chart-1: 15 85% 55%; 
+    --chart-2: 160 65% 38%; 
+    --chart-3: 205 50% 30%; 
+    --chart-4: 45 85% 62%; 
+    --chart-5: 30 90% 60%; 
+    --chart-6: 340 80% 50%; 
+    --chart-7: 210 95% 45%; 
+    --chart-8: 260 75% 55%; 
 
     --radius: 0.75rem; /* Slightly rounded edges for a modern feel */
 
