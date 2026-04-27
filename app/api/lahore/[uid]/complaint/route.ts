@@ -22,8 +22,6 @@ export async function GET(req : NextRequest, { params } : {params : Promise<{ ui
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    console.log(user.designation)
-
     if (user.complaint_assigned || isAdmin) {
       query = `
         SELECT 

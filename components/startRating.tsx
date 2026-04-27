@@ -4,7 +4,7 @@ import { useState } from "react";
 
 
 
-const StarRating = ({ value = 0, onChange }: { value: number, onChange?: (val: number) => void }) => {
+const StarRating = ({ value = 0, onChange }: { value?: number, onChange?: (val: number) => void }) => {
   const [rating, setRating] = useState(value);
 
   const handleRating = (newRating: number) => {

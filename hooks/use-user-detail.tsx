@@ -1,5 +1,6 @@
 "use client";
 
+import { NavItems } from "@/lib/types";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { UserContext } from "@/store/context/UserContext";
 import { useContext } from "react";
@@ -23,7 +24,7 @@ const useUserDetail = () => {
   const dms_write_access = data.dms_write_access ?? false;
   const customer_delete_access = data.customer_delete_access ?? false;
   const customer_add_access = data.customer_add_access ?? false
-  const nav_items = data.nav_items ?? []
+  const nav_items : NavItems[] = data.nav_items ?? []
   const branch_expenses_assigned = data.branch_expenses_assigned ?? false
   const branch_expenses_write_access = data.branch_expenses_write_access ?? false
   const branch_expenses_delete_access = data.branch_expenses_delete_access ?? false

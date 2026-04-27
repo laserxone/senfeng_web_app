@@ -1,3 +1,4 @@
+import { ActionImpl } from 'kbar';
 import * as React from 'react';
 
 const ResultItem = React.forwardRef(
@@ -6,8 +7,12 @@ const ResultItem = React.forwardRef(
       action,
       active,
       currentRootActionId
+    } : {
+      action : ActionImpl,
+      active :boolean,
+      currentRootActionId : string
     },
-    ref
+    ref : React.Ref<HTMLDivElement> | undefined
   ) => {
     const ancestors = React.useMemo(() => {
       if (!currentRootActionId) return action.ancestors;

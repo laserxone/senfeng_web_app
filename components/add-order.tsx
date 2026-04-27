@@ -22,11 +22,14 @@ import {
 import Spinner from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import axios from "@/lib/axios";
+import { InventoryItem, StockProps } from "@/lib/types";
 import "react-medium-image-zoom/dist/styles.css";
 import { InventorySearch } from "./inventory-select";
 
-const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
-  const [items, setItems] = useState([
+type InventoryErrors = Partial<Record<keyof InventoryItem, string>>[];
+
+const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, user_id: number, id?: number | null }) => {
+  const [items, setItems] = useState<InventoryItem[]>([
     {
       name: "",
       qty: 1,
@@ -42,12 +45,12 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
       status: "Order Placed",
       isExisting: false,
       inventory_id: null,
-      show : true
+      show: true
     },
   ]);
-  const [errors, setErrors] = useState([]);
+  const [errors, setErrors] = useState<InventoryErrors>([]);
   const [loading, setLoading] = useState(false);
-  const [existingInventory, setExistingInventory] = useState([]);
+  const [existingInventory, setExistingInventory] = useState<StockProps[]>([]);
 
   const [manual, setManual] = useState(false);
 
@@ -66,16 +69,30 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
     });
   }
 
-  const handleItemChange = (index, field, value) => {
+  const handleItemChange = <K extends keyof InventoryItem>(
+    index: number,
+    field: K,
+    value: InventoryItem[K]
+  ) => {
     const newItems = [...items];
-    newItems[index][field] = value;
+
+    newItems[index] = {
+      ...newItems[index],
+      [field]: value,
+    };
+
     setItems(newItems);
 
     setErrors((prevErrors) => {
       const newErrors = [...prevErrors];
+
       if (newErrors[index]) {
-        newErrors[index][field] = "";
+        newErrors[index] = {
+          ...newErrors[index],
+          [field]: "",
+        };
       }
+
       return newErrors;
     });
   };
@@ -98,12 +115,12 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
         status: "Order Placed",
         isExisting: false,
         inventory_id: null,
-        show : true
+        show: true
       },
     ]);
   };
 
-  const removeItem = (index) => {
+  const removeItem = (index: number) => {
     const newItems = [...items];
     newItems.splice(index, 1);
     setItems(newItems);
@@ -114,10 +131,10 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
   };
 
   const validateItems = () => {
-    const newErrors = [];
+    const newErrors: any[] = [];
 
-    items.forEach((item, index) => {
-      const itemErrors = {};
+    items.forEach((item) => {
+      const itemErrors: any = {};
 
       // qty required and positive
       if (!item.qty || item.qty <= 0) {
@@ -163,7 +180,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
 
   const handleSubmit = async () => {
     if (validateItems()) {
-      let processedItems = [];
+      let processedItems: any[] = [];
 
       items.forEach((item) => {
         if (item.is_machine && item.qty > 1) {
@@ -223,14 +240,14 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
           payload
         );
         await onRefresh();
-        handleClose();
+        handleClose(false);
       } finally {
         setLoading(false);
       }
     }
   };
 
-  function handleClose(val) {
+  function handleClose(val: boolean) {
     onClose(val);
     setItems([
       {
@@ -248,7 +265,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
         status: "Order Placed",
         isExisting: false,
         inventory_id: null,
-        show : false
+        show: false
       },
     ]);
 
@@ -262,7 +279,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
           <DialogTitle>Add in existing order</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="min-h-[500px] max-h-[70vh] pr-4">
+        <ScrollArea className="h-[70vh] pr-4">
           <div className="space-y-6">
             {items.map((item, index) => (
               <div key={index} className="border p-4 rounded-md space-y-4">
@@ -291,25 +308,25 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                   </Label>
                 </div>
 
-                 <div className="flex items-center gap-2 mt-2">
-                      <Switch
-                        checked={item.is_machine}
-                        onCheckedChange={(val) =>
-                          handleItemChange(index, "is_machine", val)
-                        }
-                      />
-                      <Label>Is Machine?</Label>
-                    </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <Switch
+                    checked={item.is_machine}
+                    onCheckedChange={(val) =>
+                      handleItemChange(index, "is_machine", val)
+                    }
+                  />
+                  <Label>Is Machine?</Label>
+                </div>
 
-                    <div className="flex items-center gap-2 mt-2">
-                      <Switch
-                        checked={item.show}
-                        onCheckedChange={(val) =>
-                          handleItemChange(index, "show", val)
-                        }
-                      />
-                      <Label>{item.show ? "Show" : "Hide"}</Label>
-                    </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <Switch
+                    checked={item.show}
+                    onCheckedChange={(val) =>
+                      handleItemChange(index, "show", val)
+                    }
+                  />
+                  <Label>{item.show ? "Show" : "Hide"}</Label>
+                </div>
 
                 {item.isExisting ? (
                   <>
@@ -320,27 +337,27 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                         data={existingInventory}
                         value={item.inventory_id}
                         onReturn={(val) => {
-                          handleItemChange(index, "inventory_id", val.id);
-                          handleItemChange(index, "name", val.name);
+                          handleItemChange(index, "inventory_id", val?.id ?? null);
+                          handleItemChange(index, "name", val?.name ?? "");
                           handleItemChange(
                             index,
                             "price",
-                            parseFloat(val?.price || 0)
+                            parseFloat(val?.price || "0")
                           );
                           handleItemChange(
                             index,
                             "buying_price",
-                            parseFloat(val?.buying || 0)
+                            parseFloat(val?.buying || "0")
                           );
                           handleItemChange(
                             index,
                             "threshold",
-                            parseInt(val?.threshold || 0)
+                            parseInt(String(val?.threshold) || "0")
                           );
                           handleItemChange(
                             index,
                             "new_order",
-                            parseInt(val?.new_order || 0)
+                            parseInt(String(val?.new_order) || "0")
                           );
                         }}
                       />
@@ -355,15 +372,15 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                       <Input
                         type="number"
                         value={item.qty}
-                        onChange={(e) =>
-                          handleItemChange(
-                            index,
-                            "qty",
-                            isNaN(e.target.value)
-                              ? ""
-                              : parseInt(e.target.value)
-                          )
-                        }
+                        onChange={(e) => {
+                          if (!isNaN(Number(e.target.value))) {
+                            handleItemChange(
+                              index,
+                              "qty",
+                              parseInt(e.target.value)
+                            )
+                          }
+                        }}
                       />
                       {errors[index]?.qty && (
                         <p className="text-red-600 text-sm mt-1">
@@ -396,15 +413,15 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                             <Input
                               type="number"
                               value={item.qty}
-                              onChange={(e) =>
-                                handleItemChange(
-                                  index,
-                                  "qty",
-                                  isNaN(e.target.value)
-                                    ? ""
-                                    : parseInt(e.target.value)
-                                )
-                              }
+                              onChange={(e) => {
+                                if (!isNaN(Number(e.target.value))) {
+                                  handleItemChange(
+                                    index,
+                                    "qty",
+                                    parseInt(e.target.value)
+                                  )
+                                }
+                              }}
                             />
                             {errors[index]?.qty && (
                               <p className="text-red-600 text-sm mt-1">
@@ -417,14 +434,15 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                             <Input
                               type="number"
                               value={item.price}
-                              onChange={(e) =>
-                                handleItemChange(
-                                  index,
-                                  "price",
-                                  isNaN(e.target.value)
-                                    ? ""
-                                    : parseFloat(e.target.value)
-                                )
+                              onChange={(e) => {
+                                if (!isNaN(Number(e.target.value))) {
+                                  handleItemChange(
+                                    index,
+                                    "price",
+                                    parseInt(e.target.value)
+                                  )
+                                }
+                              }
                               }
                             />
                           </div>
@@ -433,14 +451,15 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                             <Input
                               type="number"
                               value={item.buying_price}
-                              onChange={(e) =>
-                                handleItemChange(
-                                  index,
-                                  "buying_price",
-                                  isNaN(e.target.value)
-                                    ? ""
-                                    : parseFloat(e.target.value)
-                                )
+                              onChange={(e) => {
+                                if (!isNaN(Number(e.target.value))) {
+                                  handleItemChange(
+                                    index,
+                                    "buying_price",
+                                    parseInt(e.target.value)
+                                  )
+                                }
+                              }
                               }
                             />
                           </div>
@@ -449,14 +468,15 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                             <Input
                               type="number"
                               value={item.threshold}
-                              onChange={(e) =>
-                                handleItemChange(
-                                  index,
-                                  "threshold",
-                                  isNaN(e.target.value)
-                                    ? ""
-                                    : parseInt(e.target.value)
-                                )
+                              onChange={(e) => {
+                                if (!isNaN(Number(e.target.value))) {
+                                  handleItemChange(
+                                    index,
+                                    "threshold",
+                                    parseInt(e.target.value)
+                                  )
+                                }
+                              }
                               }
                             />
                           </div>
@@ -465,14 +485,15 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                             <Input
                               type="number"
                               value={item.new_order}
-                              onChange={(e) =>
-                                handleItemChange(
-                                  index,
-                                  "new_order",
-                                  isNaN(e.target.value)
-                                    ? ""
-                                    : parseInt(e.target.value)
-                                )
+                              onChange={(e) => {
+                                if (!isNaN(Number(e.target.value))) {
+                                  handleItemChange(
+                                    index,
+                                    "new_order",
+                                    parseInt(e.target.value)
+                                  )
+                                }
+                              }
                               }
                             />
                           </div>
@@ -480,7 +501,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                       </>
                     )}
 
-                   
+
 
                     {item.is_machine && (
                       <div className="flex items-center gap-2 mt-2">
@@ -538,7 +559,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                                 handleItemChange(index, "machine_model", val)
                               }
                             >
-                              <SelectTrigger>
+                              <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select Model" />
                               </SelectTrigger>
                               <SelectContent>
@@ -592,7 +613,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                                 handleItemChange(index, "machine_source", val)
                               }
                             >
-                              <SelectTrigger>
+                              <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select Source" />
                               </SelectTrigger>
                               <SelectContent>
@@ -632,7 +653,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                                 handleItemChange(index, "machine_power", val)
                               }
                             >
-                              <SelectTrigger>
+                              <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select Power" />
                               </SelectTrigger>
                               <SelectContent>
@@ -653,16 +674,15 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
                           <Input
                             type="number"
                             value={item.qty}
-                            onChange={(e) =>
-                              handleItemChange(
-                                index,
-                                "qty",
-                                e.target.value
-                                  ? isNaN(e.target.value)
-                                    ? ""
-                                    : parseInt(e.target.value)
-                                  : ""
-                              )
+                            onChange={(e) => {
+                              if (!isNaN(Number(e.target.value))) {
+                                handleItemChange(
+                                  index,
+                                  "qty",
+                                  parseInt(e.target.value)
+                                )
+                              }
+                            }
                             }
                           />
                         </div>
@@ -680,7 +700,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }) => {
         </Button>
 
         <DialogFooter className="mt-6">
-          <Button type="button" variant="secondary" onClick={handleClose}>
+          <Button type="button" variant="secondary" onClick={() => handleClose(false)}>
             Cancel
           </Button>
           <Button disabled={loading} onClick={handleSubmit}>

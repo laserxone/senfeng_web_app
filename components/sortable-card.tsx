@@ -1,8 +1,12 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Order } from "@/lib/types";
 
-function SortableCard({ order, children, dragHandle }) {
+function SortableCard({ order, children, dragHandle } : {order : Order | null, children : ReactNode, dragHandle : React.ReactElement;}) {
+
+  if(!order?.id) return
+
   const {
     attributes,
     listeners,

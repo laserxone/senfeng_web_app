@@ -2,8 +2,8 @@
 "use client";
 
 import useUserDetail from "@/hooks/use-user-detail";
-import { useEffect, useMemo, useState } from "react";
 import axios from "@/lib/axios";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   Select,
@@ -13,10 +13,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 
+import Heading from "@/components/ui/heading";
+import Spinner from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -25,21 +27,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import  Heading  from "@/components/ui/heading";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
-import Spinner from "@/components/ui/spinner";
+
+type TableType = {
+  table_name : string
+}
+
+type ColumnType = {
+  name : string
+  type: string
+}
 
 
 
 export default function BackendPage() {
   const { userID } = useUserDetail();
 
-  const [tables, setTables] = useState([]);
+  const [tables, setTables] = useState<TableType[]>([]);
   const [selected, setSelected] = useState("");
 
-  const [columns, setColumns] = useState([]);
-  const [rows, setRows] = useState([]);
+  const [columns, setColumns] = useState<ColumnType[]>([]);
+  const [rows, setRows] = useState<any[]>([]);
   const [originalRows, setOriginalRows] = useState([]);
 
   const [search, setSearch] = useState("");
@@ -51,7 +59,7 @@ const isMobile = useIsMobile()
   const PAGE_SIZE = 15;
 
 
-  const [editedRows, setEditedRows] = useState({});
+  const [editedRows, setEditedRows] = useState<any>({});
 
   const hasChanges = useMemo(() => Object.keys(editedRows).length > 0, [editedRows]);
 
@@ -87,7 +95,6 @@ const isMobile = useIsMobile()
     });
   }, [userID, selected]);
 
-
   const filteredRows = useMemo(() => {
     const q = (search || "").toLowerCase();
 
@@ -120,23 +127,23 @@ const isMobile = useIsMobile()
   const paginatedRows = filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
 
-  function isoToLocalInput(iso) {
+  function isoToLocalInput(iso : string) {
     if (!iso) return "";
     const d = new Date(iso);
     const tzOffset = d.getTimezoneOffset() * 60000;
     const local = new Date(d.getTime() - tzOffset);
     return local.toISOString().slice(0, 16);
   }
-  function localInputToIso(localValue) {
+  function localInputToIso(localValue : string) {
     if (!localValue) return null;
     const d = new Date(localValue);
     return d.toISOString();
   }
 
 
-  function handleEdit(rowId, colName, newValue) {
-    setEditedRows((prev) => {
-      const next = { ...prev };
+  function handleEdit(rowId : number, colName : string, newValue : string | null | string[] | boolean | number) {
+    setEditedRows((prev : any) => {
+      const next : any = { ...prev };
       const rowEdits = { ...(next[rowId] || {}) };
 
 
@@ -144,7 +151,7 @@ const isMobile = useIsMobile()
       else rowEdits[colName] = newValue;
 
 
-      const origRow = originalRows.find((r) => String(r.id) === String(rowId));
+      const origRow = originalRows.find((r : {id : number}) => String(r.id) === String(rowId));
       const origVal = origRow ? origRow[colName] : undefined;
 
       const changed =
@@ -197,11 +204,11 @@ const isMobile = useIsMobile()
   }
 
 
-  function revertRow(rowId) {
-    const orig = originalRows.find((r) => String(r.id) === String(rowId));
+  function revertRow(rowId : number) {
+    const orig = originalRows.find((r : {id : number}) => String(r.id) === String(rowId));
     if (!orig) return;
     setRows((prev) => prev.map((r) => (String(r.id) === String(rowId) ? JSON.parse(JSON.stringify(orig)) : r)));
-    setEditedRows((prev) => {
+    setEditedRows((prev : any) => {
       const next = { ...prev };
       delete next[rowId];
       return next;
@@ -216,12 +223,12 @@ const isMobile = useIsMobile()
   }
 
 
-function renderCellInput(row, col) {
+function renderCellInput(row :any, col : ColumnType) {
   const colName = col.name;
   const type = (col.type || "").toLowerCase();
   const value = row[colName];
 
-  const origRow = originalRows.find((r) => String(r.id) === String(row.id));
+  const origRow = originalRows.find((r : {id : number}) => String(r.id) === String(row.id));
   const origVal = origRow ? origRow[colName] : undefined;
 
   const changed =
@@ -233,9 +240,7 @@ function renderCellInput(row, col) {
 
   const changedClass = changed ? "bg-yellow-200 dark:bg-yellow-700" : "";
 
-  // -------------------------------------------------------------
-  // SUPPORT FOR ARRAYS
-  // -------------------------------------------------------------
+  
   if (type.endsWith("[]") || type.includes("array")) {
     let arrString = "";
 
@@ -259,7 +264,7 @@ function renderCellInput(row, col) {
           const raw = e.target.value.trim();
 
           if (raw === "") {
-            handleEdit(row.id, colName, null); // Allow NULL
+            handleEdit(row.id, colName, null);
             return;
           }
 
@@ -267,7 +272,7 @@ function renderCellInput(row, col) {
 
           // Convert numbers if the array type is numeric
           if (["int", "integer", "numeric", "bigint", "smallint"].some((t) => type.includes(t))) {
-            parsedArray = parsedArray.map((n) => (isNaN(n) ? n : Number(n)));
+            parsedArray = parsedArray.map((n : any) => (isNaN(n) ? n : Number(n)));
           }
 
           handleEdit(row.id, colName, parsedArray);

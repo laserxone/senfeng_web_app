@@ -3,6 +3,7 @@ import { Button } from "../ui/button";
 import Spinner from "../ui/spinner";
 import axios from "@/lib/axios";
 import useUserDetail from "@/hooks/use-user-detail";
+import { toast } from "sonner";
 
 
 export default function DeleteInvoice({ item, onRefresh }) {
@@ -15,7 +16,7 @@ export default function DeleteInvoice({ item, onRefresh }) {
 
     try {
       const res = await axios.post(`/${userID}/pos/deleteinvoice`, data);
-      toast({ title: "Invoice deleted successfully" });
+      toast.success( "Invoice deleted successfully" );
     } finally {
       setLoading(false);
         onRefresh()

@@ -17,6 +17,7 @@ import axios from "@/lib/axios";
 import { getDownloadURL, ref } from "firebase/storage";
 import { memo, useCallback, useEffect, useState } from "react";
 import "react-medium-image-zoom/dist/styles.css";
+import { toast } from "sonner";
 
 const DetailComponent = ({ id }) => {
     const { userID } = useUserDetail()
@@ -110,10 +111,7 @@ const DetailComponent = ({ id }) => {
                     setLeavingDate(apiData?.leaving_date || null);
                     setActive(apiData?.active || false)
                 } else {
-                    toast({
-                        title: "Employee details not found",
-                        variant: "destructive",
-                    });
+                    toast.error("Employee details not found");
                 }
             })
             .finally(() => {
@@ -165,7 +163,7 @@ const DetailComponent = ({ id }) => {
                 active: active
             })
             .then(() => {
-                toast({ title: "Information updated" });
+                toast.success( "Information updated");
             })
             .finally(() => {
                 setDataLoading(false);

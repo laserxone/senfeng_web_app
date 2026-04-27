@@ -19,7 +19,7 @@ type EngineerModalType = {
 const EngineerModal = ({ engineersModal, setEngineersModal, allEngineersData, onRefresh }: EngineerModalType) => {
   return (
     <Dialog open={engineersModal} onOpenChange={setEngineersModal}>
-      <DialogContent className="max-w-[90vw] h-[90vh] min-w-[90vw]">
+      <DialogContent className="max-w-[90vw] min-w-[90vw]">
         <DialogHeader>
           <DialogTitle>Issued Items To Engineers</DialogTitle>
         </DialogHeader>

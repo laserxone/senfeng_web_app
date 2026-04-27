@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { getDownloadURL, getStorage, ref } from 'firebase/storage';
 import moment from 'moment';
+import { MachineResponse } from '@/lib/types';
 
 const styles = StyleSheet.create({
   page: {
@@ -52,7 +53,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const CustomerPDF = ({ data }) => (
+const CustomerPDF = ({ data } :{data : MachineResponse}) => (
   <Document>
     <Page size="A4" style={styles.page}>
 
@@ -127,7 +128,7 @@ const CustomerPDF = ({ data }) => (
   </Document>
 );
 
-export const downloadCustomerZip = async (data) => {
+export const downloadCustomerZip = async (data : MachineResponse) => {
   const customerName = data.customer.name || data.customer.owner || 'Customer';
   const folderName = customerName.replace(/\s+/g, '_');
   const zip = new JSZip();
@@ -150,7 +151,7 @@ for (const payment of data.machine.payments) {
     const blob = await res.blob();
 
     const ext = imageUrl.split('.').pop()?.split('?')[0] || 'png';
-    paymentsFolder.file(`payment_${payment.track}.png`, blob);
+    paymentsFolder?.file(`payment_${payment.track}.png`, blob);
 
   } catch (error) {
     console.warn(`Could not fetch image for track ${payment.track}`, error);
@@ -177,7 +178,7 @@ for (const payment of data.machine.payments) {
 
         // Preserve extension if possible
         const ext = imageUrl.split('.').pop()?.split('?')[0] || 'png';
-        contractFolder.file(`contract_${i + 1}.png`, blob);
+        contractFolder?.file(`contract_${i + 1}.png`, blob);
       } catch (error) {
         console.warn(`Could not fetch contract image ${i + 1}`, error);
       }

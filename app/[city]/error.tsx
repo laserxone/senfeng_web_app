@@ -6,12 +6,13 @@ import { AlertCircle } from "lucide-react";
 
 export default function Error({
   error,
-  unstable_retry,
+  reset ,
 }: {
   error: Error & { digest?: string }
-  unstable_retry: () => void
+  reset : () => void
 }) {
   return (
+
     <div className="flex flex-col h-screen items-center justify-center w-full text-center">
       <div className="space-y-4">
         <Alert variant="destructive">
@@ -21,7 +22,7 @@ export default function Error({
             Failed to load data: {error?.message}
           </AlertDescription>
         </Alert>
-        <Button onClick={() => unstable_retry()}>Try Again</Button>
+        <Button onClick={() =>reset()}>Try Again</Button>
       </div>
     </div>
   );

@@ -1,5 +1,19 @@
 import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
 
+type DOPDFGatePassType = {
+  delivery_date ?: string | Date | null,
+  from : string,
+  vehicle_no: string,
+  driver_no: string,
+  driver_name: string,
+  manager: string,
+  received_by?: string,
+  gatepass: string | number,
+  gatepassType: string,
+  order_no: string,
+  time: string,
+  items : Record<string, any>,
+}
 const DOPDFGatepass = ({
   delivery_date,
   from,
@@ -13,7 +27,7 @@ const DOPDFGatepass = ({
   order_no,
   time,
   items = {},
-}) => {
+} : DOPDFGatePassType) => {
 
   const now = delivery_date ? new Date(delivery_date) : new Date();
 
@@ -229,7 +243,7 @@ const DOPDFGatepass = ({
   );
 };
 
-const Cell = ({ width, value }) => (
+const Cell = ({ width, value } : {width : number, value : string | number}) => (
   <View
     style={{
       width,
@@ -253,6 +267,15 @@ const FormField = ({
   manager,
   received_by,
   time,
+} : {
+  from : string,
+  vehicle_no: string,
+  driver_no: string,
+  order_no: string,
+  driver_name: string,
+  manager: string,
+  received_by?: string,
+  time: string,
 }) => {
   const fields = [
     { label: "To", value: received_by },
@@ -326,7 +349,7 @@ const CompanyDetails = () => (
   </View>
 );
 
-const Header = ({ gatepassType }) => (
+const Header = ({ gatepassType } : {gatepassType : string}) => (
   <View
     style={{
       display: "flex",
@@ -338,7 +361,6 @@ const Header = ({ gatepassType }) => (
     {/* <Text fontSize={60} color={'#0072BC'} fontWeight={'800'}>SENFENG</Text> */}
     <Image
       src={"/logo.png"}
-      alt="My Local Image"
       style={{ height: "40px", width: "200px" }}
     />
     <View

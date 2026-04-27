@@ -57,24 +57,7 @@ export function LoginForm() {
         setLoading(false);
       });
 
-    // try {
-
-    //   localStorage.setItem('user_email', email);
-
-    //   toast({
-    //     description: "Login successful",
-    //   });
-
-    //   router.replace("/")
-    // } catch (err) {
-    //   toast({
-    //     variant: "destructive",
-    //     title: "Error",
-    //     description: "Login failed",
-    //   });
-    // } finally {
-    //   setLoading(false);
-    // }
+    
   }
 
 

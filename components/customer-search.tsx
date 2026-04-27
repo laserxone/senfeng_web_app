@@ -13,19 +13,14 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { MyCustomer } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
-import { MyCustomer } from "@/lib/types";
 
-type LocalMyCustomer = MyCustomer & {value : number | string} 
+type LocalMyCustomer = MyCustomer & { value: number | string }
 
 export function CustomerSearch({ value, onReturn }: { value: number | string | null | undefined, onReturn: (val: number | string) => void }) {
   const [open, setOpen] = React.useState(false);

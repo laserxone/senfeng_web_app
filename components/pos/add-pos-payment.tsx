@@ -172,7 +172,7 @@ const AddPOSPayment = ({
           }}
         >
           <div className="w-full sm:w-[30%] flex">
-            <ScrollArea className="px-2 w-full max-h-[90vh]">
+            <ScrollArea className="px-2 w-full h-[90vh]">
               <div className="px-2">
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}

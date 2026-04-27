@@ -1,10 +1,11 @@
 "use client";
 
+import { AdminDashboardCustomers } from "@/lib/types";
 import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useState } from "react";
 
-const CustomerMapComponent = ({ data }) => {
+const CustomerMapComponent = ({ data } : {data : AdminDashboardCustomers[]}) => {
   const { theme } = useTheme();
 
   const defaultMapContainerStyle = {
@@ -42,8 +43,8 @@ const CustomerMapComponent = ({ data }) => {
   }, [theme]);
 
   const RenderMap = useCallback(
-    ({ list }) => {
-      const [selectedMarker, setSelectedMarker] = useState(null);
+    ({ list } : {list : AdminDashboardCustomers[]}) => {
+      const [selectedMarker, setSelectedMarker] = useState<AdminDashboardCustomers | null>(null);
       return (
         <GoogleMap
           mapContainerStyle={defaultMapContainerStyle}

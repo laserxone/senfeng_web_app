@@ -6,6 +6,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
+  CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
@@ -23,28 +24,36 @@ import { cn } from "@/lib/utils";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
 import { Checkbox } from "./ui/checkbox";
+import { UserDashboard } from "@/lib/types";
+
 type UserSearchProps = {
-  value?: any;
-  onReturn?: (val: any) => void;
-  onReturnName?: (val: any) => void;
-  onReturnData?: (val: any) => void;
+  value?: number | null | string;
+  onReturn?: (val: number) => void;
+  onReturnName?: (val: string) => void;
+  onReturnData?: (val: UserDashboard) => void;
   placeholder?: string;
   lead?: boolean;
-  className?: string;
   remove?: boolean;
+  className ?: string
 };
+
+type LocalUserData = {
+  value : number
+  label : string
+  data : UserDashboard
+}
 export function UserSearch({
   value,
   onReturn,
   placeholder = "Select user...",
   lead = false,
-  className = "",
   remove = false,
-  onReturnName = () => {},
-  onReturnData = () => {},
+  onReturnName,
+  onReturnData,
+  className = ""
 }:UserSearchProps) {
   const [open, setOpen] = React.useState(false);
-  const [data, setData] = React.useState([]);
+  const [data, setData] = React.useState<LocalUserData[]>([]);
   const [city, setCity] = React.useState("lahore");
   const [showInactive, setShowInactive] = React.useState(false);
   const { userID, designation, office } = useUserDetail();
@@ -55,7 +64,7 @@ export function UserSearch({
         if (response.data.length > 0) {
           if (lead) {
             const finalData = response.data
-              .filter((item) => {
+              .filter((item : UserDashboard) => {
                 if (
                   item.designation === "Customer Relationship Manager" ||
                   item.designation === "Owner" ||
@@ -63,7 +72,7 @@ export function UserSearch({
                 )
                   return item;
               })
-              .map((item) => {
+              .map((item : UserDashboard) => {
                 return {
                   value: item.id,
                   label: item?.name || item.email,
@@ -71,12 +80,12 @@ export function UserSearch({
                 };
               });
             if (remove) {
-              setData(finalData.filter((item) => item.value !== userID));
+              setData(finalData.filter((item : LocalUserData) => item.value !== userID));
             } else {
               setData(finalData);
             }
           } else {
-            const finalData = response.data.map((item) => {
+            const finalData = response.data.map((item : UserDashboard) => {
               return {
                 value: item.id,
                 label: item?.name || item.email,
@@ -84,7 +93,7 @@ export function UserSearch({
               };
             });
             if (remove) {
-              setData(finalData.filter((item) => item.value !== userID));
+              setData(finalData.filter((item : LocalUserData) => item.value !== userID));
             } else {
               setData(finalData);
             }
@@ -113,22 +122,25 @@ export function UserSearch({
     });
 
   return (
-    <div className={className}>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+    <>
+     
           <Button
             variant="outline"
             role="combobox"
             aria-expanded={open}
             className="w-full justify-between"
+             onClick={(e) => {
+          e.preventDefault()
+          setOpen(!open)
+        }}
           >
             {value
               ? filteredData.find((item) => item.value === value)?.label
               : placeholder}
             <ChevronsUpDown className="opacity-50" />
           </Button>
-        </PopoverTrigger>
-        <PopoverContent className="py-2 px-0">
+       
+       <CommandDialog open={open} onOpenChange={setOpen}>
           <Command>
             {designation !== "Sales" && (
               <div className="flex items-center justify-center gap-2 px-2 py-1 border-b">
@@ -142,7 +154,7 @@ export function UserSearch({
                 <Label className="text-sm">Karachi</Label>
                 <Checkbox
                   checked={showInactive}
-                  onCheckedChange={setShowInactive}
+                  onCheckedChange={(a : boolean)=>setShowInactive(a)}
                 />
                 <Label className="text-sm">Inactive</Label>
               </div>
@@ -155,11 +167,12 @@ export function UserSearch({
                   <CommandItem
                     key={item.value}
                     value={item.label}
+                    className={!item.data.active ? "bg-red-300" : ""}
                     onSelect={() => {
-                      onReturn(Number(item.value));
-                      onReturnName(item.label);
+                      onReturn?.(Number(item.value));
+                      onReturnName?.(item.label);
                       if (lead) {
-                        onReturnData(item.data);
+                        onReturnData?.(item.data);
                       }
                       setOpen(false);
                     }}
@@ -176,8 +189,7 @@ export function UserSearch({
               </CommandGroup>
             </CommandList>
           </Command>
-        </PopoverContent>
-      </Popover>
-    </div>
+      </CommandDialog>
+    </>
   );
 }

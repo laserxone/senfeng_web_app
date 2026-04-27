@@ -12,6 +12,7 @@ import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
 import Spinner from "../ui/spinner";
 import useUserDetail from "@/hooks/use-user-detail";
+import { toast } from "sonner";
 
 const RenderOtherStockItems = ({ item, onRefresh }) => {
   const [localName, setLocalName] = useState("");
@@ -113,47 +114,27 @@ const RenderOtherStockItems = ({ item, onRefresh }) => {
 
   async function handleSave(id, imgRef) {
     if (localPrice && isNaN(Number(localPrice))) {
-      toast({
-        title: "Error",
-        description: "Price must be a number",
-        variant: "destructive",
-      });
+      toast.info( "Price must be a number");
       return;
     }
 
     if (localQty && isNaN(Number(localQty))) {
-      toast({
-        title: "Error",
-        description: "Quantity must be a number",
-        variant: "destructive",
-      });
+       toast.info("Quantity must be a number");
       return;
     }
 
     if (threshold && isNaN(Number(threshold))) {
-      toast({
-        title: "Error",
-        description: "Threshold must be a number",
-        variant: "destructive",
-      });
+       toast.info("Threshold must be a number");
       return;
     }
 
     if (newOrder && isNaN(Number(newOrder))) {
-      toast({
-        title: "Error",
-        description: "New order must be a number",
-        variant: "destructive",
-      });
+       toast.info( "New order must be a number");
       return;
     }
 
     if (buying && isNaN(Number(buying))) {
-      toast({
-        title: "Error",
-        description: "Buying price must be a number",
-        variant: "destructive",
-      });
+       toast.info("Buying price must be a number");
       return;
     }
 
@@ -191,11 +172,7 @@ const RenderOtherStockItems = ({ item, onRefresh }) => {
       await axios.put(`/${userID}/pos/${id}`, formData);
       onRefresh();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to upload image or data. Try again",
-        variant: "destructive",
-      });
+       toast.error("Failed to upload image or data. Try again");
     } finally {
       setLoading(false);
     }

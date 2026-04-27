@@ -13,6 +13,7 @@ import {
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -362,6 +363,7 @@ const AddUserDialog = ({
         <DialogHeader>
           <DialogTitle>Add new user</DialogTitle>
         </DialogHeader>
+           <ScrollArea className="h-[70vh] px-2">
         <div className="py-4">
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FieldGroup>
@@ -519,6 +521,7 @@ const AddUserDialog = ({
             </FieldGroup>
           </form>
         </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

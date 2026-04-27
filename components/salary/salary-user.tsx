@@ -61,6 +61,7 @@ import {
 import useUserDetail from "@/hooks/use-user-detail";
 import { pdf } from "@react-pdf/renderer";
 import { ScrollArea } from "../ui/scroll-area";
+import { toast } from "sonner";
 
 const SalaryComponent = ({ onSelectedId }) => {
   const currentDate = new Date();
@@ -566,7 +567,7 @@ const SalaryComponent = ({ onSelectedId }) => {
         basic_salary : data?.user?.basic_salary || 0
       });
 
-      toast({ title: "Salary saved! Updating other entries in background" });
+      toast.success("Salary saved! Updating other entries in background");
 
       if (checked) {
         if (repayment && !isNaN(repayment) && employeeLoan) {
@@ -601,7 +602,7 @@ const SalaryComponent = ({ onSelectedId }) => {
           });
         }
       }
-      toast({ title: "Salary saved successfully." });
+      toast.success("Salary saved successfully.");
       clearForm();
     } finally {
       setSaveLoading(false);

@@ -23,6 +23,7 @@ import useUserDetail from "@/hooks/use-user-detail";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
 import Spinner from "../ui/spinner";
+import { toast } from "sonner";
 
 const AddNewProduct = ({ visible, onClose, onRefresh }) => {
   const [name, setName] = useState("");
@@ -78,11 +79,7 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
         isNaN(Number(threshold))) ||
       (newOrder !== undefined && newOrder !== "" && isNaN(Number(newOrder)))
     ) {
-      toast({
-        title: "Error",
-        description: "Price, Quantity, Threshold and New Order must be numbers",
-        variant: "destructive",
-      });
+      toast.info( "Price, Quantity, Threshold and New Order must be numbers",);
       return;
     }
 
@@ -106,11 +103,7 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
       await axios.post(`/${userID}/pos`, formData);
       onRefresh();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to upload image or data. Try again",
-        variant: "destructive",
-      });
+      toast.error( "Failed to upload image or data. Try again");
       setLoading(false);
     } finally {
       setLoading(false);

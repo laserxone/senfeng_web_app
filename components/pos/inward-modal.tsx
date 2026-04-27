@@ -123,7 +123,7 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }: {
                 <DialogHeader>
                     <DialogTitle>Inward Gatepass</DialogTitle>
                 </DialogHeader>
-                <ScrollArea className="max-h-[90vh] w-full pr-2">
+                <ScrollArea className="h-[80vh] w-full pr-2">
                     <form onSubmit={handleSubmit} className="space-y-4 ">
                         <div className="grid grid-cols-2 gap-4 px-2">
                             <div>

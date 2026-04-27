@@ -1,14 +1,12 @@
-// pages/document-management.js
-"use client";
+"use client"
+
+import { Button } from "@/components/ui/button"
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 import {
   Dialog,
   DialogClose,
@@ -16,753 +14,1232 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import Heading from "@/components/ui/heading";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Spinner from "@/components/ui/spinner";
-
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { supabase } from "@/lib/supabaseClient";
-import { FileProps, FoldersProps } from "@/lib/types";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { ChevronRight, List, Table2 } from "lucide-react";
-import moment from "moment";
-import Image from "next/image";
-import React, {
-  Fragment,
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import { toast } from "sonner";
-import { ProgressWithLabel } from "./progress-with-label";
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import Spinner from "@/components/ui/spinner"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { supabase } from "@/lib/supabaseClient"
+import { FileNode, FolderNode } from "@/lib/types"
+import { cn } from "@/lib/utils"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "./ui/context-menu";
+  ChevronDown,
+  ChevronRight,
+  Download,
+  Folder,
+  FolderOpen,
+  FolderPlus,
+  Grid3X3,
+  List,
+  Plus,
+  Upload
+} from "lucide-react"
+import moment from "moment"
+import { Fragment, memo, useCallback, useEffect, useRef, useState } from "react"
 
-const videoThumbnailCache: any = {};
-
-type FolderBread = {
-  name: string
-  id: number | null
-}
-
-const DocumentManagement = () => {
-  const [selectedFile, setSelectedFile] = useState<File[]>([]);
-  const [allFolders, setAllFolders] = useState<FoldersProps[]>([]);
-  const [allDocuments, setAllDocuments] = useState<FileProps[]>([]);
-  const [selectedFolder, setSelectedFolder] = useState<FoldersProps | null>(null);
-  const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { userID, name, email, dms_write_access } =
-    useUserDetail();
-
-  const [uploadLoading, setUploadLoading] = useState(false);
-  const [currentFolder, setCurrentFolder] = useState<FoldersProps | null>(null);
-  const [folderName, setFolderName] = useState("");
-  const [visible, setVisible] = useState(false);
-  const [folderBread, setFolderBread] = useState<FolderBread[]>([{ name: "root", id: null }]);
-  const [folderLoading, setFolderLoading] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [view, setView] = useState(false);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [preview, setPreview] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [uploadingStatus, setUploadingStatus] = useState({
-    file: "",
-    progress: 0,
-    track: 0,
-  });
+export default function DocumentManagement() {
+  const [folderTree, setFolderTree] = useState<FolderNode | null>(null)
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(["root"]))
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>("root")
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [createFolderOpen, setCreateFolderOpen] = useState(false)
+  const [renameFolderOpen, setRenameFolderOpen] = useState(false)
+  const [folderToRename, setFolderToRename] = useState<FolderNode | null>(null)
+  const [parentFolderForCreate, setParentFolderForCreate] = useState<FolderNode | null>(null)
+  const [newFolderName, setNewFolderName] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewFile, setPreviewFile] = useState<FileNode | null>(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploadProgress, setUploadProgress] = useState<{ file: string; progress: number } | null>(null)
+  const selectedFolder = selectedFolderId ? folderTree ? findFolderById(folderTree, selectedFolderId) : null : null
+  const breadcrumbPath = selectedFolderId ? folderTree ? getFolderPath(folderTree, selectedFolderId) || [] : [] : []
+  const [workingFile, setWorkingFile] = useState<string[]>([])
+  const [workingFolder, setWorkingFolder] = useState<string[]>([])
+  const { userID, name, email } = useUserDetail()
 
   useEffect(() => {
-    if (userID) {
-      setLoading(true);
-      fetchFiles();
-    }
-  }, [userID, currentFolder]);
+    if (userID) fetchData()
+  }, [userID])
 
-  const fetchFiles = useCallback(async () => {
-    try {
-      const response = await axios.get(
-        `/${userID}/folder?folder=${currentFolder?.id || null}`,
-      );
-      setAllDocuments(response.data.documents);
-      setAllFolders(response.data.folders);
-      setLoading(false);
-      setUploadLoading(false);
-    } catch (error) {
-      console.log(error);
-    }
-  }, [userID, currentFolder]);
+  async function fetchData() {
+    axios.get(`/${userID}/dms/folder`).then((response) => {
+      setFolderTree(response.data)
+    })
+  }
 
-  const uploadFile = async () => {
-    if (!selectedFile.length) {
-      toast.info("Please select at least one file to upload.")
-      return;
-    }
-    setUploadLoading(true);
-    handleUpload();
-  };
 
-  async function handleUpload() {
-    for (const [index, file] of selectedFile.entries()) {
-      try {
-        await uploadWithProgress(file, index);
-      } catch (err) {
-        toast.error(`Error uploading ${file.name}`)
-        continue;
+  const handleToggleFolder = useCallback((folderId: string) => {
+    setExpandedFolders((prev) => {
+      const next = new Set(prev)
+      if (next.has(folderId)) {
+        next.delete(folderId)
+      } else {
+        next.add(folderId)
       }
+      return next
+    })
+  }, [])
+
+
+  const handleSelectFolder = useCallback((folder: FolderNode) => {
+    setSelectedFolderId(folder.id)
+
+    setExpandedFolders((prev) => {
+      const next = new Set(prev)
+      next.add(folder.id)
+      return next
+    })
+  }, [])
+
+
+  const handleOpenSubfolder = useCallback((folder: FolderNode) => {
+    handleSelectFolder(folder)
+    const path = folderTree ? getFolderPath(folderTree, folder.id) : null
+    if (path) {
+      setExpandedFolders((prev) => {
+        const next = new Set(prev)
+        path.forEach((f) => next.add(f.id))
+        return next
+      })
     }
+  }, [folderTree, handleSelectFolder])
 
-    setSelectedFile([]);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-    setUploadingStatus({ file: "", progress: 0, track: 0 });
-
-    await fetchFiles();
-    setUploadLoading(false);
-  }
-
-  async function uploadWithProgress(file: File, idx: number) {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-
-      const filePath = file.name;
-      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/documents/${filePath}`;
-
-      xhr.open("POST", url, true);
-      xhr.setRequestHeader(
-        "Authorization",
-        `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-      );
-      xhr.setRequestHeader("Content-Type", file.type);
-
-      let lastProgress = 0;
-
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const percent = Math.round((event.loaded / event.total) * 100);
-          if (percent !== lastProgress) {
-            lastProgress = percent;
-
-            setUploadingStatus({
-              file: file.name,
-              progress: percent,
-              track: idx + 1,
-            });
-          }
-        }
-      };
-
-      xhr.onload = async () => {
-        if (xhr.status === 200) {
-          try {
-            await axios.post(`/${userID}/document`, {
-              added_by: name || email,
-              path: filePath,
-              folder_id: currentFolder ? currentFolder.id : undefined,
-            });
-
-            resolve(true);
-          } catch (err) {
-            reject("DB save failed");
-          }
+  const handleCreateFolder = useCallback(() => {
+    if (!newFolderName.trim() || !parentFolderForCreate) return
+    setLoading(true)
+    axios
+      .post(`/${userID}/dms/folder`, {
+        name: newFolderName,
+        parent_folder: parentFolderForCreate?.id === 'root' ? undefined : parentFolderForCreate?.id,
+      })
+      .then(async (response) => {
+        setNewFolderName("");
+        if (!response.data?.id) {
+          await fetchData()
         } else {
-          reject(xhr.response);
+          const newFolder: FolderNode = {
+            id: response.data?.id,
+            name: newFolderName.trim(),
+            parentId: parentFolderForCreate.id,
+            children: [],
+            files: [],
+          }
+
+          const updateTree = (node: FolderNode): FolderNode => {
+            if (node.id === parentFolderForCreate.id) {
+              return { ...node, children: [...node.children, newFolder] }
+            }
+            return { ...node, children: node.children.map(updateTree) }
+          }
+          if (folderTree)
+            setFolderTree(updateTree(folderTree))
+          setExpandedFolders((prev) => new Set([...prev, parentFolderForCreate.id]))
+          setNewFolderName("")
+          setCreateFolderOpen(false)
+          setParentFolderForCreate(null)
         }
-      };
-
-      xhr.onerror = () => reject("Upload failed");
-
-      xhr.send(file);
-    });
-  }
-
-  async function handleCreateFolder() {
-    setFolderLoading(true);
-    axios
-      .post(`/${userID}/folder`, {
-        name: folderName,
-        parent_folder: currentFolder ? currentFolder?.id : undefined,
-      })
-      .then(async () => {
-        setFolderName("");
-        setVisible(false);
-        await fetchFiles();
       })
       .finally(() => {
-        setFolderLoading(false);
+        setLoading(false);
       });
-  }
+  }, [newFolderName, parentFolderForCreate, folderTree])
 
-  async function handleRenameFolder() {
-    if (!selectedFolder) return;
-    setFolderLoading(true);
+
+  const handleRenameFolder = useCallback(() => {
+    if (!newFolderName.trim() || !folderToRename) return
+
+    setLoading(true)
+
     axios
-      .put(`/${userID}/folder/${selectedFolder?.id}`, {
-        name: newName,
+      .put(`/${userID}/dms/folder/${folderToRename?.id}`, {
+        name: newFolderName,
       })
       .then(async () => {
-        setNewName("");
-        setSelectedFolder(null);
-        await fetchFiles();
+        const updateTree = (node: FolderNode): FolderNode => {
+          if (node.id === folderToRename.id) {
+            return { ...node, name: newFolderName.trim() }
+          }
+          return { ...node, children: node.children.map(updateTree) }
+        }
+        if (folderTree)
+          setFolderTree(updateTree(folderTree))
+        setNewFolderName("")
+        setRenameFolderOpen(false)
+        setFolderToRename(null)
+
       })
       .finally(() => {
-        setFolderLoading(false);
+        setLoading(false)
       });
-  }
 
-  const handlePreview = useCallback(async (path: string) => {
-    setPreviewLoading(true);
-    setPreview(true);
+  }, [newFolderName, folderToRename, folderTree])
+
+  const handleDeleteFolder = useCallback(async (folder: FolderNode) => {
+    setWorkingFolder((prev) => [...prev, folder.id])
     try {
-      const { data } = await supabase.storage
+      await axios.delete(`/${userID}/dms/folder/${folder.id}`);
+      const removeFromTree = (node: FolderNode): FolderNode => {
+        return {
+          ...node,
+          children: node.children
+            .filter((child) => child.id !== folder.id)
+            .map(removeFromTree),
+        }
+      }
+      if (folderTree)
+        setFolderTree(removeFromTree(folderTree))
+      if (selectedFolderId === folder.id) {
+        setSelectedFolderId(folder.parentId || "root")
+      }
+    } finally {
+      setWorkingFolder((prev) => prev.filter((item) => item !== folder.id));
+    }
+
+
+  }, [folderTree, selectedFolderId])
+
+
+  const openRenameDialog = useCallback((folder: FolderNode) => {
+    setFolderToRename(folder)
+    setNewFolderName(folder.name)
+    setRenameFolderOpen(true)
+  }, [])
+
+  const openCreateSubfolderDialog = useCallback((parentFolder: FolderNode) => {
+    setParentFolderForCreate(parentFolder)
+    setNewFolderName("")
+    setCreateFolderOpen(true)
+  }, [])
+
+
+  const handlePreview = useCallback(async (file: FileNode) => {
+    setPreviewLoading(true)
+    setPreviewOpen(true)
+
+    try {
+      const { data } = supabase.storage
         .from("documents")
-        .getPublicUrl(path);
+        .getPublicUrl(file.path);
+      if (data?.publicUrl) {
+        setPreviewFile({ ...file, url: data.publicUrl })
+      }
 
-
-
-      setSelectedPreview(data.publicUrl);
     } catch (error) {
       console.error("Error downloading file", error);
     } finally {
       setPreviewLoading(false);
     }
-  }, []);
+  }, [])
 
-  return (
-    <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex flex-col space-y-4">
-        <Heading
-          title="Documents Management"
-          description="Manage office documents"
-        />
-        {dms_write_access && (
-          <div className="flex justify-between mb-4 gap-2 flex-wrap">
-            <div className="flex gap-2 items-center">
-              <input
-                type="file"
-                multiple
-                ref={fileInputRef}
-                onChange={(e) => setSelectedFile(Array.isArray(e.target.files) ? e.target.files : [])}
-                className="border p-2 rounded-md w-72"
-              />
-              {selectedFile.length > 0 && (
-                <Button disabled={uploadLoading} onClick={uploadFile}>
-                  {uploadLoading && <Spinner />} Upload Files
-                </Button>
-              )}
-            </div>
-            <Button onClick={() => setVisible(true)}>Create new folder</Button>
-          </div>
-        )}
-      </div>
 
-      {uploadLoading && (
-        <ProgressWithLabel
-          status={uploadingStatus}
-          total={selectedFile?.length}
-        />
-      )}
+  const handleDownload = useCallback(async (file: FileNode) => {
 
-      <div>
-        <div className="flex justify-between items-center bg-gray-200 dark:bg-gray-800 mb-2 pr-2">
-          <div className="flex space-x-2 p-2 ">
-            <MyBreadcrumb
-              folderBread={folderBread}
-              setCurrentFolder={setCurrentFolder}
-              setFolderBread={setFolderBread}
-            />
-          </div>
-          {!view ? (
-            <Table2 className="cursor-pointer" onClick={() => setView(!view)} />
-          ) : (
-            <List className="cursor-pointer" onClick={() => setView(!view)} />
-          )}
-        </div>
+    setWorkingFile((prev) => [...prev, file.id]);
+    const { data, error } = await supabase.storage
+      .from("documents")
+      .download(file.path);
+    if (error) {
+      console.error("Error downloading file", error);
+      return;
+    }
+    const url = URL.createObjectURL(data);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = file.path;
+    link.click();
+    URL.revokeObjectURL(url);
+    setWorkingFile((prev) => prev.filter((item) => item !== file.id));
+  }, [])
 
-        {loading ? (
-          <div className="flex flex-c items-center justify-center">
-            <Spinner />
-          </div>
-        ) : (
-          <div
-            className={
-              view ? "flex flex-col" : "flex flex-row gap-4 flex-wrap"
-            }
-          >
-            {allFolders.map((item, index) => (
-              <RenderEachFolder
-                key={item.id}
-                item={item}
-                index={index}
-                view={view}
-                setCurrentFolder={setCurrentFolder}
-                setFolderBread={setFolderBread}
-                setNewName={setNewName}
-                setSelectedFolder={setSelectedFolder}
-                fetchFiles={fetchFiles}
-              />
-            ))}
 
-            {allDocuments.map((item) => (
-              <RenderEachFile
-                key={item.id}
-                onRefresh={fetchFiles}
-                item={item}
-                // view={view}
-                onPreview={handlePreview}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+  const handleDeleteFile = useCallback(async (file: FileNode) => {
 
-      <Dialog open={visible} onOpenChange={setVisible}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create new folder</DialogTitle>
-          </DialogHeader>
-
-          <div className="px-2">
-            <Label>Folder name</Label>
-            <Input
-              value={folderName}
-              onChange={(e) => setFolderName(e.target.value)}
-            />
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Close</Button>
-            </DialogClose>
-            <Button onClick={handleCreateFolder}>
-              {folderLoading && <Spinner />}Create
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={!!selectedFolder}
-        onOpenChange={() => setSelectedFolder(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Rename folder</DialogTitle>
-          </DialogHeader>
-
-          <div className="px-2">
-            <Label>Folder name</Label>
-            <Input
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-            />
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Close</Button>
-            </DialogClose>
-            <Button
-              disabled={!newName || folderLoading}
-              onClick={handleRenameFolder}
-            >
-              {folderLoading && <Spinner />}Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <PreviewFile
-        preview={preview}
-        setPreview={setPreview}
-        previewLoading={previewLoading}
-        selectedPreview={selectedPreview}
-      />
-    </div>
-  );
-};
-
-const RenderEachFile = memo(({ item, onPreview, onRefresh }: { item: FileProps, onPreview: (val: string) => void, onRefresh: () => Promise<void> }) => {
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [downloadLoading, setDownloadLoading] = useState(false);
-  const { isAdmin, userID } = useUserDetail();
-
-  async function handleDelete(file: FileProps) {
     const id = file.id;
-    await axios
-      .delete(`/${userID}/document/${id}`)
-      .then(async () => {
-        await supabase.storage.from("documents").remove([file.path]);
-        await onRefresh();
-      })
-      .finally(() => {
-        setDeleteLoading(false);
-      });
-  }
+    setWorkingFile((prev) => [...prev, id]);
 
-  const RenderFile = memo(
-    ({ path }: { path: string }) => {
-      const [thumbnail, setThumbnail] = useState<string | null>(null);
-      const [loadingThumb, setLoadingThumb] = useState(false);
-      const fileExt = path?.toLowerCase();
-      const isImage = fileExt?.match(/\.(jpg|jpeg|png|gif|webp)$/);
-      const isVideo = fileExt?.match(/\.(mp4|mov|webm|mkv)$/);
+    try {
+      await axios.delete(`/${userID}/dms/document/${id}`);
+      const paths = [file.path];
+      if (file.thumbnail) paths.push(file.thumbnail);
+      await supabase.storage.from("documents").remove(paths);
 
-      useEffect(() => {
-        if (!isVideo) return;
-
-        if (videoThumbnailCache[path]) {
-          setThumbnail(videoThumbnailCache[path]);
-          return;
+      const updateTree = (node: FolderNode): FolderNode => {
+        if (node.id === file.folderId) {
+          return { ...node, files: node.files.filter((f) => f.id !== file.id) }
         }
-
-        setLoadingThumb(true);
-
-        const generateThumbnail = async () => {
-          try {
-            const videoUrl = supabase.storage
-              .from("documents")
-              .getPublicUrl(path).data.publicUrl;
-            if (!videoUrl) return;
-
-            const video = document.createElement("video");
-            video.src = videoUrl;
-            video.crossOrigin = "anonymous";
-            video.currentTime = 1;
-            video.muted = true;
-            video.play().catch(() => { });
-
-            video.addEventListener("loadeddata", () => {
-              const canvas = document.createElement("canvas");
-              canvas.width = 100;
-              canvas.height = 100;
-              const ctx = canvas.getContext("2d");
-              if (ctx) {
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const dataUrl = canvas.toDataURL("image/jpeg");
-                videoThumbnailCache[path] = dataUrl;
-                setThumbnail(dataUrl);
-                setLoadingThumb(false);
-              }
-            });
-          } catch (err) {
-            console.error("Error generating video thumbnail", err);
-            setLoadingThumb(false);
-          }
-        };
-
-        generateThumbnail();
-
-      }, [path, isVideo]);
-
-      let url = "/file-icon.png";
-
-      if (fileExt.includes("pdf")) url = "/pdf-icon.png";
-      else if (fileExt.includes("doc")) url = "/docx-icon.png";
-      else if (fileExt.includes("xls")) url = "/xlsx-icon.png";
-      else if (fileExt.includes("ppt")) url = "/ppt-icon.png";
-      else if (isImage) {
-        const { data } = supabase.storage
-          .from("superadmin.documents")
-          .getPublicUrl(path);
-        if (data.publicUrl) url = data.publicUrl;
-      } else if (isVideo) {
-        url = thumbnail || "/mp4-icon.png";
+        return { ...node, children: node.children.map(updateTree) }
       }
+      if (folderTree)
+        setFolderTree(updateTree(folderTree))
 
-      return (
-        <div className={`max-w-md break-all flex flex-col`}>
-          {loadingThumb ? (
-            <div
-              className="flex items-center justify-center"
-              style={{ width: 100, height: 100 }}
-            >
-              <Spinner />
-            </div>
-          ) : (
-            <div className="w-[100px] h-[120px] overflow-hidden flex justify-center">
-              <Image
-                src={url}
-                height={100}
-                width={100}
-                alt={`${path}-file`}
-                className="object-cover"
-              />
-            </div>
-          )}
-          <Label className={"mt-1"}>{path}</Label>
-        </div>
-      );
-    },
-    (prev, next) => prev.path === next.path,
-  );
-
-  return (
-    <ContextMenu modal={false}>
-      <ContextMenuTrigger
-        onDoubleClick={() => {
-          onPreview(item.path);
-        }}
-      >
-        <div
-          className={`flex flex-col justify-center min-h-[120px] p-2 rounded cursor-pointer max-w-[150px]`}
-          style={{
-            border: "1px solid transparent",
-            backgroundColor: "transparent",
-          }}
-        >
-          {downloadLoading || deleteLoading ? (
-            <Spinner />
-          ) : (
-            <RenderFile path={item.path} />
-          )}
-        </div>
-      </ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem
-          onClick={async () => {
-            onPreview(item.path);
-          }}
-        >
-          Preview
-        </ContextMenuItem>
-
-        <ContextMenuItem
-          onClick={async () => {
-            setDownloadLoading(true);
-            const { data, error } = await supabase.storage
-              .from("documents")
-              .download(item.path);
-            if (error) {
-              console.error("Error downloading file", error);
-              return;
-            }
-            const url = URL.createObjectURL(data);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = item.path;
-            link.click();
-            URL.revokeObjectURL(url);
-            setDownloadLoading(false);
-          }}
-        >
-          Download
-        </ContextMenuItem>
-        {isAdmin && (
-          <ContextMenuItem
-            onClick={async () => {
-              setDeleteLoading(true);
-              await handleDelete(item);
-            }}
-          >
-            Delete
-          </ContextMenuItem>
-        )}
-
-        <ContextMenuItem className="hover:none">
-          <div className="flex flex-1 flex-col">
-            <Label>Date : {moment(item.created_at).format("YYYY-MM-DD")}</Label>
-            <Label>Uploaded by : {item.added_by}</Label>
-          </div>
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
-  );
-});
-
-type RenderEachFolderProps = {
-  item: FoldersProps,
-  index: number,
-  view: boolean,
-  setFolderBread: (val: any) => void,
-  setCurrentFolder: (val: any) => void,
-  setSelectedFolder: (val: FoldersProps) => void,
-  setNewName: (val: string) => void,
-  fetchFiles: () => Promise<void>,
-}
-
-const RenderEachFolder = memo(
-  ({
-    item,
-    index,
-    view,
-    setFolderBread,
-    setCurrentFolder,
-    setSelectedFolder,
-    setNewName,
-    fetchFiles,
-  }: RenderEachFolderProps) => {
-    const [deleteLoading, setDeleteLoading] = useState(false);
-    const { userID } = useUserDetail();
-    async function handleDeleteFolder(id: number) {
-      try {
-        setDeleteLoading(true);
-        await axios.delete(`/${userID}/folder/${id}`);
-        await fetchFiles();
-      } finally {
-        setDeleteLoading(false);
-      }
+    } finally {
+      setWorkingFile((prev) => prev.filter((item) => item !== id));
     }
 
-    const openFolder = () => {
-      setFolderBread((prev: FoldersProps[]) => [...prev, { name: item.name, id: item.id }]);
-      setCurrentFolder({ name: item.name, id: item.id });
-    };
+  }, [folderTree])
 
-    return (
-      <ContextMenu modal={false}>
-        <ContextMenuTrigger onDoubleClick={openFolder}>
-          <div
-            className={`flex ${view ? "flex-row items-center gap-4" : "flex-col items-center justify-center"} ${view ? "p-0" : "p-2"} rounded cursor-pointer ${view ? "w-full" : "max-w-[150px]"} ${view ? "h-auto" : "min-h-[120px]"} `}
-            style={{
-              border: "1px solid transparent",
-              backgroundColor: "transparent",
-            }}
-          >
-            {deleteLoading ? (
-              <Spinner />
-            ) : (
-              <>
-                <Image
-                  src="/folder-icon.png"
-                  height={view ? 40 : 100}
-                  width={view ? 40 : 100}
-                  alt={`${index}-folder`}
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files?.length || !selectedFolder) return
+
+    const file = files[0]
+    setUploadProgress({ file: file.name, progress: 0 })
+    const type = getFileType(file.name)
+
+    let thumbnail: string | undefined = undefined
+
+    if (type === 'video') {
+      try {
+        const blob = await getVideoThumbnailFromFile(file);
+        if (blob) {
+          const thumbnailPath = `thumbnails/${file.name}`;
+          const { error } = await supabase.storage
+            .from("documents")
+            .upload(thumbnailPath, blob, {
+              contentType: "image/jpeg",
+            });
+          if (!error) {
+            thumbnail = thumbnailPath;
+          } else {
+            console.log("Thumbnail upload failed", error);
+          }
+        }
+      } catch (error) {
+        console.log("Thumbnail generation failed", error);
+      }
+
+    }
+
+    let res: { path?: string } = {};
+    try {
+      res = await uploadWithProgress(file, (p) =>
+        setUploadProgress({ file: file.name, progress: p })
+      );
+    } catch (err) {
+      if (thumbnail) {
+        await supabase.storage.from("documents").remove([thumbnail]);
+      }
+      setUploadProgress(null);
+      return;
+
+    }
+
+
+    if (res.path) {
+      try {
+        const response = await axios.post(`/${userID}/dms/document`, {
+          added_by: name || email,
+          path: res.path,
+          folder_id: selectedFolder?.id === 'root' ? undefined : selectedFolder.id,
+          type,
+          size: file.size,
+          thumbnail_path: thumbnail
+        })
+
+        const returningId = response.data?.id
+
+        if (!returningId) {
+          await fetchData()
+        } else {
+          const newFile: FileNode = {
+            id: returningId,
+            name: file.name,
+            path: res.path,
+            folderId: selectedFolder.id,
+            type,
+            size: file.size,
+            createdAt: new Date().toISOString().split("T")[0],
+            addedBy: name,
+            thumbnail
+          }
+
+          const updateTree = (node: FolderNode): FolderNode => {
+            if (node.id === selectedFolder.id) {
+              return { ...node, files: [...node.files, newFile] }
+            }
+            return { ...node, children: node.children.map(updateTree) }
+          }
+          if (folderTree)
+            setFolderTree(updateTree(folderTree))
+        }
+      } catch (error) {
+        console.log(error)
+        await supabase.storage.from("documents").remove(
+          [res.path, ...(thumbnail ? [thumbnail] : [])]
+        );
+      } finally {
+        setUploadProgress(null)
+        if (fileInputRef.current) fileInputRef.current.value = ""
+      }
+    }
+  }, [selectedFolder, folderTree])
+
+  const officeFile = previewFile
+    ? previewFile?.path
+      ?.toLowerCase()
+      ?.match(/\.(xlsx|xls|csv|doc|docx|ppt|pptx)$/)
+    : false;
+
+  return (
+    <div className="h-screen flex flex-col bg-background w-full">
+      <div className="flex items-center gap-2 mb-2">
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+          className="hidden"
+        />
+        <Button
+          variant="ghost"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={!selectedFolder}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Upload
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => selectedFolder && openCreateSubfolderDialog(selectedFolder)}
+          disabled={!selectedFolder}
+        >
+          <FolderPlus className="h-4 w-4 mr-2" />
+          New Folder
+        </Button>
+      </div>
+
+      <div className="flex flex-1 overflow-hidden border-t">
+        <aside className="w-72 border-r flex flex-col shrink-0 bg-muted/30">
+          <div className="px-3 h-11.25 border-b flex items-center">
+            <h2 className="text-sm font-medium text-muted-foreground px-2">Folders</h2>
+          </div>
+          <ScrollArea className="flex-1">
+            <div className="p-2">
+              {folderTree &&
+                <FolderTreeItem
+                  folder={folderTree}
+                  expandedFolders={expandedFolders}
+                  selectedFolderId={selectedFolderId}
+                  onToggle={handleToggleFolder}
+                  onSelect={handleSelectFolder}
+                  onRename={openRenameDialog}
+                  onDelete={handleDeleteFolder}
+                  onCreateSubfolder={openCreateSubfolderDialog}
+                  workingFolder={workingFolder}
                 />
-                <Label className={view ? "text-left" : "text-center"}>
-                  {item.name}
-                </Label>
+              }
+            </div>
+          </ScrollArea>
+        </aside>
+
+
+        <main className="flex-1 flex flex-col overflow-hidden">
+          <div className="border-b px-4 h-11.25 flex items-center justify-between shrink-0">
+            <nav className="flex items-center gap-1 text-sm">
+              {breadcrumbPath.map((folder, index) => (
+                <Fragment key={folder.id}>
+                  {index > 0 && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                  {index < breadcrumbPath.length - 1 ? (
+                    <button
+                      className="text-primary hover:underline"
+                      onClick={() => handleSelectFolder(folder)}
+                    >
+                      {folder.name}
+                    </button>
+                  ) : (
+                    <span className="text-foreground font-medium">{folder.name}</span>
+                  )}
+                </Fragment>
+              ))}
+            </nav>
+
+            <div className="flex items-center gap-1 border rounded-md p-0.5">
+              <button
+                className={cn(
+                  "p-1.5 rounded transition-colors",
+                  viewMode === "grid" ? "bg-muted" : "hover:bg-muted/50"
+                )}
+                onClick={() => setViewMode("grid")}
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </button>
+              <button
+                className={cn(
+                  "p-1.5 rounded transition-colors",
+                  viewMode === "list" ? "bg-muted" : "hover:bg-muted/50"
+                )}
+                onClick={() => setViewMode("list")}
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          {uploadProgress && (
+            <div className="px-4 py-2 border-b bg-muted/30">
+              <div className="flex items-center gap-3">
+                <Spinner className="h-4 w-4" />
+                <span className="text-sm flex-1 truncate">Uploading: {uploadProgress.file}</span>
+                <span className="text-sm text-muted-foreground">{uploadProgress.progress}%</span>
+              </div>
+              <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all"
+                  style={{ width: `${uploadProgress.progress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          <ScrollArea className="flex-1">
+            {selectedFolder ? (
+              <>
+                {viewMode === "list" && (selectedFolder.children.length > 0 || selectedFolder.files.length > 0) && (
+                  <div className="flex items-center gap-3 px-4 py-2 border-b bg-muted/30 text-xs font-medium text-muted-foreground">
+                    <span className="w-5" />
+                    <span className="flex-1">Name</span>
+                    <span className="w-20 text-right">Size</span>
+                    <span className="w-24">Date</span>
+                    <span className="w-28">Added by</span>
+                  </div>
+                )}
+
+                {viewMode === "grid" ? (
+                  <div className="p-4 grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2">
+                    {selectedFolder.children.map((subfolder) => (
+                      <SubfolderItem
+                        key={subfolder.id}
+                        folder={subfolder}
+                        viewMode={viewMode}
+                        onOpen={handleOpenSubfolder}
+                        onRename={openRenameDialog}
+                        onDelete={handleDeleteFolder}
+                        workingFolder={workingFolder}
+                      />
+                    ))}
+                    {selectedFolder.files.map((file) => (
+                      <FileGridItem
+                        key={file.id}
+                        file={file}
+                        onPreview={handlePreview}
+                        onDownload={handleDownload}
+                        onDelete={handleDeleteFile}
+                        workingFile={workingFile}
+
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div>
+                    {selectedFolder.children.map((subfolder) => (
+                      <SubfolderItem
+                        key={subfolder.id}
+                        folder={subfolder}
+                        viewMode={viewMode}
+                        onOpen={handleOpenSubfolder}
+                        onRename={openRenameDialog}
+                        onDelete={handleDeleteFolder}
+                        workingFolder={workingFolder}
+                      />
+                    ))}
+                    {selectedFolder.files.map((file) => (
+                      <FileListItem
+                        key={file.id}
+                        file={file}
+                        onPreview={handlePreview}
+                        onDownload={handleDownload}
+                        onDelete={handleDeleteFile}
+                        workingFile={workingFile}
+                      />
+                    ))}
+                  </div>
+                )}
+
+
+                {selectedFolder.children.length === 0 && selectedFolder.files.length === 0 && (
+                  <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                    <Folder className="h-16 w-16 text-muted-foreground/30 mb-4" />
+                    <h3 className="text-lg font-medium">This folder is empty</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Upload files or create subfolders to get started
+                    </p>
+                    <div className="flex gap-2 mt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload File
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => openCreateSubfolderDialog(selectedFolder)}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        New Folder
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-muted-foreground">Select a folder to view its contents</p>
+              </div>
+            )}
+          </ScrollArea>
+        </main>
+      </div>
+
+      <Dialog open={createFolderOpen} onOpenChange={setCreateFolderOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Folder</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="folder-name">Folder Name</Label>
+            <Input
+              id="folder-name"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="Enter folder name"
+              className="mt-2"
+              onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
+            />
+            {parentFolderForCreate && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Will be created in: {parentFolderForCreate.name}
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleCreateFolder} disabled={!newFolderName.trim() || loading}>
+              {loading && <Spinner className="mr-2 h-4 w-4" />}
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={renameFolderOpen} onOpenChange={setRenameFolderOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Folder</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="rename-folder">Folder Name</Label>
+            <Input
+              id="rename-folder"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="Enter new name"
+              className="mt-2"
+              onKeyDown={(e) => e.key === "Enter" && handleRenameFolder()}
+            />
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleRenameFolder} disabled={!newFolderName.trim() || loading}>
+              {loading && <Spinner className="mr-2 h-4 w-4" />}
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="w-full sm:max-w-[90vw] h-[90vh]">
+          <VisuallyHidden>
+            <DialogHeader>
+              <DialogTitle>Preview</DialogTitle>
+            </DialogHeader>
+          </VisuallyHidden>
+          <div className="flex-1 flex items-center justify-center bg-muted/30 rounded-lg">
+            {previewLoading ? (
+              <Spinner className="h-8 w-8" />
+            ) : previewFile ?
+              !officeFile ? (
+                <iframe
+                  src={previewFile.url}
+                  style={{
+                    border: "none",
+                    flex: 1,
+                    width: "100%",
+                    height: "100%",
+                  }}
+                />
+              ) : (
+                <iframe
+                  src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
+                    previewFile.url || ""
+                  )}`}
+                  style={{
+                    border: "none",
+                    flex: 1,
+                    width: "100%",
+                    height: "100%",
+                  }}
+                />
+              ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+
+const FolderTreeItem = memo(({
+  folder,
+  level = 0,
+  expandedFolders,
+  selectedFolderId,
+  onToggle,
+  onSelect,
+  onRename,
+  onDelete,
+  onCreateSubfolder,
+  workingFolder
+}: {
+  folder: FolderNode
+  level?: number
+  expandedFolders: Set<string>
+  selectedFolderId: string | null
+  onToggle: (id: string) => void
+  onSelect: (folder: FolderNode) => void
+  onRename: (folder: FolderNode) => void
+  onDelete: (folder: FolderNode) => void
+  onCreateSubfolder: (parentFolder: FolderNode) => void
+  workingFolder: string[]
+}) => {
+  const isExpanded = expandedFolders.has(folder.id)
+  const isSelected = selectedFolderId === folder.id
+  const hasChildren = folder.children.length > 0
+  const { isAdmin } = useUserDetail()
+  const isWorking = workingFolder.includes(folder.id) || workingFolder.includes(folder.parentId as string)
+
+  return (
+    <div>
+      <ContextMenu modal={false}>
+        <ContextMenuTrigger asChild>
+          <div
+
+            className={cn(
+              "flex items-center gap-1 py-1.5 px-2 cursor-pointer rounded-md transition-colors group",
+              isSelected
+                ? "bg-primary/10 text-primary"
+                : "hover:bg-muted"
+            )}
+            style={{ paddingLeft: `${level * 16 + 8}px` }}
+            onClick={() => !isWorking && onSelect(folder)}
+          >
+            <button
+
+              className={cn(
+                "p-0.5 rounded hover:bg-accent transition-colors",
+                !hasChildren && "invisible"
+              )}
+              disabled={isWorking}
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggle(folder.id)
+              }}
+            >
+              {isExpanded ? (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              )}
+            </button>
+            <div className="relative">
+              {isExpanded ? (
+                <FolderOpen className="h-4 w-4 text-amber-500 shrink-0" />
+              ) : (
+                <Folder className="h-4 w-4 text-amber-500 shrink-0" />
+              )}
+
+              {isWorking && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded">
+                  <Spinner className="h-5 w-5 text-destructive" />
+                </div>
+              )}
+            </div>
+
+            <span className="text-sm line-clamp-1 flex-1">{folder.name}</span>
+            {(folder.files.length > 0 || folder.children.length > 0) && (
+              <span className="text-xs text-muted-foreground">
+                {folder.files.length + folder.children.length}
+              </span>
             )}
           </div>
         </ContextMenuTrigger>
-        <ContextMenuContent>
-          <ContextMenuItem onClick={openFolder}>Open</ContextMenuItem>
-
-          <ContextMenuItem
-            onClick={() => {
-              setSelectedFolder(item);
-              setNewName(item.name);
-            }}
-          >
-            Rename
-          </ContextMenuItem>
-
-          <ContextMenuItem onClick={() => handleDeleteFolder(item.id)}>
-            Delete
-          </ContextMenuItem>
-        </ContextMenuContent>
+        {folder.id !== 'root' &&
+          <ContextMenuContent>
+            <ContextMenuItem disabled={isWorking} onClick={() => onSelect(folder)}>
+              Open
+            </ContextMenuItem>
+            <ContextMenuItem disabled={isWorking} onClick={() => onCreateSubfolder(folder)}>
+              New Subfolder
+            </ContextMenuItem>
+            <ContextMenuItem disabled={isWorking} onClick={() => onRename(folder)}>
+              Rename
+            </ContextMenuItem>
+            {isAdmin &&
+              <ContextMenuItem
+                disabled={isWorking}
+                className="text-destructive"
+                onClick={() => onDelete(folder)}
+              >
+                Delete
+              </ContextMenuItem>
+            }
+          </ContextMenuContent>
+        }
       </ContextMenu>
-    );
-  },
-);
 
-const MyBreadcrumb = ({ folderBread, setFolderBread, setCurrentFolder }: { folderBread: FolderBread[], setFolderBread: (val: any) => void, setCurrentFolder: (val: any) => void }) => {
+      {isExpanded && hasChildren && (
+        <div>
+          {folder.children.map((child) => (
+            <FolderTreeItem
+              key={child.id}
+              folder={child}
+              level={level + 1}
+              expandedFolders={expandedFolders}
+              selectedFolderId={selectedFolderId}
+              onToggle={onToggle}
+              onSelect={onSelect}
+              onRename={onRename}
+              onDelete={onDelete}
+              onCreateSubfolder={onCreateSubfolder}
+              workingFolder={workingFolder}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+})
+FolderTreeItem.displayName = "FolderTreeItem"
+
+
+const FileGridItem = memo(({
+  file,
+  onPreview,
+  onDownload,
+  onDelete,
+  workingFile
+}: {
+  file: FileNode
+  onPreview: (file: FileNode) => void
+  onDownload: (file: FileNode) => void
+  onDelete: (file: FileNode) => void
+  workingFile: string[]
+}) => {
+  const { isAdmin } = useUserDetail()
+  const isWorking = workingFile.includes(file.id)
   return (
-    <Breadcrumb>
-      <BreadcrumbList>
-        {folderBread.map((crumb, index) => (
-          <Fragment key={crumb.name + index}>
-            {index !== folderBread.length - 1 && (
-              <BreadcrumbItem className="block">
-                <BreadcrumbLink
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const path = folderBread.slice(0, index + 1);
-                    setFolderBread(path);
-                    setCurrentFolder(
-                      path[path.length - 1]?.id ? path[path.length - 1] : null,
-                    );
-                  }}
-                  className="text-blue-600 text-lg hover:underline"
-                >
-                  {crumb.name}
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-            )}
-
-            {index < folderBread.length - 1 && (
-              <BreadcrumbSeparator className="block">
-                <ChevronRight />
-              </BreadcrumbSeparator>
-            )}
-
-            {index === folderBread.length - 1 && (
-              <BreadcrumbPage className="text-lg">{crumb.name}</BreadcrumbPage>
-            )}
-          </Fragment>
-        ))}
-      </BreadcrumbList>
-    </Breadcrumb>
-  );
-};
-
-
-
-const PreviewFile = React.memo(
-  ({
-    preview,
-    setPreview,
-    selectedPreview,
-    previewLoading,
-  }: { preview: boolean, setPreview: (val: boolean) => void, selectedPreview: string | null, previewLoading: boolean }) => {
-    const officeFile = selectedPreview
-      ? selectedPreview
-        ?.toLowerCase()
-        ?.match(/\.(xlsx|xls|csv|doc|docx|ppt|pptx)$/)
-      : false;
-
-    return (
-      <Dialog open={preview} onOpenChange={setPreview}>
-        <VisuallyHidden>
-          <DialogHeader>
-            <DialogTitle>Preview</DialogTitle>
-          </DialogHeader>
-        </VisuallyHidden>
-
-        <DialogContent className="w-[90vw] max-w-[90vw] h-[90vh]">
-          <div className="flex-1">
-            {previewLoading ? (
-              <div className="flex flex-1 items-center justify-center">
-                <Spinner />
+    <ContextMenu modal={false}>
+      <ContextMenuTrigger asChild>
+        <div
+          className="flex flex-col items-center p-4 rounded-lg border border-transparent hover:border-border hover:bg-muted/50 cursor-pointer transition-all group"
+          onDoubleClick={() => onPreview(file)}
+        >
+          <div className="relative h-16 w-16 flex items-center justify-center mb-2">
+            <RenderFileIcon file={file} size="h-16 w-16" />
+            {isWorking && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded">
+                <Spinner className="h-5 w-5 text-destructive" />
               </div>
-            ) : selectedPreview && !officeFile ? (
-              <iframe
-                src={selectedPreview}
-                style={{
-                  border: "none",
-                  flex: 1,
-                  width: "100%",
-                  height: "100%",
-                }}
-              />
-            ) : (
-              <iframe
-                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
-                  selectedPreview || ""
-                )}`}
-                style={{
-                  border: "none",
-                  flex: 1,
-                  width: "100%",
-                  height: "100%",
-                }}
-              />
             )}
           </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-);
+          <span className="text-sm font-medium text-center max-w-30 line-clamp-2">
+            {file.name}
+          </span>
+          <span className="text-xs text-muted-foreground mt-1">
+            {formatFileSize(file.size)}
+          </span>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem disabled={isWorking} onClick={() => onPreview(file)}>
+          Preview
+        </ContextMenuItem>
+        <ContextMenuItem disabled={isWorking} onClick={() => onDownload(file)}>
+          Download
+        </ContextMenuItem>
+        {isAdmin &&
+          <ContextMenuItem
+            disabled={isWorking}
+            className="text-destructive"
+            onClick={() => onDelete(file)}
+          >
+            Delete
+          </ContextMenuItem>
+        }
 
-export default DocumentManagement;
+      </ContextMenuContent>
+    </ContextMenu>
+  )
+})
+
+FileGridItem.displayName = "FileGridItem"
+
+const RenderFileIcon = ({ file, size = "h-5 w-5" }: { file: FileNode, size?: string }) => {
+
+  const [imageLoading, setImageLoading] = useState(false)
+  const path = file.path
+  const [url, setUrl] = useState<string>("/file-icon.png")
+
+
+  function generateImage(p?: string) {
+    if (!p) return
+    try {
+
+      const { data } = supabase.storage
+        .from("documents")
+        .getPublicUrl(p);
+      if (data.publicUrl) {
+        setUrl(data.publicUrl);
+        setImageLoading(false)
+      }
+    } catch (err) {
+      console.error("Error generating video thumbnail", err);
+      setImageLoading(false);
+    }
+  }
+
+
+  useEffect(() => {
+    if (file) {
+      if (file.type === "image") {
+        generateImage(file.path)
+      } else if (file?.type === 'video') {
+        generateImage(file?.thumbnail)
+      } else if (file?.type === 'pdf') {
+        setUrl("/pdf-icon.png")
+      } else if (file?.type?.includes("doc")) setUrl("/docx-icon.png");
+      else if (file?.type?.includes("excel")) setUrl("/xlsx-icon.png")
+      else if (file?.type?.includes("ppt")) setUrl("/ppt-icon.png")
+      else {
+        setUrl("/file-icon.png")
+      }
+    }
+  }, [file])
+
+  return (
+    imageLoading ? <Spinner /> : <img
+      src={url}
+      alt={`${path}-file`}
+      className={`${size} object-contain`}
+    />
+  )
+
+}
+const FileListItem = memo(({
+  file,
+  onPreview,
+  onDownload,
+  onDelete,
+  workingFile
+}: {
+  file: FileNode
+  onPreview: (file: FileNode) => void
+  onDownload: (file: FileNode) => void
+  onDelete: (file: FileNode) => void
+  workingFile: string[]
+}) => {
+  const { isAdmin } = useUserDetail()
+  const isWorking = workingFile.includes(file.id)
+  return (
+    <ContextMenu modal={false}>
+      <ContextMenuTrigger asChild>
+        <div
+          className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 cursor-pointer transition-colors border-b border-border/50"
+          onDoubleClick={() => onPreview(file)}
+        >
+          <div className="relative">
+            <RenderFileIcon file={file} />
+            {isWorking && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded">
+                <Spinner className="h-5 w-5 text-destructive" />
+              </div>
+            )}
+          </div>
+          <span className="text-sm font-medium flex-1 truncate">{file.name}</span>
+          <span className="text-xs text-muted-foreground w-20 text-right">
+            {formatFileSize(file.size)}
+          </span>
+          <span className="text-xs text-muted-foreground w-24">
+            {moment(file.createdAt).format("YYYY-MM-DD")}
+          </span>
+          <span className="text-xs text-muted-foreground w-28 truncate">
+            {file.addedBy}
+          </span>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem disabled={isWorking} onClick={() => onPreview(file)}>
+          Preview
+        </ContextMenuItem>
+        <ContextMenuItem disabled={isWorking} onClick={() => onDownload(file)}>
+          Download
+        </ContextMenuItem>
+        {isAdmin &&
+          <ContextMenuItem
+            disabled={isWorking}
+            className="text-destructive"
+            onClick={() => onDelete(file)}
+          >
+            Delete
+          </ContextMenuItem>
+        }
+      </ContextMenuContent>
+    </ContextMenu>
+  )
+})
+FileListItem.displayName = "FileListItem"
+
+
+const SubfolderItem = memo(({
+  folder,
+  viewMode,
+  onOpen,
+  onRename,
+  onDelete,
+  workingFolder
+}: {
+  folder: FolderNode
+  viewMode: "grid" | "list"
+  onOpen: (folder: FolderNode) => void
+  onRename: (folder: FolderNode) => void
+  onDelete: (folder: FolderNode) => void
+  workingFolder: string[]
+}) => {
+  const { isAdmin } = useUserDetail()
+   const isWorking = workingFolder.includes(folder.id) || workingFolder.includes(folder.parentId as string)
+  if (viewMode === "grid") {
+    return (
+      <ContextMenu modal={false}>
+        <ContextMenuTrigger asChild>
+          <div
+            className="flex flex-col items-center p-4 rounded-lg border border-transparent hover:border-border hover:bg-muted/50 cursor-pointer transition-all"
+            onDoubleClick={() => onOpen(folder)}
+          >
+            <div className="relative h-16 w-16 flex items-center justify-center mb-2">
+              <Folder className="h-14 w-14 text-amber-500" />
+              {isWorking && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded">
+                  <Spinner className="h-5 w-5 text-destructive" />
+                </div>
+              )}
+            </div>
+            <span className="text-sm font-medium text-center max-w-30">
+              {folder.name}
+            </span>
+            <span className="text-xs text-muted-foreground mt-1">
+              {folder.files.length + folder.children.length} items
+            </span>
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem disabled={isWorking} onClick={() => onOpen(folder)}>
+            Open
+          </ContextMenuItem>
+          <ContextMenuItem disabled={isWorking} onClick={() => onRename(folder)}>
+            Rename
+          </ContextMenuItem>
+          {isAdmin &&
+            <ContextMenuItem
+              disabled={isWorking}
+              className="text-destructive"
+              onClick={() => onDelete(folder)}
+            >
+              Delete
+            </ContextMenuItem>
+          }
+        </ContextMenuContent>
+      </ContextMenu>
+    )
+  }
+
+  return (
+    <ContextMenu modal={false}>
+      <ContextMenuTrigger asChild>
+        <div
+          className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 cursor-pointer transition-colors border-b border-border/50"
+          onDoubleClick={() => onOpen(folder)}
+        >
+          <div className="relative">
+            <Folder className="h-5 w-5 text-amber-500" />
+            {isWorking && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded">
+                <Spinner className="h-5 w-5 text-destructive" />
+              </div>
+            )}
+          </div>
+
+          <span className="text-sm font-medium flex-1 truncate">{folder.name}</span>
+          <span className="text-xs text-muted-foreground w-20 text-right">
+            --
+          </span>
+          <span className="text-xs text-muted-foreground w-24">
+            --
+          </span>
+          <span className="text-xs text-muted-foreground w-28 truncate">
+            {folder.files.length + folder.children.length} items
+          </span>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem disabled={isWorking} onClick={() => onOpen(folder)}>
+          Open
+        </ContextMenuItem>
+        <ContextMenuItem disabled={isWorking} onClick={() => onRename(folder)}>
+          Rename
+        </ContextMenuItem>
+        {isAdmin &&
+          <ContextMenuItem
+            disabled={isWorking}
+            className="text-destructive"
+            onClick={() => onDelete(folder)}
+          >
+            Delete
+          </ContextMenuItem>
+        }
+      </ContextMenuContent>
+    </ContextMenu>
+  )
+})
+SubfolderItem.displayName = "SubfolderItem"
+
+const getFileType = (path: string) => {
+  const fileExt = path?.toLowerCase();
+  const isImage = fileExt?.match(/\.(jpg|jpeg|png|gif|webp)$/);
+  const isVideo = fileExt?.match(/\.(mp4|mov|webm|mkv)$/);
+
+  let type = "file";
+
+  if (fileExt.includes("pdf")) type = "pdf";
+  else if (fileExt.includes("doc")) type = "doc";
+  else if (fileExt.includes("xls")) type = "excel";
+  else if (fileExt.includes("ppt")) type = "ppt";
+  else if (isImage) type = "image";
+  else if (isVideo) type = "video";
+
+  return type;
+};
+
+async function uploadWithProgress(file: File, onProgress?: (progress: number) => void): Promise<{ path: string }> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+
+    const filePath = file.name;
+    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/documents/${filePath}`;
+
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader(
+      "Authorization",
+      `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+    );
+    xhr.setRequestHeader("Content-Type", file.type);
+
+    let lastProgress = 0;
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percent = Math.round((event.loaded / event.total) * 100);
+        if (percent !== lastProgress) {
+          lastProgress = percent;
+          onProgress?.(percent)
+        }
+      }
+    };
+
+    xhr.onload = async () => {
+      if (xhr.status === 200) {
+        resolve({ path: filePath })
+      } else {
+        reject(xhr.response);
+      }
+    };
+
+    xhr.onerror = () => reject("Upload failed");
+
+    xhr.send(file);
+  });
+}
+
+async function getVideoThumbnailFromFile(
+  file: File
+): Promise<Blob | null> {
+  const videoUrl = URL.createObjectURL(file);
+
+  const video = document.createElement("video");
+  video.src = videoUrl;
+  video.muted = true;
+
+  await new Promise<void>((resolve) => {
+    video.onloadeddata = () => resolve();
+  });
+
+  video.currentTime = Math.min(1, video.duration || 1);
+
+  await new Promise<void>((resolve) => {
+    video.onseeked = () => resolve();
+  });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 200;
+  canvas.height = 200;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  const blob: Blob | null = await new Promise((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", 0.7)
+  );
+
+  // ✅ cleanup (important)
+  URL.revokeObjectURL(videoUrl);
+  video.remove();
+  canvas.remove();
+
+  return blob;
+}
+
+function findFolderById(node: FolderNode, id: string): FolderNode | null {
+  if (node.id === id) return node
+  for (const child of node.children) {
+    const found = findFolderById(child, id)
+    if (found) return found
+  }
+  return null
+}
+
+function getFolderPath(node: FolderNode, targetId: string, path: FolderNode[] = []): FolderNode[] | null {
+  if (node.id === targetId) return [...path, node]
+  for (const child of node.children) {
+    const found = getFolderPath(child, targetId, [...path, node])
+    if (found) return found
+  }
+  return null
+}
+
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + " B"
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB"
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB"
+}

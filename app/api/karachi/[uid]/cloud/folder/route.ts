@@ -1,32 +1,30 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req) {
 
-    const searchParams = req.nextUrl.searchParams
-    const folder = searchParams.get('folder');
-    const isRoot = !folder || folder === "null";
+export async function GET() {
 
-    let documents
-    let folders
     try {
-        if (!isRoot) {
-            documents = await pool.query(`SELECT * FROM superadmin_document WHERE folder_id = $1 ORDER BY id ASC`, [folder])
-            folders = await pool.query(`SELECT * FROM superadmin_folder WHERE parent_folder = $1 ORDER BY id ASC`, [folder])
-        } else {
-            documents = await pool.query(`SELECT * FROM superadmin_document WHERE folder_id IS NULL ORDER BY id ASC`)
-            folders = await pool.query(`SELECT * FROM superadmin_folder WHERE parent_folder IS NULL ORDER BY id ASC`)
-        }
+        const foldersResult = await pool.query(
+            "SELECT * FROM superadmin_folder"
+        );
 
-        return NextResponse.json({ folders: folders.rows, documents: documents.rows }, { status: 200 })
-    } catch (error) {
-        console.log(error)
-        return NextResponse.json({ message: "Error occured" }, { status: 500 })
+        const documentsResult = await pool.query(
+            "SELECT * FROM superadmin_document"
+        );
+
+        const tree = await buildFolderTree(
+            foldersResult.rows,
+            documentsResult.rows
+        );
+
+        return NextResponse.json(tree)
+    } catch (error: any) {
+        return NextResponse.json({ message: error?.message || "Server error" }, { status: 500 })
     }
 }
 
-
-export async function POST(req) {
+export async function POST(req: NextRequest) {
 
     try {
         const data = await req.json();
@@ -35,9 +33,6 @@ export async function POST(req) {
         if (!data || Object.keys(data).length === 0) {
             return NextResponse.json({ message: "No data provided for insertion" }, { status: 400 });
         }
-
-
-
         const fields = Object.keys(data);
         const values = Object.values(data);
         const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
@@ -45,12 +40,13 @@ export async function POST(req) {
         const query = `
         INSERT INTO superadmin_folder (${fields.join(", ")})
         VALUES (${placeholders})
+        RETURNING id
     `;
 
-        await pool.query(query, values);
+        const res = await pool.query(query, values);
 
         console.log("data inserted successfully");
-        return NextResponse.json({ message: "Inserted successfully" }, { status: 201 });
+        return NextResponse.json({ message: "Inserted successfully", id: res.rows?.[0]?.id ?? null }, { status: 201 });
 
     } catch (error) {
         console.error('Error inserting data: ', error);
@@ -58,4 +54,68 @@ export async function POST(req) {
     }
 }
 
-export const revalidate = 0
+async function formatFile(doc: any) {
+
+    return {
+        id: doc.id,
+        name: doc.path,
+        path: doc.path,
+        folderId: doc.folder_id,
+        createdAt: doc.created_at,
+        addedBy: doc.added_by,
+        size: doc.size,
+        type: doc.type,
+        thumbnail: doc.thumbnail_path
+    };
+}
+
+async function buildFolderTree(folders: any[], documents: any[]) {
+    const folderMap = new Map();
+
+    folders.forEach((folder: any) => {
+        folderMap.set(folder.id, {
+            id: folder.id,
+            name: folder.name,
+            parentId: folder.parent_folder,
+            children: [],
+            files: [],
+        });
+    });
+
+    const root: any = {
+        id: "root",
+        name: "Root",
+        parentId: null,
+        children: [],
+        files: [],
+    };
+
+    // attach folders
+    folders.forEach((folder: any) => {
+        const current = folderMap.get(folder.id);
+
+        if (folder.parent_folder) {
+            const parent = folderMap.get(folder.parent_folder);
+            if (parent) parent.children.push(current);
+        } else {
+            root.children.push(current);
+        }
+    });
+
+
+    const files = await Promise.all(
+        documents.map((doc: any) => formatFile(doc))
+    );
+
+    files.forEach((file: any, index) => {
+        const doc = documents[index];
+
+        if (doc.folder_id && folderMap.has(doc.folder_id)) {
+            folderMap.get(doc.folder_id).files.push(file);
+        } else {
+            root.files.push(file);
+        }
+    });
+
+    return root;
+}

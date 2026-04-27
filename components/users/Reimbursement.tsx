@@ -511,7 +511,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: 
           <DialogTitle>Add New Reimbursement</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[80vh] px-2">
+        <ScrollArea className="h-[80vh] px-2">
           <div className="px-2 space-y-4">
             <RadioGroup
               defaultValue={selectedRadio}

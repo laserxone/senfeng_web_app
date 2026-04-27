@@ -3,14 +3,13 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axiosInstance from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Marquee from "react-fast-marquee";
 
 export default function NewsTicker() {
   const { userID } = useUserDetail();
   const isMobile = useIsMobile();
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<{news : string}[]>([]);
 
   const debouncedUserId = useDebounce(userID, 1000);
 

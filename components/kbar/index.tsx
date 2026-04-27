@@ -9,12 +9,13 @@ import {
   KBarSearch,
 } from "kbar";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import RenderResults from "./render-result";
+import { NavItems } from "@/lib/types";
 
-export default function KBar({ children }) {
+export default function KBar({ children } : {children : ReactNode}) {
   const router = useRouter();
-  const [navItems, setNavItems] = useState([]);
+  const [navItems, setNavItems] = useState<NavItems[]>([]);
   const { base_route, userID, nav_items } = useUserDetail();
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export default function KBar({ children }) {
     }
   }, [userID]);
 
-  const navigateTo = (url) => {
+  const navigateTo = (url : string) => {
     if (userID) {
 
       router.push(`/${base_route}/${url}`);
@@ -77,7 +78,7 @@ export default function KBar({ children }) {
     </KBarProvider>
   );
 }
-const KBarComponent = ({ children }) => {
+const KBarComponent = ({ children } : {children :ReactNode}) => {
   return (
     <>
       <KBarPortal>

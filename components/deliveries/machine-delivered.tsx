@@ -11,12 +11,14 @@ import { pdf } from "@react-pdf/renderer";
 import moment from "moment";
 import { DispatchOrderEditDialog } from "./dispatch-dialoges";
 import DOPDFGatepass from "./do-pdf-gatepass";
+import { DeliveryType, DispatchPdf } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 
 export default function MachineDelivered() {
-  const { userID, name } = useUserDetail();
-  const [data, setData] = useState([]);
+  const { userID } = useUserDetail();
+  const [data, setData] = useState<DeliveryType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedForEdit, setSelectedForEdit] = useState(null);
+  const [selectedForEdit, setSelectedForEdit] = useState<DeliveryType | null>(null);
 
   useEffect(() => {
     if (userID) {
@@ -29,15 +31,17 @@ export default function MachineDelivered() {
     setLoading(true);
     try {
       const response = await axios.get(`/${userID}/delivery/delivered`);
-      const finalData = response.data?.map((item)=>({...item, do : `DO-${item.id}`}))
+      const finalData = response.data?.map((item: DeliveryType) => ({ ...item, do: `DO-${item.id}` }))
       setData(finalData);
     } finally {
       setLoading(false);
     }
   }
 
-  const columns = [
-     {
+
+
+  const columns: ColumnDef<DeliveryType>[] = [
+    {
       accessorKey: "do",
       filterFn: "includesString",
       header: ({ column }) => {
@@ -121,7 +125,10 @@ export default function MachineDelivered() {
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("order_no_arr")?.join(" ")}</div>,
+      cell: ({ row }) => {
+        const value = row.getValue("order_no_arr") as string[];
+        return <div>{value?.join(" ")}</div>;
+      },
     },
 
     {
@@ -162,39 +169,39 @@ export default function MachineDelivered() {
       id: "actions",
       header: "Action",
       cell: ({ row }) => {
-     
-          return (
-            <div className="flex gap-2 items-center ">
-              <Button
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  generatePDF(row.original);
-                }}
-              >
-                Open DO
-              </Button>
-              <Button
-                size="icon"
-                onClick={() => {
-                  setSelectedForEdit(row.original);
-                }}
-              >
-                <Edit />
-              </Button>
-            </div>
-          );
+
+        return (
+          <div className="flex gap-2 items-center ">
+            <Button
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                generatePDF(row.original);
+              }}
+            >
+              Open DO
+            </Button>
+            <Button
+              size="icon"
+              onClick={() => {
+                setSelectedForEdit(row.original);
+              }}
+            >
+              <Edit />
+            </Button>
+          </div>
+        );
       },
     },
   ];
 
 
-  const generatePDF = async (item) => {
+  const generatePDF = async (item: DeliveryType) => {
     const PDFData = {
       order_no: `${item?.order_no_arr?.join(" ")} - ${item.serial_no} - ${item?.power} - ${item?.source}`,
       gate_pass: item?.do || item?.id,
-      delivery_date : item?.delivery_date,
-      to: item?.customer_name || item?.customer?.owner,
+      delivery_date: item?.delivery_date,
+      to: item?.customer_name || item?.customer_owner,
       tod: moment(item?.delivery_date).format("YYYY-MM-DD hh:mm A"),
       driver_number:
         item?.dispatch_information?.other_information?.driverNumber,
@@ -208,7 +215,7 @@ export default function MachineDelivered() {
     try {
       const blob = await pdf(
         <DOPDFGatepass
-        delivery_date={PDFData.delivery_date}
+          delivery_date={PDFData.delivery_date}
           from={PDFData.delivery_issued_by}
           vehicle_no={PDFData.vehicle_no}
           driver_no={PDFData.driver_number}
@@ -240,10 +247,10 @@ export default function MachineDelivered() {
       </div>
 
       <PageTable
-      loading={loading}
+        loading={loading}
         columns={columns}
         data={data}
-        onRowClick={(val, event) => {}}
+        onRowClick={(val, event) => { }}
       >
       </PageTable>
 

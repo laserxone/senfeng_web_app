@@ -35,6 +35,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
 import { Textarea } from "../ui/textarea";
 import { TriggerFirebaseForMachine } from "@/lib/triggerFirebase";
+import { DeliveryInformation, DeliveryType, DispatchPdf } from "@/lib/types";
 
 const dispatchSchema = z.object({
   orderNo: z.string().min(1, "Order number is required"),
@@ -47,16 +48,24 @@ const dispatchSchema = z.object({
   note: z.string().optional(),
 });
 
-export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }) {
+type FormValues = z.infer<typeof dispatchSchema>;
+
+export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
+{
+  open : boolean,
+  onClose : ()=> void,
+  onRefresh : ()=> Promise<void>,
+  data : DeliveryType | null,
+}) {
   const [loading, setLoading] = useState(false);
   const [checklistLoading, setChecklistLoading] = useState(false);
-  const [checklist, setChecklist] = useState({});
+  const [checklist, setChecklist] = useState<Record<string, any>>({});
   const [progress, setProgress] = useState(0);
   const { userID } = useUserDetail();
   const [originalImage, setOriginalImage] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const form = useForm({
+  const form = useForm<FormValues>({
     resolver: zodResolver(dispatchSchema),
     defaultValues: {
       orderNo: "",
@@ -95,11 +104,12 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }) {
     }
   }
 
-  function handleChnage(key, val) {
+  function handleChnage(key : string, val : string) {
     setChecklist((prev) => ({ ...prev, [key]: val }));
   }
 
-  async function handleSubmit(values) {
+  async function handleSubmit(values : FormValues) {
+    if(!data) return
     setLoading(true);
 
     try {
@@ -432,7 +442,7 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }) {
                           ? moment(
                               new Date(data?.delivery_information[key]),
                             ).format("YYYY-MM-DD hh:mm A")
-                          : String(data?.delivery_information[key])}
+                          : String(data?.delivery_information[key as keyof  DeliveryInformation])}
                       </p>
                     </div>
                   ))}
@@ -456,10 +466,17 @@ export function DispatchOrderDialog({
   onRefresh,
   data,
   openPdf,
+} :
+{
+  open : boolean,
+  onClose : ()=> void,
+  onRefresh : ()=> Promise<void>,
+  data : DeliveryType | null,
+  openPdf : (item : DispatchPdf)=>Promise<void>,
 }) {
   const [loading, setLoading] = useState(false);
   const [checklistLoading, setChecklistLoading] = useState(false);
-  const [checklist, setChecklist] = useState({});
+  const [checklist, setChecklist] = useState<Record<string, any>>({});
   const { state: OfficeState } = useContext(OfficeContext);
   const [progress, setProgress] = useState(0);
   const { userID, name: userName } = useUserDetail();
@@ -470,7 +487,7 @@ export function DispatchOrderDialog({
     }
   }, [userID, open]);
 
-  const form = useForm({
+  const form = useForm<FormValues>({
     resolver: zodResolver(dispatchSchema),
     defaultValues: {
       orderNo: "",
@@ -499,11 +516,12 @@ export function DispatchOrderDialog({
     }
   }
 
-  function handleChnage(key, val) {
+  function handleChnage(key : string, val : string) {
     setChecklist((prev) => ({ ...prev, [key]: val }));
   }
 
-  async function handleSubmit(values) {
+  async function handleSubmit(values : FormValues) {
+    if(!data) return
     setLoading(true);
 
     try {
@@ -824,7 +842,7 @@ export function DispatchOrderDialog({
                           ? moment(
                               new Date(data?.delivery_information[key]),
                             ).format("YYYY-MM-DD hh:mm A")
-                          : String(data?.delivery_information[key])}
+                          : String(data?.delivery_information[key as keyof DeliveryInformation])}
                       </p>
                     </div>
                   ))}

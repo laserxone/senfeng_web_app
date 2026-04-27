@@ -6,6 +6,7 @@ import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { GetProfileImage } from "@/lib/getProfileImage";
 import Spinner from "./ui/spinner";
+
 type DropzoneProps = {
   onDrop: (file: any) => void;
   title: string;
@@ -33,7 +34,7 @@ const Dropzone = ({
 
 
   const onDropAccepted = useCallback(
-    (acceptedFiles) => {
+    (acceptedFiles: File[]) => {
       const file = acceptedFiles[0];
       onDrop(URL.createObjectURL(file));
     },
@@ -42,16 +43,19 @@ const Dropzone = ({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDropAccepted,
-    accept: "image/*",
+   accept: {
+      "image/*": [],
+    },
   });
 
   useEffect(() => {
-    const handlePaste = (event) => {
-      const items = event.clipboardData.items;
+    const handlePaste = (event : ClipboardEvent) => {
+    const items = event?.clipboardData?.items;
+    if(!items) return
       for (let item of items) {
         if (item.type.startsWith("image/")) {
           const file = item.getAsFile();
-          const imageUrl = URL.createObjectURL(file);
+          const imageUrl = URL.createObjectURL(file as Blob);
 
           onDrop(imageUrl);
         }
@@ -138,8 +142,8 @@ const Dropzone = ({
   );
 };
 
-const RenderImage = ({ img }) => {
-  const [localImage, setLocalImage] = useState(null);
+const RenderImage = ({ img } : {img : string}) => {
+  const [localImage, setLocalImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -166,7 +170,7 @@ const RenderImage = ({ img }) => {
       </div>
     );
   }
-
+if(!localImage) return null
   return (
     <img
       src={localImage}

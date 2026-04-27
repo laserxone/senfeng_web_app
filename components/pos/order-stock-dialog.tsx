@@ -20,30 +20,36 @@ import {
 
 import useUserDetail from "@/hooks/use-user-detail";
 import exportToExcel from "@/lib/exportToExcel";
+import { StockProps } from "@/lib/types";
 import moment from "moment";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
+import { toast } from "sonner";
 import { Checkbox } from "../ui/checkbox";
 import Spinner from "../ui/spinner";
 import { UserSearch } from "../user-search";
 import RenderOtherStockItems from "./render-other-stock-items";
-import { toast } from "sonner";
 
 const OrderStockDialog = ({
   dialogVisible,
   onCloseDialog,
   stock,
   onRefresh,
+}: {
+  dialogVisible: boolean,
+  onCloseDialog: (val: boolean) => void
+  stock: StockProps[]
+  onRefresh: () => Promise<void>
 }) => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
-  const [selectedItems, setSelectedItems] = useState([]);
-  const {userID, isAdmin} = useUserDetail()
-  const [sendTo, setSendTo] = useState(null);
+  const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const { userID, isAdmin } = useUserDetail()
+  const [sendTo, setSendTo] = useState<number | null>(null);
 
 
 
-  const toggleItem = (id) => {
+  const toggleItem = (id: number) => {
     setSelectedItems((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
@@ -125,7 +131,7 @@ const OrderStockDialog = ({
             }
           )
           .then(() => {
-            toast({ title: "Report sent" });
+            toast.success("Report sent");
           });
       }
     } finally {
@@ -136,47 +142,50 @@ const OrderStockDialog = ({
   return (
     <Dialog open={dialogVisible} onOpenChange={onCloseDialog}>
       <DialogContent className="w-full sm:max-w-[90vw]">
-        <DialogHeader>
+        <DialogHeader className="w-full">
           <DialogTitle>Order new stock</DialogTitle>
 
-          <div className="flex flex-1 justify-end gap-4 items-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">Bulk Actions</Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={selectAll}>
-                  Select All
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={deselectAll}>
-                  Deselect All
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {isAdmin ? (
-              <Button
-                disabled={selectedItems.length === 0}
-                onClick={handleCreateExcel}
-              >
-                {loading && <Spinner className="mr-2" />}
-                Export
-              </Button>
-            ) : (
-              <div className="flex gap-2 items-center">
-                <UserSearch
-                  className="w-[200px]"
-                  onReturn={setSendTo}
-                  value={sendTo}
-                />
+          <div className="flex w-full justify-end">
+            <div className="flex items-center gap-4 flex-wrap ">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">Bulk Actions</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={selectAll}>
+                    Select All
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={deselectAll}>
+                    Deselect All
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {isAdmin &&
                 <Button
-                  disabled={!sendTo || loading || selectedItems.length === 0}
-                  onClick={handleShare}
+                  disabled={selectedItems.length === 0}
+                  onClick={handleCreateExcel}
                 >
-                  {loading && <Spinner />}Send Report
-                </Button>
-              </div>
-            )}
+                  {loading && <Spinner className="mr-2" />}
+                  Export
+                </Button>}
+
+              {!isAdmin &&
+                <>
+                  <div className="w-[200px]">
+                    <UserSearch onReturn={setSendTo} value={sendTo} />
+                  </div>
+                  <Button
+                    className="whitespace-nowrap"
+                    disabled={!sendTo || loading || selectedItems.length === 0}
+                    onClick={handleShare}
+                  >
+                    {loading && <Spinner />}
+                    Send Report
+                  </Button>
+                </>
+              }
+
+            </div>
           </div>
         </DialogHeader>
 
@@ -199,7 +208,6 @@ const OrderStockDialog = ({
                     onCheckedChange={() => toggleItem(item.id)}
                   />
                   <RenderOtherStockItems
-                    index={index}
                     item={item}
                     onRefresh={onRefresh}
                   />

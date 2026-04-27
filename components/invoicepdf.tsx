@@ -146,8 +146,37 @@ const styles = StyleSheet.create({
     },
 })
 
+type LocalData = {
+    customer: string | undefined;
+    name: string | undefined;
+    contact: string | undefined;
+    model: string | undefined;
+    serial: string | undefined;
+    manager: string;
+    payments: {
+        balance: number;
+        id: number;
+        transaction_date: string;
+        amount: string;
+        machine_id: number;
+        image: string;
+        mode: string;
+        note: string;
+        received_by: string;
+        clearance_date: string;
+        remarks: string;
+        firebase_img: string | null;
+        status: string;
+        comment: string | null;
+        payment_lock: boolean;
+        cheque_id: string;
+        track: number;
+    }[];
+    received: number;
+    total: number;
+}
 
-const InvoicePDF = ({ data }) => {
+const InvoicePDF = ({ data } : {data : LocalData}) => {
 
     return (
         <Document>
@@ -187,14 +216,14 @@ const InvoicePDF = ({ data }) => {
                     <View style={{ width: '100%' }}>
                         <View style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: '#0072BC', border: '1px solid #D1D5DB', }}>
                             {['DATE', 'TID', 'BANK', 'MODE', 'PAYMENT', 'BALANCE'].map((header, index) => (
-                                <View key={index} style={[{ textAlign: 'center', display: 'flex', justifyContent: 'center', height: 25, paddingLeft: 5, width: 100, borderLeftWidth: index !== 0 && 1, borderLeftColor: "#D1D5DB" }]}>
+                                <View key={index} style={[{ textAlign: 'center', display: 'flex', justifyContent: 'center', height: 25, paddingLeft: 5, width: 100, borderLeftWidth: index !== 0 ? 1 : undefined, borderLeftColor: "#D1D5DB" }]}>
                                     <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 11, color: 'white' }}>{header}</Text>
                                 </View>
                             ))}
                         </View>
 
                         {data?.payments && data?.payments.map((item, index) => (
-                            <View key={index} style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: index % 2 === 0 ? "#f1f1f1" : "white", border: '1px solid #D1D5DB', borderTopWidth: index !== 0 && 0 }}>
+                            <View key={index} style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: index % 2 === 0 ? "#f1f1f1" : "white", border: '1px solid #D1D5DB', borderTopWidth: index !== 0 ? 0 :  undefined }}>
                                 <View style={[{ textAlign: 'left', display: 'flex', justifyContent: 'center', height: 20, paddingLeft: 5, width: 100, }]}>
                                     <Text style={{ fontSize: 9, color: 'black' }}>{item?.transaction_date ? moment(item?.transaction_date).format("YYYY-MM-DD") : null}</Text>
                                 </View>
@@ -208,7 +237,7 @@ const InvoicePDF = ({ data }) => {
                                     <Text style={{ fontSize: 9, color: 'black' }}>{item?.mode}</Text>
                                 </View>
                                 <View style={[{ textAlign: 'left', display: 'flex', justifyContent: 'center', height: 20, paddingLeft: 5, width: 100, borderLeftWidth: 1, borderLeftColor: "#D1D5DB" }]}>
-                                    <Text style={{ fontSize: 9, color: 'black' }}>{formatCurrency(item?.amount || 0)}</Text>
+                                    <Text style={{ fontSize: 9, color: 'black' }}>{formatCurrency(Number(item?.amount || 0))}</Text>
                                 </View>
                                 <View style={[{ textAlign: 'left', display: 'flex', justifyContent: 'center', height: 20, paddingLeft: 5, width: 100, borderLeftWidth: 1, borderLeftColor: "#D1D5DB" }]}>
                                     <Text style={{ fontSize: 9, color: 'black' }}>{formatCurrency(item?.balance || 0)}</Text>
@@ -217,7 +246,7 @@ const InvoicePDF = ({ data }) => {
                         ))}
 
                         {data?.payments && data?.payments.length <= 20 && [...Array(20 - data?.payments.length)].map((_, i) => (
-                            <View key={i} style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: i % 2 === 0 ? "#f1f1f1" : "white", border: '1px solid #D1D5DB', borderTopWidth: i !== 0 && 0 }}>
+                            <View key={i} style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: i % 2 === 0 ? "#f1f1f1" : "white", border: '1px solid #D1D5DB', borderTopWidth: i !== 0 ? 0 : undefined }}>
                                 <View style={[{ textAlign: 'left', display: 'flex', justifyContent: 'center', height: 20, paddingLeft: 5, width: 100, }]}>
                                     <Text style={{ fontSize: 10, color: 'black' }}></Text>
                                 </View>
@@ -247,7 +276,7 @@ const InvoicePDF = ({ data }) => {
 
 
 
-const FormField = ({ data }) => {
+const FormField = ({ data } : {data : LocalData}) => {
     return (
         <View style={{ marginBottom: 5, flex: 0.5 }}>
             {['Company', 'Name', 'Contact', 'Model', 'Order No', 'Manager'].map((label, index) => (
@@ -286,7 +315,7 @@ const Header = () => {
     return (
         <View style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexDirection: 'row' }}>
             {/* <Text fontSize={60} color={'#0072BC'} fontWeight={'800'}>SENFENG</Text> */}
-            <Image src={"/logo.png"} alt="My Local Image" style={{ height: '40px', width: '200px' }} />
+            <Image src={"/logo.png"} style={{ height: '40px', width: '200px' }} />
             <div style={{ backgroundColor: '#0072BC', borderTopLeftRadius: 20, borderTopRightRadius: 20, marginRight: 70, width: '150px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} >
                 <Text style={{ fontSize: '12px', fontFamily: 'Helvetica-Bold', color: 'white', }}>
                     ACCOUNT STATEMENT
@@ -323,14 +352,14 @@ const Footer = () => {
     )
 }
 
-function truncateText(text) {
+function truncateText(text : string) {
     return text.length > 13 ? text.slice(0, 13) + "..." : text;
 }
 
-function formatCurrency(number) {
+function formatCurrency(number : number) {
     return new Intl.NumberFormat("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+       
+        maximumFractionDigits: 0,
         useGrouping: true,
     }).format(number);
 }

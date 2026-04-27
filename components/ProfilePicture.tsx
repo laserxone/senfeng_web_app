@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 import { Skeleton } from "./ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
-const ProfilePictureTeam = ({ img = "", name = "", loading }) => {
-  const [localImage, setLocalImage] = useState(null);
+const ProfilePictureTeam = ({ img = "", name = "", loading } : {img ?: string, name ?:string, loading ?:boolean}) => {
+  const [localImage, setLocalImage] = useState<string | null>(null);
   
 
   useEffect(() => {
@@ -21,7 +21,7 @@ const ProfilePictureTeam = ({ img = "", name = "", loading }) => {
     }
   }, [img]);
 
-  async function fetchImage(img) {
+  async function fetchImage(img : string) {
     try {
       const storageRef = ref(storage, img);
       const url = await getDownloadURL(storageRef);
@@ -41,7 +41,7 @@ const ProfilePictureTeam = ({ img = "", name = "", loading }) => {
           <Avatar
             className="h-[100px] w-[100px]"
           >
-            <AvatarImage src={localImage} />
+            <AvatarImage src={localImage || ""} />
             <AvatarFallback>{name?.substring(0, 2)}</AvatarFallback>
           </Avatar>
         )}

@@ -18,6 +18,7 @@ import Spinner from "../ui/spinner";
 import { Switch } from "../ui/switch";
 import InvoicePDFGatepass from "./invoice-pdf-gatepass";
 import StockSearch from "./stock-search";
+import { toast } from "sonner";
 
 
 const emptyItem = {
@@ -59,11 +60,7 @@ const OutwardModal = ({ visible, onClose, data = [], onRefresh }) => {
                             : item
                     )
                 );
-                toast({
-                    title: "Error",
-                    description: response.data?.message,
-                    variant: "destructive",
-                })
+                toast.error(response.data?.message)
             } else {
                 const blob = await pdf(
                     <InvoicePDFGatepass
@@ -130,7 +127,7 @@ const OutwardModal = ({ visible, onClose, data = [], onRefresh }) => {
                 <DialogHeader>
                     <DialogTitle>Outward Gatepass</DialogTitle>
                 </DialogHeader>
-                <ScrollArea className="max-h-[90vh] w-full pr-2">
+                <ScrollArea className="h-[80vh] w-full pr-2">
                     <form onSubmit={handleSubmit} className="space-y-4 ">
 
                         <div className="grid grid-cols-2 gap-4 px-2">

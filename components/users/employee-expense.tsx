@@ -526,7 +526,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { visible: 
           <DialogTitle>Add New Office Expense</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[80vh] px-2">
+        <ScrollArea className="h-[80vh] px-2">
           <div className="px-2">
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FieldGroup>

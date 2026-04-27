@@ -14,13 +14,11 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { StockProps } from "@/lib/types";
 
-type InventoryProp = {
-  id: number
-  name: string
-}
+type InventoryProp = Partial<StockProps>
 
-export function InventorySearch({ value, onReturn, data }: { value: number, onReturn: (val: InventoryProp) => void, data: InventoryProp[] }) {
+export function InventorySearch({ value, onReturn, data }: { value: number | null, onReturn: (val: InventoryProp) => void, data: InventoryProp[] }) {
   const [open, setOpen] = React.useState(false);
 
   return (

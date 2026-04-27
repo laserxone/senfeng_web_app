@@ -1,17 +1,13 @@
 "use client";
 
 import PageTable from "@/components/app-table-without-pagination";
-import Dropzone from "@/components/dropzone";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { ArrowUpDown, Edit, Edit2, Plus } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
+import { ArrowUpDown, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import {
   Dialog,
@@ -21,36 +17,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 
 import { Input } from "@/components/ui/input";
-import { UploadImage } from "@/lib/uploadFunction";
-import { OfficeContext } from "@/store/context/OfficeContext";
-import moment from "moment";
-import { RequiredStar } from "../RequiredStar";
+import { DeliveryType, DispatchPdf } from "@/lib/types";
+import { pdf } from "@react-pdf/renderer";
+import { ColumnDef } from "@tanstack/react-table";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
-import { Textarea } from "../ui/textarea";
-import DOPDFGatepass from "./do-pdf-gatepass";
-import { pdf } from "@react-pdf/renderer";
-import { GetProfileImage } from "@/lib/getProfileImage";
-import { Progress } from "@/components/ui/progress";
 import { DispatchOrderDialog } from "./dispatch-dialoges";
+import DOPDFGatepass from "./do-pdf-gatepass";
 
 export default function MachineDelivery() {
   const { userID, name } = useUserDetail();
-  const [data, setData] = useState([]);
-  const [selectedDelivery, setSelectedDelivery] = useState(null);
+  const [data, setData] = useState<DeliveryType[]>([]);
+  const [selectedDelivery, setSelectedDelivery] = useState<DeliveryType | null>(null);
   const [loading, setLoading] = useState(false);
-  const [selectedForEdit, setSelectedForEdit] = useState(null);
 
   useEffect(() => {
     if (userID) {
@@ -69,7 +51,7 @@ export default function MachineDelivery() {
     }
   }
 
-  const columns = [
+  const columns: ColumnDef<DeliveryType>[] = [
     {
       accessorKey: "customer_owner",
       filterFn: "includesString",
@@ -177,28 +159,28 @@ export default function MachineDelivery() {
       id: "actions",
       header: "Action",
       cell: ({ row }) => {
-       
-          return (
-            <Button
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedDelivery(row.original);
-               
-              }}
-            >
-              Create Delivery
-            </Button>
-          );
-        
+
+        return (
+          <Button
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedDelivery(row.original);
+
+            }}
+          >
+            Create Delivery
+          </Button>
+        );
+
       },
     },
   ];
 
- 
 
-  const generatePDF = async (item) => {
-    const PDFData = {...item};
+
+  const generatePDF = async (item: DispatchPdf) => {
+    const PDFData = { ...item };
 
     try {
       const blob = await pdf(
@@ -237,8 +219,8 @@ export default function MachineDelivery() {
         loading={loading}
         columns={columns}
         data={data}
-      
-        onRowClick={(val, event) => {}}
+
+        onRowClick={(val, event) => { }}
       >
         <MachineChecklist />
       </PageTable>
@@ -261,7 +243,7 @@ const MachineChecklist = () => {
   const [open, setOpen] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [ID, setID] = useState(null);
-  const [form, setForm] = useState({});
+  const [form, setForm] = useState<Record<string, any>>({});
 
   async function fetchData() {
     if (!userID) return;
@@ -276,14 +258,16 @@ const MachineChecklist = () => {
     }
   }
 
-  function handleChange(key, val) {
+
+
+  function handleChange(key: string, val: string) {
     setForm((prev) => ({
       ...prev,
       [key]: val,
     }));
   }
 
-  function handleChangeKey(oldKey, newKey) {
+  function handleChangeKey(oldKey: string, newKey: string) {
     if (!newKey || oldKey === newKey) return;
 
     setForm((prev) => {
@@ -310,7 +294,7 @@ const MachineChecklist = () => {
     setOpen(false);
   }
 
-  function normalizeKey(key) {
+  function normalizeKey(key: string) {
     return key.toLowerCase().trim().replace(/\s+/g, "_");
   }
 

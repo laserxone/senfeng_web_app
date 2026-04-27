@@ -27,6 +27,9 @@ export type UserDashboard = {
     name: string;
     designation: string;
     limited_access: boolean;
+    email ?:string
+    office ?:string
+    active ?:string
 }
 
 export type SalesCustomerMachines = {
@@ -1043,11 +1046,12 @@ export type Team = {
     office: string
 }
 
-type LoanPayment = {
+export type LoanPayment = {
     id: number;
     loan_id: number;
-    payment_date: string;
+    payment_date: Date;
     amount: string;
+    slip: string
 };
 
 export type Loan = {
@@ -1071,7 +1075,163 @@ export type UserMap = {
     user_dp: string | null;
 }
 
+export type DeliveryInformation = {
+    pin: string;
+    tod: string; // ISO date
+    city: string;
+    name: string;
+    note: string;
+    number: string;
+    address: string;
+};
 
+export type DeliveryType = {
+    id: number;
+    order_no_arr: string[];
+    delivery_date: string | null;
+    power: string | null;
+    source: string | null;
+    serial_no: string;
+    customer_name: string;
+    customer_owner: string;
+    ownership_name: string;
+    customer_id: number
+    delivery_information: DeliveryInformation;
+    dispatch_information: Record<string, any>;
+    do?: string
+}
 
+export type DispatchPdf = {
 
+    order_no: string;
+    gate_pass: string;
+    delivery_date: string | null | Date;
+    to: string | undefined;
+    tod: string;
+
+    driver_number: string;
+    driver_name: string;
+    vehicle_no: string;
+    manager: string;
+    delivery_issued_by: string;
+
+    checklist: Record<string, any>;
+
+}
+
+export type OrderItem = {
+    id: number;
+    order_id: number;
+    inventory_id: number | null;
+
+    name: string;
+    qty: number;
+    price: number;
+
+    is_machine: boolean;
+
+    machine_serial: string;
+    machine_model: string;
+    machine_source: string;
+    machine_power: string;
+
+    machine_id: number | null;
+
+    customer_id: number | null;
+    customer_name: string | null;
+    customer_owner: string | null;
+
+    booked: boolean;
+    booking_date: string | null;
+    booked_by: number | null;
+    booked_by_name: string | null;
+
+    status: string;
+
+    threshold: number;
+    new_order: number;
+    buying_price: number;
+
+    location: string;
+    sold_order_no: string | null;
+
+    show: boolean;
+
+    machine_color_bg: string;
+    machine_color_text: string;
+
+    machine_type_count: number;
+};
+
+export type Order = {
+    id: number
+    created_at: string
+    status: string
+    title: string
+    user_email: string
+    user_id: string
+    user_name: string
+    order_items: OrderItem[]
+}
+
+export type NavSingleItem = {
+    title: string
+    url: string
+    shortcut: string[]
+}
+
+export type NavItems = {
+    title: string
+    url: string
+    icon: string
+    shortcut: string[]
+    items?: NavSingleItem[]
+    isActive?: string[]
+}
+
+export interface FolderNode {
+    id: string
+    name: string
+    parentId: string | null
+    children: FolderNode[]
+    files: FileNode[]
+}
+
+export interface FileNode {
+    id: string
+    name: string
+    path: string
+    folderId: string
+    type: string
+    size: number
+    createdAt: string
+    addedBy: string
+    url?: string
+    thumbnail?: string
+}
+
+export type InventoryItem = {
+  name: string;
+  qty: number;
+  price: number;
+  buying_price: number;
+  threshold: number;
+  new_order: number;
+  is_machine: boolean;
+  machine_serial: string;
+  machine_model: string;
+  machine_source: string;
+  machine_power: string;
+  status: string;
+  isExisting: boolean;
+  inventory_id: number | null;
+  show: boolean;
+  location ?: string
+};
+
+export type ChequeProp = {
+  date : Date | undefined, 
+  amount : number, 
+  img : string
+}
 

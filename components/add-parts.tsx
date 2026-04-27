@@ -17,6 +17,7 @@ import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
 import { Textarea } from "./ui/textarea";
+import { ChequeProp } from "@/lib/types";
 
 const formSchema = z
   .object({
@@ -30,14 +31,13 @@ const formSchema = z
     order_item: z.number().nullable().optional(),
   })
 
-type Installment = { date: string, img: string, amount: number }
 
 const AddParts = ({ customer_id, user_id, visible, onClose, onRefresh }: { customer_id?: number, user_id: number, visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void> }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
   const [cheque, setCheque] = useState(false);
-  const [value, setValue] = useState();
-  const [total, setTotal] = useState<Installment[]>([]);
+  const [value, setValue] = useState<string>();
+  const [total, setTotal] = useState<ChequeProp[]>([]);
   const { state: OfficeState } = useContext(OfficeContext);
   const [newParts, setNewParts] = useState([{ name: "", model: "", power: "", serial_no: "" }])
   const [errors, setErrors] = useState<any>({})
@@ -171,7 +171,7 @@ const AddParts = ({ customer_id, user_id, visible, onClose, onRefresh }: { custo
         </DialogHeader>
 
         <div className="w-full flex flex-1">
-          <ScrollArea className="px-2 w-full max-h-[85vh]">
+          <ScrollArea className="px-2 w-full h-[85vh]">
             <div
               className={`flex gap-6 ${cheque ? "flex-row" : "flex-col"
                 } w-full`}

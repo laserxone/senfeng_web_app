@@ -258,7 +258,7 @@ const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: bool
                 Entries: {data.length}
               </Label>
             </div>
-            <ScrollArea className="h-[90vh] px-4">
+            <ScrollArea className="h-[80vh] px-4">
               {data.length == 0 ? (
                 <div className="flex flex-1 flex-col gap-2">
                   <p>No data to display</p>
@@ -344,7 +344,7 @@ const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: bool
                 Export
               </Button>
             </div>
-            <ScrollArea className="h-[90vh] px-4">
+            <ScrollArea className="h-[80vh] px-4">
               {data.length == 0 ? (
                 <div className="flex flex-1 flex-col gap-2">
                   <p>No data to display</p>

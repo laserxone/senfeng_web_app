@@ -13,17 +13,12 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { PakCities } from "@/constants/data";
 import { cn } from "@/lib/utils";
 
 export function CitiesSearch({ value, onReturn }: { value: string, onReturn: (val: string) => void }) {
   const [open, setOpen] = React.useState(false);
-  const [data, setData] = React.useState(
+  const [data] = React.useState(
     PakCities.map((item) => {
       return { value: item.name, label: item.name };
     })

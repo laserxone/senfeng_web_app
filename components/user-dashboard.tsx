@@ -322,7 +322,7 @@ export default function UserDashboard({ id, owner = false }: { id: string | null
 
           <MachinesSoldCard
             value={data?.machinesSoldThisMonth || 0}
-            percentage={data?.percentageChange || 0}
+            percentage={Number(data?.percentageChange || 0)}
             onClick={() => {
               setMachineData(data?.machinesSoldThisMonthDetail || []);
               setVisible(true);

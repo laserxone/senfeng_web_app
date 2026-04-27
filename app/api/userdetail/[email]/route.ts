@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { branchNavItem, complaintItem, dealerNavItems, employeeNavItems, FinanceItem, myCloud, ownerNavItems, POSNavItem, Prices, RepairAndMaintenance, StoreNavItem, teamAttendance, Tools } from "@/constants/data";
+import { branchNavItem, complaintItem, dealerNavItems, employeeNavItems, FinanceItem, myCloud, ownerNavItems, POSNavItem, POSNavItemAdmin, Prices, RepairAndMaintenance, StoreNavItem, teamAttendance, Tools } from "@/constants/data";
 import admin from "@/lib/firebaseAdmin";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -24,7 +24,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ emai
         const user = result.rows[0];
 
         if (!user) {
-            // deleteUserFromFirebase(email)
             return NextResponse.json({ message: "User not found, contact your manager" }, { status: 404 })
 
         }
@@ -46,7 +45,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ emai
 
             nav_items = [...ownerNavItems]
             nav_items.push(FinanceItem)
-            nav_items.push(POSNavItem)
+            nav_items.push(POSNavItemAdmin)
             nav_items.push(Tools)
             nav_items.push(Prices)
             nav_items.push(RepairAndMaintenance)

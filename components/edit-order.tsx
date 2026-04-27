@@ -23,44 +23,20 @@ import Spinner from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { InventoryItem, OrderItem, StockProps } from "@/lib/types";
 import "react-medium-image-zoom/dist/styles.css";
 import { InventorySearch } from "./inventory-select";
-interface EditOrderDialogProps {
-  visible: boolean;
-  onClose: (val?: any) => void;
-  user_id?: string | number;
-  onRefresh: () => Promise<void> | void;
-  id: string | number;
-  item?: any;
-}
-interface ItemState {
-  name: string;
-  qty: number | "";
-  price: number | "";
-  buying_price: number | "";
-  threshold: number | "";
-  new_order: number | "";
-  is_machine: boolean;
-  machine_serial: string;
-  machine_model: string;
-  machine_source: string;
-  machine_power: string;
-  status: string;
-  isExisting: boolean;
-  inventory_id: number | null;
-  location: string;
-  show: boolean;
-}
+
+type InventoryErrors = Partial<Record<keyof InventoryItem, string>>
 
 const EditOrderDialog = ({
   visible,
   onClose,
-  user_id,
   onRefresh,
   id,
   item,
-}:EditOrderDialogProps) => {
-  const [items, setItems] = useState<ItemState>({
+}: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, id?: number | null, item: OrderItem | null }) => {
+  const [items, setItems] = useState<InventoryItem>({
     name: "",
     qty: 1,
     price: 0,
@@ -102,9 +78,10 @@ const EditOrderDialog = ({
     }
   }, [item]);
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<InventoryErrors>();
   const [loading, setLoading] = useState(false);
-  const [existingInventory, setExistingInventory] = useState<any[]>([]);
+  const [existingInventory, setExistingInventory] = useState<StockProps[]>([]);
+
   const { userID } = useUserDetail() as { userID: string }
   const [manual, setManual] = useState(true);
 
@@ -123,13 +100,13 @@ const EditOrderDialog = ({
     });
   }
 
-  const handleItemChange = <K extends keyof ItemState>(field: K, value:ItemState[K]) => {
+  const handleItemChange = <K extends keyof InventoryItem>(field: K, value: InventoryItem[K]) => {
     setItems((prevState) => ({ ...prevState, [field]: value }));
     setErrors((prevState) => ({ ...prevState, [field]: "" }));
   };
 
   const validateItems = () => {
-    const itemErrors:Partial<Record<keyof ItemState, string>> = {};
+    const itemErrors: any = {};
 
     // qty required and positive
     if (!items.qty || items.qty <= 0) {
@@ -170,7 +147,7 @@ const EditOrderDialog = ({
   };
 
   const handleSubmit = async () => {
-  
+
     if (validateItems()) {
       setLoading(true);
       try {
@@ -179,14 +156,14 @@ const EditOrderDialog = ({
           items
         );
         await onRefresh();
-        handleClose();
+        handleClose(false);
       } finally {
         setLoading(false);
       }
     }
   };
 
-  function handleClose(val?: any) {
+  function handleClose(val: boolean) {
     onClose(val);
     setItems({
       name: "",
@@ -217,7 +194,7 @@ const EditOrderDialog = ({
           <DialogTitle>Edit in existing order</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="min-h-[500px] max-h-[70vh] pr-4">
+        <ScrollArea className="h-[70vh] pr-4">
           <div className="space-y-6">
             <div className="border p-4 rounded-md space-y-4">
               <div>
@@ -254,20 +231,20 @@ const EditOrderDialog = ({
                       data={existingInventory}
                       value={items.inventory_id}
                       onReturn={(val) => {
-                        handleItemChange("inventory_id", val.id);
-                        handleItemChange("name", val.name);
-                        handleItemChange("price", parseFloat(val?.price || 0));
+                        handleItemChange("inventory_id", val?.id ?? null);
+                        handleItemChange("name", val.name ?? "");
+                        handleItemChange("price", parseFloat(val?.price || "0"));
                         handleItemChange(
                           "buying_price",
-                          parseFloat(val?.buying || 0)
+                          parseFloat(val?.buying || "0")
                         );
                         handleItemChange(
                           "threshold",
-                          parseInt(val?.threshold || 0)
+                          parseInt(String(val?.threshold) || "0")
                         );
                         handleItemChange(
                           "new_order",
-                          parseInt(val?.new_order || 0)
+                          parseInt(String(val?.new_order) || "0")
                         );
                       }}
                     />
@@ -282,10 +259,14 @@ const EditOrderDialog = ({
                     <Input
                       type="number"
                       value={items.qty}
-                      onChange={(e) =>
-                        {const val = e.target.value;
-                            handleItemChange("qty", val === "" ? "" : parseFloat(val));}
-                      }
+                      onChange={(e) => {
+                        if (!isNaN(Number(e.target.value))) {
+                          handleItemChange(
+                            "qty",
+                            parseInt(e.target.value)
+                          )
+                        }
+                      }}
                     />
                     {errors?.qty && (
                       <p className="text-red-600 text-sm mt-1">{errors.qty}</p>
@@ -316,9 +297,14 @@ const EditOrderDialog = ({
                           <Input
                             type="number"
                             value={items.qty}
-                            onChange={(e) =>
-                              handleItemChange("qty", parseInt(e.target.value))
-                            }
+                            onChange={(e) => {
+                              if (!isNaN(Number(e.target.value))) {
+                                handleItemChange(
+                                  "qty",
+                                  parseInt(e.target.value)
+                                )
+                              }
+                            }}
                           />
                           {errors?.qty && (
                             <p className="text-red-600 text-sm mt-1">
@@ -331,10 +317,15 @@ const EditOrderDialog = ({
                           <Input
                             type="number"
                             value={items.price}
-                            onChange={(e) =>
-                              {const val = e.target.value;
-                            handleItemChange("price", val === "" ? "" : parseFloat(val));}
-                            }
+                            onChange={(e) => {
+                              if (!isNaN(Number(e.target.value))) {
+                                handleItemChange(
+                                  "price",
+                                  parseInt(e.target.value)
+                                )
+                              }
+                            }}
+
                           />
                         </div>
                         <div>
@@ -342,10 +333,15 @@ const EditOrderDialog = ({
                           <Input
                             type="number"
                             value={items.buying_price}
-                            onChange={(e) =>
-                            {const val = e.target.value;
-                            handleItemChange("buying_price", val === "" ? "" : parseFloat(val));}
-                            }
+                            onChange={(e) => {
+                              if (!isNaN(Number(e.target.value))) {
+                                handleItemChange(
+                                  "buying_price",
+                                  parseInt(e.target.value)
+                                )
+                              }
+                            }}
+                            
                           />
                         </div>
                         <div>
@@ -353,10 +349,14 @@ const EditOrderDialog = ({
                           <Input
                             type="number"
                             value={items.threshold}
-                            onChange={(e) =>
-                              {const val = e.target.value;
-                            handleItemChange("threshold", val === "" ? "" : parseFloat(val));}
-                            }
+                            onChange={(e) => {
+                              if (!isNaN(Number(e.target.value))) {
+                                handleItemChange(
+                                  "threshold",
+                                  parseInt(e.target.value)
+                                )
+                              }
+                            }}
                           />
                         </div>
                         <div>
@@ -364,10 +364,14 @@ const EditOrderDialog = ({
                           <Input
                             type="number"
                             value={items.new_order}
-                            onChange={(e) =>
-                              {const val = e.target.value;
-                            handleItemChange("new_order", val === "" ? "" : parseFloat(val));}
-                            }
+                             onChange={(e) => {
+                              if (!isNaN(Number(e.target.value))) {
+                                handleItemChange(
+                                  "new_order",
+                                  parseInt(e.target.value)
+                                )
+                              }
+                            }}
                           />
                         </div>
                       </div>
@@ -442,7 +446,7 @@ const EditOrderDialog = ({
                               handleItemChange("machine_model", val)
                             }
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select Model" />
                             </SelectTrigger>
                             <SelectContent>
@@ -489,7 +493,7 @@ const EditOrderDialog = ({
                               handleItemChange("machine_source", val)
                             }
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select Source" />
                             </SelectTrigger>
                             <SelectContent>
@@ -525,7 +529,7 @@ const EditOrderDialog = ({
                               handleItemChange("machine_power", val)
                             }
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select Power" />
                             </SelectTrigger>
                             <SelectContent>
@@ -546,10 +550,14 @@ const EditOrderDialog = ({
                         <Input
                           type="number"
                           value={items.qty}
-                          onChange={(e) =>
-                            {const val = e.target.value;
-                            handleItemChange("qty", val === "" ? "" : parseFloat(val));}
-                          }
+                          onChange={(e) => {
+                              if (!isNaN(Number(e.target.value))) {
+                                handleItemChange(
+                                  "qty",
+                                  parseInt(e.target.value)
+                                )
+                              }
+                            }}
                         />
                       </div>
                     </div>
@@ -561,7 +569,7 @@ const EditOrderDialog = ({
         </ScrollArea>
 
         <DialogFooter className="mt-6">
-          <Button type="button" variant="secondary" onClick={handleClose}>
+          <Button type="button" variant="secondary" onClick={()=>handleClose(false)}>
             Cancel
           </Button>
           <Button disabled={loading} onClick={handleSubmit}>

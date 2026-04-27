@@ -1,9 +1,9 @@
 import pool from "@/config/db"
 import { supabase } from "@/lib/supabaseClient"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 
-export async function DELETE(req, { params }) {
+export async function DELETE(req : NextRequest, { params } : {params : Promise<{id : string}>}) {
 
     const { id } = await params
     if (!id) {
@@ -24,10 +24,24 @@ export async function DELETE(req, { params }) {
         const folderIds = result.rows.map((row) => row.id)
 
         const docResult = await pool.query(`
-            SELECT path FROM superadmin_document WHERE folder_id = ANY($1)
+            SELECT path, thumbnail_path FROM superadmin_document WHERE folder_id = ANY($1)
         `, [folderIds])
 
         const paths = docResult.rows.map((row) => row.path)
+        const thumbnail_paths = docResult.rows.map((row)=>row.thumbnail_path)
+
+         if (thumbnail_paths.length > 0) {
+            const { error: storageError } = await supabase
+                .storage
+                .from('superadmin.documents')
+                .remove(thumbnail_paths)
+
+            if (storageError) {
+                console.log("Storage delete error:", storageError)
+                return NextResponse.json({ message: "Failed to delete files from storage" }, { status: 500 })
+            }
+
+        }
 
         if (paths.length > 0) {
             const { error: storageError } = await supabase
@@ -45,13 +59,13 @@ export async function DELETE(req, { params }) {
         await pool.query(`DELETE FROM superadmin_folder WHERE id = $1`, [id])
 
         return NextResponse.json({ message: "Folder and documents deleted" }, { status: 200 })
-    } catch (error) {
+    } catch (error : any) {
         return NextResponse.json({ message: error.message || "Internal server error" }, { status: 500 })
     }
 
 }
 
-export async function PUT(req, { params }) {
+export async function PUT(req : NextRequest, { params } : {params : Promise<{id : string}>}) {
   try {
     const data = await req.json();
     const { ...updates } = data;
@@ -61,7 +75,7 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
-    const fields = [];
+    const fields : any[] = [];
     const values = [];
 
     Object.entries(updates).forEach(([key, value], index) => {

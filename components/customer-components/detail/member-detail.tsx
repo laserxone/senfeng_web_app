@@ -507,10 +507,10 @@ const BillingInformation = ({ total, received, balance }: { total: number | unde
 
       <div className="grid grid-cols-3 gap-4 text-xs sm:text-sm mt-2 font-bold">
         <p>
-          <CurrencyFormatter amount={total} />
+          <CurrencyFormatter amount={total ?? 0} />
         </p>
         <p className="text-green-600">
-          <CurrencyFormatter amount={received} />
+          <CurrencyFormatter amount={received ?? 0} />
         </p>
         <p className="text-red-600">
           <CurrencyFormatter amount={balance} />

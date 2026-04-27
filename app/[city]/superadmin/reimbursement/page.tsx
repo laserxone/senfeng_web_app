@@ -522,7 +522,7 @@ const ImageSheet = ({
         <SheetHeader>
           <SheetTitle>Bill Detail</SheetTitle>
         </SheetHeader>
-        <ScrollArea className="flex flex-1 h-[90vh] px-4">
+        <ScrollArea className="flex flex-1 h-[80vh] px-4">
           <div className="flex flex-col">
             <Button
               className="mb-2"

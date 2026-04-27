@@ -1,31 +1,38 @@
 import Dropzone from "@/components/dropzone";
-import { useEffect } from "react";
+import { Dispatch, SetStateAction, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import AppCalendar from "@/components/appCalendar";
+import { ChequeProp } from "@/lib/types";
 
-const ChequeCredit = ({ total, value, setTotal, setValue }) => {
+
+
+const ChequeCredit = ({ total, value, setTotal, setValue }: { total: ChequeProp[], value: string | undefined, setTotal: Dispatch<SetStateAction<ChequeProp[]>>, setValue: Dispatch<SetStateAction<string | undefined>> }) => {
   useEffect(() => {
     if (Number(value) > 0) {
       setTotal(
         Array.from({ length: Number(value) }, () => ({
-          date: "",
-          amount: "",
+          date: undefined,
+          amount: 0,
           img: "",
         }))
       );
     }
   }, [value]);
 
-  function handleUpdateData(val, i, key) {
+  function handleUpdateData<K extends keyof ChequeProp>(
+    val: ChequeProp[K],
+    i: number,
+    key: K
+  ) {
     setTotal((prevState) => {
       const newState = [...prevState];
       newState[i][key] = val;
@@ -75,7 +82,7 @@ const ChequeCredit = ({ total, value, setTotal, setValue }) => {
               placeholder="Enter amount"
               value={item?.amount || ""}
               onChange={(e) => {
-                if (!isNaN(e.target.value)) {
+                if (!isNaN(Number(e.target.value))) {
                   handleUpdateData(Number(e.target.value), index, "amount");
                 }
               }}
@@ -98,7 +105,7 @@ const ChequeCredit = ({ total, value, setTotal, setValue }) => {
           </div>
         </div>
       ))}
-      
+
     </div>
   );
 };

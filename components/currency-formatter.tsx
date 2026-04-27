@@ -1,7 +1,7 @@
 import React from "react";
 
-export default function CurrencyFormatter({ amount, showDecimals = false, showPKR = true }) {
-  const numericValue = parseFloat(amount);
+export default function CurrencyFormatter({ amount, showDecimals = false, showPKR = true } : {amount : number | string, showDecimals ?: boolean, showPKR ?: boolean}) {
+  const numericValue = typeof amount === 'string' ? parseFloat(amount) : amount;
 
   // Check if it's a valid number after conversion
   if (isNaN(numericValue)) {

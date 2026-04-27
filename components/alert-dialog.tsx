@@ -23,7 +23,7 @@ type ConfirmationDialogProps = {
 const ConfimationDialog = ({ title, description, onPressYes,onPressCancel, open, loading, children = null, valid = true }: ConfirmationDialogProps) => {
   return (
     <AlertDialog open={open}>
-      {/* <AlertDialogTrigger >{children}</AlertDialogTrigger> */}
+     
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

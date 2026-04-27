@@ -27,6 +27,7 @@ import {
   updatePassword,
 } from "firebase/auth";
 import { useContext, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function Page() {
   const { state: UserState } = useContext(UserContext);
@@ -35,7 +36,7 @@ export default function Page() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
- 
+
   const { userID } = useUserDetail();
 
   useEffect(() => {
@@ -45,20 +46,15 @@ export default function Page() {
     }
   }, [userID]);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e?.target?.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImage(reader.result);
+        setImage(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
-  };
-
-  const handleSave = async () => {
-    // setLoading(true)
-    console.log("pressed");
   };
 
   function checkStatus() {
@@ -71,24 +67,19 @@ export default function Page() {
     setPasswordLoading(true);
     const auth = getAuth();
     const user = auth.currentUser;
+    if (!user?.email) return
     const credential = EmailAuthProvider.credential(
-      user.email,
+      user?.email,
       currentPassword
     );
 
     try {
       await reauthenticateWithCredential(user, credential);
       await updatePassword(user, newPassword);
-      toast({
-        description: "Password changed successfully",
-      });
-    } catch (error) {
+      toast.success("Password changed successfully");
+    } catch (error: any) {
       console.log(error.message);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.message || "Error updating password",
-      });
+      toast.error(error?.message || "Error updating password");
     }
     setPasswordLoading(false);
   };
@@ -121,13 +112,6 @@ export default function Page() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your name"
             />
-            <Button
-              disabled={!checkStatus()}
-              onClick={handleSave}
-              className="w-full"
-            >
-              Save Changes
-            </Button>
 
             <Dialog>
               <DialogTrigger asChild>

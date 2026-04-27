@@ -92,12 +92,13 @@ export default function AppSidebar({ office }: { office: string }) {
             <SidebarMenu>
               {
                 nav_items.map((item, index) => {
-                  const Icon = item.icon ? Icons[item.icon] : Icons.logo;
+                  const Icon = item.icon ? Icons[item.icon as keyof typeof Icons] : Icons.logo;
+                   const openCollapsible = item?.isActive ? item.isActive?.some(val => pathname.includes(val)) : false
                   return item?.items && item?.items?.length > 0 ? (
                     <Collapsible
                       key={item.title}
                       asChild
-                      defaultOpen={item.isActive}
+                      defaultOpen={openCollapsible}
                       className="group/collapsible"
                     >
                       <SidebarMenuItem>
@@ -128,7 +129,7 @@ export default function AppSidebar({ office }: { office: string }) {
                                     href={`/${base_route}${subItem.url}`}
                                   >
                                     <span className="text-[14px]">
-                                      {subItem.title} {subItem.title === "Machine Delivery" && pendingDelivery > 0 && <NotificationBadge count={pendingDelivery} className="ml-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm font-bold shadow-sm" />}
+                                      {subItem.title} {subItem.title === "Machine Delivery" && pendingDelivery > 0 && <NotificationBadge count={pendingDelivery}/>}
                                     </span>
                                   </Link>
                                 </SidebarMenuSubButton>

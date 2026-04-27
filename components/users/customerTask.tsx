@@ -24,6 +24,7 @@ import {
 import axios from "@/lib/axios";
 import moment from "moment";
 import Spinner from "../ui/spinner";
+import { toast } from "sonner";
 
 const getSchema = (isClientSelected) =>
   z.object({
@@ -214,7 +215,7 @@ const TaskDetail = ({
         status: values.status,
       })
       .then(() => {
-        toast({ title: "Status updated" });
+        toast.success("Status updated");
         onClose(false);
       })
 
@@ -224,20 +225,7 @@ const TaskDetail = ({
       });
   }
 
-  async function handleDelete() {
-    setDeleteLoading(true);
-    axios
-      .delete(`/user/${user_id}/task/${detail.id}`)
-      .then(() => {
-        onClose(false);
-        toast({ title: "Task deleted" });
-      })
-
-      .finally(() => {
-        setDeleteLoading(false);
-        onDelete();
-      });
-  }
+ 
 
   return (
     <Sheet open={visible} onOpenChange={onClose}>

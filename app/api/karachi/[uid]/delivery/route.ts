@@ -15,6 +15,7 @@ export async function GET(req, { params }) {
     s.delivery_information,
     s.serial_no,
     s.dispatch_information, 
+    s.customer_id,
     c.name AS customer_name, 
     c.owner AS customer_owner,
     u.name AS ownership_name
@@ -141,7 +142,7 @@ export async function DELETE(req) {
     if (img) {
       try {
         await deleteObject(ref(storage, img));
-      } catch (err) {
+      } catch (err : any) {
         console.warn("Image delete failed:", err?.message);
         throw err;
       }

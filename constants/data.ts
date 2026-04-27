@@ -3,7 +3,7 @@ export const ownerNavItems = [
     title: "Dashboard",
     url: "/dashboard",
     icon: "dashboard",
-    isActive: false,
+    
     shortcut: ["d", "a", "s", "h"],
     items: [],
   },
@@ -11,7 +11,7 @@ export const ownerNavItems = [
     title: "Complaint & Installation",
     url: "/complaint",
     icon: "complaint",
-    isActive: false,
+    
     shortcut: ["c", "o", "m", "p"],
     items: [],
   },
@@ -19,7 +19,7 @@ export const ownerNavItems = [
     title: "Customer",
     url: "#",
     icon: "customer",
-    isActive: false,
+    
 
     items: [
       {
@@ -60,7 +60,7 @@ export const ownerNavItems = [
     title: "Human Resource",
     url: "#",
     icon: "hr",
-    isActive: false,
+    isActive: ["attendance", "salary", "reimbursement", 'commission', 'team', "fine", "loans"],
 
     items: [
       {
@@ -110,7 +110,7 @@ export const ownerNavItems = [
     title: "Task Management",
     url: "#",
     icon: "task",
-    isActive: false,
+    
 
     items: [
       {
@@ -130,7 +130,7 @@ export const ownerNavItems = [
     url: "/expense",
     icon: "expense",
     shortcut: ["o", "f", "f"],
-    isActive: false,
+    
     items: [], // No child items
   },
 
@@ -139,7 +139,7 @@ export const ownerNavItems = [
   //   url: '/inventory',
   //   icon: 'inventory',
   //   shortcut: ['i', 'n', 'v'],
-  //   isActive: false,
+  //   
   //   items: [] // No child items
   // },
 
@@ -148,15 +148,15 @@ export const ownerNavItems = [
     url: "/dms",
     icon: "dms",
     shortcut: ["d", "m", "s"],
-    isActive: false,
-    items: [], // No child items
+    
+    items: [],
   },
   {
     title: "News",
     url: "/news",
     icon: "news",
     shortcut: ["n", "e", "w", "s"],
-    isActive: false,
+    
     items: [], // No child items
   },
 
@@ -165,14 +165,14 @@ export const ownerNavItems = [
     url: "/cloud",
     icon: "cloud",
     shortcut: ["c", "l", "o"],
-    isActive: false,
+    
     items: [],
   },
   {
     title: "Delivery",
     url: "#",
     icon: "truck",
-    isActive: false,
+    
 
     items: [
       {
@@ -199,15 +199,15 @@ export const FinanceItem = {
   url: "/finance",
   icon: "finance",
   shortcut: ["f", "i", "n", "a"],
-  isActive: false,
-  items: [], // No child items
+  
+  items: [], 
 };
 
 export const complaintItem = {
   title: "Complaint & Installation",
   url: "/complaint",
   icon: "complaint",
-  isActive: false,
+  
   shortcut: ["c", "o", "m", "p"],
   items: [],
 };
@@ -217,7 +217,7 @@ export const myCloud = {
   url: "/cloud",
   icon: "cloud",
   shortcut: ["c", "l", "o"],
-  isActive: false,
+  
   items: [],
 };
 
@@ -226,7 +226,7 @@ export const teamAttendance = {
   url: "/teamattendance",
   icon: "userPen",
   shortcut: ["t", "a", "t"],
-  isActive: false,
+  
   items: [],
 };
 
@@ -235,7 +235,7 @@ export const employeeNavItems = [
     title: "Dashboard",
     url: "/dashboard",
     icon: "dashboard",
-    isActive: false,
+    
     shortcut: ["d", "a", "s", "h"],
     items: [],
   },
@@ -243,7 +243,7 @@ export const employeeNavItems = [
     title: "Task Management",
     url: "/task",
     icon: "task",
-    isActive: false,
+    
     shortcut: ["t", "a", "s", "k"],
     items: [],
   },
@@ -252,14 +252,14 @@ export const employeeNavItems = [
     title: "Customers",
     url: "/customer",
     icon: "customer",
-    isActive: false,
+    
     shortcut: ["c", "u", "s"],
     items: [],
   },
   {
     title: "Members",
     url: "/member",
-    isActive: false,
+    
     icon: "member",
     shortcut: ["m", "e", "m"],
     items: [],
@@ -269,25 +269,17 @@ export const employeeNavItems = [
     url: "/dms",
     icon: "dms",
     shortcut: ["d", "m", "s"],
-    isActive: false,
-    items: [], // No child items
+    
+    items: [], 
   },
   {
     title: "Commission",
     url: "/commission",
     icon: "commission",
     shortcut: ["c", "o", "m"],
-    isActive: false,
-    items: [], // No child items
+    
+    items: [], 
   },
-  // {
-  //   title: 'Messages',
-  //   url: '/messages',
-  //   icon: 'messages',
-  //   shortcut: ['m', 's', 'g'],
-  //   isActive: false,
-  //   items: [] // No child items
-  // },
 ];
 
 export const dealerNavItems = [
@@ -295,7 +287,7 @@ export const dealerNavItems = [
     title: "Dashboard",
     url: "/dashboard",
     icon: "dashboard",
-    isActive: false,
+    
     shortcut: ["d", "a", "s", "h"],
     items: [],
   },
@@ -303,14 +295,14 @@ export const dealerNavItems = [
     title: "Customers",
     url: "/customer",
     icon: "customer",
-    isActive: false,
+    
     shortcut: ["c", "u", "s"],
     items: [],
   },
   {
     title: "Members",
     url: "/member",
-    isActive: false,
+    
     icon: "member",
     shortcut: ["m", "e", "m"],
     items: [],
@@ -320,8 +312,8 @@ export const dealerNavItems = [
     url: "/commission",
     icon: "commission",
     shortcut: ["c", "o", "m"],
-    isActive: false,
-    items: [], // No child items
+    
+    items: [], 
   },
 ];
 
@@ -330,25 +322,17 @@ export const branchNavItem = {
   url: "/expense",
   icon: "expense",
   shortcut: ["o", "f", "f"],
-  isActive: false,
-  items: [], // No child items
-};
-
-export const InventoryNavItem = {
-  title: "Inventory",
-  url: "/inventory",
-  icon: "inventory",
-  shortcut: ["i", "n", "v"],
-  isActive: false,
+  
   items: [],
 };
+
 
 export const StoreNavItem = [
   {
     title: "Dashboard",
     url: "/dashboard",
     icon: "dashboard",
-    isActive: false,
+    
     shortcut: ["d", "a", "s", "h"],
     items: [],
   },
@@ -356,7 +340,7 @@ export const StoreNavItem = [
     title: "Task Management",
     url: "/task",
     icon: "task",
-    isActive: false,
+    
     shortcut: ["t", "a", "s", "k"],
     items: [],
   },
@@ -365,14 +349,14 @@ export const StoreNavItem = [
     url: "/dms",
     icon: "dms",
     shortcut: ["d", "m", "s"],
-    isActive: false,
+    
     items: [], 
   },
   {
     title: "Delivery",
     url: "#",
     icon: "truck",
-    isActive: false,
+    
 
     items: [
       {
@@ -397,11 +381,11 @@ export const StoreNavItem = [
   },
 ];
 
-export const POSNavItem = {
+export const POSNavItemAdmin = {
   title: "Point Of Sale",
   url: "#",
   icon: "pos",
-  isActive: false,
+  
 
   items: [
     {
@@ -422,11 +406,20 @@ export const POSNavItem = {
   ],
 };
 
+export const POSNavItem = {
+  title: "Point Of Sale",
+  url: "/pos",
+  icon: "pos",
+   shortcut: ["p", "o", "s"],
+  items: [],
+};
+
+
 export const Tools = {
   title: "Tools",
   url: "#",
   icon: "tools",
-  isActive: false,
+  
 
   items: [
     {
@@ -483,7 +476,7 @@ export const Prices = {
   url: "/prices",
   icon: "coins",
   shortcut: ["p", "r", "i"],
-  isActive: false,
+  
   items: [],
 };
 
@@ -492,7 +485,7 @@ export const RepairAndMaintenance = {
   url: "/repairandmaintenance",
   icon: "settings",
   shortcut: ["r", "a", "m"],
-  isActive: false,
+  
   items: [],
 };
 

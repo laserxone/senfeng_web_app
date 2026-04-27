@@ -16,6 +16,8 @@ import { UploadImage } from "@/lib/uploadFunction";
 import axios from "@/lib/axios";
 import useUserDetail from "@/hooks/use-user-detail";
 import Spinner from "@/components/ui/spinner";
+import { ChequeProp } from "@/lib/types";
+
 
 export default function AddCheque({
   visible,
@@ -23,10 +25,16 @@ export default function AddCheque({
   saleID,
   customer_id,
   onRefresh,
+} : {
+  visible:boolean
+  onClose : (val : boolean)=> void
+  saleID : number | string
+  customer_id ?: number
+  onRefresh : ()=> Promise<void>
 }) {
-  const [total, setTotal] = useState([]);
-  const [value, setValue] = useState();
-  const [errors, setErrors] = useState(null);
+  const [total, setTotal] = useState<ChequeProp[]>([]);
+  const [value, setValue] = useState<string>();
+  const [errors, setErrors] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { state: OfficeState } = useContext(OfficeContext);
   const { userID } = useUserDetail();
@@ -81,7 +89,7 @@ export default function AddCheque({
           <DialogTitle>Credit Cheque</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="px-2 max-h-[90vh] ">
+        <ScrollArea className="px-2 h-[80vh] ">
           <ChequeCredit
             setTotal={setTotal}
             setValue={setValue}

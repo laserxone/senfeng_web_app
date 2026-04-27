@@ -1,7 +1,7 @@
 import { Bell } from "lucide-react";
-import { Button } from "./ui/button";
+import { ReactNode } from "react";
 
-export default function NotificationBadge({ count, max = 99 }) {
+export default function NotificationBadge({ count, max = 99 }: { count: number, max?: number }) {
   const display = count > max ? `${max}+` : count;
 
   return (
@@ -41,6 +41,15 @@ export function BadgeCount({
   className = "",
   badgeClassName = "",
   offset = { top: -4, right: -4 },
+} : {
+  children : ReactNode
+  count ?: number
+  max ?: number
+  showZero ?: boolean
+  dot ?: boolean
+  className ?: string
+  badgeClassName ?: string
+  offset ?: {top : number, right : number}
 }) {
   const display = typeof count === "number" && count > max ? `${max}+` : count;
   const shouldShow = dot || !!count || (count === 0 && showZero);
@@ -49,11 +58,10 @@ export function BadgeCount({
       {children}
       {shouldShow && (
         <span
-          className={`absolute select-none ${
-            dot
+          className={`absolute select-none ${dot
               ? "h-2 w-2 rounded-full bg-red-500"
               : "min-w-4 max-w-[3.25rem] truncate rounded-full bg-red-600 px-1.5 py-[2px] text-[10px] font-semibold leading-none text-white shadow-sm flex items-center justify-center animate-pulse-opacity"
-          } ${badgeClassName}`}
+            } ${badgeClassName}`}
           style={{ top: offset.top, right: offset.right }}
           aria-label={dot ? "notifications" : `notifications: ${display}`}
           title={dot ? "" : String(display)}

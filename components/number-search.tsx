@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronsUpDown } from "lucide-react";
+import { ChevronsUpDown } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -13,13 +13,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { CountriesList } from "@/constants/data";
-import { cn } from "@/lib/utils";
 
 type CountriesType = {
   flag: string
@@ -40,7 +34,7 @@ export function NumberSearch({ value, onReturn }: { value: string, onReturn: (va
   return (
     <div className="flex flex-col gap-4">
       <Button
-      type="button"
+        type="button"
         variant="outline"
         role="combobox"
         aria-expanded={open}

@@ -1,8 +1,8 @@
 import pool from "@/config/db"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 
-export async function DELETE(req, { params }) {
+export async function DELETE(req : NextRequest, { params } : {params : Promise<{id : string}>}) {
 
     const { id } = await params
     if (!id) {
@@ -12,7 +12,7 @@ export async function DELETE(req, { params }) {
     try {
         await pool.query(`DELETE FROM superadmin_document WHERE id = $1`, [id])
         return NextResponse.json({ message: "Document deleted" }, { status: 200 })
-    } catch (error) {
+    } catch (error : any) {
         return NextResponse.json({ message: error.message || "Internal server error" }, { status: 500 })
     }
 

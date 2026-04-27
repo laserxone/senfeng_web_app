@@ -352,11 +352,11 @@ export default function CustomerMainPage({ onReturn } : {onReturn : (val : numbe
             data={data.filter((item) => !item.ownership)}
             visible={quickAction}
             onClose={setQuickAction}
-            onRefresh={(id, ownership) => {
+            onRefresh={(id, ownership, ownership_name) => {
               setData((prev) => {
                 const updatedData = prev.map((item) => {
                   if (item.id === id) {
-                    return { ...item, ownership: ownership };
+                    return { ...item, ownership: ownership ? ownership : undefined, ownership_name : ownership ? ownership_name : "" };
                   }
                   return item;
                 });

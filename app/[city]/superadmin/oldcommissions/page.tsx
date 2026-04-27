@@ -25,9 +25,34 @@ import moment from "moment";
 import { useEffect, useRef, useState } from "react";
 import "react-medium-image-zoom/dist/styles.css";
 
+
+type CustomerMachinesResponse = {
+  customer_id: number;
+  customer_name: string;
+  customer_owner: string;
+  customer_owner_name: string;
+  customer_number: string[];
+  machines: Machine[];
+};
+
+type Machine = {
+  sale_id: number;
+  serial_no: string;
+  power: string | null;
+  source: string | null;
+  order_no_arr: string[];
+  contract_date: string; 
+  sold_by_name: string;
+  sold_by_id: number;
+  price: string; 
+  speed_money: boolean;
+  speed_money_note: string;
+  speed_money_amount: string | null;
+};
+
 export default function Page() {
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<CustomerMachinesResponse[]>([]);
   const hasFetched = useRef(false);
   const [search, setSearch] = useState("");
   const { userID } = useUserDetail();
@@ -50,6 +75,8 @@ export default function Page() {
       setLoading(false);
     }
   }
+
+ 
 
   const filteredData = data.filter((item) =>
     `${item.customer_name} ${item.customer_owner}`
@@ -82,7 +109,7 @@ export default function Page() {
               value={customer.customer_id.toString()}
               className="border rounded-lg shadow-sm"
             >
-              <AccordionTrigger className="text-left px-4 py-3 font-semibold text-lg">
+              <AccordionTrigger className="px-4 py-3 font-semibold text-lg">
                 <div className="w-full flex flex-col sm:flex-row sm:justify-between">
                   <div>
                     <p>{customer?.customer_name}</p>
@@ -90,7 +117,7 @@ export default function Page() {
                       Owner: {customer?.customer_owner}
                     </p>
                   </div>
-                  <div>
+                  <div className="text-right whitespace-normal wrap-break-word max-w-sm">
                     <div className="text-sm text-muted-foreground mt-2 sm:mt-0">
                       Number:{" "}
                       {Array.isArray(customer?.customer_number)
@@ -136,11 +163,11 @@ export default function Page() {
   );
 }
 
-const RenderEachMachine = ({ machine, onReturn }) => {
+const RenderEachMachine = ({ machine, onReturn } : {machine : Machine, onReturn : (val : number)=> void}) => {
   const [selectedPercentage, setSelectedPercentage] = useState("2");
   const [showManual, setShowManual] = useState(false);
   const [manualNumber, setManualNumber] = useState("");
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<number | null>(null);
   const [commissionAmount, setCommissionAmount] = useState(0);
   const [loading, setLoading] = useState(false);
   const { userID } = useUserDetail();
@@ -164,7 +191,7 @@ const RenderEachMachine = ({ machine, onReturn }) => {
     }
   }, [selectedPercentage, selectedUser, machine, showManual, manualNumber]);
 
-  async function handleClearCommission(machine) {
+  async function handleClearCommission(machine : Machine) {
     setLoading(true);
     const formData = {
       sale_id: machine.sale_id,

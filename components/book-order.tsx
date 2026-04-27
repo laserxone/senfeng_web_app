@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-
 import { RequiredStar } from "@/components/RequiredStar";
 import {
   Dialog,
@@ -14,18 +13,24 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { MyCustomer, OrderItem } from "@/lib/types";
 import "react-medium-image-zoom/dist/styles.css";
 import { CustomerSearchWithData } from "./customer-search-with-data";
 
 const BookOrderDialog = ({
   visible,
   onClose,
-  user_id,
   onRefresh,
   id,
   item,
+}: {
+  visible: boolean
+  onClose: () => void
+  onRefresh: () => Promise<void>
+  id?: number
+  item: OrderItem | null
 }) => {
-  const [customer, setCustomer] = useState(null)
+  const [customer, setCustomer] = useState<MyCustomer | null>(null)
   const [loading, setLoading] = useState(false);
   const { userID } = useUserDetail()
 
@@ -40,11 +45,11 @@ const BookOrderDialog = ({
           {
             customer_id: customer?.id,
             type: "Machine",
-            serial_no: item.machine_model,
-            power: item.machine_power,
-            source: item.machine_source,
+            serial_no: item?.machine_model,
+            power: item?.machine_power,
+            source: item?.machine_source,
             sell_by: customer?.ownership,
-            order_no_arr : [item?.machine_serial],
+            order_no_arr: [item?.machine_serial],
             commission: true,
           }
         )
@@ -55,8 +60,8 @@ const BookOrderDialog = ({
     }
   };
 
-  function handleClose(val) {
-    onClose(val);
+  function handleClose() {
+    onClose();
     setCustomer(null)
   }
 
@@ -67,7 +72,7 @@ const BookOrderDialog = ({
           <DialogTitle>Book machine for customer</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className=" pr-4">
+      
           <div className="space-y-6">
             <div className="border p-4 rounded-md space-y-4">
               <div>
@@ -79,7 +84,7 @@ const BookOrderDialog = ({
 
             </div>
           </div>
-        </ScrollArea>
+        
 
         <DialogFooter className="mt-6">
           <Button type="button" variant="secondary" onClick={handleClose}>

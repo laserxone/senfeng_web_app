@@ -2,23 +2,17 @@
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { debounce } from "@/lib/debounce";
+import { MachinePayment } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import AppCalendar from "./appCalendar";
-import { RequiredStar } from "./RequiredStar";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "./ui/form";
+import { Field, FieldError, FieldGroup, FieldLabel } from "./ui/field";
 import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import {
@@ -30,9 +24,6 @@ import {
 } from "./ui/select";
 import Spinner from "./ui/spinner";
 import { Textarea } from "./ui/textarea";
-import { MachinePayment } from "@/lib/types";
-import { toast } from "sonner";
-import { Field, FieldError, FieldGroup, FieldLabel } from "./ui/field";
 
 
 const formSchema = z.object({
@@ -184,7 +175,7 @@ const EditPayment = ({
           <DialogTitle>Edit Payment</DialogTitle>
         </DialogHeader>
         <div className="w-full ">
-          <ScrollArea className="px-2 w-full h-[85vh]">
+          <ScrollArea className="px-2 w-full h-[80vh]">
             <div className="px-2">
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FieldGroup>

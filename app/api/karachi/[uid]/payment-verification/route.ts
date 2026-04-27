@@ -24,17 +24,17 @@ LEFT JOIN customer c ON s.customer_id = c.id
 
 const grouped = groupPaymentsByCustomerMachine(result.rows);
         return NextResponse.json(grouped, { status: 200 })
-    } catch (error) {
+    } catch (error : any) {
         return NextResponse.json({ message: error.message || "Internal server error" }, { status: 500 })
     }
 }
 
 
 
-function groupPaymentsByCustomerMachine(data) {
+function groupPaymentsByCustomerMachine(data : any) {
   const customerMap = new Map();
 
-  data.forEach((row) => {
+  data.forEach((row : any) => {
     const {
       customer_id,
       customer_name,
@@ -44,7 +44,7 @@ function groupPaymentsByCustomerMachine(data) {
       serial_no,
       power,
       source,
-      order_no,
+      order_no_arr,
       contract_date,
       ...paymentData
     } = row;
@@ -61,7 +61,7 @@ function groupPaymentsByCustomerMachine(data) {
 
     const customer = customerMap.get(customer_id);
 
-    let machine = customer.machines.find((m) => m.machine_id === machine_id);
+    let machine = customer.machines.find((m : any) => m.machine_id === machine_id);
 
     if (!machine) {
       machine = {
@@ -69,7 +69,7 @@ function groupPaymentsByCustomerMachine(data) {
         serial_no,
         power,
         source,
-        order_no,
+        order_no_arr,
         contract_date,
         payments: [],
       };
@@ -84,14 +84,14 @@ function groupPaymentsByCustomerMachine(data) {
   
   const filteredCustomers = Array.from(customerMap.values())
     .map((customer) => {
-      const filteredMachines = customer.machines.filter((machine) => {
-        return machine.payments.some((payment) => payment.status !== "approved");
+      const filteredMachines = customer.machines.filter((machine : any) => {
+        return machine.payments.some((payment : any) => payment.status !== "approved");
       });
 
       if (filteredMachines.length === 0) return null;
 
       filteredMachines.sort(
-        (a, b) => new Date(a.contract_date) - new Date(b.contract_date)
+        (a : any, b : any) => new Date(a.contract_date).getTime() - new Date(b.contract_date).getTime()
       );
 
       return {

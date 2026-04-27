@@ -1,55 +1,49 @@
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserContext } from "@/store/context/UserContext";
+import { MachineProps } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash, Trash2 } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import AppCalendar from "./appCalendar";
+import { RequiredStar } from "./RequiredStar";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "./ui/form";
+import { Field, FieldError, FieldGroup, FieldLabel } from "./ui/field";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
 import { Textarea } from "./ui/textarea";
-import useUserDetail from "@/hooks/use-user-detail";
-import { RequiredStar } from "./RequiredStar";
 
-const EditParts = ({ machine_id, visible, onClose, onRefresh, data, }) => {
+const formSchema = z.object({
+  serial_no: z.string().min(1, { message: "Name is required." }),
+  contractDate: z.date({ error: "Contract date is required." }),
+  isSpeedMoney: z.boolean(),
+  speedMoney: z.coerce.number<number>().optional(),
+  speedMoneyNote: z.string().optional(),
+  totalPrice: z.coerce.number<number>({ error: "Price is required" }),
+  cnic: z.string().optional(),
+});
+type FormValues = z.infer<typeof formSchema>;
+
+const EditParts = ({ machine_id, visible, onClose, onRefresh, data, }: { machine_id?: number | string, visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, data?: MachineProps }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [orderNumbers, setOrderNumbers] = useState([""]);
-  const [orderNumberError, setOrderNumberError] = useState("");
   const [newParts, setNewParts] = useState([{ name: "", model: "", power: "", serial_no: "" }])
-  const [errors, setErrors] = useState({})
+  const [errors, setErrors] = useState<Record<string, any>>({})
   const { userID } = useUserDetail()
-  const formSchema = z.object({
-    serial_no: z.string().min(1, { message: "Name is required." }),
-    contractDate: z.date({ required_error: "Contract date is required." }),
-    isSpeedMoney: z.boolean().default(false),
-    speedMoney: z.string().optional(),
-    speedMoneyNote: z.string().optional(),
-    totalPrice: z.number().min(1, { message: "Total price is required." }),
-    cnic: z.string().optional(),
-  });
 
-  const form = useForm({
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       serial_no: "",
       contractDate: undefined,
       isSpeedMoney: false,
-      speedMoney: "",
+      speedMoney: 0,
       speedMoneyNote: "",
       totalPrice: 0,
       cnic: "",
@@ -60,9 +54,9 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, }) => {
     if (data) {
       form.reset({
         serial_no: data?.serial_no || "",
-        contractDate: data?.contract_date ? new Date(data.contract_date) : null,
+        contractDate: data?.contract_date ? new Date(data.contract_date) : undefined,
         isSpeedMoney: data?.speed_money,
-        speedMoney: data?.speed_money_amount || "",
+        speedMoney: Number(data?.speed_money_amount ?? 0),
         speedMoneyNote: data?.speed_money_note || "",
         totalPrice: Number(data?.price || 0),
         cnic: data?.cnic || "",
@@ -70,9 +64,7 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, }) => {
       if (data?.speed_money) {
         setIsSpeedMoney(true);
       }
-      if (data?.order_no_arr && data?.order_no_arr.length > 0) {
-        setOrderNumbers([...data.order_no_arr]);
-      }
+
       if (data?.parts_information) {
         setNewParts(data.parts_information)
       }
@@ -81,10 +73,10 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, }) => {
 
   function validateNewParts() {
 
-    let newErrors = {};
+    let newErrors: any = {};
 
     newParts.forEach((part, index) => {
-      let partErrors = {};
+      let partErrors: any = {};
 
       Object.entries(part).forEach(([key, value]) => {
         if (!value.trim()) {
@@ -102,7 +94,7 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, }) => {
     return Object.keys(newErrors).length === 0;
   }
 
-  function onSubmit(values) {
+  function onSubmit(values: FormValues) {
 
     if (!validateNewParts()) return
     setErrors({})
@@ -131,13 +123,13 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, }) => {
       });
   }
 
-  function handleClose(val) {
+  function handleClose(val: boolean) {
     form.reset();
     setNewParts([{ name: "", model: "", power: "", serial_no: "" }])
     onClose(val);
   }
 
-  function generatePlaceholder(key) {
+  function generatePlaceholder(key: string) {
     if (key === "name") {
       return "Laser Source"
     }
@@ -162,32 +154,29 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, }) => {
         </DialogHeader>
 
         <div className="w-full flex flex-1">
-          <ScrollArea className="px-2 w-full max-h-[90vh]">
+          <ScrollArea className="px-2 w-full h-[80vh]">
             <div className="px-2">
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit, (errors) => {
-                    console.log("Form validation errors:", errors);
-                  })}
-                  className="space-y-2"
-                >
-                  <FormField
-                    control={form.control}
-                    name="serial_no"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Name <RequiredStar />
-                        </FormLabel>
-                        <FormControl>
-                          <Input
 
-                            placeholder="Enter name e.g: 3KW Upgradation"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FieldGroup>
+
+
+                  <Controller
+                    name="serial_no"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>Machine Model</FieldLabel>
+
+                        <Input
+                          placeholder="Enter name e.g: 3KW Upgradation"
+                          {...field}
+                        />
+
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
                     )}
                   />
 
@@ -199,15 +188,15 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, }) => {
                             Part {index + 1}
                           </Label>
                           <Button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  setNewParts((prevState) =>
-                                    prevState.filter((item, ind) => index !== ind)
-                                  );
-                                }}
-                                variant="destructive"
-                                size="icon"
-                              >
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setNewParts((prevState) =>
+                                prevState.filter((item, ind) => index !== ind)
+                              );
+                            }}
+                            variant="destructive"
+                            size="icon"
+                          >
                             <Trash2 />
                           </Button>
                         </div>
@@ -246,137 +235,133 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, }) => {
                   }} className="mt-2">Add new part</Button>
 
 
-                  <FormField
-                    control={form.control}
+                  <Controller
                     name="contractDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Contract Date</FormLabel>
-                        <FormControl>
-                          <AppCalendar
-                            date={field.value}
-                            onChange={field.onChange}
-                             max={new Date()}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>Contract Date</FieldLabel>
+
+                        <AppCalendar
+                          date={field.value}
+                          onChange={field.onChange}
+                          max={new Date()}
+                        />
+
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
+                  <Controller
                     name="totalPrice"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Total Price</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="Enter total price"
-                            value={field.value ? field.value : ""}
-                            onChange={(e) => {
-                              if (!isNaN(Number(e.target.value))) {
-                                field.onChange(Number(e.target.value));
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>Total Price</FieldLabel>
+
+                        <Input
+
+                          placeholder="Enter amount"
+                          {...field}
+                        />
+
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
+                  <Controller
                     name="isSpeedMoney"
+                    control={form.control}
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="pr-2">
-                          Include Speed Money
-                        </FormLabel>
-                        <FormControl>
+                      <Field>
+                        <div className="flex gap-4 items-center">
+                          <FieldLabel>Include Speed Money</FieldLabel>
+
                           <Checkbox
                             checked={isSpeedMoney}
-                            onCheckedChange={(checked) => {
-                              const value = checked === true;
+                            onCheckedChange={(checked: boolean) => {
+                              setIsSpeedMoney(checked);
+                              field.onChange(checked);
 
-                              setIsSpeedMoney(value);
-                              field.onChange(value);
-
-                              if (!value) {
-                                form.setValue("speedMoney", "");
+                              if (!checked) {
+                                form.setValue("speedMoney", 0);
                                 form.setValue("speedMoneyNote", "");
                               }
                             }}
                           />
-                        </FormControl>
-                      </FormItem>
+                        </div>
+                      </Field>
                     )}
                   />
 
                   {isSpeedMoney && (
                     <>
-                      <FormField
-                        control={form.control}
+                      <Controller
                         name="speedMoney"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Speed Money</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter speed money"
-                                value={field.value ? field.value : ""}
-                                onChange={(e) => {
-                                  if (!isNaN(Number(e.target.value))) {
-                                    field.onChange(e.target.value);
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel>Speed Money</FieldLabel>
+
+                            <Input
+                              placeholder="Amount"
+                              {...field}
+                            />
+
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
                         )}
                       />
 
-                      <FormField
-                        control={form.control}
+                      <Controller
                         name="speedMoneyNote"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Speed Money Note</FormLabel>
-                            <FormControl>
-                              <Textarea placeholder="Enter note" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel>Note</FieldLabel>
+
+                            <Textarea placeholder="Optional note" {...field} />
+
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
                         )}
                       />
                     </>
                   )}
 
-                  <FormField
-                    control={form.control}
+                  <Controller
                     name="cnic"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cnic</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="example: 1234567891234"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>CNIC</FieldLabel>
+
+                        <Input placeholder="1234567891234" {...field} />
+
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
                     )}
                   />
 
                   <Button className="w-full" type="submit" disabled={loading}>
                     {loading && <Spinner />} Submit
                   </Button>
-                </form>
-              </Form>
+
+                </FieldGroup>
+              </form>
+
             </div>
           </ScrollArea>
         </div>

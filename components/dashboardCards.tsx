@@ -1,4 +1,4 @@
-export const MachinesSoldCard = ({ value, percentage, onClick }) => {
+export const MachinesSoldCard = ({ value, percentage, onClick } : {value :number, percentage : number, onClick : ()=> void}) => {
   return (
     <>
       <div
@@ -49,7 +49,7 @@ export const MachinesSoldCard = ({ value, percentage, onClick }) => {
   );
 };
 
-export const FeedbackTakenCard = ({ value, remaining, total }) => {
+export const FeedbackTakenCard = ({ value, remaining, total } : {value : number, remaining : number, total : number}) => {
   return (
     <div
       className="shadow-md border border-gray-200 rounded-lg bg-white p-4"
@@ -96,7 +96,7 @@ export const FeedbackTakenCard = ({ value, remaining, total }) => {
   );
 };
 
-export const VisitsDoneCard = ({ value, remaining, total }) => {
+export const VisitsDoneCard = ({ value, remaining, total } : {value : number, remaining : number, total : number}) => {
   return (
     <div
       className="shadow-md border border-gray-200 rounded-lg bg-white p-4"

@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const AccountsPdf = ({ data, headings, total }) => {
+const AccountsPdf = ({ data, headings, total } : {data : any[], total : number, headings : any}) => {
   return (
     <Document>
       <Page
@@ -209,7 +209,7 @@ const AccountsPdf = ({ data, headings, total }) => {
                       justifyContent: "center",
                       height: 25,
                       paddingLeft: 5,
-                      borderLeftWidth: index !== 0 && 1,
+                      borderLeftWidth: index !== 0 ? 1 : undefined,
                       borderLeftColor: "#D1D5DB",
                       flex: 1,
                     },
@@ -237,7 +237,7 @@ const AccountsPdf = ({ data, headings, total }) => {
                   flexDirection: "row",
                   backgroundColor: index % 2 === 0 ? "#f1f1f1" : "white",
                   border: "1px solid #D1D5DB",
-                  borderTopWidth: index !== 0 && 0,
+                  borderTopWidth: index !== 0 ?0 : undefined,
                 }}
               >
                 <View
@@ -293,7 +293,7 @@ const AccountsPdf = ({ data, headings, total }) => {
   );
 };
 
-const FormField = ({ data }) => {
+const FormField = ({ data } : {data : any}) => {
   return (
     <View style={{ marginBottom: 5, flex: 1 }}>
       {["Salary Month", "Paid On"].map((label, index) => (
@@ -382,7 +382,6 @@ const Header = () => {
       {/* <Text fontSize={60} color={'#0072BC'} fontWeight={'800'}>SENFENG</Text> */}
       <Image
         src={"/logo.png"}
-        alt="My Local Image"
         style={{ height: "40px", width: "200px" }}
       />
       <div
@@ -485,10 +484,9 @@ const Footer = () => {
   );
 };
 
-function formatCurrency(number) {
+function formatCurrency(number : number) {
   return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 0,
     useGrouping: true,
   }).format(number);
 }

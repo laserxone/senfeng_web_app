@@ -900,21 +900,19 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
         />
       </div>
       <EditMachine
-
         visible={editMachine}
         onClose={setEditMachine}
         machine_id={id}
-        onRefresh={async () => await fetchData(id)}
-        data={data?.machine || {}}
+        onRefresh={async () => {await fetchData(id)}}
+        data={data?.machine}
       />
 
       <EditParts
-
         visible={editParts}
         onClose={setEditParts}
         machine_id={id}
-        onRefresh={async () => await fetchData(id)}
-        data={data?.machine || {}}
+        onRefresh={async () => {await fetchData(id)}}
+        data={data?.machine}
       />
 
       <ImageSheet
@@ -2241,7 +2239,7 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }: { cust
         <DialogHeader>
           <DialogTitle>Add New Images</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="max-h-[80vh] px-2">
+        <ScrollArea className="h-[80vh] px-2">
           <div className="px-2">
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
 

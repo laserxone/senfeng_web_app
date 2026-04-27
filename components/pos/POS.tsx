@@ -32,17 +32,16 @@ import { UserSearch } from "../user-search";
 import NotificationBadge from "./NotificationBadge";
 import AddItemDialog from "./add-item-dialog";
 import AddPOSPayment from "./add-pos-payment";
+import DeleteInvoice from "./delete-invoice";
 import EngineerModal from "./engineer-modal";
+import InwardModal from "./inward-modal";
 import OrderStockDialog from "./order-stock-dialog";
 import POSModal from "./pos-modal";
 import SearchResultModal from "./search-result-modal";
 import ViewableInvoice from "./viewable-invoice";
-import InwardModal from "./inward-modal";
-import OutwardModal from "./outward-modal";
-import DeleteInvoice from "./delete-invoice";
 
-import Link from "next/link";
 import { InvoiceItem, MyCustomer, POSCustomer, POSInvoiceReminder, SearchItem, StockProps } from "@/lib/types";
+import Link from "next/link";
 import { toast } from "sonner";
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -57,7 +56,7 @@ import { toast } from "sonner";
 // }
 
 export type SelectedUser = {
-  id: null | string
+  id: null | number
   label: null | string
 }
 
@@ -768,9 +767,9 @@ export default function POS() {
                     item.threshold !== undefined &&
                     (item?.qty || 0) <= item.threshold,
                 )}
-                onRefresh={() => {
+                onRefresh={async () => {
                   setStock([]);
-                  fetchData();
+                  await fetchData();
                 }}
               />
             </div>
@@ -870,7 +869,7 @@ export default function POS() {
               onClick={() => {
                 setSearchInvoice(!searchInvocie);
               }}
-             className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
+              className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
             >
               Search Invoice
             </Button>
@@ -880,7 +879,7 @@ export default function POS() {
               onClick={handleEngineerItems}
               className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
             >
-           {engineerLoading && <Spinner />}  <div className="break-words"> Engineer issued items</div>
+              {engineerLoading && <Spinner />}  <div className="break-words"> Engineer issued items</div>
             </Button>
 
             <Button
@@ -894,14 +893,14 @@ export default function POS() {
 
             <Button
               onClick={handleOutward}
-               className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
+              className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
             >
-             <div className="break-words">Outward Gatepass</div>
+              <div className="break-words">Outward Gatepass</div>
             </Button>
 
             {selectedSearchItem && selectedSearchItem?.id && (
               <Link href={`/${base_route}/pos/${selectedSearchItem?.id}`} target="_blank">
-                <Button  className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center">
+                <Button className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center">
                   <div>Payment Record</div>
                 </Button>
               </Link>
