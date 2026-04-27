@@ -1,12 +1,9 @@
-import withPWA from 'next-pwa';
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // output : "export",
-  // trailingSlash: true,
-  // images: { unoptimized: true }
-
-  images: {
+  typescript : {
+    ignoreBuildErrors : true
+  },
+    images: {
     remotePatterns: [
       {
         protocol: 'https',
@@ -18,10 +15,6 @@ const nextConfig = {
       }
     ],
   },
-};
-
-// export default withPWA({
-//   dest: 'public',
-// })(nextConfig);
+}
 
 export default nextConfig

@@ -1,0 +1,11 @@
+import UserDashboard from "@/components/user-dashboard"
+
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
+
+    if (!id) return
+
+    return (
+        <UserDashboard id={id as string} owner={true} />
+    )
+}
