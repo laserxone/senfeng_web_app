@@ -3,7 +3,7 @@ export const ownerNavItems = [
     title: "Dashboard",
     url: "/dashboard",
     icon: "dashboard",
-    
+
     shortcut: ["d", "a", "s", "h"],
     items: [],
   },
@@ -11,7 +11,7 @@ export const ownerNavItems = [
     title: "Complaint & Installation",
     url: "/complaint",
     icon: "complaint",
-    
+
     shortcut: ["c", "o", "m", "p"],
     items: [],
   },
@@ -19,26 +19,26 @@ export const ownerNavItems = [
     title: "Customer",
     url: "#",
     icon: "customer",
-    
+
 
     items: [
       {
         title: "Customer",
         url: "/customer",
-        
+
         shortcut: ["c", "u", "s"],
       },
       {
         title: "Member",
         url: "/member",
-        
+
         shortcut: ["m", "e", "m"],
       },
       {
         title: "Feedback",
         shortcut: ["f", "e", "e"],
         url: "/feedback",
-        
+
       },
       // {
       //   title: 'Quotation',
@@ -110,7 +110,7 @@ export const ownerNavItems = [
     title: "Task Management",
     url: "#",
     icon: "task",
-    
+
 
     items: [
       {
@@ -130,7 +130,7 @@ export const ownerNavItems = [
     url: "/expense",
     icon: "expense",
     shortcut: ["o", "f", "f"],
-    
+
     items: [], // No child items
   },
 
@@ -148,7 +148,7 @@ export const ownerNavItems = [
     url: "/dms",
     icon: "dms",
     shortcut: ["d", "m", "s"],
-    
+
     items: [],
   },
   {
@@ -156,7 +156,7 @@ export const ownerNavItems = [
     url: "/news",
     icon: "news",
     shortcut: ["n", "e", "w", "s"],
-    
+
     items: [], // No child items
   },
 
@@ -165,14 +165,14 @@ export const ownerNavItems = [
     url: "/cloud",
     icon: "cloud",
     shortcut: ["c", "l", "o"],
-    
+
     items: [],
   },
   {
     title: "Delivery",
     url: "#",
     icon: "truck",
-    
+
 
     items: [
       {
@@ -199,15 +199,15 @@ export const FinanceItem = {
   url: "/finance",
   icon: "finance",
   shortcut: ["f", "i", "n", "a"],
-  
-  items: [], 
+
+  items: [],
 };
 
 export const complaintItem = {
   title: "Complaint & Installation",
   url: "/complaint",
   icon: "complaint",
-  
+
   shortcut: ["c", "o", "m", "p"],
   items: [],
 };
@@ -217,7 +217,7 @@ export const myCloud = {
   url: "/cloud",
   icon: "cloud",
   shortcut: ["c", "l", "o"],
-  
+
   items: [],
 };
 
@@ -226,7 +226,7 @@ export const teamAttendance = {
   url: "/teamattendance",
   icon: "userPen",
   shortcut: ["t", "a", "t"],
-  
+
   items: [],
 };
 
@@ -235,7 +235,7 @@ export const employeeNavItems = [
     title: "Dashboard",
     url: "/dashboard",
     icon: "dashboard",
-    
+
     shortcut: ["d", "a", "s", "h"],
     items: [],
   },
@@ -243,7 +243,7 @@ export const employeeNavItems = [
     title: "Task Management",
     url: "/task",
     icon: "task",
-    
+
     shortcut: ["t", "a", "s", "k"],
     items: [],
   },
@@ -252,14 +252,14 @@ export const employeeNavItems = [
     title: "Customers",
     url: "/customer",
     icon: "customer",
-    
+
     shortcut: ["c", "u", "s"],
     items: [],
   },
   {
     title: "Members",
     url: "/member",
-    
+
     icon: "member",
     shortcut: ["m", "e", "m"],
     items: [],
@@ -269,25 +269,25 @@ export const employeeNavItems = [
     url: "/dms",
     icon: "dms",
     shortcut: ["d", "m", "s"],
-    
-    items: [], 
+
+    items: [],
   },
-  {
-    title: "Commission",
-    url: "/commission",
-    icon: "commission",
-    shortcut: ["c", "o", "m"],
-    
-    items: [], 
-  },
+
 ];
+
+export const Commission = {
+  title: "Commission",
+  url: "/commission",
+  icon: "commission",
+  shortcut: ["c", "o", "m"],
+  items: [],
+}
 
 export const dealerNavItems = [
   {
     title: "Dashboard",
     url: "/dashboard",
     icon: "dashboard",
-    
     shortcut: ["d", "a", "s", "h"],
     items: [],
   },
@@ -295,14 +295,14 @@ export const dealerNavItems = [
     title: "Customers",
     url: "/customer",
     icon: "customer",
-    
+
     shortcut: ["c", "u", "s"],
     items: [],
   },
   {
     title: "Members",
     url: "/member",
-    
+
     icon: "member",
     shortcut: ["m", "e", "m"],
     items: [],
@@ -312,8 +312,8 @@ export const dealerNavItems = [
     url: "/commission",
     icon: "commission",
     shortcut: ["c", "o", "m"],
-    
-    items: [], 
+
+    items: [],
   },
 ];
 
@@ -322,7 +322,7 @@ export const branchNavItem = {
   url: "/expense",
   icon: "expense",
   shortcut: ["o", "f", "f"],
-  
+
   items: [],
 };
 
@@ -332,7 +332,7 @@ export const StoreNavItem = [
     title: "Dashboard",
     url: "/dashboard",
     icon: "dashboard",
-    
+
     shortcut: ["d", "a", "s", "h"],
     items: [],
   },
@@ -340,7 +340,7 @@ export const StoreNavItem = [
     title: "Task Management",
     url: "/task",
     icon: "task",
-    
+
     shortcut: ["t", "a", "s", "k"],
     items: [],
   },
@@ -349,33 +349,33 @@ export const StoreNavItem = [
     url: "/dms",
     icon: "dms",
     shortcut: ["d", "m", "s"],
-    
-    items: [], 
+
+    items: [],
   },
   {
     title: "Delivery",
     url: "#",
     icon: "truck",
-    
+
 
     items: [
       {
         title: "Machine Delivery",
         url: "/delivery/machinedelivery",
-       
+
         shortcut: ["m", "d", "e"],
       },
       {
         title: "Other Delivery",
         url: "/delivery/otherdelivery",
-       
+
         shortcut: ["o", "d", "e"],
       },
       {
         title: "Delivered",
         shortcut: ["d", "e", "l"],
         url: "/delivery/delivered",
-       
+
       },
     ],
   },
@@ -385,7 +385,7 @@ export const POSNavItemAdmin = {
   title: "Point Of Sale",
   url: "#",
   icon: "pos",
-  
+
 
   items: [
     {
@@ -410,7 +410,7 @@ export const POSNavItem = {
   title: "Point Of Sale",
   url: "/pos",
   icon: "pos",
-   shortcut: ["p", "o", "s"],
+  shortcut: ["p", "o", "s"],
   items: [],
 };
 
@@ -419,7 +419,7 @@ export const Tools = {
   title: "Tools",
   url: "#",
   icon: "tools",
-  
+
 
   items: [
     {
@@ -431,25 +431,25 @@ export const Tools = {
       title: "Transfer Customers",
       shortcut: ["t", "r", "a"],
       url: "/transfer-customers",
-      
+
     },
     {
       title: "Old Commissions",
       shortcut: ["o", "l", "d"],
       url: "/oldcommissions",
-     
+
     },
     {
       title: "Configuration",
       shortcut: ["o", "l", "d"],
       url: "/configuration",
-      
+
     },
     {
       title: "Backend",
       shortcut: ["b", "a", "c"],
       url: "/backend",
-      
+
     },
     // {
     //   title: 'Multiple TID',
@@ -476,7 +476,7 @@ export const Prices = {
   url: "/prices",
   icon: "coins",
   shortcut: ["p", "r", "i"],
-  
+
   items: [],
 };
 
@@ -485,7 +485,7 @@ export const RepairAndMaintenance = {
   url: "/repairandmaintenance",
   icon: "settings",
   shortcut: ["r", "a", "m"],
-  
+
   items: [],
 };
 
