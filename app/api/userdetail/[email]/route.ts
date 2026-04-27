@@ -11,10 +11,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ emai
     if (referrer) {
         const url = new URL(referrer);
         const segments = url.pathname.split('/');
-        city = segments[1];
+        if (segments[1]?.toLocaleLowerCase() === 'lahore' || segments[1]?.toLocaleLowerCase() === 'karachi')
+            city = segments[1];
     }
-
-
     try {
         const query = `
       SELECT * FROM users WHERE email = $1 LIMIT 1
