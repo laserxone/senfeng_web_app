@@ -51,7 +51,7 @@ type AddCustomerDialogProps = {
 const formSchema = z.object({
   company: z.string().min(1, { message: "Company name is required" }), 
   owner: z.string().min(1, { message: "Owner name is required" }), 
-  email: z.email().optional(), 
+  email: z.string().optional(), 
   city: z.string().min(1, { message: "City is required" }),
   industry: z.string().optional(), 
   remarks: z.string().optional(), 
