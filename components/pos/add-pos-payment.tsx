@@ -50,7 +50,6 @@ const formSchema = z.object({
   clearance_date: z.date().optional(),
   image: z.string().min(1, { message: "Image by is required." }),
   remarks: z.string().optional(),
-  status: z.string().optional()
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -88,7 +87,6 @@ const AddPOSPayment = ({
       clearance_date: undefined,
       image: "",
       remarks: "",
-      status: "Pending"
     },
   });
   async function onSubmit(values: FormValues) {
@@ -141,7 +139,6 @@ const AddPOSPayment = ({
         `/${userID}/pos/payment-invoice/check-note`,
         { number }
       );
-      console.log(response.data)
       if (Array.isArray(response.data) && response.data.length > 0) {
         setError(response.data[0]);
       }
@@ -346,12 +343,6 @@ const AddPOSPayment = ({
                             date={field.value}
                             onChange={(date) => {
                               field.onChange(date);
-
-                              if (date) {
-                                form.setValue("status", "Cleared");
-                              } else {
-                                form.setValue("status", "Pending");
-                              }
                             }}
                           />
 
