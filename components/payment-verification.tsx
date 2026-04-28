@@ -132,7 +132,7 @@ export default function PaymentVerification() {
         customer.machines.forEach((machine) => {
           if (machine.machine_id === machineId) {
             machine.payments.forEach((payment) => {
-              if (payment.status === "pending") {
+              if (payment.status !== "approved") {
                 pendingPayments.push(payment.id);
               }
             });

@@ -32,6 +32,8 @@ export function EdgePanel(
     const isMobile = useIsMobile()
     const [vw, setVw] = useState(typeof window !== "undefined" ? window.innerWidth : 0);
 
+
+
     useEffect(() => {
         if (initialY == null && typeof window !== "undefined") {
             const handleHeight = 120
@@ -123,6 +125,7 @@ export function EdgePanel(
         ? (isMobile ? `translateX(-${mobilePx}px)` : `translateX(-${width}px)`)
         : "translateX(0)";
 
+    if (isMobile) return null
     return (
         <div
             ref={containerRef}

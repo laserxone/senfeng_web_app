@@ -39,6 +39,7 @@ import FilterSheet from "./users/filterSheet";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { ComplaintProps } from "@/lib/types";
 import { Field, FieldError, FieldGroup, FieldLabel } from "./ui/field";
+import { Label } from "./ui/label";
 
 const formSchema = z.object({
   title: z.string().min(1, "Required"),
@@ -167,7 +168,7 @@ export default function ComplaintSystem() {
             <Spinner />
           </div>
         ) : (
-          <Accordion type="single" className="w-full space-y-4">
+          <Accordion type="multiple" className="w-full space-y-4">
             {filteredData.map((complaint) => {
               const statusColor = {
                 pending: "bg-red-100 text-red-800",
@@ -204,7 +205,8 @@ export default function ComplaintSystem() {
                     </div>
                   </AccordionTrigger>
 
-                  <AccordionContent className="px-4 pb-4 space-y-4">
+                  <AccordionContent >
+                    <div className="px-4 space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold">Status:</span>
                       <span
@@ -304,15 +306,15 @@ export default function ComplaintSystem() {
                         </div>
                         <div className="grid grid-cols-1 text-sm text-muted-foreground gap-2">
                           {complaint.logs.map((item, index) => (
-                            <div key={index}>
-                              <p>
+                            <div key={index} className="border rounded-md p-2 flex flex-col gap-2 w-fit">
+                              <Label>
                                 <strong>Remarks:</strong> {item?.remark}
-                              </p>
-                              <p>
+                              </Label>
+                              <Label>
                                 {moment(item.created_at).format(
                                   "YYYY-MM-DD HH:mm A"
                                 )}
-                              </p>
+                              </Label>
                               <div className="flex flex-row gap-5 mt-2">
                                 {item.location && item.location.length > 0 ? (
                                   <MapPin
@@ -335,6 +337,7 @@ export default function ComplaintSystem() {
                         </div>
                       </>
                     )}
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
               );

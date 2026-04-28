@@ -7,7 +7,7 @@ import Heading from "@/components/ui/heading";
 import { Label } from "@/components/ui/label";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { ArrowUpDown, Trash } from "lucide-react";
+import { ArrowUpDown, Info, ShieldCheck, Trash, TriangleAlert } from "lucide-react";
 import moment from "moment";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AddPOSPayment from "@/components/pos/add-pos-payment";
@@ -27,6 +27,7 @@ import { Params } from "next/dist/server/request/params";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export default function PaymentDetail({ params }: { params: Params }) {
   const [data, setData] = useState<POSPaymentDetailProps | null>(null);
@@ -60,6 +61,8 @@ export default function PaymentDetail({ params }: { params: Params }) {
   }
 
 
+  
+
   const columns: ColumnDef<Payment>[] = useMemo(
     () => [
       {
@@ -73,6 +76,55 @@ export default function PaymentDetail({ params }: { params: Params }) {
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
+        cell: ({ row }) => {
+          const currentItem = row.original;
+          return (
+            <div className="flex items-center">
+              {currentItem?.status === "rejected" ? (
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+
+                    <TriangleAlert className="text-red-600 h-5 w-5 animate-pulse-opacity mr-2" />
+
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-red-600" arrowColor="bg-red-600 fill-red-600">
+                    <p className="text-white">{currentItem?.comment}</p>
+                  </TooltipContent>
+                </Tooltip>
+
+              ) : currentItem?.status === "approved" ? (
+
+                <Tooltip>
+                  <TooltipTrigger>
+
+                    <ShieldCheck className="text-green-600 h-5 w-5" />
+
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-green-600 mr-2" arrowColor="bg-green-600 fill-green-600">
+                    <p className="text-white">Payment verified</p>
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+
+                <Tooltip>
+                  <TooltipTrigger>
+
+                    <Info className="text-orange-600 h-5 w-5 animate-pulse-opacity mr-2" />
+
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-orange-600" arrowColor="bg-orange-600 fill-orange-600">
+                    <p className="text-white">Need verification</p>
+                  </TooltipContent>
+                </Tooltip>
+
+              )}
+              <span className="font-medium">
+                {row.getValue("note")}
+              </span>
+            </div>
+          )
+        }
       },
       {
         accessorKey: "transaction_date",
@@ -154,6 +206,14 @@ export default function PaymentDetail({ params }: { params: Params }) {
                 >
                   <MyImg img={payment.image} />
                 </div>
+              )}
+              {isAdmin && payment?.status !== "approved" && (
+                <RenderVerifyButton
+                  item={payment}
+                  onRefresh={async () => {
+                    await fetchData();
+                  }}
+                />
               )}
             </div>
           );
@@ -305,6 +365,35 @@ export default function PaymentDetail({ params }: { params: Params }) {
     </div>
   );
 }
+
+const RenderVerifyButton = ({ item, onRefresh }: { item: Payment, onRefresh: () => Promise<void> }) => {
+    const [loading, setLoading] = useState(false);
+    const { userID } = useUserDetail();
+    async function handleVerify(item: Payment) {
+      setLoading(true);
+      await axios
+        .put(`/${userID}/pos/payment-verification`, {
+          status: "approved",
+          id : item.id
+        })
+        .then(async () => {
+          await onRefresh();
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+    return (
+      <Button
+        disabled={loading}
+        onClick={() => {
+          handleVerify(item);
+        }}
+      >
+        {loading && <Spinner />} {loading ? "Verifying" : "Verify"}
+      </Button>
+    );
+  };
 
 type ImageSheetProps = {
   payment_lock: boolean | undefined,

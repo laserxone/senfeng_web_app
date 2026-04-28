@@ -40,7 +40,6 @@ const formSchema = z.object({
   image: z.string().min(1, { message: "Image is required." }),
   remarks: z.string().optional(),
   cheque_id: z.string().optional(),
-  status: z.string().optional()
 }).superRefine((data, ctx) => {
   if (data.mode === "Cheque" && (!data.cheque_id || data.cheque_id.trim() === "")) {
     ctx.addIssue({
@@ -94,7 +93,7 @@ const AddPayment = ({
       image: "",
       remarks: "",
       cheque_id: "",
-      status: ""
+
     },
   });
   async function onSubmit(values: FormValues) {
@@ -345,7 +344,6 @@ const AddPayment = ({
                             date={field.value}
                             onChange={(date) => {
                               field.onChange(date);
-                              form.setValue("status", date ? "Cleared" : "Pending");
                             }}
                           />
 

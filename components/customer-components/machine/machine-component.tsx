@@ -88,6 +88,7 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { toast } from "sonner";
 import AddCheque from "./add-cheque";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Machine({ id, onLoading }: { id: string | number, onLoading?: (val: boolean) => void }) {
   const [data, setData] = useState<MachineResponse>();
@@ -359,7 +360,6 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
         id: "actions",
         cell: ({ row }) => {
           const currentItem = row.original;
-
           return (
             <div className="flex flex-row gap-2 items-center">
               {currentItem.image && (
@@ -387,7 +387,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                 />
               )}
 
-              {isAdmin && currentItem?.status === "pending" && (
+              {isAdmin && currentItem?.status !== "approved" && (
                 <RenderVerifyButton
                   item={currentItem}
                   onRefresh={async () => {
@@ -468,74 +468,66 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
 
       return [...new Set(duplicates)];
     }
-
+const isMobile = useIsMobile()
     return (
-      <Card
-        className={`bg-gray-100 dark:bg-gray-900 rounded-lg shadow-md p-4 w-full`}
-      >
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4">
-          {/* Spacer or empty block if needed */}
-          <div className="hidden md:block" />
+      <Card className="bg-gray-100 dark:bg-gray-900 rounded-xl shadow-md p-4 w-full">
 
-          {/* Customer Info */}
-          <div className="flex flex-col gap-1">
-            <div className="flex flex-row flex-wrap gap-2 items-center text-2xl font-bold text-gray-900 dark:text-white">
-              {data?.name || "Customer Name"}
-              {data?.owner && (
-                <span className="text-gray-500 text-sm">({data.owner})</span>
-              )}
-            </div>
+  {/* HEADER */}
+  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+    
+    {/* Customer Info */}
+    <div className="flex flex-col gap-1">
+      <div className="flex flex-wrap items-center gap-2 text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+        {data?.name || "Customer Name"}
+        {data?.owner && (
+          <span className="text-gray-500 text-sm">({data.owner})</span>
+        )}
+      </div>
 
-            <div className="text-md font-bold text-primary dark:text-white flex flex-wrap gap-2">
-              <span>Sell by: {machine?.sell_by_name || "NA"}</span>
-              <span>Manager: {data?.ownership_name || "NA"}</span>
-            </div>
-          </div>
+      <div className="text-sm md:text-md font-medium text-primary flex flex-wrap gap-3">
+        <span>Sell by: {machine?.sell_by_name || "NA"}</span>
+        <span>Manager: {data?.ownership_name || "NA"}</span>
+      </div>
+    </div>
 
-          {/* Alerts */}
-          <div className="flex gap-2 mt-2 md:mt-0">
-            {showAlert && (
-              
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    
-                      <Siren className="text-red-600 h-8 w-8 animate-pulse-opacity" />
-                    
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-red-600 mr-2" arrowColor="bg-red-600 fill-red-600">
-                    <p className="text-white">Duplicate TID found</p>
-                  </TooltipContent>
-                </Tooltip>
-              
-            )}
+    {/* Alerts */}
+    <div className="flex items-center gap-3">
+      {showAlert && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Siren className="text-red-600 h-6 w-6 animate-pulse" />
+          </TooltipTrigger>
+          <TooltipContent className="bg-red-600">
+            <p className="text-white">Duplicate TID found</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
 
-            {unmatched.length > 0 && (
-              
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    
-                      <InfoIcon className="text-red-600 h-8 w-8 animate-pulse-opacity" />
-                    
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-red-600 mr-2" arrowColor="bg-red-600 fill-red-600">
-                    <div>
-                    {unmatched.map((item, index) => (
-                      <p key={index} className="text-white">
-                        {item.replace(/_/g, " ").toUpperCase()}
-                      </p>
-                    ))}
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              
-            )}
-          </div>
-        </div>
+      {unmatched.length > 0 && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <InfoIcon className="text-red-600 h-6 w-6 animate-pulse" />
+          </TooltipTrigger>
+          <TooltipContent className="bg-red-600">
+            {unmatched.map((item, i) => (
+              <p key={i} className="text-white">
+                {item.replace(/_/g, " ").toUpperCase()}
+              </p>
+            ))}
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </div>
+  </div>
 
-        <div className="flex flex-1 gap-6 flex-wrap">
-          <Card className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            {machine?.type === "Parts" ? (
-              <CardContent>
+  {/* MAIN CONTENT */}
+  <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_220px] gap-4">
+    
+    {/* LEFT: Machine / Parts */}
+    <Card className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+      <CardContent>
+       {machine?.type === "Parts" ? (
+              <>
                 <div className="flex gap-2 text-sm items-center">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                     Parts Information
@@ -600,9 +592,9 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                     No data available
                   </p>
                 )}
-              </CardContent>
+              </>
             ) : (
-              <CardContent>
+              <>
                 <div className="flex gap-2 text-sm items-center">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                     Machine Information
@@ -701,64 +693,63 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                     No data available
                   </p>
                 )}
-              </CardContent>
+              </>
             )}
-          </Card>
+      </CardContent>
+    </Card>
 
-          <Card className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <CardContent>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                Billing Summary
-              </h3>
+    {/* MIDDLE: Billing */}
+    <Card className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+      <CardContent>
+        <h3 className="text-base font-semibold mb-3">
+          Billing Summary
+        </h3>
 
-              <div className="flex flex-col  sm:flex-row gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 mt-2 justify-between flex-wrap">
-                <div className="flex flex-col">
-                  <p>
-                    <strong>Bill:</strong>
-                  </p>
-                  <p className="font-bold">
-                    {" "}
-                    <CurrencyFormatter amount={payment[0]} />
-                  </p>
-                </div>
-                <div className="flex flex-col">
-                  <p>
-                    <strong>Received:</strong>
-                  </p>
-                  <p className="text-green-600 font-bold">
-                    <CurrencyFormatter amount={payment[1]} />
-                  </p>
-                </div>
-                <div className="flex flex-col">
-                  <p>
-                    <strong>Balance:</strong>
-                  </p>
-                  <p className="text-red-600 font-bold">
-                    {" "}
-                    <CurrencyFormatter
-                      amount={(payment[0] || 0) - (payment[1] || 0)}
-                    />
-                  </p>
-                </div>
-              </div>
+        <div className="grid grid-cols-3 gap-3 text-sm">
+          <div>
+            <p className="text-gray-500">Bill</p>
+            <p className="font-bold">
+              <CurrencyFormatter amount={payment[0]} />
+            </p>
+          </div>
 
-              {machine?.speed_money && (
-                <>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mt-3">
-                    Speed Money
-                  </h3>
-                  <div className="flex flex-col">
-                    <p>Amount: {machine?.speed_money_amount}</p>
-                    <p>{machine?.speed_money_note}</p>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
+          <div>
+            <p className="text-gray-500">Received</p>
+            <p className="text-green-600 font-bold">
+              <CurrencyFormatter amount={payment[1]} />
+            </p>
+          </div>
 
-          {children}
+          <div>
+            <p className="text-gray-500">Balance</p>
+            <p className="text-red-600 font-bold">
+              <CurrencyFormatter
+                amount={(payment[0] || 0) - (payment[1] || 0)}
+              />
+            </p>
+          </div>
         </div>
-      </Card>
+
+        {machine?.speed_money && (
+          <div className="mt-4 border-t pt-3">
+            <p className="font-semibold">Speed Money</p>
+            <p className="text-sm">
+              {machine.speed_money_amount}
+            </p>
+            <p className="text-xs text-gray-500">
+              {machine.speed_money_note}
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+
+    {/* RIGHT: ACTIONS */}
+    <div className="flex flex-col gap-2">
+      {children}
+    </div>
+  </div>
+</Card>
     );
   });
 
@@ -776,7 +767,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
         payment={[total, received]}
       >
         {data && (
-          <div className="w-[150px] shrink-0 flex flex-col gap-2">
+        <div className="flex flex-col gap-2 w-full lg:w-[220px]">
             {!data?.machine?.cancelled_detail && (
               <>
                 <Button

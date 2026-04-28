@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import Spinner from "@/components/ui/spinner"
+import { useIsMobile } from "@/hooks/use-mobile"
 import useUserDetail from "@/hooks/use-user-detail"
 import axios from "@/lib/axios"
 import { supabase } from "@/lib/supabaseClient"
@@ -60,7 +61,10 @@ export default function DocumentManagement() {
   const breadcrumbPath = selectedFolderId ? folderTree ? getFolderPath(folderTree, selectedFolderId) || [] : [] : []
   const [workingFile, setWorkingFile] = useState<string[]>([])
   const [workingFolder, setWorkingFolder] = useState<string[]>([])
+  const isMobile = useIsMobile()
   const { userID, name, email } = useUserDetail()
+
+  console.log(isMobile)
 
   useEffect(() => {
     if (userID) fetchData()
@@ -412,7 +416,8 @@ export default function DocumentManagement() {
         </Button>
       </div>
 
-      <div className="flex flex-1 overflow-hidden border-t">
+      <div className="flex flex-1 border-t">
+        {!isMobile && 
         <aside className="w-72 border-r flex flex-col shrink-0 bg-muted/30">
           <div className="px-3 h-11.25 border-b flex items-center">
             <h2 className="text-sm font-medium text-muted-foreground px-2">Folders</h2>
@@ -435,9 +440,9 @@ export default function DocumentManagement() {
             </div>
           </ScrollArea>
         </aside>
+}
 
-
-        <main className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 flex flex-col">
           <div className="border-b px-4 h-11.25 flex items-center justify-between shrink-0">
             <nav className="flex items-center gap-1 text-sm">
               {breadcrumbPath.map((folder, index) => (
@@ -495,7 +500,7 @@ export default function DocumentManagement() {
             </div>
           )}
 
-          <ScrollArea className="flex-1">
+       
             {selectedFolder ? (
               <>
                 {viewMode === "list" && (selectedFolder.children.length > 0 || selectedFolder.files.length > 0) && (
@@ -592,7 +597,7 @@ export default function DocumentManagement() {
                 <p className="text-muted-foreground">Select a folder to view its contents</p>
               </div>
             )}
-          </ScrollArea>
+
         </main>
       </div>
 

@@ -117,6 +117,7 @@ export default function CustomerBaseComponent() {
     return (
       <MemberMainPage
         onReturn={(cid) => {
+          console.log(cid)
           if (isMobile) {
             router.push(`/${base_route}/member/${cid}`);
           } else {

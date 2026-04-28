@@ -33,7 +33,7 @@ export default function RootLayout({
       className={cn("antialiased", fontMono.variable, "font-sans", inter.variable, nunitoSansHeading.variable)}
       
     >
-      <body className="flex flex-1 w-screen h-screen overflow-hidden">
+      <body className="">
         <Suspense fallback={<SenfengLogoLoader />}>
           <MainProviders>
             <MaintenanceWrapper>
