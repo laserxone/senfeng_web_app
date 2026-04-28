@@ -1,5 +1,4 @@
 "use client";
-import CustomerMainPage from "@/components/customer-components/customer/main-page";
 import MemberDetail from "@/components/customer-components/detail/member-detail";
 import Machine from "@/components/customer-components/machine/machine-component";
 import TabManager from "@/components/tabManager";
@@ -25,9 +24,9 @@ export default function CustomerBaseComponent() {
 
   const tabsFromUrl = useMemo(() => {
     if (!tabsParam) return [];
-    return tabsParam
-      .split(",")
-      .map((id) => {
+    const ids = [...new Set(tabsParam.split(",").filter(Boolean))];
+
+    return ids.map((id) => {
         if (id.startsWith("customer-")) {
           const cid = id.split("-")[1];
 
@@ -104,15 +103,26 @@ export default function CustomerBaseComponent() {
   }, [tabsParam]);
 
   const openTab = (id: string) => {
-    const currentTabs = tabsParam ? tabsParam.split(",") : [];
+  const params = new URLSearchParams(window.location.search);
 
-    if (!currentTabs.includes(id)) {
-      currentTabs.push(id);
-    }
+  const current = params.get("tabs")?.split(",").filter(Boolean) || [];
 
-    window.history.pushState({}, "", `?tabs=${currentTabs.join(",")}&active=${id}`);
+  const updated = [...new Set([...current, id])];
+
+  params.set("tabs", updated.join(","));
+  params.set("active", id);
+
+  window.history.pushState({}, "", `?${params.toString()}`);
+};
+
+useEffect(() => {
+  const handler = () => {
+    setActiveTabId(new URLSearchParams(window.location.search).get("active") || "dashboard");
   };
 
+  window.addEventListener("popstate", handler);
+  return () => window.removeEventListener("popstate", handler);
+}, []);
   const dashboardComponent = useMemo(() => {
     return (
       <MemberMainPage

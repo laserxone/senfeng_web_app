@@ -21,21 +21,27 @@ const TabManager = ({
   setActiveTabId,
   loading,
 }: TabManagerProps) => {
-const searchParams = useSearchParams();
+  const searchParams = useSearchParams();
 
-const tabsParam = searchParams.get("tabs");
- const closeTab = (id: string) => {
-  const currentTabs = tabsParam?.split(",") || [];
+  const tabsParam = searchParams.get("tabs");
+  const closeTab = (id: string) => {
+  const params = new URLSearchParams(window.location.search);
 
-  const newTabs = currentTabs.filter((t) => t !== id);
-  const newActive = newTabs[0] || "dashboard";
-  window.history.pushState({}, "", `?tabs=${newTabs.join(",")}&active=${newActive}`);
- 
+  const current = params.get("tabs")?.split(",").filter(Boolean) || [];
+
+  const updated = current.filter((t) => t !== id);
+
+  const newActive = updated[updated.length - 1] || "dashboard";
+
+  params.set("tabs", updated.join(","));
+  params.set("active", newActive);
+
+  window.history.pushState({}, "", `?${params.toString()}`);
 };
 
   return (
     <div className="w-full flex flex-1 flex-col">
-   
+
       <div className="flex pt-2 border-b overflow-x-auto">
         {tabs.map((tab) => (
           <div
