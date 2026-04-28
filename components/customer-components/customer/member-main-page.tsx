@@ -1,6 +1,6 @@
 "use client";
 import ConfimationDialog from "@/components/alert-dialog";
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import {
@@ -14,7 +14,6 @@ import {
 import Spinner from "@/components/ui/spinner";
 import { UserSearch } from "@/components/user-search";
 import FilterSheet from "@/components/users/filterSheet";
-
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { MyCustomer, MyCustomerResolved } from "@/lib/types";

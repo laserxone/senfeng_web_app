@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, ChevronsUpDown, SearchIcon } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "@/components/ui/command";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
@@ -19,6 +20,9 @@ import { MyCustomer } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
+import { Input } from "./ui/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
+import { useDebounce } from "@/hooks/use-debounce";
 
 type LocalMyCustomer = MyCustomer & { value: number | string }
 
@@ -27,7 +31,14 @@ export function CustomerSearch({ value, onReturn }: { value: number | string | n
   const [customers, setCustomers] = React.useState<LocalMyCustomer[]>([]);
   const { userID, designation, office } = useUserDetail();
   const [city, setCity] = React.useState("lahore");
+  const [search, setSearch] = React.useState("");
+  const [page, setPage] = React.useState(1);
 
+  const PAGE_SIZE = 20;
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [city, customers]);
 
   React.useEffect(() => {
     async function fetchData() {
@@ -78,7 +89,26 @@ export function CustomerSearch({ value, onReturn }: { value: number | string | n
     }
   }, [office, designation]);
 
-  const filteredData = customers.filter((item) => item?.office?.includes(city));
+  const debouncedSearch = useDebounce(search, 500)
+
+  const filteredData = customers.filter((item) => {
+    const matchesCity = item?.office?.includes(city);
+
+    const matchesSearch =
+      item?.label?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      item?.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      item?.owner?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      item?.location?.toLowerCase().includes(debouncedSearch.toLowerCase())
+
+    return matchesCity && matchesSearch;
+  });
+
+  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
+
+  const paginatedData = filteredData.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE
+  );
 
   return (
     <>
@@ -99,23 +129,58 @@ export function CustomerSearch({ value, onReturn }: { value: number | string | n
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
         <Command>
-          {designation !== "Sales" && (
-            <div className="flex items-center justify-center gap-2 px-2 py-1 border-b">
-              <Label className="text-sm">Lahore</Label>
-              <Switch
-                checked={city === "karachi"}
-                onCheckedChange={(checked) =>
-                  setCity(checked ? "karachi" : "lahore")
-                }
-              />
-              <Label className="text-sm">Karachi</Label>
+          <div className="flex justify-between px-2 py-1 border-b">
+            {designation !== "Sales" && (
+              <div className="flex items-center gap-2 px-2 py-1 ">
+                <Label className="text-sm">Lahore</Label>
+                <Switch
+                  checked={city === "karachi"}
+                  onCheckedChange={(checked) =>
+                    setCity(checked ? "karachi" : "lahore")
+                  }
+                />
+                <Label className="text-sm">Karachi</Label>
+              </div>
+            )}
+            <div className="flex items-center justify-between gap-2">
+
+              <Button
+                size="icon"
+                variant="outline"
+                disabled={page === 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                <ChevronLeft />
+              </Button>
+
+              <span className="text-xs text-muted-foreground">
+                {page} / {totalPages || 1}
+              </span>
+
+              <Button
+                size="icon"
+                variant="outline"
+                disabled={page === totalPages || totalPages === 0}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              >
+                <ChevronRight />
+              </Button>
             </div>
-          )}
-          <CommandInput placeholder="Search customer..." className="h-9" />
+          </div>
+
+          <div className="p-1 pb-0">
+            <InputGroup className="h-8! rounded-lg! border-input/30 bg-input/30 shadow-none! *:data-[slot=input-group-addon]:pl-2!">
+              <InputGroupInput id="inline-start-input" placeholder="Search customer..." value={search}
+                onChange={(e) => setSearch(e.target.value)} className="text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50" />
+              <InputGroupAddon align="inline-start">
+                <SearchIcon className="size-4 shrink-0 opacity-50" />
+              </InputGroupAddon>
+            </InputGroup>
+          </div>
           <CommandList>
             <CommandEmpty>No customer found.</CommandEmpty>
-            <CommandGroup>
-              {filteredData.map((item) => (
+            <CommandGroup className="flex-1">
+              {paginatedData.map((item) => (
                 <CommandItem
                   key={item.value}
                   value={item.label}

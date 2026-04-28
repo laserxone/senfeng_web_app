@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, ChevronsUpDown, SearchIcon } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -20,14 +20,22 @@ import { cn } from "@/lib/utils";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
 
 export function CustomerSearchWithData({ value, onReturn }: { value: MyCustomer | null, onReturn: (val: MyCustomer) => void }) {
   const [open, setOpen] = React.useState(false);
   const [customers, setCustomers] = React.useState<MyCustomer[]>([]);
   const { userID, designation, office } = useUserDetail();
-  const [search, setSearch] = React.useState("");
   const [city, setCity] = React.useState("lahore");
-
+   const [search, setSearch] = React.useState("");
+    const [page, setPage] = React.useState(1);
+  
+    const PAGE_SIZE = 20;
+  
+    React.useEffect(() => {
+      setPage(1);
+    }, [city, customers]);
+  
   React.useEffect(() => {
     async function fetchData() {
       const response: { data: MyCustomer[] } = await axios.get(`/${userID}/mycustomer`);
@@ -110,6 +118,13 @@ export function CustomerSearchWithData({ value, onReturn }: { value: MyCustomer 
       );
   }, [customers, debouncedSearch, city]);
 
+   const totalPages = Math.ceil(filteredCustomers.length / PAGE_SIZE);
+
+  const paginatedData = filteredCustomers.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE
+  );
+
   return (
     <>
       <Button
@@ -128,28 +143,58 @@ export function CustomerSearchWithData({ value, onReturn }: { value: MyCustomer 
 
       <CommandDialog open={open} onOpenChange={setOpen}>
         <Command>
-          {designation !== "Sales" && (
-            <div className="flex items-center justify-center gap-2 px-2 py-1 border-b">
-              <Label className="text-sm">Lahore</Label>
-              <Switch
-                checked={city === "karachi"}
-                onCheckedChange={(checked) =>
-                  setCity(checked ? "karachi" : "lahore")
-                }
-              />
-              <Label className="text-sm">Karachi</Label>
+         <div className="flex justify-between px-2 py-1 border-b">
+            {designation !== "Sales" && (
+              <div className="flex items-center gap-2 px-2 py-1 ">
+                <Label className="text-sm">Lahore</Label>
+                <Switch
+                  checked={city === "karachi"}
+                  onCheckedChange={(checked) =>
+                    setCity(checked ? "karachi" : "lahore")
+                  }
+                />
+                <Label className="text-sm">Karachi</Label>
+              </div>
+            )}
+            <div className="flex items-center justify-between gap-2">
+
+              <Button
+                size="icon"
+                variant="outline"
+                disabled={page === 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                <ChevronLeft />
+              </Button>
+
+              <span className="text-xs text-muted-foreground">
+                {page} / {totalPages || 1}
+              </span>
+
+              <Button
+                size="icon"
+                variant="outline"
+                disabled={page === totalPages || totalPages === 0}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              >
+                <ChevronRight />
+              </Button>
             </div>
-          )}
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search customer..."
-            className="h-9 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
-          />
+          </div>
+
+          <div className="p-1 pb-0">
+            <InputGroup className="h-8! rounded-lg! border-input/30 bg-input/30 shadow-none! *:data-[slot=input-group-addon]:pl-2!">
+              <InputGroupInput id="inline-start-input" placeholder="Search customer..." value={search}
+                onChange={(e) => setSearch(e.target.value)} className="text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50" />
+              <InputGroupAddon align="inline-start">
+                <SearchIcon className="size-4 shrink-0 opacity-50" />
+              </InputGroupAddon>
+            </InputGroup>
+          </div>
           <CommandList>
             <CommandEmpty>No customer found.</CommandEmpty>
             <CommandGroup>
-              {filteredCustomers.map((item, index) => (
+              {paginatedData.map((item, index) => (
                 <CommandItem
                   key={index}
                   value={item.search}
