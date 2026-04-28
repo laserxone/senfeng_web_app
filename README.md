@@ -1,4 +1,4 @@
-# Next.js template
+# Next.js
 
 This is a Next.js template with shadcn/ui.
 
