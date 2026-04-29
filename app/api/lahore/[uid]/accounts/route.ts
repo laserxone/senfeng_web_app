@@ -1,12 +1,10 @@
 
 import pool from "@/config/db";
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(req, { params }) {
+export async function GET(req : NextRequest) {
 
-    const { uid } = await params
-    const branchQuery = await pool.query(`SELECT office FROM users WHERE id = $1`, [uid])
-    const branch = branchQuery.rows[0]?.office || "lahore"
+    const branch = "lahore"
     const searchParams = req.nextUrl.searchParams;
 
     try {
@@ -35,8 +33,8 @@ export async function GET(req, { params }) {
 
         return NextResponse.json(salaryResult.rows, { status: 200 });
 
-    } catch (error) {
-        console.error('Error fetching data: ', error);
+    } catch (error : any) {
+        console.log('Error fetching data: ', error);
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 });
     }
 }

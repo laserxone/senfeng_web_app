@@ -1,8 +1,8 @@
 
 import pool from "@/config/db";
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(req, { params }) {
+export async function GET(req : NextRequest) {
 
     const branch = "karachi"
     const searchParams = req.nextUrl.searchParams;
@@ -33,8 +33,8 @@ export async function GET(req, { params }) {
 
         return NextResponse.json(salaryResult.rows, { status: 200 });
 
-    } catch (error) {
-        console.error('Error fetching data: ', error);
+    } catch (error : any) {
+        console.log('Error fetching data: ', error);
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 });
     }
 }

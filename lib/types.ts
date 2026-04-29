@@ -1235,3 +1235,72 @@ export type ChequeProp = {
   img : string
 }
 
+export type SalaryRecord = {
+    id: number;
+  user_id: number;
+  year: number;
+  month: number;
+  target_achieved: string;
+  absents: number;
+  late: number;
+  late_fine_per_day: string;
+  reimbursement: string;
+  commission: string;
+  miscellaneous: string;
+  additional_fine: string;
+  issued: boolean;
+  created_at: string; 
+  salary_month: string; 
+  payable: string;
+  kpi: string;
+  fuel: string;
+  loan: string;
+  issued_commissions: number[]; 
+  loan_repayment: any | null;
+  basic_salary: string;
+  user_name: string;
+ 
+}
+
+export type GenerateSalaryUser = {
+    basic_salary : string
+    designation : string
+    email : string
+    fuel : string
+    id : number
+    monthly_target : string
+    name : string
+    total_salary : string
+}
+
+export type GenerateOldRecord = {
+    created_at : string
+    name : string
+    payable : string
+    salary_month :string
+    user_id : number
+}
+
+export type GenerateSalaryDashboard = {
+    user : GenerateSalaryUser
+    feedbacksTakenThisMonth : number
+    salary : null | SalaryRecord
+    reimbursement : UserReimbursementType[]
+    old_record : GenerateOldRecord[]
+    loan : Loan[]
+    fines : UserFine[]
+    machines : MachineProps[]
+    totalCustomersWithSale : number
+    totalVisits : number
+    commission ?: CommissionOwnerProps[]
+    attendance : UserAttendanceRecord[]
+}
+
+export type ToAccounts = {
+    issued : boolean
+    month : number
+    name : string
+    payable : string
+    user_id : number
+    year : number
+}

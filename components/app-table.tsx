@@ -2,12 +2,17 @@
 
 import {
   ColumnDef,
+  ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  OnChangeFn,
+  PaginationState,
+  SortingState,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
@@ -27,9 +32,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { memo, ReactNode, useMemo, useRef, useState } from "react";
+import { memo, ReactNode, useMemo, useState } from "react";
 
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -37,12 +41,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Spinner from "./ui/spinner";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useIsMobile } from "@/hooks/use-mobile";
 import exportToExcel from "@/lib/exportToExcel";
+import Spinner from "./ui/spinner";
+import moment from "moment";
 
-const PageTable = ({
+
+type ExtendedColumnDef<T> = ColumnDef<T> & {
+  accessorKey?: keyof T;
+};
+
+type PageTableProps<T extends Record<string, any>> = {
+  children?: React.ReactNode;
+  columns: ColumnDef<T>[];
+  data: T[];
+  pageSizeOptions ?: number[]
+  totalCustomerText ?:string
+  disableInput?: boolean;
+  onRowClick?: (row: T, event: React.MouseEvent<HTMLTableRowElement>) => void;
+  loading?: boolean;
+  defaultPageSize ?: number
+  download?: boolean;
+};
+
+const PageTable = <T extends Record<string, any>>({
   children,
   columns,
   data,
@@ -53,63 +76,31 @@ const PageTable = ({
   loading = false,
   defaultPageSize = 20,
   download = false,
-}: {
-  children: ReactNode;
-  columns: ColumnDef<any>[]
-  data: any
-  pageSizeOptions?: number[]
-  disableInput?: boolean
-  totalCustomerText?: string
-  onRowClick?: (item : any, e: any) => void
-  loading ?: boolean
-  defaultPageSize ?: number
-  download ?: boolean
-}) => {
-  const [sorting, setSorting] = useState([]);
-  const [columnFilters, setColumnFilters] = useState([]);
-  const [columnVisibility, setColumnVisibility] = useState({});
+}: PageTableProps<T>) => {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
+   const isMobile = useIsMobile();
+
   const paginationState = {
     pageIndex: currentPage - 1,
     pageSize: pageSize,
   };
 
-  // const filteredData = useMemo(() => {
-  //   let filtered = data;
-
-  //   // Apply column filters
-  //   columnFilters.forEach((filter) => {
-  //     filtered = filtered.filter(row => {
-  //       const cellValue = row[filter.id];
-  //       return cellValue.toString().toLowerCase().includes(filter.value.toLowerCase());
-  //     });
-  //   });
-
-  //   // Apply global search filter
-  //   if (search) {
-  //     filtered = filtered.filter(row => {
-  //       return Object.values(row).some(value =>
-  //         String(value).toLowerCase().includes(search.toLowerCase())
-  //       );
-  //     });
-  //   }
-
-  //   return filtered;
-  // }, [data, columnFilters, search]);
-
-  const filteredData = useMemo(() => {
+   const filteredData = useMemo(() => {
     let filtered = data;
     columnFilters.forEach((filter) => {
       filtered = filtered.filter((row) => {
-        const cellValue = row[filter.id];
-        return cellValue
-          .toString()
+        const key = filter.id as keyof T;
+        const cellValue = row[key];
+        return String(cellValue ?? "")
           .toLowerCase()
-          .includes(filter.value.toLowerCase());
+          .includes(String(filter.value).toLowerCase());
       });
     });
 
@@ -125,7 +116,7 @@ const PageTable = ({
   }, [data, columnFilters, debouncedSearch]);
   const pageCount = Math.ceil(filteredData.length / pageSize);
 
-  const handlePaginationChange = (updaterOrValue) => {
+  const handlePaginationChange: OnChangeFn<PaginationState> = (updaterOrValue) => {
     const pagination =
       typeof updaterOrValue === "function"
         ? updaterOrValue(paginationState)
@@ -135,7 +126,7 @@ const PageTable = ({
     setPageSize(pagination.pageSize);
   };
 
-  const table = useReactTable({
+  const table = useReactTable<T>({
     data: filteredData,
     columns,
     onSortingChange: setSorting,
@@ -146,7 +137,6 @@ const PageTable = ({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    // globalFilterFn: customGlobalFilter,
     pageCount: pageCount,
     state: {
       sorting,
@@ -154,14 +144,13 @@ const PageTable = ({
       columnVisibility,
       rowSelection,
       pagination: paginationState,
-      // globalFilter: search,
+    
     },
     onPaginationChange: handlePaginationChange,
     defaultColumn: {
       size: 200,
     },
-    // manualPagination: true,
-    // manualFiltering: true
+   
   });
 
   const startIndex = paginationState.pageIndex * paginationState.pageSize + 1;
@@ -171,37 +160,50 @@ const PageTable = ({
   );
 
   function handleDownload() {
-    try {
-      if (!filteredData || !filteredData.length) return;
-
-      const headers = columns
-        .filter((col) => typeof col.accessorKey === "string")
-        .map((col) => col.accessorKey);
-
-      const formattedData = filteredData.map((row) =>
-        columns.map((col) => {
-          const value = row[col.accessorKey];
-          if (col.type === "date" && value) {
-            return moment(value).format("YYYY-MM-DD");
-          }
-          return value != null ? value : "";
-        }),
-      );
-
-      exportToExcel(
-        headers,
-        formattedData,
-        "Table-Export.xlsx",
-        false,
-        "",
-        false,
-      );
-    } catch (error) {
-      console.error("Error exporting Excel:", error);
+      try {
+        if (!filteredData || !filteredData.length) return;
+  
+  
+  
+        const exportableColumns = columns.filter(
+          (col  : ExtendedColumnDef<T>): col is ExtendedColumnDef<T> & { accessorKey: keyof T } =>
+            typeof col.accessorKey === "string"
+        );
+  
+        const headers = exportableColumns.map((col) =>
+          String(col.accessorKey)
+        );
+  
+        const formattedData = filteredData.map((row) =>
+          exportableColumns.map((col) => {
+            const key = col.accessorKey as keyof T;
+            const value = row[key];
+            if (isValidDateString(value) && value) {
+              return moment(value as any).format("YYYY-MM-DD");
+            }
+            return value != null ? String(value) : "";
+          })
+        );
+  
+        exportToExcel(
+          headers,
+          formattedData,
+          "Table-Export.xlsx",
+          false,
+          "",
+          false
+        );
+      } catch (error) {
+        console.error("Error exporting Excel:", error);
+      }
     }
-  }
 
-  const isMobile = useIsMobile();
+     function isValidDateString(value: string): boolean {
+        console.log(value, moment(value, moment.ISO_8601, true).isValid())
+        return moment(value, moment.ISO_8601, true).isValid();
+      }
+
+ 
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -261,7 +263,7 @@ const PageTable = ({
                       <TableCell className="text-[13px] whitespace-normal break-words" key={cell.id}>
                         {flexRender(cell.column.columnDef.cell, {
                           ...cell.getContext(),
-                          stopRowClick: (e) => e.stopPropagation(),
+                          stopRowClick: (e: React.MouseEvent<HTMLTableRowElement>) => e.stopPropagation(),
                         })}
                       </TableCell>
                     ))}
@@ -383,11 +385,4 @@ const PageTable = ({
   );
 };
 
-function customGlobalFilter(row, columnId, filterValue) {
-  const search = filterValue.toLowerCase();
-  return row
-    .getAllCells()
-    .some((cell) => String(cell.getValue()).toLowerCase().includes(search));
-}
-
-export default memo(PageTable);
+export default memo(PageTable) as typeof PageTable;

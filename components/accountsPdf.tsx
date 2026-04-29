@@ -296,7 +296,7 @@ const AccountsPdf = ({ data, headings, total } : {data : any[], total : number, 
 const FormField = ({ data } : {data : any}) => {
   return (
     <View style={{ marginBottom: 5, flex: 1 }}>
-      {["Salary Month", "Paid On"].map((label, index) => (
+      {["Salary Month"].map((label, index) => (
         <View
           key={index}
           style={{ display: "flex", flexDirection: "column", marginBottom: 5 }}
@@ -325,8 +325,8 @@ const FormField = ({ data } : {data : any}) => {
           >
             <Text>
               {index === 0
-                ? moment(data?.salary_month).subtract(1, "month").format("MMMM YYYY")
-                : moment().format("DD MMM YYYY")}
+                ? moment().month(data).format("MMMM YYYY")
+                : null}
             </Text>
           </View>
         </View>

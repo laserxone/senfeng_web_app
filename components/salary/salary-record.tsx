@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, Trash2 } from "lucide-react";
 import {
+    memo,
     useEffect,
     useState
 } from "react";
@@ -17,11 +18,13 @@ import "react-medium-image-zoom/dist/styles.css";
 
 import useUserDetail from "@/hooks/use-user-detail";
 import { pdf } from "@react-pdf/renderer";
+import { SalaryRecord, UserSalaryProps } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 
 const RecordComponent = () => {
     const { userID } = useUserDetail();
-    const [loading, setLoading] = useState(true);
-    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [data, setData] = useState<SalaryRecord[]>([]);
 
     useEffect(() => {
         if (userID) {
@@ -30,6 +33,7 @@ const RecordComponent = () => {
     }, [userID]);
 
     async function fetchData() {
+        setLoading(true)
         axios
             .get(`/${userID}/record`)
             .then((response) => {
@@ -40,7 +44,9 @@ const RecordComponent = () => {
             });
     }
 
-    const columns = [
+
+
+    const columns : ColumnDef<SalaryRecord>[] = [
         {
             accessorKey: "salary_month",
             filterFn: "includesString",
@@ -102,7 +108,7 @@ const RecordComponent = () => {
         },
     ];
 
-    async function handleDelete(id) {
+    async function handleDelete(id : number) {
         if (!id) return;
         setLoading(true);
         axios
@@ -115,8 +121,24 @@ const RecordComponent = () => {
             });
     }
 
-    async function handleDownload(item) {
-        const blob = await pdf(<SalaryPdf data={item} />).toBlob();
+    async function handleDownload(item : SalaryRecord) {
+        const passingData : UserSalaryProps = {
+             salary_month: item.salary_month,
+    id: String(item.id),
+    user_name: item.user_name,
+    payable: item.payable,
+    reimbursement: item.reimbursement,
+    commission: item.commission,
+    kpi: item.kpi,
+    miscellaneous: item.miscellaneous,
+    additional_fine: item.additional_fine,
+    late_fine_per_day: item.late_fine_per_day,
+    absents: String(item.absents),
+    late: String(item.late),
+    fuel: item.fuel,
+   
+        }
+        const blob = await pdf(<SalaryPdf data={passingData} />).toBlob();
         const url = URL.createObjectURL(blob);
         window.open(url, "_blank");
         setTimeout(() => URL.revokeObjectURL(url), 600000);
@@ -129,22 +151,15 @@ const RecordComponent = () => {
                 title={"Salary Record"}
                 description={"Explore issued salaries"}
             />
-            <div className="flex flex-1 min-h-[600px]">
+       
                 <PageTable
                     loading={loading}
                     columns={columns}
                     data={data}
-                 
-                    onRowClick={(val, e) => {
-                        // setImageURL(val);
-                        // setVisible(true);
-                    }}
-                // filter={true}
-                // onFilterClick={() => setFilterVisible(true)}
-                ></PageTable>
-            </div>
+                 />
+          
         </div>
     );
 };
 
-export default RecordComponent
+export default memo(RecordComponent)

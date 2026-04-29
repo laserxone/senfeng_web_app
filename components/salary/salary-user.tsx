@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowUpDown } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import PageTable from "@/components/app-table-without-pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,8 +62,29 @@ import useUserDetail from "@/hooks/use-user-detail";
 import { pdf } from "@react-pdf/renderer";
 import { ScrollArea } from "../ui/scroll-area";
 import { toast } from "sonner";
+import { CommissionOwnerProps, GenerateOldRecord, GenerateSalaryDashboard, GenerateSalaryUser, Loan, MachineProps, ToAccounts, UserAttendanceRecord, UserFine, UserReimbursementType } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 
-const SalaryComponent = ({ onSelectedId }) => {
+type Form = {
+   target_achieved: number,
+    absents: number,
+    late: number,
+    late_fine_per_day: number,
+    reimbursement: number,
+    commission: number,
+    miscellaneous: number,
+    additional_fine: number,
+    old_target_achieved?: number,
+}
+
+type LocalUserAttendance = {
+  date : string
+  day : string
+  status : string
+  time_in : null | string
+  time_out : null | string
+}
+const SalaryComponent = ({ onSelectedId } : {onSelectedId : Dispatch<SetStateAction<number | null>>}) => {
   const currentDate = new Date();
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
@@ -72,11 +93,11 @@ const SalaryComponent = ({ onSelectedId }) => {
   );
   const { userID } = useUserDetail();
   const [endDate, setEndDate] = useState(moment().endOf("month").toISOString());
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState({});
+  const [data, setData] = useState<GenerateSalaryDashboard | null>(null);
   const [checked, setChecked] = useState(false);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<Form>({
     target_achieved: 0,
     absents: 0,
     late: 0,
@@ -87,13 +108,13 @@ const SalaryComponent = ({ onSelectedId }) => {
     additional_fine: 0,
     old_target_achieved: 0,
   });
-  const [cancelled, setCancelled] = useState(0);
+  const [cancelled, setCancelled] = useState<number | string>(0);
   const [saveLoading, setSaveLoading] = useState(false);
   const [kpi, setKpi] = useState(0);
   const [lateComingFine, setLateComingFine] = useState(0);
   const [absentsFine, setAbsentsFine] = useState(0);
   const [payable, setPayable] = useState(0);
-  const [attendanceData, setAttendanceData] = useState([]);
+  const [attendanceData, setAttendanceData] = useState<LocalUserAttendance[]>([]);
   const [accountsLoading, setAccountsLoading] = useState(false);
   const [excludeAbsent, setExcludeAbsent] = useState(false);
   const [excludeLate, setExcludeLate] = useState(false);
@@ -102,10 +123,10 @@ const SalaryComponent = ({ onSelectedId }) => {
   const [modal, setModal] = useState(false);
   const [ttRate, setTTRate] = useState(1);
  
-  const [toAccounts, setToAccounts] = useState([]);
+  const [toAccounts, setToAccounts] = useState<ToAccounts[]>([]);
   const [refresh, setRefresh] = useState(false);
   const [remainingLoan, setRemainingLoan] = useState(0);
-  const [repayment, setRepayment] = useState(0);
+  const [repayment, setRepayment] = useState<string | number>(0);
   const years = Array.from(
     { length: 20 },
     (_, i) => new Date().getFullYear() - 10 + i,
@@ -122,7 +143,7 @@ const SalaryComponent = ({ onSelectedId }) => {
     }
   }, [userID]);
 
-  const updateDate = (month, year) => {
+  const updateDate = (month : number, year: number) => {
     const start = moment()
       .year(year)
       .month(month)
@@ -135,7 +156,7 @@ const SalaryComponent = ({ onSelectedId }) => {
   };
 
   async function clearForm() {
-    setData({});
+    setData(null);
     setForm({
       target_achieved: 0,
       absents: 0,
@@ -145,6 +166,7 @@ const SalaryComponent = ({ onSelectedId }) => {
       commission: 0,
       miscellaneous: 0,
       additional_fine: 0,
+      old_target_achieved : 0
     });
     setPayable(0);
     setLateComingFine(0);
@@ -173,7 +195,7 @@ const SalaryComponent = ({ onSelectedId }) => {
 
           if (response.data?.loan) {
             const totalAmount = response.data.loan.reduce(
-              (sum, item) => sum + Number(item.loan_amount),
+              (sum : number, item : Loan) => sum + Number(item.loan_amount),
               0,
             );
             setRemainingLoan(totalAmount);
@@ -181,7 +203,7 @@ const SalaryComponent = ({ onSelectedId }) => {
 
           if (response.data?.reimbursement) {
             const totalAmount = response.data.reimbursement.reduce(
-              (sum, item) => sum + Number(item.amount),
+              (sum : number, item : UserReimbursementType) => sum + Number(item.amount),
               0,
             );
             setForm((prevState) => ({
@@ -191,7 +213,7 @@ const SalaryComponent = ({ onSelectedId }) => {
           }
           if (response.data?.fines) {
             const totalAmount = response.data.fines.reduce(
-              (sum, item) => sum + Number(item.amount),
+              (sum : number, item : UserFine) => sum + Number(item.amount),
               0,
             );
             setForm((prevState) => ({
@@ -202,7 +224,7 @@ const SalaryComponent = ({ onSelectedId }) => {
 
           if (response.data?.commission?.length) {
             const totalCommission = response.data.commission.reduce(
-              (sum, item) => sum + Number(item.commission_amount),
+              (sum : number, item : CommissionOwnerProps) => sum + Number(item.commission_amount),
               0,
             );
             setForm((prevState) => ({
@@ -210,16 +232,7 @@ const SalaryComponent = ({ onSelectedId }) => {
               commission: totalCommission,
             }));
           }
-          // else if (response.data?.lead_commission?.length) {
-          //   const totalCommission = response.data.lead_commission.reduce(
-          //     (sum, item) => sum + Number(item.lead_commission_amount),
-          //     0
-          //   );
-          //   setForm((prevState) => ({
-          //     ...prevState,
-          //     commission: totalCommission,
-          //   }));
-          // }
+      
           if (excludeAbsent) {
             setForm((prev) => ({ ...prev, absents: 0 }));
           }
@@ -234,14 +247,14 @@ const SalaryComponent = ({ onSelectedId }) => {
           }
           if (Number(ttRate) > 0 && Array.isArray(response.data?.machines)) {
             const total = response.data?.machines.reduce(
-              (sum, item) => sum + Number(item.price || 0),
+              (sum : number, item : MachineProps) => sum + Number(item.price || 0),
               0,
             );
             const finalTotal = total / Number(ttRate);
             setForm((prev) => ({
               ...prev,
-              target_achieved: finalTotal.toFixed(0),
-              old_target_achieved: finalTotal.toFixed(0),
+              target_achieved: Number(finalTotal.toFixed(0)),
+              old_target_achieved: Number(finalTotal.toFixed(0)) ,
             }));
           }
         } else {
@@ -275,14 +288,14 @@ const SalaryComponent = ({ onSelectedId }) => {
             );
             if (response.data?.loan) {
               const totalAmount = response.data.loan.reduce(
-                (sum, item) => sum + Number(item.loan_amount),
+                (sum : number, item : Loan) => sum + Number(item.loan_amount),
                 0,
               );
               setRemainingLoan(totalAmount);
             }
             if (response.data?.reimbursement) {
               const totalAmount = response.data.reimbursement.reduce(
-                (sum, item) => sum + Number(item.amount),
+                (sum : number, item : UserReimbursementType) => sum + Number(item.amount),
                 0,
               );
               setForm((prevState) => ({
@@ -292,7 +305,7 @@ const SalaryComponent = ({ onSelectedId }) => {
             }
             if (response.data?.fines) {
               const totalAmount = response.data.fines.reduce(
-                (sum, item) => sum + Number(item.amount),
+                (sum : number, item : UserFine) => sum + Number(item.amount),
                 0,
               );
               setForm((prevState) => ({
@@ -302,7 +315,7 @@ const SalaryComponent = ({ onSelectedId }) => {
             }
             if (response.data?.commission) {
               const totalCommission = response.data?.commission.reduce(
-                (sum, item) => sum + Number(item.commission_amount),
+                (sum : number, item : CommissionOwnerProps) => sum + Number(item.commission_amount),
                 0,
               );
               setForm((prevState) => ({
@@ -324,14 +337,14 @@ const SalaryComponent = ({ onSelectedId }) => {
             }
             if (Number(ttRate) > 0 && Array.isArray(response.data?.machines)) {
               const total = response.data?.machines.reduce(
-                (sum, item) => sum + Number(item.price || 0),
+                (sum : number, item : MachineProps) => sum + Number(item.price || 0),
                 0,
               );
               const finalTotal = total / Number(ttRate);
               setForm((prev) => ({
                 ...prev,
-                target_achieved: finalTotal.toFixed(0),
-                old_target_achieved: finalTotal.toFixed(0),
+                target_achieved: Number(finalTotal.toFixed(0)),
+                old_target_achieved: Number(finalTotal.toFixed(0)),
               }));
             }
           }
@@ -350,7 +363,7 @@ const SalaryComponent = ({ onSelectedId }) => {
         const basicSalary = Number(data?.user?.basic_salary) || 0;
         const performanceSalary = totalSalary - basicSalary;
 
-        const targetAchieved = Number(form.target_achieved) || 0; // mistake here for target_achieved but double check code again
+        const targetAchieved = Number(form.target_achieved) || 0;
         const monthlyTarget = Number(data?.user?.monthly_target) || 1;
 
         const feedbacksTaken = Number(data?.feedbacksTakenThisMonth) || 0;
@@ -392,7 +405,7 @@ const SalaryComponent = ({ onSelectedId }) => {
           data?.user
             ? Number(
                 (
-                  (data.user.total_salary / 30) *
+                  (Number(data.user.total_salary) / 30) *
                   (form.absents || 0) *
                   -1
                 ).toFixed(0),
@@ -406,7 +419,7 @@ const SalaryComponent = ({ onSelectedId }) => {
   useEffect(() => {
     if (data?.user) {
       setPayable(
-        (
+        Number((
           Number(data?.user?.basic_salary || 0) +
           Number(kpi || 0) +
           Number(lateComingFine || 0) +
@@ -416,7 +429,7 @@ const SalaryComponent = ({ onSelectedId }) => {
           Number(form.miscellaneous || 0) +
           Number(form.additional_fine || 0) +
           Number(repayment || 0)
-        ).toFixed(2),
+        ).toFixed(2)),
       );
     }
   }, [data, form, kpi, lateComingFine, absentsFine, repayment]);
@@ -428,17 +441,17 @@ const SalaryComponent = ({ onSelectedId }) => {
       const finalNewTarget = newAmount / Number(ttRate);
       setForm((prevState) => ({
         ...prevState,
-        target_achieved: finalNewTarget.toFixed(0),
+        target_achieved: Number(finalNewTarget.toFixed(0)),
       }));
     } else {
       setForm((prevState) => ({
         ...prevState,
-        target_achieved: prevState.old_target_achieved,
+        target_achieved: prevState?.old_target_achieved || 0,
       }));
     }
   }, [cancelled]);
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field : string, value : string) => {
     setForm((prev) => ({
       ...prev,
       [field]: value ? (value == "-" ? value : Number(value)) : "",
@@ -446,7 +459,7 @@ const SalaryComponent = ({ onSelectedId }) => {
     }));
   };
 
-  const processAttendance = (year, month, records, condition) => {
+  const processAttendance = (year : number, month : number, records : UserAttendanceRecord[], condition : boolean) => {
     let monthData = [];
     let totalWorkingDays = 0;
     let sundays = [];
@@ -463,8 +476,8 @@ const SalaryComponent = ({ onSelectedId }) => {
       let isSunday = date.isoWeekday() === 7;
 
       if (!isSunday)
-        totalWorkingDays++; // Count only non-Sunday days
-      else sundays.push(date.format("YYYY-MM-DD")); // Track Sundays
+        totalWorkingDays++; 
+      else sundays.push(date.format("YYYY-MM-DD"));
 
       monthData.push({
         date: date.format("YYYY-MM-DD"),
@@ -478,11 +491,12 @@ const SalaryComponent = ({ onSelectedId }) => {
     let finalData = monthData.map((day) => {
       let record = records.find(
         (r) =>
+           r.time_in &&
           moment(new Date(r.time_in)).format("YYYY-MM-DD") ===
           moment(day.date).format("YYYY-MM-DD"),
       );
 
-      if (record) {
+      if (record && record.time_in) {
         const checkIn = moment(new Date(record.time_in));
         const checkOut = record?.time_out
           ? moment(new Date(record.time_out))
@@ -570,7 +584,7 @@ const SalaryComponent = ({ onSelectedId }) => {
       toast.success("Salary saved! Updating other entries in background");
 
       if (checked) {
-        if (repayment && !isNaN(repayment) && employeeLoan) {
+        if (repayment && !isNaN(Number(repayment)) && employeeLoan) {
           const response = await axios.post(`/${userID}/loans/repayment`, {
             loan_id: employeeLoan.id,
             amount: Number(repayment),
@@ -615,29 +629,13 @@ const SalaryComponent = ({ onSelectedId }) => {
       .get(`/${userID}/accounts?month=${selectedMonth}&year=${selectedYear}`)
       .then(async (response) => {
         setToAccounts(response.data);
-        // const apiData = response.data;
-        // const totalPayments = apiData.reduce(
-        //   (sum, payment) => sum + Number(payment.payable),
-        //   0
-        // );
-
-        // const blob = await pdf(
-        //   <AccountsPdf
-        //     data={apiData}
-        //     total={totalPayments}
-        //     headings={apiData.length > 0 ? apiData[0].salary_month : {}}
-        //   />
-        // ).toBlob();
-        // const url = URL.createObjectURL(blob);
-        // window.open(url, "_blank");
-        // setTimeout(() => URL.revokeObjectURL(url), 600000);
       })
       .finally(() => {
         setAccountsLoading(false);
       });
   }
 
-  const RenderTTRate = ({ machines }) => {
+  const RenderTTRate = ({ machines }: {machines : MachineProps[]}) => {
     const total = machines.reduce(
       (sum, item) => sum + Number(item.price || 0),
       0,
@@ -782,7 +780,7 @@ const SalaryComponent = ({ onSelectedId }) => {
                   <Label>Issue?</Label>
                   <Checkbox
                     checked={checked}
-                    onCheckedChange={(checked) => {
+                    onCheckedChange={(checked : boolean) => {
                       setChecked(checked);
                     }}
                   />
@@ -812,7 +810,7 @@ const SalaryComponent = ({ onSelectedId }) => {
                           ) : (
                             <Input
                               type="number"
-                              value={form[key]}
+                              value={form[key as keyof typeof form]}
                               onChange={(e) =>
                                 handleInputChange(key, e.target.value)
                               }
@@ -895,7 +893,7 @@ const SalaryComponent = ({ onSelectedId }) => {
                     <Input
                       value={
                         data?.user
-                          ? data.user.total_salary - data.user.basic_salary
+                          ? (Number(data.user.total_salary) - Number(data.user.basic_salary))
                           : 0
                       }
                       disabled
@@ -1146,7 +1144,7 @@ const SalaryComponent = ({ onSelectedId }) => {
               <Label className="text-lg">Exclude absents?</Label>
               <Checkbox
                 checked={excludeAbsent}
-                onCheckedChange={(checked) => {
+                onCheckedChange={(checked : boolean) => {
                   setExcludeAbsent(checked);
                 }}
               />
@@ -1155,7 +1153,7 @@ const SalaryComponent = ({ onSelectedId }) => {
               <Label className="text-lg">Exclude absents fine?</Label>
               <Checkbox
                 checked={excludeAbsentFine}
-                onCheckedChange={(checked) => {
+                onCheckedChange={(checked : boolean) => {
                   setExcludeAbsentFine(checked);
                 }}
               />
@@ -1164,7 +1162,7 @@ const SalaryComponent = ({ onSelectedId }) => {
               <Label className="text-lg">Exclude late?</Label>
               <Checkbox
                 checked={excludeLate}
-                onCheckedChange={(checked) => {
+                onCheckedChange={(checked : boolean) => {
                   setExcludeLate(checked);
                 }}
               />
@@ -1173,7 +1171,7 @@ const SalaryComponent = ({ onSelectedId }) => {
               <Label className="text-lg">Exclude late fine?</Label>
               <Checkbox
                 checked={excludeLateFine}
-                onCheckedChange={(checked) => {
+                onCheckedChange={(checked : boolean) => {
                   setExcludeLateFine(checked);
                 }}
               />
@@ -1205,7 +1203,7 @@ const SalaryComponent = ({ onSelectedId }) => {
   );
 };
 
-function SalaryHistory({ data }) {
+function SalaryHistory({ data } : {data : GenerateOldRecord[]}) {
   if (!data || data.length === 0) {
     return;
   }
@@ -1240,7 +1238,7 @@ function SalaryHistory({ data }) {
                   {new Intl.NumberFormat("en-US", {
                     style: "currency",
                     currency: "PKR",
-                  }).format(item?.payable || 0)}
+                  }).format(Number(item?.payable || 0))}
                 </span>
               </div>
               <div className="flex justify-between ">
@@ -1255,12 +1253,11 @@ function SalaryHistory({ data }) {
   );
 }
 
-const Accounts = ({ visible, onClose, data }) => {
-  const [selected, setSelected] = useState([]);
-  const [finalData, setFinalData] = useState([]);
+const Accounts = ({ visible, onClose, data } : {visible:  boolean, onClose : ()=> void, data : ToAccounts[]}) => {
+  const [selected, setSelected] = useState<number[]>([]);
+  const [finalData, setFinalData] = useState<ToAccounts[]>([]);
   const [search, setSearch] = useState("");
 
-  // keep finalData in sync with selected
   useEffect(() => {
     const filtered = data.filter((item) => selected.includes(item.user_id));
     setFinalData(filtered);
@@ -1277,7 +1274,7 @@ const Accounts = ({ visible, onClose, data }) => {
     }
   };
 
-  const toggleOne = (id) => {
+  const toggleOne = (id : number) => {
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
@@ -1290,12 +1287,11 @@ const Accounts = ({ visible, onClose, data }) => {
         (sum, payment) => sum + Number(payment.payable),
         0,
       );
-
       const blob = await pdf(
         <AccountsPdf
           data={apiData}
           total={totalPayments}
-          headings={apiData.length > 0 ? apiData[0].salary_month : {}}
+          headings={apiData.length > 0 ? apiData[0].month : {}}
         />,
       ).toBlob();
       const url = URL.createObjectURL(blob);
@@ -1388,29 +1384,10 @@ const Accounts = ({ visible, onClose, data }) => {
   );
 };
 
-const Fines = ({ passingData }) => {
-  const [data, setData] = useState([]);
+const Fines = ({ passingData } : {passingData : UserFine[]}) => {
+  const [data, setData] = useState<UserFine[]>([]);
 
-  const tableHeader = [
-    {
-      value: "customer_name",
-      label: "Customer",
-    },
-    {
-      value: "user_name",
-      label: "Employee",
-    },
-    {
-      value: "amount",
-      label: "Amount",
-    },
-    {
-      value: "reason",
-      label: "Reason",
-    },
-  ];
-
-  const columns = [
+  const columns : ColumnDef<UserFine>[] = [
     {
       accessorKey: "created_at",
       filterFn: "includesString",
@@ -1512,24 +1489,22 @@ const Fines = ({ passingData }) => {
         <PageTable
           columns={columns}
           data={data}
-          tableHeader={tableHeader}
-          onRowClick={() => {}}
         />
       </div>
     </div>
   );
 };
 
-const Reimbursement = ({ passingData }) => {
-  const [data, setData] = useState([]);
-  const [imageURL, setImageURL] = useState(null);
+const Reimbursement = ({ passingData } : {passingData : UserReimbursementType[]}) => {
+  const [data, setData] = useState<UserReimbursementType[]>([]);
+  const [imageURL, setImageURL] = useState<UserReimbursementType | null>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     setData([...passingData]);
   }, [passingData]);
 
-  const columns = [
+  const columns : ColumnDef<UserReimbursementType>[] = [
     {
       accessorKey: "date",
       filterFn: "includesString",
@@ -1644,9 +1619,9 @@ const Reimbursement = ({ passingData }) => {
     </div>
   );
 };
-const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
+const ImageSheet = ({ visible, onClose, img, submittedBy, description } : {visible : boolean, onClose : ()=> void, img : string | null, description : string | null, submittedBy : string | null}) => {
   const [imageOpen, setImageOpen] = useState(false);
-  const [localImage, setLocalImage] = useState(null);
+  const [localImage, setLocalImage] = useState<string | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
   const isMountedRef = useRef(true);
 
@@ -1667,7 +1642,6 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
     }
   }, [img]);
 
-  // Use Effect to fetch image on mount or when img changes
   useEffect(() => {
     isMountedRef.current = true;
     fetchImage();
@@ -1678,22 +1652,21 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
     };
   }, [fetchImage]);
 
-  // Memoized function for closing modal
+  
   const handleClose = useCallback(() => {
     if (!imageOpen) {
       onClose();
     }
   }, [imageOpen, onClose]);
 
-  // Memoized function for zoom change
-  const handleZoomChange = useCallback((shouldZoom) => {
+  
+  const handleZoomChange = useCallback((shouldZoom : boolean) => {
     setIsZoomed(shouldZoom);
     if (!shouldZoom) {
       setImageOpen(false);
     }
   }, []);
 
-  // Memoized local image URL to prevent unnecessary re-renders
   const memoizedImage = useMemo(() => localImage, [localImage]);
 
   return (
@@ -1732,8 +1705,8 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }) => {
   );
 };
 
-const AttendanceRecord = ({ passingData = [] }) => {
-  const columns = [
+const AttendanceRecord = ({ passingData = [] } : {passingData: LocalUserAttendance[]}) => {
+  const columns : ColumnDef<LocalUserAttendance>[] = [
     {
       accessorKey: "date",
       filterFn: "includesString",
@@ -1842,9 +1815,9 @@ const AttendanceRecord = ({ passingData = [] }) => {
   );
 };
 
-const TargetRecord = ({ passingData = [] }) => {
+const TargetRecord = ({ passingData = [] } : {passingData : MachineProps[]}) => {
   const { base_route } = useUserDetail();
-  const columns = [
+  const columns : ColumnDef<MachineProps>[] = [
     {
       accessorKey: "contract_date",
       filterFn: "includesString",

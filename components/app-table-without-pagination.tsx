@@ -1,11 +1,15 @@
 "use client";
 
 import {
+  ColumnDef,
+  ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
+  SortingState,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table";
 
 import { Input } from "@/components/ui/input";
@@ -24,19 +28,23 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import exportToExcel from "@/lib/exportToExcel";
 import { Button } from "./ui/button";
 import Spinner from "./ui/spinner";
-type PageTableProps = {
+import moment from "moment";
+
+type ExtendedColumnDef<T> = ColumnDef<T> & {
+  accessorKey?: keyof T;
+};
+
+type PageTableProps<T extends Record<string, any>> = {
   children?: React.ReactNode;
-  columns: any[];
-  data: any[];
+  columns: ColumnDef<T>[];
+  data: T[];
   disableInput?: boolean;
   loading?: boolean;
   download?: boolean;
-  onRowClick?: (row: any, event: React.MouseEvent<HTMLTableRowElement>) => void;
+  onRowClick?: (row: T, event: React.MouseEvent<HTMLTableRowElement>) => void;
   height?: string
-  totalCustomerText?: string;
-  totalCustomer?: number;
 };
-const PageTable = ({
+const PageTable = <T extends Record<string, any>>({
   children,
   columns,
   data,
@@ -45,10 +53,10 @@ const PageTable = ({
   loading = false,
   download = false,
   height = "min-h-[calc(100dvh-280px)]"
-}: PageTableProps) => {
-  const [sorting, setSorting] = useState([]);
-  const [columnFilters, setColumnFilters] = useState([]);
-  const [columnVisibility, setColumnVisibility] = useState({});
+}: PageTableProps<T>) => {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
@@ -57,11 +65,11 @@ const PageTable = ({
     let filtered = data;
     columnFilters.forEach((filter) => {
       filtered = filtered.filter((row) => {
-        const cellValue = row[filter.id];
-        return cellValue
-          .toString()
+        const key = filter.id as keyof T;
+        const cellValue = row[key];
+        return String(cellValue ?? "")
           .toLowerCase()
-          .includes(filter.value.toLowerCase());
+          .includes(String(filter.value).toLowerCase());
       });
     });
 
@@ -76,7 +84,7 @@ const PageTable = ({
     return filtered;
   }, [data, columnFilters, debouncedSearch]);
 
-  const table = useReactTable({
+  const table = useReactTable<T>({
     data: filteredData,
     columns,
     onSortingChange: setSorting,
@@ -103,18 +111,26 @@ const PageTable = ({
     try {
       if (!filteredData || !filteredData.length) return;
 
-      const headers = columns
-        .filter((col) => typeof col.accessorKey === "string")
-        .map((col) => col.accessorKey);
+
+
+      const exportableColumns = columns.filter(
+        (col : ExtendedColumnDef<T>): col is ExtendedColumnDef<T> & { accessorKey: keyof T } =>
+          typeof col.accessorKey === "string"
+      );
+
+      const headers = exportableColumns.map((col) =>
+        String(col.accessorKey)
+      );
 
       const formattedData = filteredData.map((row) =>
-        columns.map((col) => {
-          const value = row[col.accessorKey];
-          if (col.type === "date" && value) {
-            return moment(value).format("YYYY-MM-DD");
+        exportableColumns.map((col) => {
+          const key = col.accessorKey as keyof T;
+          const value = row[key];
+          if (isValidDateString(value) && value) {
+            return moment(value as any).format("YYYY-MM-DD");
           }
-          return value != null ? value : "";
-        }),
+          return value != null ? String(value) : "";
+        })
       );
 
       exportToExcel(
@@ -123,11 +139,16 @@ const PageTable = ({
         "Table-Export.xlsx",
         false,
         "",
-        false,
+        false
       );
     } catch (error) {
       console.error("Error exporting Excel:", error);
     }
+  }
+
+  function isValidDateString(value: string): boolean {
+    console.log(value, moment(value, moment.ISO_8601, true).isValid())
+    return moment(value, moment.ISO_8601, true).isValid();
   }
 
   return (
@@ -187,7 +208,7 @@ const PageTable = ({
                       <TableCell className="text-[13px] whitespace-normal break-words" key={cell.id}>
                         {flexRender(cell.column.columnDef.cell, {
                           ...cell.getContext(),
-                          stopRowClick: (e) => e.stopPropagation(),
+                          stopRowClick: (e: React.MouseEvent<HTMLTableRowElement>) => e.stopPropagation(),
                         })}
                       </TableCell>
                     ))}
@@ -230,4 +251,4 @@ const PageTable = ({
 };
 
 
-export default memo(PageTable);
+export default memo(PageTable) as typeof PageTable;

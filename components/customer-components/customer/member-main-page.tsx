@@ -1,6 +1,6 @@
 "use client";
 import ConfimationDialog from "@/components/alert-dialog";
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/app-table-without-pagination";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import {
@@ -32,7 +32,7 @@ export default function MemberMainPage({ onReturn }: { onReturn: (val: number) =
   const { userID, isAdmin, designation, customer_delete_access, } = useUserDetail()
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<number | null>(null);
   const [numCount, setNumCount] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [resetLoading, setResetLoading] = useState(false);
