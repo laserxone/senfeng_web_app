@@ -4,9 +4,9 @@ import admin from "@/lib/firebaseAdmin";
 import { GetAttendanceFromFirebase } from "@/lib/getAttendanceFromFirebase";
 import UploadImageForMobile from "@/lib/uploadImageForMobile";
 import moment from "moment";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req, { params }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ uid: string }> }) {
   try {
     const { uid } = await params;
     const { note, location, image, task, reason, customer_id } =
@@ -19,17 +19,17 @@ export async function POST(req, { params }) {
       );
     }
 
-    const currentDate = moment().format("YYYY-MM-DD"); // Format the date
-    const timestamp = new Date(); // Current time
+    const currentDate = moment().format("YYYY-MM-DD"); 
+    const timestamp = new Date(); 
 
-    // Check if an attendance entry exists for the same date
+    
     const checkQuery = `
         SELECT * FROM attendance 
         WHERE user_id = $1 
         AND DATE(time_in) = $2
       `;
     const checkResult = await pool.query(checkQuery, [uid, currentDate]);
-    const fileName = `lahore/${uid}/attendance/${moment().valueOf()}.png`; // Unique file path
+    const fileName = `lahore/${uid}/attendance/${moment().valueOf()}.png`;
 
     if (checkResult.rows.length === 0) {
       UploadImageForMobile(image, fileName);
@@ -81,13 +81,6 @@ export async function POST(req, { params }) {
         existingAttendance.id,
       ]);
 
-      // await pool.query(`
-      //     INSERT INTO task(
-      //         assigned_to, status, task_name, type, created_at
-      //     )
-      //     VALUES ($1, $2, $3, $4, NOW())
-      // `, [id, "Pending", task, reason]);
-
       return NextResponse.json(
         { message: "Attendance marked time out", data: updateResult.rows[0] },
         { status: 200 },
@@ -98,7 +91,7 @@ export async function POST(req, { params }) {
       { message: "Attendance already marked for the day" },
       { status: 400 },
     );
-  } catch (error) {
+  } catch (error : any) {
     console.log("message:", error);
     return NextResponse.json(
       { message: error?.message || "Something went wrong" },
@@ -107,7 +100,7 @@ export async function POST(req, { params }) {
   }
 }
 
-export async function GET(req, { params }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ uid: string }> }) {
   const searchParams = req.nextUrl.searchParams;
   const start_date = searchParams.get("start_date");
   const end_date = searchParams.get("end_date");
@@ -137,9 +130,6 @@ export async function GET(req, { params }) {
     const queryParams = [];
     let paramIndex = 1;
 
-    // -----------------------------
-    // Role-based filtering
-    // -----------------------------
     if (isSuper || team === "true") {
       attendanceQuery += ` AND u.office = 'lahore'`;
 
@@ -152,9 +142,6 @@ export async function GET(req, { params }) {
       queryParams.push(Number(uid));
     }
 
-    // -----------------------------
-    // Date filtering
-    // -----------------------------
     if (start_date && end_date) {
       attendanceQuery += ` AND t.time_in BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
       queryParams.push(start_date, end_date);
@@ -168,9 +155,7 @@ export async function GET(req, { params }) {
       queryParams
     );
 
-    // -----------------------------
-    // Firebase Attendance
-    // -----------------------------
+
     const firebaseAttendance = await GetAttendanceFromFirebase(
       start_date,
       end_date,
@@ -178,9 +163,9 @@ export async function GET(req, { params }) {
       false
     );
 
-    // Normalize Firebase records
-    const normalizedFirebaseAttendance = firebaseAttendance.map(
-      (item, index) => ({
+   
+    const normalizedFirebaseAttendance = firebaseAttendance?.map(
+      (item) => ({
        ...item,
         record_type: "attendance",
         leave_id: null,
@@ -189,9 +174,6 @@ export async function GET(req, { params }) {
       })
     );
 
-    // -----------------------------
-    // Normalize SQL Attendance
-    // -----------------------------
     const sqlAttendance = attendanceResult.rows.map((item) => ({
       ...item,
       record_type: "attendance",
@@ -239,7 +221,7 @@ export async function GET(req, { params }) {
         WHERE l.user_id = ANY($1)
       `;
 
-      const leaveParams = [filteredUserIds];
+      const leaveParams : any[] = [filteredUserIds];
       let leaveParamIndex = 2;
 
       if (start_date && end_date) {
@@ -254,9 +236,6 @@ export async function GET(req, { params }) {
       leaveRows = leaveResult.rows;
     }
 
-    // -----------------------------
-    // Normalize Leave Records
-    // -----------------------------
     const leaveData = leaveRows.map((leave) => ({
       id: `leave-${leave.leave_id}`,
       record_type: "leave",
@@ -278,9 +257,6 @@ export async function GET(req, { params }) {
       leave_date: leave.leave_date,
     }));
 
-    // -----------------------------
-    // Combine and Sort Data
-    // -----------------------------
     const finalData = [...allAttendance, ...leaveData].sort(
       (a, b) => {
         const dateA = new Date(
@@ -294,7 +270,7 @@ export async function GET(req, { params }) {
     );
 
     return NextResponse.json(finalData, { status: 200 });
-  } catch (error) {
+  } catch (error : any) {
     console.log("Error inserting data: ", error);
     return NextResponse.json(
       { message: error?.message || "Something went wrong" },

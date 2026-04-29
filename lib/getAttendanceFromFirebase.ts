@@ -2,7 +2,7 @@ import moment from "moment";
 import admin from "./firebaseAdmin";
 import pool from "@/config/db";
 
-export async function GetAttendanceFromFirebase(start_date : string,end_date : string, user : string | number, cond = true ) {
+export async function GetAttendanceFromFirebase(start_date : string | null,end_date : string | null, user : string | number, cond = true ) {
 
     if(!cond) return []
 
@@ -67,5 +67,5 @@ export async function GetAttendanceFromFirebase(start_date : string,end_date : s
     user_name: userMap[item.user_email] || "Unknown",
   }));
 
-  return data
-}
+  return data ?? []
+} 

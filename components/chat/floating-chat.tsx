@@ -2,18 +2,19 @@
 import { useMessagesNotification } from "@/hooks/use-message-notification";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { ArrowLeft, MessageCircle, X } from "lucide-react";
+import { ArrowLeft, Maximize, Maximize2, MessageCircle, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BadgeCount } from "../NotificationBadge";
 import Chatcomponent from "./chat-component";
 import UserChatIcon from "./chatIcon";
 import { playNotificationSound } from "../playNotificationSound";
 import { ConversationType, UserConversation } from "@/lib/types";
+import Link from "next/link";
 
 
 
 export default function FloatingChat() {
-  const { userID } = useUserDetail();
+  const { userID, base_route } = useUserDetail();
   const [open, setOpen] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<ConversationType | null>(null);
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,8 @@ export default function FloatingChat() {
           id: response.data.id,
           user: response.data?.otherUser,
         });
+      } else {
+        setSelectedConversation(null)
       }
     })
 
@@ -80,6 +83,13 @@ export default function FloatingChat() {
                 : "Messages"}
             </p>
           </div>
+
+          <div className="flex gap-2 items-center">
+
+          {selectedConversation &&
+            <Link href={`/${base_route}/messages?chat=${selectedConversation.user.id}`}>
+              <Maximize2 size={18}/>
+            </Link>}
           <div
             className="cursor-pointer hover:text-red-500"
             onClick={() => {
@@ -89,15 +99,30 @@ export default function FloatingChat() {
           >
             <X size={18} />
           </div>
+          </div>
         </div>
 
         <div className="flex-1">
           <div className={`${selectedConversation ? "hidden" : "block"}`}>
             <UserChatIcon
+              className="h-[calc(100dvh-300px)]"
               myId={userID}
               onChatSelected={(item) => {
                 if (item?.id === selectedConversation?.user?.id) return;
                 setLoading(true);
+                setSelectedConversation({
+                  id: item.id,
+                  user: {
+                    name: item.name,
+                    dp: item.dp,
+                    id: item.id,
+                    conversation: {
+                      last_message: item.conversation.last_message,
+                      last_updated: item.conversation.last_updated,
+                      unreadCount: item.conversation.unreadCount
+                    }
+                  }
+                });
                 handleStartConversation(item);
               }}
             />
@@ -107,6 +132,7 @@ export default function FloatingChat() {
             className={`${loading ? "block" : !selectedConversation ? "hidden" : "block"} h-full`}
           >
             <Chatcomponent
+
               id={selectedConversation?.id}
               user={selectedConversation?.user}
               stateLoading={loading}

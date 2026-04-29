@@ -2,7 +2,7 @@
 
 import { db } from "@/config/firebase";
 import axios from "@/lib/axios";
-import { ConversationType, UserConversation } from "@/lib/types";
+import { UserConversation } from "@/lib/types";
 import { doc, onSnapshot } from "firebase/firestore";
 import moment from "moment";
 import { useEffect, useState } from "react";
@@ -10,7 +10,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { Separator } from "../ui/separator";
 import { ProfilePicture } from "../users/ProfilePicture";
 
-export default function UserChatIcon({ myId, onChatSelected }: { myId: number, onChatSelected: (val: UserConversation) => void }) {
+export default function UserChatIcon({ myId, onChatSelected, className, active = null }: { myId: number, onChatSelected: (val: UserConversation) => void, className?: string, active?: number | null }) {
   const [conversations, setConversations] = useState<UserConversation[]>([]);
   const [search, setSearch] = useState("");
 
@@ -41,21 +41,24 @@ export default function UserChatIcon({ myId, onChatSelected }: { myId: number, o
   );
 
   return (
-    <>
+    <div>
       <input
-        className="my-2 px-4 w-full border-0 focus:ring-0 focus:border-0 hover:border-0 outline-none focus:outline-none"
+        className="my-2 px-4 border-0 focus:ring-0 focus:border-0 hover:border-0 outline-none focus:outline-none"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search user..."
       />
 
       <Separator />
-      <div className="absolute bottom-0 left-0 right-0 top-[90px] flex overflow-scroll md:overflow-auto">
-        <ScrollArea className="flex-1">
+      <div className={`w-full h-full`}>
+        <ScrollArea className={` ${className}`}>
           {filtered.map((item, index) => (
             <div
               key={index}
-              className="w-full py-4 hover:cursor-pointer px-4 hover:bg-muted rounded"
+              className={`w-full py-4 px-4 cursor-pointer hover:bg-muted rounded-md transition-all ${active === item.id
+                  ? "bg-muted/70 border-l-4 border-primary"
+                  : ""
+                }`}
               onClick={() => onChatSelected(item)}
             >
               <div className="flex justify-between items-start w-full">
@@ -90,7 +93,7 @@ export default function UserChatIcon({ myId, onChatSelected }: { myId: number, o
           ))}
         </ScrollArea>
       </div>
-    </>
+    </div>
   );
 }
 

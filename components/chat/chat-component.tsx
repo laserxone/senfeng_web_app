@@ -8,7 +8,7 @@ import { Messages, UserConversation } from "@/lib/types";
 import { Clock, Send } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import { Input } from "../ui/input";
@@ -31,6 +31,7 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }: ChatComp
   const [tempMessages, setTempMessages] = useState<Messages[]>([]);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const [selectedContent, setSelectedContent] = useState<any | null>(null);
+  const [visibleCount, setVisibleCount] = useState(20);
 
   useEffect(() => {
     if (!id) return;
@@ -117,7 +118,20 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }: ChatComp
     // TriggerFirebase(id.toString(), userID?.toString());
   };
 
-  const combinedMessages = [...realMessages, ...tempMessages];
+  const visibleRealMessages = useMemo(() => {
+    return realMessages.slice(-visibleCount);
+  }, [realMessages, visibleCount]);
+
+  const combinedMessages = [...visibleRealMessages, ...tempMessages];
+
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) =>
+      Math.min(prev + 20, realMessages.length)
+    );
+  };
+
+
 
   return (
     <div className="flex flex-col w-full h-full bg-muted/40 z-99999">
@@ -126,7 +140,18 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }: ChatComp
           <Spinner />
         </div>
       ) : (
-        <ScrollArea className="h-[calc(100dvh-320px)] px-5">
+        <ScrollArea className="h-[calc(100dvh-320px)] px-5" >
+          {visibleCount < realMessages.length && (
+            <div className="flex justify-center my-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLoadMore}
+              >
+                Load more messages
+              </Button>
+            </div>
+          )}
           {combinedMessages.map((item, index) => {
             const isMe = item.sender_id === userID;
             return (

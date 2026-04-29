@@ -33,6 +33,7 @@ export default function RootLayout({
       className={cn("antialiased", fontMono.variable, "font-sans", inter.variable, nunitoSansHeading.variable)}
       
     >
+      <link rel="icon" href="/favicon.ico" sizes="any" />
       <body className="">
         <Suspense fallback={<SenfengLogoLoader />}>
           <MainProviders>

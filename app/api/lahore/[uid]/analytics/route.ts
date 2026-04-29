@@ -1,11 +1,8 @@
 import pool from "@/config/db";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
-import admin from "@/lib/firebaseAdmin";
-import UploadImageForMobile from "@/lib/uploadImageForMobile";
-import moment from "moment";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req, { params }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ uid: string }> }) {
 
     const searchParams = req.nextUrl.searchParams
     const start_date = searchParams.get('start')
@@ -61,7 +58,7 @@ WHERE s.contract_date BETWEEN $1 AND $2
 
 
 
-    } catch (error) {
+    } catch (error: any) {
         console.log('Error inserting data: ', error);
         return NextResponse.json({ message: error?.message || "Something went wrong" }, { status: 500 })
     }
