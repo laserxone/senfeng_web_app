@@ -1,8 +1,8 @@
 import pool from "@/config/db"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
     const { uid } = await params;
 
     if (!uid) {
@@ -88,13 +88,13 @@ export async function GET(req, { params }) {
         }
 
         usersWithConversation.sort((a, b) =>
-            new Date(b.conversation.last_updated) - new Date(a.conversation.last_updated)
+            new Date(b.conversation.last_updated).getTime() - new Date(a.conversation.last_updated).getTime()
         );
 
         const finalUserList = [...usersWithConversation, ...usersWithoutConversation];
 
         return NextResponse.json(finalUserList, { status: 200 });
-    } catch (error) {
+    } catch (error:any) {
         console.error(error);
         return NextResponse.json(
             { message: error?.message || "Something went wrong" },

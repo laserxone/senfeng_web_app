@@ -12,7 +12,7 @@ export async function GET() {
         const result = await pool.query(query);
         return NextResponse.json(result.rows[0], { status: 200 })
 
-    } catch (error) {
+    } catch (error:any) {
         console.error('Error inserting data: ', error);
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }

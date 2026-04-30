@@ -5,9 +5,9 @@ import { addLog } from "@/lib/addLog";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { generateLog } from "@/lib/generateLog";
 import { deleteObject, ref } from "firebase/storage";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{id:string,uid:string}>}) {
   const { id, uid } = await params; 
 
 
@@ -79,7 +79,7 @@ export async function GET(req, { params }) {
       machine.status = machineStatus.rows.length > 0 ? machineStatus.rows[0].status : null
 
       let machineFilled = 0;
-      let unmatchedFields = [];
+      let unmatchedFields:any[] = [];
 
       const hasContractImages =
         (Array.isArray(machine.contract_images_pdf) && machine.contract_images_pdf.length > 0) ||
@@ -213,7 +213,7 @@ export async function GET(req, { params }) {
       machine.status = machineStatus.rows.length > 0 ? machineStatus.rows[0].status : null
 
       let machineFilled = 0;
-      let unmatchedFields = [];
+      let unmatchedFields:any[] = [];
 
       const hasContractImages =
         (Array.isArray(machine.contract_images_pdf) && machine.contract_images_pdf.length > 0) ||
@@ -266,7 +266,7 @@ export async function GET(req, { params }) {
     }
 
 
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error fetching data:", error);
     return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 });
   }
@@ -274,7 +274,7 @@ export async function GET(req, { params }) {
 
 
 
-export async function PUT(req, { params }) {
+export async function PUT(req:NextRequest, { params }:{params:Promise<{id:string,uid:string}>}) {
   try {
     const data = await req.json();
     const { ...updates } = data;
@@ -284,7 +284,7 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
-    const fields = [];
+    const fields:string[] = [];
     const values = [];
 
     Object.entries(updates).forEach(([key, value], index) => {
@@ -324,7 +324,7 @@ export async function PUT(req, { params }) {
   }
 }
 
-export async function DELETE(req, { params }) {
+export async function DELETE(req:NextRequest, { params }:{params:Promise<{id:string}>}) {
   const { id } = await params;
 
   if (!id) {
@@ -362,7 +362,7 @@ export async function DELETE(req, { params }) {
       if (imagePath && !imagePath.includes("https")) {
         try {
           await admin.storage().bucket().file(imagePath).delete()
-        } catch (err) {
+        } catch (err:any) {
           console.warn(
             `Failed to delete payment image: ${imagePath}`,
             err.message,
@@ -382,7 +382,7 @@ export async function DELETE(req, { params }) {
 
     let customer_id = null;
 
-    if (saleResult.rowCount > 0) {
+    if (saleResult.rows.length > 0) {
       const saleRow = saleResult.rows[0];
       customer_id = saleRow?.customer_id;
 
@@ -402,7 +402,7 @@ export async function DELETE(req, { params }) {
             if (img && !img.includes("https")) {
               try {
                 await deleteObject(ref(storage, img));
-              } catch (err) {
+              } catch (err:any) {
                 console.warn(`Failed to delete image: ${img}`, err.message);
               }
             }

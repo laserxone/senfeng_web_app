@@ -1,10 +1,10 @@
 import pool from "@/config/db"
 import { checkSuperadmin } from "@/lib/checkSuperadmin"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
     const { uid } = await params;
 
     try {
@@ -63,7 +63,7 @@ export async function GET(req, { params }) {
         const result = await pool.query(query, queryParams);
         return NextResponse.json(result.rows, { status: 200 });
 
-    } catch (error) {
+    } catch (error:any) {
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 });
     }
 }

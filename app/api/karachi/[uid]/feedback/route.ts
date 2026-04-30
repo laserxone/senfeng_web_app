@@ -1,10 +1,10 @@
 import pool from "@/config/db";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import moment from "moment";
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
 
     const { uid } = await params;
     const searchParams = req.nextUrl.searchParams;
@@ -96,12 +96,12 @@ ORDER BY created_at DESC;
 
         }
 
-    } catch (error) {
+    } catch (error:any) {
         console.error('Error ', error);
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }
 }
-export async function POST(req) {
+export async function POST(req:NextRequest) {
 
     try {
         const data = await req.json();

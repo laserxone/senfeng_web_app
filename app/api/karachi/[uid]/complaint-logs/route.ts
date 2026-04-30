@@ -1,12 +1,12 @@
 import pool from "@/config/db";
 import UploadImageForMobile from "@/lib/uploadImageForMobile";
 import moment from "moment";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
 
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
     const { image_base64, ...data } = await req.json()
 
 
@@ -40,14 +40,14 @@ export async function POST(req) {
         await pool.query(query, values);
 
         return NextResponse.json({ message: "Data inserted" }, { status: 200 });
-    } catch (error) {
+    } catch (error:any) {
         console.log(error)
         return NextResponse.json({ message: error.message || "Error occured" }, { status: 500 });
     }
 
 }
 
-export async function PUT(req) {
+export async function PUT(req:NextRequest) {
     try {
         const data = await req.json();
         const { id, ...updates } = data;
@@ -56,7 +56,7 @@ export async function PUT(req) {
             return NextResponse.json({ message: "ID is required" }, { status: 400 });
         }
 
-        const fields = [];
+        const fields:string[] = [];
         const values = [];
 
         Object.entries(updates).forEach(([key, value], index) => {

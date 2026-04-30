@@ -1,7 +1,7 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req) {
+export async function GET(req:NextRequest) {
     try {
         const searchParams = req.nextUrl.searchParams
         const uid = searchParams.get('uid')

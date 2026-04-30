@@ -1,19 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import pool from "@/config/db";
 
 import { parse } from "url";
 
-async function tableExists(table) {
+async function tableExists(table:any) {
   const q = `
     SELECT 1 FROM information_schema.tables
     WHERE table_schema = 'public' AND table_name = $1
     LIMIT 1
   `;
   const r = await pool.query(q, [table]);
-  return r.rowCount > 0;
+  return r.rows.length > 0;
 }
 
-async function getColumnsForTable(table) {
+async function getColumnsForTable(table:any) {
   const q = `
     SELECT column_name
     FROM information_schema.columns
@@ -23,7 +23,7 @@ async function getColumnsForTable(table) {
   return r.rows.map((r) => r.column_name);
 }
 
-export async function PATCH(req, { params }) {
+export async function PATCH(req:NextRequest, { params }:{params:Promise<{table:any}>}) {
   const { table } = await params;
 
   try {
@@ -59,7 +59,7 @@ export async function PATCH(req, { params }) {
         const keys = Object.keys(rowChanges).filter((k) => allowedCols.includes(k) && k !== "id"); // don't allow changing id
         if (keys.length === 0) continue;
 
-        const setClauses = [];
+        const setClauses:any[] = [];
         const values = [];
         let idx = 1;
 

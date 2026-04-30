@@ -1,8 +1,8 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
-export async function DELETE(req, { params }) {
+export async function DELETE(req:NextRequest, { params }:{params:Promise<{id:string}>}) {
   try {
 
     const { id } = await params
@@ -14,7 +14,7 @@ export async function DELETE(req, { params }) {
 
 
     return NextResponse.json({ message: "Customer Deleted" }, { status: 200 });
-  } catch (error) {
+  } catch (error:any) {
     return NextResponse.json({ message: error.message ||"Internal Server Error" }, { status: 500 });
   }
 }

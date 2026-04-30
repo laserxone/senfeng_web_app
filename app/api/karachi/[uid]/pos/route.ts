@@ -1,8 +1,8 @@
 import pool from "@/config/db";
 import moment from "moment";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req) {
+export async function GET(req:NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const availablemachine = searchParams.get("availablemachine");
 
@@ -30,7 +30,7 @@ export async function GET(req) {
 
       const invoices = resultQry.rows.map((invoice) => {
         const itemsTotal = Array.isArray(invoice.fields)
-          ? invoice.fields.reduce((sum, item) => {
+          ? invoice.fields.reduce((sum:number, item:any) => {
               const val = Number(item?.total ?? 0);
               return sum + (isNaN(val) ? 0 : val);
             }, 0)
@@ -62,7 +62,7 @@ export async function GET(req) {
   }
 }
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
   try {
     const data = await req.json();
 
@@ -101,7 +101,7 @@ export async function POST(req) {
   }
 }
 
-export async function PUT(req) {
+export async function PUT(req:NextRequest) {
   try {
     const {
       entries,
@@ -196,7 +196,7 @@ export async function PUT(req) {
       { nextinvoice: generatedInvoiceNumber, returning_id },
       { status: 200 },
     );
-  } catch (error) {
+  } catch (error:any) {
     console.log(error);
     return NextResponse.json(
       { message: error?.message || "Processing error" },

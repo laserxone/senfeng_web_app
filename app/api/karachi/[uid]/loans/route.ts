@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
   try {
@@ -34,12 +34,12 @@ export async function GET() {
 
     return NextResponse.json(loansWithPayments);
 
-  } catch (err) {
+  } catch (err:any) {
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
   const { user_id, loan_amount, description } = await req.json();
 
   try {
@@ -66,7 +66,7 @@ export async function POST(req) {
     );
 
     return NextResponse.json(result.rows[0]);
-  } catch (err) {
+  } catch (err:any) {
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }

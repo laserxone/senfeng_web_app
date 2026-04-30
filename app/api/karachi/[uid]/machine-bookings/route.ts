@@ -34,7 +34,7 @@ ORDER BY oi.id DESC;
 
         return NextResponse.json(result.rows, { status: 200 })
 
-    } catch (error) {
+    } catch (error:any) {
         return NextResponse.json({ message: error?.message || "Failed to fetch data" }, { status: 500 })
     }
 }

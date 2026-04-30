@@ -1,7 +1,7 @@
 import pool from "@/config/db"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(req) {
+export async function GET(req:any) {
 
     const searchParams = req.nextUrl.searchParams
     const start_date = searchParams.get('start_date')
@@ -54,7 +54,7 @@ export async function GET(req) {
 
         const result = await pool.query(query, queryParams);
         return NextResponse.json(result.rows, { status: 200 });
-    } catch (error) {
+    } catch (error:any) {
         console.log(error)
         return NextResponse.json({ message: error?.message || 'Error saving data, try again' }, { status: 500 });
     }
@@ -63,7 +63,7 @@ export async function GET(req) {
 
 }
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
     const data = await req.json()
 
     if (!data.user_id || !data.items) {
@@ -121,7 +121,7 @@ export async function POST(req) {
         }
 
         return NextResponse.json({ message: 'Order created successfully', orderId }, { status: 200 });
-    } catch (error) {
+    } catch (error:any) {
         console.log(error)
         return NextResponse.json({ message: error?.message || 'Error saving data, try again' }, { status: 500 });
     }

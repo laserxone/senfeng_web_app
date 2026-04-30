@@ -4,9 +4,9 @@ import admin from "@/lib/firebaseAdmin";
 import { GetAttendanceFromFirebase } from "@/lib/getAttendanceFromFirebase";
 import UploadImageForMobile from "@/lib/uploadImageForMobile";
 import moment from "moment";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req, { params }) {
+export async function POST(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
   try {
     const { uid } = await params;
     const { note, location, image, task, reason, customer_id } =
@@ -98,7 +98,7 @@ export async function POST(req, { params }) {
       { message: "Attendance already marked for the day" },
       { status: 400 },
     );
-  } catch (error) {
+  } catch (error:any) {
     console.log("message:", error);
     return NextResponse.json(
       { message: error?.message || "Something went wrong" },
@@ -107,7 +107,7 @@ export async function POST(req, { params }) {
   }
 }
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
   const searchParams = req.nextUrl.searchParams;
   const start_date = searchParams.get("start_date");
   const end_date = searchParams.get("end_date");
@@ -239,7 +239,7 @@ export async function GET(req, { params }) {
         WHERE l.user_id = ANY($1)
       `;
 
-      const leaveParams = [filteredUserIds];
+      const leaveParams:any[] = [filteredUserIds];
       let leaveParamIndex = 2;
 
       if (start_date && end_date) {
@@ -294,7 +294,7 @@ export async function GET(req, { params }) {
     );
 
     return NextResponse.json(finalData, { status: 200 });
-  } catch (error) {
+  } catch (error:any) {
     console.log("Error inserting data: ", error);
     return NextResponse.json(
       { message: error?.message || "Something went wrong" },

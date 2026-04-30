@@ -1,8 +1,8 @@
 import pool from "@/config/db"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 
-export async function POST(req, {params}) {
+export async function POST(req:NextRequest, {params}:{params:Promise<{id:string}>}) {
     const data = await req.json()
     const {id} = await params
     
@@ -56,7 +56,7 @@ export async function POST(req, {params}) {
         }
 
         return NextResponse.json({ message: 'Order created successfully', orderId }, { status: 200 });
-    } catch (error) {
+    } catch (error:any) {
         console.log(error)
         return NextResponse.json({ message: error?.message || 'Error saving data, try again' }, { status: 500 });
     }
@@ -66,7 +66,7 @@ export async function POST(req, {params}) {
 }
 
 
-export async function DELETE(req, { params }) {
+export async function DELETE(req:NextRequest, { params }:{params:Promise<{id:string}>}) {
 
     const { id } = await params
 
@@ -77,7 +77,7 @@ export async function DELETE(req, { params }) {
         await pool.query(`DELETE FROM orders WHERE id = $1`, [id])
 
         return NextResponse.json({ message: "Delete" }, { status: 200 })
-    } catch (error) {
+    } catch (error:any) {
         return NextResponse.json({ message: error?.message || "Something went wrong" }, { status: 500 })
     }
 }

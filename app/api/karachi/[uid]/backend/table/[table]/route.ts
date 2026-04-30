@@ -1,17 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import pool from "@/config/db";
 
-async function tableExists(table) {
+async function tableExists(table:any) {
   const q = `
     SELECT 1 FROM information_schema.tables
     WHERE table_schema = 'public' AND table_name = $1
     LIMIT 1
   `;
   const r = await pool.query(q, [table]);
-  return r.rowCount > 0;
+  return r.rows.length > 0;
 }
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{table:string}>}) {
   const { table } = await params;
 
   try {

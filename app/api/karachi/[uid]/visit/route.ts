@@ -1,10 +1,10 @@
 import pool from "@/config/db";
 import UploadImageForMobile from "@/lib/uploadImageForMobile";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
 
 
   const { uid } = await params
@@ -41,7 +41,7 @@ WHERE u.id = $1
     const result = await pool.query(query, queryParams);
     return NextResponse.json(result.rows, { status: 200 })
 
-  } catch (error) {
+  } catch (error:any) {
     console.error('Error fetching data: ', error);
     return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
   }
@@ -49,7 +49,7 @@ WHERE u.id = $1
 
 }
 
-export async function POST(req, { params }) {
+export async function POST(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
   try {
     const searchParams = req.nextUrl.searchParams
     const saveLocation = searchParams.get('savelocation')

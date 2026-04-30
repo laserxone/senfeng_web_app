@@ -1,9 +1,9 @@
 import pool from "@/config/db";
 import { sendNotification } from "@/lib/sendNotification";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
-export async function DELETE(req, { params }) {
+export async function DELETE(req:NextRequest, { params }:{params:Promise<{id:string}>}) {
   try {
 
     const { id } = await params
@@ -15,12 +15,12 @@ export async function DELETE(req, { params }) {
 
 
     return NextResponse.json({ message: "Commission Deleted" }, { status: 200 });
-  } catch (error) {
+  } catch (error:any) {
     return NextResponse.json({ message: error.message || "Internal Server Error" }, { status: 500 });
   }
 }
 
-export async function PUT(req, { params }) {
+export async function PUT(req:NextRequest, { params }:{params:Promise<{id:string}>}) {
   try {
     const data = await req.json();
     const { ...updates } = data;
@@ -30,7 +30,7 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
-    const fields = [];
+    const fields:string[] = [];
     const values = [];
 
     Object.entries(updates).forEach(([key, value], index) => {
@@ -65,7 +65,7 @@ export async function PUT(req, { params }) {
 
 
     return NextResponse.json({ message: "Updated successfully" }, { status: 200 });
-  } catch (error) {
+  } catch (error:any) {
     return NextResponse.json({ message: error.message || "Internal Server Error" }, { status: 500 });
   }
 }

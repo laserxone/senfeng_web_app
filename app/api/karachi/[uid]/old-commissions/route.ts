@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
 export async function GET() {
@@ -36,7 +36,7 @@ WHERE com.sale_id IS NULL
         const groupedData = groupByCustomer(result.rows);
 
         return NextResponse.json(groupedData, { status: 200 });
-    } catch (error) {
+    } catch (error:any) {
         console.error("GET error:", error);
         return NextResponse.json(
             { message: error.message || "Internal Server Error" },
@@ -46,7 +46,7 @@ WHERE com.sale_id IS NULL
 
 }
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
 
     try {
         const data = await req.json();
@@ -77,7 +77,7 @@ export async function POST(req) {
 }
 
 
-function groupByCustomer(rows) {
+function groupByCustomer(rows:any) {
   const customerMap = new Map();
 
   for (const row of rows) {
@@ -117,7 +117,7 @@ function groupByCustomer(rows) {
 
     // Prevent duplicate machine (sale_id)
     const machineExists = customer.machines.some(
-      (m) => m.sale_id === sale_id
+      (m:any) => m.sale_id === sale_id
     );
 
     if (!machineExists) {
@@ -141,7 +141,7 @@ function groupByCustomer(rows) {
   // Sort machines by contract_date ascending
   for (const customer of customerMap.values()) {
     customer.machines.sort(
-      (a, b) => new Date(a.contract_date) - new Date(b.contract_date)
+      (a:any, b:any) => new Date(a.contract_date).getTime() - new Date(b.contract_date).getTime()
     );
   }
 

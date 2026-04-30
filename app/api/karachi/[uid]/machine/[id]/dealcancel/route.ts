@@ -1,7 +1,7 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req, { params }) {
+export async function POST(req:NextRequest, { params }:{params:Promise<{id:string,uid:string}>}) {
   const { uid, id } = await params;
 
   const { reason } = await req.json();
@@ -62,7 +62,7 @@ export async function POST(req, { params }) {
     }
 
     return NextResponse.json({ message: "Done" }, { status: 200 });
-  } catch (error) {
+  } catch (error:any) {
     return NextResponse.json({ message: error?.message }, { status: 500 });
   }
 }

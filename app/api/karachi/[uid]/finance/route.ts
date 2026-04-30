@@ -1,7 +1,7 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req) {
+export async function GET(req:NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const start_date = searchParams.get("start_date");
   const end_date = searchParams.get("end_date");
@@ -96,7 +96,7 @@ export async function GET(req) {
     const pendingMachines = normalizedSales.filter((sale) => sale.pending > 0);
 
     return NextResponse.json(pendingMachines, { status: 200 });
-  } catch (error) {
+  } catch (error:any) {
     return NextResponse.json(
       { message: error?.message || "Server error" },
       { status: 500 },

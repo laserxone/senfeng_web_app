@@ -1,7 +1,7 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{searchitem:string}>}) {
   const { searchitem } = await params;
   const searchParams = req.nextUrl.searchParams;
   const pending = searchParams.get("pending");
@@ -21,7 +21,7 @@ export async function GET(req, { params }) {
 
       const invoices = result.rows.map((invoice) => {
         const itemsTotal = Array.isArray(invoice.fields)
-          ? invoice.fields.reduce((sum, item) => {
+          ? invoice.fields.reduce((sum:number, item:any) => {
               const val = Number(item?.total ?? 0);
               return sum + (isNaN(val) ? 0 : val);
             }, 0)
@@ -76,7 +76,7 @@ WHERE
       const invoices = result.rows.map((invoice) => {
         // Sum totals from fields array
         const itemsTotal = Array.isArray(invoice.fields)
-          ? invoice.fields.reduce((sum, item) => {
+          ? invoice.fields.reduce((sum:number, item:any) => {
               const val = Number(item?.total ?? 0);
               return sum + (isNaN(val) ? 0 : val);
             }, 0)
@@ -113,7 +113,7 @@ WHERE
 
       const invoices = result.rows.map((invoice) => {
         const itemsTotal = Array.isArray(invoice.fields)
-          ? invoice.fields.reduce((sum, item) => {
+          ? invoice.fields.reduce((sum:number, item:any) => {
               const val = Number(item?.total ?? 0);
               return sum + (isNaN(val) ? 0 : val);
             }, 0)

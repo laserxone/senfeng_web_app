@@ -1,3 +1,5 @@
+import pool from "@/config/db";
+
 type AddLogParams = {
   text: string;
   user_id?: string | null;

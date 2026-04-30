@@ -2,9 +2,9 @@
 
 import pool from "@/config/db";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
 
     const { uid } = await params
 
@@ -38,7 +38,7 @@ export async function GET(req, { params }) {
             return NextResponse.json(salaries.rows, { status: 200 });
 
         }
-    } catch (error) {
+    } catch (error:any) {
 
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }

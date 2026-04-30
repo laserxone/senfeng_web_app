@@ -3,11 +3,11 @@ import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import admin from "@/lib/firebaseAdmin";
 import UploadImageForMobile from "@/lib/uploadImageForMobile";
 import moment from "moment";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
 
     const searchParams = req.nextUrl.searchParams
     const start_date = searchParams.get('start_date')
@@ -77,8 +77,8 @@ export async function GET(req, { params }) {
         }
 
 
-        const attendanceRecords = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const preparedData = attendanceRecords.map((item) => {
+        const attendanceRecords = snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const preparedData = attendanceRecords?.map((item:any) => {
             return {
                 time_in: item?.timeIn ? moment(item?.timeIn).utc().format("YYYY-MM-DDTHH:mm:ss.SSS[Z]") : null,
                 note_time_in: item?.noteTimeIn || null,
@@ -96,21 +96,21 @@ export async function GET(req, { params }) {
         const userQuery = await pool.query(`SELECT name, email FROM users`)
 
 
-        const userMap = {};
+        const userMap:any = {};
         userQuery.rows.forEach(user => {
             userMap[user.email] = user.name;
         });
 
-        const enrichedData = preparedData.map(item => ({
+        const enrichedData:any = preparedData?.map(item => ({
             ...item,
             user_name: userMap[item.user_email] || "Unknown"
         }));
 
         const finalData = [...result.rows, ...enrichedData]
 
-        finalData.sort((a, b) => new Date(b.time_in) - new Date(a.time_in))
+        finalData.sort((a, b) => new Date(b.time_in).getTime() - new Date(a.time_in).getTime())
         if (user) {
-            const uniqueData = [];
+            const uniqueData:any[] = [];
             const seenDates = new Set();
 
             finalData.forEach(item => {
@@ -131,7 +131,7 @@ export async function GET(req, { params }) {
 
     }
 
-    catch (error) {
+    catch (error:any) {
         console.log('Error inserting data: ', error);
         return NextResponse.json({ message: error?.message || "Something went wrong" }, { status: 500 })
     }

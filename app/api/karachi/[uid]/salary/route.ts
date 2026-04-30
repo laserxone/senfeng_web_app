@@ -2,9 +2,9 @@ import pool from "@/config/db";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import admin from "@/lib/firebaseAdmin";
 import moment from "moment";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{id:string,uid:string}>}) {
   const searchParams = req.nextUrl.searchParams;
   const start_date = searchParams.get("start");
   const end_date = searchParams.get("end");
@@ -75,11 +75,11 @@ export async function GET(req, { params }) {
         .get();
     }
 
-    const attendanceRecords = snapshot.docs.map((doc) => ({
+    const attendanceRecords = snapshot?.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
-    const preparedData = attendanceRecords.map((item) => {
+    const preparedData = attendanceRecords?.map((item:any) => {
       return {
         time_in: item?.timeIn
           ? moment(item?.timeIn).utc().format("YYYY-MM-DDTHH:mm:ss.SSS[Z]")
@@ -102,21 +102,21 @@ export async function GET(req, { params }) {
       [user],
     );
 
-    const userMap = {};
+    const userMap:any = {};
     userQuery.rows.forEach((user) => {
       userMap[user.email] = user.name;
     });
 
-    const enrichedData = preparedData.map((item) => ({
+    const enrichedData:any = preparedData?.map((item) => ({
       ...item,
       user_name: userMap[item.user_email] || "Unknown",
     }));
 
     const finalData = [...result.rows, ...enrichedData];
 
-    finalData.sort((a, b) => new Date(a.time_in) - new Date(b.time_in));
+    finalData.sort((a, b) => new Date(a.time_in).getTime() - new Date(b.time_in).getTime());
 
-    const uniqueData = [];
+    const uniqueData :any[]= [];
     const seenDates = new Set();
 
     finalData.forEach((item) => {
@@ -284,7 +284,7 @@ export async function GET(req, { params }) {
     `;
 
         allCommissions = await Promise.all(
-          savedCommission.map(async (item) => {
+          savedCommission.map(async (item:any) => {
             const commissionResultQry = await pool.query(
               savedSalaryCommission,
               [item],
@@ -304,7 +304,7 @@ export async function GET(req, { params }) {
           salaryResult.rows.length > 0
             ? salaryResult.rows[0]
             : null,
-        commission: [...commissionResult.rows, ...allCommissions ] || [],
+        commission: [...commissionResult.rows, ...allCommissions ],
         machines: machineResult.rows,
         feedbacksTakenThisMonth,
         remainingFeedbacks,
@@ -316,7 +316,7 @@ export async function GET(req, { params }) {
       },
       { status: 200 },
     );
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error inserting data: ", error);
     return NextResponse.json(
       { message: error.message || "Something went wrong" },
@@ -325,7 +325,7 @@ export async function GET(req, { params }) {
   }
 }
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
   try {
     const data = await req.json();
 

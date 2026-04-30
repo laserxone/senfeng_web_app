@@ -1,5 +1,5 @@
 export function debounce(func, delay = 1000) {
-  let timeout;
+  let timeout:number;
   return (...args) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => {
@@ -9,7 +9,7 @@ export function debounce(func, delay = 1000) {
 }
 
 export function debouncePromise(func, delay = 1000) {
-  let timeout;
+  let timeout:number;
   let promiseReject;
 
   return (...args) => {

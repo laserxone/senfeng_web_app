@@ -1,9 +1,9 @@
 import pool from "@/config/db";
 import { partFields, profileFields, saleFields } from "@/constants/data";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{id:string,uid:string}>}) {
     const { id, uid } = await params;
 
 
@@ -120,7 +120,7 @@ export async function GET(req, { params }) {
             const overallCompletion = Math.round((filledCount / customerTotalFields) * 100);
 
             let billReceived = 0;
-            let payments = [];
+            let payments:any[] = [];
 
             if (machineIds.length > 0) {
                 const paymentsQuery = `SELECT id, machine_id, note, amount, mode, received_by, clearance_date, transaction_date FROM payment WHERE machine_id = ANY($1)`;
@@ -152,7 +152,7 @@ export async function GET(req, { params }) {
             }));
 
             customer.machines = machines;
-            customer.bill_received = parseFloat(billReceived);
+            customer.bill_received = parseFloat(`${billReceived}`);
             customer.bill_total = parseFloat(billTotal);
             customer.profile_completion = overallCompletion;
             customer.parts = parts
@@ -300,7 +300,7 @@ export async function GET(req, { params }) {
             const overallCompletion = Math.round((filledCount / customerTotalFields) * 100);
 
             let billReceived = 0;
-            let payments = [];
+            let payments:any[] = [];
 
             if (machineIds.length > 0) {
                 const paymentsQuery = `SELECT id, machine_id, note, amount, mode, received_by, clearance_date, transaction_date FROM payment WHERE machine_id = ANY($1)`;
@@ -331,7 +331,7 @@ export async function GET(req, { params }) {
             }));
 
             customer.machines = machines;
-            customer.bill_received = parseFloat(billReceived);
+            customer.bill_received = parseFloat(`${billReceived}`);
             customer.bill_total = parseFloat(billTotal);
             customer.profile_completion = overallCompletion;
             customer.parts = parts
@@ -346,7 +346,7 @@ export async function GET(req, { params }) {
 
 
 
-    } catch (error) {
+    } catch (error:any) {
         console.error('Error fetching data: ', error);
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 });
     }
