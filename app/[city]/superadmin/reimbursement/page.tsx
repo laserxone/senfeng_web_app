@@ -750,6 +750,9 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }: { visible: bool
                             <SelectItem value="Sales Meeting">
                               Sales Meeting
                             </SelectItem>
+                            <SelectItem value="   Final Hand Over">
+                              Final Hand Over
+                            </SelectItem>
                           </SelectGroup>
                         </SelectContent>
                       </Select>

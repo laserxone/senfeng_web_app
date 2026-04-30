@@ -69,6 +69,7 @@ import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
 import { Field, FieldGroup, FieldLabel } from "../ui/field";
 import { Checkbox } from "../ui/checkbox";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 export default function Reimbursement({
   id,
@@ -98,6 +99,8 @@ export default function Reimbursement({
       filterFn: "includesString",
       header: ({ column }) => {
         return (
+
+
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -108,11 +111,30 @@ export default function Reimbursement({
         );
       },
       cell: ({ row }) => (
-        <div className="ml-2">
-          {row.getValue("date")
-            ? moment(new Date(row.getValue("date"))).format("YYYY-MM-DD")
-            : ""}
+        <div className="flex gap-2 items-center">
+          {(row.original.title === 'Complaint' || row.original.title === 'Overhauling') &&
+             <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                   <div
+              className={`${!row.original?.resolved ? "bg-red-500" : "bg-green-500"
+                } border border-white h-3 w-3`}
+            />
+                </TooltipTrigger>
+                <TooltipContent className={!row.original?.resolved ? "bg-red-600 mr-2" : "bg-green-600 mr-2"} arrowColor={!row.original?.resolved ? "bg-red-600 fill-red-600" : "bg-green-600 fill-green-600"}>
+                  <p className="text-white">{!row.original?.resolved ? "Unresolved" : "Resolved"}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          
+          }
+          <div className="ml-2">
+            {row.getValue("date")
+              ? moment(new Date(row.getValue("date"))).format("YYYY-MM-DD")
+              : ""}
+          </div>
         </div>
+
       ),
     },
 
@@ -472,9 +494,9 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: 
   });
 
   async function onSubmit(values: FormValues) {
-   const verified =
-  values.title !== "Complaint" &&
-  values.title !== "Overhauling";
+    const verified =
+      values.title !== "Complaint" &&
+      values.title !== "Overhauling";
     setLoading(true);
     try {
       const name = `${OfficeState.value.data}/${id}/reimbursement/${moment().valueOf().toString()}.png`;
@@ -489,8 +511,8 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: 
         submitted_by: id,
         customer_id: selectedRadio === 'customer' ? values.customer : null,
         purpose: true,
-        resolved : values.resolved,
-       verified
+        resolved: values.resolved,
+        verified
       });
       onRefresh();
       form.reset();
@@ -596,6 +618,9 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: 
                             </SelectItem>
                             <SelectItem value="Sales Meeting">
                               Sales Meeting
+                            </SelectItem>
+                            <SelectItem value="   Final Hand Over">
+                              Final Hand Over
                             </SelectItem>
                           </SelectGroup>
                         </SelectContent>

@@ -166,6 +166,8 @@ export type UserReimbursementType = {
     ownership_id: number;
     customer: string;
     ownership_name: string;
+    verified ?:boolean
+    resolved ?:boolean
 }
 
 export type MyCustomer = {
