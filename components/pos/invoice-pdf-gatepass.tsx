@@ -16,9 +16,23 @@ const InvoicePDFGatepass = ({
     gatepass,
     gatepassType,
     items,
+    created_at
+}: {
+    from: string,
+    vehicle_no: string,
+    driver_name: string,
+    manager: string,
+    received_by: string,
+    gatepass: string,
+    gatepassType: string,
+    items: any[],
+    created_at?: string
 }) => {
 
-    const now = new Date();
+    let now = new Date();
+    if (created_at) {
+        now = new Date(created_at)
+    }
 
     const date = now.toLocaleDateString("en-GB", {
         day: "2-digit",
@@ -227,7 +241,7 @@ const InvoicePDFGatepass = ({
     );
 };
 
-const Cell = ({ width, value }) => (
+const Cell = ({ width, value } : {width : number, value : string | number}) => (
     <View
         style={{
             width,
@@ -249,6 +263,13 @@ const FormField = ({
     manager,
     received_by,
     time,
+}: {
+     from : string,
+    vehicle_no : string,
+    driver_name : string,
+    manager : string,
+    received_by : string,
+    time : string,
 }) => {
     const fields = [
         { label: "From", value: from },
@@ -320,10 +341,10 @@ const CompanyDetails = () => (
     </View>
 );
 
-const Header = ({ gatepassType }) => (
+const Header = ({ gatepassType } : {gatepassType : string}) => (
     <View style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexDirection: 'row' }}>
         {/* <Text fontSize={60} color={'#0072BC'} fontWeight={'800'}>SENFENG</Text> */}
-        <Image src={"/logo.png"} alt="My Local Image" style={{ height: '40px', width: '200px' }} />
+        <Image src={"/logo.png"} style={{ height: '40px', width: '200px' }} />
         <View style={{ backgroundColor: '#0072BC', borderTopLeftRadius: 20, borderTopRightRadius: 20, marginRight: 70, width: '150px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} >
             <Text style={{ fontSize: '15px', fontFamily: 'Helvetica-Bold', color: 'white', }}>
                 {gatepassType}

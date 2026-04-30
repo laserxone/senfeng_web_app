@@ -43,6 +43,7 @@ import ViewableInvoice from "./viewable-invoice";
 import { InvoiceItem, MyCustomer, POSCustomer, POSInvoiceReminder, SearchItem, StockProps } from "@/lib/types";
 import Link from "next/link";
 import { toast } from "sonner";
+import OutwardModal from "./outward-modal";
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -1070,15 +1071,10 @@ export default function POS() {
         }}
       />
 
-      {/* <OutwardModal
+      <OutwardModal
         visible={outwardModal}
         onClose={setOutwardModal}
-        data={stock}
-        onRefresh={async () => {
-          setLoading(true);
-          await fetchData();
-        }}
-      /> */}
+      />
     </PageContainer>
   );
 }

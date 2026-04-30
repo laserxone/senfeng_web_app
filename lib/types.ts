@@ -27,9 +27,9 @@ export type UserDashboard = {
     name: string;
     designation: string;
     limited_access: boolean;
-    email ?:string
-    office ?:string
-    active ?:string
+    email?: string
+    office?: string
+    active?: string
 }
 
 export type SalesCustomerMachines = {
@@ -862,6 +862,7 @@ export type POSInvoiceReminder = {
     final_amount: number;
 
     status: string;
+    outward_gatepass?: POSInvoiceReminder
 };
 
 export type POSCustomer = {
@@ -1211,96 +1212,131 @@ export interface FileNode {
 }
 
 export type InventoryItem = {
-  name: string;
-  qty: number;
-  price: number;
-  buying_price: number;
-  threshold: number;
-  new_order: number;
-  is_machine: boolean;
-  machine_serial: string;
-  machine_model: string;
-  machine_source: string;
-  machine_power: string;
-  status: string;
-  isExisting: boolean;
-  inventory_id: number | null;
-  show: boolean;
-  location ?: string
+    name: string;
+    qty: number;
+    price: number;
+    buying_price: number;
+    threshold: number;
+    new_order: number;
+    is_machine: boolean;
+    machine_serial: string;
+    machine_model: string;
+    machine_source: string;
+    machine_power: string;
+    status: string;
+    isExisting: boolean;
+    inventory_id: number | null;
+    show: boolean;
+    location?: string
 };
 
 export type ChequeProp = {
-  date : Date | undefined, 
-  amount : number, 
-  img : string
+    date: Date | undefined,
+    amount: number,
+    img: string
 }
 
 export type SalaryRecord = {
     id: number;
-  user_id: number;
-  year: number;
-  month: number;
-  target_achieved: string;
-  absents: number;
-  late: number;
-  late_fine_per_day: string;
-  reimbursement: string;
-  commission: string;
-  miscellaneous: string;
-  additional_fine: string;
-  issued: boolean;
-  created_at: string; 
-  salary_month: string; 
-  payable: string;
-  kpi: string;
-  fuel: string;
-  loan: string;
-  issued_commissions: number[]; 
-  loan_repayment: any | null;
-  basic_salary: string;
-  user_name: string;
- 
+    user_id: number;
+    year: number;
+    month: number;
+    target_achieved: string;
+    absents: number;
+    late: number;
+    late_fine_per_day: string;
+    reimbursement: string;
+    commission: string;
+    miscellaneous: string;
+    additional_fine: string;
+    issued: boolean;
+    created_at: string;
+    salary_month: string;
+    payable: string;
+    kpi: string;
+    fuel: string;
+    loan: string;
+    issued_commissions: number[];
+    loan_repayment: any | null;
+    basic_salary: string;
+    user_name: string;
+
 }
 
 export type GenerateSalaryUser = {
-    basic_salary : string
-    designation : string
-    email : string
-    fuel : string
-    id : number
-    monthly_target : string
-    name : string
-    total_salary : string
+    basic_salary: string
+    designation: string
+    email: string
+    fuel: string
+    id: number
+    monthly_target: string
+    name: string
+    total_salary: string
 }
 
 export type GenerateOldRecord = {
-    created_at : string
-    name : string
-    payable : string
-    salary_month :string
-    user_id : number
+    created_at: string
+    name: string
+    payable: string
+    salary_month: string
+    user_id: number
 }
 
 export type GenerateSalaryDashboard = {
-    user : GenerateSalaryUser
-    feedbacksTakenThisMonth : number
-    salary : null | SalaryRecord
-    reimbursement : UserReimbursementType[]
-    old_record : GenerateOldRecord[]
-    loan : Loan[]
-    fines : UserFine[]
-    machines : MachineProps[]
-    totalCustomersWithSale : number
-    totalVisits : number
-    commission ?: CommissionOwnerProps[]
-    attendance : UserAttendanceRecord[]
+    user: GenerateSalaryUser
+    feedbacksTakenThisMonth: number
+    salary: null | SalaryRecord
+    reimbursement: UserReimbursementType[]
+    old_record: GenerateOldRecord[]
+    loan: Loan[]
+    fines: UserFine[]
+    machines: MachineProps[]
+    totalCustomersWithSale: number
+    totalVisits: number
+    commission?: CommissionOwnerProps[]
+    attendance: UserAttendanceRecord[]
 }
 
 export type ToAccounts = {
-    issued : boolean
-    month : number
-    name : string
-    payable : string
-    user_id : number
-    year : number
+    issued: boolean
+    month: number
+    name: string
+    payable: string
+    user_id: number
+    year: number
 }
+
+
+export type OutwardProps = {
+    id: number;
+    name: string;
+    company: string;
+    phone: string;
+    address: string;
+    invoicenumber: string;
+    manager: string;
+    fields: InvoiceItem[];
+
+    created_at: string;
+
+    payment: boolean;
+    customer_id: number | null;
+
+    discount: number;
+    total_paid: string;
+
+    items_total: number;
+    final_amount: number;
+
+    status: string;
+    outward_gatepass?: {
+        id: number
+        from_by: string
+        vehicle_no: string
+        driver_name: string
+        fields: InvoiceItem[] | null;
+        received_by: string
+        manager: string
+        created_at: string
+    }
+};

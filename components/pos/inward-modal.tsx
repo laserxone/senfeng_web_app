@@ -60,7 +60,7 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }: {
         };
 
         try {
-            const response = await axios.post(`/${userID}/pos/inward`, formData)
+            const response = await axios.post(`/${userID}/pos/inward`, data)
             const blob = await pdf(
                 <InvoicePDFGatepass
                     from={data.from}
