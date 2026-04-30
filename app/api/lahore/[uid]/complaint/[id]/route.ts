@@ -1,12 +1,8 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
-export async function GET(req, { params }) {
-  const { uid } = await params
-
-
-
+export async function GET(req:NextRequest, { params }:{params:Promise<{id:string}>}) {
   const { id } = await params
 
   try {
@@ -54,7 +50,7 @@ WHERE c.id = $1;
 
 
     return NextResponse.json(result.rows[0] || {}, { status: 200 });
-  } catch (error) {
+  } catch (error:any) {
 
     return NextResponse.json({ message: error.message || "Server error" }, { status: 500 });
   }

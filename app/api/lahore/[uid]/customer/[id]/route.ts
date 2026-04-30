@@ -7,9 +7,9 @@ import { generateLog } from "@/lib/generateLog";
 import { sendNotification } from "@/lib/sendNotification";
 import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
 import { sendNotificationToSMM } from "@/lib/sendNotificationToSMM";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{id:string,uid:string}>}) {
   const { id } = await params;
   const { uid } = await params
 
@@ -147,7 +147,7 @@ export async function GET(req, { params }) {
       const billTotal = machines.reduce((sum, machine) => sum + (Number(machine.price) || 0), 0);
 
       customer.machines = machines;
-      customer.bill_received = parseFloat(billReceived);
+      customer.bill_received = parseFloat(`${billReceived}`);
       customer.bill_total = parseFloat(billTotal);
       customer.profile_completion = overallCompletion;
 
@@ -203,20 +203,20 @@ export async function GET(req, { params }) {
 
       // 6. Attach machines & calculated values to customer object
       customer.machines = machines;
-      customer.bill_received = parseFloat(billReceived);
+      customer.bill_received = parseFloat(`${billReceived}`);
       customer.bill_total = parseFloat(billTotal);
 
       return NextResponse.json(customer, { status: 200 });
     }
 
 
-  } catch (error) {
+  } catch (error:any) {
     console.error('Error fetching data: ', error);
     return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 });
   }
 }
 
-export async function PUT(req, { params }) {
+export async function PUT(req:NextRequest, { params }:{params:Promise<{uid:string,id:string}>}) {
 
 
 
@@ -236,7 +236,7 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
-    const fields = [];
+    const fields:string[] = [];
     const values = [];
 
     Object.entries(updates).forEach(([key, value], index) => {
@@ -287,7 +287,7 @@ export async function PUT(req, { params }) {
   }
 }
 
-export async function DELETE(req, { params }) {
+export async function DELETE(req:NextRequest, { params }:{params:Promise<{uid:string,id:string}>}) {
 
 
   try {
@@ -360,7 +360,7 @@ export async function DELETE(req, { params }) {
 
 
 
-async function checkDeleteUser(id) {
+async function checkDeleteUser(id:string) {
 
   if (!id) throw new Error("User ID is missing");
 

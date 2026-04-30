@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 
 export async function GET() {
@@ -12,14 +12,14 @@ export async function GET() {
         const result = await pool.query(query);
         return NextResponse.json(result.rows[0], { status: 200 })
 
-    } catch (error) {
+    } catch (error:any) {
         console.error('Error inserting data: ', error);
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }
 
 }
 
-export async function PUT(req) {
+export async function PUT(req:NextRequest) {
     try {
         const data = await req.json();
         const { id, ...updates } = data;
@@ -28,7 +28,7 @@ export async function PUT(req) {
             return NextResponse.json({ message: "ID is required" }, { status: 400 });
         }
 
-        const fields = [];
+        const fields:string[] = [];
         const values = [];
 
         Object.entries(updates).forEach(([key, value], index) => {

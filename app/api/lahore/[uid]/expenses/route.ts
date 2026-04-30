@@ -1,7 +1,7 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
   try {
     const data = await req.json();
 
@@ -37,7 +37,7 @@ export async function POST(req) {
   }
 }
 
-export async function GET(req) {
+export async function GET(req:NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const start_date = searchParams.get("start_date");
   const end_date = searchParams.get("end_date");
@@ -64,7 +64,7 @@ INNER JOIN users u ON r.submitted_by = u.id
     query += ` ORDER BY r.date DESC;`;
     const result = await pool.query(query, queryParams);
     return NextResponse.json(result.rows, { status: 200 });
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error fetching data: ", error);
     return NextResponse.json(
       { message: error.message || "Something went wrong" },

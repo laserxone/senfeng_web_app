@@ -1,9 +1,9 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import oldMoment from 'moment'
 
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
 
     const { uid } = await params;
 
@@ -59,10 +59,10 @@ export async function GET(req, { params }) {
             const startOfNextMonth = oldMoment().add(1, "month").startOf("month");
             const endOfNextMonth = oldMoment().add(1, "month").endOf("month");
 
-            const withoutFeedback = [];
-            const thisMonth = [];
-            const nextMonth = [];
-            const topFollow = [];
+            const withoutFeedback:any[] = [];
+            const thisMonth:any[] = [];
+            const nextMonth:any[] = [];
+            const topFollow:any[] = [];
 
 
             customers.forEach((customer) => {
@@ -74,7 +74,7 @@ export async function GET(req, { params }) {
                 }
 
                 // Sort by created_at descending to get latest
-                const sorted = fbList.sort((a, b) =>
+                const sorted = fbList.sort((a:any, b:any) =>
                     oldMoment(b.created_at).diff(oldMoment(a.created_at))
                 );
                 const latest = sorted[0];
@@ -148,10 +148,10 @@ export async function GET(req, { params }) {
             const startOfNextMonth = oldMoment().add(1, "month").startOf("month");
             const endOfNextMonth = oldMoment().add(1, "month").endOf("month");
 
-            const withoutFeedback = [];
-            const thisMonth = [];
-            const nextMonth = [];
-            const topFollow = [];
+            const withoutFeedback:any[] = [];
+            const thisMonth:any[] = [];
+            const nextMonth:any[] = [];
+            const topFollow:any[] = [];
 
 
             customers.forEach((customer) => {
@@ -163,7 +163,7 @@ export async function GET(req, { params }) {
                 }
 
                 // Sort by created_at descending to get latest
-                const sorted = fbList.sort((a, b) =>
+                const sorted = fbList.sort((a:any, b:any) =>
                     oldMoment(b.created_at).diff(oldMoment(a.created_at))
                 );
                 const latest = sorted[0];
@@ -231,10 +231,10 @@ export async function GET(req, { params }) {
             const startOfNextMonth = oldMoment().add(1, "month").startOf("month");
             const endOfNextMonth = oldMoment().add(1, "month").endOf("month");
 
-            const withoutFeedback = [];
-            const thisMonth = [];
-            const nextMonth = [];
-            const topFollow = [];
+            const withoutFeedback:any[] = [];
+            const thisMonth:any[] = [];
+            const nextMonth:any[] = [];
+            const topFollow:any[] = [];
 
 
             customers.forEach((customer) => {
@@ -246,7 +246,7 @@ export async function GET(req, { params }) {
                 }
 
                 // Sort by created_at descending to get latest
-                const sorted = fbList.sort((a, b) =>
+                const sorted = fbList.sort((a:any, b:any) =>
                     oldMoment(b.created_at).diff(oldMoment(a.created_at))
                 );
                 const latest = sorted[0];
@@ -282,7 +282,7 @@ export async function GET(req, { params }) {
         }
         return NextResponse.json({}, { status: 200 })
 
-    } catch (error) {
+    } catch (error:any) {
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }
 

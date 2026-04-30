@@ -1,9 +1,9 @@
 import pool from '@/config/db';
 import admin from '@/lib/firebaseAdmin';
 import { sendNotificationToMobile } from '@/lib/sendNotificationToMobile';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{cid:string}>}) {
     const { cid } = await params;
     const res = await pool.query(
         `SELECT * FROM messages WHERE conversation_id = $1 ORDER BY created_at ASC`,
@@ -12,7 +12,7 @@ export async function GET(req, { params }) {
     return NextResponse.json(res.rows);
 }
 
-export async function POST(req, { params }) {
+export async function POST(req:NextRequest, { params }:{params:Promise<{cid:string}>}) {
     const { cid } = await params;
     const { senderId, message, data, created_at } = await req.json();
 
@@ -39,7 +39,7 @@ export async function POST(req, { params }) {
     return NextResponse.json({ success: true });
 }
 
-async function sendNotificationFromMe(id, myId, message) {
+async function sendNotificationFromMe(id:string, myId:number, message:string) {
     const convQuery = await pool.query(`
        SELECT c.*,
        u1.name AS participant1_name,

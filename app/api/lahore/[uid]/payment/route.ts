@@ -2,11 +2,11 @@ import pool from "@/config/db";
 import { addLog } from "@/lib/addLog";
 import { generateLog } from "@/lib/generateLog";
 import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
 
     try {
         const data = await req.json();
@@ -50,14 +50,14 @@ export async function POST(req) {
             message: "Payment added successfully",
         }, { status: 200 });
 
-    } catch (error) {
+    } catch (error:any) {
         console.error('Error inserting data: ', error);
         return NextResponse.json({ message: error?.message || 'Error adding payment' }, { status: 500 })
     }
 }
 
 
-export async function PUT(req) {
+export async function PUT(req:NextRequest) {
     try {
         const data = await req.json();
         const { id, ...updates } = data;
@@ -66,7 +66,7 @@ export async function PUT(req) {
             return NextResponse.json({ message: "ID is required" }, { status: 400 });
         }
 
-        const fields = [];
+        const fields:string[] = [];
         const values = [];
 
         Object.entries(updates).forEach(([key, value], index) => {

@@ -1,8 +1,8 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{id:string}>}) {
 
     const { id } = await params
 
@@ -44,7 +44,7 @@ WHERE r.customer_id = $1
         });
 
         return NextResponse.json(updatedTasks, { status: 200 })
-    } catch (error) {
+    } catch (error:any) {
         return NextResponse.json({ message: error?.message || "Something went wrong" }, { status: 500 })
     }
 }

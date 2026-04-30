@@ -1,9 +1,9 @@
 import pool from "@/config/db";
 import { partFields, profileFields, saleFields } from "@/constants/data";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{id:string,uid:string}>}) {
   const { id, uid } = await params;
 
   try {
@@ -134,7 +134,7 @@ export async function GET(req, { params }) {
       );
 
       let billReceived = 0;
-      let payments = [];
+      let payments:any[] = [];
 
       if (machineIds.length > 0) {
         const paymentsQuery = `SELECT id, machine_id, note, amount, mode, received_by, clearance_date, transaction_date FROM payment WHERE machine_id = ANY($1)`;
@@ -172,7 +172,7 @@ export async function GET(req, { params }) {
       }));
 
       customer.machines = machines;
-      customer.bill_received = parseFloat(billReceived);
+      customer.bill_received = parseFloat(`${billReceived}`);
       customer.bill_total = parseFloat(billTotal);
       customer.profile_completion = overallCompletion;
       customer.parts = parts;
@@ -344,7 +344,7 @@ export async function GET(req, { params }) {
       );
 
       let billReceived = 0;
-      let payments = [];
+      let payments:any = [];
 
       if (machineIds.length > 0) {
         const paymentsQuery = `SELECT id, machine_id, note, amount, mode, received_by, clearance_date, transaction_date FROM payment WHERE machine_id = ANY($1)`;
@@ -361,7 +361,7 @@ export async function GET(req, { params }) {
       machines = machines.map((machine) => ({
         ...machine,
         payments: payments.filter(
-          (payment) => payment.machine_id === machine.id,
+          (payment:any) => payment.machine_id === machine.id,
         ),
       }));
 
@@ -378,11 +378,11 @@ export async function GET(req, { params }) {
 
       parts = parts.map((part) => ({
         ...part,
-        payments: payments.filter((payment) => payment.part_id === part.id),
+        payments: payments.filter((payment:any) => payment.part_id === part.id),
       }));
 
       customer.machines = machines;
-      customer.bill_received = parseFloat(billReceived);
+      customer.bill_received = parseFloat(`${billReceived}`);
       customer.bill_total = parseFloat(billTotal);
       customer.profile_completion = overallCompletion;
       customer.parts = parts;
@@ -394,7 +394,7 @@ export async function GET(req, { params }) {
         { status: 200 },
       );
     }
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error fetching data: ", error);
     return NextResponse.json(
       { message: error.message || "Something went wrong" },

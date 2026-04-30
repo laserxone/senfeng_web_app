@@ -1,7 +1,7 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req, {params}) {
+export async function GET(req:NextRequest, {params}:{params:Promise<{}>}) {
 
     const searchParams = req.nextUrl.searchParams;
     const expiry = searchParams.get('expiry');
@@ -29,7 +29,7 @@ export async function GET(req, {params}) {
     try {
         const result = await pool.query(query, queryParams);
         return NextResponse.json(result.rows, { status: 200 });
-    } catch (error) {
+    } catch (error:any) {
         return NextResponse.json(
             { message: error.message || "Error occurred" },
             { status: 500 }
@@ -38,7 +38,7 @@ export async function GET(req, {params}) {
 }
 
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
 
     try {
         const data = await req.json();

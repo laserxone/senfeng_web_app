@@ -1,8 +1,8 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
 
     try {
         const data = await req.json();
@@ -31,13 +31,13 @@ export async function POST(req) {
             { ...reimbursement, user_name }
             , { status: 200 });
 
-    } catch (error) {
+    } catch (error:any) {
         return NextResponse.json({ message: error.message || 'Error saving data' }, { status: 500 })
     }
 }
 
 
-export async function GET(req) {
+export async function GET(req:NextRequest) {
 
 
     const searchParams = req.nextUrl.searchParams
@@ -78,7 +78,7 @@ export async function GET(req) {
         }
 
 
-    } catch (error) {
+    } catch (error:any) {
         console.error('Error inserting data: ', error);
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }

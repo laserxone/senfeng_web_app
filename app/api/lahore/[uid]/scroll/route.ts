@@ -1,9 +1,9 @@
 import pool from "@/config/db";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
     try {
         const { uid } = await params
 
@@ -20,7 +20,7 @@ export async function GET(req, { params }) {
             const condition = await pool.query(`SELECT designation, limited_access FROM users WHERE id = $1`, [uid])
 
             const user = condition.rows[0]
-            let result = null
+            let result:any = null
 
             if (!user) {
                 return NextResponse.json({ message: "User note found" }, { status: 500 })
@@ -40,7 +40,7 @@ export async function GET(req, { params }) {
         }
 
 
-    } catch (error) {
+    } catch (error:any) {
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }
 }

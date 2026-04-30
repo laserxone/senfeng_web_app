@@ -1,8 +1,8 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
-export async function POST(req, { params }) {
+export async function POST(req:NextRequest, { params }:{params:Promise<{id:string}>}) {
 
     const { id } = await params
     const { field } = await req.json()
@@ -21,7 +21,7 @@ export async function POST(req, { params }) {
         }
 
         return NextResponse.json(query.rows, { status: 200 })
-    } catch (error) {
+    } catch (error:any) {
         return NextResponse.json({ message: error?.message || "Error" }, { status: 500 })
     }
 

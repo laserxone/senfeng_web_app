@@ -13,7 +13,7 @@ export async function GET(){
 `);
 
     return NextResponse.json(query.rows, {status : 200})
-    } catch (error) {
+    } catch (error:any) {
          return NextResponse.json({message : error?.message || "Error"}, {status : 500})
     }
 

@@ -1,8 +1,8 @@
 import pool from "@/config/db"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 
-export async function DELETE(req, { params }) {
+export async function DELETE(req:NextRequest, { params }:{params:Promise<{vid:string}>}) {
 
     const { vid } = await params
     if (!vid) {
@@ -12,7 +12,7 @@ export async function DELETE(req, { params }) {
     try {
         await pool.query(`DELETE FROM visit WHERE id = $1`, [vid])
         return NextResponse.json({ message: "Feedback delete" }, { status: 200 })
-    } catch (error) {
+    } catch (error:any) {
         return NextResponse.json({ message:error.message || "Internal server error" }, { status: 500 })
     }
 

@@ -1,10 +1,10 @@
 
 import pool from "@/config/db"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 
 
-export async function PUT(req, {params}) {
+export async function PUT(req:NextRequest, {params}:{params:Promise<{oid:string}>}) {
     const item = await req.json();
   
     const { oid } = await params;
@@ -73,7 +73,7 @@ export async function PUT(req, {params}) {
         );
 
         return NextResponse.json({ message: "Order item updated successfully" }, { status: 200 });
-    } catch (error) {
+    } catch (error:any) {
         console.log(error)
         return NextResponse.json({ message: error?.message || 'Error saving data, try again' }, { status: 500 });
     }

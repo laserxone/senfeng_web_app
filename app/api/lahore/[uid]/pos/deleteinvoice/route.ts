@@ -1,8 +1,8 @@
 import pool from "@/config/db";
 import deleteImageByPath from "@/lib/delete-image-by-path";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
   const client = await pool.connect();
 
   try {
@@ -65,7 +65,7 @@ export async function POST(req) {
       { status: 200 }
     );
 
-  } catch (error) {
+  } catch (error:any) {
     await client.query("ROLLBACK");
 
     console.log(error);

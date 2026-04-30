@@ -1,10 +1,10 @@
 import pool from "@/config/db";
 import admin from "@/lib/firebaseAdmin";
 import sendPasswordReset from "@/lib/password-reset";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
 
   try {
     const data = await req.json();
@@ -27,7 +27,7 @@ export async function POST(req) {
         email,
         password,
       });
-    } catch (error) {
+    } catch (error:any) {
       if (error.code === 'auth/email-already-exists') {
         console.warn(`Email ${email} already exists in Firebase, continuing...`);
       } else {
@@ -52,13 +52,13 @@ export async function POST(req) {
 
     return NextResponse.json(newUser, { status: 200 });
 
-  } catch (error) {
+  } catch (error:any) {
     console.error('Error inserting data: ', error);
     return NextResponse.json({ message: error?.message || 'Error adding user' }, { status: 500 });
   }
 }
 
-export async function GET(req) {
+export async function GET(req:NextRequest) {
 
   const searchParams = req.nextUrl.searchParams
   const user = searchParams.get('user')
@@ -92,7 +92,7 @@ export async function GET(req) {
     return NextResponse.json(result.rows, { status: 200 });
 
 
-  } catch (error) {
+  } catch (error:any) {
     console.error('Error inserting data: ', error);
     return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
   }

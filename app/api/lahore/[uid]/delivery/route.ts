@@ -1,9 +1,9 @@
 import pool from "@/config/db";
 import { storage } from "@/config/firebase";
 import { deleteObject, ref } from "firebase/storage";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{}>}) {
   try {
     const queryResult = await pool.query(`
   SELECT 
@@ -28,7 +28,7 @@ export async function GET(req, { params }) {
 `);
 
     return NextResponse.json(queryResult.rows, { status: 200 });
-  } catch (error) {
+  } catch (error:any) {
     return NextResponse.json(
       { message: error?.message || "Server error" },
       { status: 500 },
@@ -36,7 +36,7 @@ export async function GET(req, { params }) {
   }
 }
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
   const data = await req.json();
 
   try {
@@ -67,7 +67,7 @@ export async function POST(req) {
 
 
     return NextResponse.json({ message: "Done" }, { status: 200 });
-  } catch (error) {
+  } catch (error:any) {
     console.log(error);
     return NextResponse.json(
       { message: error?.message || "Server error" },
@@ -76,7 +76,7 @@ export async function POST(req) {
   }
 }
 
-export async function PUT(req) {
+export async function PUT(req:NextRequest) {
   const data = await req.json();
 
   try {
@@ -103,7 +103,7 @@ export async function PUT(req) {
    
 
     return NextResponse.json({ message: "Done" }, { status: 200 });
-  } catch (error) {
+  } catch (error:any) {
     console.log(error);
     return NextResponse.json(
       { message: error?.message || "Server error" },
@@ -112,7 +112,7 @@ export async function PUT(req) {
   }
 }
 
-export async function DELETE(req) {
+export async function DELETE(req:NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const id = searchParams.get("id");
 
@@ -142,11 +142,11 @@ export async function DELETE(req) {
     if (img) {
       try {
         await deleteObject(ref(storage, img));
-      } catch (err) {
+      } catch (err:any) {
         console.warn("Image delete failed:", err?.message);
         throw err;
       }
-      newNamePlate = namePlate?.filter((item) => item !== img);
+      newNamePlate = namePlate?.filter((item:any) => item !== img);
     }
 
     await pool.query(
@@ -166,7 +166,7 @@ export async function DELETE(req) {
       { message: "Deleted successfully" },
       { status: 200 },
     );
-  } catch (error) {
+  } catch (error:any) {
     await pool.query("ROLLBACK");
     console.log(error);
 

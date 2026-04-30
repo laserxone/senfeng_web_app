@@ -1,11 +1,11 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import momentT from 'moment-timezone';
 import moment from "moment/moment";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { partFields, profileFields, saleFields } from "@/constants/data";
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
 
     const { uid } = await params
     const searchParams = req.nextUrl.searchParams
@@ -286,9 +286,9 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
             const totalNewCustomersThisMonth = newCustomersResult.rows[0].total_new_customers || 0;
             const totalNewCustomersLastMonth = lastMonthNewCustomersResult.rows[0].total_new_customers || 0;
 
-            const teamTasks = taskResult.rows
+            const teamTasks:any[] = taskResult.rows
             const updatedTasks = teamTasks.map(user => {
-                const updatedUserTasks = user.tasks.map(task => {
+                const updatedUserTasks = user.tasks.map((task:any) => {
                     if (task.customer_id) {
                         const [firstPart] = task.title.split("-");
                         const customerInfo = task.customer_name || task.customer_owner || "";
@@ -807,7 +807,7 @@ GROUP BY
         }
 
 
-    } catch (error) {
+    } catch (error:any) {
         console.error('Error fetching data: ', error);
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 });
     }

@@ -3,9 +3,9 @@ import { partFields, profileFields, saleFields } from "@/constants/data";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import admin from "@/lib/firebaseAdmin";
 import moment from "moment";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
   try {
     const data = await req.json();
 
@@ -74,7 +74,7 @@ export async function POST(req) {
   }
 }
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }: { params: Promise<{ uid: string }> }) {
   const { uid } = await params;
 
   const searchParams = req.nextUrl.searchParams;
@@ -253,7 +253,7 @@ ORDER BY
         return NextResponse.json(enrichedSales, { status: 200 });
       }
     }
-  } catch (err) {
+  } catch (err:any) {
     console.error(err);
     return NextResponse.json(
       { message: "Failed to fetch commissions", details: err.message },

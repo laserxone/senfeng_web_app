@@ -63,7 +63,7 @@ export async function GET(req : NextRequest, { params } : {params : Promise<{uid
         const result = await pool.query(query, queryParams);
         return NextResponse.json(result.rows, { status: 200 });
 
-    } catch (error) {
+    } catch (error:any) {
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 });
     }
 }

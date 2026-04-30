@@ -1,8 +1,8 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
     let { number } = await req.json()
 
     try {
@@ -40,7 +40,7 @@ export async function POST(req) {
         }));
 
         return NextResponse.json(response, { status: 200 });
-    } catch (error) {
+    } catch (error:any) {
         return NextResponse.json({ message: error.message || "Server error" }, { status: 500 })
     }
 

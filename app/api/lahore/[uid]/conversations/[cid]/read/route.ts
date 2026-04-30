@@ -1,8 +1,8 @@
 import pool from "@/config/db";
 import admin from "@/lib/firebaseAdmin";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function PUT(req, { params }) {
+export async function PUT(req:NextRequest, { params }:{params:Promise<{cid:string,uid:string}>}) {
   const { cid: conversationId, uid } = await params;
   const { userId } = await req.json();
 
@@ -24,7 +24,7 @@ export async function PUT(req, { params }) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error:any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

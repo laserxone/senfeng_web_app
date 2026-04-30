@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import pool from "@/config/db";
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
   const { loan_id, amount } = await req.json();
   try {
     // Insert payment
@@ -25,7 +25,7 @@ export async function POST(req) {
     `, [remaining, status, loan_id]);
 
     return NextResponse.json({ remaining_amount: remaining, status, id : val.rows[0]?.id });
-  } catch (err) {
+  } catch (err:any) {
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }

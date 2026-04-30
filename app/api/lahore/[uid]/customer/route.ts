@@ -5,10 +5,10 @@ import { generateLog } from "@/lib/generateLog";
 import { sendNotification } from "@/lib/sendNotification";
 import { sendNotificationToCRM, sendNotificationToCRMWithoutLead } from "@/lib/sendNotificationToCRM";
 import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 
-export async function POST(req, { params }) {
+export async function POST(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
 
     const { uid } = await params
 
@@ -69,7 +69,7 @@ export async function POST(req, { params }) {
 }
 
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
 
     const { uid } = await params
 
@@ -298,7 +298,7 @@ export async function GET(req, { params }) {
 
 
 
-    } catch (error) {
+    } catch (error:any) {
         console.log(error)
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }

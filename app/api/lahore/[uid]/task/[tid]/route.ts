@@ -1,7 +1,7 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
-export async function DELETE(req, {params}) {
+export async function DELETE(req:NextRequest, {params}:{params:Promise<{tid:string}>}) {
     try {
        const {tid}  = await params
 
@@ -15,7 +15,7 @@ export async function DELETE(req, {params}) {
     }
 }
 
-export async function PUT(req) {
+export async function PUT(req:NextRequest) {
     try {
         const data = await req.json();
         const { id, ...updates } = data;
@@ -25,7 +25,7 @@ export async function PUT(req) {
             return NextResponse.json({ message: "ID is required" }, { status: 400 });
         }
 
-        const fields = [];
+        const fields:string[] = [];
         const values = [];
 
         Object.entries(updates).forEach(([key, value], index) => {

@@ -1,6 +1,6 @@
 import pool from "@/config/db";
 import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
 export async function GET() {
@@ -34,12 +34,12 @@ export async function GET() {
 
 
         return NextResponse.json(result.rows, { status: 200 })
-    } catch (error) {
+    } catch (error:any) {
         return NextResponse.json({ message: error.message || "Error occured" }, { status: 500 })
     }
 }
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
     const data = await req.json()
 
     try {
@@ -64,14 +64,14 @@ export async function POST(req) {
         sendNotificationToMobile("New Complaint", `Complaint assigned to you`, data.engineer_id, data, "complaint", `/dashboard/complaint/${data.complaint_id}`)
 
         return NextResponse.json({message : "Data inserted"}, { status: 200 });
-    } catch (error) {
+    } catch (error:any) {
         console.log(error)
         return NextResponse.json({ message: error.message || "Error occured" }, { status: 500 });
     }
 
 }
 
-export async function PUT(req) {
+export async function PUT(req:NextRequest) {
     try {
         const data = await req.json();
         const { id, ...updates } = data;
@@ -80,7 +80,7 @@ export async function PUT(req) {
             return NextResponse.json({ message: "ID is required" }, { status: 400 });
         }
 
-        const fields = [];
+        const fields:string[] = [];
         const values = [];
 
         Object.entries(updates).forEach(([key, value], index) => {

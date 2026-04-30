@@ -1,7 +1,7 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req, { params }) {
+export async function POST(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
   const { from, vehicle_no, driver_name, manager, received_by, items } =
     await req.json();
   const { uid } = await params;
@@ -58,7 +58,7 @@ export async function POST(req, { params }) {
     }
 
     return NextResponse.json({ id: gatepassid.rows[0].id }, { status: 200 });
-  } catch (error) {
+  } catch (error:any) {
     return NextResponse.json(
       { message: error?.message || "Error saving data" },
       { status: 500 },

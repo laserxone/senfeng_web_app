@@ -1,8 +1,8 @@
 import pool from "@/config/db"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
     const { uid } = await params
 
     try {

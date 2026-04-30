@@ -1,7 +1,7 @@
 import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req) {
+export async function GET(req:NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const user_id = searchParams.get("id");
 
@@ -26,7 +26,7 @@ export async function GET(req) {
     );
 
     return NextResponse.json(query.rows, { status: 200 });
-  } catch (error) {
+  } catch (error:any) {
     return NextResponse.json(
       { message: error?.message || "Server error" },
       { status: 500 },
@@ -34,7 +34,7 @@ export async function GET(req) {
   }
 }
 
-export async function POST(req) {
+export async function POST(req:NextRequest) {
   try {
     const { from_user_id, to_user_id, ids } = await req.json();
 
@@ -51,7 +51,7 @@ export async function POST(req) {
     );
 
     return NextResponse.json({message : "Transfer completed"}, {status:200})
-  } catch (error) {
+  } catch (error:any) {
     return NextResponse.json(
       { message: error?.message || "Server error" },
       { status: 500 },

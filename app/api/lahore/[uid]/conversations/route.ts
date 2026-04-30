@@ -1,7 +1,7 @@
 import pool from '@/config/db';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{userid:string}>}) {
   const { searchParams } = new URL(req.url);
   const userId = searchParams.get("userId");
   if (!userId) {
@@ -47,13 +47,13 @@ export async function GET(req, { params }) {
     }));
 
     return NextResponse.json(conversations, { status: 200 });
-  } catch (error) {
+  } catch (error:any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 
-export async function POST(req, { params }) {
+export async function POST(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
 
   try {
     const { user1, user2 } = await req.json();
@@ -109,7 +109,7 @@ export async function POST(req, { params }) {
       ...conversation.id,
       otherUser,
     }, { status: 201 });
-  } catch (error) {
+  } catch (error:any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

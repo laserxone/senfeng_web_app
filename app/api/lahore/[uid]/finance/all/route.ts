@@ -1,8 +1,8 @@
 import pool from "@/config/db";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
-import { NextResponse } from "next/server";
+import { NextResponse,NextRequest } from "next/server";
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
   const { uid } = await params;
   const searchParams = req.nextUrl.searchParams;
   const user = searchParams.get("user");
@@ -115,7 +115,7 @@ export async function GET(req, { params }) {
         },
         { status: 200 },
       );
-    } catch (error) {
+    } catch (error:any) {
       return NextResponse.json(
         { message: error?.message || "Server error" },
         { status: 500 },
@@ -222,7 +222,7 @@ export async function GET(req, { params }) {
         },
         { status: 200 },
       );
-    } catch (error) {
+    } catch (error:any) {
       return NextResponse.json(
         { message: error?.message || "Server error" },
         { status: 500 },

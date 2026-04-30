@@ -1,10 +1,10 @@
 import pool from "@/config/db";
 import { partFields, saleFields } from "@/constants/data";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
-export async function GET(req, { params }) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{id:string,uid:string}>}) {
 
     const { id, uid } = await params;
 
@@ -211,7 +211,7 @@ export async function GET(req, { params }) {
 
 
 
-    } catch (error) {
+    } catch (error:any) {
         console.error('Error fetching data: ', error);
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 });
     }
