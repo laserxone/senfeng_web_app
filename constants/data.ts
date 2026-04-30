@@ -194,6 +194,14 @@ export const ownerNavItems = [
   },
 ];
 
+export const Applications = {
+  title : "Applications",
+  url : "/application",
+  icon : "application",
+  shortcut : ["a", "p", "p"],
+  items : []
+}
+
 export const FinanceItem = {
   title: "Finance",
   url: "/finance",

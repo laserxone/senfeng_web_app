@@ -122,7 +122,7 @@ const OutwardModal = ({ visible, onClose }: { visible: boolean, onClose: Dispatc
                         >
                             <AccordionItem value="fields" className="border-none">
                                 <AccordionTrigger className="py-2 text-xs font-medium hover:no-underline">
-                                    Fields ({currentItem?.fields?.length ?? 0})
+                                    Items ({currentItem?.fields?.length ?? 0})
                                 </AccordionTrigger>
 
                                 <AccordionContent className="space-y-2">

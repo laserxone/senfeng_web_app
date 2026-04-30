@@ -51,6 +51,7 @@ import {
   Truck,
   Coins,
   Landmark,
+  ScrollText,
 } from 'lucide-react';
 
 
@@ -107,6 +108,7 @@ export const Icons = {
   truck : Truck,
   coins : Coins,
   finance : Landmark,
+  application: ScrollText,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden='true'

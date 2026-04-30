@@ -68,6 +68,7 @@ import {
 import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
 import { Field, FieldGroup, FieldLabel } from "../ui/field";
+import { Checkbox } from "../ui/checkbox";
 
 export default function Reimbursement({
   id,
@@ -259,7 +260,7 @@ export default function Reimbursement({
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex flex-1">
         <PageTable
-        height={height}
+          height={height}
           columns={columns}
           data={data}
           onRowClick={(val, e) => {
@@ -444,6 +445,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: 
     date: z.date({ error: "Date is required." }),
     image: z.string().min(1, { message: "Image is required." }),
     city: z.string().min(1, { message: "City is required." }),
+    resolved: z.boolean().optional()
   })
     .refine(
       (data) => selectedRadio !== "customer" || (data.customer !== undefined && data.customer !== null),
@@ -465,10 +467,14 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: 
       image: "",
       city: "",
       customer: null,
+      resolved: false
     },
   });
 
   async function onSubmit(values: FormValues) {
+   const verified =
+  values.title !== "Complaint" &&
+  values.title !== "Overhauling";
     setLoading(true);
     try {
       const name = `${OfficeState.value.data}/${id}/reimbursement/${moment().valueOf().toString()}.png`;
@@ -482,7 +488,9 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: 
         date: values.date,
         submitted_by: id,
         customer_id: selectedRadio === 'customer' ? values.customer : null,
-        purpose: true
+        purpose: true,
+        resolved : values.resolved,
+       verified
       });
       onRefresh();
       form.reset();
@@ -595,6 +603,28 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: 
                     </Field>
                   )}
                 />
+
+                {(form.watch("title") === 'Complaint' || form.watch("title") === 'Overhauling') &&
+
+                  <Controller
+                    name="resolved"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+
+                        <div className="flex flex-row items-center gap-2">
+                          <h1>Resolved ?</h1>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={(checked: boolean) => {
+                              field.onChange(checked);
+                            }}
+                          />
+                        </div>
+                      </Field>
+                    )}
+                  />
+                }
 
                 {/* City */}
                 <Controller

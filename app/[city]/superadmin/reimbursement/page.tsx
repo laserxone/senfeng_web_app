@@ -71,6 +71,7 @@ import { Controller, useForm } from "react-hook-form";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function Page() {
   const [filterVisible, setFilterVisible] = useState(false);
@@ -595,6 +596,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }: { visible: bool
       image: z.string().min(1, { message: "Image is required." }),
       city: z.string().min(1, { message: "City is required." }),
       submitted_by: z.number().min(1, { message: "User is required" }),
+      resolved: z.boolean().optional()
     })
     .refine(
       (data) => selectedRadio !== "customer" || (data.customer !== undefined && data.customer !== null),
@@ -617,10 +619,14 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }: { visible: bool
       city: "",
       submitted_by: undefined,
       customer: null,
+      resolved: false
     },
   });
 
   async function onSubmit(values: FormValues) {
+    const verified =
+      values.title !== "Complaint" &&
+      values.title !== "Overhauling";
     setLoading(true);
     try {
       const name = `${OfficeState.value.data}/${values.submitted_by
@@ -636,6 +642,8 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }: { visible: bool
         submitted_by: values.submitted_by,
         customer_id: selectedRadio === "customer" ? values?.customer : null,
         purpose: true,
+        resolved: values.resolved,
+        verified
       });
       onRefresh();
       form.reset();
@@ -752,6 +760,28 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }: { visible: bool
                     </Field>
                   )}
                 />
+
+                {(form.watch("title") === 'Complaint' || form.watch("title") === 'Overhauling') &&
+
+                  <Controller
+                    name="resolved"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+
+                        <div className="flex flex-row items-center gap-2">
+                          <h1>Resolved ?</h1>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={(checked: boolean) => {
+                              field.onChange(checked);
+                            }}
+                          />
+                        </div>
+                      </Field>
+                    )}
+                  />
+                }
 
                 {/* City */}
                 <Controller
