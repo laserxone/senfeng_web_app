@@ -1,7 +1,11 @@
-const { execSync } = require("child_process");
-const fs = require("fs");
-const path = require("path");
-const admin = require("firebase-admin");
+// const { execSync } = require("child_process");
+// const fs = require("fs");
+// const path = require("path");
+
+import fs from 'fs'
+import path from 'path';
+import admin from "firebase-admin"
+import { execSync } from 'child_process';
 
 const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
 if (!serviceAccountBase64)
