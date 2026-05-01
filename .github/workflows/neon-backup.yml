@@ -25,7 +25,7 @@ jobs:
         run: npm install --force
 
       - name: Run backup
-        run: node scripts/backup-db.ts
+        run: node scripts/backup-db.js
         env:
           NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
