@@ -33,6 +33,7 @@ const Dropzone = ({
 }:DropzoneProps) => {
 
 
+
   const onDropAccepted = useCallback(
     (acceptedFiles: File[]) => {
       const file = acceptedFiles[0];
@@ -89,8 +90,8 @@ const Dropzone = ({
           <Label>{drag}</Label>
         ) : value ? (
           <>
-            {!noImage && dbImage ? (
-              <RenderImage img={dbImage} />
+            {!noImage && !value?.includes?.("http") ? (
+              <RenderImage img={value} />
             ) : (
               <img
                 src={value}

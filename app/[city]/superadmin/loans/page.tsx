@@ -23,8 +23,9 @@ import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "@/config/firebase";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
-import { Edit } from "lucide-react";
+import { ChevronRight, Edit } from "lucide-react";
 import AppCalendar from "@/components/appCalendar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 
 type LoansByUser = {
@@ -207,11 +208,20 @@ export function LoanPaymentModal({ userID, loan, onSuccess }: { userID: number, 
 
 export function LoanAccordion({ loansByUser, userID, onUpdate }: { loansByUser: LoansByUser, userID: number, onUpdate: () => Promise<void> }) {
     return (
-        <Accordion type="single" collapsible className="w-full space-y-2">
-            {Object.entries(loansByUser).map(([userId, userData]) => (
-                <AccordionItem key={userId} value={userId}>
-                    <AccordionTrigger>{userData.name}</AccordionTrigger>
-                    <AccordionContent>
+        // <>
+            Object.entries(loansByUser).map(([userId, userData]) => (
+                <Collapsible key={`user-${userId}`}>
+                    <CollapsibleTrigger asChild>
+                        <Button
+                            variant="ghost"
+
+                            className="group w-full justify-start transition-none hover:bg-card hover:text-accent-foreground "
+                        >
+                            <ChevronRight className="transition-transform group-data-[state=open]:rotate-90" />
+                            {userData.name}
+                        </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-4 pl-4 rounded-md p-4 ml-5 ">
                         {userData.loans.map((loan) => (
                             <div key={loan.id} className="border rounded-md p-4 mb-4">
                                 <div className="flex justify-between mb-2">
@@ -272,10 +282,12 @@ export function LoanAccordion({ loansByUser, userID, onUpdate }: { loansByUser: 
                                 </Accordion>
                             </div>
                         ))}
-                    </AccordionContent>
-                </AccordionItem>
-            ))}
-        </Accordion>
+                    </CollapsibleContent>
+
+                </Collapsible>
+            ))
+        
+        //</> 
     );
 }
 
@@ -289,9 +301,8 @@ const EditPaymentLoan = ({ p, user_id, onRefresh }: { p: LoanPayment, user_id: n
         if (!selectedPayment?.id) return;
         setLoading(true)
         try {
-            let name =
-                selectedPayment?.slip ||
-                `/users/${user_id}/loans/payment_slip/${selectedPayment?.id}.png`;
+            let name =!p?.slip ? 
+                `/users/${user_id}/loans/payment_slip/${selectedPayment?.id}.png` : p.slip;
             if (selectedPayment?.slip !== p?.slip) {
                 const imageRefResult = await UploadImage(
                     selectedPayment?.slip,
@@ -299,6 +310,7 @@ const EditPaymentLoan = ({ p, user_id, onRefresh }: { p: LoanPayment, user_id: n
                     "image/png",
                 );
             }
+          
 
             await axios.put(`/${userID}/loans/repayment`, {
                 id: selectedPayment?.id,
@@ -331,7 +343,6 @@ const EditPaymentLoan = ({ p, user_id, onRefresh }: { p: LoanPayment, user_id: n
                         <div>
                             <Label>Payment Slip</Label>
                             <Dropzone
-                                dbImage={p?.slip}
                                 value={selectedPayment?.slip}
                                 onDrop={(file) => {
                                     setSelectedPayment((prev) => {

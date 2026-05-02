@@ -1,7 +1,3 @@
-// const { execSync } = require("child_process");
-// const fs = require("fs");
-// const path = require("path");
-
 import fs from 'fs'
 import path from 'path';
 import admin from "firebase-admin"
