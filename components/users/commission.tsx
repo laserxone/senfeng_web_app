@@ -1,12 +1,6 @@
 "use client";
 
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -14,16 +8,22 @@ import {
 } from "@/components/ui/sheet";
 import { storage } from "@/config/firebase";
 
+import Heading from "@/components/ui/heading";
+import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { CommissionCRMProps, CommissionMachineItemProps, CommissionOwnerProps } from "@/lib/types";
 import { getDownloadURL, ref } from "firebase/storage";
+import { ChevronRight } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { memo, useCallback, useEffect, useState } from "react";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
+import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import {
   Dialog,
   DialogContent,
@@ -31,9 +31,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import Heading from "@/components/ui/heading";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { ScrollArea } from "../ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -41,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { useSidebar } from "../ui/sidebar";
 import Spinner from "../ui/spinner";
 import {
   Table,
@@ -56,13 +57,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
-import { ScrollArea, ScrollBar } from "../ui/scroll-area";
-import { toast } from "sonner";
-import { useSidebar } from "../ui/sidebar";
-import { CommissionCRMProps, CommissionMachineItemProps, CommissionOwnerProps } from "@/lib/types";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
-import { ChevronRight } from "lucide-react";
 
 
 export default function Commission({ owner, crm }: { owner?: boolean, crm?: boolean }) {
@@ -124,7 +118,7 @@ const OwnerView = () => {
 
   const groupedData: Record<string, CommissionOwnerProps[]> = groupByMonth(filteredData);
 
-  const RenderEachRow = ({ item, onRefresh, onDisapprove, onReturn, index }: { item: CommissionOwnerProps, onRefresh: () => Promise<void>, onDisapprove: () => void, onReturn: (val: CommissionOwnerProps) => void, index : number }) => {
+  const RenderEachRow = ({ item, onRefresh, onDisapprove, onReturn, index }: { item: CommissionOwnerProps, onRefresh: () => Promise<void>, onDisapprove: () => void, onReturn: (val: CommissionOwnerProps) => void, index: number }) => {
     const [loading, setLoading] = useState(false);
     const { userID, base_route } = useUserDetail();
     const [selectedPercentage, setSelectedPercentage] = useState<null | number>(null);
@@ -176,12 +170,12 @@ const OwnerView = () => {
     }
 
     const getRowBg = (item: CommissionOwnerProps, index: number) => {
-  
-  if (item.commission_issued === true) return "bg-green-100 dark:bg-green-900";
-  if (item.is_approved === false) return "bg-red-100 dark:bg-red-900";
-  if (item.is_approved === true) return "bg-blue-100 dark:bg-blue-900";
- return index % 2 === 0 ? "bg-slate-50 dark:bg-gray-900" : "bg-white dark:bg-slate-800";
-};
+
+      if (item.commission_issued === true) return "bg-green-100 dark:bg-green-900 border-b-gray-400";
+      if (item.is_approved === false) return "bg-red-100 dark:bg-red-900 border-b-gray-400";
+      if (item.is_approved === true) return "bg-blue-100 dark:bg-blue-900 border-b-gray-400";
+      return index % 2 === 0 ? "bg-slate-50 dark:bg-gray-900 border-b-gray-400" : "bg-white dark:bg-slate-800 border-b-gray-400";
+    };
 
     return (
       <TableRow className={`${getRowBg(item, index)} hover:${getRowBg(item, index)}`}>
@@ -420,7 +414,7 @@ const OwnerView = () => {
                         <TableBody className="bg-white dark:bg-gray-900">
                           {items.map((item, i) => (
                             <RenderEachRow
-                            index={i}
+                              index={i}
                               key={item.id}
                               item={item}
                               onRefresh={fetchData}
