@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
         {
           stock: result.rows, reminders: invoices.filter(
             (item) =>
-                 moment(item.created_at).isSameOrAfter("2026-01-01") ||
+                 moment(item.created_at).isSameOrAfter("2025-12-01") ||
                  item.payment === false
           ).filter((item) => item?.status !== 'Paid')
         },

@@ -139,16 +139,10 @@ WHERE
         };
       });
 
-      const filteredInvoices = invoices.map((item)=>{
-        if(moment(item.created_at).isSameOrAfter("2026-01-01")) return item
-        else if(item.payment === false) return item
-        else return null
-      }).filter(Boolean)
-
       return NextResponse.json(
         invoices.filter(
           (item) =>
-            moment(item.created_at).isSameOrAfter("2026-01-01") ||
+            moment(item.created_at).isSameOrAfter("2025-12-01") ||
     item.payment === false
         ).filter((item) => item.status !== "Paid"),
         { status: 200 },
