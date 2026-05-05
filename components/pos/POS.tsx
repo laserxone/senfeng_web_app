@@ -981,9 +981,6 @@ export default function POS() {
           visible={searchModal}
           onClose={setSearchModal}
           data={searchItemsResult}
-          onUpdateData={(n) => {
-            setSearchItemsResult((prevState) => prevState.filter((item) => item.id !== n))
-          }}
           onselect={(val) => {
             setSearchModal(false);
             setSelectedSearchItem(val);

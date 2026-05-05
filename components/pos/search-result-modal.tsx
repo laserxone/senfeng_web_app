@@ -31,34 +31,18 @@ const SearchResultModal = ({
   onClose,
   data,
   onselect,
-  onUpdateData
+  
 }: {
   visible: boolean,
   onClose: Dispatch<SetStateAction<boolean>>,
   data: SearchItem[],
   onselect: (item: SearchItem) => void,
-  onUpdateData?: (val: number) => void
-
+  
 }) => {
   const pageTableRef = useRef<PageTableRef | null>(null);
   const [value, setValue] = useState("");
-  const [selectedId, setSelectedId] = useState<number | null>(null)
   const total = data.reduce((sum, item) => sum + (item.final_amount || 0), 0);
-  const { base_route, isAdmin } = useUserDetail();
-
-  async function handlePaid(item: SearchItem) {
-    if (!item.id) return
-    setSelectedId(item.id)
-    try {
-      await axios.put("/api/temp", { id: item.id, owner_paid: true })
-      onUpdateData?.(item.id)
-    } catch (error) {
-      console.log(error)
-    } finally {
-      setSelectedId(null)
-    }
-
-  }
+  const { base_route, } = useUserDetail();
 
   const columns: ColumnDef<SearchItem>[] = [
     {
@@ -185,11 +169,6 @@ const SearchResultModal = ({
         const id = row.original?.id ?? null;
         return (
           <div className="flex gap-2">
-            { base_route?.includes("lahore") &&
-              <Button disabled={selectedId === row.original.id} onClick={() => handlePaid(row.original)}>
-                {selectedId === row.original.id && <Spinner />}  Paid
-              </Button>
-            }
             <Button variant="secondary" onClick={() => onselect(row.original)}>
               Select
             </Button>
