@@ -61,6 +61,8 @@ import { toast } from "sonner";
 import { useSidebar } from "../ui/sidebar";
 import { CommissionCRMProps, CommissionMachineItemProps, CommissionOwnerProps } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
+import { ChevronRight } from "lucide-react";
 
 
 export default function Commission({ owner, crm }: { owner?: boolean, crm?: boolean }) {
@@ -85,22 +87,22 @@ const OwnerView = () => {
   }, [userID]);
 
   async function fetchData() {
-   
-      try {
-        const route = `/${userID}/commission`;
-        const response = await axios.get(route);
 
-        setData(response.data);
-      } catch (error) {
-      } finally {
-     
-        setLoading(false);
-      }
-  
+    try {
+      const route = `/${userID}/commission`;
+      const response = await axios.get(route);
+
+      setData(response.data);
+    } catch (error) {
+    } finally {
+
+      setLoading(false);
+    }
+
   }
 
-  function groupByMonth(data : CommissionOwnerProps[]) {
-    return data.reduce((acc : any, item) => {
+  function groupByMonth(data: CommissionOwnerProps[]) {
+    return data.reduce((acc: any, item) => {
       const key = item.request_date
         ? moment(item.request_date).format("YYYY-MM")
         : "Unknown";
@@ -120,9 +122,9 @@ const OwnerView = () => {
     return allSearch.toLowerCase().includes(search.toLowerCase());
   });
 
-  const groupedData : Record<string, CommissionOwnerProps[]> = groupByMonth(filteredData);
+  const groupedData: Record<string, CommissionOwnerProps[]> = groupByMonth(filteredData);
 
-  const RenderEachRow = ({ item, onRefresh, onDisapprove, onReturn } : {item : CommissionOwnerProps, onRefresh : ()=> Promise<void>, onDisapprove : ()=> void, onReturn : (val :CommissionOwnerProps)=> void}) => {
+  const RenderEachRow = ({ item, onRefresh, onDisapprove, onReturn }: { item: CommissionOwnerProps, onRefresh: () => Promise<void>, onDisapprove: () => void, onReturn: (val: CommissionOwnerProps) => void }) => {
     const [loading, setLoading] = useState(false);
     const { userID, base_route } = useUserDetail();
     const [selectedPercentage, setSelectedPercentage] = useState<null | number>(null);
@@ -130,10 +132,10 @@ const OwnerView = () => {
     const [manualNumber, setManualNumber] = useState("");
 
     async function handleUpdate(
-      id : number,
-      is_approved : boolean | null,
-      approval_date : string | Date | null,
-      commission_amount : number | null,
+      id: number,
+      is_approved: boolean | null,
+      approval_date: string | Date | null,
+      commission_amount: number | null,
     ) {
       if (!id) return;
       setLoading(true);
@@ -154,7 +156,7 @@ const OwnerView = () => {
       }
     }
 
-    async function revertIssued(id : number) {
+    async function revertIssued(id: number) {
       if (!id) return;
       setLoading(true);
       try {
@@ -175,13 +177,13 @@ const OwnerView = () => {
 
     return (
       <TableRow>
-        <TableCell className="max-w-md whitespace-normal break-words">
+        <TableCell className="max-w-50 whitespace-normal break-words">
           {item.request_date
             ? moment(item.request_date).format("YYYY-MM-DD")
             : ""}
         </TableCell>
-        <TableCell className="max-w-md whitespace-normal break-words">{item.user_name}</TableCell>
-        <TableCell className="max-w-md whitespace-normal break-words">
+        <TableCell className="max-w-50 whitespace-normal break-words">{item.user_name}</TableCell>
+        <TableCell className="max-w-50 whitespace-normal break-words">
           <Link
             target="blank"
             href={`/${base_route}/member/${item.customer_id}/${item.sale_id}`}
@@ -190,7 +192,7 @@ const OwnerView = () => {
             {item.customer_name}
           </Link>
         </TableCell>
-        <TableCell className="max-w-md whitespace-normal break-words">
+        <TableCell className="max-w-50 whitespace-normal break-words">
           <Link
             target="blank"
             href={`/${base_route}/member/${item.customer_id}/${item.sale_id}`}
@@ -199,10 +201,10 @@ const OwnerView = () => {
             {item.customer_owner}
           </Link>
         </TableCell>
-        <TableCell className="max-w-md whitespace-normal break-words">{item.customer_group}</TableCell>
-        <TableCell className="max-w-md whitespace-normal break-words">{item.machine_name}</TableCell>
-        <TableCell className="max-w-md whitespace-normal break-words">{item.order_no_arr?.join(", ")}</TableCell>
-        <TableCell className="max-w-md whitespace-normal break-words">{item.total_amount}</TableCell>
+        <TableCell className="max-w-50 whitespace-normal break-words">{item.customer_group}</TableCell>
+        <TableCell className="max-w-50 whitespace-normal break-words">{item.machine_name}</TableCell>
+        <TableCell className="max-w-50 whitespace-normal break-words">{item.order_no_arr?.join(", ")}</TableCell>
+        <TableCell className="max-w-50 whitespace-normal break-words">{item.total_amount}</TableCell>
         <TableCell>
           <Button
             onClick={() => {
@@ -228,7 +230,7 @@ const OwnerView = () => {
                 }}
                 value={String(selectedPercentage) || ""}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select %" />
                 </SelectTrigger>
                 <SelectContent>
@@ -259,9 +261,9 @@ const OwnerView = () => {
             )}
           </div>
         </TableCell>
-        <TableCell className="max-w-md whitespace-normal break-words">{item.note}</TableCell>
+        <TableCell className="max-w-50 whitespace-normal break-words">{item.note}</TableCell>
 
-        <TableCell>
+        <TableCell className="sticky right-0 z-20 bg-background min-w-[120px] border-l">
           {loading ? (
             <Spinner />
           ) : item.commission_issued === true ? (
@@ -364,57 +366,73 @@ const OwnerView = () => {
           {Object.keys(groupedData).length === 0 ? (
             <p>No data available.</p>
           ) : (
-            <Accordion type="multiple" className="space-y-2">
-              {Object.entries(groupedData).map(([month, items]) => (
-                <AccordionItem key={month} value={month}>
-                  <AccordionTrigger>
-                    <span>{moment(month, "YYYY-MM").format("MMMM YYYY")}</span>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="flex-1 min-w-0">
-                      <ScrollArea
-                        className={`${state === 'expanded' ? "w-[calc(100dvw-310px)]" : "w-[calc(100dvw-100px)]"}  overflow-x-auto`}
 
-                      >
-                        <Table className="min-w-max w-max">
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Request Date</TableHead>
-                              <TableHead>Employee</TableHead>
-                              <TableHead>Customer</TableHead>
-                              <TableHead>Owner</TableHead>
-                              <TableHead>Group</TableHead>
-                              <TableHead>Machine</TableHead>
-                              <TableHead>Order No</TableHead>
-                              <TableHead>Price</TableHead>
-                              <TableHead>Images</TableHead>
-                              <TableHead>Commission</TableHead>
-                              <TableHead>Note</TableHead>
-                              <TableHead>Status</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {items.map((item) => (
-                              <RenderEachRow
-                                key={item.id}
-                                item={item}
-                                onRefresh={fetchData}
-                                onReturn={(i) => setSelectedRow(i)}
-                                onDisapprove={() => {
-                                  setSelectedItem(item);
-                                  setVisibleDisapprove(true);
-                                }}
-                              />
-                            ))}
-                          </TableBody>
-                        </Table>
-                        <ScrollBar orientation="horizontal" />
-                      </ScrollArea>
+            Object.entries(groupedData).map(([month, items]) => (
+              <Collapsible key={month}>
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant="ghost"
+
+                    className="group w-full justify-start transition-none hover:bg-card hover:text-accent-foreground "
+                  >
+                    <ChevronRight className="transition-transform group-data-[state=open]:rotate-90" />
+                    <span>{moment(month, "YYYY-MM").format("MMMM YYYY")}</span>
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="flex-1 min-w-0 relative custom-scrollbar">
+                    {/* <ScrollArea
+                        className={`w-full  ${state === 'expanded' ? "max-w-[calc(100dvw-310px)]" : "max-w-[calc(100dvw-100px)]"}  overflow-x-auto`}
+                      > */}
+                    <div
+                      className={`overflow-x-auto ${state === "expanded"
+                        ? "max-w-[calc(100dvw-310px)]"
+                        : "max-w-[calc(100dvw-100px)]"
+                        }`}
+                    >
+                      <Table className="min-w-max w-max border-separate border-spacing-0">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Request Date</TableHead>
+                            <TableHead>Employee</TableHead>
+                            <TableHead>Customer</TableHead>
+                            <TableHead>Owner</TableHead>
+                            <TableHead>Group</TableHead>
+                            <TableHead>Machine</TableHead>
+                            <TableHead>Order No</TableHead>
+                            <TableHead>Price</TableHead>
+                            <TableHead>Images</TableHead>
+                            <TableHead>Commission</TableHead>
+                            <TableHead>Note</TableHead>
+                            <TableHead className="sticky right-0 z-30 bg-background min-w-[120px] border-l">
+                              Status
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {items.map((item) => (
+                            <RenderEachRow
+                              key={item.id}
+                              item={item}
+                              onRefresh={fetchData}
+                              onReturn={(i) => setSelectedRow(i)}
+                              onDisapprove={() => {
+                                setSelectedItem(item);
+                                setVisibleDisapprove(true);
+                              }}
+                            />
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+                    {/* <ScrollBar orientation="horizontal" />
+                      </ScrollArea> */}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            ))
+
+
           )}
         </div>
       )}
@@ -1018,7 +1036,7 @@ const ImageSheet = memo(({
   onClose,
 
 }: {
-   data: CommissionOwnerProps | null;
+  data: CommissionOwnerProps | null;
   visible: boolean;
   onClose: () => void;
 }) => {

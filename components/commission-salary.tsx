@@ -38,10 +38,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import { CommissionOwnerProps } from "@/lib/types";
 
-const CommissionRecord = ({ data, fetchData }) => {
+const CommissionRecord = ({ data, fetchData } : {data : CommissionOwnerProps[], fetchData : ()=> Promise<void>}) => {
   const [visibleDisapprove, setVisibleDisapprove] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState<CommissionOwnerProps | null>(null);
   const [disapproveMsg, setDisapproveMsg] = useState("");
   const [disapproveLoading, setDisapproveLoading] = useState(false);
   const [total, setTotal] = useState(0);
@@ -55,18 +56,18 @@ const CommissionRecord = ({ data, fetchData }) => {
     setTotal(totalCommission);
   }, [data]);
 
-  const RenderEachRow = ({ item, onRefresh, onDisapprove }) => {
+  const RenderEachRow = ({ item, onRefresh, onDisapprove } : {item : CommissionOwnerProps, onRefresh : ()=> Promise<void>, onDisapprove : ()=>void}) => {
     const [loading, setLoading] = useState(false);
 
-    const [selectedPercentage, setSelectedPercentage] = useState(null);
+    const [selectedPercentage, setSelectedPercentage] = useState<string | null>(null);
     const [showManual, setShowManual] = useState(false);
-    const [manualNumber, setManualNumber] = useState("");
+    const [manualNumber, setManualNumber] = useState<string | number>("");
 
     async function handleUpdate(
-      id,
-      is_approved,
-      approval_date,
-      commission_amount
+      id : number,
+      is_approved : boolean | null,
+      approval_date : Date | null,
+      commission_amount : number | string | null
     ) {
       if (!id) return;
       setLoading(true);
@@ -184,7 +185,7 @@ const CommissionRecord = ({ data, fetchData }) => {
                     new Date(),
                     showManual
                       ? manualNumber
-                      : (item.total_amount * (selectedPercentage || 0)) / 100
+                      : (item.total_amount * Number(selectedPercentage || 0)) / 100
                   )
                 }
               >
