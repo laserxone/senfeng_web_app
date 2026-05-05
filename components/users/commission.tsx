@@ -390,20 +390,20 @@ const OwnerView = () => {
                         : "max-w-[calc(100dvw-100px)]"
                         }`}
                     >
-                      <Table className="min-w-max w-max border-separate border-spacing-0">
+                      <Table className="min-w-max w-max">
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Request Date</TableHead>
-                            <TableHead>Employee</TableHead>
-                            <TableHead>Customer</TableHead>
-                            <TableHead>Owner</TableHead>
-                            <TableHead>Group</TableHead>
-                            <TableHead>Machine</TableHead>
-                            <TableHead>Order No</TableHead>
-                            <TableHead>Price</TableHead>
-                            <TableHead>Images</TableHead>
-                            <TableHead>Commission</TableHead>
-                            <TableHead>Note</TableHead>
+                            <TableHead >Request Date</TableHead>
+                            <TableHead >Employee</TableHead>
+                            <TableHead >Customer</TableHead>
+                            <TableHead >Owner</TableHead>
+                            <TableHead >Group</TableHead>
+                            <TableHead >Machine</TableHead>
+                            <TableHead >Order No</TableHead>
+                            <TableHead >Price</TableHead>
+                            <TableHead >Images</TableHead>
+                            <TableHead >Commission</TableHead>
+                            <TableHead >Note</TableHead>
                             <TableHead className="sticky right-0 z-30 bg-background min-w-[120px] border-l">
                               Status
                             </TableHead>

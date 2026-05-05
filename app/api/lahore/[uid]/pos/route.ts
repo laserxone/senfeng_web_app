@@ -2,7 +2,7 @@ import pool from "@/config/db";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req:NextRequest) {
+export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const availablemachine = searchParams.get("availablemachine");
 
@@ -30,10 +30,10 @@ export async function GET(req:NextRequest) {
 
       const invoices = resultQry.rows.map((invoice) => {
         const itemsTotal = Array.isArray(invoice.fields)
-          ? invoice.fields.reduce((sum:any, item:any) => {
-              const val = Number(item?.total ?? 0);
-              return sum + (isNaN(val) ? 0 : val);
-            }, 0)
+          ? invoice.fields.reduce((sum: any, item: any) => {
+            const val = Number(item?.total ?? 0);
+            return sum + (isNaN(val) ? 0 : val);
+          }, 0)
           : 0;
         const discount = Number(invoice.discount ?? 0);
         const finalAmount = itemsTotal - discount;
@@ -52,7 +52,13 @@ export async function GET(req:NextRequest) {
       });
 
       return NextResponse.json(
-        { stock: result.rows, reminders: invoices.filter((item)=> item?.status !== 'Paid') },
+        {
+          stock: result.rows, reminders: invoices.filter(
+            (item) =>
+              item.payment ||
+              !moment(item.created_at).isBefore("2025-09-01")
+          ).filter((item) => item?.status !== 'Paid')
+        },
         { status: 200 },
       );
     }
@@ -62,7 +68,7 @@ export async function GET(req:NextRequest) {
   }
 }
 
-export async function POST(req:NextRequest) {
+export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
 
@@ -101,7 +107,7 @@ export async function POST(req:NextRequest) {
   }
 }
 
-export async function PUT(req:NextRequest) {
+export async function PUT(req: NextRequest) {
   try {
     const {
       entries,
@@ -196,7 +202,7 @@ export async function PUT(req:NextRequest) {
       { nextinvoice: generatedInvoiceNumber, returning_id },
       { status: 200 },
     );
-  } catch (error:any) {
+  } catch (error: any) {
     console.log(error);
     return NextResponse.json(
       { message: error?.message || "Processing error" },

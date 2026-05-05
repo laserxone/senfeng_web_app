@@ -539,6 +539,8 @@ export default function POS() {
     });
   }
 
+  console.log(searchItemsResult)
+
   useEffect(() => {
     setSelectedUser({ id: null, label: null });
   }, [selectedRadio]);

@@ -1,7 +1,8 @@
 import pool from "@/config/db";
+import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req:NextRequest, { params }:{params:Promise<{searchitem:string}>}) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ searchitem: string }> }) {
   const { searchitem } = await params;
   const searchParams = req.nextUrl.searchParams;
   const pending = searchParams.get("pending");
@@ -21,16 +22,16 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{searchite
 
       const invoices = result.rows.map((invoice) => {
         const itemsTotal = Array.isArray(invoice.fields)
-          ? invoice.fields.reduce((sum:number, item:any) => {
-              const val = Number(item?.total ?? 0);
-              return sum + (isNaN(val) ? 0 : val);
-            }, 0)
+          ? invoice.fields.reduce((sum: number, item: any) => {
+            const val = Number(item?.total ?? 0);
+            return sum + (isNaN(val) ? 0 : val);
+          }, 0)
           : 0;
         const discount = Number(invoice.discount ?? 0);
         const finalAmount = itemsTotal - discount;
         const totalPaid = Number(invoice.total_paid ?? 0);
         let status = "NA";
-        if(itemsTotal === 0) status = "Paid"
+        if (itemsTotal === 0) status = "Paid"
         else if (totalPaid === 0) status = "Pending";
         else if (finalAmount - totalPaid !== 0) status = "Partial";
         else status = "Paid";
@@ -77,17 +78,17 @@ WHERE
       const invoices = result.rows.map((invoice) => {
         // Sum totals from fields array
         const itemsTotal = Array.isArray(invoice.fields)
-          ? invoice.fields.reduce((sum:number, item:any) => {
-              const val = Number(item?.total ?? 0);
-              return sum + (isNaN(val) ? 0 : val);
-            }, 0)
+          ? invoice.fields.reduce((sum: number, item: any) => {
+            const val = Number(item?.total ?? 0);
+            return sum + (isNaN(val) ? 0 : val);
+          }, 0)
           : 0;
 
         const discount = Number(invoice.discount ?? 0);
         const finalAmount = itemsTotal - discount;
         const totalPaid = Number(invoice.total_paid ?? 0);
         let status = "NA";
-        if(itemsTotal === 0) status = "Paid"
+        if (itemsTotal === 0) status = "Paid"
         else if (totalPaid === 0) status = "Pending";
         else if (finalAmount - totalPaid !== 0) status = "Partial";
         else status = "Paid";
@@ -115,16 +116,16 @@ WHERE
 
       const invoices = result.rows.map((invoice) => {
         const itemsTotal = Array.isArray(invoice.fields)
-          ? invoice.fields.reduce((sum:number, item:any) => {
-              const val = Number(item?.total ?? 0);
-              return sum + (isNaN(val) ? 0 : val);
-            }, 0)
+          ? invoice.fields.reduce((sum: number, item: any) => {
+            const val = Number(item?.total ?? 0);
+            return sum + (isNaN(val) ? 0 : val);
+          }, 0)
           : 0;
         const discount = Number(invoice.discount ?? 0);
         const finalAmount = itemsTotal - discount;
         const totalPaid = Number(invoice.total_paid ?? 0);
         let status = "NA";
-        if(itemsTotal === 0) status = "Paid"
+        if (itemsTotal === 0) status = "Paid"
         else if (totalPaid === 0) status = "Pending";
         else if (finalAmount - totalPaid !== 0) status = "Partial";
         else status = "Paid";
@@ -138,8 +139,18 @@ WHERE
         };
       });
 
+      const filteredInvoices = invoices.map((item)=>{
+        if(moment(item.created_at).isSameOrAfter("2026-01-01")) return item
+        else if(item.payment === false) return item
+        else return null
+      }).filter(Boolean)
+
       return NextResponse.json(
-        invoices.filter((item) => item.status !== "Paid"),
+        invoices.filter(
+          (item) =>
+            moment(item.created_at).isSameOrAfter("2026-01-01") ||
+    item.payment === false
+        ).filter((item) => item.status !== "Paid"),
         { status: 200 },
       );
     }
