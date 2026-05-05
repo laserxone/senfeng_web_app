@@ -124,7 +124,7 @@ const OwnerView = () => {
 
   const groupedData: Record<string, CommissionOwnerProps[]> = groupByMonth(filteredData);
 
-  const RenderEachRow = ({ item, onRefresh, onDisapprove, onReturn }: { item: CommissionOwnerProps, onRefresh: () => Promise<void>, onDisapprove: () => void, onReturn: (val: CommissionOwnerProps) => void }) => {
+  const RenderEachRow = ({ item, onRefresh, onDisapprove, onReturn, index }: { item: CommissionOwnerProps, onRefresh: () => Promise<void>, onDisapprove: () => void, onReturn: (val: CommissionOwnerProps) => void, index : number }) => {
     const [loading, setLoading] = useState(false);
     const { userID, base_route } = useUserDetail();
     const [selectedPercentage, setSelectedPercentage] = useState<null | number>(null);
@@ -175,8 +175,16 @@ const OwnerView = () => {
       }
     }
 
+    const getRowBg = (item: CommissionOwnerProps, index: number) => {
+  
+  if (item.commission_issued === true) return "bg-green-100 dark:bg-green-900";
+  if (item.is_approved === false) return "bg-red-100 dark:bg-red-900";
+  if (item.is_approved === true) return "bg-blue-100 dark:bg-blue-900";
+ return index % 2 === 0 ? "bg-slate-50 dark:bg-gray-900" : "bg-white dark:bg-slate-800";
+};
+
     return (
-      <TableRow>
+      <TableRow className={`${getRowBg(item, index)} hover:${getRowBg(item, index)}`}>
         <TableCell className="max-w-50 whitespace-normal break-words">
           {item.request_date
             ? moment(item.request_date).format("YYYY-MM-DD")
@@ -263,7 +271,7 @@ const OwnerView = () => {
         </TableCell>
         <TableCell className="max-w-50 whitespace-normal break-words">{item.note}</TableCell>
 
-        <TableCell className="sticky right-0 z-20 bg-background min-w-[120px] border-l">
+        <TableCell className="sticky right-0 z-20 bg-inherit min-w-[120px] border-l">
           {loading ? (
             <Spinner />
           ) : item.commission_issued === true ? (
@@ -409,9 +417,10 @@ const OwnerView = () => {
                             </TableHead>
                           </TableRow>
                         </TableHeader>
-                        <TableBody>
-                          {items.map((item) => (
+                        <TableBody className="bg-white dark:bg-gray-900">
+                          {items.map((item, i) => (
                             <RenderEachRow
+                            index={i}
                               key={item.id}
                               item={item}
                               onRefresh={fetchData}
