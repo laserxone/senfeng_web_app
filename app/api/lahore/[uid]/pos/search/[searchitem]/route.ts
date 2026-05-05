@@ -110,6 +110,7 @@ WHERE
     COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
   FROM savedinvoices si
   LEFT JOIN customer_parts cp ON cp.part_id = si.id
+  WHERE si.owner_paid IS FALSE
   GROUP BY si.id
 `;
       const result = await pool.query(query);
@@ -143,7 +144,7 @@ WHERE
         invoices.filter(
           (item) =>
             moment(item.created_at).isSameOrAfter("2025-12-01") ||
-    item.payment === false
+            item.payment === false
         ).filter((item) => item.status !== "Paid"),
         { status: 200 },
       );
