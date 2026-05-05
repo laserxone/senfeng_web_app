@@ -185,7 +185,7 @@ const SearchResultModal = ({
         const id = row.original?.id ?? null;
         return (
           <div className="flex gap-2">
-            {isAdmin && base_route?.includes("lahore") &&
+            { base_route?.includes("lahore") &&
               <Button disabled={selectedId === row.original.id} onClick={() => handlePaid(row.original)}>
                 {selectedId === row.original.id && <Spinner />}  Paid
               </Button>
