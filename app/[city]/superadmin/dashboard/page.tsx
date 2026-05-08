@@ -149,7 +149,7 @@ export default function Page() {
               <Skeleton className="h-6 w-32" />
             ) : (
               <div className="text-2xl font-bold">
-                <CurrencyFormatter amount={data?.total_payment_this_month} />
+                <CurrencyFormatter amount={data?.total_payment_this_month ?? 0} />
               </div>
             )}
             {loading ? (

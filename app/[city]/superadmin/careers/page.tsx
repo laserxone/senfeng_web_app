@@ -1,58 +1,56 @@
-import admin from "@/lib/firebaseAdmin";
-import ResumesTable from "./resumes-table";
+"use client"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "axios"
+import { useEffect, useState } from "react"
+import ResumesTable from "./resumes-table"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ResumesResponse } from "@/lib/types"
 
-async function getResumes() {
-  const db = admin.firestore();
+export default function Page() {
 
-  const snapshot = await db
-    .collection("resume")
-    .orderBy("createdAt", "desc")
-    .get();
+  const { userID } = useUserDetail()
+  const [data, setData] = useState<ResumesResponse | null>(null)
 
-  const resumes = await Promise.all(
-    snapshot.docs.map(async (doc) => {
-      const data = doc.data();
+  useEffect(() => {
+    if (userID) {
+      fetchData()
+    }
+  }, [userID])
 
-      let cvDownloadUrl = null;
+  async function fetchData() {
+    try {
+      const res = await axios.get('/api/careers/applications')
+      setData(res.data)
+    } catch (error) {
 
-      if (data.cvUrl) {
-        try {
-          const [url] = await admin
-            .storage()
-            .bucket()
-            .file(data.cvUrl)
-            .getSignedUrl({
-              action: "read",
-              expires: Date.now() + 60 * 60 * 1000,
-            });
+    }
+  }
 
-          cvDownloadUrl = url;
-        } catch (error) {
-          console.error("Signed URL error:", error);
-        }
-      }
+  return (
+    <div className="flex flex-1 flex-col space-y-4">
+      <div className="flex items-start justify-between gap-4 mt-2">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Resume Applications
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            View submitted applications and open uploaded CVs.
+          </p>
+        </div>
 
-      return {
-        id: doc.id,
-        fullName: data.fullName || "",
-        emailAddress: data.emailAddress || "",
-        phoneNumber: data.phoneNumber || "",
-        currentLocation: data.currentLocation || "",
-        positionAppliedFor: data.positionAppliedFor || "",
-        experienceYears: data.experienceYears || 0,
-        coverLetter: data.coverLetter || "",
-        status: data.status || "new",
-        cvUrl: data.cvUrl || "",
-        cvDownloadUrl,
-      };
-    })
-  );
+        <Card className="w-[190px]">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Resumes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-semibold">{data?.resumes?.length ?? 0}</p>
+          </CardContent>
+        </Card>
+      </div>
 
-  return resumes;
-}
-
-export default async function ResumesPage() {
-  const resumes = await getResumes();
-
-  return <ResumesTable resumes={resumes} />;
+      <ResumesTable resumes={data?.resumes || []} />
+    </div>
+  )
 }

@@ -104,6 +104,12 @@ export const ownerNavItems = [
         url: "/analytics",
         shortcut: ["f", "i", "n", "e"],
       },
+
+      {
+        title: "Careers",
+        url: "/careers",
+        shortcut: ["c", "a", "r", "e"],
+      },
     ],
   },
   {

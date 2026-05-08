@@ -1342,3 +1342,27 @@ export type OutwardProps = {
         created_at: string
     }
 };
+
+export type Resume = {
+  id: string;
+  fullName: string;
+  emailAddress: string;
+  phoneNumber: string;
+  currentLocation: string;
+  positionAppliedFor: string;
+  experienceYears: number;
+  coverLetter: string;
+  cvUrl: string;
+  status: "new" | string;
+  createdAt: {
+    _seconds: number;
+    _nanoseconds: number;
+  };
+  cvDownloadUrl: string;
+};
+
+export type ResumesResponse = {
+  success: boolean;
+  total: number;
+  resumes: Resume[];
+};
