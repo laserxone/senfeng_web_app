@@ -1,3 +1,4 @@
+import pool from "@/config/db";
 import admin from "@/lib/firebaseAdmin";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -50,17 +51,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const db = admin.firestore();
     const bucket = admin.storage().bucket();
-
-    const resumeRef = db.collection("resume").doc();
-    const applicationId = resumeRef.id;
-
     const bytes = await cv.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
     const safeFileName = cv.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const storagePath = `resumes/${applicationId}/${Date.now()}-${safeFileName}`;
+    const storagePath = `resumes/${emailAddress}/${Date.now()}-${safeFileName}`;
 
     const file = bucket.file(storagePath);
 
@@ -70,7 +66,6 @@ export async function POST(request: NextRequest) {
         metadata: {
           fullName,
           emailAddress,
-          applicationId,
         },
       },
       resumable: false,
@@ -78,24 +73,39 @@ export async function POST(request: NextRequest) {
 
     const cvUrl = storagePath;
 
-    const application = {
-      id: applicationId,
-      fullName,
-      emailAddress,
-      phoneNumber,
-      currentLocation,
-      positionAppliedFor,
-      experienceYears: Number(experienceYears || 0),
-      coverLetter,
-      cvUrl,
-      status: "new",
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    };
-    await resumeRef.set(application);
+    await pool.query(
+      `
+      INSERT INTO resumes (
+        full_name,
+        email_address,
+        phone_number,
+        current_location,
+        position_applied_for,
+        experience_years,
+        cover_letter,
+        cv_url,
+        status
+      )
+      VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9
+      )
+      `,
+      [
+        fullName,
+        emailAddress,
+        phoneNumber,
+        currentLocation,
+        positionAppliedFor,
+        Number(experienceYears || 0),
+        coverLetter,
+        cvUrl,
+        "new",
+      ]
+    );
+
     return NextResponse.json(
       {
         message: "Application received successfully.",
-        applicationId,
         cvUrl,
       },
       { status: 201 }
@@ -110,46 +120,40 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    
-    const db = admin.firestore();
+    const res = await pool.query(`SELECT * FROM resumes`);
 
-    const snapshot = await db
-      .collection("resume")
-      .orderBy("createdAt", "desc")
-      .get();
+    const resumes = (
+      await Promise.all(
+        res.rows.map(async (data) => {
+          try {
+            if (!data.cv_url) return null;
 
-    const resumes = await Promise.all(
-      snapshot.docs.map(async (doc) => {
-        const data = doc.data();
-
-        let cvDownloadUrl = null;
-
-        try {
-          if (data.cvUrl) {
-            const [url] = await admin
+            const [cvDownloadUrl] = await admin
               .storage()
               .bucket()
-              .file(data.cvUrl)
+              .file(data.cv_url)
               .getSignedUrl({
                 action: "read",
                 expires: "03-01-2500",
               });
 
-            cvDownloadUrl = url;
-          }
-        } catch (error) {
-          console.error("CV URL generation error:", error);
-        }
+            return {
+              ...data,
+              cvDownloadUrl,
+            };
+          } catch (error) {
+            console.error(
+              `CV URL generation error for resume ${data.id}:`,
+              error
+            );
 
-        return {
-          id: doc.id,
-          ...data,
-          cvDownloadUrl,
-        };
-      })
-    );
+            return null;
+          }
+        })
+      )
+    ).filter(Boolean);
 
     return NextResponse.json(
       {

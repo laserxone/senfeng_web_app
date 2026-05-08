@@ -1,3 +1,4 @@
+import pool from "@/config/db";
 import admin from "@/lib/firebaseAdmin";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -15,30 +16,25 @@ export async function DELETE(
       );
     }
 
-    const db = admin.firestore();
-    const bucket = admin.storage().bucket();
+    const res = await pool.query(`SELECT * FROM resumes`)
+    const data =res.rows?.[0] ?? null
 
-    const resumeRef = db.collection("resume").doc(id);
-    const resumeSnap = await resumeRef.get();
-
-    if (!resumeSnap.exists) {
-      return NextResponse.json(
-        { message: "Resume not found." },
-        { status: 404 }
-      );
+    if(!data){
+      return NextResponse.json({message : "Data not found"}, {status:400})
     }
 
-    const resumeData = resumeSnap.data();
+    const bucket = admin.storage().bucket();
 
-    if (resumeData?.cvUrl) {
+
+    if (data?.cv_url) {
       try {
-        await bucket.file(resumeData.cvUrl).delete();
+        await bucket.file(data?.cv_url).delete();
       } catch (error) {
         console.error("Storage delete error:", error);
       }
     }
 
-    await resumeRef.delete();
+   await pool.query(`DELETE FROM resumes WHERE id = $1`, [id])
 
     return NextResponse.json({
       success: true,

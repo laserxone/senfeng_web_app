@@ -5,11 +5,16 @@ import { useEffect, useState } from "react"
 import ResumesTable from "./resumes-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ResumesResponse } from "@/lib/types"
+import { useDebounce } from "@/hooks/use-debounce"
+import { Input } from "@/components/ui/input"
 
 export default function Page() {
 
   const { userID } = useUserDetail()
   const [data, setData] = useState<ResumesResponse | null>(null)
+  const [search, setSearch] = useState("")
+
+  const debouncedSearch = useDebounce(search, 300)
 
   useEffect(() => {
     if (userID) {
@@ -26,6 +31,20 @@ export default function Page() {
     }
   }
 
+ const filteredData = data?.resumes?.filter((item) => {
+  const search = debouncedSearch.toLowerCase();
+
+  return Object.values(item).some((value) => {
+    if (typeof value === "object" && value !== null) {
+      return Object.values(value).some((nestedValue) =>
+        String(nestedValue).toLowerCase().includes(search)
+      );
+    }
+
+    return String(value).toLowerCase().includes(search);
+  });
+});
+
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-start justify-between gap-4 mt-2">
@@ -38,6 +57,7 @@ export default function Page() {
           </p>
         </div>
 
+       
         <Card className="w-[190px]">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -50,7 +70,10 @@ export default function Page() {
         </Card>
       </div>
 
-      <ResumesTable resumes={data?.resumes || []} />
+       <Input placeholder="Search resume" className="max-w-xl" value={search} onChange={(e)=> setSearch(e.target.value)}/>
+
+
+      <ResumesTable resumes={filteredData || []} />
     </div>
   )
 }
