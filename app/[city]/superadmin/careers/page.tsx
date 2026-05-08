@@ -13,7 +13,7 @@ export default function Page() {
   const { userID } = useUserDetail()
   const [data, setData] = useState<ResumesResponse | null>(null)
   const [search, setSearch] = useState("")
-
+  const [loading, setLoading] = useState(false)
   const debouncedSearch = useDebounce(search, 300)
 
   useEffect(() => {
@@ -23,27 +23,28 @@ export default function Page() {
   }, [userID])
 
   async function fetchData() {
+    setLoading(true)
     try {
       const res = await axios.get('/api/careers/applications')
       setData(res.data)
-    } catch (error) {
-
+    } finally {
+      setLoading(false)
     }
   }
 
- const filteredData = data?.resumes?.filter((item) => {
-  const search = debouncedSearch.toLowerCase();
+  const filteredData = data?.resumes?.filter((item) => {
+    const search = debouncedSearch.toLowerCase();
 
-  return Object.values(item).some((value) => {
-    if (typeof value === "object" && value !== null) {
-      return Object.values(value).some((nestedValue) =>
-        String(nestedValue).toLowerCase().includes(search)
-      );
-    }
+    return Object.values(item).some((value) => {
+      if (typeof value === "object" && value !== null) {
+        return Object.values(value).some((nestedValue) =>
+          String(nestedValue).toLowerCase().includes(search)
+        );
+      }
 
-    return String(value).toLowerCase().includes(search);
+      return String(value).toLowerCase().includes(search);
+    });
   });
-});
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -57,7 +58,7 @@ export default function Page() {
           </p>
         </div>
 
-       
+
         <Card className="w-[190px]">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -70,10 +71,10 @@ export default function Page() {
         </Card>
       </div>
 
-       <Input placeholder="Search resume" className="max-w-xl" value={search} onChange={(e)=> setSearch(e.target.value)}/>
+      <Input placeholder="Search resume" className="max-w-xl" value={search} onChange={(e) => setSearch(e.target.value)} />
 
 
-      <ResumesTable resumes={filteredData || []} />
+      <ResumesTable resumes={filteredData || []} onRefresh={fetchData} loading={loading} />
     </div>
   )
 }
