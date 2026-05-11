@@ -53,7 +53,6 @@ type UserProfile = {
 
 export default function DetailComponent({ id }: { id: string | null }) {
   const { userID } = useUserDetail();
-  const { state: OfficeState } = useContext(OfficeContext);
   const [joiningDate, setJoiningDate] = useState<Date | null>(null);
   const [leavingDate, setLeavingDate] = useState<Date | null>(null);
   const [active, setActive] = useState(false);
@@ -92,6 +91,7 @@ export default function DetailComponent({ id }: { id: string | null }) {
     customer_full_access: false,
     repairing_and_maintenance: false,
     team_attendance: false,
+    careers : false
   });
 
   const [docsData, setDocsData] = useState({
@@ -147,6 +147,7 @@ export default function DetailComponent({ id }: { id: string | null }) {
             customer_full_access: apiData?.customer_full_access,
             repairing_and_maintenance: apiData?.repairing_and_maintenance,
             team_attendance: apiData?.false,
+            careers : apiData?.careers
           });
           setForm({
             basic_salary: apiData?.basic_salary || 0,
@@ -226,6 +227,7 @@ export default function DetailComponent({ id }: { id: string | null }) {
         repairing_and_maintenance: checks?.repairing_and_maintenance,
         team_attendance: checks?.team_attendance,
         active: active,
+        careers : checks?.careers
 
       })
       .then(() => {
@@ -557,7 +559,7 @@ const DocumentCardOther = ({ userID, otherDocs, employeeId, fetchData }: { userI
 
                 {files.map((file, index) => {
                   return (
-                    <RenderEachFile key={index} file={file} employeeId={employeeId} otherDocs={otherDocs} setFiles={setFiles} userId={userId} />
+                    <RenderEachFile key={index} file={file} employeeId={employeeId} otherDocs={otherDocs} fetchData={fetchData} userId={userId} />
                   );
                 })
                 }
@@ -705,12 +707,8 @@ const DocumentCard =
     );
   }
 
-const RenderEachFile = ({ file, userId, otherDocs, employeeId, setFiles }: {
-  file: any, userId: number, otherDocs: string[], employeeId: string | null, setFiles: Dispatch<SetStateAction<{
-    url: string;
-    name: string;
-    path: string;
-  }[]>>
+const RenderEachFile = ({ file, userId, otherDocs, employeeId, fetchData }: {
+  file: any, userId: number, otherDocs: string[], employeeId: string | null, fetchData: ()=> Promise<void>
 }) => {
   const [loading, setLoading] = useState(false)
   const cleanName = file.name.replace(/^\d+-/, "");
@@ -740,7 +738,7 @@ const RenderEachFile = ({ file, userId, otherDocs, employeeId, setFiles }: {
       };
 
       await axios.put(`/${userId}/user/${employeeId}`, updatedData);
-      setFiles((prev) => prev.filter((file) => file.path !== path));
+      await fetchData()
 
       toast.success("File deleted successfully");
     } catch (error) {

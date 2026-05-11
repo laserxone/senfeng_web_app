@@ -48,7 +48,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ emai
             nav_items.push(Tools)
             nav_items.push(Prices)
             nav_items.push(RepairAndMaintenance)
-            nav_items.push(Applications)
             base_route = `${city ? city : branchOffice}/superadmin`
         } else {
             if (user.designation == 'Store Manager') {
@@ -78,6 +77,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ emai
             }
             if (user.team_attendance) {
                 nav_items.push(teamAttendance)
+            }
+            if(user.careers){
+                nav_items.push(Applications)
             }
             if (user.designation == 'Engineer') {
                 base_route = `${branchOffice}/engineer`

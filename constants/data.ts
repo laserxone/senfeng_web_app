@@ -106,9 +106,9 @@ export const ownerNavItems = [
       },
 
       {
-        title: "Careers",
-        url: "/careers",
-        shortcut: ["c", "a", "r", "e"],
+        title: "Applications",
+        url: "/application",
+        shortcut: ["a", "p", "p", "l"],
       },
     ],
   },
