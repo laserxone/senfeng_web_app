@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
+
     const authHeader = request.headers.get("authorization");
 
     if (authHeader !== `Bearer ${process.env.WORDPRESS_API_SECRET}`) {

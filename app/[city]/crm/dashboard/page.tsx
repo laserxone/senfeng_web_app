@@ -1,23 +1,22 @@
 "use client";
-import AutoScrollMembers from "@/components/autoScroll";
 import TeamTask from "@/components/teamTask";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Attendance from "@/components/users/attendance";
 import CustomerEmployee from "@/components/users/customer";
 import { CustomerExtraData } from "@/components/users/ExtraData";
+import OldRecordSheet from "@/components/users/old-record-sheet";
 import { ProfilePicture } from "@/components/users/ProfilePicture";
 import Reimbursement from "@/components/users/Reimbursement";
+import RenderFines from "@/components/users/render-fines";
 import SalaryRecord from "@/components/users/SalaryRecord";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { UserAttendanceRecord, UserDashboard, UserExtraTypes, UserReimbursementType } from "@/lib/types";
+import { updateItemPurpose } from "@/lib/updatePurpose";
 import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
-import OldRecordSheet from "@/components/users/old-record-sheet";
-import RenderFines from "@/components/users/render-fines";
-import { updateItemPurpose } from "@/lib/updatePurpose";
-import { UserAttendanceRecord, UserDashboard, UserExtraTypes, UserReimbursementType } from "@/lib/types";
 
 
 type ProfileData = {
@@ -131,8 +130,7 @@ export default function Page() {
               }}
             />
             <CustomerEmployee
-            height="min-h-[calc(100dvh-470px)]"
-              totalCustomerText={"Total Customers"}
+              height="min-h-[calc(100dvh-400px)]"
               ownership={true}
               customer_data={
                 selectedOption && extraData ? extraData[selectedOption as Exclude<keyof UserExtraTypes, "user">] : []
@@ -217,26 +215,37 @@ export default function Page() {
             <TabsTrigger value="fines">Fines</TabsTrigger>
           </TabsList>
 
-          <div className="flex flex-1 w-full mt-2">
-            {activeTab === "newCustomers" && <RenderNewCustomer />}
-            {activeTab === "reimbursement" && <RenderReimbursement />}
-            {activeTab === "attendance" && <RenderAttendance />}
-            {activeTab === "task" && (
-              <Card className="flex flex-1 p-0">
-                <CardContent className="pt-2 flex flex-1">
-                  <TeamTask height="min-h-[calc(100dvh-360px)]" />
-                </CardContent>
-              </Card>
-            )}
-            {activeTab === "salary" && (
-              <Card className="flex flex-1 p-0">
-                <CardContent className="pt-2 flex flex-1">
-                  <SalaryRecord id={userID} height="min-h-[calc(100dvh-320px)]"/>
-                </CardContent>
-              </Card>
-            )}
-              {activeTab === 'fines' && <RenderFines height="min-h-[calc(100dvh-370px)]"/>}
+          <div hidden={activeTab !== 'newCustomers'}>
+            <RenderNewCustomer />
           </div>
+          <div hidden={activeTab !== 'reimbursement'}>
+            <RenderReimbursement />
+          </div>
+          <div hidden={activeTab !== 'attendance'}>
+            <RenderAttendance />
+          </div>
+          <div hidden={activeTab !== 'task'}>
+
+            <Card className="flex flex-1 p-0">
+              <CardContent className="pt-2 flex flex-1">
+                <TeamTask height="min-h-[calc(100dvh-360px)]" />
+              </CardContent>
+            </Card>
+
+          </div>
+          <div hidden={activeTab !== 'salary'}>
+
+            <Card className="flex flex-1 p-0">
+              <CardContent className="pt-2 flex flex-1">
+                <SalaryRecord id={userID} height="min-h-[calc(100dvh-320px)]" />
+              </CardContent>
+            </Card>
+
+          </div>
+          <div hidden={activeTab !== 'fines'}>
+            <RenderFines height="min-h-[calc(100dvh-370px)]" />
+          </div>
+
         </Tabs>
       </div>
 

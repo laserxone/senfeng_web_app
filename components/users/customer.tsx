@@ -32,11 +32,9 @@ type CustomerEmployeeProps = {
 };
 
 export default function CustomerEmployee({
-
   customer_data,
   onRefresh,
   ownership,
-  totalCustomerText,
   height
 }: CustomerEmployeeProps) {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -204,13 +202,11 @@ export default function CustomerEmployee({
       <div className="flex flex-1">
         <PageTable
         height={height}
-          totalCustomerText={totalCustomerText}
-          totalCustomer={data.length}
           columns={columns}
           data={data}
           onRowClick={(val, event) => {
             if (val?.id) {
-              const url = `/${base_route}/${val.member ? "member" : "customer"
+              const url = `/${base_route}/${val?.member ? "member" : "customer"
                 }/${val.id}`;
 
               if (event.ctrlKey || event.metaKey) {

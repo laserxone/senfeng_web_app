@@ -101,6 +101,7 @@ export type ExtraCustomer = {
     number: string;
     location: string;
     created_at: string;
+    member ?: boolean
 }
 
 export type UserExtraTypes = {

@@ -24,9 +24,22 @@ import { deleteObject, getDownloadURL, ref } from "firebase/storage";
 import { CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ChangeEvent, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { ChangeEvent, Dispatch, SetStateAction, useCallback, useContext, useEffect, useRef, useState } from "react";
 import "react-medium-image-zoom/dist/styles.css";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { ScrollArea } from "../ui/scroll-area";
+import { UserContext } from "@/store/context/UserContext";
+
+type DocsDataType = {
+  cnic: string;
+  education: string;
+  police: string;
+  resume: string;
+  appointment_letter: string;
+  father_cnic: string;
+}
+
 
 type UserProfile = {
   id?: number;
@@ -38,7 +51,7 @@ type UserProfile = {
   kin: string;
 };
 
-export default function DetailComponent({id} : {id : string | null}) {
+export default function DetailComponent({ id }: { id: string | null }) {
   const { userID } = useUserDetail();
   const { state: OfficeState } = useContext(OfficeContext);
   const [joiningDate, setJoiningDate] = useState<Date | null>(null);
@@ -46,7 +59,7 @@ export default function DetailComponent({id} : {id : string | null}) {
   const [active, setActive] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [employeeId, setEmployeeId] = useState(null);
+  const [employeeId, setEmployeeId] = useState<string | null>(null);
   const [fixedData, setFixedData] = useState<UserProfile>({
     designation: "",
     dp: "",
@@ -90,6 +103,8 @@ export default function DetailComponent({id} : {id : string | null}) {
     father_cnic: "",
     contract: "",
   });
+
+  const [otherDocs, setOtherDocs] = useState([])
 
 
 
@@ -150,7 +165,7 @@ export default function DetailComponent({id} : {id : string | null}) {
             father_cnic: apiData.father_cnic || "",
             contract: apiData?.contract || "",
           });
-
+          setOtherDocs(apiData?.other_docs || [])
           setJoiningDate(apiData?.joining_date || null);
           setLeavingDate(apiData?.leaving_date || null);
           setActive(apiData?.active || false);
@@ -211,6 +226,7 @@ export default function DetailComponent({id} : {id : string | null}) {
         repairing_and_maintenance: checks?.repairing_and_maintenance,
         team_attendance: checks?.team_attendance,
         active: active,
+
       })
       .then(() => {
         toast.success("Information updated");
@@ -220,140 +236,9 @@ export default function DetailComponent({id} : {id : string | null}) {
       });
   }
 
-  const DocumentCard = useCallback(
-    ({ type }: { type: string }) => {
-      const [fileUrl, setFileUrl] = useState<string | null>(null);
-      const [loading, setLoading] = useState(false);
-      const [fileName, setFileName] = useState<string | undefined>("");
-      const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-      const userId = userID;
-
-      useEffect(() => {
-        if (docsData?.[type as keyof typeof docsData]) {
-          setLoading(true);
-          const filePath = docsData[type as keyof typeof docsData];
-          if (filePath.includes("http")) {
-            setFileUrl(filePath);
-            setFileName(filePath.split("/").pop());
-            setLoading(false);
-          } else {
-            const storageRef = ref(storage, filePath);
-            getDownloadURL(storageRef)
-              .then((url) => {
-                setFileUrl(url);
-                setFileName(filePath.split("/").pop());
-              })
-              .catch((error) => console.error("Error loading file:", error))
-              .finally(() => setLoading(false));
-          }
-        }
-      }, []);
-
-      const handleFileUpload = async (event: ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
-        const file = event?.target?.files?.[0];
-        if (!file) return;
-
-        setLoading(true);
-        try {
-          const extension = file.name.split(".").pop();
-          const newFilePath = `${OfficeState.value.data}/${userId}/profile/${type}.${extension}`;
-
-          // Step 1: Delete old file if exists
-          if (docsData?.[type as keyof typeof docsData] && !docsData[type as keyof typeof docsData].includes("http")) {
-            const oldFileRef = ref(storage, docsData[type as keyof typeof docsData]);
-            await deleteObject(oldFileRef).catch((err) =>
-              console.log("Old file could not be deleted:", err),
-            );
-          }
-
-          // Step 2: Upload new file
-          const uploadedPath = await UploadImage(
-            URL.createObjectURL(file),
-            newFilePath,
-            file.type || "application/octet-stream",
-          );
-
-          const updatedData = {
-            ...docsData,
-            password: undefined,
-            confirmPassword: undefined,
-            currentPassword: undefined,
-            [type]: newFilePath,
-          };
-          await axios.put(`/${userId}/user/${employeeId}`, updatedData);
-
-          toast.success("File uploaded successfully");
-          await fetchData();
-          setFileUrl(URL.createObjectURL(file));
-          setFileName(file.name);
-        } catch (error) {
-          toast.error("Upload failed");
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      return (
-        <div className="space-y-2">
-          {loading ? (
-            <Skeleton className="h-[50px] w-full" />
-          ) : (
-            <>
-              <input
-                type="file"
-                accept="*"
-                hidden
-                ref={fileInputRef}
-                onChange={handleFileUpload}
-              />
-
-              <Popover>
-                <PopoverTrigger asChild className="w-full flex gap-4">
-                  <Button variant={"outline"}>
-                    {type?.replace("_", " ").toUpperCase()}{" "}
-                    {fileUrl && <CheckCircle className="text-green-500" />}
-                  </Button>
-                </PopoverTrigger>
-
-                <PopoverContent className="w-48 p-2">
-                  <div className="flex flex-col gap-2">
-                    <Button
-                      variant="ghost"
-                      className="justify-start"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      {fileUrl ? "Reupload File" : "Upload File"}
-                    </Button>
-
-                    {/* Download (only if file exists) */}
-                    {fileUrl && (
-                      <Button variant="ghost" className="justify-start" asChild>
-                        <a
-                          href={fileUrl}
-                          download={fileName}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Download File
-                        </a>
-                      </Button>
-                    )}
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </>
-          )}
-        </div>
-      );
-    },
-    [docsData],
-  );
-
-
 
   return (
-    <div className="flex w-full justify-center">
+    <div className="flex w-full justify-center pb-4">
       <div className="w-full space-y-6">
 
         <div className="flex flex-col md:flex-row md:items-center gap-4 border-b pb-6">
@@ -488,13 +373,14 @@ export default function DetailComponent({id} : {id : string | null}) {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              <DocumentCard type={"cnic"} />
-              <DocumentCard type={"father_cnic"} />
-              <DocumentCard type={"police"} />
-              <DocumentCard type={"education"} />
-              <DocumentCard type={"resume"} />
-              <DocumentCard type={"appointment_letter"} />
-              <DocumentCard type={"contract"} />
+              <DocumentCard type={"cnic"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+              <DocumentCard type={"father_cnic"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+              <DocumentCard type={"police"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+              <DocumentCard type={"education"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+              <DocumentCard type={"resume"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+              <DocumentCard type={"appointment_letter"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+              <DocumentCard type={"contract"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+              <DocumentCardOther userID={userID} otherDocs={otherDocs} employeeId={employeeId} fetchData={fetchData} />
             </div>
           </CardContent>
         </Card>
@@ -502,4 +388,438 @@ export default function DetailComponent({id} : {id : string | null}) {
       </div>
     </div>
   );
+}
+
+
+const DocumentCardOther = ({ userID, otherDocs, employeeId, fetchData }: { userID: number, otherDocs: string[], employeeId: string | null, fetchData: () => Promise<void> }) => {
+  const [files, setFiles] = useState<
+    {
+      url: string;
+      name: string;
+      path: string;
+    }[]
+  >([]);
+
+  const [loading, setLoading] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { state: OfficeState } = useContext(OfficeContext)
+  const [open, setOpen] = useState(false)
+  const userId = userID;
+
+  useEffect(() => {
+    async function loadFiles() {
+      if (!otherDocs?.length) return;
+
+      setLoading(true);
+
+      try {
+        const loadedFiles = await Promise.all(
+          otherDocs.map(async (filePath: string) => {
+            if (filePath.includes("http")) {
+              return {
+                url: filePath,
+                name: filePath.split("/").pop() || "file",
+                path: filePath,
+              };
+            }
+
+            const storageRef = ref(storage, filePath);
+            const url = await getDownloadURL(storageRef);
+
+            return {
+              url,
+              name: filePath.split("/").pop() || "file",
+              path: filePath,
+            };
+          })
+        );
+
+        setFiles(loadedFiles);
+      } catch (error) {
+        console.error("Error loading files:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadFiles();
+  }, [otherDocs]);
+
+  const handleFileUpload = async (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event?.target?.files?.[0];
+
+    if (!file) return;
+
+    setLoading(true);
+
+    try {
+      const extension = file.name.split(".").pop();
+
+      const fileName = `${Date.now()}-${file.name}`;
+
+      const newFilePath = `${OfficeState.value.data}/${userId}/profile/other_docs/${fileName}`;
+
+      await UploadImage(
+        URL.createObjectURL(file),
+        newFilePath,
+        file.type || "application/octet-stream"
+      );
+
+      const updatedOtherDocs = [
+        ...(otherDocs || []),
+        newFilePath,
+      ];
+
+      const updatedData = {
+        password: undefined,
+        confirmPassword: undefined,
+        currentPassword: undefined,
+        other_docs: [...updatedOtherDocs],
+      };
+
+      await axios.put(`/${userId}/user/${employeeId}`, updatedData);
+
+      await fetchData()
+
+      toast.success("File uploaded successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Upload failed");
+    } finally {
+      setLoading(false);
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+
+
+  return (
+    <div className="space-y-2">
+      {loading ? (
+        <Skeleton className="h-[50px] w-full" />
+      ) : (
+        <>
+          <input
+            type="file"
+            hidden
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+          />
+
+          <Popover>
+            <PopoverTrigger asChild className="w-full flex gap-4">
+              <Button variant={"outline"}>
+                OTHER DOCS
+                {files.length > 0 && (
+                  <CheckCircle className="text-green-500" />
+                )}
+              </Button>
+            </PopoverTrigger>
+
+            <PopoverContent className="w-64 p-2">
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="ghost"
+                  className="justify-start"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {files.length > 0
+                    ? "Add More Files"
+                    : "Upload File"}
+                </Button>
+
+                {files.length > 0 &&
+                  <Button onClick={() => setOpen(true)} variant="ghost" className="justify-start">
+                    See Files
+                  </Button>
+                }
+
+
+              </div>
+            </PopoverContent>
+          </Popover>
+        </>
+      )}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="w-full sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Additional Files</DialogTitle>
+          </DialogHeader>
+          {files.length > 0 ?
+            <ScrollArea className="h-[60vh] pr-4">
+              <div className="flex flex-col gap-3">
+
+                {files.map((file, index) => {
+                  return (
+                    <RenderEachFile key={index} file={file} employeeId={employeeId} otherDocs={otherDocs} setFiles={setFiles} userId={userId} />
+                  );
+                })
+                }
+              </div>
+            </ScrollArea>
+            :
+            <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">
+              No files uploaded
+            </div>
+
+          }
+
+
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+
+const DocumentCard =
+  ({ type, userID, docsData, employeeId, fetchData }: { type: string, userID: number, docsData: DocsDataType, employeeId: string | null, fetchData: () => Promise<void> }) => {
+    const [fileUrl, setFileUrl] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [fileName, setFileName] = useState<string | undefined>("");
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const { state: OfficeState } = useContext(OfficeContext);
+    const userId = userID;
+
+    useEffect(() => {
+      if (docsData?.[type as keyof typeof docsData]) {
+        setLoading(true);
+        const filePath = docsData[type as keyof typeof docsData];
+        if (filePath.includes("http")) {
+          setFileUrl(filePath);
+          setFileName(filePath.split("/").pop());
+          setLoading(false);
+        } else {
+          const storageRef = ref(storage, filePath);
+          getDownloadURL(storageRef)
+            .then((url) => {
+              setFileUrl(url);
+              setFileName(filePath.split("/").pop());
+            })
+            .catch((error) => console.error("Error loading file:", error))
+            .finally(() => setLoading(false));
+        }
+      }
+    }, [docsData]);
+
+    const handleFileUpload = async (event: ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
+      const file = event?.target?.files?.[0];
+      if (!file) return;
+
+      setLoading(true);
+      try {
+        const extension = file.name.split(".").pop();
+        const newFilePath = `${OfficeState.value.data}/${userId}/profile/${type}.${extension}`;
+
+        // Step 1: Delete old file if exists
+        if (docsData?.[type as keyof typeof docsData] && !docsData[type as keyof typeof docsData].includes("http")) {
+          const oldFileRef = ref(storage, docsData[type as keyof typeof docsData]);
+          await deleteObject(oldFileRef).catch((err) =>
+            console.log("Old file could not be deleted:", err),
+          );
+        }
+
+        // Step 2: Upload new file
+        const uploadedPath = await UploadImage(
+          URL.createObjectURL(file),
+          newFilePath,
+          file.type || "application/octet-stream",
+        );
+
+        const updatedData = {
+          ...docsData,
+          password: undefined,
+          confirmPassword: undefined,
+          currentPassword: undefined,
+          [type]: newFilePath,
+        };
+        await axios.put(`/${userId}/user/${employeeId}`, updatedData);
+
+        toast.success("File uploaded successfully");
+        await fetchData();
+        setFileUrl(URL.createObjectURL(file));
+        setFileName(file.name);
+      } catch (error) {
+        toast.error("Upload failed");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <div className="space-y-2">
+        {loading ? (
+          <Skeleton className="h-[50px] w-full" />
+        ) : (
+          <>
+            <input
+              type="file"
+              accept="*"
+              hidden
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+            />
+
+            <Popover>
+              <PopoverTrigger asChild className="w-full flex gap-4">
+                <Button variant={"outline"}>
+                  {type?.replace("_", " ").toUpperCase()}{" "}
+                  {fileUrl && <CheckCircle className="text-green-500" />}
+                </Button>
+              </PopoverTrigger>
+
+              <PopoverContent className="w-48 p-2">
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="ghost"
+                    className="justify-start"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {fileUrl ? "Reupload File" : "Upload File"}
+                  </Button>
+
+                  {fileUrl && (
+                    <Button variant="ghost" className="justify-start" asChild>
+                      <a
+                        href={fileUrl}
+                        download={fileName}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Download File
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </>
+        )}
+      </div>
+    );
+  }
+
+const RenderEachFile = ({ file, userId, otherDocs, employeeId, setFiles }: {
+  file: any, userId: number, otherDocs: string[], employeeId: string | null, setFiles: Dispatch<SetStateAction<{
+    url: string;
+    name: string;
+    path: string;
+  }[]>>
+}) => {
+  const [loading, setLoading] = useState(false)
+  const cleanName = file.name.replace(/^\d+-/, "");
+
+  const handleDelete = async (path: string) => {
+    if (!userId || !employeeId) return
+    try {
+      setLoading(true);
+
+      if (!path.includes("http")) {
+        const fileRef = ref(storage, path);
+
+        await deleteObject(fileRef).catch((err) =>
+          console.log("Could not delete file from storage:", err)
+        );
+      }
+
+      const updatedOtherDocs = otherDocs.filter(
+        (item) => item !== path
+      );
+
+      const updatedData = {
+        password: undefined,
+        confirmPassword: undefined,
+        currentPassword: undefined,
+        other_docs: updatedOtherDocs,
+      };
+
+      await axios.put(`/${userId}/user/${employeeId}`, updatedData);
+      setFiles((prev) => prev.filter((file) => file.path !== path));
+
+      toast.success("File deleted successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Delete failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+   <div
+  className="
+    grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto]
+    gap-4
+    rounded-2xl border p-4
+    hover:bg-muted/40 transition-colors
+  "
+>
+  <a
+    href={file.url}
+    download={cleanName}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="min-w-0 flex flex-col"
+  >
+    <span
+      className="
+        text-sm font-medium leading-relaxed
+        break-words
+      "
+    >
+      {cleanName}
+    </span>
+
+    <span className="text-xs text-muted-foreground mt-1">
+      Click to download
+    </span>
+  </a>
+
+  <div
+    className="
+      flex flex-row sm:flex-col
+      items-stretch
+      gap-2
+      w-full sm:w-auto
+    "
+  >
+    <Button
+      type="button"
+      size="sm"
+      variant="secondary"
+      className="flex-1 sm:flex-none"
+      asChild
+    >
+      <a
+        href={file.url}
+        download={cleanName}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Download
+      </a>
+    </Button>
+
+    <Button
+      type="button"
+      size="sm"
+      variant="destructive"
+      className="flex-1 sm:flex-none"
+      onClick={() => handleDelete(file.path)}
+      disabled={loading}
+    >
+      <div className="flex items-center gap-2">
+        {loading && <Spinner />}
+        Delete
+      </div>
+    </Button>
+  </div>
+</div>
+  )
 }
