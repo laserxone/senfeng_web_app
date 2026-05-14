@@ -93,7 +93,8 @@ export default function DetailComponent({ id }: { id: string | null }) {
     repairing_and_maintenance: false,
     team_attendance: false,
     careers : false,
-    reimbursement_approval : false
+    reimbursement_approval : false,
+    team_attendance_marking : false
   });
 
   const [docsData, setDocsData] = useState({
@@ -150,7 +151,8 @@ export default function DetailComponent({ id }: { id: string | null }) {
             repairing_and_maintenance: apiData?.repairing_and_maintenance,
             team_attendance: apiData?.false,
             careers : apiData?.careers,
-            reimbursement_approval : apiData?.reimbursement_approval
+            reimbursement_approval : apiData?.reimbursement_approval,
+            team_attendance_marking : apiData?.team_attendance_marking
           });
           setForm({
             basic_salary: apiData?.basic_salary || 0,
@@ -231,7 +233,8 @@ export default function DetailComponent({ id }: { id: string | null }) {
         team_attendance: checks?.team_attendance,
         active: active,
         careers : checks?.careers,
-        reimbursement_approval : checks?.reimbursement_approval
+        reimbursement_approval : checks?.reimbursement_approval,
+        team_attendance_marking : checks?.team_attendance_marking
 
       })
       .then(() => {

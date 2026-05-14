@@ -1,18 +1,16 @@
 "use client";
 
-import { NavItems } from "@/lib/types";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { UserContext } from "@/store/context/UserContext";
 import { useContext } from "react";
 
 const useUserDetail = () => {
   const { state: UserState } = useContext(UserContext);
-  const {state : OfficeState} = useContext(OfficeContext)
+  const { state: OfficeState } = useContext(OfficeContext)
 
   const data = UserState.value.data
   const isAdmin = (data?.designation === "Owner" || data?.full_access) ?? false;
   const userID = data?.id ?? "";
-  // const userID = 20
   const base_route = data?.base_route ?? "";
   const designation = data?.designation ?? "";
   const limited_access = data?.limited_access ?? false;
@@ -24,7 +22,7 @@ const useUserDetail = () => {
   const dms_write_access = data?.dms_write_access ?? false;
   const customer_delete_access = data?.customer_delete_access ?? false;
   const customer_add_access = data?.customer_add_access ?? false
-  const nav_items  = data?.nav_items ?? []
+  const nav_items = data?.nav_items ?? []
   const branch_expenses_assigned = data?.branch_expenses_assigned ?? false
   const branch_expenses_write_access = data?.branch_expenses_write_access ?? false
   const branch_expenses_delete_access = data?.branch_expenses_delete_access ?? false
@@ -34,6 +32,7 @@ const useUserDetail = () => {
 
   const route_branch = OfficeState?.value?.data ?? null
   const reimbursement_approval = data?.reimbursement_approval ?? false
+  const team_attendance_marking = data?.team_attendance_marking ?? false
 
 
   return {
@@ -58,7 +57,8 @@ const useUserDetail = () => {
     superadmin_cloud_access,
     customer_full_access,
     route_branch,
-    reimbursement_approval
+    reimbursement_approval,
+    team_attendance_marking
   };
 };
 

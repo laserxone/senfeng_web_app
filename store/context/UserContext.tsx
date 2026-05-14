@@ -36,6 +36,7 @@ customer_add_access: boolean
 customer_full_access: boolean
 dp : string
 reimbursement_approval : boolean
+team_attendance_marking : boolean
 }
 
 export interface UserState {

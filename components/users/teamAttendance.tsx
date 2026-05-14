@@ -30,6 +30,7 @@ import LeaveApproval from "@/components/users/leaveApproval";
 import { UserAttendanceRecord } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { columns } from "./AttendanceColumns";
+import RenderMarkAttendance from "./attendance-marking";
 
 export default function TeamAttendance() {
   const [filterVisible, setFilterVisible] = useState(false);
@@ -37,8 +38,9 @@ export default function TeamAttendance() {
   const [visible, setVisible] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState<UserAttendanceRecord | null>(null);
   const [resetLoading, setResetLoading] = useState(false);
-  const { userID } = useUserDetail();
-  const [approveLeave, setApproveLeave] = useState<UserAttendanceRecord| null>(null);
+  const { userID, team_attendance_marking } = useUserDetail();
+  const [approveLeave, setApproveLeave] = useState<UserAttendanceRecord | null>(null);
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     if (userID) {
@@ -58,7 +60,7 @@ export default function TeamAttendance() {
     }
   }, [userID]);
 
-  async function fetchData(start : string, end : string, user : string| undefined | null | number = null) {
+  async function fetchData(start: string, end: string, user: string | undefined | null | number = null) {
     return new Promise((res) => {
       axios
         .get(
@@ -66,7 +68,7 @@ export default function TeamAttendance() {
         )
         .then((response) => {
           if (response.data.length > 0) {
-            const apiData = response.data.map((item : any) => {
+            const apiData = response.data.map((item: any) => {
               let status = item?.leave_status
                 ? `Leave ${item?.leave_status}`
                 : "Absent";
@@ -104,7 +106,7 @@ export default function TeamAttendance() {
     });
   }
 
-  function generateAttendanceData(rawData :UserAttendanceRecord[], start : string, end : string) {
+  function generateAttendanceData(rawData: UserAttendanceRecord[], start: string, end: string) {
     const start_date = moment(start);
     const end_date = moment(end);
 
@@ -112,16 +114,16 @@ export default function TeamAttendance() {
       new Set(rawData.map((item) => item.user_email)),
     );
 
-    const datesInMonth : string[] = [];
+    const datesInMonth: string[] = [];
     let current = moment(start_date);
     while (current.isSameOrBefore(end_date)) {
       datesInMonth.push(current.format("YYYY-MM-DD"));
       current.add(1, "day");
     }
 
-    const finalData : any = [];
+    const finalData: any = [];
 
-    const userMap : any = {};
+    const userMap: any = {};
     rawData.forEach((item) => {
       if (!userMap[item.user_email]) {
         userMap[item.user_email] = item.user_name;
@@ -154,10 +156,10 @@ export default function TeamAttendance() {
       });
     });
 
-    finalData.sort((a : any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    finalData.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
     const today = moment().format("YYYY-MM-DD");
 
-    const filteredData = finalData.filter((item : any) => item.date <= today);
+    const filteredData = finalData.filter((item: any) => item.date <= today);
 
     return filteredData;
   }
@@ -170,7 +172,7 @@ export default function TeamAttendance() {
         <Heading title="Attendace" description="Manage attendance" />
       </div>
 
-     
+
       <PageTable
         columns={columns}
         data={data}
@@ -215,6 +217,7 @@ export default function TeamAttendance() {
             >
               {resetLoading && <Spinner />} Reset
             </Button>
+          {team_attendance_marking &&   <Button onClick={() => setOpen(true)}>Add Attendance</Button>}
           </div>
         </div>
         {/* <Button onClick={handleDownload}>Download</Button> */}
@@ -243,28 +246,43 @@ export default function TeamAttendance() {
             prevState.map((p) =>
               p?.leave_id === approveLeave?.leave_id
                 ? {
-                    ...p,
-                    leave_status: `Leave ${newStatus}`,
-                    status: `Leave ${newStatus}`,
-                  }
+                  ...p,
+                  leave_status: `Leave ${newStatus}`,
+                  status: `Leave ${newStatus}`,
+                }
                 : p,
             ),
           );
         }}
       />
+
+      <RenderMarkAttendance open={open} onClose={() => setOpen(false)} fetchData={async () => {
+        const startDate = momentT
+          .tz(TIMEZONE)
+          .startOf("month")
+          .startOf("day")
+          .utc()
+          .toISOString();
+        const endDate = momentT
+          .tz(TIMEZONE)
+          .endOf("month")
+          .endOf("day")
+          .utc()
+          .toISOString();
+        await fetchData(startDate, endDate);
+      }} />
     </div>
   );
 }
 
-export const AttendanceDetail = ({ detail, visible, onClose } : {detail : UserAttendanceRecord | null,visible : boolean, onClose : (val : boolean)=> void}) => {
+export const AttendanceDetail = ({ detail, visible, onClose }: { detail: UserAttendanceRecord | null, visible: boolean, onClose: (val: boolean) => void }) => {
   return (
     <Dialog open={visible} onOpenChange={onClose}>
       <DialogContent
-        className={`${
-          detail?.time_out
+        className={`${detail?.time_out
             ? " sm:max-w-4xl lg:max-w-5xl"
             : "sm:max-w-2xl lg:max-w-xl"
-        } `}
+          } `}
       >
         <DialogHeader>
           <DialogTitle>Attendance detail</DialogTitle>
@@ -308,7 +326,7 @@ export const AttendanceDetail = ({ detail, visible, onClose } : {detail : UserAt
   );
 };
 
-const RenderImage = ({ img } : {img : string | null}) => {
+const RenderImage = ({ img }: { img: string | null }) => {
   const [localImage, setLocalImage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -326,7 +344,7 @@ const RenderImage = ({ img } : {img : string | null}) => {
     }
   }, [img]);
 
-  if(!localImage) return null
+  if (!localImage) return null
 
   return (
     <img
@@ -337,8 +355,8 @@ const RenderImage = ({ img } : {img : string | null}) => {
   );
 };
 
-const LocationMap = ({ position }  : {position : number[] | null}) => {
-  if(!position) return null
+const LocationMap = ({ position }: { position: number[] | null }) => {
+  if (!position) return null
   const { theme } = useTheme();
 
   const defaultMapContainerStyle = {
@@ -347,7 +365,7 @@ const LocationMap = ({ position }  : {position : number[] | null}) => {
     borderRadius: "15px 0px 0px 15px",
   };
 
-  const defaultMapCenter : google.maps.LatLngLiteral = {
+  const defaultMapCenter: google.maps.LatLngLiteral = {
     lat: position[0],
     lng: position[1],
   };
@@ -376,7 +394,7 @@ const LocationMap = ({ position }  : {position : number[] | null}) => {
   }, [theme]);
 
   const RenderMap = useCallback(
-    ({ position } : { position: number[] }) => {
+    ({ position }: { position: number[] }) => {
       return (
         <GoogleMap
           mapContainerStyle={defaultMapContainerStyle}

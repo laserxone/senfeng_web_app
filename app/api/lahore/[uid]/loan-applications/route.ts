@@ -41,7 +41,9 @@ export async function GET(request: NextRequest) {
         `,
         [parseInt(applicantId)]
       );
-    } else if (approverId) {
+    } 
+    else if (approverId) 
+      {
       const approverIdInt = parseInt(approverId);
 
       // const userResult = await pool.query(
@@ -171,11 +173,11 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(result.rows);
-  } catch (error) {
-    console.error("Error fetching loan applications:", error);
+  } catch (error : any) {
+    console.log("Error fetching loan applications:", error);
 
     return NextResponse.json(
-      { error: "Failed to fetch loan applications" },
+      { message: error?.message || "Failed to fetch loan applications" },
       { status: 500 }
     );
   }

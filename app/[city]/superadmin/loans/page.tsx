@@ -70,7 +70,7 @@ export default function EmployeeLoans() {
 
 
 
-export function LoanIssueModal({ userID, onSuccess }: { userID: number, onSuccess: () => Promise<void> }) {
+export function LoanIssueModal({ userID, onSuccess }: { userID: number | string, onSuccess: () => Promise<void> }) {
     const [open, setOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<number | null>(null);
     const [loanAmount, setLoanAmount] = useState("");
@@ -139,7 +139,7 @@ export function LoanIssueModal({ userID, onSuccess }: { userID: number, onSucces
     );
 }
 
-export function LoanPaymentModal({ userID, loan, onSuccess }: { userID: number, loan: Loan, onSuccess: () => Promise<void> }) {
+export function LoanPaymentModal({ userID, loan, onSuccess }: { userID: number | string, loan: Loan, onSuccess: () => Promise<void> }) {
     const [open, setOpen] = useState(false);
     const [repaymentAmount, setRepaymentAmount] = useState("");
     const [loading, setLoading] = useState(false);
@@ -206,7 +206,7 @@ export function LoanPaymentModal({ userID, loan, onSuccess }: { userID: number, 
 }
 
 
-export function LoanAccordion({ loansByUser, userID, onUpdate }: { loansByUser: LoansByUser, userID: number, onUpdate: () => Promise<void> }) {
+export function LoanAccordion({ loansByUser, userID, onUpdate }: { loansByUser: LoansByUser, userID: number | string, onUpdate: () => Promise<void> }) {
     return (
         // <>
             Object.entries(loansByUser).map(([userId, userData]) => (

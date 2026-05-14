@@ -48,6 +48,7 @@ export default function ReimbursementApproval() {
     const [resetLoading, setResetLoading] = useState(false);
     const [loading, setLoading] = useState(true);
     const [selectedItem, setSelectedItem] = useState<number | null>(null)
+    const [deleteItem, setDeleteItem] = useState<number | null>(null)
 
     useEffect(() => {
         if (userID && reimbursement_approval) {
@@ -260,6 +261,7 @@ export default function ReimbursementApproval() {
                 const currentItem = row.original;
 
                 return (
+                    <div>
                     <Button
                         disabled={selectedItem === currentItem?.id}
                         onClick={(e) => {
@@ -273,6 +275,22 @@ export default function ReimbursementApproval() {
                             "Verify"
                         )}
                     </Button>
+
+                    <Button
+                    variant={"destructive"}
+                        disabled={deleteItem === currentItem?.id}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(currentItem?.id);
+                        }}
+                    >
+                        {deleteItem === currentItem?.id ? (
+                            <Spinner />
+                        ) : (
+                            "Delete"
+                        )}
+                    </Button>
+                    </div>
                 );
             },
         },
@@ -281,7 +299,7 @@ export default function ReimbursementApproval() {
 
     async function handleVerify(id: number) {
         if (!id) return
-        console.log(id)
+        
         setSelectedItem(id)
         try {
             await axios.put(`/${userID}/reimbursement/${id}`, {
@@ -304,6 +322,31 @@ export default function ReimbursementApproval() {
             setSelectedItem(null)
         }
     }
+
+    async function handleDelete(id: number) {
+        if (!id) return
+       
+        setDeleteItem(id)
+        try {
+            await axios.delete(`/${userID}/reimbursement/${id}`)
+            const startDate = momentT
+                .tz(TIMEZONE)
+                .startOf("month")
+                .startOf("day")
+                .utc()
+                .toISOString();
+            const endDate = momentT
+                .tz(TIMEZONE)
+                .endOf("month")
+                .endOf("day")
+                .utc()
+                .toISOString();
+            await fetchData(startDate, endDate);
+        } finally {
+            setDeleteItem(null)
+        }
+    }
+
 
 
     return (

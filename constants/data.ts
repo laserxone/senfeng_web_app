@@ -253,7 +253,7 @@ export const teamAttendance = {
 export const ReimbursementApproval = {
   title: "Reimbursement Approval",
   url: "/reimbursementapproval",
-  icon: "userPen",
+  icon: "reimbursementApproval",
   shortcut: ["r", "i", "a"],
 
   items: [],

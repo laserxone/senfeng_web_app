@@ -9,6 +9,7 @@ import Spinner from "./ui/spinner";
 
 type DropzoneProps = {
   onDrop: (file: any) => void;
+  onDropFile ?: (file : File | Blob) => void
   title: string;
   subheading: string;
   description: string;
@@ -21,6 +22,7 @@ type DropzoneProps = {
 };
 const Dropzone = ({
   onDrop,
+  onDropFile,
   title,
   subheading,
   description,
@@ -38,8 +40,9 @@ const Dropzone = ({
     (acceptedFiles: File[]) => {
       const file = acceptedFiles[0];
       onDrop(URL.createObjectURL(file));
+      onDropFile?.(file)
     },
-    [onDrop],
+    [onDrop, onDropFile],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -59,6 +62,7 @@ const Dropzone = ({
           const imageUrl = URL.createObjectURL(file as Blob);
 
           onDrop(imageUrl);
+          onDropFile?.(file as Blob)
         }
       }
     };

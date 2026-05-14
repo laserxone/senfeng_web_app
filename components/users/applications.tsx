@@ -1105,8 +1105,7 @@ const RenderMyApprovals = () => {
         setLoading(true)
         try {
             const res = await axios.get(`/${userID}/loan-applications?approver_id=${userID}`)
-            const rei = await axios.get(`/${userID}/reimbursement-applications?approver_id=${userID}`)
-            setApplications({...res.data, ...rei.data})
+            setApplications(res.data)
         } finally {
             setLoading(false)
         }

@@ -52,6 +52,7 @@ import {
   Coins,
   Landmark,
   ScrollText,
+  ShieldCheck,
 } from 'lucide-react';
 
 
@@ -110,6 +111,7 @@ export const Icons = {
   finance : Landmark,
   careers: ScrollText,
   applications : Briefcase,
+  reimbursementApproval : ShieldCheck,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden='true'
