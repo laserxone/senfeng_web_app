@@ -402,6 +402,7 @@ export type ComplaintProps = {
     complaint_solution: string;
     complaint_status: string;
     complaint_created_at: string;
+    complaint_paid : boolean
     customer_id: number;
     complaint_id: number;
     customer_name: string;

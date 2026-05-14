@@ -1287,11 +1287,12 @@ const Accounts = ({ visible, onClose, data } : {visible:  boolean, onClose : ()=
         (sum, payment) => sum + Number(payment.payable),
         0,
       );
+      const findMonth = apiData.filter((item) => Number(item.payable) > 0)
       const blob = await pdf(
         <AccountsPdf
           data={apiData}
           total={totalPayments}
-          headings={apiData.length > 0 ? apiData[0].month : {}}
+          headings={findMonth.length > 0 ? findMonth[0].month : null}
         />,
       ).toBlob();
       const url = URL.createObjectURL(blob);

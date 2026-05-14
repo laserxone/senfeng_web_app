@@ -294,6 +294,7 @@ const AccountsPdf = ({ data, headings, total } : {data : any[], total : number, 
 };
 
 const FormField = ({ data } : {data : any}) => {
+
   return (
     <View style={{ marginBottom: 5, flex: 1 }}>
       {["Salary Month"].map((label, index) => (
@@ -325,8 +326,8 @@ const FormField = ({ data } : {data : any}) => {
           >
             <Text>
               {index === 0
-                ? moment().month(data).format("MMMM YYYY")
-                : null}
+                ? data ? moment().month(data).format("MMMM YYYY")
+                : null : null}
             </Text>
           </View>
         </View>

@@ -31,6 +31,7 @@ export async function GET(req : NextRequest, { params } : {params : Promise<{ ui
           c.problem AS complaint_problem,
           c.solution AS complaint_solution,
           c.status AS complaint_status,
+          c.paid AS complaint_paid,
           c.created_at AS complaint_created_at,
           c.customer_id,
           cu.name AS customer_name,

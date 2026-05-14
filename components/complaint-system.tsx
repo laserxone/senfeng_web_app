@@ -2,9 +2,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { ComplaintProps } from "@/lib/types";
+import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Filter, MapPin, MapPinOff } from "lucide-react";
 import moment from "moment";
@@ -22,24 +25,14 @@ import {
 } from "./ui/accordion";
 import { Checkbox } from "./ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import Heading from "@/components/ui/heading";
+import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "./ui/field";
+import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import Spinner from "./ui/spinner";
 import { UserSearch } from "./user-search";
 import { MyImg } from "./users/addVisit";
 import FilterSheet from "./users/filterSheet";
-import { OfficeContext } from "@/store/context/OfficeContext";
-import { ComplaintProps } from "@/lib/types";
-import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "./ui/field";
-import { Label } from "./ui/label";
 
 const formSchema = z.object({
   title: z.string().min(1, "Required"),
@@ -47,6 +40,7 @@ const formSchema = z.object({
   problem: z.string().optional(),
   solution: z.string().optional(),
   installation: z.boolean(),
+  paid: z.boolean(),
 });
 
 const formSchemaEngineer = z.object({
@@ -66,6 +60,7 @@ export default function ComplaintSystem() {
   const [closeLoading, setCloseLoading] = useState(null);
   const [filterVisible, setFilterVisible] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [selected, setSelected] = useState("all")
   const [search, setSearch] = useState("");
   const [dates, setDates] = useState({
     start: moment().startOf("month").toDate(),
@@ -102,6 +97,13 @@ export default function ComplaintSystem() {
 
 
   const filteredData = data.filter((item) => {
+    if (selected === "paid" && !item.complaint_paid) {
+    return false;
+  }
+
+  if (selected === "unpaid" && item.complaint_paid) {
+    return false;
+  }
     if (!search) return true;
     const searchLower = search.toLowerCase();
     return (
@@ -159,6 +161,27 @@ export default function ComplaintSystem() {
         >
           {resetLoading && <Spinner />} Reset
         </Button>
+        <div>
+
+          <Select onValueChange={(v) => setSelected(v)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select option" />
+            </SelectTrigger>
+            <SelectContent>
+
+              <SelectItem value={"all"}>
+                All
+              </SelectItem>
+              <SelectItem value={"paid"}>
+                Paid
+              </SelectItem>
+              <SelectItem value={"unpaid"}>
+                Unpaid
+              </SelectItem>
+
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <ScrollArea className="h-[calc(100dvh-220px)]">
@@ -206,136 +229,136 @@ export default function ComplaintSystem() {
 
                   <AccordionContent >
                     <div className="px-4 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">Status:</span>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor[complaint.complaint_status?.toLowerCase() as keyof typeof statusColor] ||
-                          "bg-gray-100 text-gray-800"
-                          }`}
-                      >
-                        {complaint.complaint_status}
-                      </span>
-                      {complaint.complaint_status !== "completed" && (
-                        <Button
-                          size="sm"
-                          disabled={!!closeLoading}
-                          onClick={() =>
-                            // handleCloseComplaint(complaint.id)
-                            setSelectedComplaintForClose(complaint.complaint_id)
-                          }
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">Status:</span>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor[complaint.complaint_status?.toLowerCase() as keyof typeof statusColor] ||
+                            "bg-gray-100 text-gray-800"
+                            }`}
                         >
-                          {/* {closeLoading === complaint.id && <Spinner />} */}
-                          Close Complaint
-                        </Button>
-                      )}
-                    </div>
-                    {complaint?.complaint_problem && (
-                      <div>
-                        <strong>Problem:</strong> {complaint.complaint_problem}
-                      </div>
-                    )}
-                    {complaint?.complaint_solution && (
-                      <div>
-                        <strong>Solution:</strong> {complaint.complaint_solution || "N/A"}
-                      </div>
-                    )}
-
-                    <hr />
-
-                    <div className="text-md font-semibold">Customer Info</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-sm text-muted-foreground">
-                      <p>
-                        <strong>Name:</strong> {complaint.customer_name}
-                      </p>
-                      <p>
-                        <strong>Owner:</strong> {complaint.customer_owner}
-                      </p>
-                      <p>
-                        <strong>Address:</strong> {complaint.customer_address}
-                      </p>
-                      <p>
-                        <strong>Location:</strong> {complaint.customer_location}
-                      </p>
-                      <p>
-                        <strong>Contact:</strong>{" "}
-                        {complaint.customer_number.join(", ")}
-                      </p>
-                      <p>
-                        <strong>Manager:</strong>{" "}
-                        {complaint.customer_ownership_name}
-                      </p>
-                      {complaint?.customer_pin &&
-                        complaint?.customer_pin.includes("http") && (
-                          <Link target="blank" href={complaint?.customer_pin}>
-                            <Button variant="outline">
-                              Open Google location
-                            </Button>
-                          </Link>
+                          {complaint.complaint_status}
+                        </span>
+                        {complaint.complaint_status !== "completed" && (
+                          <Button
+                            size="sm"
+                            disabled={!!closeLoading}
+                            onClick={() =>
+                              // handleCloseComplaint(complaint.id)
+                              setSelectedComplaintForClose(complaint.complaint_id)
+                            }
+                          >
+                            {/* {closeLoading === complaint.id && <Spinner />} */}
+                            Close Complaint
+                          </Button>
                         )}
-                    </div>
+                      </div>
+                      {complaint?.complaint_problem && (
+                        <div>
+                          <strong>Problem:</strong> {complaint.complaint_problem}
+                        </div>
+                      )}
+                      {complaint?.complaint_solution && (
+                        <div>
+                          <strong>Solution:</strong> {complaint.complaint_solution || "N/A"}
+                        </div>
+                      )}
 
-                    <hr />
+                      <hr />
 
-                    <div className="text-md font-semibold">Engineer Info</div>
-                    {complaint.engineer_id ? (
+                      <div className="text-md font-semibold">Customer Info</div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-sm text-muted-foreground">
                         <p>
-                          <strong>Engineer:</strong> {complaint.engineer_name}
+                          <strong>Name:</strong> {complaint.customer_name}
                         </p>
                         <p>
-                          <strong>Assigned By:</strong>{" "}
-                          {complaint.assigned_by_name}
+                          <strong>Owner:</strong> {complaint.customer_owner}
                         </p>
+                        <p>
+                          <strong>Address:</strong> {complaint.customer_address}
+                        </p>
+                        <p>
+                          <strong>Location:</strong> {complaint.customer_location}
+                        </p>
+                        <p>
+                          <strong>Contact:</strong>{" "}
+                          {complaint.customer_number.join(", ")}
+                        </p>
+                        <p>
+                          <strong>Manager:</strong>{" "}
+                          {complaint.customer_ownership_name}
+                        </p>
+                        {complaint?.customer_pin &&
+                          complaint?.customer_pin.includes("http") && (
+                            <Link target="blank" href={complaint?.customer_pin}>
+                              <Button variant="outline">
+                                Open Google location
+                              </Button>
+                            </Link>
+                          )}
                       </div>
-                    ) : (
-                      <Button
-                        className="mt-2"
-                        onClick={() => handleAssignEngineer(complaint.complaint_id)}
-                      >
-                        Assign Engineer
-                      </Button>
-                    )}
 
-                    {complaint?.logs && complaint.logs.length > 0 && (
-                      <>
-                        <hr />
+                      <hr />
 
-                        <div className="text-md font-semibold">
-                          Complaints updates
+                      <div className="text-md font-semibold">Engineer Info</div>
+                      {complaint.engineer_id ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-sm text-muted-foreground">
+                          <p>
+                            <strong>Engineer:</strong> {complaint.engineer_name}
+                          </p>
+                          <p>
+                            <strong>Assigned By:</strong>{" "}
+                            {complaint.assigned_by_name}
+                          </p>
                         </div>
-                        <div className="grid grid-cols-1 text-sm text-muted-foreground gap-2">
-                          {complaint.logs.map((item, index) => (
-                            <div key={index} className="border rounded-md p-2 flex flex-col gap-2 w-fit">
-                              <Label>
-                                <strong>Remarks:</strong> {item?.remark}
-                              </Label>
-                              <Label>
-                                {moment(item.created_at).format(
-                                  "YYYY-MM-DD HH:mm A"
-                                )}
-                              </Label>
-                              <div className="flex flex-row gap-5 mt-2">
-                                {item.location && item.location.length > 0 ? (
-                                  <MapPin
-                                    onClick={() => {
-                                      const mapUrl = `https://www.google.com/maps?q=${item.location[0]},${item.location[1]}`;
-                                      window.open(mapUrl, "_blank");
-                                    }}
-                                    className="text-red-500 h-5 w-5 cursor-pointer hover:opacity-50"
-                                  />
-                                ) : (
-                                  <MapPinOff className="text-red-500 h-5 w-5 opacity-50" />
-                                )}
-                                {item.signature && (
-                                  <MyImg img={item.signature} />
-                                )}
-                                {item.image && <MyImg img={item.image} />}
+                      ) : (
+                        <Button
+                          className="mt-2"
+                          onClick={() => handleAssignEngineer(complaint.complaint_id)}
+                        >
+                          Assign Engineer
+                        </Button>
+                      )}
+
+                      {complaint?.logs && complaint.logs.length > 0 && (
+                        <>
+                          <hr />
+
+                          <div className="text-md font-semibold">
+                            Complaints updates
+                          </div>
+                          <div className="grid grid-cols-1 text-sm text-muted-foreground gap-2">
+                            {complaint.logs.map((item, index) => (
+                              <div key={index} className="border rounded-md p-2 flex flex-col gap-2 w-fit">
+                                <Label>
+                                  <strong>Remarks:</strong> {item?.remark}
+                                </Label>
+                                <Label>
+                                  {moment(item.created_at).format(
+                                    "YYYY-MM-DD HH:mm A"
+                                  )}
+                                </Label>
+                                <div className="flex flex-row gap-5 mt-2">
+                                  {item.location && item.location.length > 0 ? (
+                                    <MapPin
+                                      onClick={() => {
+                                        const mapUrl = `https://www.google.com/maps?q=${item.location[0]},${item.location[1]}`;
+                                        window.open(mapUrl, "_blank");
+                                      }}
+                                      className="text-red-500 h-5 w-5 cursor-pointer hover:opacity-50"
+                                    />
+                                  ) : (
+                                    <MapPinOff className="text-red-500 h-5 w-5 opacity-50" />
+                                  )}
+                                  {item.signature && (
+                                    <MyImg img={item.signature} />
+                                  )}
+                                  {item.image && <MyImg img={item.image} />}
+                                </div>
                               </div>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -437,115 +460,141 @@ const AddNewComplaint = ({ visible, onClose, onRefresh }: { visible: boolean, on
           <DialogTitle className="text-xl">New registration</DialogTitle>
         </DialogHeader>
 
-      <form id="complaint-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-  
-  {/* Complaint Details */}
-  <FieldSet className="border rounded-md p-3 gap-3">
-    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Complaint Details</FieldLegend>
-    
-    {/* Installation */}
-    <Controller
-      name="installation"
-      control={form.control}
-      render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <div className="flex items-center gap-2">
-            <FieldLabel>
-              Machine Installation? <RequiredStar />
-            </FieldLabel>
-            <Checkbox
-              checked={field.value}
-              onCheckedChange={(checked) => field.onChange(checked)}
+        <form id="complaint-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+
+          {/* Complaint Details */}
+          <FieldSet className="border rounded-md p-3 gap-3">
+            <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Complaint Details</FieldLegend>
+
+            {/* Installation */}
+            <div className="flex items-center gap-4 justify-between">
+              <Controller
+                name="installation"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <div className="flex items-center gap-2">
+                      <FieldLabel>
+                        Machine Installation? <RequiredStar />
+                      </FieldLabel>
+                      <div>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) => field.onChange(checked)}
+                        />
+                      </div>
+                    </div>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="paid"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <div className="flex items-center gap-2">
+                      <FieldLabel>
+                        Paid?
+                      </FieldLabel>
+                      <div>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) => field.onChange(checked)}
+                        />
+                      </div>
+                    </div>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+
+            </div>
+
+            {/* Title / Complaint */}
+            <Controller
+              name="title"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="complaint-title">
+                    {form.watch("installation") ? "Title" : "Complaint"} <RequiredStar />
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id="complaint-title"
+                    placeholder={`Enter ${form.watch("installation") ? "title" : "complaint"}`}
+                    aria-invalid={fieldState.invalid}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
             />
-          </div>
-          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-        </Field>
-      )}
-    />
 
-    {/* Title / Complaint */}
-    <Controller
-      name="title"
-      control={form.control}
-      render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <FieldLabel htmlFor="complaint-title">
-            {form.watch("installation") ? "Title" : "Complaint"} <RequiredStar />
-          </FieldLabel>
-          <Input
-            {...field}
-            id="complaint-title"
-            placeholder={`Enter ${form.watch("installation") ? "title" : "complaint"}`}
-            aria-invalid={fieldState.invalid}
-          />
-          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-        </Field>
-      )}
-    />
-
-    {/* Customer */}
-    <Controller
-      name="customer_id"
-      control={form.control}
-      render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <FieldLabel>
-            Select Customer <RequiredStar />
-          </FieldLabel>
-          <CustomerSearch
-            value={field.value}
-            onReturn={(val) => field.onChange(val)}
-          />
-          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-        </Field>
-      )}
-    />
-  </FieldSet>
-
-  {/* Problem & Solution */}
-  {!form.watch("installation") && (
-    <FieldSet className="border rounded-md p-3 gap-3">
-      <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Problem & Solution</FieldLegend>
-      
-      <Controller
-        name="problem"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel>Problem</FieldLabel>
-            <Input
-              {...field}
-              placeholder="Enter problem"
-              aria-invalid={fieldState.invalid}
+            {/* Customer */}
+            <Controller
+              name="customer_id"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>
+                    Select Customer <RequiredStar />
+                  </FieldLabel>
+                  <CustomerSearch
+                    value={field.value}
+                    onReturn={(val) => field.onChange(val)}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
             />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
+          </FieldSet>
 
-      <Controller
-        name="solution"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel>Solution</FieldLabel>
-            <Input
-              {...field}
-              placeholder="Enter solution"
-              aria-invalid={fieldState.invalid}
-            />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
-    </FieldSet>
-  )}
+          {/* Problem & Solution */}
+          {!form.watch("installation") && (
+            <FieldSet className="border rounded-md p-3 gap-3">
+              <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Problem & Solution</FieldLegend>
 
-  {/* Submit */}
-  <Button disabled={loading} type="submit" className="w-full">
-    {loading && <Spinner />} Save
-  </Button>
-</form>
+              <Controller
+                name="problem"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Warranty</FieldLabel>
+                    <Input
+                      {...field}
+                      placeholder="Enter warranty information"
+                      aria-invalid={fieldState.invalid}
+                    />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="solution"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Solution</FieldLabel>
+                    <Input
+                      {...field}
+                      placeholder="Enter solution"
+                      aria-invalid={fieldState.invalid}
+                    />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+            </FieldSet>
+          )}
+
+          {/* Submit */}
+          <Button disabled={loading} type="submit" className="w-full">
+            {loading && <Spinner />} Save
+          </Button>
+        </form>
       </DialogContent>
     </Dialog>
   );

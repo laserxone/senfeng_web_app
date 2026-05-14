@@ -1,11 +1,10 @@
 "use client";
-import { ArrowUpDown, Filter } from "lucide-react";
+import { Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useCallback, useEffect, useState } from "react";
 
-import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table-without-pagination";
 import {
   Dialog,
@@ -17,18 +16,17 @@ import Heading from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import FilterSheet from "@/components/users/filterSheet";
+import LeaveApproval from "@/components/users/leaveApproval";
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { GetProfileImage } from "@/lib/getProfileImage";
+import { UserAttendanceRecord } from "@/lib/types";
 import { MapProvider } from "@/providers/map-provider";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import moment from "moment";
 import momentT from "moment-timezone";
 import { useTheme } from "next-themes";
-import LeaveApproval from "@/components/users/leaveApproval";
-import { UserAttendanceRecord } from "@/lib/types";
-import { ColumnDef } from "@tanstack/react-table";
 import { columns } from "./AttendanceColumns";
 import RenderMarkAttendance from "./attendance-marking";
 
@@ -217,7 +215,7 @@ export default function TeamAttendance() {
             >
               {resetLoading && <Spinner />} Reset
             </Button>
-          {team_attendance_marking &&   <Button onClick={() => setOpen(true)}>Add Attendance</Button>}
+            {team_attendance_marking && <Button onClick={() => setOpen(true)}>Add Attendance</Button>}
           </div>
         </div>
         {/* <Button onClick={handleDownload}>Download</Button> */}
@@ -280,8 +278,8 @@ export const AttendanceDetail = ({ detail, visible, onClose }: { detail: UserAtt
     <Dialog open={visible} onOpenChange={onClose}>
       <DialogContent
         className={`${detail?.time_out
-            ? " sm:max-w-4xl lg:max-w-5xl"
-            : "sm:max-w-2xl lg:max-w-xl"
+          ? " sm:max-w-4xl lg:max-w-5xl"
+          : "sm:max-w-2xl lg:max-w-xl"
           } `}
       >
         <DialogHeader>
