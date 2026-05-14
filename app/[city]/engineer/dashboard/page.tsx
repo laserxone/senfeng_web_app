@@ -224,7 +224,6 @@ export default function Page() {
           </div>
         </Tabs>
       </div>
-      {/* <AutoScrollMembers /> */}
     </div>
   );
 }

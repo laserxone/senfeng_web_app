@@ -108,7 +108,8 @@ export const Icons = {
   truck : Truck,
   coins : Coins,
   finance : Landmark,
-  application: ScrollText,
+  careers: ScrollText,
+  applications : Briefcase,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden='true'

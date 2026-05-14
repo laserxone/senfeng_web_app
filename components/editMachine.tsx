@@ -10,7 +10,7 @@ import AppCalendar from "./appCalendar";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { Field, FieldError, FieldGroup, FieldLabel } from "./ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "./ui/field";
 
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -156,239 +156,193 @@ const EditMachine = (
           <DialogTitle>Edit Machine</DialogTitle>
         </DialogHeader>
 
-        <div className="w-full flex flex-1">
-          <ScrollArea className="px-2 w-full h-[80vh]">
-            <div className="px-2">
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FieldGroup>
+    
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            <ScrollArea className="pr-2 w-full h-[75vh]">
 
-                  <Controller
-                    name="machineModel"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Machine Model</FieldLabel>
+              {/* Machine Details */}
+              <FieldSet className="border rounded-md p-3 gap-3">
+                <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Machine Details</FieldLegend>
 
-                        <Input
-                          disabled={true}
-                          placeholder="SF3015G"
-                          {...field}
-                        />
-
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-
-                  <Controller
-                    name="power"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Power</FieldLabel>
-
-                        <Input
-
-                          placeholder="3000W / 1500W"
-                          {...field}
-                        />
-
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-
-                  <Controller
-                    name="source"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Source</FieldLabel>
-
-                        <Input
-
-                          placeholder="RAYCUS / IPG"
-                          {...field}
-                        />
-
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-
-                  <div className="space-y-2">
-                    <Label>Order No</Label>
-                    {orderNumbers.map((num, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <div className="flex-1">
-                          <Input
-                            placeholder="202501011"
-                            value={num}
-                            onChange={(e) =>
-                              handleNumberChange(index, e.target.value)
-                            }
-                          />
-                        </div>
-                        {index > 0 && (
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => {
-                              removeNumberField(index);
-                            }}
-                          >
-                            <Trash size={16} />
-                          </Button>
-                        )}
-                        {index === orderNumbers.length - 1 && (
-                          <Button size="icon" onClick={addNumberField}>
-                            <Plus size={16} />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                    {orderNumberError && (
-                      <Label className="text-red-700 dark:text-red-300 font-medium text-sm">
-                        {orderNumberError}
-                      </Label>
-                    )}
-                  </div>
-                  <Controller
-                    name="contractDate"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Contract Date</FieldLabel>
-
-                        <AppCalendar
-                          date={field.value}
-                          onChange={field.onChange}
-                          max={new Date()}
-                        />
-
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-
-                  <Controller
-                    name="totalPrice"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Total Price</FieldLabel>
-
-                        <Input
-
-                          placeholder="Enter amount"
-                          {...field}
-                        />
-
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-
-                  <Controller
-                    name="isSpeedMoney"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Field>
-                        <div className="flex gap-4 items-center">
-                          <FieldLabel>Include Speed Money</FieldLabel>
-
-                          <Checkbox
-                            checked={isSpeedMoney}
-                            onCheckedChange={(checked: boolean) => {
-                              setIsSpeedMoney(checked);
-                              field.onChange(checked);
-
-                              if (!checked) {
-                                form.setValue("speedMoney", 0);
-                                form.setValue("speedMoneyNote", "");
-                              }
-                            }}
-                          />
-                        </div>
-                      </Field>
-                    )}
-                  />
-
-                  {isSpeedMoney && (
-                    <>
-                      <Controller
-                        name="speedMoney"
-                        control={form.control}
-                        render={({ field, fieldState }) => (
-                          <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel>Speed Money</FieldLabel>
-
-                            <Input
-                              placeholder="Amount"
-                              {...field}
-                            />
-
-                            {fieldState.invalid && (
-                              <FieldError errors={[fieldState.error]} />
-                            )}
-                          </Field>
-                        )}
-                      />
-
-                      <Controller
-                        name="speedMoneyNote"
-                        control={form.control}
-                        render={({ field, fieldState }) => (
-                          <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel>Note</FieldLabel>
-
-                            <Textarea placeholder="Optional note" {...field} />
-
-                            {fieldState.invalid && (
-                              <FieldError errors={[fieldState.error]} />
-                            )}
-                          </Field>
-                        )}
-                      />
-                    </>
+                <Controller
+                  name="machineModel"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Machine Model</FieldLabel>
+                      <Input disabled={true} placeholder="SF3015G" {...field} />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
                   )}
-
-                  <Controller
-                    name="cnic"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>CNIC</FieldLabel>
-
-                        <Input placeholder="1234567891234" {...field} />
-
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-                  <Button className="w-full" type="submit" disabled={loading}>
-                    {loading && <Spinner />} Submit
-                  </Button>
-
-                </FieldGroup>
-              </form>
+                />
 
 
-            </div>
-          </ScrollArea>
-        </div>
+                <Controller
+                  name="power"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Power</FieldLabel>
+                      <Input placeholder="3000W / 1500W" {...field} />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="source"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Source</FieldLabel>
+                      <Input placeholder="RAYCUS / IPG" {...field} />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+
+
+                <Field>
+                  <FieldLabel>Order No</FieldLabel>
+                  {orderNumbers.map((num, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        className="flex-1"
+                        placeholder="202501011"
+                        value={num}
+                        onChange={(e) => handleNumberChange(index, e.target.value)}
+                      />
+                      {index > 0 && (
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => removeNumberField(index)}
+                        >
+                          <Trash size={14} />
+                        </Button>
+                      )}
+                      {index === orderNumbers.length - 1 && (
+                        <Button size="icon" onClick={addNumberField}>
+                          <Plus size={14} />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  {orderNumberError && (
+                    <Label className="text-red-700 dark:text-red-300 text-sm">
+                      {orderNumberError}
+                    </Label>
+                  )}
+                </Field>
+              </FieldSet>
+
+              {/* Contract Details */}
+              <FieldSet className="border rounded-md p-3 gap-3">
+                <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Contract Details</FieldLegend>
+
+                <Controller
+                  name="contractDate"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Contract Date</FieldLabel>
+                      <AppCalendar date={field.value} onChange={field.onChange} max={new Date()} />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="totalPrice"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Total Price</FieldLabel>
+                      <Input placeholder="Enter amount" {...field} />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="cnic"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>CNIC</FieldLabel>
+                      <Input placeholder="1234567891234" {...field} />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+              </FieldSet>
+
+              {/* Payment Options */}
+              <FieldSet className="border rounded-md p-3 gap-3">
+                <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Payment Options</FieldLegend>
+
+                <Controller
+                  name="isSpeedMoney"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Field>
+                      <div className="flex gap-3 items-center">
+                        <FieldLabel>Include Speed Money</FieldLabel>
+                        <Checkbox
+                          checked={isSpeedMoney}
+                          onCheckedChange={(checked: boolean) => {
+                            setIsSpeedMoney(checked);
+                            field.onChange(checked);
+                            if (!checked) {
+                              form.setValue("speedMoney", 0);
+                              form.setValue("speedMoneyNote", "");
+                            }
+                          }}
+                        />
+                      </div>
+                    </Field>
+                  )}
+                />
+
+                {isSpeedMoney && (
+                  <>
+                    <Controller
+                      name="speedMoney"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Speed Money</FieldLabel>
+                          <Input placeholder="Amount" {...field} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+
+                    <Controller
+                      name="speedMoneyNote"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Note</FieldLabel>
+                          <Textarea placeholder="Optional note" {...field} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+                  </>
+                )}
+              </FieldSet>
+            </ScrollArea>
+            {/* Submit */}
+            <Button className="w-full" type="submit" disabled={loading}>
+              {loading && <Spinner />} Submit
+            </Button>
+          </form>
+
+
+
+
+   
       </DialogContent>
     </Dialog>
   );

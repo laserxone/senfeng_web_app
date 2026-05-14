@@ -2,14 +2,14 @@
 import { useMessagesNotification } from "@/hooks/use-message-notification";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { ArrowLeft, Maximize, Maximize2, MessageCircle, X } from "lucide-react";
+import { ConversationType, UserConversation } from "@/lib/types";
+import { ArrowLeft, Maximize2, MessageCircle, X } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BadgeCount } from "../NotificationBadge";
+import { playNotificationSound } from "../playNotificationSound";
 import Chatcomponent from "./chat-component";
 import UserChatIcon from "./chatIcon";
-import { playNotificationSound } from "../playNotificationSound";
-import { ConversationType, UserConversation } from "@/lib/types";
-import Link from "next/link";
 
 
 

@@ -14,6 +14,7 @@ import { updateItemPurpose } from "@/lib/updatePurpose";
 import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
+import AutoScrollMembers from "@/components/autoScroll";
 
 export default function Page() {
   const [data, setData] = useState<{ user: UserDashboard }>();

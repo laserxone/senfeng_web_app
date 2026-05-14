@@ -106,10 +106,16 @@ export const ownerNavItems = [
       },
 
       {
-        title: "Applications",
-        url: "/application",
+        title: "Careers",
+        url: "/careers",
         shortcut: ["a", "p", "p", "l"],
       },
+
+      {
+    title: "Applications",
+    url: "/applications",
+    shortcut: ["a", "p", "p"],
+  },
     ],
   },
   {
@@ -200,12 +206,12 @@ export const ownerNavItems = [
   },
 ];
 
-export const Applications = {
-  title : "Applications",
-  url : "/application",
-  icon : "application",
-  shortcut : ["a", "p", "p"],
-  items : []
+export const Careers = {
+  title: "Careers",
+  url: "/careers",
+  icon: "careers",
+  shortcut: ["a", "p", "p"],
+  items: []
 }
 
 export const FinanceItem = {
@@ -240,6 +246,15 @@ export const teamAttendance = {
   url: "/teamattendance",
   icon: "userPen",
   shortcut: ["t", "a", "t"],
+
+  items: [],
+};
+
+export const ReimbursementApproval = {
+  title: "Reimbursement Approval",
+  url: "/reimbursementapproval",
+  icon: "userPen",
+  shortcut: ["r", "i", "a"],
 
   items: [],
 };
@@ -283,6 +298,15 @@ export const employeeNavItems = [
     url: "/dms",
     icon: "dms",
     shortcut: ["d", "m", "s"],
+
+    items: [],
+  },
+
+  {
+    title: "Applications",
+    url: "/applications",
+    icon: "applications",
+    shortcut: ["a", "p", "p"],
 
     items: [],
   },
@@ -457,6 +481,12 @@ export const Tools = {
       title: "Configuration",
       shortcut: ["o", "l", "d"],
       url: "/configuration",
+
+    },
+     {
+      title: "Manage Hierarchy",
+      shortcut: ["m", "a", "n"],
+      url: "/manage-hierarchy",
 
     },
     {

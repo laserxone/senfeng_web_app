@@ -82,9 +82,7 @@ export default function Page() {
         setLoading(false);
       });
   }
-
-
-
+  
   async function fetchCustomerList() {
     try {
       axios.get(`/${debouncedUserId}/customer?map=true&office=${OfficeState.value.data}`).then((response) => {

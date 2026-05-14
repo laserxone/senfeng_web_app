@@ -38,7 +38,7 @@ import { MyImg } from "./users/addVisit";
 import FilterSheet from "./users/filterSheet";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { ComplaintProps } from "@/lib/types";
-import { Field, FieldError, FieldGroup, FieldLabel } from "./ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "./ui/field";
 import { Label } from "./ui/label";
 
 const formSchema = z.object({
@@ -100,7 +100,6 @@ export default function ComplaintSystem() {
     setSelectedComplaint(complaintId);
   };
 
-  console.log(data)
 
   const filteredData = data.filter((item) => {
     if (!search) return true;
@@ -435,124 +434,118 @@ const AddNewComplaint = ({ visible, onClose, onRefresh }: { visible: boolean, on
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New registration</DialogTitle>
+          <DialogTitle className="text-xl">New registration</DialogTitle>
         </DialogHeader>
 
-        <form id="complaint-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-          <FieldGroup>
-
-            {/* Installation */}
-            <Controller
-              name="installation"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <div className="flex items-center gap-2">
-                    <FieldLabel>
-                      Machine Installation? <RequiredStar />
-                    </FieldLabel>
-
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={(checked) => field.onChange(checked)}
-                    />
-                  </div>
-
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                </Field>
-              )}
+      <form id="complaint-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+  
+  {/* Complaint Details */}
+  <FieldSet className="border rounded-md p-3 gap-3">
+    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Complaint Details</FieldLegend>
+    
+    {/* Installation */}
+    <Controller
+      name="installation"
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <div className="flex items-center gap-2">
+            <FieldLabel>
+              Machine Installation? <RequiredStar />
+            </FieldLabel>
+            <Checkbox
+              checked={field.value}
+              onCheckedChange={(checked) => field.onChange(checked)}
             />
+          </div>
+          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+        </Field>
+      )}
+    />
 
-            {/* Title / Complaint */}
-            <Controller
-              name="title"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="complaint-title">
-                    {form.watch("installation") ? "Title" : "Complaint"} <RequiredStar />
-                  </FieldLabel>
+    {/* Title / Complaint */}
+    <Controller
+      name="title"
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel htmlFor="complaint-title">
+            {form.watch("installation") ? "Title" : "Complaint"} <RequiredStar />
+          </FieldLabel>
+          <Input
+            {...field}
+            id="complaint-title"
+            placeholder={`Enter ${form.watch("installation") ? "title" : "complaint"}`}
+            aria-invalid={fieldState.invalid}
+          />
+          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+        </Field>
+      )}
+    />
 
-                  <Input
-                    {...field}
-                    id="complaint-title"
-                    placeholder={`Enter ${form.watch("installation") ? "title" : "complaint"}`}
-                    aria-invalid={fieldState.invalid}
-                  />
+    {/* Customer */}
+    <Controller
+      name="customer_id"
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel>
+            Select Customer <RequiredStar />
+          </FieldLabel>
+          <CustomerSearch
+            value={field.value}
+            onReturn={(val) => field.onChange(val)}
+          />
+          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+        </Field>
+      )}
+    />
+  </FieldSet>
 
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                </Field>
-              )}
+  {/* Problem & Solution */}
+  {!form.watch("installation") && (
+    <FieldSet className="border rounded-md p-3 gap-3">
+      <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Problem & Solution</FieldLegend>
+      
+      <Controller
+        name="problem"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel>Problem</FieldLabel>
+            <Input
+              {...field}
+              placeholder="Enter problem"
+              aria-invalid={fieldState.invalid}
             />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
 
-            {/* Customer */}
-            <Controller
-              name="customer_id"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>
-                    Select Customer <RequiredStar />
-                  </FieldLabel>
-
-                  <CustomerSearch
-                    value={field.value}
-                    onReturn={(val) => field.onChange(val)}
-                  />
-
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                </Field>
-              )}
+      <Controller
+        name="solution"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel>Solution</FieldLabel>
+            <Input
+              {...field}
+              placeholder="Enter solution"
+              aria-invalid={fieldState.invalid}
             />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+    </FieldSet>
+  )}
 
-            {/* Problem (only if NOT installation) */}
-            {!form.watch("installation") && (
-              <>
-                <Controller
-                  name="problem"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>Problem</FieldLabel>
-
-                      <Input
-                        {...field}
-                        placeholder="Enter problem"
-                        aria-invalid={fieldState.invalid}
-                      />
-
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                    </Field>
-                  )}
-                />
-
-                <Controller
-                  name="solution"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>Solution</FieldLabel>
-
-                      <Input
-                        {...field}
-                        placeholder="Enter solution"
-                        aria-invalid={fieldState.invalid}
-                      />
-
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                    </Field>
-                  )}
-                />
-              </>
-            )}
-
-            {/* Submit */}
-            <Button disabled={loading} type="submit" className="w-full">
-              {loading && <Spinner />} Save
-            </Button>
-
-          </FieldGroup>
-        </form>
+  {/* Submit */}
+  <Button disabled={loading} type="submit" className="w-full">
+    {loading && <Spinner />} Save
+  </Button>
+</form>
       </DialogContent>
     </Dialog>
   );
@@ -601,7 +594,7 @@ const AssignEngineerModal = ({
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Assign Engineer</DialogTitle>
+          <DialogTitle className="text-xl">Assign Engineer</DialogTitle>
         </DialogHeader>
 
         <form id="engineer-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">

@@ -34,6 +34,7 @@ import "./styles.css";
 import { MyCustomer, MyCustomerResolved, UserAttendanceRecord, UserDashboard, UserReimbursementType } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
+import AutoScrollMembers from "@/components/autoScroll";
 
 type WithFeedbackProps = MyCustomerResolved & {
   feedback_date: string
@@ -173,9 +174,6 @@ export default function Page() {
       }
     });
   }
-
-  console.log(data)
-
 
   useEffect(() => {
     if (filter.start) {
@@ -341,7 +339,7 @@ const CustomerEmployeeAfterSales = ({
   const router = useRouter();
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState<WithFeedbackProps | null>(
+  const [selectedCustomer, setSelectedCustomer] = useState<WithFeedbackProps | MyCustomerResolved | null>(
     null,
   );
   const [next, setNext] = useState<Date | undefined>(undefined);
@@ -351,7 +349,7 @@ const CustomerEmployeeAfterSales = ({
   const [filterVisible, setFilterVisible] = useState(false);
   const [oldRecordVisible, setOldRecordVisible] = useState(false);
 
-  const columns: ColumnDef<WithFeedbackProps>[] = [
+  const columns: ColumnDef<WithFeedbackProps | MyCustomerResolved>[] = [
     {
       accessorKey: "owner",
       filterFn: "includesString",

@@ -16,14 +16,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import Heading from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -42,9 +34,11 @@ import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import exportToExcel from "@/lib/exportToExcel";
 import formatCurrency from "@/lib/formatCurrency";
+import { OfficeExpenseProps } from "@/lib/types";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ColumnDef } from "@tanstack/react-table";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import momentT from "moment-timezone";
@@ -52,13 +46,11 @@ import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
+import { toast } from "sonner";
 import { z } from "zod";
 import { Card, CardContent, CardTitle } from "../ui/card";
+import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 import Spinner from "../ui/spinner";
-import { ColumnDef } from "@tanstack/react-table";
-import { OfficeExpenseProps } from "@/lib/types";
-import { toast } from "sonner";
-import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 
 export default function EmployeeBranchExpenses() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -523,13 +515,16 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { visible: 
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Office Expense</DialogTitle>
+          <DialogTitle className="text-xl">Add New Office Expense</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="h-[80vh] px-2">
+        
           <div className="px-2">
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FieldGroup>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+
+              {/* Entry Details */}
+              <FieldSet className="border rounded-md p-3 gap-3">
+                <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Entry Details</FieldLegend>
 
                 {/* Note */}
                 <Controller
@@ -538,93 +533,75 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { visible: 
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Note</FieldLabel>
-
-
                       <Textarea placeholder="Enter note" {...field} />
-
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />
 
-                {/* Amount */}
-                <Controller
-                  name="amount"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>Amount</FieldLabel>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Amount */}
+                  <Controller
+                    name="amount"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>Amount</FieldLabel>
+                        <Input placeholder="Enter amount" {...field} />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
 
-                      <Input
-                        placeholder="Enter amount"
-                        {...field}
-                      />
+                  {/* Date */}
+                  <Controller
+                    name="date"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>Date</FieldLabel>
+                        <AppCalendar
+                          max={new Date()}
+                          date={field.value ? new Date(field.value) : undefined}
+                          onChange={field.onChange}
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+                </div>
+              </FieldSet>
 
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
+              {/* Attachment */}
+              <FieldSet className="border rounded-md p-3 gap-3">
+                <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Attachment</FieldLegend>
 
-                {/* Date */}
-                <Controller
-                  name="date"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>Date</FieldLabel>
-
-                      <AppCalendar
-                        max={new Date()}
-                        date={field.value ? new Date(field.value) : undefined}
-                        onChange={field.onChange}
-                      />
-
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-
-                {/* Image */}
                 <Controller
                   name="image"
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>Image</FieldLabel>
-
-                      <div className="flex flex-1 items-center justify-center">
-                        <Dropzone
-                          value={field.value}
-                          onDrop={field.onChange}
-                          title="Click to upload"
-                          subheading="or drag and drop"
-                          description="PNG or JPG"
-                          drag="Drop the files here..."
-                        />
-                      </div>
-
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
+                      <Dropzone
+                        value={field.value}
+                        onDrop={field.onChange}
+                        title="Click to upload"
+                        subheading="or drag and drop"
+                        description="PNG or JPG"
+                        drag="Drop the files here..."
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />
+              </FieldSet>
 
-                {/* Submit */}
-                <Button className="w-full" type="submit" disabled={loading}>
-                  {loading && <Spinner />} Submit
-                </Button>
-
-              </FieldGroup>
+              {/* Submit */}
+              <Button className="w-full" type="submit" disabled={loading}>
+                {loading && <Spinner />} Submit
+              </Button>
             </form>
           </div>
-        </ScrollArea>
+      
       </DialogContent>
     </Dialog>
   );

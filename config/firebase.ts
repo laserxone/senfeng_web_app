@@ -13,10 +13,6 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_MEASUREMENTID
 };
 
-console.log(
-  process.env.NEXT_PUBLIC_UBAID
-)
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app)
 const provider = new GoogleAuthProvider();

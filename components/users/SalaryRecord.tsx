@@ -12,7 +12,7 @@ import { pdf } from "@react-pdf/renderer";
 import { UserSalaryProps } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 
-const SalaryRecord = ({ id, height }: { id: number, height ?:string }) => {
+const SalaryRecord = ({ id, height }: { id: number | string, height ?:string }) => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<UserSalaryProps[]>([]);
 
@@ -22,7 +22,7 @@ const SalaryRecord = ({ id, height }: { id: number, height ?:string }) => {
     }
   }, [id]);
 
-  async function fetchData(id: number) {
+  async function fetchData(id: number | string) {
     axios
       .get(`/${id}/record`)
       .then((response) => {

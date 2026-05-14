@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -361,166 +361,147 @@ const AddUserDialog = ({
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add new user</DialogTitle>
+          <DialogTitle className="text-xl">Add new user</DialogTitle>
         </DialogHeader>
-           <ScrollArea className="h-[70vh] px-2">
-        <div className="py-4">
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FieldGroup>
+           <ScrollArea className="h-[70vh] pr-2">
+        
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+  
+  {/* Personal Information */}
+  <FieldSet className="border rounded-md p-3 gap-3">
+    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Personal Information</FieldLegend>
+    
+    {/* Name */}
+    <Controller
+      name="name"
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel>
+            Name <RequiredStar />
+          </FieldLabel>
+          <Input placeholder="Enter name" {...field} />
+          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+        </Field>
+      )}
+    />
 
-              <Controller
-                name="name"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>
-                      Name <RequiredStar />
-                    </FieldLabel>
+    {/* Email */}
+    <Controller
+      name="email"
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel>
+            Email <RequiredStar />
+          </FieldLabel>
+          <Input placeholder="Enter email" {...field} />
+          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+        </Field>
+      )}
+    />
+  </FieldSet>
 
-                    <Input placeholder="Enter name" {...field} />
+  {/* Work Details */}
+  <FieldSet className="border rounded-md p-3 gap-3">
+    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Work Details</FieldLegend>
+    
+    {/* Designation */}
+    <Controller
+      name="designation"
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel>
+            Designation <RequiredStar />
+          </FieldLabel>
+          <Select value={field.value} onValueChange={field.onChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select designation..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {designations.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+        </Field>
+      )}
+    />
 
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
+    {/* Office */}
+    <Controller
+      name="office"
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel>
+            Office branch <RequiredStar />
+          </FieldLabel>
+          <Select value={field.value} onValueChange={field.onChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select office" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {["lahore", "karachi"].map((item) => (
+                  <SelectItem key={item} value={item}>
+                    {item}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+        </Field>
+      )}
+    />
 
-              {/* Email */}
-              <Controller
-                name="email"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>
-                      Email <RequiredStar />
-                    </FieldLabel>
+    {/* Joining Date */}
+    <Controller
+      name="joining_date"
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel>
+            Joining Date <RequiredStar />
+          </FieldLabel>
+          <AppCalendar date={field.value} onChange={field.onChange} />
+          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+        </Field>
+      )}
+    />
+  </FieldSet>
 
-                    <Input placeholder="Enter email" {...field} />
+  {/* Additional Info */}
+  <FieldSet className="border rounded-md p-3 gap-3">
+    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Additional Info</FieldLegend>
+    
+    {/* Note */}
+    <Controller
+      name="note"
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel>Additional Note</FieldLabel>
+          <Textarea placeholder="Enter personal note" {...field} />
+          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+        </Field>
+      )}
+    />
+  </FieldSet>
 
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-
-              {/* Designation */}
-              <Controller
-                name="designation"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>
-                      Designation <RequiredStar />
-                    </FieldLabel>
-
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select designation..." />
-                      </SelectTrigger>
-
-                      <SelectContent>
-                        <SelectGroup>
-                          {designations.map((item) => (
-                            <SelectItem key={item.value} value={item.value}>
-                              {item.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-
-              {/* Office */}
-              <Controller
-                name="office"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>
-                      Office branch <RequiredStar />
-                    </FieldLabel>
-
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select office" />
-                      </SelectTrigger>
-
-                      <SelectContent>
-                        <SelectGroup>
-                          {["lahore", "karachi"].map((item) => (
-                            <SelectItem key={item} value={item}>
-                              {item}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-
-              {/* Note */}
-              <Controller
-                name="note"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>Additional Note</FieldLabel>
-
-                    <Textarea placeholder="Enter personal note" {...field} />
-
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-
-              {/* Joining Date */}
-              <Controller
-                name="joining_date"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>
-                      Joining Date <RequiredStar />
-                    </FieldLabel>
-
-                    <AppCalendar
-                      date={field.value}
-                      onChange={field.onChange}
-                    />
-
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-
-              {/* Submit */}
-              <Button disabled={dataLoading} className="w-full" type="submit">
-                {dataLoading && <Spinner />} Save
-              </Button>
-
-            </FieldGroup>
-          </form>
-        </div>
+  {/* Submit */}
+  <Button disabled={dataLoading} className="w-full" type="submit">
+    {dataLoading && <Spinner />} Save
+  </Button>
+</form>
+      
         </ScrollArea>
       </DialogContent>
     </Dialog>

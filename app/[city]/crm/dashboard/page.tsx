@@ -17,6 +17,7 @@ import { updateItemPurpose } from "@/lib/updatePurpose";
 import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
+import AutoScrollMembers from "@/components/autoScroll";
 
 
 type ProfileData = {

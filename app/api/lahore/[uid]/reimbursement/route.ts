@@ -52,7 +52,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
   const user = searchParams.get("user");
 
   try {
-    const isAdmin = await checkSuperadmin(uid);
+    const isAdmin = await checkSuperadmin(uid, true);
 
     if (isAdmin) {
       let query = `

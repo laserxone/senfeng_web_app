@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 
 
 
-export const ProfilePicture = ({ img, name, className = "" }) => {
-  const [localImage, setLocalImage] = useState(null);
+export const ProfilePicture = ({ img, name, className = "" } : {img ?: string, name ?:string, className ?: string}) => {
+  const [localImage, setLocalImage] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchImage() {
@@ -27,7 +27,7 @@ export const ProfilePicture = ({ img, name, className = "" }) => {
 
   return (
     <Avatar className={cn("w-24 h-24 mr-4", className)}>
-      <AvatarImage src={localImage} alt="Profile Picture" />
+      <AvatarImage src={localImage || ""} alt="Profile Picture" />
       <AvatarFallback>{name?.substring(0, 2)}</AvatarFallback>
     </Avatar>
   );

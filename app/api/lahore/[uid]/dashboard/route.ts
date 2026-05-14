@@ -6,12 +6,10 @@ import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { partFields, profileFields, saleFields } from "@/constants/data";
 
 export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
-
+    
     const { uid } = await params
     const searchParams = req.nextUrl.searchParams
     const office = searchParams.get('office')
-
-
 
     try {
         const isAdmin = await checkSuperadmin(uid)

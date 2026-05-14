@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
 import { UserContext } from "@/store/context/UserContext";
+import { Field, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 
 type DocsDataType = {
   cnic: string;
@@ -91,7 +92,8 @@ export default function DetailComponent({ id }: { id: string | null }) {
     customer_full_access: false,
     repairing_and_maintenance: false,
     team_attendance: false,
-    careers : false
+    careers : false,
+    reimbursement_approval : false
   });
 
   const [docsData, setDocsData] = useState({
@@ -147,7 +149,8 @@ export default function DetailComponent({ id }: { id: string | null }) {
             customer_full_access: apiData?.customer_full_access,
             repairing_and_maintenance: apiData?.repairing_and_maintenance,
             team_attendance: apiData?.false,
-            careers : apiData?.careers
+            careers : apiData?.careers,
+            reimbursement_approval : apiData?.reimbursement_approval
           });
           setForm({
             basic_salary: apiData?.basic_salary || 0,
@@ -227,7 +230,8 @@ export default function DetailComponent({ id }: { id: string | null }) {
         repairing_and_maintenance: checks?.repairing_and_maintenance,
         team_attendance: checks?.team_attendance,
         active: active,
-        careers : checks?.careers
+        careers : checks?.careers,
+        reimbursement_approval : checks?.reimbursement_approval
 
       })
       .then(() => {
@@ -240,160 +244,147 @@ export default function DetailComponent({ id }: { id: string | null }) {
 
 
   return (
-    <div className="flex w-full justify-center pb-4">
-      <div className="w-full space-y-6">
+   <div className="flex w-full justify-center pb-4">
+  <div className="w-full space-y-3">
 
-        <div className="flex flex-col md:flex-row md:items-center gap-4 border-b pb-6">
-          <ProfilePictureTeam
-            img={fixedData?.dp}
-            name={fixedData?.name}
-            loading={loading}
-          />
+    {/* Header */}
+    <div className="flex flex-col md:flex-row md:items-center gap-3 border-b pb-3">
+      <ProfilePictureTeam
+        img={fixedData?.dp}
+        name={fixedData?.name}
+        loading={loading}
+      />
 
-          <div className="flex-1">
-            <h1 className="text-2xl font-semibold">{fixedData?.name}</h1>
-            <p className="text-muted-foreground">{fixedData?.designation}</p>
+      <div className="flex-1">
+        <h1 className="text-2xl font-semibold">{fixedData?.name}</h1>
+        <p className="text-muted-foreground">{fixedData?.designation}</p>
 
-            {fixedData?.designation === "Sales" && (
-              <Link
-                href={`/lahore/superadmin/team/${id}/dashboard`}
-                target="blank"
-                className="text-sm text-blue-500 hover:underline mt-1 inline-block"
-              >
-                Open Dashboard
-              </Link>
-            )}
-          </div>
+        {fixedData?.designation === "Sales" && (
+          <Link
+            href={`/lahore/superadmin/team/${id}/dashboard`}
+            target="blank"
+            className="text-sm text-blue-500 hover:underline mt-1 inline-block"
+          >
+            Open Dashboard
+          </Link>
+        )}
+      </div>
 
-          <div className="flex justify-end">
-            <Button
-              onClick={handleSave}
-            >
-              {dataLoading && <Spinner />} Save Changes
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Personal Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {Object.keys(form).map(
-                (key) =>
-                  key !== "note" && (
-                    <div key={key} className="space-y-1">
-                      <Label>{key.replace(/_/g, " ").toUpperCase()}</Label>
-                      <Input
-                        className="rounded-lg"
-                        value={form[key as keyof typeof form]}
-                        onChange={(e) =>
-                          handleInputChange(key, e.target.value)
-                        }
-                      />
-                    </div>
-                  ),
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Preferences</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {Object.keys(checks).map((key) => (
-                <div key={key} className="flex items-center gap-3">
-                  <Checkbox
-                    className="scale-110"
-                    checked={checks[key as keyof typeof checks]}
-                    onCheckedChange={(checked: boolean) =>
-                      handleCheck(key, checked)
-                    }
-                  />
-                  <Label>{key.replace(/_/g, " ").toUpperCase()}</Label>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Additional Details</CardTitle>
-          </CardHeader>
-
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label>PHONE NUMBER</Label>
-              <Input value={fixedData?.number} disabled />
-            </div>
-
-            <div className="space-y-1">
-              <Label>KINSHIP NUMBER</Label>
-              <Input value={fixedData?.kin} disabled />
-            </div>
-
-            <div className="space-y-1 md:col-span-2">
-              <Label>NOTE</Label>
-              <Textarea
-                className="rounded-lg"
-                value={form.note}
-                onChange={(e) => handleInputChange("note", e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label>JOINING DATE</Label>
-              <AppCalendar
-                date={joiningDate}
-                onChange={(date) => setJoiningDate(date)}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label>LEAVING DATE</Label>
-              <AppCalendar
-                date={leavingDate}
-                onChange={(date) => setLeavingDate(date)}
-              />
-            </div>
-
-            <div className="flex items-center gap-3 md:col-span-2">
-              <Label>Status</Label>
-              <Switch checked={active} onCheckedChange={setActive} />
-            </div>
-          </CardContent>
-        </Card>
-
-
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Documents</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              <DocumentCard type={"cnic"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-              <DocumentCard type={"father_cnic"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-              <DocumentCard type={"police"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-              <DocumentCard type={"education"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-              <DocumentCard type={"resume"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-              <DocumentCard type={"appointment_letter"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-              <DocumentCard type={"contract"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-              <DocumentCardOther userID={userID} otherDocs={otherDocs} employeeId={employeeId} fetchData={fetchData} />
-            </div>
-          </CardContent>
-        </Card>
-
+      <div className="flex justify-end">
+        <Button onClick={handleSave}>
+          {dataLoading && <Spinner />} Save Changes
+        </Button>
       </div>
     </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      
+      {/* Personal Details */}
+      <FieldSet className="border rounded-md p-3 gap-3">
+        <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Personal Details</FieldLegend>
+        {Object.keys(form).map(
+          (key) =>
+            key !== "note" && (
+              <Field key={key}>
+                <FieldLabel>{key.replace(/_/g, " ").toUpperCase()}</FieldLabel>
+                <Input
+                  value={form[key as keyof typeof form]}
+                  onChange={(e) => handleInputChange(key, e.target.value)}
+                />
+              </Field>
+            ),
+        )}
+      </FieldSet>
+
+      {/* Preferences */}
+      <FieldSet className="border rounded-md p-3 gap-3">
+        <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Preferences</FieldLegend>
+        {Object.keys(checks).map((key) => (
+          <div key={key} className="flex items-center gap-3">
+            <Checkbox
+              checked={checks[key as keyof typeof checks]}
+              onCheckedChange={(checked: boolean) => handleCheck(key, checked)}
+            />
+            <Label>{key.replace(/_/g, " ").toUpperCase()}</Label>
+          </div>
+        ))}
+      </FieldSet>
+
+      {/* Contact Information */}
+      <FieldSet className="border rounded-md p-3 gap-3">
+        <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Contact Information</FieldLegend>
+        
+        <Field>
+          <FieldLabel>PHONE NUMBER</FieldLabel>
+          <Input value={fixedData?.number} disabled />
+        </Field>
+
+        <Field>
+          <FieldLabel>KINSHIP NUMBER</FieldLabel>
+          <Input value={fixedData?.kin} disabled />
+        </Field>
+      </FieldSet>
+
+      {/* Dates & Status */}
+      <FieldSet className="border rounded-md p-3 gap-3">
+        <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Dates & Status</FieldLegend>
+        
+        <Field>
+          <FieldLabel>JOINING DATE</FieldLabel>
+          <AppCalendar
+            date={joiningDate}
+            onChange={(date) => setJoiningDate(date)}
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel>LEAVING DATE</FieldLabel>
+          <AppCalendar
+            date={leavingDate}
+            onChange={(date) => setLeavingDate(date)}
+          />
+        </Field>
+
+        <div className="flex items-center gap-3">
+          <Label>Status</Label>
+          <Switch checked={active} onCheckedChange={setActive} />
+        </div>
+      </FieldSet>
+
+      {/* Note */}
+      <FieldSet className="border rounded-md p-3 gap-3 lg:col-span-2">
+        <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Note</FieldLegend>
+        <Field>
+          <Textarea
+            value={form.note}
+            onChange={(e) => handleInputChange("note", e.target.value)}
+          />
+        </Field>
+      </FieldSet>
+
+      {/* Documents */}
+      <FieldSet className="border rounded-md p-3 gap-3 lg:col-span-2">
+        <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Documents</FieldLegend>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <DocumentCard type={"cnic"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+          <DocumentCard type={"father_cnic"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+          <DocumentCard type={"police"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+          <DocumentCard type={"education"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+          <DocumentCard type={"resume"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+          <DocumentCard type={"appointment_letter"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+          <DocumentCard type={"contract"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+          <DocumentCardOther userID={userID} otherDocs={otherDocs} employeeId={employeeId} fetchData={fetchData} />
+        </div>
+      </FieldSet>
+
+    </div>
+  </div>
+</div>
   );
 }
 
 
-const DocumentCardOther = ({ userID, otherDocs, employeeId, fetchData }: { userID: number, otherDocs: string[], employeeId: string | null, fetchData: () => Promise<void> }) => {
+const DocumentCardOther = ({ userID, otherDocs, employeeId, fetchData }: { userID: number | string, otherDocs: string[], employeeId: string | null, fetchData: () => Promise<void> }) => {
   const [files, setFiles] = useState<
     {
       url: string;
@@ -581,7 +572,7 @@ const DocumentCardOther = ({ userID, otherDocs, employeeId, fetchData }: { userI
 
 
 const DocumentCard =
-  ({ type, userID, docsData, employeeId, fetchData }: { type: string, userID: number, docsData: DocsDataType, employeeId: string | null, fetchData: () => Promise<void> }) => {
+  ({ type, userID, docsData, employeeId, fetchData }: { type: string, userID: number | string, docsData: DocsDataType, employeeId: string | null, fetchData: () => Promise<void> }) => {
     const [fileUrl, setFileUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [fileName, setFileName] = useState<string | undefined>("");
@@ -708,7 +699,7 @@ const DocumentCard =
   }
 
 const RenderEachFile = ({ file, userId, otherDocs, employeeId, fetchData }: {
-  file: any, userId: number, otherDocs: string[], employeeId: string | null, fetchData: ()=> Promise<void>
+  file: any, userId: number | string, otherDocs: string[], employeeId: string | null, fetchData: ()=> Promise<void>
 }) => {
   const [loading, setLoading] = useState(false)
   const cleanName = file.name.replace(/^\d+-/, "");

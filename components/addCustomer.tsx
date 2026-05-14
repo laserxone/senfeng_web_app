@@ -21,7 +21,7 @@ import StarRating from "./startRating";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { Field, FieldError, FieldGroup, FieldLabel } from "./ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "./ui/field";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
@@ -40,7 +40,7 @@ type AddCustomerDialogProps = {
 
   onRefresh: (val: MyCustomer) => Promise<void>;
   visible: boolean;
-  onClose: (val : boolean)=> void;
+  onClose: (val: boolean) => void;
   user_id: number;
   ownership: boolean;
   user_designation?: string | null;
@@ -49,14 +49,14 @@ type AddCustomerDialogProps = {
 
 
 const formSchema = z.object({
-  company: z.string().min(1, { message: "Company name is required" }), 
-  owner: z.string().min(1, { message: "Owner name is required" }), 
-  email: z.string().optional(), 
+  company: z.string().min(1, { message: "Company name is required" }),
+  owner: z.string().min(1, { message: "Owner name is required" }),
+  email: z.string().optional(),
   city: z.string().min(1, { message: "City is required" }),
-  industry: z.string().optional(), 
-  remarks: z.string().optional(), 
-  address: z.string().optional(), 
-  group: z.string().optional(), 
+  industry: z.string().optional(),
+  remarks: z.string().optional(),
+  address: z.string().optional(),
+  group: z.string().optional(),
   other: z.string().optional(),
   lead: z.number().nullable().optional(),
   platform: z.string().optional(),
@@ -278,196 +278,238 @@ function AddCustomerDialog({
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent className="w-full sm:w-[80vw] sm:max-w-[80vw]">
         <DialogHeader>
-          <DialogTitle>Add new customer</DialogTitle>
+          <DialogTitle className="text-xl">Add new customer</DialogTitle>
         </DialogHeader>
         <ScrollArea className="h-[85dvh] px-2">
           <div className="px-2">
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FieldGroup className="flex flex-1 flex-row gap-10 flex-wrap">
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                {/* LEFT COLUMN */}
-                <div className="flex flex-1 flex-col space-y-4">
+                {/* CONTACT INFORMATION */}
+                <FieldSet className="md:col-span-2 border rounded-md p-3">
+                  <FieldLegend className="px-2 text-sm font-medium text-muted-foreground">
+                    Contact Information
+                  </FieldLegend>
 
-                  {/* Phone Numbers (custom non-RHF section kept as-is) */}
-                  <div>
-                    <Label style={{ color: numberError ? "red" : "black" }}>
-                      Phone Number <RequiredStar />
-                    </Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Phone Numbers - Full Width */}
+                    <div className="md:col-span-2">
+                      <Label style={{ color: numberError ? "hsl(var(--destructive))" : undefined }} className="text-sm font-medium">
+                        Phone Number <RequiredStar />
+                      </Label>
 
-                    {numbers.map((num, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <div className="w-[150px]">
-                          <NumberSearch
-                            value={selectedNumber[index]}
-                            onReturn={(val) => handlePrefixChange(index, val)}
-                          />
-                        </div>
-
-                        <Input
-                          disabled={!selectedNumber[index]}
-                          placeholder="xxxxxxxxx"
-                          value={num}
-                          onChange={(e) => handleNumberChange(index, e.target.value)}
-                        />
-
-                        {index > 0 && (
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => {
-                              removeNumberField(index);
-                              setCustomerInfo([]);
-                            }}
-                          >
-                            <Trash size={16} />
-                          </Button>
-                        )}
-
-                        {checking && <Spinner />}
+                      <div className="space-y-2 mt-1">
+                        {numbers.map((num, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <div className="w-28">
+                              <NumberSearch
+                                value={selectedNumber[index]}
+                                onReturn={(val: any) => handlePrefixChange(index, val)}
+                              />
+                            </div>
+                            <Input
+                              disabled={!selectedNumber[index]}
+                              placeholder="xxxxxxxxx"
+                              value={num}
+                              onChange={(e) => handleNumberChange(index, e.target.value)}
+                              className="flex-1"
+                            />
+                            {index > 0 && (
+                              <Button
+                                variant="destructive"
+                                size="icon"
+                                className="size-8"
+                                onClick={() => {
+                                  removeNumberField(index)
+                                  setCustomerInfo([])
+                                }}
+                              >
+                                <Trash size={14} />
+                              </Button>
+                            )}
+                            {checking && <Spinner className="size-4" />}
+                          </div>
+                        ))}
                       </div>
-                    ))}
 
-                    <Button
-                      disabled={customerInfo.length > 0 || checking}
-                      type="button"
-                      onClick={addNumberField}
-                      className="mt-2"
-                    >
-                      + Add Number
-                    </Button>
+                      <Button
+                        disabled={customerInfo.length > 0 || checking}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addNumberField}
+                        className="mt-2"
+                      >
+                        + Add Number
+                      </Button>
 
-                    {customerInfo.length > 0 && (
-                      <div className="mt-2 p-3 bg-red-100 dark:bg-red-900 rounded-lg border border-red-400">
-                        <Label className="text-red-700 dark:text-red-300 font-medium text-sm">
-                          ⚠️ Number exists with the following:
-                        </Label>
-
-                        <div className="mt-1 space-y-1">
-                          {customerInfo.map((item, index) => (
-                            <Link
-                              key={index}
-                              target="_blank"
-                              href={`/${base_route}/customer/${item?.id}`}
-                              className="block text-red-600 dark:text-red-400 text-sm font-medium hover:underline"
-                            >
-                              {item?.name || item?.owner} -{" "}
-                              {item?.number?.join(", ")}
-                            </Link>
-                          ))}
+                      {customerInfo.length > 0 && (
+                        <div className="mt-2 p-2 bg-destructive/10 rounded border border-destructive/20 text-sm">
+                          <Label className="text-destructive font-medium text-xs">
+                            Number exists with the following:
+                          </Label>
+                          <div className="mt-1 space-y-0.5">
+                            {customerInfo.map((item, index) => (
+                              <Link
+                                key={index}
+                                target="_blank"
+                                href={`/${base_route}/customer/${item?.id}`}
+                                className="block text-destructive text-xs hover:underline"
+                              >
+                                {item?.name || item?.owner} - {item?.number?.join(", ")}
+                              </Link>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    <Label style={{ color: "red" }}>{numberError}</Label>
+                      {numberError && <Label className="text-destructive text-xs mt-1">{numberError}</Label>}
+                    </div>
+
+                    {/* Email */}
+                    <Controller
+                      name="email"
+                      control={control}
+                      render={({ field }) => (
+                        <Field>
+                          <FieldLabel className="text-sm">Email</FieldLabel>
+                          <Input placeholder="example@email.com" {...field} />
+                        </Field>
+                      )}
+                    />
+
+                    {/* Other IDs */}
+                    <Controller
+                      name="other"
+                      control={control}
+                      render={({ field }) => (
+                        <Field>
+                          <FieldLabel className="text-sm">Other IDs</FieldLabel>
+                          <Input placeholder="WeChat / QQ / Facebook" {...field} />
+                        </Field>
+                      )}
+                    />
                   </div>
+                </FieldSet>
 
-                  {/* OWNER */}
-                  <Controller
-                    name="owner"
-                    control={control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Customer <RequiredStar /></FieldLabel>
-                        <Input placeholder="Enter customer name" {...field} />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
-                  />
+                {/* CUSTOMER DETAILS */}
+                <FieldSet className="border rounded-md p-3">
+                  <FieldLegend className="px-2 text-sm font-medium text-muted-foreground">
+                    Customer Details
+                  </FieldLegend>
 
-                  {/* COMPANY */}
-                  <Controller
-                    name="company"
-                    control={control}
-                    render={({ field, fieldState }) => (
-                      <Field>
-                        <FieldLabel>Company <RequiredStar /></FieldLabel>
-                        <Input placeholder="Enter company name" {...field} />
-                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
-                  />
-
-                  {/* GROUP */}
-                  <Controller
-                    name="group"
-                    control={control}
-                    render={({ field }) => (
-                      <Field>
-                        <FieldLabel>Group</FieldLabel>
-                        <Input placeholder="Enter group name" {...field} />
-                      </Field>
-                    )}
-                  />
-
-                  {/* CITY */}
-                  <Controller
-                    name="city"
-                    control={control}
-                    render={({ field, fieldState }) => (
-                      <Field>
-                        <FieldLabel>City <RequiredStar /></FieldLabel>
-                        <CitiesSearch value={field.value} onReturn={field.onChange} />
-                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
-                  />
-
-                  {/* OWNERSHIP */}
-                  {ownership && (
+                  <div className="space-y-3">
                     <Controller
-                      name="ownership"
+                      name="owner"
                       control={control}
-                      render={({ field }) => (
-                        <Field>
-                          <FieldLabel>Ownership</FieldLabel>
-                          <UserSearch value={field.value} onReturn={field.onChange} />
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel className="text-sm">Customer Name <RequiredStar /></FieldLabel>
+                          <Input placeholder="Enter customer name" {...field} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                         </Field>
                       )}
                     />
-                  )}
 
-                  {/* LEAD */}
-                  {!(user_designation === "Sales" || user_designation === "Dealer") && (
                     <Controller
-                      name="lead"
+                      name="company"
                       control={control}
-                      render={({ field }) => (
+                      render={({ field, fieldState }) => (
                         <Field>
-                          <FieldLabel>Lead Generated By</FieldLabel>
-                          <UserSearch
-                            lead
-                            value={field.value}
-                            onReturn={field.onChange}
-                            onReturnData={(val) => {
-                              if (val.designation === "Social Media Manager") {
-                                form.setValue("platform", "SOCIAL MEDIA");
-                              } else {
-                                form.setValue("platform", "");
-                              }
-                            }}
-                          />
+                          <FieldLabel className="text-sm">Company <RequiredStar /></FieldLabel>
+                          <Input placeholder="Enter company name" {...field} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                         </Field>
                       )}
                     />
-                  )}
 
-                  {/* OFFICE */}
-                  {!(user_designation === "Sales" || user_designation === "Dealer") && (
                     <Controller
-                      name="office"
+                      name="group"
                       control={control}
                       render={({ field }) => (
                         <Field>
-                          <FieldLabel>Office branch <RequiredStar /></FieldLabel>
+                          <FieldLabel className="text-sm">Group</FieldLabel>
+                          <Input placeholder="Enter group name" {...field} />
+                        </Field>
+                      )}
+                    />
 
+                    <Controller
+                      name="industry"
+                      control={control}
+                      render={({ field }) => (
+                        <Field>
+                          <FieldLabel className="text-sm">Industry</FieldLabel>
+                          <IndustrySearch value={field.value} onReturn={field.onChange} />
+                        </Field>
+                      )}
+                    />
+                  </div>
+                </FieldSet>
+
+                {/* LOCATION */}
+                <FieldSet className="border rounded-md p-3">
+                  <FieldLegend className="px-2 text-sm font-medium text-muted-foreground">
+                    Location
+                  </FieldLegend>
+
+                  <div className="space-y-3">
+                    <Controller
+                      name="city"
+                      control={control}
+                      render={({ field, fieldState }) => (
+                        <Field>
+                          <FieldLabel className="text-sm">City <RequiredStar /></FieldLabel>
+                          <CitiesSearch value={field.value} onReturn={field.onChange} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+
+                    <Controller
+                      name="address"
+                      control={control}
+                      render={({ field }) => (
+                        <Field>
+                          <FieldLabel className="text-sm">Address</FieldLabel>
+                          <Input placeholder="Enter full address" {...field} />
+                        </Field>
+                      )}
+                    />
+
+                    <Controller
+                      name="pin"
+                      control={control}
+                      render={({ field }) => (
+                        <Field>
+                          <FieldLabel className="text-sm">Google Location Pin</FieldLabel>
+                          <Input placeholder="Paste Google Maps link" {...field} />
+                        </Field>
+                      )}
+                    />
+                  </div>
+                </FieldSet>
+
+                {/* BUSINESS SETTINGS */}
+                <FieldSet className="border rounded-md p-3">
+                  <FieldLegend className="px-2 text-sm font-medium text-muted-foreground">
+                    Business Settings
+                  </FieldLegend>
+
+                  <div className="space-y-3">
+                    <Controller
+                      name="platform"
+                      control={control}
+                      render={({ field }) => (
+                        <Field>
+                          <FieldLabel className="text-sm">Platform</FieldLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select office" />
+                              <SelectValue placeholder="Select platform" />
                             </SelectTrigger>
-
                             <SelectContent>
                               <SelectGroup>
-                                {["lahore", "karachi"].map((item) => (
+                                {["SOCIAL MEDIA", "SENFENG", "DIRECT"].map((item) => (
                                   <SelectItem key={item} value={item}>
                                     {item}
                                   </SelectItem>
@@ -478,113 +520,105 @@ function AddCustomerDialog({
                         </Field>
                       )}
                     />
-                  )}
 
-                </div>
-
-                {/* RIGHT COLUMN */}
-                <div className="flex flex-1 flex-col space-y-4">
-
-                  <Controller
-                    name="email"
-                    control={control}
-                    render={({ field }) => (
-                      <Field>
-                        <FieldLabel>Email</FieldLabel>
-                        <Input placeholder="Enter email" {...field} />
-                      </Field>
+                    {!(user_designation === "Sales" || user_designation === "Dealer") && (
+                      <Controller
+                        name="office"
+                        control={control}
+                        render={({ field }) => (
+                          <Field>
+                            <FieldLabel className="text-sm">Office Branch <RequiredStar /></FieldLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select office" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectGroup>
+                                  {["lahore", "karachi"].map((item) => (
+                                    <SelectItem key={item} value={item}>
+                                      {item.charAt(0).toUpperCase() + item.slice(1)}
+                                    </SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
+                          </Field>
+                        )}
+                      />
                     )}
-                  />
 
-                  <Controller
-                    name="other"
-                    control={control}
-                    render={({ field }) => (
-                      <Field>
-                        <FieldLabel>Other IDs</FieldLabel>
-                        <Input placeholder="wechat / qq / facebook / twitter" {...field} />
-                      </Field>
+                    {ownership && (
+                      <Controller
+                        name="ownership"
+                        control={control}
+                        render={({ field }) => (
+                          <Field>
+                            <FieldLabel className="text-sm">Ownership</FieldLabel>
+                            <UserSearch value={field.value} onReturn={field.onChange} />
+                          </Field>
+                        )}
+                      />
                     )}
-                  />
+                  </div>
+                </FieldSet>
 
-                  <Controller
-                    name="address"
-                    control={control}
-                    render={({ field }) => (
-                      <Field>
-                        <FieldLabel>Address</FieldLabel>
-                        <Input placeholder="Enter address" {...field} />
-                      </Field>
+                {/* LEAD & REMARKS */}
+                <FieldSet className="border rounded-md p-3">
+                  <FieldLegend className="px-2 text-sm font-medium text-muted-foreground">
+                    Lead & Remarks
+                  </FieldLegend>
+
+                  <div className="space-y-3">
+                    {!(user_designation === "Sales" || user_designation === "Dealer") && (
+                      <Controller
+                        name="lead"
+                        control={control}
+                        render={({ field }) => (
+                          <Field>
+                            <FieldLabel className="text-sm">Lead Generated By</FieldLabel>
+                            <UserSearch
+                              lead
+                              value={field.value}
+                              onReturn={field.onChange}
+                              onReturnData={(val: any) => {
+                                if (val.designation === "Social Media Manager") {
+                                  form.setValue("platform", "SOCIAL MEDIA")
+                                } else {
+                                  form.setValue("platform", "")
+                                }
+                              }}
+                            />
+                          </Field>
+                        )}
+                      />
                     )}
-                  />
 
-                  <Controller
-                    name="industry"
-                    control={control}
-                    render={({ field }) => (
-                      <Field>
-                        <FieldLabel>Industry</FieldLabel>
-                        <IndustrySearch value={field.value} onReturn={field.onChange} />
-                      </Field>
-                    )}
-                  />
+                    <Controller
+                      name="remarks"
+                      control={control}
+                      render={({ field }) => (
+                        <Field>
+                          <FieldLabel className="text-sm">Remarks</FieldLabel>
+                          <Input placeholder="Add any additional notes" {...field} />
+                        </Field>
+                      )}
+                    />
+                  </div>
+                </FieldSet>
 
-                  <Controller
-                    name="remarks"
-                    control={control}
-                    render={({ field }) => (
-                      <Field>
-                        <FieldLabel>Remarks</FieldLabel>
-                        <Input placeholder="Enter remarks" {...field} />
-                      </Field>
-                    )}
-                  />
+                {/* ADDITIONAL OPTIONS */}
+                <FieldSet className="border rounded-md p-3">
+                  <FieldLegend className="px-2 text-sm font-medium text-muted-foreground">
+                    Additional Options
+                  </FieldLegend>
 
-                  <Controller
-                    name="platform"
-                    control={control}
-                    render={({ field }) => (
-                      <Field>
-                        <FieldLabel>Platform</FieldLabel>
-
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select platform" />
-                          </SelectTrigger>
-
-                          <SelectContent>
-                            <SelectGroup>
-                              {["SOCIAL MEDIA", "SENFENG", "DIRECT"].map((item) => (
-                                <SelectItem key={item} value={item}>
-                                  {item}
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </Field>
-                    )}
-                  />
-
-                  <Controller
-                    name="pin"
-                    control={control}
-                    render={({ field }) => (
-                      <Field>
-                        <FieldLabel>Google Location Pin</FieldLabel>
-                        <Input placeholder="Enter pin location" {...field} />
-                      </Field>
-                    )}
-                  />
-
-                  <div className="flex flex-row gap-10">
-
+                  <div className="space-y-3">
                     <Controller
                       name="rating"
                       control={control}
                       render={({ field }) => (
                         <Field>
-                          <FieldLabel>Rating</FieldLabel>
+                          <FieldLabel className="text-sm">Rating</FieldLabel>
                           <StarRating value={field.value} onChange={field.onChange} />
                         </Field>
                       )}
@@ -596,7 +630,7 @@ function AddCustomerDialog({
                         control={control}
                         render={({ field }) => (
                           <Field>
-                            <FieldLabel>Date</FieldLabel>
+                            <FieldLabel className="text-sm">Date</FieldLabel>
                             <AppCalendar date={field.value} onChange={field.onChange} />
                           </Field>
                         )}
@@ -607,35 +641,43 @@ function AddCustomerDialog({
                       name="member"
                       control={control}
                       render={({ field }) => (
-                        <Field className="flex flex-row gap-2 items-center">
-                          <FieldLabel>Member?</FieldLabel>
-                          <div>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
+                        <Field className="flex flex-row items-center gap-2 pt-1">
+                          <div className="flex gap-2">
+                            <FieldLabel htmlFor="member" className="cursor-pointer text-sm">
+                              Member?
+                            </FieldLabel>
+                            <div>
+                              <Checkbox
+                                id="member"
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </div>
                           </div>
                         </Field>
                       )}
                     />
-
                   </div>
-                </div>
-              </FieldGroup>
+                </FieldSet>
 
-              {/* SUBMIT */}
-              <Button
-                disabled={
-                  loading ||
-                  customerInfo.length > 0 ||
-                  checking ||
-                  numbers.filter(Boolean).length === 0
-                }
-                className="w-full mt-10"
-                type="submit"
-              >
-                {loading && <Spinner />} Submit
-              </Button>
+              </div>
+
+              {/* SUBMIT BUTTON */}
+              <div className="mt-4 pt-4 border-t">
+                <Button
+                  disabled={
+                    loading ||
+                    customerInfo.length > 0 ||
+                    checking ||
+                    numbers.filter(Boolean).length === 0
+                  }
+                  className="w-full"
+                  type="submit"
+                >
+                  {loading && <Spinner className="mr-2 size-4" />}
+                  Register Customer
+                </Button>
+              </div>
             </form>
           </div>
         </ScrollArea>

@@ -13,21 +13,22 @@ import ChequeCredit from "./customer-components/machine/cheque-credit";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { Field, FieldError, FieldGroup, FieldLabel } from "./ui/field";
+import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "./ui/field";
 import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
 import { Textarea } from "./ui/textarea";
+import { ChequeProp } from "@/lib/types";
 
-type Installment = { date: string, img: string, amount: number }
+
 
 const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { customer_id?: number, user_id: number, visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void> }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedMachine, setSelectedMachine] = useState<number | null>(null);
   const [cheque, setCheque] = useState(false);
-  const [value, setValue] = useState();
-  const [total, setTotal] = useState<Installment[]>([]);
+  const [value, setValue] = useState<string | undefined>();
+  const [total, setTotal] = useState<ChequeProp[]>([]);
   const { state: OfficeState } = useContext(OfficeContext);
   const [manual, setManual] = useState(false);
   const { isAdmin } = useUserDetail();
@@ -150,22 +151,25 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { cus
           }`}
       >
         <DialogHeader>
-          <DialogTitle>Add New Machine</DialogTitle>
+          <DialogTitle className="text-xl">Add New Machine</DialogTitle>
         </DialogHeader>
 
         <div className="w-full flex flex-1">
-          <ScrollArea className="px-2 w-full h-[85dvh]">
+          <ScrollArea className="px-2 w-full h-[80dvh]">
             <div
               className={`flex gap-6 ${cheque ? "flex-row" : "flex-col"
                 } w-full`}
             >
               <div className={`${cheque ? "w-1/2" : "w-full"} px-2 space-y-2`}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FieldGroup>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+
+                  {/* Machine Details */}
+                  <FieldSet className="border rounded-md p-3 gap-3">
+                    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Machine Details</FieldLegend>
 
                     {manualShow && (
                       <Field>
-                        <div className="flex gap-4 items-center">
+                        <div className="flex gap-3 items-center">
                           <FieldLabel>Add Manual?</FieldLabel>
                           <Checkbox
                             checked={manual}
@@ -182,7 +186,6 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { cus
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
                             <FieldLabel>Select Machine</FieldLabel>
-
                             <AvailableMachines
                               value={selectedMachine}
                               onReturn={setSelectedMachine}
@@ -193,10 +196,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { cus
                                 form.setValue("source", val.machine_source);
                               }}
                             />
-
-                            {fieldState.invalid && (
-                              <FieldError errors={[fieldState.error]} />
-                            )}
+                            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                           </Field>
                         )}
                       />
@@ -208,59 +208,42 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { cus
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
                           <FieldLabel>Machine Model</FieldLabel>
-
-                          <Input
-                            disabled={!manual}
-                            placeholder="SF3015G"
-                            {...field}
-                          />
-
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
+                          <Input disabled={!manual} placeholder="SF3015G" {...field} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                         </Field>
                       )}
                     />
 
-                    <Controller
-                      name="power"
-                      control={form.control}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>Power</FieldLabel>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Controller
+                        name="power"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel>Power</FieldLabel>
+                            <Input disabled={!manual} placeholder="3000W / 1500W" {...field} />
+                            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                          </Field>
+                        )}
+                      />
 
-                          <Input
-                            disabled={!manual}
-                            placeholder="3000W / 1500W"
-                            {...field}
-                          />
+                      <Controller
+                        name="source"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel>Source</FieldLabel>
+                            <Input disabled={!manual} placeholder="RAYCUS / IPG" {...field} />
+                            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                          </Field>
+                        )}
+                      />
+                    </div>
+                  </FieldSet>
 
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
-
-                    <Controller
-                      name="source"
-                      control={form.control}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>Source</FieldLabel>
-
-                          <Input
-                            disabled={!manual}
-                            placeholder="RAYCUS / IPG"
-                            {...field}
-                          />
-
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
+                  {/* Contract Details */}
+                  <FieldSet className="border rounded-md p-3 gap-3">
+                    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Contract Details</FieldLegend>
 
                     <Controller
                       name="contractDate"
@@ -268,16 +251,8 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { cus
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
                           <FieldLabel>Contract Date</FieldLabel>
-
-                          <AppCalendar
-                            date={field.value}
-                            onChange={field.onChange}
-                            max={new Date()}
-                          />
-
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
+                          <AppCalendar date={field.value} onChange={field.onChange} max={new Date()} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                         </Field>
                       )}
                     />
@@ -288,54 +263,63 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { cus
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
                           <FieldLabel>Total Price</FieldLabel>
-
-                          <Input
-
-                            placeholder="Enter amount"
-                            {...field}
-                          />
-
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
+                          <Input placeholder="Enter amount" {...field} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                         </Field>
                       )}
                     />
 
                     <Controller
-                      name="isSpeedMoney"
+                      name="cnic"
                       control={form.control}
-                      render={({ field }) => (
-                        <Field>
-                          <div className="flex gap-4 items-center">
-                            <FieldLabel>Include Speed Money</FieldLabel>
-
-                            <Checkbox
-                              checked={isSpeedMoney}
-                              onCheckedChange={(checked: boolean) => {
-                                setIsSpeedMoney(checked);
-                                field.onChange(checked);
-
-                                if (!checked) {
-                                  form.setValue("speedMoney", 0);
-                                  form.setValue("speedMoneyNote", "");
-                                }
-                              }}
-                            />
-                          </div>
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>CNIC</FieldLabel>
+                          <Input placeholder="1234567891234" {...field} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                         </Field>
                       )}
                     />
+                  </FieldSet>
 
-                    <Field>
-                      <div className="flex gap-4 items-center">
-                        <FieldLabel>Cheque Credit</FieldLabel>
-                        <Checkbox
-                          checked={cheque}
-                          onCheckedChange={(checked: boolean) => setCheque(checked)}
-                        />
-                      </div>
-                    </Field>
+                  {/* Payment Options */}
+                  <FieldSet className="border rounded-md p-3 gap-3">
+                    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Payment Options</FieldLegend>
+
+                    <div className="flex flex-wrap gap-6">
+                      <Controller
+                        name="isSpeedMoney"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Field>
+                            <div className="flex gap-3 items-center">
+                              <FieldLabel>Include Speed Money</FieldLabel>
+                              <Checkbox
+                                checked={isSpeedMoney}
+                                onCheckedChange={(checked: boolean) => {
+                                  setIsSpeedMoney(checked);
+                                  field.onChange(checked);
+                                  if (!checked) {
+                                    form.setValue("speedMoney", 0);
+                                    form.setValue("speedMoneyNote", "");
+                                  }
+                                }}
+                              />
+                            </div>
+                          </Field>
+                        )}
+                      />
+
+                      <Field>
+                        <div className="flex gap-3 items-center">
+                          <FieldLabel>Cheque Credit</FieldLabel>
+                          <Checkbox
+                            checked={cheque}
+                            onCheckedChange={(checked: boolean) => setCheque(checked)}
+                          />
+                        </div>
+                      </Field>
+                    </div>
 
                     {isSpeedMoney && (
                       <>
@@ -345,15 +329,8 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { cus
                           render={({ field, fieldState }) => (
                             <Field data-invalid={fieldState.invalid}>
                               <FieldLabel>Speed Money</FieldLabel>
-
-                              <Input
-                                placeholder="Amount"
-                                {...field}
-                              />
-
-                              {fieldState.invalid && (
-                                <FieldError errors={[fieldState.error]} />
-                              )}
+                              <Input placeholder="Amount" {...field} />
+                              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                             </Field>
                           )}
                         />
@@ -364,39 +341,19 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { cus
                           render={({ field, fieldState }) => (
                             <Field data-invalid={fieldState.invalid}>
                               <FieldLabel>Note</FieldLabel>
-
                               <Textarea placeholder="Optional note" {...field} />
-
-                              {fieldState.invalid && (
-                                <FieldError errors={[fieldState.error]} />
-                              )}
+                              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                             </Field>
                           )}
                         />
                       </>
                     )}
+                  </FieldSet>
 
-                    <Controller
-                      name="cnic"
-                      control={form.control}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>CNIC</FieldLabel>
-
-                          <Input placeholder="1234567891234" {...field} />
-
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
-
-                    <Button type="submit" disabled={loading} className="w-full">
-                      {loading && <Spinner />} Submit
-                    </Button>
-
-                  </FieldGroup>
+                  {/* Submit */}
+                  <Button type="submit" disabled={loading} className="w-full">
+                    {loading && <Spinner />} Submit
+                  </Button>
                 </form>
               </div>
               {cheque && (

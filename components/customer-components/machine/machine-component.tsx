@@ -69,7 +69,7 @@ import { UserSearch } from "@/components/user-search";
 import { storage } from "@/config/firebase";
 import { Colors } from "@/constants/data";
 
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
@@ -1844,186 +1844,195 @@ const ViewImagesSheet = ({
     }
   };
 
+  const isMobile = useIsMobile()
+  const maxwidth = isMobile ? "90vw" : "50vw"
+
   return (
-    <Sheet open={visible} onOpenChange={handleClose}>
-      <SheetContent
-        className="w-[90vw] max-w-[90vw]"
-        style={{ width: "100%", maxWidth: "90vw" }}
-      >
-        <SheetHeader className="mb-4">
-          <div className="flex gap-4 flex-wrap">
-            <SheetTitle className="text-2xl">View Images</SheetTitle>
-            <Button
-              onClick={() => {
-                if (editAllowed) {
-                  setAddImageVisible(true);
-                } else {
-                  toast.error("You are not allowed to perform this action ");
-                }
-              }}
-            >
-              Add Image
-            </Button>
+   <Sheet open={visible} onOpenChange={handleClose}>
+  <SheetContent
+    style={{ width: "100%", maxWidth : maxwidth }}
+  >
+    <SheetHeader>
+      <div className="flex items-center gap-2">
+        <SheetTitle className="text-2xl">View Images</SheetTitle>
+        <Button
+          size="sm"
+          onClick={() => {
+            if (editAllowed) {
+              setAddImageVisible(true);
+            } else {
+              toast.error("You are not allowed to perform this action");
+            }
+          }}
+        >
+          Add Image
+        </Button>
+      </div>
+    </SheetHeader>
+
+    <AddImages
+      customer_id={customer_id}
+      machine={data}
+      visible={addImageVisible}
+      onClose={setAddImageVisible}
+      onRefresh={onRefresh}
+    />
+
+    <ScrollArea className="h-[85vh] mt-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pr-4">
+
+        {/* Handshake Images */}
+        <FieldSet className="border rounded-md p-3 gap-3">
+          <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Handshake Images</FieldLegend>
+          <div className="flex flex-row gap-2 flex-wrap">
+            {handshakeImages.length > 0 ? (
+              handshakeImages.map((item, ind) => (
+                <RenderImage
+                  key={item}
+                  img={item}
+                  setImageOpen={setImageOpen}
+                  onDelete={(a, b) => {
+                    if (editAllowed) handleDeleteImage(a, b);
+                  }}
+                  imageType="handshake_images"
+                />
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No images found</p>
+            )}
           </div>
-          <AddImages
-            customer_id={customer_id}
-            machine={data}
-            visible={addImageVisible}
-            onClose={setAddImageVisible}
-            onRefresh={onRefresh}
-          />
-          <ScrollArea className="h-[85vh] px-4">
-            <div className="flex flex-1 flex-col gap-2">
-              <Label className="font-semibold text-[18px]">
-                Handshake Images
-              </Label>
-              <div className="flex flex-row gap-2 flex-wrap">
-                {handshakeImages.length > 0 ? (
-                  handshakeImages.map((item, ind) => (
-                    <RenderImage
-                      key={item}
-                      img={item}
-                      setImageOpen={setImageOpen}
-                      onDelete={(a, b) => {
-                        if (editAllowed)
-                          handleDeleteImage(a, b)
-                      }}
-                      imageType="handshake_images"
-                    />
-                  ))
-                ) : (
-                  <p>No images found</p>
-                )}
-              </div>
-              <Label className="font-semibold text-[18px]">
-                Nameplate Images
-              </Label>
-              <div className="flex flex-row gap-2 flex-wrap">
-                {nameplateImages.length > 0 ? (
-                  nameplateImages.map((item, ind) => (
-                    <RenderImage
-                      key={ind}
-                      img={item}
-                      setImageOpen={setImageOpen}
-                      onDelete={(a, b) => {
-                        if (editAllowed)
-                          handleDeleteImage(a, b)
-                      }}
-                      imageType="machine_nameplate_images"
-                    />
-                  ))
-                ) : (
-                  <p>No images found</p>
-                )}
-              </div>
+        </FieldSet>
 
-              <Label className="font-semibold text-[18px]">
-                Handover Images
-              </Label>
-              <div className="flex flex-row gap-2 flex-wrap">
-                {handoverImages.length > 0 ? (
-                  handoverImages.map((item, ind) => (
-                    <RenderImage
-                      key={ind}
-                      img={item}
-                      setImageOpen={setImageOpen}
-                      onDelete={(a, b) => {
-                        if (editAllowed)
-                          handleDeleteImage(a, b)
-                      }}
-                      imageType="final_handover_images"
-                    />
-                  ))
-                ) : (
-                  <p>No images found</p>
-                )}
-              </div>
-              <Label className="font-semibold text-[18px]">
-                Installation Report
-              </Label>
-              <div className="flex flex-row gap-2 flex-wrap">
-                {installationReport.length > 0 ? (
-                  installationReport.map((item, ind) => (
-                    <RenderImage
-                      key={ind}
-                      img={item}
-                      setImageOpen={setImageOpen}
-                      onDelete={(a, b) => {
-                        if (editAllowed)
-                          handleDeleteImage(a, b)
-                      }}
-                      imageType="installation_report"
-                    />
-                  ))
-                ) : (
-                  <p>No report found</p>
-                )}
-              </div>
-
-              <Label className="font-semibold text-[18px]">
-                Contract Images
-              </Label>
-              <div className="flex flex-row gap-2 flex-wrap">
-                {contractImages.length > 0 ? (
-                  contractImages.map((item, ind) => (
-                    <RenderImage
-                      key={ind}
-                      img={item}
-                      setImageOpen={setImageOpen}
-                      onDelete={(a, b) => {
-                        if (editAllowed)
-                          handleDeleteImage(a, b)
-                      }}
-                      imageType="contract_images_png"
-                    />
-                  ))
-                ) : (
-                  <p>No images found</p>
-                )}
-              </div>
-              {contractPdfImages.map((item, ind) => (
+        {/* Nameplate Images */}
+        <FieldSet className="border rounded-md p-3 gap-3">
+          <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Nameplate Images</FieldLegend>
+          <div className="flex flex-row gap-2 flex-wrap">
+            {nameplateImages.length > 0 ? (
+              nameplateImages.map((item, ind) => (
                 <RenderImage
                   key={ind}
                   img={item}
-                  type="pdf"
                   setImageOpen={setImageOpen}
+                  onDelete={(a, b) => {
+                    if (editAllowed) handleDeleteImage(a, b);
+                  }}
+                  imageType="machine_nameplate_images"
                 />
-              ))}
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No images found</p>
+            )}
+          </div>
+        </FieldSet>
 
-              <Label className="font-semibold text-[18px]">
-                Additional Images
-              </Label>
-              <div className="flex flex-row gap-2 flex-wrap">
-                {otherImages.length > 0 ? (
-                  otherImages.map((item, ind) => (
-                    <RenderImage
-                      key={ind}
-                      img={item}
-                      setImageOpen={setImageOpen}
-                      onDelete={(a, b) => {
-                        if (editAllowed)
-                          handleDeleteImage(a, b)
-                      }}
-                      imageType="other_images_png"
-                    />
-                  ))
-                ) : (
-                  <p>No images found</p>
-                )}
-              </div>
-              {otherPdfImages.map((item, ind) => (
+        {/* Handover Images */}
+        <FieldSet className="border rounded-md p-3 gap-3">
+          <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Handover Images</FieldLegend>
+          <div className="flex flex-row gap-2 flex-wrap">
+            {handoverImages.length > 0 ? (
+              handoverImages.map((item, ind) => (
                 <RenderImage
                   key={ind}
                   img={item}
-                  type="pdf"
                   setImageOpen={setImageOpen}
+                  onDelete={(a, b) => {
+                    if (editAllowed) handleDeleteImage(a, b);
+                  }}
+                  imageType="final_handover_images"
                 />
-              ))}
-            </div>
-          </ScrollArea>
-        </SheetHeader>
-      </SheetContent>
-    </Sheet>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No images found</p>
+            )}
+          </div>
+        </FieldSet>
+
+        {/* Installation Report */}
+        <FieldSet className="border rounded-md p-3 gap-3">
+          <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Installation Report</FieldLegend>
+          <div className="flex flex-row gap-2 flex-wrap">
+            {installationReport.length > 0 ? (
+              installationReport.map((item, ind) => (
+                <RenderImage
+                  key={ind}
+                  img={item}
+                  setImageOpen={setImageOpen}
+                  onDelete={(a, b) => {
+                    if (editAllowed) handleDeleteImage(a, b);
+                  }}
+                  imageType="installation_report"
+                />
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No report found</p>
+            )}
+          </div>
+        </FieldSet>
+
+        {/* Contract Images */}
+        <FieldSet className="border rounded-md p-3 gap-3">
+          <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Contract Images</FieldLegend>
+          <div className="flex flex-row gap-2 flex-wrap">
+            {contractImages.length > 0 ? (
+              contractImages.map((item, ind) => (
+                <RenderImage
+                  key={ind}
+                  img={item}
+                  setImageOpen={setImageOpen}
+                  onDelete={(a, b) => {
+                    if (editAllowed) handleDeleteImage(a, b);
+                  }}
+                  imageType="contract_images_png"
+                />
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No images found</p>
+            )}
+            {contractPdfImages.map((item, ind) => (
+              <RenderImage
+                key={`pdf-${ind}`}
+                img={item}
+                type="pdf"
+                setImageOpen={setImageOpen}
+              />
+            ))}
+          </div>
+        </FieldSet>
+
+        {/* Additional Images */}
+        <FieldSet className="border rounded-md p-3 gap-3">
+          <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Additional Images</FieldLegend>
+          <div className="flex flex-row gap-2 flex-wrap">
+            {otherImages.length > 0 ? (
+              otherImages.map((item, ind) => (
+                <RenderImage
+                  key={ind}
+                  img={item}
+                  setImageOpen={setImageOpen}
+                  onDelete={(a, b) => {
+                    if (editAllowed) handleDeleteImage(a, b);
+                  }}
+                  imageType="other_images_png"
+                />
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No images found</p>
+            )}
+            {otherPdfImages.map((item, ind) => (
+              <RenderImage
+                key={`pdf-${ind}`}
+                img={item}
+                type="pdf"
+                setImageOpen={setImageOpen}
+              />
+            ))}
+          </div>
+        </FieldSet>
+
+      </div>
+    </ScrollArea>
+  </SheetContent>
+</Sheet>
   );
 };
 type RenderImageProps = {
@@ -2062,6 +2071,8 @@ const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }: Rend
       setDeleteLoading(false)
     };
   }, [img, type]);
+
+  if(!localImage) return null
 
   return (
     <div className="space-y-2">

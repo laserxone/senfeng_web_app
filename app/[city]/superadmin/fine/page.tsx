@@ -276,7 +276,7 @@ export default function Page() {
   );
 }
 
-const AddFine = ({ open, setOpen, onRefresh, userID }: { open: boolean, setOpen: (val: boolean) => void, onRefresh: () => Promise<void>, userID: number }) => {
+const AddFine = ({ open, setOpen, onRefresh, userID }: { open: boolean, setOpen: (val: boolean) => void, onRefresh: () => Promise<void>, userID: number |  string }) => {
   const [loading, setLoading] = useState(false);
 
   const form = useForm<FormValues>({

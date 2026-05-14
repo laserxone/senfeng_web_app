@@ -67,7 +67,7 @@ import {
 } from "../ui/select";
 import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
-import { Field, FieldGroup, FieldLabel } from "../ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 import { Checkbox } from "../ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
@@ -536,9 +536,9 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: 
         onClose(false);
       }}
     >
-      <DialogContent className="sm:max-w-[425px]">
+     <DialogContent className="max-w-[90vw] sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Add New Reimbursement</DialogTitle>
+          <DialogTitle className="text-xl">Add New Reimbursement</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="h-[80vh] px-2">
@@ -558,186 +558,173 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: 
               </div>
             </RadioGroup>
 
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FieldGroup>
+             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
 
-                {/* Customer (conditional) */}
-                {selectedRadio === "customer" && (
+                {/* Trip Details */}
+                <FieldSet className="border rounded-md p-3 gap-3">
+                  <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Trip Details</FieldLegend>
+
+                  {/* Customer (conditional) */}
+                  {selectedRadio === "customer" && (
+                    <Controller
+                      name="customer"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>
+                            Customer <RequiredStar />
+                          </FieldLabel>
+                          <CustomerSearchWithData
+                            value={selectedCustomer}
+                            onReturn={(val) => {
+                              field.onChange(val.id);
+                              setSelectedCustomer(val);
+                              if (val.location) {
+                                form.setValue("city", val.location);
+                              }
+                              form.setValue("title", val?.company || val?.owner || "");
+                            }}
+                          />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+                  )}
+
+                  {/* Purpose */}
                   <Controller
-                    name="customer"
+                    name="title"
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel>
-                          Customer <RequiredStar />
+                          Purpose <RequiredStar />
                         </FieldLabel>
-
-                        <CustomerSearchWithData
-                          value={selectedCustomer}
-                          onReturn={(val) => {
-                            field.onChange(val.id);
-                            setSelectedCustomer(val);
-
-                            if (val.location) {
-                              form.setValue("city", val.location);
-                            }
-
-                            form.setValue("title", val?.company || val?.owner || "");
-                          }}
-                        />
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Purpose" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectItem value="New Installation">New Installation</SelectItem>
+                              <SelectItem value="Complaint">Complaint</SelectItem>
+                              <SelectItem value="Overhauling">Overhauling</SelectItem>
+                              <SelectItem value="Sales Meeting">Sales Meeting</SelectItem>
+                              <SelectItem value="Final Hand Over">Final Hand Over</SelectItem>
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
                   />
-                )}
 
-                {/* Purpose */}
-                <Controller
-                  name="title"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>
-                        Purpose <RequiredStar />
-                      </FieldLabel>
-
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Purpose" />
-                        </SelectTrigger>
-
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectItem value="New Installation">
-                              New Installation
-                            </SelectItem>
-                            <SelectItem value="Complaint">
-                              Complaint
-                            </SelectItem>
-                            <SelectItem value="Overhauling">
-                              Overhauling
-                            </SelectItem>
-                            <SelectItem value="Sales Meeting">
-                              Sales Meeting
-                            </SelectItem>
-                            <SelectItem value="   Final Hand Over">
-                              Final Hand Over
-                            </SelectItem>
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </Field>
+                  {/* Resolved (conditional) */}
+                  {(form.watch("title") === "Complaint" || form.watch("title") === "Overhauling") && (
+                    <Controller
+                      name="resolved"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <div className="flex items-center gap-2">
+                            <FieldLabel>Resolved?</FieldLabel>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked: boolean) => field.onChange(checked)}
+                            />
+                          </div>
+                        </Field>
+                      )}
+                    />
                   )}
-                />
 
-                {(form.watch("title") === 'Complaint' || form.watch("title") === 'Overhauling') &&
-
+                  {/* City */}
                   <Controller
-                    name="resolved"
+                    name="city"
                     control={form.control}
                     render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-
-                        <div className="flex flex-row items-center gap-2">
-                          <h1>Resolved ?</h1>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={(checked: boolean) => {
-                              field.onChange(checked);
-                            }}
-                          />
-                        </div>
+                      <Field>
+                        <FieldLabel>
+                          City <RequiredStar />
+                        </FieldLabel>
+                        <Input placeholder="Enter city" {...field} />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
                   />
-                }
+                </FieldSet>
 
-                {/* City */}
-                <Controller
-                  name="city"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Field>
-                      <FieldLabel>
-                        City <RequiredStar />
-                      </FieldLabel>
+                {/* Expense Details */}
+                <FieldSet className="border rounded-md p-3 gap-3">
+                  <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Expense Details</FieldLegend>
 
-                      <Input placeholder="Enter city" {...field} />
-                    </Field>
-                  )}
-                />
+                  {/* Amount */}
+                  <Controller
+                    name="amount"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field>
+                        <FieldLabel>
+                          Amount <RequiredStar />
+                        </FieldLabel>
+                        <Input
+                          type="number"
+                          placeholder="Enter amount"
+                          value={field.value ?? ""}
+                          onChange={(e) => {
+                            if (!isNaN(Number(e.target.value))) {
+                              field.onChange(Number(e.target.value));
+                            }
+                          }}
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+
+                  {/* Date */}
+                  <Controller
+                    name="date"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field>
+                        <FieldLabel>
+                          Date <RequiredStar />
+                        </FieldLabel>
+                        <AppCalendar date={field.value} onChange={field.onChange} max={new Date()} />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+
+                </FieldSet>
 
                 {/* Description */}
-                <Controller
-                  name="description"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Field>
-                      <FieldLabel>
-                        Description <RequiredStar />
-                      </FieldLabel>
+                <FieldSet className="border rounded-md p-3 gap-3 lg:col-span-2">
+                  <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Description</FieldLegend>
 
-                      <Textarea placeholder="Enter description" {...field} />
-                    </Field>
-                  )}
-                />
+                  <Controller
+                    name="description"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field>
+                        <Textarea placeholder="Enter description" {...field} />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+                </FieldSet>
 
-                {/* Amount */}
-                <Controller
-                  name="amount"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Field>
-                      <FieldLabel>
-                        Amount <RequiredStar />
-                      </FieldLabel>
+                {/* Attachment */}
+                <FieldSet className="border rounded-md p-3 gap-3 lg:col-span-2">
+                  <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Attachment</FieldLegend>
 
-                      <Input
-                        type="number"
-                        placeholder="Enter amount"
-                        value={field.value ?? ""}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                      />
-                    </Field>
-                  )}
-                />
-
-                {/* Date */}
-                <Controller
-                  name="date"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Field>
-                      <FieldLabel>
-                        Date <RequiredStar />
-                      </FieldLabel>
-
-                      <AppCalendar
-                        date={field.value}
-                        onChange={field.onChange}
-                        max={new Date()}
-                        min={
-                          new Date(
-                            new Date().getFullYear(),
-                            new Date().getMonth(),
-                            1
-                          )
-                        }
-                      />
-                    </Field>
-                  )}
-                />
-
-                {/* Image */}
-                <Controller
-                  name="image"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Field>
-                      <FieldLabel>
-                        Image <RequiredStar />
-                      </FieldLabel>
-
-                      <div className="flex flex-1 items-center justify-center">
+                  <Controller
+                    name="image"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field>
                         <Dropzone
                           value={field.value}
                           onDrop={(file) => field.onChange(file)}
@@ -746,17 +733,18 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: 
                           description="PNG or JPG"
                           drag="Drop the files here..."
                         />
-                      </div>
-                    </Field>
-                  )}
-                />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+                </FieldSet>
 
-                {/* Submit */}
-                <Button className="w-full" type="submit" disabled={loading}>
-                  {loading && <Spinner />} Submit
-                </Button>
+              </div>
 
-              </FieldGroup>
+              {/* Submit */}
+              <Button className="w-full" type="submit">
+                {loading && <Spinner />} Submit
+              </Button>
             </form>
           </div>
         </ScrollArea>

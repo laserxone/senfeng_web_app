@@ -35,7 +35,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 
 export default function Page() {
-  const [fromUserId, setFromUserId] = useState(null);
+  const [fromUserId, setFromUserId] = useState<number | null>(null);
   const [toUserId, setToUserId] = useState<number | null>(null);
   const { userID } = useUserDetail();
   const [customers, setCustomers] = useState<MyCustomer[]>([]);
@@ -61,8 +61,6 @@ export default function Page() {
       setLoading(false);
     }
   };
-
-  console.log(customers)
 
   const allSelected = useMemo(
     () => customers.length > 0 && selectedCustomers.length === customers.length,
@@ -120,7 +118,7 @@ export default function Page() {
             <h2 className="text-lg font-semibold">Select transfer from</h2>
             <UserSearch
               value={fromUserId}
-              onReturn={setFromUserId}
+              onReturn={(val)=>setFromUserId(val)}
               placeholder="Select employee"
             />
           </div>

@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { Applications, branchNavItem, Commission, complaintItem, dealerNavItems, employeeNavItems, FinanceItem, myCloud, ownerNavItems, POSNavItem, POSNavItemAdmin, Prices, RepairAndMaintenance, StoreNavItem, teamAttendance, Tools } from "@/constants/data";
+import { Careers, branchNavItem, Commission, complaintItem, dealerNavItems, employeeNavItems, FinanceItem, myCloud, ownerNavItems, POSNavItem, POSNavItemAdmin, Prices, RepairAndMaintenance, StoreNavItem, teamAttendance, Tools, ReimbursementApproval } from "@/constants/data";
 import admin from "@/lib/firebaseAdmin";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -79,7 +79,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ emai
                 nav_items.push(teamAttendance)
             }
             if(user.careers){
-                nav_items.push(Applications)
+                nav_items.push(Careers)
+            }
+            if(user?.reimbursement_approval){
+                nav_items.push(ReimbursementApproval)
             }
             if (user.designation == 'Engineer') {
                 base_route = `${branchOffice}/engineer`

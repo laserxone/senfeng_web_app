@@ -64,8 +64,6 @@ export default function DocumentManagement() {
   const isMobile = useIsMobile()
   const { userID, name, email } = useUserDetail()
 
-  console.log(isMobile)
-
   useEffect(() => {
     if (userID) fetchData()
   }, [userID])

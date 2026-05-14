@@ -318,10 +318,10 @@ const RenderImage = ({ img }: { img: string | null }) => {
       fetchImage();
     }
   }, [img]);
-
+  if (!localImage) return null
   return (
     <img
-      src={localImage || ""}
+      src={localImage}
       alt="timein-img"
       className="w-full object-cover rounded-lg"
     />

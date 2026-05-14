@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { Field, FieldLabel, FieldLegend, FieldSet } from "./ui/field";
 
 export default function MainRepairingLab() {
   const [data, setData] = useState<RepairingProps[]>([]);
@@ -332,92 +333,110 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }: { open: boolean
     <Dialog open={open} onOpenChange={onChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Assign Task</DialogTitle>
-          <div className="flex flex-1 flex-col gap-4">
-            {/* Assign Date */}
-            <div>
-              <h1>
-                Assign Date <RequiredStar />
-              </h1>
-              <AppCalendar
-                date={form.assign_date}
-                onChange={(date) => updateForm("assign_date", date)}
-                min={YESTERDAY}
+          <DialogTitle className="text-xl">Assign Task</DialogTitle>
+         <div className="flex flex-1 flex-col gap-3">
+  
+  {/* Schedule */}
+  <FieldSet className="border rounded-md p-3 gap-3">
+    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Schedule</FieldLegend>
+    
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Assign Date */}
+      <Field>
+        <FieldLabel>
+          Assign Date <RequiredStar />
+        </FieldLabel>
+        <AppCalendar
+          date={form.assign_date}
+          onChange={(date) => updateForm("assign_date", date)}
+          min={YESTERDAY}
+        />
+      </Field>
 
-              />
-            </div>
+      {/* Delivery Date */}
+      <Field>
+        <FieldLabel>
+          Delivery Date <RequiredStar />
+        </FieldLabel>
+        <AppCalendar
+          date={form.deliver_date}
+          onChange={(date) => updateForm("deliver_date", date)}
+          min={YESTERDAY}
+        />
+      </Field>
+    </div>
+  </FieldSet>
 
-            {/* Delivery Date */}
-            <div>
-              <h1>
-                Delivery Date <RequiredStar />
-              </h1>
-              <AppCalendar
-                date={form.deliver_date}
-                onChange={(date) => updateForm("deliver_date", date)}
-                min={YESTERDAY}
-              />
-            </div>
+  {/* Assignment Details */}
+  <FieldSet className="border rounded-md p-3 gap-3">
+    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Assignment Details</FieldLegend>
+    
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Assigned To */}
+      <Field>
+        <FieldLabel>
+          Assigned To <RequiredStar />
+        </FieldLabel>
+        <UserSearch
+          value={form.user_id}
+          onReturn={(e) => updateForm("user_id", e)}
+        />
+      </Field>
 
-            {/* Assigned To */}
-            <div>
-              <h1>
-                Assigned To <RequiredStar />
-              </h1>
-              <UserSearch
-                value={form.user_id}
-                onReturn={(e) => updateForm("user_id", e)}
-              />
-            </div>
+      {/* Customer */}
+      <Field>
+        <FieldLabel>
+          Customer <RequiredStar />
+        </FieldLabel>
+        <CustomerSearch
+          value={form.customer_id}
+          onReturn={(e) => updateForm("customer_id", e)}
+        />
+      </Field>
+    </div>
 
-            {/* Customer */}
-            <div>
-              <h1>
-                Customer <RequiredStar />
-              </h1>
-              <CustomerSearch
-                value={form.customer_id}
-                onReturn={(e) => updateForm("customer_id", e)}
-              />
-            </div>
+    {/* Charges */}
+    <Field>
+      <FieldLabel>
+        Charges <RequiredStar />
+      </FieldLabel>
+      <Input
+        type="number"
+        placeholder="Enter charges"
+        value={form.charges}
+        onChange={(e) => updateForm("charges", Number(e.target.value))}
+      />
+    </Field>
+  </FieldSet>
 
-            {/* Charges */}
-            <div>
-              <h1>
-                Charges <RequiredStar />
-              </h1>
-              <Input
-                type="number"
-                placeholder="Enter charges"
-                value={form.charges}
-                onChange={(e) => updateForm("charges", Number(e.target.value))}
-              />
-            </div>
+  {/* Remarks */}
+  <FieldSet className="border rounded-md p-3 gap-3">
+    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Remarks</FieldLegend>
+    
+    <Field>
+      <Textarea
+        placeholder="Enter remarks"
+        value={form.remarks}
+        onChange={(e) => updateForm("remarks", e.target.value)}
+      />
+    </Field>
+  </FieldSet>
 
-            {/* Remarks */}
-            <div>
-              <h1>Remarks</h1>
-              <Textarea
-                placeholder="Enter remarks"
-                value={form.remarks}
-                onChange={(e) => updateForm("remarks", e.target.value)}
-              />
-            </div>
-
-            {/* Save Button */}
-            <Button
-              disabled={
-                !form.assign_date ||
-                !form.deliver_date ||
-                !form.user_id ||
-                !form.customer_id ||
-                !form.charges
-              }
-              onClick={handleSaveTask}
-            >
-              {loading && <Spinner />} Save
-            </Button>
-          </div>
+  {/* Save Button */}
+  <Button
+    className="w-full"
+    disabled={
+      !form.assign_date ||
+      !form.deliver_date ||
+      !form.user_id ||
+      !form.customer_id ||
+      !form.charges
+    }
+    onClick={handleSaveTask}
+  >
+    {loading && <Spinner />} Save
+  </Button>
+</div>
         </DialogHeader>
       </DialogContent>
     </Dialog>

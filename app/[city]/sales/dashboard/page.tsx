@@ -1,5 +1,4 @@
 "use client";
-import AutoScrollMembers from "@/components/autoScroll";
 import {
   FeedbackTakenCard,
   MachinesSoldCard,
@@ -47,6 +46,7 @@ import moment from "moment";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
+import AutoScrollMembers from "@/components/autoScroll";
 
 export default function Page() {
   const [data, setData] = useState<SalesDashboard>();
@@ -203,6 +203,7 @@ export default function Page() {
         <CardContent className="pt-2 flex flex-1">
           <div className="flex flex-1 gap-5">
             <CustomerExtraData
+            showold={false}
               data={extraData || {}}
               option={selectedOption}
               onSelect={(val) => {
@@ -210,12 +211,15 @@ export default function Page() {
               }}
             />
             <CustomerEmployee
-             height="min-h-[calc(100dvh-470px)]"
+              height="min-h-[calc(100dvh-470px)]"
               ownership={false}
               customer_data={
                 selectedOption && extraData ? extraData[selectedOption as Exclude<keyof UserExtraTypes, "user">] : []
               }
-              onRefresh={() => fetchData()}
+              onRefresh={() => {
+                fetchData()
+                fetchExtraCustomerOptions()
+              }}
             />
           </div>
         </CardContent>
@@ -228,7 +232,7 @@ export default function Page() {
       <Card className="flex flex-1">
         <CardContent className="pt-0 pr-0 flex flex-1">
           <CustomersTab
-          height="h-[calc(100dvh-380px)]"
+            height="h-[calc(100dvh-380px)]"
             data={
               data?.customers.filter((customer) => customer.sales.length > 0) ||
               []
@@ -355,35 +359,51 @@ export default function Page() {
             <TabsTrigger value="fines">Fines</TabsTrigger>
           </TabsList>
 
-          <div className="flex flex-1 w-full mt-2">
-            {activeTab === "newCustomers" && <RenderNewCustomer />}
-            {activeTab === "members" && <RenderMembers />}
-            {activeTab === "reimbursement" && <RenderReimbursement />}
 
-            {activeTab === "visit" && <RenderVisitTab />}
-            {activeTab === "calls" && <RenderCallTab />}
-
-            {activeTab === "attendance" && <RenderAttendance />}
-            {activeTab === "salary" && (
-              <Card className="flex flex-1 p-0">
-                <CardContent className="pt-0 flex flex-1">
-                  <SalaryRecord id={userID} height="min-h-[calc(100dvh-420px)]" />
-                </CardContent>
-              </Card>
-            )}
-            {activeTab === "issued" && <RenderReturnable height="min-h-[calc(100dvh-420px)]" />}
-            {activeTab === 'fines' && <RenderFines height="min-h-[calc(100dvh-480px)]" />}
+          <div hidden={activeTab !== "newCustomers"}>
+            <RenderNewCustomer />
           </div>
+          <div hidden={activeTab !== "members"}>
+            <RenderMembers />
+          </div>
+          <div hidden={activeTab !== "reimbursement"}>
+            <RenderReimbursement />
+          </div>
+          <div hidden={activeTab !== "visit"}>
+            <RenderVisitTab />
+          </div>
+          <div hidden={activeTab !== "calls"}>
+            <RenderCallTab />
+          </div>
+          <div hidden={activeTab !== "attendance"}>
+            <RenderAttendance />
+          </div>
+          <div hidden={activeTab !== "salary"}>
+
+            <Card className="flex flex-1 p-0">
+              <CardContent className="pt-0 flex flex-1">
+                <SalaryRecord id={userID} height="min-h-[calc(100dvh-420px)]" />
+              </CardContent>
+            </Card>
+
+          </div>
+          <div hidden={activeTab !== "issued"}>
+            <RenderReturnable height="min-h-[calc(100dvh-420px)]" />
+          </div>
+          <div hidden={activeTab !== "fines"}>
+            <RenderFines height="min-h-[calc(100dvh-480px)]" />
+          </div>
+
         </Tabs>
       </div>
 
-      {/* <AutoScrollMembers /> */}
+      <AutoScrollMembers />
       <MachinesSold visible={visible} setVisible={setVisible} machineData={machineData} base_route={base_route} />
     </div>
   );
 }
 
-function CustomersTab({ data, height = "h-[calc(100dvh-250px)]" }: { data: SalesCustomer[], height ?:string }) {
+function CustomersTab({ data, height = "h-[calc(100dvh-250px)]" }: { data: SalesCustomer[], height?: string }) {
   const [localData, setLocalData] = useState<(SalesCustomer & { overall: string })[]>([]);
   const { base_route } = useUserDetail();
 

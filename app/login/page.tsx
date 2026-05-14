@@ -1,11 +1,12 @@
 "use client"
 import { LoginForm } from "@/components/login-form"
 import Spinner from "@/components/ui/spinner"
-import { useAuth } from "@/store/context/UserAuthContext"
+import { UserContext } from "@/store/context/UserContext"
+import { useContext } from "react"
 
 export default function LoginPage() {
 
-  const { loading: AuthLoading } = useAuth()
+  const {loading : AuthLoading } = useContext(UserContext)
 
   if (AuthLoading) {
     return (

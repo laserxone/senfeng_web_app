@@ -61,8 +61,6 @@ export default function PricesComponent() {
     });
   }
 
-  console.log(data)
-
   const handleEditClick = (row: PricesProps) => {
     setFormData(row);
     setIsEdit(true);

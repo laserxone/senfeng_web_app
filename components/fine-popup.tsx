@@ -19,7 +19,7 @@ export default function FinePopup() {
 
   useEffect(() => {
     if (fine?.id) {
-      setOpen(true);
+      // setOpen(true);
     }
   }, [fine]);
 
@@ -32,10 +32,8 @@ export default function FinePopup() {
     <Dialog open={open}>
       <DialogOverlay />
       <DialogContent className="max-w-lg p-10 text-center rounded-2xl">
-        <DialogTitle>
-             <h1 className="text-2xl font-bold text-red-600 mb-4">
+        <DialogTitle className="text-2xl font-bold text-red-600 mb-4">
           🚨 You Have Been Fined!
-        </h1>
         </DialogTitle>
 
         <p className="text-lg mb-2">
