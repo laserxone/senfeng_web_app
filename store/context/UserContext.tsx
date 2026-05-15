@@ -114,10 +114,12 @@ const setUser = (data: (AppUser & Partial<User>) | null) => {
       if (authData.full_access || authData.designation === 'Owner') {
         if (!pathname.includes("superadmin")) {
           router.replace(`/${authData.base_route.toLowerCase()}/dashboard`)
+          return
         }
       } else {
         if (!pathname.includes(authData.base_route)) {
           router.replace(`/${authData.base_route}/dashboard`)
+          return
         }
       }
       setUser(authData)

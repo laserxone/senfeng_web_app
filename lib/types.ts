@@ -934,7 +934,7 @@ export type ConversationType = {
 export type Messages = {
     id: number | string;
     conversation_id?: number;
-    sender_id: number;
+    sender_id: number | string;
     message: string;
     created_at: string | Date;
     is_read?: boolean;
@@ -1364,4 +1364,47 @@ export type ResumesResponse = {
   success: boolean;
   total: number;
   resumes: Resume[];
+};
+
+export type EngineerPerformanceResponse = {
+  success: boolean;
+
+  overview: {
+    total_assigned: number;
+    total_completed: number;
+    total_pending: number;
+    completion_rate: number;
+  };
+
+  top_performers: {
+    engineer_id: number;
+    name: string;
+    designation: string;
+    total_assigned: number;
+    total_completed: number;
+    total_pending: number;
+    completion_rate: number;
+  }[];
+
+  complaints_by_category: {
+    category: string;
+    total: number;
+  }[];
+
+  complaints_by_status: {
+    status: string;
+    total: number;
+  }[];
+
+  performance_trend: {
+    month: string;
+    total_assigned: number;
+    total_completed: number;
+    completion_rate: number;
+  }[];
+
+  task_overview: {
+    completed: number;
+    pending: number;
+  };
 };

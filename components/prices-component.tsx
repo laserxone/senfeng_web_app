@@ -11,21 +11,20 @@ import {
 import { Input } from "@/components/ui/input";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { ArrowUpDown, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import PageTable from "./app-table-without-pagination";
 import Heading from "./ui/heading";
 import { Label } from "./ui/label";
 import Spinner from "./ui/spinner";
-import PageTable from "./app-table-without-pagination";
-import { ArrowUpDown, Trash2 } from "lucide-react";
-import Dropzone from "@/components/dropzone";
 
-import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { storage } from "@/config/firebase";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
-import ConfimationDialog from "./alert-dialog";
 import { PricesProps } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { toast } from "sonner";
+import ConfimationDialog from "./alert-dialog";
 
 export default function PricesComponent() {
   const [loading, setLoading] = useState(false);
@@ -348,7 +347,7 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }: { attachment?
 
   const [uploadLoading, setUploadLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
- const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const uploadFile = async () => {

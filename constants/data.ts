@@ -223,6 +223,15 @@ export const FinanceItem = {
   items: [],
 };
 
+export const EngineersPerformance = {
+  title: "Engineer's Performance",
+  url: "/engineerperformance",
+  icon: "finance",
+  shortcut: ["f", "i", "n", "a"],
+
+  items: [],
+};
+
 export const complaintItem = {
   title: "Complaint & Installation",
   url: "/complaint",

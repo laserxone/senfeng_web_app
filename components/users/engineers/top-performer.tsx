@@ -1,0 +1,122 @@
+"use client"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Crown, Users } from "lucide-react"
+
+interface Performer {
+  engineer_id: string | number
+  name: string
+  designation: string
+  total_assigned: number
+  total_completed: number
+  total_pending: number
+  completion_rate: number
+}
+
+interface TopPerformersProps {
+  performers: Performer[]
+}
+
+export function TopPerformers({ performers }: TopPerformersProps) {
+  const [topPerformer, ...otherPerformers] = performers
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  return (
+    <div className="space-y-4">
+      {topPerformer && (
+        <Card className="border border-border bg-gradient-to-br from-amber-50 to-white shadow-sm lg:col-span-1">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <div className="rounded-full bg-amber-100 p-1.5">
+                <Crown className="h-4 w-4 text-amber-600" />
+              </div>
+              <CardTitle className="text-base font-semibold text-foreground">Top Performer</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex flex-col items-center text-center">
+              <div className="relative">
+                <Avatar className="h-16 w-16 border-2 border-amber-200">
+                  <AvatarFallback className="bg-amber-100 text-amber-700 text-lg font-semibold">
+                    {getInitials(topPerformer.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-1 -right-1 rounded-full bg-amber-500 p-1 shadow-sm">
+                  <Crown className="h-3 w-3 text-white" />
+                </div>
+              </div>
+              <h3 className="mt-3 text-lg font-bold text-foreground">{topPerformer.name}</h3>
+              <p className="text-xs text-muted-foreground">{topPerformer.designation}</p>
+              <div className="mt-3 flex items-center justify-center gap-1">
+                <span className="text-2xl font-bold text-amber-600">{topPerformer.completion_rate.toFixed(1)}%</span>
+              </div>
+              <div className="mt-3 grid w-full grid-cols-3 gap-2 rounded-lg bg-secondary/50 p-2">
+                <div className="text-center">
+                  <p className="text-sm font-bold text-foreground">{topPerformer.total_assigned}</p>
+                  <p className="text-[10px] text-muted-foreground">Assigned</p>
+                </div>
+                <div className="text-center border-x border-border">
+                  <p className="text-sm font-bold text-success">{topPerformer.total_completed}</p>
+                  <p className="text-[10px] text-muted-foreground">Done</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-bold text-warning">{topPerformer.total_pending}</p>
+                  <p className="text-[10px] text-muted-foreground">Pending</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Other Top Performers */}
+      <Card className="border border-border bg-card shadow-sm lg:col-span-2">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <div className="rounded-full bg-secondary p-1.5">
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <CardTitle className="text-base font-semibold text-foreground">Leaderboard</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="space-y-2">
+            {otherPerformers.map((performer, index) => (
+              <div
+                key={performer.engineer_id}
+                className="flex items-center gap-3 rounded-lg border border-border bg-secondary/30 p-3 transition-colors hover:bg-secondary/50"
+              >
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-xs font-bold text-muted-foreground">
+                  {index + 2}
+                </div>
+                <Avatar className="h-9 w-9 border border-border">
+                  <AvatarFallback className="bg-secondary text-xs text-foreground">
+                    {getInitials(performer.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="truncate text-sm font-medium text-foreground">{performer.name}</p>
+                 <p className="font-semibold text-foreground">{performer.total_assigned} / {performer.total_completed}</p>
+                </div>
+               
+                <div className="text-right">
+                  <p className="text-sm font-bold text-primary">{performer.completion_rate.toFixed(1)}%</p>
+                      <p className="text-xs text-muted-foreground">{performer.total_pending} Pending</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
