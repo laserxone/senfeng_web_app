@@ -327,6 +327,16 @@ export const OwnerSidebarItems = [
       },
     ],
   },
+
+  {
+  title: "KHATA",
+  url: "/khata",
+  icon: "khata",
+  shortcut: ["k", "h", "a", "t"],
+
+  items: [],
+  group : "engineer"
+}
 ]
 
 // export const ownerNavItems = [

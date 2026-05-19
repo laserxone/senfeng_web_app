@@ -115,6 +115,7 @@ export const Icons = {
   reimbursementApproval : ShieldCheck,
   sales : BadgeDollarSign,
   performance : Zap,
+  khata : Scroll,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden='true'
