@@ -1,5 +1,4 @@
 import { TIMEZONE } from "@/constants/data";
-import useUserDetail from "@/hooks/use-user-detail";
 import { zodResolver } from "@hookform/resolvers/zod";
 import moment from "moment";
 import momentT from "moment-timezone";
@@ -8,14 +7,7 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import AppCalendar from "../appCalendar";
 import { Button } from "../ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "../ui/form";
+import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 import {
   Sheet,
   SheetContent,
@@ -25,7 +17,9 @@ import {
 } from "../ui/sheet";
 import Spinner from "../ui/spinner";
 import { UserSearch } from "../user-search";
-import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
+import { format, setMonth } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
 
 type FilterSheetProps = {
   visible: boolean,
@@ -33,7 +27,7 @@ type FilterSheetProps = {
   user_disable?: boolean,
   onReturn: (
     { start, end, user }:
-      { start: string, end: string, user?:  number }) => Promise<void>
+      { start: string, end: string, user?: number }) => Promise<void>
 }
 
 const formSchema = z.object({
@@ -164,6 +158,142 @@ const FilterSheet = ({ visible, onClose, onReturn, user_disable = true }: Filter
       </SheetContent>
     </Sheet>
   );
+};
+
+export const FilterSheetMonth = ({ visible, onClose, onReturn }: FilterSheetProps) => {
+
+    const currentDate = new Date();
+    const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+    const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
+
+    const years = Array.from(
+        { length: 20 },
+        (_, i) => new Date().getFullYear() - 10 + i
+    );
+
+    const months = Array.from({ length: 12 }, (_, i) =>
+        format(setMonth(new Date(), i), "MMMM")
+    );
+
+    function handleClear() {
+        setSelectedYear(currentDate.getFullYear());
+        setSelectedMonth(currentDate.getMonth());
+    }
+
+    function handleClose() {
+        onClose();
+        handleClear();
+    }
+
+    async function handleFilter() {
+        const startDate = momentT
+            .tz(
+                moment()
+                    .year(selectedYear)
+                    .month(selectedMonth)
+                    .startOf("month")
+                    .toDate(),
+                TIMEZONE
+            )
+            .startOf("day")
+            .utc()
+            .toISOString();
+
+        const endDate = momentT
+            .tz(
+                moment()
+                    .year(selectedYear)
+                    .month(selectedMonth)
+                    .endOf("month")
+                    .toDate(),
+                TIMEZONE
+            )
+            .endOf("day")
+            .utc()
+            .toISOString();
+
+        onReturn({
+            start: startDate,
+            end: endDate,
+        });
+
+        onClose();
+    }
+
+    return (
+        <Sheet open={visible} onOpenChange={handleClose}>
+            <SheetContent>
+                <SheetHeader>
+                    <SheetTitle>Filter</SheetTitle>
+                    <SheetDescription>Filter data by month and year</SheetDescription>
+                </SheetHeader>
+
+                <div className="space-y-4 px-4">
+                    <FieldSet className="border rounded-md p-3 gap-3">
+                        <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Month Filter</FieldLegend>
+
+                        <FieldGroup>
+                            <Field>
+                                <FieldLabel>Select Month</FieldLabel>
+
+                                <Select
+                                    value={selectedMonth.toString()}
+                                    onValueChange={(month) => {
+                                        setSelectedMonth(Number(month));
+                                    }}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select Month" />
+                                    </SelectTrigger>
+
+                                    <SelectContent>
+                                        {months.map((month, index) => (
+                                            <SelectItem key={index} value={index.toString()}>
+                                                {month}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </Field>
+
+                            <Field>
+                                <FieldLabel>Select Year</FieldLabel>
+
+                                <Select
+                                    value={selectedYear.toString()}
+                                    onValueChange={(year) => {
+                                        setSelectedYear(Number(year));
+                                    }}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select Year" />
+                                    </SelectTrigger>
+
+                                    <SelectContent>
+                                        {years.map((year) => (
+                                            <SelectItem key={year} value={year.toString()}>
+                                                {year}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </Field>
+
+                            <Button
+
+                                className="w-full"
+                                type="button"
+                                onClick={handleFilter}
+                            >
+
+                                Filter
+                            </Button>
+                        </FieldGroup>
+                    </FieldSet>
+                </div>
+            </SheetContent>
+        </Sheet>
+    );
 };
 
 export default FilterSheet;

@@ -4,199 +4,235 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
 
-    const searchParams = req.nextUrl.searchParams
-    const start_date = searchParams.get("start_date")
-    const end_date = searchParams.get("end_date")
-    const queryParams = []
-    let query = `
-      SELECT
-        u.id,
-        u.name,
-        u.designation,
+  const searchParams = req.nextUrl.searchParams;
+  const start_date = searchParams.get("start_date");
+  const end_date = searchParams.get("end_date");
 
-        COUNT(ca.complaint_id)::int AS total_assigned,
+  const queryParams: any[] = [];
 
-        COUNT(
-          CASE 
-            WHEN LOWER(c.status) IN ('resolved', 'completed') 
-            THEN 1 
-          END
-        )::int AS total_completed,
+  let query = `
+  SELECT
+    u.id AS engineer_id,
+    u.name,
+    u.designation,
+    u.dp,
 
-        COUNT(
-          CASE 
-            WHEN LOWER(c.status) NOT IN ('resolved', 'completed') 
-            THEN 1 
-          END
-        )::int AS total_pending,
+    c.id AS complaint_id,
+    c.status,
+    c.installation,
+    c.created_at
 
-        ROUND(
-          (
-            COUNT(CASE WHEN LOWER(c.status) IN ('resolved', 'completed') THEN 1 END)::decimal
-            / NULLIF(COUNT(ca.complaint_id), 0)
-          ) * 100,
-          2
-        ) AS completion_rate
+  FROM users u
 
-      FROM users u
-      INNER JOIN complaint_assignments ca 
-        ON ca.engineer_id = u.id
-      INNER JOIN complaints c 
-        ON c.id = ca.complaint_id
-      WHERE u.office = 'karachi'
-     
-    `
-    if (start_date && end_date) {
-        query += " AND c.created_at BETWEEN $1 AND $2"
-        queryParams.push(start_date)
-        queryParams.push(end_date)
-    }
+  INNER JOIN complaint_assignments ca
+    ON ca.engineer_id = u.id
 
-    query += `  GROUP BY u.id, u.name, u.designation
-      ORDER BY completion_rate DESC, total_assigned DESC`
-    try {
-        const engineers = await pool.query(query, queryParams)
+  INNER JOIN complaints c
+    ON c.id = ca.complaint_id
 
-        const complaintsByCategory = await pool.query(`
-  SELECT 
-    CASE
-      WHEN c.installation = true THEN 'New Installation'
-      ELSE 'Complaint'
-    END AS category,
+  WHERE u.office = 'karachi'
+`;
 
-    COUNT(*)::int AS total
+  if (start_date && end_date) {
+    query += ` AND c.created_at BETWEEN $1 AND $2`;
+    queryParams.push(start_date, end_date);
+  }
 
-  FROM complaints c
+  query += ` ORDER BY c.created_at ASC`;
 
-  INNER JOIN complaint_assignments ca 
-    ON ca.complaint_id = c.id
+  try {
+    const result = await pool.query(query, queryParams);
+    const rows = result.rows;
 
-  GROUP BY category
-  ORDER BY total DESC
-`);
+    const isCompleted = (status: string) => {
+      return ["resolved", "completed"].includes(status?.toLowerCase());
+    };
 
-        const complaintsByStatus = await pool.query(`
-     SELECT
-  CASE 
-    WHEN LOWER(c.status) IN ('resolved', 'completed')
-    THEN 'completed'
-    ELSE 'pending'
-  END AS status,
+    const engineerMap = new Map();
 
-  COUNT(*)::int AS total
+    const categoryMap = {
+      "New Installation": 0,
+      Complaint: 0,
+    };
 
-FROM complaints c
+    const statusMap = {
+      completed: 0,
+      pending: 0,
+    };
 
-INNER JOIN complaint_assignments ca
-  ON ca.complaint_id = c.id
+    const trendMap = new Map();
 
-GROUP BY
-  CASE 
-    WHEN LOWER(c.status) IN ('resolved', 'completed')
-    THEN 'completed'
-    ELSE 'pending'
-  END
-    `)
+    for (const row of rows) {
+      const completed = isCompleted(row.status);
+      const category = row.installation ? "New Installation" : "Complaint";
+      const status = completed ? "completed" : "pending";
 
-        const performanceTrend = await pool.query(`
-      SELECT
-        TO_CHAR(DATE_TRUNC('month', c.created_at), 'Mon YYYY') AS month,
-
-        COUNT(ca.complaint_id)::int AS total_assigned,
-
-        COUNT(
-          CASE 
-            WHEN LOWER(c.status) IN ('resolved', 'completed') 
-            THEN 1 
-          END
-        )::int AS total_completed,
-
-        ROUND(
-          (
-            COUNT(CASE WHEN LOWER(c.status) IN ('resolved', 'completed') THEN 1 END)::decimal
-            / NULLIF(COUNT(ca.complaint_id), 0)
-          ) * 100,
-          2
-        ) AS completion_rate
-
-      FROM complaints c
-      INNER JOIN complaint_assignments ca 
-        ON ca.complaint_id = c.id
-      GROUP BY DATE_TRUNC('month', c.created_at)
-      ORDER BY DATE_TRUNC('month', c.created_at)
-    `);
-
-        const totalAssigned = engineers.rows.reduce(
-            (sum, item) => sum + Number(item.total_assigned),
-            0
-        );
-
-        const totalCompleted = engineers.rows.reduce(
-            (sum, item) => sum + Number(item.total_completed),
-            0
-        );
-
-        const totalPending = engineers.rows.reduce(
-            (sum, item) => sum + Number(item.total_pending),
-            0
-        );
-
-        const completionRate =
-            totalAssigned > 0
-                ? Number(((totalCompleted / totalAssigned) * 100).toFixed(2))
-                : 0;
-
-        return NextResponse.json({
-            success: true,
-
-            overview: {
-                total_assigned: totalAssigned,
-                total_completed: totalCompleted,
-                total_pending: totalPending,
-                completion_rate: completionRate,
-            },
-
-            top_performers: engineers.rows.slice(0, 5).map((item) => ({
-                engineer_id: item.id,
-                name: item.name,
-                designation: item.designation,
-                total_assigned: Number(item.total_assigned),
-                total_completed: Number(item.total_completed),
-                total_pending: Number(item.total_pending),
-                completion_rate: Number(item.completion_rate || 0),
-            })),
-
-            complaints_by_category: complaintsByCategory.rows.map((item) => ({
-                category: item.category || "Uncategorized",
-                total: Number(item.total),
-            })),
-
-            complaints_by_status: complaintsByStatus.rows.map((item) => ({
-                status: item.status,
-                total: Number(item.total),
-            })),
-
-            performance_trend: performanceTrend.rows.map((item) => ({
-                month: item.month,
-                total_assigned: Number(item.total_assigned),
-                total_completed: Number(item.total_completed),
-                completion_rate: Number(item.completion_rate || 0),
-            })),
-
-            task_overview: {
-                completed: totalCompleted,
-                pending: totalPending,
-            },
+      if (!engineerMap.has(row.engineer_id)) {
+        engineerMap.set(row.engineer_id, {
+          engineer_id: row.engineer_id,
+          name: row.name,
+          dp: row.dp,
+          designation: row.designation,
+          total_assigned: 0,
+          total_completed: 0,
+          total_pending: 0,
         });
-    } catch (error) {
-        console.error("Engineer performance API error:", error);
+      }
 
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Failed to fetch engineer performance data",
-            },
-            { status: 500 }
-        );
+      const engineer = engineerMap.get(row.engineer_id);
+
+      engineer.total_assigned += 1;
+
+      if (completed) {
+        engineer.total_completed += 1;
+      } else {
+        engineer.total_pending += 1;
+      }
+
+      categoryMap[category] += 1;
+      statusMap[status] += 1;
+
+      const date = new Date(row.created_at);
+      const month = date.toLocaleString("en-US", {
+        month: "short",
+        year: "numeric",
+      });
+
+      if (!trendMap.has(month)) {
+        trendMap.set(month, {
+          month,
+          total_assigned: 0,
+          total_completed: 0,
+        });
+      }
+
+      const trend = trendMap.get(month);
+
+      trend.total_assigned += 1;
+
+      if (completed) {
+        trend.total_completed += 1;
+      }
     }
+
+    const engineers = Array.from(engineerMap.values()).map((engineer) => {
+      const completion_rate =
+        engineer.total_assigned > 0
+          ? Number(
+            (
+              (engineer.total_completed / engineer.total_assigned) *
+              100
+            ).toFixed(2)
+          )
+          : 0;
+
+      return {
+        ...engineer,
+        completion_rate,
+      };
+    });
+
+    const totalAssigned = engineers.reduce(
+      (sum, item) => sum + item.total_assigned,
+      0
+    );
+
+    const totalCompleted = engineers.reduce(
+      (sum, item) => sum + item.total_completed,
+      0
+    );
+
+    const totalPending = engineers.reduce(
+      (sum, item) => sum + item.total_pending,
+      0
+    );
+
+    const completionRate =
+      totalAssigned > 0
+        ? Number(((totalCompleted / totalAssigned) * 100).toFixed(2))
+        : 0;
+
+    const maxAssigned = Math.max(
+      ...engineers.map((item) => item.total_assigned),
+      1
+    );
+
+    const topPerformers = engineers
+      .map((engineer) => {
+        const workload_score = Number(
+          ((engineer.total_assigned / maxAssigned) * 100).toFixed(2)
+        );
+
+        const performance_score = Number(
+          (engineer.completion_rate * 0.7 + workload_score * 0.3).toFixed(2)
+        );
+
+        return {
+          ...engineer,
+          workload_score,
+          performance_score,
+        };
+      })
+      .sort((a, b) => b.performance_score - a.performance_score)
+      .slice(0, 5);
+
+    const complaintsByCategory = Object.entries(categoryMap).map(
+      ([category, total]) => ({
+        category,
+        total,
+      })
+    );
+
+    const complaintsByStatus = Object.entries(statusMap).map(
+      ([status, total]) => ({
+        status,
+        total,
+      })
+    );
+
+    const performanceTrend = Array.from(trendMap.values()).map((item) => ({
+      month: item.month,
+      total_assigned: item.total_assigned,
+      total_completed: item.total_completed,
+      completion_rate:
+        item.total_assigned > 0
+          ? Number(
+            ((item.total_completed / item.total_assigned) * 100).toFixed(2)
+          )
+          : 0,
+    }));
+
+    return NextResponse.json({
+      
+      overview: {
+        total_assigned: totalAssigned,
+        total_completed: totalCompleted,
+        total_pending: totalPending,
+        completion_rate: completionRate,
+      },
+
+      top_performers: topPerformers,
+
+      complaints_by_category: complaintsByCategory,
+
+      complaints_by_status: complaintsByStatus,
+
+      performance_trend: performanceTrend,
+
+      task_overview: {
+        completed: totalCompleted,
+        pending: totalPending,
+      },
+    });
+  } catch (error) {
+    console.error("Engineer performance API error:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to fetch engineer performance data",
+      },
+      { status: 500 }
+    );
+  }
 }

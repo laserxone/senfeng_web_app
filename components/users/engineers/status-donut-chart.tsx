@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
+import { ValueType } from "recharts/types/component/DefaultTooltipContent"
 
 interface StatusDonutChartProps {
   data: {
@@ -52,7 +53,7 @@ export function StatusDonutChart({ data }: StatusDonutChartProps) {
                   boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                   fontSize: "12px",
                 }}
-                formatter={(value: number) => [value, ""]}
+                // formatter={(value: number) => [value as ValueType, ""]}
               />
             </PieChart>
           </ResponsiveContainer>

@@ -1,5 +1,5 @@
 import pool from "@/config/db";
-import { Careers, branchNavItem, Commission, complaintItem, dealerNavItems, employeeNavItems, FinanceItem, myCloud, ownerNavItems, POSNavItem, POSNavItemAdmin, Prices, RepairAndMaintenance, StoreNavItem, teamAttendance, Tools, ReimbursementApproval, EngineersPerformance } from "@/constants/data";
+import { branchNavItem, Careers, Commission, complaintItem, dealerNavItems, employeeNavItems, EngineersPerformance, FinanceItem, myCloud, OwnerSidebarItems, POSNavItem, Prices, ReimbursementApproval, RepairAndMaintenance, StoreNavItem, teamAttendance } from "@/constants/data";
 import admin from "@/lib/firebaseAdmin";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -42,12 +42,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ emai
 
         if (user.full_access || user.designation == 'Owner') {
 
-            nav_items = [...ownerNavItems]
-            nav_items.push(FinanceItem)
-            nav_items.push(POSNavItemAdmin)
-            nav_items.push(Tools)
-            nav_items.push(Prices)
-            nav_items.push(RepairAndMaintenance)
+            nav_items = [...OwnerSidebarItems]
             base_route = `${city ? city : branchOffice}/superadmin`
         } else {
             if (user.designation == 'Store Manager') {
@@ -79,10 +74,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ emai
             if (user.team_attendance) {
                 nav_items.push(teamAttendance)
             }
-            if(user.careers){
+            if (user.careers) {
                 nav_items.push(Careers)
             }
-            if(user?.reimbursement_approval){
+            if (user?.reimbursement_approval) {
                 nav_items.push(ReimbursementApproval)
             }
             if (user.designation == 'Engineer') {
@@ -110,12 +105,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ emai
                 nav_items.push(Commission)
                 nav_items.push(Prices)
                 nav_items.push(FinanceItem)
-                // nav_items.push(EngineersPerformance)
+                nav_items.push(EngineersPerformance)
             }
 
         }
 
-        return NextResponse.json({ ...user, nav_items: nav_items, base_route: base_route, version_code: version_code, route_url: route_url }, { status: 200 })
+        return NextResponse.json({ ...user, nav_items: nav_items, base_route: base_route, version_code: version_code, route_url: route_url, }, { status: 200 })
 
     } catch (error: any) {
         console.error('Error inserting data: ', error);
@@ -134,5 +129,6 @@ async function deleteUserFromFirebase(email: string) {
         console.log(`Error deleting Firebase user: ${email}`, error?.message || error);
     }
 }
+
 
 export const revalidate = 0

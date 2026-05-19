@@ -1,67 +1,146 @@
-export const ownerNavItems = [
+export const OwnerSidebarItems = [
+
   {
-    title: "Dashboard",
-    url: "/dashboard",
+    title: "Overview",
     icon: "dashboard",
-
-    shortcut: ["d", "a", "s", "h"],
-    items: [],
-  },
-  {
-    title: "Complaint & Installation",
-    url: "/complaint",
-    icon: "complaint",
-
-    shortcut: ["c", "o", "m", "p"],
-    items: [],
-  },
-  {
-    title: "Customer",
-    url: "#",
-    icon: "customer",
-
-
+    isActive: [
+      "dashboard",
+      "news"
+    ],
     items: [
       {
-        title: "Customer",
-        url: "/customer",
+        title: "Dashboard",
+        url: "/dashboard",
+        shortcut: ["d", "a", "s", "h"],
+      },
 
+      {
+        title: "News & Updates",
+        url: "/news",
+        shortcut: ["n", "e", "w"],
+      },
+    ],
+  },
+
+
+  {
+    title: "Customers",
+    icon: "customer",
+    isActive: [
+      "customer",
+      "member",
+      "feedback",
+      "transfer-customers"
+    ],
+    items: [
+      {
+        title: "Customers",
+        url: "/customer",
         shortcut: ["c", "u", "s"],
       },
       {
-        title: "Member",
+        title: "Members",
         url: "/member",
-
         shortcut: ["m", "e", "m"],
       },
       {
         title: "Feedback",
-        shortcut: ["f", "e", "e"],
         url: "/feedback",
-
+        shortcut: ["f", "e", "e"],
       },
-      // {
-      //   title: 'Quotation',
-      //   url: '/quotation',
-      //   icon: 'quotation',
-      //   shortcut: ['q', 'u', 'o'],
-      // },
-      // {
-      //   title: 'Contract',
-      //   url: '/contract',
-      //   icon: 'contract',
-      //   shortcut: ['c', 'o', 'n'],
-
-      // },
+      {
+        title: "Transfer Customers",
+        url: "/transfer-customers",
+        shortcut: ["t", "r", "a"],
+      },
     ],
   },
 
-  {
-    title: "Human Resource",
-    url: "#",
-    icon: "hr",
-    isActive: ["attendance", "salary", "reimbursement", 'commission', 'team', "fine", "loans"],
 
+  {
+    title: "Engineering",
+    icon: "performance",
+    isActive: [
+      "complaint",
+      "repairandmaintenance",
+      "engineerperformance",
+    ],
+    items: [
+      {
+        title: "Complaints & Installations",
+        url: "/complaint",
+        shortcut: ["c", "o", "m"],
+      },
+
+      {
+        title: "Repair & Maintenance",
+        url: "/repairandmaintenance",
+        shortcut: ["r", "a", "m"],
+      },
+      {
+        title: "Engineers Performance",
+        url: "/engineerperformance",
+        shortcut: ["e", "n", "g"],
+      },
+    ],
+  },
+
+
+ 
+  {
+    title: "Sales",
+    icon: "sales",
+    isActive: [
+      "finance",
+      "commission",
+      "prices",
+      "oldcommissions",
+      "analytics",
+    ],
+    items: [
+       {
+        title: "Sales Overview",
+        url: "/finance",
+        shortcut: ["f", "i", "n"],
+      },
+      {
+        title: "Commission",
+        url: "/commission",
+        shortcut: ["c", "o", "m"],
+      },
+      {
+        title: "Prices",
+        url: "/prices",
+        shortcut: ["p", "r", "i"],
+      },
+      {
+        title: "Old Commissions",
+        url: "/oldcommissions",
+        shortcut: ["o", "l", "d"],
+      },
+      {
+        title: "Analytics",
+        url: "/analytics",
+        shortcut: ["a", "n", "a"],
+      },
+
+    ]
+
+  },
+
+
+  {
+    title: "Human Resources",
+    icon: "hr",
+    isActive: [
+      "attendance",
+      "team",
+      "salary",
+      "careers",
+      "applications",
+      "taks",
+      "map"
+    ],
     items: [
       {
         title: "Attendance",
@@ -69,123 +148,115 @@ export const ownerNavItems = [
         shortcut: ["a", "t", "t"],
       },
       {
-        title: "Salary",
-        shortcut: ["s", "a", "l"],
-        url: "/salary",
-      },
-      {
-        title: "Reimbursement",
-        shortcut: ["r", "e", "i"],
-        url: "/reimbursement",
-      },
-      {
-        title: "Commission",
-        shortcut: ["c", "o", "m"],
-        url: "/commission",
-      },
-      {
-        title: "Team",
+        title: "Team Management",
         url: "/team",
         shortcut: ["t", "e", "a"],
       },
       {
-        title: "Fine",
-        url: "/fine",
-        shortcut: ["f", "i", "n", "e"],
-      },
-      {
-        title: "Loans",
-        url: "/loans",
-        shortcut: ["l", "o", "a", "n"],
+        title: "Salary",
+        url: "/salary",
+        shortcut: ["s", "a", "l"],
       },
 
-      {
-        title: "Analytics",
-        url: "/analytics",
-        shortcut: ["f", "i", "n", "e"],
-      },
 
       {
         title: "Careers",
         url: "/careers",
-        shortcut: ["a", "p", "p", "l"],
+        shortcut: ["c", "a", "r"],
+      },
+      {
+        title: "Applications",
+        url: "/applications",
+        shortcut: ["a", "p", "p"],
       },
 
       {
-    title: "Applications",
-    url: "/applications",
-    shortcut: ["a", "p", "p"],
-  },
-    ],
-  },
-  {
-    title: "Task Management",
-    url: "#",
-    icon: "task",
-
-
-    items: [
-      {
-        title: "Assign Task",
+        title: "Assign Tasks",
         url: "/task",
         shortcut: ["a", "s", "s"],
       },
       {
         title: "Map View",
-        shortcut: ["m", "a", "p"],
         url: "/map",
+        shortcut: ["m", "a", "p"],
       },
     ],
   },
-  {
-    title: "Office Expense",
-    url: "/expense",
-    icon: "expense",
-    shortcut: ["o", "f", "f"],
 
-    items: [], // No child items
+  {
+    title: "Finance",
+    icon: "finance",
+    isActive: [
+     
+      "expense",
+      "paymentverification",
+      "reimbursement",
+      "fine",
+      "loans"
+    ],
+    items: [
+     
+      {
+        title: "Office Expenses",
+        url: "/expense",
+        shortcut: ["e", "x", "p"],
+      },
+
+      {
+        title: "Payment Verification",
+        url: "/paymentverification",
+        shortcut: ["p", "a", "y"],
+      },
+
+      {
+        title: "Reimbursement",
+        url: "/reimbursement",
+        shortcut: ["r", "e", "i"],
+      },
+      {
+        title: "Fines",
+        url: "/fine",
+        shortcut: ["f", "i", "n"],
+      },
+      {
+        title: "Loans",
+        url: "/loans",
+        shortcut: ["l", "o", "a"],
+      },
+
+    ],
   },
 
-  // {
-  //   title: 'Inventory',
-  //   url: '/inventory',
-  //   icon: 'inventory',
-  //   shortcut: ['i', 'n', 'v'],
-  //   
-  //   items: [] // No child items
-  // },
 
   {
-    title: "Documents",
-    url: "/dms",
-    icon: "dms",
-    shortcut: ["d", "m", "s"],
-
-    items: [],
-  },
-  {
-    title: "News",
-    url: "/news",
-    icon: "news",
-    shortcut: ["n", "e", "w", "s"],
-
-    items: [], // No child items
+    title: "POS & Orders",
+    icon: "pos",
+    isActive: [
+      "pos",
+      "orders",
+    ],
+    items: [
+      {
+        title: "Point Of Sale",
+        url: "/pos",
+        shortcut: ["p", "o", "s"],
+      },
+      {
+        title: "Orders",
+        url: "/orders",
+        shortcut: ["o", "r", "d"],
+      },
+    ],
   },
 
-  {
-    title: "My Cloud",
-    url: "/cloud",
-    icon: "cloud",
-    shortcut: ["c", "l", "o"],
-
-    items: [],
-  },
-  {
-    title: "Delivery",
-    url: "#",
+   {
+    title: "Delivery & Logistics",
     icon: "truck",
-
-
+    isActive: [
+      "delivery/machinedelivery",
+      "delivery/otherdelivery",
+      "delivery/delivered",
+    ],
     items: [
       {
         title: "Machine Delivery",
@@ -198,20 +269,281 @@ export const ownerNavItems = [
         shortcut: ["o", "d", "e"],
       },
       {
-        title: "Delivered",
-        shortcut: ["d", "e", "l"],
+        title: "Delivered Orders",
         url: "/delivery/delivered",
+        shortcut: ["d", "e", "l"],
+      },
+
+    ],
+  },
+
+
+
+  {
+    title: "Documents & Cloud",
+    icon: "cloud",
+    isActive: [
+      "dms",
+      "cloud",
+    ],
+    items: [
+      {
+        title: "Document Management",
+        url: "/dms",
+        shortcut: ["d", "m", "s"],
+      },
+      {
+        title: "My Cloud",
+        url: "/cloud",
+        shortcut: ["c", "l", "o"],
       },
     ],
   },
-];
+
+
+  {
+    title: "Administration",
+    icon: "tools",
+    isActive: [
+      "configuration",
+      "manage-hierarchy",
+      "backend"
+    ],
+    items: [
+      {
+        title: "Configuration",
+        url: "/configuration",
+        shortcut: ["c", "o", "n"],
+      },
+      {
+        title: "Manage Hierarchy",
+        url: "/manage-hierarchy",
+        shortcut: ["m", "a", "n"],
+      },
+      {
+        title: "Backend",
+        url: "/backend",
+        shortcut: ["b", "a", "c"],
+      },
+    ],
+  },
+]
+
+// export const ownerNavItems = [
+//   {
+//     title: "Dashboard",
+//     url: "/dashboard",
+//     icon: "dashboard",
+
+//     shortcut: ["d", "a", "s", "h"],
+//     items: [],
+//   },
+//   {
+//     title: "Complaint & Installation",
+//     url: "/complaint",
+//     icon: "complaint",
+
+//     shortcut: ["c", "o", "m", "p"],
+//     items: [],
+//   },
+//   {
+//     title: "Customer",
+//     url: "#",
+//     icon: "customer",
+
+
+//     items: [
+//       {
+//         title: "Customer",
+//         url: "/customer",
+
+//         shortcut: ["c", "u", "s"],
+//       },
+//       {
+//         title: "Member",
+//         url: "/member",
+
+//         shortcut: ["m", "e", "m"],
+//       },
+//       {
+//         title: "Feedback",
+//         shortcut: ["f", "e", "e"],
+//         url: "/feedback",
+
+//       },
+//       // {
+//       //   title: 'Quotation',
+//       //   url: '/quotation',
+//       //   icon: 'quotation',
+//       //   shortcut: ['q', 'u', 'o'],
+//       // },
+//       // {
+//       //   title: 'Contract',
+//       //   url: '/contract',
+//       //   icon: 'contract',
+//       //   shortcut: ['c', 'o', 'n'],
+
+//       // },
+//     ],
+//   },
+
+//   {
+//     title: "Human Resource",
+//     url: "#",
+//     icon: "hr",
+//     isActive: ["attendance", "salary", "reimbursement", 'commission', 'team', "fine", "loans"],
+
+//     items: [
+//       {
+//         title: "Attendance",
+//         url: "/attendance",
+//         shortcut: ["a", "t", "t"],
+//       },
+//       {
+//         title: "Salary",
+//         shortcut: ["s", "a", "l"],
+//         url: "/salary",
+//       },
+//       {
+//         title: "Reimbursement",
+//         shortcut: ["r", "e", "i"],
+//         url: "/reimbursement",
+//       },
+//       {
+//         title: "Commission",
+//         shortcut: ["c", "o", "m"],
+//         url: "/commission",
+//       },
+//       {
+//         title: "Team",
+//         url: "/team",
+//         shortcut: ["t", "e", "a"],
+//       },
+//       {
+//         title: "Fine",
+//         url: "/fine",
+//         shortcut: ["f", "i", "n", "e"],
+//       },
+//       {
+//         title: "Loans",
+//         url: "/loans",
+//         shortcut: ["l", "o", "a", "n"],
+//       },
+
+//       {
+//         title: "Analytics",
+//         url: "/analytics",
+//         shortcut: ["f", "i", "n", "e"],
+//       },
+
+//       {
+//         title: "Careers",
+//         url: "/careers",
+//         shortcut: ["a", "p", "p", "l"],
+//       },
+
+//       {
+//         title: "Applications",
+//         url: "/applications",
+//         shortcut: ["a", "p", "p"],
+//       },
+//     ],
+//   },
+//   {
+//     title: "Task Management",
+//     url: "#",
+//     icon: "task",
+
+
+//     items: [
+//       {
+//         title: "Assign Task",
+//         url: "/task",
+//         shortcut: ["a", "s", "s"],
+//       },
+//       {
+//         title: "Map View",
+//         shortcut: ["m", "a", "p"],
+//         url: "/map",
+//       },
+//     ],
+//   },
+//   {
+//     title: "Office Expense",
+//     url: "/expense",
+//     icon: "expense",
+//     shortcut: ["o", "f", "f"],
+
+//     items: [], // No child items
+//   },
+
+//   // {
+//   //   title: 'Inventory',
+//   //   url: '/inventory',
+//   //   icon: 'inventory',
+//   //   shortcut: ['i', 'n', 'v'],
+//   //   
+//   //   items: [] // No child items
+//   // },
+
+//   {
+//     title: "Documents",
+//     url: "/dms",
+//     icon: "dms",
+//     shortcut: ["d", "m", "s"],
+
+//     items: [],
+//   },
+//   {
+//     title: "News",
+//     url: "/news",
+//     icon: "news",
+//     shortcut: ["n", "e", "w", "s"],
+
+//     items: [], // No child items
+//   },
+
+//   {
+//     title: "My Cloud",
+//     url: "/cloud",
+//     icon: "cloud",
+//     shortcut: ["c", "l", "o"],
+
+//     items: [],
+//   },
+//   {
+//     title: "Delivery",
+//     url: "#",
+//     icon: "truck",
+
+
+//     items: [
+//       {
+//         title: "Machine Delivery",
+//         url: "/delivery/machinedelivery",
+//         shortcut: ["m", "d", "e"],
+//       },
+//       {
+//         title: "Other Delivery",
+//         url: "/delivery/otherdelivery",
+//         shortcut: ["o", "d", "e"],
+//       },
+//       {
+//         title: "Delivered",
+//         shortcut: ["d", "e", "l"],
+//         url: "/delivery/delivered",
+//       },
+//     ],
+//   },
+// ];
 
 export const Careers = {
   title: "Careers",
   url: "/careers",
   icon: "careers",
   shortcut: ["a", "p", "p"],
-  items: []
+  items: [],
+  group : "hr"
 }
 
 export const FinanceItem = {
@@ -221,15 +553,17 @@ export const FinanceItem = {
   shortcut: ["f", "i", "n", "a"],
 
   items: [],
+  group : "sales"
 };
 
 export const EngineersPerformance = {
   title: "Engineer's Performance",
   url: "/engineerperformance",
-  icon: "finance",
-  shortcut: ["f", "i", "n", "a"],
+  icon: "performance",
+  shortcut: ["e", "n", "g", "i"],
 
   items: [],
+  group : "engineer"
 };
 
 export const complaintItem = {
@@ -239,6 +573,7 @@ export const complaintItem = {
 
   shortcut: ["c", "o", "m", "p"],
   items: [],
+   group : "engineer"
 };
 
 export const myCloud = {
@@ -248,6 +583,7 @@ export const myCloud = {
   shortcut: ["c", "l", "o"],
 
   items: [],
+  group : "dms"
 };
 
 export const teamAttendance = {
@@ -257,6 +593,7 @@ export const teamAttendance = {
   shortcut: ["t", "a", "t"],
 
   items: [],
+  group : "hr"
 };
 
 export const ReimbursementApproval = {
@@ -266,6 +603,7 @@ export const ReimbursementApproval = {
   shortcut: ["r", "i", "a"],
 
   items: [],
+  group : "finance"
 };
 
 export const employeeNavItems = [
@@ -286,24 +624,31 @@ export const employeeNavItems = [
     items: [],
   },
 
-  {
+   {
     title: "Customers",
-    url: "/customer",
     icon: "customer",
-
-    shortcut: ["c", "u", "s"],
-    items: [],
+    isActive: [
+      "customer",
+      "member",
+      "feedback",
+      "transfer-customers"
+    ],
+    items: [
+      {
+        title: "Customers",
+        url: "/customer",
+        shortcut: ["c", "u", "s"],
+      },
+      {
+        title: "Members",
+        url: "/member",
+        shortcut: ["m", "e", "m"],
+      },
+    ],
   },
-  {
-    title: "Members",
-    url: "/member",
 
-    icon: "member",
-    shortcut: ["m", "e", "m"],
-    items: [],
-  },
   {
-    title: "Documents",
+    title: "Documents & Cloud",
     url: "/dms",
     icon: "dms",
     shortcut: ["d", "m", "s"],
@@ -328,6 +673,7 @@ export const Commission = {
   icon: "commission",
   shortcut: ["c", "o", "m"],
   items: [],
+  group : "sales"
 }
 
 export const dealerNavItems = [
@@ -371,6 +717,7 @@ export const branchNavItem = {
   shortcut: ["o", "f", "f"],
 
   items: [],
+  group : "finance"
 };
 
 
@@ -459,6 +806,7 @@ export const POSNavItem = {
   icon: "pos",
   shortcut: ["p", "o", "s"],
   items: [],
+  group : "pos"
 };
 
 
@@ -492,7 +840,7 @@ export const Tools = {
       url: "/configuration",
 
     },
-     {
+    {
       title: "Manage Hierarchy",
       shortcut: ["m", "a", "n"],
       url: "/manage-hierarchy",
@@ -531,6 +879,7 @@ export const Prices = {
   shortcut: ["p", "r", "i"],
 
   items: [],
+  group : "sales"
 };
 
 export const RepairAndMaintenance = {
@@ -540,6 +889,7 @@ export const RepairAndMaintenance = {
   shortcut: ["r", "a", "m"],
 
   items: [],
+   group : "engineer"
 };
 
 export const PakCities = [

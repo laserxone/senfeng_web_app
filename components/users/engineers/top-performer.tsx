@@ -1,18 +1,14 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Crown, Users } from "lucide-react"
+import { Performer } from "@/lib/types"
+import { useEffect, useState } from "react"
+import { getDownloadURL, ref } from "firebase/storage"
+import { storage } from "@/config/firebase"
 
-interface Performer {
-  engineer_id: string | number
-  name: string
-  designation: string
-  total_assigned: number
-  total_completed: number
-  total_pending: number
-  completion_rate: number
-}
+
 
 interface TopPerformersProps {
   performers: Performer[]
@@ -45,7 +41,8 @@ export function TopPerformers({ performers }: TopPerformersProps) {
           <CardContent className="pt-0">
             <div className="flex flex-col items-center text-center">
               <div className="relative">
-                <Avatar className="h-16 w-16 border-2 border-amber-200">
+                <Avatar className="h-33 w-33 border-2 border-amber-200">
+                  <RenderProfilePicture dp={topPerformer.dp}/>
                   <AvatarFallback className="bg-amber-100 text-amber-700 text-lg font-semibold">
                     {getInitials(topPerformer.name)}
                   </AvatarFallback>
@@ -105,12 +102,12 @@ export function TopPerformers({ performers }: TopPerformersProps) {
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="truncate text-sm font-medium text-foreground">{performer.name}</p>
-                 <p className="font-semibold text-foreground">{performer.total_assigned} / {performer.total_completed}</p>
+                  <p className="font-semibold text-foreground">{performer.total_assigned} / {performer.total_completed}</p>
                 </div>
-               
+
                 <div className="text-right">
                   <p className="text-sm font-bold text-primary">{performer.completion_rate.toFixed(1)}%</p>
-                      <p className="text-xs text-muted-foreground">{performer.total_pending} Pending</p>
+                  <p className="text-xs text-muted-foreground">{performer.total_pending} Pending</p>
                 </div>
               </div>
             ))}
@@ -120,3 +117,32 @@ export function TopPerformers({ performers }: TopPerformersProps) {
     </div>
   )
 }
+
+const RenderProfilePicture = ({ dp }: { dp?: string }) => {
+  const [localImage, setLocalImage] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    if (dp) {
+
+      try {
+        if (dp?.includes("http")) {
+          setLocalImage(dp);
+        } else {
+          const storageRef = ref(storage, dp);
+          getDownloadURL(storageRef).then((url) => {
+            setLocalImage(url);
+          });
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }, []);
+
+  if (localImage)
+    return (
+      <AvatarImage src={localImage || ""} />
+    );
+}
+

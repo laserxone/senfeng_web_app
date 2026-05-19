@@ -199,7 +199,7 @@ export default function Page() {
     },
   ];
 
-  async function fetchData(startDate, endDate, user = null) {
+  async function fetchData(startDate = "", endDate = "", user : string | null = null) {
     return new Promise((resolve, reject) => {
       axios
         .get(

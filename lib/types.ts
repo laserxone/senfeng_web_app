@@ -101,7 +101,7 @@ export type ExtraCustomer = {
     number: string;
     location: string;
     created_at: string;
-    member ?: boolean
+    member?: boolean
 }
 
 export type UserExtraTypes = {
@@ -167,8 +167,8 @@ export type UserReimbursementType = {
     ownership_id: number;
     customer: string;
     ownership_name: string;
-    verified ?:boolean
-    resolved ?:boolean
+    verified?: boolean
+    resolved?: boolean
 }
 
 export type MyCustomer = {
@@ -402,7 +402,7 @@ export type ComplaintProps = {
     complaint_solution: string;
     complaint_status: string;
     complaint_created_at: string;
-    complaint_paid : boolean
+    complaint_paid: boolean
     customer_id: number;
     complaint_id: number;
     customer_name: string;
@@ -1346,65 +1346,72 @@ export type OutwardProps = {
 };
 
 export type Resume = {
-   id: number;
-  full_name: string;
-  email_address: string;
-  phone_number: string;
-  current_location: string;
-  position_applied_for: string;
-  experience_years: number;
-  cover_letter: string;
-  cv_url: string;
-  status: string;
-  created_at: string;
-  cvDownloadUrl: string;
+    id: number;
+    full_name: string;
+    email_address: string;
+    phone_number: string;
+    current_location: string;
+    position_applied_for: string;
+    experience_years: number;
+    cover_letter: string;
+    cv_url: string;
+    status: string;
+    created_at: string;
+    cvDownloadUrl: string;
 };
 
 export type ResumesResponse = {
-  success: boolean;
-  total: number;
-  resumes: Resume[];
+    success: boolean;
+    total: number;
+    resumes: Resume[];
 };
 
+export type Performer = {
+    engineer_id: string | number
+    name: string
+    dp: string
+    designation: string
+    total_assigned: number
+    total_completed: number
+    total_pending: number
+    completion_rate: number
+}
+
 export type EngineerPerformanceResponse = {
-  success: boolean;
+    success: boolean;
 
-  overview: {
-    total_assigned: number;
-    total_completed: number;
-    total_pending: number;
-    completion_rate: number;
-  };
+    overview: {
+        total_assigned: number;
+        total_completed: number;
+        total_pending: number;
+        completion_rate: number;
+        total_assigned_change: { positive: boolean, value: number }
+        total_completed_change: { positive: boolean, value: number }
+        total_pending_change: { positive: boolean, value: number }
+        completion_rate_change: { positive: boolean, value: number }
+    };
 
-  top_performers: {
-    engineer_id: number;
-    name: string;
-    designation: string;
-    total_assigned: number;
-    total_completed: number;
-    total_pending: number;
-    completion_rate: number;
-  }[];
+    top_performers: Performer[];
 
-  complaints_by_category: {
-    category: string;
-    total: number;
-  }[];
+    complaints_by_category: {
+        category: string;
+        total: number;
+    }[];
 
-  complaints_by_status: {
-    status: string;
-    total: number;
-  }[];
+    complaints_by_status: {
+        status: string;
+        total: number;
+    }[];
 
-  performance_trend: {
-    month: string;
-    total_assigned: number;
-    total_completed: number;
-    completion_rate: number;
-  }[];
+    performance_trend: {
+        month: string;
+        total_assigned: number;
+        total_completed: number;
+        completion_rate: number;
+    }[];
 
-  task_overview: {
-    completed: number;
-    pending: number;
-  };
+    task_overview: {
+        completed: number;
+        pending: number;
+    };
 };

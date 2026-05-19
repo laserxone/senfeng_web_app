@@ -37,7 +37,7 @@ export function StatCard({ title, value, icon: Icon, trend, variant = "default" 
           <div className={cn(
             "text-xs font-medium px-2 py-1 rounded-full",
             trend.isPositive 
-              ? "bg-success/10 text-success" 
+              ? "bg-green-100 text-green-500" 
               : "bg-destructive/10 text-destructive"
           )}>
             {trend.isPositive ? "+" : ""}{trend.value}%
