@@ -83,9 +83,14 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
       ...newItems[index],
       [field]: value,
     };
+    if (field === 'machine_serial') {
+      newItems[index] = {
+        ...newItems[index],
+        "name": value as string
+      };
 
+    }
     setItems(newItems);
-
     setErrors((prevErrors) => {
       const newErrors = [...prevErrors];
 
@@ -545,7 +550,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                                 "machine_serial",
                                 e.target.value
                               );
-                              handleItemChange(index, "name", e.target.value);
+                              // handleItemChange(index, "name", e.target.value);
                             }}
                           />
                           {errors[index]?.machine_serial && (
