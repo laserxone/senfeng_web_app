@@ -39,7 +39,6 @@ export async function GET() {
 export async function PUT(req: NextRequest) {
     try {
         const data = await req.json();
-        console.log(data)
         const { id, ...updates } = data;
 
         if (!id) {

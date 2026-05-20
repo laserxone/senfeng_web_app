@@ -1,14 +1,17 @@
-import { Pool } from 'pg';
+import { Pool } from "pg";
 
+declare global {
+  var pool: Pool | undefined;
+}
 
-const pool = new Pool({
-    connectionString : process.env.DATABASE_URL
-});
+const pool =
+  global.pool ||
+  new Pool({
+    connectionString: process.env.DATABASE_URL,
+  });
 
-// export const karachi_pool = new Pool({
-//     connectionString : process.env.KARACHI_DATABASE_URL
-// });
+if (process.env.NODE_ENV !== "production") {
+  global.pool = pool;
+}
 
-
-
-export default pool;
+export default pool

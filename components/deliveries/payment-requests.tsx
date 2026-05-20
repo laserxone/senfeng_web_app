@@ -1,45 +1,39 @@
 "use client";
 
-import Dropzone from "@/components/dropzone";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
 import {
     CircleDollarSign,
     Clock3,
     Loader2,
-    ReceiptText,
-    Wallet,
+    Wallet
 } from "lucide-react";
 import moment from "moment";
 import { useEffect, useMemo, useState } from "react";
 import Zoom from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
-import { Input } from "@/components/ui/input";
 
 import {
     Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
+    CardContent
 } from "@/components/ui/card";
 
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
-import { UploadImage } from "@/lib/uploadFunction";
-import AppCalendar from "../appCalendar";
-import Spinner from "../ui/spinner";
-import { getDownloadURL, ref } from "firebase/storage";
+import PageTable from "@/components/app-table";
+import Dropzone from "@/components/dropzone";
 import { storage } from "@/config/firebase";
+import { UploadImage } from "@/lib/uploadFunction";
+import { ColumnDef } from "@tanstack/react-table";
+import { getDownloadURL, ref } from "firebase/storage";
+import { ArrowUpDown } from "lucide-react";
+import AppCalendar from "../appCalendar";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Input } from "../ui/input";
+import Spinner from "../ui/spinner";
+import { TriggerFirebaseForPendingPayments } from "@/lib/triggerFirebase";
 
 type PaymentRequest = {
     id: number;
@@ -132,7 +126,10 @@ export default function PaymentRequestsPage() {
                 request_type: false
             });
 
+            TriggerFirebaseForPendingPayments()
+
             await fetchPaymentRequests()
+
 
             setDialogOpen(false);
         } finally {
@@ -161,6 +158,170 @@ export default function PaymentRequestsPage() {
         };
     }, [requests]);
 
+    const columns: ColumnDef<PaymentRequest>[] = [
+        {
+            accessorKey: "serial_no",
+            filterFn: "includesString",
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Serial No
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => (
+                <div className="font-medium">
+                    {row.original.serial_no || row.original.sale_id}
+                </div>
+            ),
+        },
+        {
+            accessorKey: "customer_name",
+            filterFn: "includesString",
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Customer
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => <div>{row.original.customer_name || "-"}</div>,
+        },
+        {
+            accessorKey: "customer_owner",
+            filterFn: "includesString",
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Owner
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => <div>{row.original.customer_owner || "-"}</div>,
+        },
+        {
+            accessorKey: "ownership_name",
+            filterFn: "includesString",
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Ownership
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => <div>{row.original.ownership_name || "-"}</div>,
+        },
+        {
+            accessorKey: "amount",
+            filterFn: "includesString",
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Amount
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => (
+                <div className="font-semibold">
+                    PKR {Number(row.original.amount || 0).toLocaleString()}
+                </div>
+            ),
+        },
+        {
+            accessorKey: "tid",
+            filterFn: "includesString",
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    TID
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => <div>{row.original.tid || "-"}</div>,
+        },
+        {
+            accessorKey: "date",
+            filterFn: "includesString",
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Payment Date
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => (
+                <div>
+                    {row.original.date
+                        ? moment(row.original.date).format("DD MMM YYYY")
+                        : "-"}
+                </div>
+            ),
+        },
+        {
+            accessorKey: "created_at",
+            filterFn: "includesString",
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Requested At
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => (
+                <div>{moment(row.original.created_at).format("DD MMM YYYY")}</div>
+            ),
+        },
+        {
+            accessorKey: "request_type",
+            filterFn: "includesString",
+            header: "Status",
+            cell: ({ row }) => (
+                <Badge variant={row.original.request_type ? "destructive" : "secondary"}>
+                    {row.original.request_type ? "Requested" : "Submitted"}
+                </Badge>
+            ),
+        },
+        {
+            id: "slip",
+            header: "Slip",
+            cell: ({ row }) =>
+                row.original.slip ? <RenderPaymentSlip img={row.original.slip} /> : "-",
+        },
+        {
+            id: "actions",
+            header: "Actions",
+            cell: ({ row }) => {
+                const item = row.original;
+
+                if (!item.request_type) {
+                    return <span className="text-sm text-muted-foreground">Completed</span>;
+                }
+
+                return (
+                    <Button size="sm" onClick={() => handleOpenDialog(item)}>
+                        Record Payment
+                    </Button>
+                );
+            },
+        },
+    ];
+
     return (
         <div className="flex flex-1 flex-col space-y-6">
             <Heading
@@ -169,58 +330,40 @@ export default function PaymentRequestsPage() {
             />
 
             {/* Summary Cards */}
-            <div className="grid gap-4 md:grid-cols-3">
-                <Card className="border-border/60 shadow-sm">
-                    <CardContent className="flex items-center justify-between p-6">
+            <div className="grid gap-3 md:grid-cols-3">
+                <Card className="border-border/60 p-0">
+                    <CardContent className="flex items-center justify-between p-4">
                         <div>
-                            <p className="text-sm text-muted-foreground">
-                                Total Requested
-                            </p>
-
-                            <h2 className="mt-1 text-2xl font-bold">
+                            <p className="text-xs text-muted-foreground">Total Requested</p>
+                            <h2 className="text-xl font-semibold">
                                 PKR {totals.totalRequested.toLocaleString()}
                             </h2>
                         </div>
-
-                        <div className="rounded-xl bg-primary/10 p-3">
-                            <Wallet className="h-5 w-5" />
-                        </div>
+                        <Wallet className="h-5 w-5 text-muted-foreground" />
                     </CardContent>
                 </Card>
 
-                <Card className="border-border/60 shadow-sm">
-                    <CardContent className="flex items-center justify-between p-6">
+                <Card className="border-border/60 p-0">
+                    <CardContent className="flex items-center justify-between p-4">
                         <div>
-                            <p className="text-sm text-muted-foreground">
-                                Total Paid
-                            </p>
-
-                            <h2 className="mt-1 text-2xl font-bold">
+                            <p className="text-xs text-muted-foreground">Total Paid</p>
+                            <h2 className="text-xl font-semibold">
                                 PKR {totals.totalPaid.toLocaleString()}
                             </h2>
                         </div>
-
-                        <div className="rounded-xl bg-green-500/10 p-3">
-                            <CircleDollarSign className="h-5 w-5 text-green-600" />
-                        </div>
+                        <CircleDollarSign className="h-5 w-5 text-muted-foreground" />
                     </CardContent>
                 </Card>
 
-                <Card className="border-border/60 shadow-sm">
-                    <CardContent className="flex items-center justify-between p-6">
+                <Card className="border-border/60 p-0">
+                    <CardContent className="flex items-center justify-between p-4">
                         <div>
-                            <p className="text-sm text-muted-foreground">
-                                Total Due
-                            </p>
-
-                            <h2 className="mt-1 text-2xl font-bold">
+                            <p className="text-xs text-muted-foreground">Total Due</p>
+                            <h2 className="text-xl font-semibold">
                                 PKR {totals.totalDue.toLocaleString()}
                             </h2>
                         </div>
-
-                        <div className="rounded-xl bg-orange-500/10 p-3">
-                            <Clock3 className="h-5 w-5 text-orange-600" />
-                        </div>
+                        <Clock3 className="h-5 w-5 text-muted-foreground" />
                     </CardContent>
                 </Card>
             </div>
@@ -236,272 +379,131 @@ export default function PaymentRequestsPage() {
                     </p>
                 </div>
             ) : (
-                <div className="grid gap-4">
-                    {requests.map((item) => (
-                        <Card
-                            key={item.id}
-                            className="border-border/60 shadow-sm transition-all hover:shadow-md"
-                        >
-                            <CardHeader className="pb-4">
-                                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                                    <div>
-                                        <CardTitle className="flex items-center gap-2 text-base">
-                                            <ReceiptText className="h-4 w-4" />
-                                            Machine #{item.serial_no || item.sale_id}
-                                        </CardTitle>
-
-                                        <p className="mt-1 text-sm text-muted-foreground">
-                                            {item.customer_name || "-"} • Manager:{" "}
-                                            {item.customer_owner || "-"}
-                                        </p>
-                                    </div>
-
-                                    <div className="flex items-center gap-3">
-                                        <Badge
-                                            variant={
-                                                item.request_type ? "destructive" : "secondary"
-                                            }
-                                        >
-                                            {item.request_type
-                                                ? "Payment Requested"
-                                                : "Payment Submitted"}
-                                        </Badge>
-
-                                        {item.request_type && (
-                                            <Dialog
-                                                open={dialogOpen && selected?.id === item.id}
-                                                onOpenChange={setDialogOpen}
-                                            >
-                                                <DialogTrigger asChild>
-                                                    <Button
-                                                        size="sm"
-                                                        onClick={() => handleOpenDialog(item)}
-                                                    >
-                                                        Record Payment
-                                                    </Button>
-                                                </DialogTrigger>
-
-                                                <DialogContent className="sm:max-w-lg">
-                                                    <DialogHeader>
-                                                        <DialogTitle>
-                                                            Record Payment
-                                                        </DialogTitle>
-
-                                                        <DialogDescription>
-                                                            Submit payment information for this request.
-                                                        </DialogDescription>
-                                                    </DialogHeader>
-
-                                                    <div className="grid gap-4 pt-4">
-                                                        <div className="grid gap-2">
-                                                            <label className="text-sm font-medium">
-                                                                Date
-                                                            </label>
-
-                                                            <AppCalendar date={form.date} onChange={(e) =>
-                                                                setForm((prev) => ({
-                                                                    ...prev,
-                                                                    date: e,
-                                                                }))
-                                                            } />
-
-                                                        </div>
-
-                                                        <div className="grid gap-2">
-                                                            <label className="text-sm font-medium">
-                                                                TID
-                                                            </label>
-
-                                                            <Input
-                                                                placeholder="Enter transaction ID"
-                                                                value={form.tid}
-                                                                onChange={(e) =>
-                                                                    setForm((prev) => ({
-                                                                        ...prev,
-                                                                        tid: e.target.value,
-                                                                    }))
-                                                                }
-                                                            />
-                                                        </div>
-
-                                                        <div className="grid gap-2">
-                                                            <label className="text-sm font-medium">
-                                                                Amount
-                                                            </label>
-
-                                                            <Input
-                                                                disabled
-                                                                value={Number(
-                                                                    form.amount
-                                                                ).toLocaleString()}
-                                                            />
-                                                        </div>
-
-
-
-                                                        <div className="grid gap-2">
-                                                            <label className="text-sm font-medium">
-                                                                Slip
-                                                            </label>
-                                                            <div className="flex w-full justify-center">
-
-                                                                <Dropzone
-                                                                    value={form?.slip}
-                                                                    onDrop={(file) => {
-                                                                        setForm((prev) => {
-                                                                            if (!prev) return prev;
-                                                                            return { ...prev, slip: file };
-                                                                        });
-                                                                    }}
-                                                                    title={"Click to upload"}
-                                                                    subheading={"or drag and drop"}
-                                                                    description={"PNG or JPG"}
-                                                                    drag={"Drop the files here..."}
-                                                                />
-                                                            </div>
-
-
-                                                        </div>
-
-                                                        <Button
-                                                            disabled={submitting}
-                                                            onClick={handleRecordPayment}
-                                                        >
-                                                            {submitting && (
-                                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                            )}
-
-                                                            Submit Payment
-                                                        </Button>
-                                                    </div>
-                                                </DialogContent>
-                                            </Dialog>
-                                        )}
-                                    </div>
-                                </div>
-                            </CardHeader>
-
-                            <CardContent>
-                                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">
-                                            Amount
-                                        </p>
-
-                                        <p className="font-semibold">
-                                            PKR {Number(item.amount).toLocaleString()}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">
-                                            TID
-                                        </p>
-
-                                        <p className="font-medium">
-                                            {item.tid || "-"}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">
-                                            Payment Date
-                                        </p>
-
-                                        <p className="font-medium">
-                                            {item.date
-                                                ? moment(item.date).format("DD MMM YYYY")
-                                                : "-"}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">
-                                            Ownership
-                                        </p>
-
-                                        <p className="font-medium">
-                                            {item.ownership_name || "-"}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">
-                                            Requested At
-                                        </p>
-
-                                        <p className="font-medium">
-                                            {moment(item.created_at).format(
-                                                "DD MMM YYYY"
-                                            )}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {item.slip && (
-                                    <div className="mt-4 rounded-xl border bg-muted/30 p-4">
-                                        <p className="text-xs text-muted-foreground">
-                                            Payment Slip
-                                        </p>
-
-                                       <RenderPaymentSlip img={item.slip}/>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+                <PageTable
+                    loading={loading}
+                    columns={columns}
+                    data={requests}
+                />
             )}
+
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>Record Payment</DialogTitle>
+                        <DialogDescription>
+                            Submit payment information for this request.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="grid gap-4 pt-4">
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium">Date</label>
+                            <AppCalendar
+                                date={form.date}
+                                onChange={(date) =>
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        date,
+                                    }))
+                                }
+                            />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium">TID</label>
+                            <Input
+                                placeholder="Enter transaction ID"
+                                value={form.tid}
+                                onChange={(e) =>
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        tid: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium">Amount</label>
+                            <Input disabled value={Number(form.amount).toLocaleString()} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium">Slip</label>
+                            <div className="flex w-full justify-center">
+                                <Dropzone
+                                    value={form.slip}
+                                    onDrop={(file) =>
+                                        setForm((prev) => ({
+                                            ...prev,
+                                            slip: file,
+                                        }))
+                                    }
+                                    title="Click to upload"
+                                    subheading="or drag and drop"
+                                    description="PNG or JPG"
+                                    drag="Drop the files here..."
+                                />
+                            </div>
+                        </div>
+
+                        <Button disabled={submitting} onClick={handleRecordPayment}>
+                            {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Submit Payment
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
 
 
 const RenderPaymentSlip = ({ img }: { img: string }) => {
-  const [localImage, setLocalImage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+    const [localImage, setLocalImage] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(false);
 
-  useEffect(() => {
-    if (!img) {
-      setLocalImage(null);
-      setError(false);
-      setLoading(false);
-      return;
-    }
+    useEffect(() => {
+        if (!img) {
+            setLocalImage(null);
+            setError(false);
+            setLoading(false);
+            return;
+        }
 
-    setLoading(true);
-    setError(false);
+        setLoading(true);
+        setError(false);
 
-    if (img.includes("http")) {
-      setLocalImage(img);
-      setLoading(false);
-    } else {
-      getDownloadURL(ref(storage, img))
-        .then((url) => {
-          setLocalImage(url);
-        })
-        .catch(() => {
-          setError(true);
-          setLocalImage(null);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-  }, [img]);
+        if (img.includes("http")) {
+            setLocalImage(img);
+            setLoading(false);
+        } else {
+            getDownloadURL(ref(storage, img))
+                .then((url) => {
+                    setLocalImage(url);
+                })
+                .catch(() => {
+                    setError(true);
+                    setLocalImage(null);
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+        }
+    }, [img]);
 
-  if (loading) return <Spinner />;
-  if (!img || error || !localImage) return <p>No image</p>;
+    if (loading) return <Spinner />;
+    if (!img || error || !localImage) return <p>No image</p>;
 
-  return (
-    <Zoom>
-      <img
-        alt="visit image"
-        className="dark:invert"
-        src={localImage}
-        width="100"
-      />
-    </Zoom>
-  );
+    return (
+        <Zoom>
+            <img
+                alt="visit image"
+                className="dark:invert"
+                src={localImage}
+                width="100"
+            />
+        </Zoom>
+    );
 };
