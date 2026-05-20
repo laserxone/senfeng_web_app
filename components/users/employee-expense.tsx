@@ -462,7 +462,7 @@ const formSchema = z.object({
 
 type ExpenseFormValues = z.infer<typeof formSchema>;
 
-const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, user_id: number | null }) => {
+const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, user_id: number | null | string }) => {
   const [loading, setLoading] = useState(false);
   const { state: OfficeState } = useContext(OfficeContext);
 

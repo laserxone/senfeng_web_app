@@ -36,3 +36,25 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
 }
+
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
+  const result = await pool.query(
+    `
+    SELECT *
+    FROM khata
+    WHERE id = $1
+    `,
+    [id]
+  );
+
+  if (!result.rows[0]) {
+    return NextResponse.json({ message: "Khata not found" }, { status: 404 });
+  }
+
+  return NextResponse.json(result.rows[0]);
+}

@@ -3,9 +3,17 @@ import pool from "@/config/db";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const result = await pool.query(
-    `SELECT * FROM khata ORDER BY created_at DESC`
-  );
+  
+  const result = await pool.query(`
+    SELECT 
+      k.*,
+      COALESCE(SUM(kp.amount), 0) AS total_amount
+    FROM khata k
+    LEFT JOIN khata_payments kp
+      ON kp.khata_id = k.id
+    GROUP BY k.id
+    ORDER BY k.created_at DESC
+  `);
 
   return NextResponse.json(result.rows);
 }
