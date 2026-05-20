@@ -15,7 +15,7 @@ const AppCalendar = ({
   date,
   onChange,
   min = new Date("1900-01-01"),
-  max = new Date(),
+  max = "",
 }:AppCalendarProps) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   return (
