@@ -42,9 +42,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ emai
         }
 
         if (user.full_access || user.designation == 'Owner') {
-
+            const allowed = [28, 29].includes(user?.id)
             nav_items = [...OwnerSidebarItems]
             base_route = `${city ? city : branchOffice}/superadmin`
+            if (base_route?.includes("karachi") || !allowed) {
+                nav_items = nav_items.filter(
+                    (item) => item.title !== "KHATA"
+                )
+            }
         } else {
             if (user.designation == 'Store Manager') {
                 base_route = `${branchOffice}/store`
