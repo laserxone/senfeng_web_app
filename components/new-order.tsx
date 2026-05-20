@@ -26,10 +26,11 @@ import axios from "@/lib/axios";
 import { InventoryItem, StockProps } from "@/lib/types";
 import "react-medium-image-zoom/dist/styles.css";
 import { InventorySearch } from "./inventory-select";
+import MachineModels from "./machine-models";
 
 type InventoryErrors = Partial<Record<keyof InventoryItem, string>>[];
 
-const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: boolean, onClose: (val: boolean) => void, user_id: number, onRefresh: () => Promise<void> }) => {
+const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: boolean, onClose: (val: boolean) => void, user_id: number | string, onRefresh: () => Promise<void> }) => {
   const [items, setItems] = useState<InventoryItem[]>([
     {
       name: "",
@@ -576,36 +577,11 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                               }}
                             />
                           ) : (
-                            <Select
-                              value={item.machine_model}
+                            <MachineModels value={item.machine_model}
                               onValueChange={(val) =>
                                 handleItemChange(index, "machine_model", val)
-                              }
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select Model" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="SF3015G">SF3015G</SelectItem>
-                                <SelectItem value="SF4015G">SF4015G</SelectItem>
-                                <SelectItem value="SF6015G">SF6015G</SelectItem>
-                                <SelectItem value="SF3015N">SF3015N</SelectItem>
-                                <SelectItem value="SF4015N">SF4015N</SelectItem>
-                                <SelectItem value="SF6015N">SF6015N</SelectItem>
-                                <SelectItem value="SF3015C">SF3015C</SelectItem>
-                                <SelectItem value="SF4015C">SF4015C</SelectItem>
-                                <SelectItem value="SF6015C">SF6015C</SelectItem>
-                                <SelectItem value="SF1500HW">
-                                  SF1500HW
-                                </SelectItem>
-                                <SelectItem value="SF2000HW">
-                                  SF2000HW
-                                </SelectItem>
-                                <SelectItem value="SF3000HW">
-                                  SF3000HW
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
+                              } />
+
                           )}
                           {errors[index]?.machine_model && (
                             <p className="text-red-600 text-sm mt-1">

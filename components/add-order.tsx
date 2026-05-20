@@ -28,7 +28,7 @@ import { InventorySearch } from "./inventory-select";
 
 type InventoryErrors = Partial<Record<keyof InventoryItem, string>>[];
 
-const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, user_id: number, id?: number | null }) => {
+const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, user_id: number | string, id?: number | null }) => {
   const [items, setItems] = useState<InventoryItem[]>([
     {
       name: "",
