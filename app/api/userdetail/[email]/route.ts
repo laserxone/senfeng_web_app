@@ -8,6 +8,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ emai
     const { email } = await params
     const referrer = req.headers.get('referer')
     let city = ""
+
     if (referrer) {
         const url = new URL(referrer);
         const segments = url.pathname.split('/');

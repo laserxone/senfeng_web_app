@@ -47,6 +47,7 @@ import { usePathname } from "next/navigation";
 import { useContext, useEffect } from "react";
 import NotificationBadge from "./NotificationBadge";
 import { ScrollArea } from "./ui/scroll-area";
+import { useDuePayments } from "@/hooks/use-due-payments";
 
 export const company = {
   name: "SENFENG",
@@ -64,6 +65,7 @@ export default function AppSidebar({ office }: { office: string }) {
   const isMobile = useIsMobile();
   const { userID, isAdmin, name, email, base_route, nav_items } = useUserDetail()
   const { pendingDelivery } = useMachineDelivery()
+   const { pending } = useDuePayments()
 
 
   useEffect(() => {
@@ -129,7 +131,7 @@ export default function AppSidebar({ office }: { office: string }) {
                                     href={`/${base_route}${subItem.url}`}
                                   >
                                     <span className="text-[14px]">
-                                      {subItem.title} {subItem.title === "Machine Delivery" && pendingDelivery > 0 && <NotificationBadge count={pendingDelivery}/>}
+                                      {subItem.title} {subItem.title === "Machine Delivery" && pendingDelivery > 0 && <NotificationBadge count={pendingDelivery}/>} {subItem.title === "Due Payment" && pending > 0 && <NotificationBadge count={pending}/>} 
                                     </span>
                                   </Link>
                                 </SidebarMenuSubButton>

@@ -26,6 +26,8 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { TriggerFirebaseForMachine, TriggerFirebaseForPendingPayments } from "@/lib/triggerFirebase";
+import { DeliveryInformation, DeliveryType, DispatchPdf } from "@/lib/types";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import moment from "moment";
@@ -34,8 +36,6 @@ import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
 import { Textarea } from "../ui/textarea";
-import { TriggerFirebaseForMachine } from "@/lib/triggerFirebase";
-import { DeliveryInformation, DeliveryType, DispatchPdf } from "@/lib/types";
 
 const dispatchSchema = z.object({
   orderNo: z.string().min(1, "Order number is required"),
@@ -45,420 +45,452 @@ const dispatchSchema = z.object({
   dispatchTime: z.string().min(1, "Dispatch time is required"),
   manager: z.string().min(1, "Manager name is required"),
   image: z.string().min(1, "Image is required"),
+  transportation: z.coerce.number<number>().min(0, "Amount is required"),
   note: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof dispatchSchema>;
 
-export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
-{
-  open : boolean,
-  onClose : ()=> void,
-  onRefresh : ()=> Promise<void>,
-  data : DeliveryType | null,
-}) {
-  const [loading, setLoading] = useState(false);
-  const [checklistLoading, setChecklistLoading] = useState(false);
-  const [checklist, setChecklist] = useState<Record<string, any>>({});
-  const [progress, setProgress] = useState(0);
-  const { userID } = useUserDetail();
-  const [originalImage, setOriginalImage] = useState(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+// export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
+// {
+//   open : boolean,
+//   onClose : ()=> void,
+//   onRefresh : ()=> Promise<void>,
+//   data : DeliveryType | null,
+// }) {
+//   const [loading, setLoading] = useState(false);
+//   const [checklistLoading, setChecklistLoading] = useState(false);
+//   const [checklist, setChecklist] = useState<Record<string, any>>({});
+//   const [progress, setProgress] = useState(0);
+//   const { userID } = useUserDetail();
+//   const [originalImage, setOriginalImage] = useState(null);
+//   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(dispatchSchema),
-    defaultValues: {
-      orderNo: "",
-      driverName: "",
-      driverNumber: "",
-      vehicleNo: "",
-      dispatchTime: "",
-      manager: "",
-      image: "",
-      note: "",
-    },
-  });
+//   const form = useForm<FormValues>({
+//     resolver: zodResolver(dispatchSchema),
+//     defaultValues: {
+//       orderNo: "",
+//       driverName: "",
+//       driverNumber: "",
+//       vehicleNo: "",
+//       dispatchTime: "",
+//       manager: "",
+//       image: "",
+//       note: "",
+//       transportation : 0
+//     },
+//   });
 
-  useEffect(() => {
-    if (userID && open) {
-      setData();
-    }
-  }, [userID, open]);
+//   useEffect(() => {
+//     if (userID && open) {
+//       setData();
+//     }
+//   }, [userID, open]);
 
-  async function setData() {
-    if (!userID) return;
-    const dispatchInformation = data?.dispatch_information;
-    if (dispatchInformation) {
-      form.reset({
-        dispatchTime: dispatchInformation?.other_information?.dispatchTime,
-        driverName: dispatchInformation?.other_information?.driverName,
-        driverNumber: dispatchInformation?.other_information?.driverNumber,
-        vehicleNo: dispatchInformation?.other_information?.vehicleNo,
-        orderNo: dispatchInformation?.other_information?.orderNo,
-        manager: dispatchInformation?.other_information?.manager,
-        note: dispatchInformation?.other_information?.note,
-        image: dispatchInformation?.other_information?.image,
-      });
-      setOriginalImage(dispatchInformation?.other_information?.image);
-      setChecklist(dispatchInformation?.checklist);
-    }
-  }
+//   async function setData() {
+//     if (!userID) return;
+//     const dispatchInformation = data?.dispatch_information;
+//     if (dispatchInformation) {
+//       form.reset({
+//         dispatchTime: dispatchInformation?.other_information?.dispatchTime,
+//         driverName: dispatchInformation?.other_information?.driverName,
+//         driverNumber: dispatchInformation?.other_information?.driverNumber,
+//         vehicleNo: dispatchInformation?.other_information?.vehicleNo,
+//         orderNo: dispatchInformation?.other_information?.orderNo,
+//         manager: dispatchInformation?.other_information?.manager,
+//         note: dispatchInformation?.other_information?.note,
+//         image: dispatchInformation?.other_information?.image,
+//       });
+//       setOriginalImage(dispatchInformation?.other_information?.image);
+//       setChecklist(dispatchInformation?.checklist);
+//     }
+//   }
 
-  function handleChnage(key : string, val : string) {
-    setChecklist((prev) => ({ ...prev, [key]: val }));
-  }
+//   function handleChnage(key : string, val : string) {
+//     setChecklist((prev) => ({ ...prev, [key]: val }));
+//   }
 
-  async function handleSubmit(values : FormValues) {
-    if(!data) return
-    setLoading(true);
+//   async function handleSubmit(values : FormValues) {
+//     if(!data) return
+//     setLoading(true);
 
-    try {
-      let name = data?.dispatch_information?.other_information?.image;
-      if (
-        values.image !== data?.dispatch_information?.other_information?.image
-      ) {
-        const imageRefResult = await UploadImage(
-          values.image,
-          name,
-          "image/png",
-          (p) => setProgress(p),
-        );
-      }
+//     try {
+//       let name = data?.dispatch_information?.other_information?.image;
+//       if (
+//         values.image !== data?.dispatch_information?.other_information?.image
+//       ) {
+//         const imageRefResult = await UploadImage(
+//           values.image,
+//           name,
+//           "image/png",
+//           (p) => setProgress(p),
+//         );
+//       }
 
-      const apiData = {
-        machine_id: data.id,
-        delivery_date: values?.dispatchTime
-          ? new Date(values.dispatchTime)
-          : new Date(),
-        order_no_arr: [values.orderNo],
-        machine_nameplate_images: [name],
-        dispatch_information: {
-          checklist: checklist,
-          other_information: {
-            orderNo: values.orderNo,
-            driverName: values.driverName,
-            driverNumber: values.driverNumber,
-            vehicleNo: values.vehicleNo,
-            dispatchTime: values.dispatchTime,
-            manager: values.manager,
-            note: values.note,
-            image: name,
-          },
-        },
-      };
+//       const apiData = {
+//         machine_id: data.id,
+//         delivery_date: values?.dispatchTime
+//           ? new Date(values.dispatchTime)
+//           : new Date(),
+//         order_no_arr: [values.orderNo],
+//         machine_nameplate_images: [name],
+//         dispatch_information: {
+//           checklist: checklist,
+//           other_information: {
+//             orderNo: values.orderNo,
+//             driverName: values.driverName,
+//             driverNumber: values.driverNumber,
+//             vehicleNo: values.vehicleNo,
+//             dispatchTime: values.dispatchTime,
+//             manager: values.manager,
+//             note: values.note,
+//             image: name,
+//           },
+//         },
+//       };
 
-      await axios.put(`/${userID}/delivery`, apiData);
-      TriggerFirebaseForMachine()
-      await onRefresh?.();
-      handleClose();
-      form.reset();
-    } finally {
-      setProgress(0);
-      setLoading(false);
-    }
-  }
+//       await axios.put(`/${userID}/delivery`, apiData);
+//       TriggerFirebaseForMachine()
+//       await onRefresh?.();
+//       handleClose();
+//       form.reset();
+//     } finally {
+//       setProgress(0);
+//       setLoading(false);
+//     }
+//   }
 
-  const DELIVERY_INFORMATION_KEYS = [
-    "name",
-    "city",
-    "address",
-    "number",
-    "tod",
-    "pin",
-    "note",
-  ];
+//   const DELIVERY_INFORMATION_KEYS = [
+//     "name",
+//     "city",
+//     "address",
+//     "number",
+//     "tod",
+//     "pin",
+//     "note",
+//   ];
 
-  function handleClose() {
-    setLoading(false);
-    setChecklistLoading(false);
-    setChecklist({});
-    onClose();
-  }
+//   function handleClose() {
+//     setLoading(false);
+//     setChecklistLoading(false);
+//     setChecklist({});
+//     onClose();
+//     form.reset({
+//        orderNo: "",
+//       driverName: "",
+//       driverNumber: "",
+//       vehicleNo: "",
+//       dispatchTime: "",
+//       manager: "",
+//       image: "",
+//       note: "",
+//       transportation : 0
+//     })
+//   }
 
-  async function handleDelete() {
-    if (!userID || !data?.id) return;
-    setDeleteLoading(true);
-    try {
-      await axios.delete(`/${userID}/delivery?id=${data.id}`);
-       TriggerFirebaseForMachine()
-      await onRefresh?.();
-      handleClose();
-    } finally {
-      setDeleteLoading(false);
-    }
-  }
+//   async function handleDelete() {
+//     if (!userID || !data?.id) return;
+//     setDeleteLoading(true);
+//     try {
+//       await axios.delete(`/${userID}/delivery?id=${data.id}`);
+//        TriggerFirebaseForMachine()
+//       await onRefresh?.();
+//       handleClose();
+//     } finally {
+//       setDeleteLoading(false);
+//     }
+//   }
 
-  return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-6xl">
-        <DialogHeader>
-          <DialogTitle>Dispatch Order</DialogTitle>
-        </DialogHeader>
+//   return (
+//     <Dialog open={open} onOpenChange={handleClose}>
+//       <DialogContent className="sm:max-w-6xl">
+//         <DialogHeader>
+//           <DialogTitle>Dispatch Order</DialogTitle>
+//         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 border rounded-lg">
-            <ScrollArea className="h-[85dvh]">
-              <div className="p-6">
-                <Form {...form}>
-                  <form
-                    onSubmit={form.handleSubmit(handleSubmit)}
-                    className="space-y-5"
-                  >
-                    <FormField
-                      control={form.control}
-                      name="orderNo"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Order No <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Enter order number"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+//         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+//           <div className="md:col-span-2 border rounded-lg">
+//             <ScrollArea className="h-[85dvh]">
+//               <div className="p-6">
+//                 <Form {...form}>
+//                   <form
+//                     onSubmit={form.handleSubmit(handleSubmit)}
+//                     className="space-y-5"
+//                   >
+//                     <FormField
+//                       control={form.control}
+//                       name="orderNo"
+//                       render={({ field }) => (
+//                         <FormItem>
+//                           <FormLabel>
+//                             Order No <RequiredStar />
+//                           </FormLabel>
+//                           <FormControl>
+//                             <Input
+//                               placeholder="Enter order number"
+//                               {...field}
+//                             />
+//                           </FormControl>
+//                           <FormMessage />
+//                         </FormItem>
+//                       )}
+//                     />
 
-                    <FormField
-                      control={form.control}
-                      name="driverName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Driver Name <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter driver name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+//                     <FormField
+//                       control={form.control}
+//                       name="driverName"
+//                       render={({ field }) => (
+//                         <FormItem>
+//                           <FormLabel>
+//                             Driver Name <RequiredStar />
+//                           </FormLabel>
+//                           <FormControl>
+//                             <Input placeholder="Enter driver name" {...field} />
+//                           </FormControl>
+//                           <FormMessage />
+//                         </FormItem>
+//                       )}
+//                     />
 
-                    <FormField
-                      control={form.control}
-                      name="driverNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Driver Number <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Enter vehicle number"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+//                     <FormField
+//                       control={form.control}
+//                       name="driverNumber"
+//                       render={({ field }) => (
+//                         <FormItem>
+//                           <FormLabel>
+//                             Driver Number <RequiredStar />
+//                           </FormLabel>
+//                           <FormControl>
+//                             <Input
+//                               placeholder="Enter vehicle number"
+//                               {...field}
+//                             />
+//                           </FormControl>
+//                           <FormMessage />
+//                         </FormItem>
+//                       )}
+//                     />
 
-                    <FormField
-                      control={form.control}
-                      name="vehicleNo"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Vehicle No <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Enter vehicle number"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+//                     <FormField
+//                       control={form.control}
+//                       name="vehicleNo"
+//                       render={({ field }) => (
+//                         <FormItem>
+//                           <FormLabel>
+//                             Vehicle No <RequiredStar />
+//                           </FormLabel>
+//                           <FormControl>
+//                             <Input
+//                               placeholder="Enter vehicle number"
+//                               {...field}
+//                             />
+//                           </FormControl>
+//                           <FormMessage />
+//                         </FormItem>
+//                       )}
+//                     />
 
-                    <FormField
-                      control={form.control}
-                      name="dispatchTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Time of Dispatch <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Input type="datetime-local" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+//                      <FormField
+//                       control={form.control}
+//                       name="transportation"
+//                       render={({ field }) => (
+//                         <FormItem>
+//                           <FormLabel>
+//                             Transportation Charges <RequiredStar />
+//                           </FormLabel>
+//                           <FormControl>
+//                             <Input
+//                               placeholder="Enter transportation charges"
+//                               {...field}
+//                             />
+//                           </FormControl>
+//                           <FormMessage />
+//                         </FormItem>
+//                       )}
+//                     />
 
-                    <FormField
-                      control={form.control}
-                      name="image"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Machine Nameplate <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Dropzone
-                              dbImage={originalImage}
-                              value={field.value}
-                              onDrop={(file) => {
-                                field.onChange(file);
-                                setOriginalImage(null);
-                              }}
-                              title="Click to upload"
-                              subheading="or drag and drop"
-                              description="PNG or JPG"
-                              drag="Drop the files here..."
-                              className="w-full"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+//                     <FormField
+//                       control={form.control}
+//                       name="dispatchTime"
+//                       render={({ field }) => (
+//                         <FormItem>
+//                           <FormLabel>
+//                             Time of Dispatch <RequiredStar />
+//                           </FormLabel>
+//                           <FormControl>
+//                             <Input type="datetime-local" {...field} />
+//                           </FormControl>
+//                           <FormMessage />
+//                         </FormItem>
+//                       )}
+//                     />
 
-                    <FormField
-                      control={form.control}
-                      name="manager"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Manager <RequiredStar />
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Enter manager name"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+//                     <FormField
+//                       control={form.control}
+//                       name="image"
+//                       render={({ field }) => (
+//                         <FormItem>
+//                           <FormLabel>
+//                             Machine Nameplate <RequiredStar />
+//                           </FormLabel>
+//                           <FormControl>
+//                             <Dropzone
+//                               dbImage={originalImage}
+//                               value={field.value}
+//                               onDrop={(file) => {
+//                                 field.onChange(file);
+//                                 setOriginalImage(null);
+//                               }}
+//                               title="Click to upload"
+//                               subheading="or drag and drop"
+//                               description="PNG or JPG"
+//                               drag="Drop the files here..."
+//                               className="w-full"
+//                             />
+//                           </FormControl>
+//                           <FormMessage />
+//                         </FormItem>
+//                       )}
+//                     />
 
-                    <FormField
-                      control={form.control}
-                      name="note"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Receiving Note</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Enter note (optional)"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+//                     <FormField
+//                       control={form.control}
+//                       name="manager"
+//                       render={({ field }) => (
+//                         <FormItem>
+//                           <FormLabel>
+//                             Manager <RequiredStar />
+//                           </FormLabel>
+//                           <FormControl>
+//                             <Input
+//                               placeholder="Enter manager name"
+//                               {...field}
+//                             />
+//                           </FormControl>
+//                           <FormMessage />
+//                         </FormItem>
+//                       )}
+//                     />
 
-                    <div className="space-y-4 border border-[#d6d6d6] rounded-md p-4 bg-slate-50">
-                      <Label className="font-bold text-lg">CheckList</Label>
-                      {checklistLoading ? (
-                        <Spinner />
-                      ) : (
-                        Object.entries(checklist).map(([k, v]) => (
-                          <div key={k}>
-                            <Label className="capitalize">
-                              {k.replaceAll("_", " ")}
-                            </Label>
-                            <Input
-                              value={v}
-                              placeholder={`Enter ${k.replaceAll("_", " ")}`}
-                              onChange={(e) => handleChnage(k, e.target.value)}
-                            />
-                          </div>
-                        ))
-                      )}
-                    </div>
+//                     <FormField
+//                       control={form.control}
+//                       name="note"
+//                       render={({ field }) => (
+//                         <FormItem>
+//                           <FormLabel>Receiving Note</FormLabel>
+//                           <FormControl>
+//                             <Textarea
+//                               placeholder="Enter note (optional)"
+//                               {...field}
+//                             />
+//                           </FormControl>
+//                           <FormMessage />
+//                         </FormItem>
+//                       )}
+//                     />
 
-                    <div className="flex flex-col w-full">
-                      {progress > 0 && (
-                        <div className="mt-1 space-y-1">
-                          <Label>Uploading Image</Label>
-                          <Progress
-                            className="mt-2"
-                            value={progress}
-                            id="progress-upload-nameplate"
-                          />
-                        </div>
-                      )}
-                      <div className="flex justify-end gap-3 pt-4 border-t">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={onClose}
-                        >
-                          Cancel
-                        </Button>
+//                     <div className="space-y-4 border border-[#d6d6d6] rounded-md p-4 bg-slate-50">
+//                       <Label className="font-bold text-lg">CheckList</Label>
+//                       {checklistLoading ? (
+//                         <Spinner />
+//                       ) : (
+//                         Object.entries(checklist).map(([k, v]) => (
+//                           <div key={k}>
+//                             <Label className="capitalize">
+//                               {k.replaceAll("_", " ")}
+//                             </Label>
+//                             <Input
+//                               value={v}
+//                               placeholder={`Enter ${k.replaceAll("_", " ")}`}
+//                               onChange={(e) => handleChnage(k, e.target.value)}
+//                             />
+//                           </div>
+//                         ))
+//                       )}
+//                     </div>
 
-                        <Button type="submit" disabled={loading}>
-                          {loading ? "Processing..." : "Dispatch"}
-                        </Button>
+//                     <div className="flex flex-col w-full">
+//                       {progress > 0 && (
+//                         <div className="mt-1 space-y-1">
+//                           <Label>Uploading Image</Label>
+//                           <Progress
+//                             className="mt-2"
+//                             value={progress}
+//                             id="progress-upload-nameplate"
+//                           />
+//                         </div>
+//                       )}
+//                       <div className="flex justify-end gap-3 pt-4 border-t">
+//                         <Button
+//                           type="button"
+//                           variant="outline"
+//                           onClick={onClose}
+//                         >
+//                           Cancel
+//                         </Button>
 
-                        <Button
-                          variant="destructive"
-                          onClick={handleDelete}
-                          type="button"
-                          disabled={deleteLoading}
-                        >
-                          {deleteLoading ? "Deleting..." : "Delete"}
-                        </Button>
-                      </div>
-                    </div>
-                  </form>
-                </Form>
-              </div>
-            </ScrollArea>
-          </div>
+//                         <Button type="submit" disabled={loading}>
+//                           {loading ? "Processing..." : "Dispatch"}
+//                         </Button>
 
-          <div className="border rounded-lg  bg-muted/30">
-            <ScrollArea className="h-[85dvh] p-5">
-              <h3 className="text-sm font-semibold mb-4 tracking-wide text-muted-foreground uppercase">
-                Delivery Information
-              </h3>
+//                         <Button
+//                           variant="destructive"
+//                           onClick={handleDelete}
+//                           type="button"
+//                           disabled={deleteLoading}
+//                         >
+//                           {deleteLoading ? "Deleting..." : "Delete"}
+//                         </Button>
+//                       </div>
+//                     </div>
+//                   </form>
+//                 </Form>
+//               </div>
+//             </ScrollArea>
+//           </div>
 
-              {data?.delivery_information ? (
-                <div className="space-y-3 text-sm">
-                  {DELIVERY_INFORMATION_KEYS.map((key, i) => (
-                    <div
-                      key={key}
-                      className="grid grid-cols-2 gap-2 border-b pb-2 last:border-none"
-                    >
-                      <p className="text-muted-foreground capitalize">
-                        {key === "tod"
-                          ? "Delivery Time"
-                          : key === "pin"
-                            ? "Google location"
-                            : key.replaceAll("_", " ")}
-                      </p>
-                      <p className="font-medium break-words">
-                        {key === "tod"
-                          ? moment(
-                              new Date(data?.delivery_information[key]),
-                            ).format("YYYY-MM-DD hh:mm A")
-                          : String(data?.delivery_information[key as keyof  DeliveryInformation])}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No delivery information available.
-                </p>
-              )}
-            </ScrollArea>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
+//           <div className="border rounded-lg  bg-muted/30">
+//             <ScrollArea className="h-[85dvh] p-5">
+//               <h3 className="text-sm font-semibold mb-4 tracking-wide text-muted-foreground uppercase">
+//                 Delivery Information
+//               </h3>
+
+//               {data?.delivery_information ? (
+//                 <div className="space-y-3 text-sm">
+//                   {DELIVERY_INFORMATION_KEYS.map((key, i) => (
+//                     <div
+//                       key={key}
+//                       className="grid grid-cols-2 gap-2 border-b pb-2 last:border-none"
+//                     >
+//                       <p className="text-muted-foreground capitalize">
+//                         {key === "tod"
+//                           ? "Delivery Time"
+//                           : key === "pin"
+//                             ? "Google location"
+//                             : key.replaceAll("_", " ")}
+//                       </p>
+//                       <p className="font-medium break-words">
+//                         {key === "tod"
+//                           ? moment(
+//                               new Date(data?.delivery_information[key]),
+//                             ).format("YYYY-MM-DD hh:mm A")
+//                           : String(data?.delivery_information[key as keyof  DeliveryInformation])}
+//                       </p>
+//                     </div>
+//                   ))}
+//                 </div>
+//               ) : (
+//                 <p className="text-sm text-muted-foreground">
+//                   No delivery information available.
+//                 </p>
+//               )}
+//             </ScrollArea>
+//           </div>
+//         </div>
+//       </DialogContent>
+//     </Dialog>
+//   );
+// }
 
 export function DispatchOrderDialog({
   open,
@@ -466,14 +498,14 @@ export function DispatchOrderDialog({
   onRefresh,
   data,
   openPdf,
-} :
-{
-  open : boolean,
-  onClose : ()=> void,
-  onRefresh : ()=> Promise<void>,
-  data : DeliveryType | null,
-  openPdf : (item : DispatchPdf)=>Promise<void>,
-}) {
+}:
+  {
+    open: boolean,
+    onClose: () => void,
+    onRefresh: () => Promise<void>,
+    data: DeliveryType | null,
+    openPdf: (item: DispatchPdf) => Promise<void>,
+  }) {
   const [loading, setLoading] = useState(false);
   const [checklistLoading, setChecklistLoading] = useState(false);
   const [checklist, setChecklist] = useState<Record<string, any>>({});
@@ -498,6 +530,7 @@ export function DispatchOrderDialog({
       manager: "",
       image: "",
       note: "",
+      transportation: 0,
     },
   });
 
@@ -516,12 +549,12 @@ export function DispatchOrderDialog({
     }
   }
 
-  function handleChnage(key : string, val : string) {
+  function handleChnage(key: string, val: string) {
     setChecklist((prev) => ({ ...prev, [key]: val }));
   }
 
-  async function handleSubmit(values : FormValues) {
-    if(!data) return
+  async function handleSubmit(values: FormValues) {
+    if (!data) return
     setLoading(true);
 
     try {
@@ -537,6 +570,7 @@ export function DispatchOrderDialog({
 
       const apiData = {
         machine_id: data.id,
+        transportation: values?.transportation,
         delivery_date: values?.dispatchTime
           ? new Date(values.dispatchTime)
           : new Date(),
@@ -559,7 +593,8 @@ export function DispatchOrderDialog({
       };
 
       await axios.post(`/${userID}/delivery`, apiData);
-       TriggerFirebaseForMachine()
+      TriggerFirebaseForMachine()
+      TriggerFirebaseForPendingPayments()
       await openPdf({
         order_no: `${apiData?.order_no_arr?.join(" ")} - ${data?.serial_no} - ${data?.power} - ${data?.source}`,
         gate_pass: `DO-${data?.id}`,
@@ -598,6 +633,17 @@ export function DispatchOrderDialog({
     setChecklistLoading(false);
     setChecklist({});
     onClose();
+    form.reset({
+      orderNo: "",
+      driverName: "",
+      driverNumber: "",
+      vehicleNo: "",
+      dispatchTime: "",
+      manager: "",
+      image: "",
+      note: "",
+      transportation: 0,
+    })
   }
 
   return (
@@ -681,6 +727,25 @@ export function DispatchOrderDialog({
                           <FormControl>
                             <Input
                               placeholder="Enter vehicle number"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="transportation"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Transportation Charges <RequiredStar />
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter transportation charges"
                               {...field}
                             />
                           </FormControl>
@@ -840,8 +905,8 @@ export function DispatchOrderDialog({
                       <p className="font-medium break-words">
                         {key === "tod"
                           ? moment(
-                              new Date(data?.delivery_information[key]),
-                            ).format("YYYY-MM-DD hh:mm A")
+                            new Date(data?.delivery_information[key]),
+                          ).format("YYYY-MM-DD hh:mm A")
                           : String(data?.delivery_information[key as keyof DeliveryInformation])}
                       </p>
                     </div>

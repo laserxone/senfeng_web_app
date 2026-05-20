@@ -256,8 +256,14 @@ export const OwnerSidebarItems = [
       "delivery/machinedelivery",
       "delivery/otherdelivery",
       "delivery/delivered",
+      "delivery/due-payments"
     ],
     items: [
+       {
+        title: "Due Payment",
+        url: "/delivery/due-payments",
+        shortcut: ["d", "u", "e"],
+      },
       {
         title: "Machine Delivery",
         url: "/delivery/machinedelivery",

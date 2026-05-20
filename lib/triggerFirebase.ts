@@ -23,6 +23,12 @@ export async function TriggerFirebaseForMachine() {
   });
 }
 
+export async function TriggerFirebaseForPendingPayments() {
+  await setDoc(doc(db, "payment-requests", "requests"), {
+    updated: serverTimestamp(),
+  });
+}
+
 export async function TriggerFirebaseForFine(id: string | number | undefined) {
   if (id) {
     await setDoc(doc(db, "fine_notification", id.toString()), {

@@ -36,11 +36,16 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
   }
 }
 
-export async function POST(req:NextRequest) {
-  const data = await req.json();
+export async function POST(req: NextRequest) {
+  const client = await pool.connect();
+
+
 
   try {
-    const existingNamePlate = await pool.query(
+    const data = await req.json();
+    await client.query("BEGIN");
+
+    const existingNamePlate = await client.query(
       `SELECT machine_nameplate_images FROM sale WHERE id = $1`,
       [data.machine_id],
     );
@@ -48,7 +53,7 @@ export async function POST(req:NextRequest) {
       existingNamePlate.rows?.[0]?.machine_nameplate_images || [];
     const combinedNamePlates = [...existing, ...data.machine_nameplate_images];
 
-    await pool.query(
+    await client.query(
       `UPDATE sale SET machine_nameplate_images = $1, order_no_arr  =$2, delivery_date = $3, dispatch_information = $4 WHERE id = $5`,
       [
         combinedNamePlates,
@@ -59,21 +64,38 @@ export async function POST(req:NextRequest) {
       ],
     );
 
-    await pool.query(
+    await client.query(
       `
         UPDATE order_items SET status = $1 WHERE machine_id = $2`,
       ["Dispatched", data.machine_id],
     );
 
+    await client.query(
+      ` INSERT INTO payment_requests (
+        request_type,
+        amount,
+        sale_id,
+        office
+      )
+      VALUES (
+        $1,$2,$3, $4
+      )`,
+      [true, data.transportation, data.machine_id, "karachi"],
+    );
+    await client.query("COMMIT");
 
     return NextResponse.json({ message: "Done" }, { status: 200 });
-  } catch (error:any) {
+  } catch (error: any) {
     console.log(error);
+    await client.query("ROLLBACK");
     return NextResponse.json(
       { message: error?.message || "Server error" },
       { status: 500 },
     );
+  } finally {
+    client.release();
   }
+
 }
 
 export async function PUT(req:NextRequest) {

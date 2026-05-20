@@ -427,6 +427,7 @@ const AddNewComplaint = ({ visible, onClose, onRefresh }: { visible: boolean, on
       problem: "",
       solution: "",
       installation: false,
+      paid : false
     },
   });
 
@@ -450,7 +451,14 @@ const AddNewComplaint = ({ visible, onClose, onRefresh }: { visible: boolean, on
 
   function handleClose(val: boolean) {
     onClose(val);
-    form.reset();
+    form.reset({
+        title: "",
+      customer_id: undefined,
+      problem: "",
+      solution: "",
+      installation: false,
+      paid : false
+    });
   }
 
   return (
@@ -501,7 +509,7 @@ const AddNewComplaint = ({ visible, onClose, onRefresh }: { visible: boolean, on
                       <div>
                         <Checkbox
                           checked={field.value}
-                          onCheckedChange={(checked) => field.onChange(checked)}
+                          onCheckedChange={(checked : boolean) => field.onChange(checked)}
                         />
                       </div>
                     </div>

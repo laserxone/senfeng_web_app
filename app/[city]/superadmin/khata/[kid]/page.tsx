@@ -50,7 +50,7 @@ const emptyPaymentForm: {
     remarks: string
 } = {
     amount: "",
-    date: undefined,
+    date: new Date(),
     remarks: "",
     tid: ""
 };
@@ -79,8 +79,7 @@ export default function KhataDetailPage() {
     const [paymentErrors, setPaymentErrors] = useState({
         amount: "",
         date: "",
-        remarks: "",
-        tid: "",
+
     });
 
     const fetchKhata = async () => {
@@ -123,7 +122,7 @@ export default function KhataDetailPage() {
         if (!isValid) return;
 
         const payload = {
-            tid : paymentForm.tid.trim(),
+            tid: paymentForm.tid.trim(),
             amount: Number(paymentForm.amount),
             date: paymentForm.date,
             remarks: paymentForm.remarks.trim(),
@@ -171,15 +170,13 @@ export default function KhataDetailPage() {
 
     const validatePaymentForm = () => {
         const errors = {
-            tid: "",
+
             amount: "",
             date: "",
-            remarks: "",
+
         };
 
-        if (!paymentForm.tid.trim()) {
-            errors.tid = "TID is required";
-        }
+
 
         if (!paymentForm.amount.trim()) {
             errors.amount = "Amount is required";
@@ -191,9 +188,7 @@ export default function KhataDetailPage() {
             errors.date = "Date is required";
         }
 
-        if (!paymentForm.remarks.trim()) {
-            errors.remarks = "Remarks are required";
-        }
+
 
         setPaymentErrors(errors);
 
@@ -205,8 +200,6 @@ export default function KhataDetailPage() {
         setPaymentErrors({
             amount: "",
             date: "",
-            remarks: "",
-            tid: ""
         });
     };
 
@@ -447,7 +440,7 @@ export default function KhataDetailPage() {
 
                             <div className="space-y-2">
                                 <Label>
-                                    TID <span className="text-destructive">*</span>
+                                    TID
                                 </Label>
 
                                 <Input
@@ -459,18 +452,11 @@ export default function KhataDetailPage() {
                                             tid: e.target.value,
                                         });
 
-                                        setPaymentErrors({
-                                            ...paymentErrors,
-                                            tid: "",
-                                        });
+
                                     }}
                                 />
 
-                                {paymentErrors.tid && (
-                                    <p className="text-sm text-destructive">
-                                        {paymentErrors.tid}
-                                    </p>
-                                )}
+
                             </div>
 
                             <div className="space-y-2">
@@ -520,7 +506,7 @@ export default function KhataDetailPage() {
 
                             <div className="space-y-2">
                                 <Label>
-                                    Remarks <span className="text-destructive">*</span>
+                                    Remarks
                                 </Label>
 
                                 <Textarea
@@ -532,15 +518,10 @@ export default function KhataDetailPage() {
                                             ...paymentForm,
                                             remarks: e.target.value,
                                         });
-                                        setPaymentErrors({ ...paymentErrors, remarks: "" });
+
                                     }}
                                 />
 
-                                {paymentErrors.remarks && (
-                                    <p className="text-sm text-destructive">
-                                        {paymentErrors.remarks}
-                                    </p>
-                                )}
                             </div>
                         </div>
                     </FieldSet>

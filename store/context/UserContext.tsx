@@ -107,7 +107,7 @@ const setUser = (data: (AppUser & Partial<User>) | null) => {
 
     return () => unsub()
 
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     if (authData?.id) {
