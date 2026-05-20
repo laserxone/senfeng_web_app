@@ -26,6 +26,7 @@ import axios from "@/lib/axios";
 import { InventoryItem, OrderItem, StockProps } from "@/lib/types";
 import "react-medium-image-zoom/dist/styles.css";
 import { InventorySearch } from "./inventory-select";
+import MachineModels from "./machine-models";
 
 type InventoryErrors = Partial<Record<keyof InventoryItem, string>>
 
@@ -341,7 +342,7 @@ const EditOrderDialog = ({
                                 )
                               }
                             }}
-                            
+
                           />
                         </div>
                         <div>
@@ -364,7 +365,7 @@ const EditOrderDialog = ({
                           <Input
                             type="number"
                             value={items.new_order}
-                             onChange={(e) => {
+                            onChange={(e) => {
                               if (!isNaN(Number(e.target.value))) {
                                 handleItemChange(
                                   "new_order",
@@ -440,30 +441,11 @@ const EditOrderDialog = ({
                             }}
                           />
                         ) : (
-                          <Select
-                            value={items.machine_model}
+                          <MachineModels value={items.machine_model}
                             onValueChange={(val) =>
                               handleItemChange("machine_model", val)
-                            }
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select Model" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="SF3015G">SF3015G</SelectItem>
-                              <SelectItem value="SF4015G">SF4015G</SelectItem>
-                              <SelectItem value="SF6015G">SF6015G</SelectItem>
-                              <SelectItem value="SF3015N">SF3015N</SelectItem>
-                              <SelectItem value="SF4015N">SF4015N</SelectItem>
-                              <SelectItem value="SF6015N">SF6015N</SelectItem>
-                              <SelectItem value="SF3015C">SF3015C</SelectItem>
-                              <SelectItem value="SF4015C">SF4015C</SelectItem>
-                              <SelectItem value="SF6015C">SF6015C</SelectItem>
-                              <SelectItem value="SF1500HW">SF1500HW</SelectItem>
-                              <SelectItem value="SF2000HW">SF2000HW</SelectItem>
-                              <SelectItem value="SF3000HW">SF3000HW</SelectItem>
-                            </SelectContent>
-                          </Select>
+                            } />
+
                         )}
                         {errors?.machine_model && (
                           <p className="text-red-600 text-sm mt-1">
@@ -551,13 +533,13 @@ const EditOrderDialog = ({
                           type="number"
                           value={items.qty}
                           onChange={(e) => {
-                              if (!isNaN(Number(e.target.value))) {
-                                handleItemChange(
-                                  "qty",
-                                  parseInt(e.target.value)
-                                )
-                              }
-                            }}
+                            if (!isNaN(Number(e.target.value))) {
+                              handleItemChange(
+                                "qty",
+                                parseInt(e.target.value)
+                              )
+                            }
+                          }}
                         />
                       </div>
                     </div>
@@ -569,7 +551,7 @@ const EditOrderDialog = ({
         </ScrollArea>
 
         <DialogFooter className="mt-6">
-          <Button type="button" variant="secondary" onClick={()=>handleClose(false)}>
+          <Button type="button" variant="secondary" onClick={() => handleClose(false)}>
             Cancel
           </Button>
           <Button disabled={loading} onClick={handleSubmit}>
