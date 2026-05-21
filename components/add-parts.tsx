@@ -278,7 +278,6 @@ const AddParts = ({ customer_id, user_id, visible, onClose, onRefresh }: { custo
                           <AppCalendar
                             date={field.value}
                             onChange={field.onChange}
-                            max={new Date()}
                           />
 
                           {fieldState.invalid && (

@@ -851,7 +851,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }: { userID: nu
               Next Follow Up <RequiredStar />
             </h1>
             <div className="w-[250px]">
-              <AppCalendar date={date} onChange={setDate} />
+              <AppCalendar date={date} onChange={setDate} min={new Date()} max={""}/>
             </div>
 
             <h1>Top Follow Up?</h1>

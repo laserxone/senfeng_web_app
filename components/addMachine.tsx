@@ -251,7 +251,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { cus
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
                           <FieldLabel>Contract Date</FieldLabel>
-                          <AppCalendar date={field.value} onChange={field.onChange} max={new Date()} />
+                          <AppCalendar date={field.value} onChange={field.onChange}  />
                           {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                         </Field>
                       )}

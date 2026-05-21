@@ -588,7 +588,7 @@ const CustomerEmployeeAfterSales = ({
                 <h1>
                   Next Follow Up <RequiredStar />
                 </h1>
-                <AppCalendar date={next} onChange={setNext} min={new Date()} />
+                <AppCalendar date={next} onChange={setNext} min={new Date()} max={""}/>
 
                 <div className="flex flex-row items-center gap-2">
                   <h1>Top Follow up</h1>

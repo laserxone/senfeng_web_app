@@ -41,7 +41,7 @@ type AddCustomerDialogProps = {
   onRefresh: (val: MyCustomer) => Promise<void>;
   visible: boolean;
   onClose: (val: boolean) => void;
-  user_id: number;
+  user_id: number | string;
   ownership: boolean;
   user_designation?: string | null;
   office?: string;
@@ -124,7 +124,7 @@ function AddCustomerDialog({
         remarks: "",
         address: "",
         group: "",
-        lead: user_id,
+        lead: Number(user_id),
         other: "",
         pin: "",
         platform: "SOCIAL MEDIA",

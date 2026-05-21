@@ -273,6 +273,8 @@ export default function VisitTab({
                       <AppCalendar
                         date={field.value}
                         onChange={field.onChange}
+                        min={new Date()}
+                        max={""}
                       />
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />

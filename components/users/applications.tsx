@@ -675,7 +675,7 @@ export default function Applications() {
                                                     <Clock className="size-3.5 text-emerald-600" />
                                                     Expected Receiving Date
                                                 </FieldLabel>
-                                                <AppCalendar min={new Date()} date={formData.receivingDate} onChange={(d) => updateField("receivingDate", d)} />
+                                                <AppCalendar min={new Date()} date={formData.receivingDate} onChange={(d) => updateField("receivingDate", d)} max={""} />
 
                                             </Field>
 
@@ -684,7 +684,8 @@ export default function Applications() {
                                                     <CalendarDays className="size-3.5 text-emerald-600" />
                                                     Return Date
                                                 </FieldLabel>
-                                                <AppCalendar min={new Date()} date={formData.returnDate} onChange={(d) => updateField("returnDate", d)} />
+                                                <AppCalendar min={new Date()} date={formData.returnDate} onChange={(d) => updateField("returnDate", d)} 
+                                                    max={""}/>
 
                                             </Field>
 
@@ -693,7 +694,8 @@ export default function Applications() {
                                                     <CalendarDays className="size-3.5 text-emerald-600" />
                                                     First Installment
                                                 </FieldLabel>
-                                                <AppCalendar min={new Date()} date={formData.firstInstallmentDate} onChange={(d) => updateField("firstInstallmentDate", d)} />
+                                                <AppCalendar min={new Date()} date={formData.firstInstallmentDate} onChange={(d) => updateField("firstInstallmentDate", d)} 
+                                                    max={""}/>
 
                                             </Field>
                                         </div>
@@ -1169,7 +1171,7 @@ const RenderMyApprovals = () => {
         })
     }
 
-    if(loading){
+    if (loading) {
         return (
             <div className="flex flex-1 items-center justify-center py-10">
                 <Spinner />

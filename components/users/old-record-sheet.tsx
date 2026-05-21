@@ -46,7 +46,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClose: (val: boolean) => void, user_id: number }) => {
   const [loading, setLoading] = useState(false);
-  const [sendTo, setSendTo] = useState(null);
+  const [sendTo, setSendTo] = useState<number | null>(null);
   const [data, setData] = useState<OldRecordProps[]>([]);
   const { userID, base_route } = useUserDetail();
   const [sendLoading, setSendLoading] = useState(false);
@@ -175,6 +175,7 @@ const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClo
                       <AppCalendar
                         date={field.value}
                         onChange={field.onChange}
+                        max={""}
                       />
 
                       {fieldState.invalid && (
@@ -196,6 +197,7 @@ const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClo
                       <AppCalendar
                         date={field.value}
                         onChange={field.onChange}
+                        max={""}
                       />
 
                       {fieldState.invalid && (
@@ -283,7 +285,7 @@ const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClo
                 <FieldLabel>Select user</FieldLabel>
                 <UserSearch
                   className="w-[200px]"
-                  onReturn={setSendTo}
+                  onReturn={(val)=>setSendTo(val)}
                   value={sendTo}
                 />
               </div>

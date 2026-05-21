@@ -14,7 +14,8 @@ export async function GET() {
       pr.tid,
       pr.sale_id,
 
-      s.serial_no,
+      s.order_no_arr,
+      s.dispatch_information,
 
       c.id AS customer_id,
       c.name AS customer_name,

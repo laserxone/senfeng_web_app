@@ -90,12 +90,12 @@ export default function NewsPage() {
         <div className="flex gap-4">
           <div className="flex-1">
             <Label htmlFor="start_date">Start Date</Label>
-            <AppCalendar date={startDate} onChange={setStartDate} />
+            <AppCalendar date={startDate} onChange={setStartDate} max={""}/>
           </div>
 
           <div className="flex-1">
             <Label htmlFor="end_date">End Date</Label>
-            <AppCalendar date={endDate} onChange={setEndDate} />
+            <AppCalendar date={endDate} onChange={setEndDate} max={""}/>
           </div>
         </div>
 

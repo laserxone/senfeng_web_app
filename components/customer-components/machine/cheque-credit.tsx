@@ -71,6 +71,7 @@ const ChequeCredit = ({ total, value, setTotal, setValue }: { total: ChequeProp[
             <AppCalendar
               date={item.date}
               onChange={(val) => handleUpdateData(val, index, "date")}
+              max={""}
             />
           </div>
 

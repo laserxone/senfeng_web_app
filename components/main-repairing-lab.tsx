@@ -362,6 +362,7 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }: { open: boolean
           date={form.deliver_date}
           onChange={(date) => updateForm("deliver_date", date)}
           min={YESTERDAY}
+          max={""}
         />
       </Field>
     </div>

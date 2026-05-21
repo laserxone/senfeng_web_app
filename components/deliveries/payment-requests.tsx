@@ -25,6 +25,7 @@ import {
 import PageTable from "@/components/app-table";
 import Dropzone from "@/components/dropzone";
 import { storage } from "@/config/firebase";
+import { TriggerFirebaseForPendingPayments } from "@/lib/triggerFirebase";
 import { UploadImage } from "@/lib/uploadFunction";
 import { ColumnDef } from "@tanstack/react-table";
 import { getDownloadURL, ref } from "firebase/storage";
@@ -33,7 +34,6 @@ import AppCalendar from "../appCalendar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
 import Spinner from "../ui/spinner";
-import { TriggerFirebaseForPendingPayments } from "@/lib/triggerFirebase";
 
 type PaymentRequest = {
     id: number;
@@ -44,11 +44,12 @@ type PaymentRequest = {
     date: Date;
     tid: string;
     sale_id: number;
-    serial_no: string;
+    order_no_arr: string[];
     customer_id: number;
     customer_name: string;
     customer_owner: string;
     ownership_name: string;
+    dispatch_information: { other_information?: { transporter?: string } }
 };
 
 export default function PaymentRequestsPage() {
@@ -87,7 +88,7 @@ export default function PaymentRequestsPage() {
             fetchPaymentRequests();
         }
     }, [userID]);
-
+   
     const handleOpenDialog = (item: PaymentRequest) => {
         setSelected(item);
 
@@ -158,22 +159,41 @@ export default function PaymentRequestsPage() {
         };
     }, [requests]);
 
-    const columns: ColumnDef<PaymentRequest>[] = [
+    const columns: ColumnDef<PaymentRequest>[] = useMemo(()=>[
         {
-            accessorKey: "serial_no",
+            accessorKey: "order_no_arr",
             filterFn: "includesString",
             header: ({ column }) => (
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
-                    Serial No
+                    Order No
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
             cell: ({ row }) => (
                 <div className="font-medium">
-                    {row.original.serial_no || row.original.sale_id}
+                    {row.original.order_no_arr?.join(", ") || row.original.sale_id}
+                </div>
+            ),
+        },
+
+         {
+            accessorKey: "dispatch_information",
+            filterFn: "includesString",
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Transporter
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => (
+                <div className="font-medium">
+                    {row.original?.dispatch_information?.other_information?.transporter ?? "-"}
                 </div>
             ),
         },
@@ -320,7 +340,7 @@ export default function PaymentRequestsPage() {
                 );
             },
         },
-    ];
+    ],[requests]);
 
     return (
         <div className="flex flex-1 flex-col space-y-6">

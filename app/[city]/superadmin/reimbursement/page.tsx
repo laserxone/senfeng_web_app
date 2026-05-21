@@ -852,7 +852,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }: { visible: bool
                         <FieldLabel>
                           Date <RequiredStar />
                         </FieldLabel>
-                        <AppCalendar date={field.value} onChange={field.onChange} max={new Date()} />
+                        <AppCalendar date={field.value} onChange={field.onChange}  min={new Date(new Date().getFullYear(), new Date().getMonth(), 1)} />
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}

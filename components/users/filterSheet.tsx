@@ -121,6 +121,7 @@ const FilterSheet = ({ visible, onClose, onReturn, user_disable = true }: Filter
                   <AppCalendar
                     date={field.value}
                     onChange={field.onChange}
+                    max={""}
                   />
 
                   {fieldState.invalid && (
@@ -140,6 +141,7 @@ const FilterSheet = ({ visible, onClose, onReturn, user_disable = true }: Filter
                   <AppCalendar
                     date={field.value}
                     onChange={field.onChange}
+                    max={""}
                   />
 
                   {fieldState.invalid && (
