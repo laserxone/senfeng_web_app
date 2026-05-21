@@ -1,13 +1,14 @@
 "use client"
 
+import { CustomerSearchWithData } from "@/components/customer-search-with-data"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { QuotationData } from "@/lib/types"
-import { Building2, Clock, CreditCard, DollarSign, FileText, Mail, Phone, Settings, Truck, User, Zap } from "lucide-react"
+import { MyCustomer, QuotationData } from "@/lib/types"
+import { Building2, Clock, CreditCard, DollarSign, FileText, Mail, Phone, Settings, Truck, User, Users, Zap } from "lucide-react"
 import { useState } from "react"
 
 interface QuotationFormProps {
@@ -23,17 +24,38 @@ export function QuotationForm({ data, onChange, onGeneratePDF, isGenerating }: Q
     onChange({ ...data, [field]: value })
   }
 
+  const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(null);
+
+  function onClose() {
+    onChange({
+      quotationNo: "",
+      date: new Date().toISOString().split("T")[0],
+      customerName: "",
+      contactPerson: "",
+      contactNumber: "",
+      email: "",
+      machineType: "",
+      machinePower: "",
+      priceOfMachine: "",
+      validity: "",
+      paymentTerms: "",
+      deliveryTime: "",
+    })
+    setOpen(false)
+    setSelectedCustomer(null)
+  }
+
   return (
     <>
       <Button onClick={() => setOpen(!open)}>
         Create Quotation
       </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="w-full sm:max-w-4xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
- <FileText className="h-5 w-5 text-blue-600" />
-                    Quotation Details
+              <FileText className="h-5 w-5 text-blue-600" />
+              Quotation Details
             </DialogTitle>
           </DialogHeader>
           <ScrollArea className="h-[80vh]">
@@ -41,7 +63,7 @@ export function QuotationForm({ data, onChange, onGeneratePDF, isGenerating }: Q
             <div className="space-y-6">
               {/* Quotation Details */}
               <Card>
-               
+
                 <CardContent className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="quotationNo">Quotation No.</Label>
@@ -73,6 +95,24 @@ export function QuotationForm({ data, onChange, onGeneratePDF, isGenerating }: Q
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="grid gap-4 sm:grid-cols-2">
+
+
+                  <div className="space-y-2 col-span-2">
+                    <Label htmlFor="customerName" className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      Select Customer
+                    </Label>
+                    <CustomerSearchWithData
+                      value={selectedCustomer}
+                      onReturn={(val) => {
+
+                        setSelectedCustomer(val);
+                        onChange({ ...data, customerName: val.name || val.owner || "", contactPerson: val.owner || "", contactNumber: val?.number ? val.number.join(", ") : "", email: val?.email || "" })
+                      }}
+                    />
+                  </div>
+
+
                   <div className="space-y-2">
                     <Label htmlFor="customerName" className="flex items-center gap-2">
                       <Building2 className="h-4 w-4 text-muted-foreground" />

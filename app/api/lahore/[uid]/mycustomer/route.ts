@@ -24,6 +24,7 @@ export async function GET(req : NextRequest, { params } : {params : Promise<{uid
                 c.number, 
                 c.lead, 
                 c.ownership,
+                c.email,
                 c.office,
                 u.name AS ownership_name
             FROM customer c
