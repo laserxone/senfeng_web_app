@@ -370,7 +370,6 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
             }
 
             const user = userResult.rows[0];
-            console.log(user.designation)
 
             if (user?.designation === 'Dealer') {
 
@@ -759,7 +758,7 @@ GROUP BY
                 const customersResult = await pool.query(
                     `SELECT id, name, location, number, owner, member, created_at
             FROM customer
-            WHERE member IS TRUE`
+            WHERE member IS TRUE AND office = 'karachi'`
                 );
 
                 const customers = customersResult.rows;

@@ -96,6 +96,7 @@ export const OwnerSidebarItems = [
       "prices",
       "oldcommissions",
       "analytics",
+      "quotation"
     ],
     items: [
        {
@@ -122,6 +123,12 @@ export const OwnerSidebarItems = [
         title: "Analytics",
         url: "/analytics",
         shortcut: ["a", "n", "a"],
+      },
+
+       {
+        title: "Quotation",
+        url: "/quotation",
+        shortcut: ["q", "u", "o"],
       },
 
     ]
@@ -5053,7 +5060,7 @@ export const CountriesList = [
 export const BASE_URL = "/api";
 
 export const Colors = {
-  button: "#0E997D",
+  button: "#1d76a4",
 };
 
 export const TIMEZONE = "Asia/Karachi";

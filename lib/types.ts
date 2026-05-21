@@ -1415,3 +1415,18 @@ export type EngineerPerformanceResponse = {
         pending: number;
     };
 };
+
+export interface QuotationData {
+  quotationNo: string
+  date: string
+  customerName: string
+  contactPerson: string
+  contactNumber: string
+  email: string
+  machineType: string
+  machinePower: string
+  priceOfMachine: string
+  validity: string
+  paymentTerms: string
+  deliveryTime: string
+}

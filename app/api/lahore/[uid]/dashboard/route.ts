@@ -757,7 +757,7 @@ GROUP BY
                 const customersResult = await pool.query(
                     `SELECT id, name, location, number, owner, member, created_at
             FROM customer
-            WHERE member IS TRUE`
+            WHERE member IS TRUE AND office = 'lahore'`
                 );
 
                 const customers = customersResult.rows;
