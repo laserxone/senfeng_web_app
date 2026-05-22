@@ -10,6 +10,7 @@ import {
     Text,
     View,
 } from "@react-pdf/renderer"
+import moment from "moment"
 
 
 const MainColor = '#1e3a8a'
@@ -411,7 +412,7 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
                             />
                             <View>
                                 <Text style={styles.bannerFieldLabel}>Quotation No.</Text>
-                                <Text style={styles.bannerFieldValue}>{data.quotationNo || "0000-0000"}</Text>
+                                <Text style={styles.bannerFieldValue}>{data.id || "0000-0000"}</Text>
                             </View>
                         </View>
                         <View style={styles.bannerFieldLast}>
@@ -421,7 +422,7 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
                             />
                             <View>
                                 <Text style={styles.bannerFieldLabel}>Date</Text>
-                                <Text style={styles.bannerFieldValue}>{formatDate(data.date)}</Text>
+                                <Text style={styles.bannerFieldValue}>{moment(data.date).format("YYYY-MM-DD") }</Text>
                             </View>
                         </View>
                     </View>
@@ -480,22 +481,22 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
                             {
                                 icon: "/png/building.png",
                                 label: "Customer / Company Name",
-                                value: data.customerName || "Enter customer or company name",
+                                value: data.customer_name || "-",
                             },
                             {
                                 icon: "/png/users.png",
                                 label: "Contact Person",
-                                value: data.contactPerson || "Enter contact person",
+                                value: data.contact_person || "-",
                             },
                             {
                                 icon: "/png/phone.png",
                                 label: "Contact Number",
-                                value: data.contactNumber || "Enter contact number",
+                                value: data.contact_number || "-",
                             },
                             {
                                 icon: "/png/mail.png",
                                 label: "Email Address",
-                                value: data.email || "Enter email address",
+                                value: data.email || "-",
                             },
                         ].map((item, index) => (
                             <View key={index} style={[
@@ -533,27 +534,27 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
                     <View style={styles.summaryTable}>
                         <View style={styles.summaryRow}>
                             <Text style={styles.summaryLabel}>Machine Type</Text>
-                            <Text style={styles.summaryValue}>{data.machineType || "Enter machine type"}</Text>
+                            <Text style={styles.summaryValue}>{data.machine_model || "-"}</Text>
                         </View>
                         <View style={[styles.summaryRow, { backgroundColor: "#f9fafb" }]}>
                             <Text style={styles.summaryLabel}>Machine Power</Text>
-                            <Text style={styles.summaryValue}>{data.machinePower || "Enter machine power"}</Text>
+                            <Text style={styles.summaryValue}>{data.machine_power || "-"}</Text>
                         </View>
                         <View style={styles.summaryRow}>
                             <Text style={styles.summaryLabel}>Price of Machine</Text>
-                            <Text style={styles.summaryValue}>{data.priceOfMachine || "Enter price"}</Text>
+                            <Text style={styles.summaryValue}>{data.price || "-"}</Text>
                         </View>
                         <View style={[styles.summaryRow, { backgroundColor: "#f9fafb" }]}>
                             <Text style={styles.summaryLabel}>Validity</Text>
-                            <Text style={styles.summaryValue}>{data.validity || "Enter validity period"}</Text>
+                            <Text style={styles.summaryValue}>{data.validity || "-"}</Text>
                         </View>
                         <View style={styles.summaryRow}>
                             <Text style={styles.summaryLabel}>Payment Terms</Text>
-                            <Text style={styles.summaryValue}>{data.paymentTerms || "Enter payment terms"}</Text>
+                            <Text style={styles.summaryValue}>{data.payment_terms || "-"}</Text>
                         </View>
                         <View style={[styles.summaryRow, { backgroundColor: "#f9fafb" }]}>
                             <Text style={styles.summaryLabel}>Delivery Time</Text>
-                            <Text style={styles.summaryValue}>{data.deliveryTime || "Enter delivery time"}</Text>
+                            <Text style={styles.summaryValue}>{data.delivery_time || "-"}</Text>
                         </View>
                     </View>
                 </View>

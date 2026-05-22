@@ -1417,16 +1417,19 @@ export type EngineerPerformanceResponse = {
 };
 
 export interface QuotationData {
-  quotationNo: string
-  date: string
-  customerName: string
-  contactPerson: string
-  contactNumber: string
-  email: string
-  machineType: string
-  machinePower: string
-  priceOfMachine: string
+  id?: number
+  date: Date
+  customer_name: string
+  contact_person: string
+  contact_number: string
+  email?: string
+  machine_model: string
+  machine_power?: string
+  price: string
   validity: string
-  paymentTerms: string
-  deliveryTime: string
+  payment_terms: string
+  delivery_time: string
+  customer_id : number | string 
+  user_id ?: number | string | null
+  original_pdf ?: string 
 }

@@ -51,7 +51,7 @@ export default function PricesComponent() {
   useEffect(() => {
     if (userID) {
       fetchData();
-    }
+    } 
   }, [userID]);
 
   async function fetchData() {
