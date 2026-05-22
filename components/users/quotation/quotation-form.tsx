@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { QuotationPDF } from "@/components/users/quotation/quotation-pdf"
 import useUserDetail from "@/hooks/use-user-detail"
 import axios from "@/lib/axios"
@@ -29,9 +30,9 @@ import {
   Users,
   Zap,
 } from "lucide-react"
+import { PDFDocument } from "pdf-lib"
 import { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
-import { PDFDocument } from "pdf-lib";
 import { z } from "zod"
 
 export const quotationSchema = z.object({
@@ -130,61 +131,61 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
       const finalData = { ...data, id: resID }
 
       const generatedPdfBlob = await pdf(<QuotationPDF data={finalData} />).toBlob()
-       const generatedPdfBytes = await generatedPdfBlob.arrayBuffer()
-       const firebasePdfUrl = data?.original_pdf
-       if (firebasePdfUrl) {
-            const firebasePdfResponse = await fetch(firebasePdfUrl)
-            const firebasePdfBytes = await firebasePdfResponse.arrayBuffer()
-      
-            const mergedPdf = await PDFDocument.create()
-      
-            const generatedPdfDoc = await PDFDocument.load(generatedPdfBytes)
-            const firebasePdfDoc = await PDFDocument.load(firebasePdfBytes)
-      
-            const generatedPages = await mergedPdf.copyPages(
-              generatedPdfDoc,
-              generatedPdfDoc.getPageIndices()
-            )
-      
-            generatedPages.forEach((page) => mergedPdf.addPage(page))
-      
-            const firebasePages = await mergedPdf.copyPages(
-              firebasePdfDoc,
-              firebasePdfDoc.getPageIndices()
-            )
-      
-            firebasePages.forEach((page) => mergedPdf.addPage(page))
-      
-            // 5. Download final merged PDF
-            const mergedPdfBytes = await mergedPdf.save()
-      
-            const blob = new Blob([mergedPdfBytes.buffer as ArrayBuffer], {
-              type: "application/pdf",
-            })
-      
-            const url = URL.createObjectURL(blob)
-            const link = document.createElement("a")
-      
-            link.href = url
-            link.download = `Quotation-${finalData.id || "download"}.pdf`
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-      
-            URL.revokeObjectURL(url)
-          }
-          else {
-            const url = URL.createObjectURL(generatedPdfBlob)
-      
-            const link = document.createElement("a")
-            link.href = url
-            link.download = `Quotation-${finalData.id}.pdf`
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-      
-            URL.revokeObjectURL(url)
-          }
+      const generatedPdfBytes = await generatedPdfBlob.arrayBuffer()
+      const firebasePdfUrl = data?.original_pdf
+      if (firebasePdfUrl) {
+        const firebasePdfResponse = await fetch(firebasePdfUrl)
+        const firebasePdfBytes = await firebasePdfResponse.arrayBuffer()
+
+        const mergedPdf = await PDFDocument.create()
+
+        const generatedPdfDoc = await PDFDocument.load(generatedPdfBytes)
+        const firebasePdfDoc = await PDFDocument.load(firebasePdfBytes)
+
+        const generatedPages = await mergedPdf.copyPages(
+          generatedPdfDoc,
+          generatedPdfDoc.getPageIndices()
+        )
+
+        generatedPages.forEach((page) => mergedPdf.addPage(page))
+
+        const firebasePages = await mergedPdf.copyPages(
+          firebasePdfDoc,
+          firebasePdfDoc.getPageIndices()
+        )
+
+        firebasePages.forEach((page) => mergedPdf.addPage(page))
+
+        // 5. Download final merged PDF
+        const mergedPdfBytes = await mergedPdf.save()
+
+        const blob = new Blob([mergedPdfBytes.buffer as ArrayBuffer], {
+          type: "application/pdf",
+        })
+
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement("a")
+
+        link.href = url
+        link.download = `Quotation-${finalData.id || "download"}.pdf`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+
+        URL.revokeObjectURL(url)
+      }
+      else {
+        const url = URL.createObjectURL(generatedPdfBlob)
+
+        const link = document.createElement("a")
+        link.href = url
+        link.download = `Quotation-${finalData.id}.pdf`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+
+        URL.revokeObjectURL(url)
+      }
       await onRefresh()
       handleOpenChange(false)
     } catch (error) {
@@ -511,10 +512,10 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-muted-foreground" />
-                          Validity
+                          Validity (No of days)
                         </FieldLabel>
 
-                        <Input placeholder="e.g., 30 days" {...field} />
+                        <Input placeholder="e.g., 30" {...field} />
 
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />
@@ -530,13 +531,23 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel className="flex items-center gap-2">
                           <CreditCard className="h-4 w-4 text-muted-foreground" />
-                          Payment Terms
+                          Trade Terms
                         </FieldLabel>
 
-                        <Input
-                          placeholder="e.g., 50% advance, 50% before delivery"
-                          {...field}
-                        />
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select option" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={"EXW"}>EXW</SelectItem>
+                            <SelectItem value={"FOB"}>FOB</SelectItem>
+                            <SelectItem value={"CFR"}>CFR</SelectItem>
+                            <SelectItem value={"DDP"}>DDP</SelectItem>
+                          </SelectContent>
+                        </Select>
 
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />
@@ -552,11 +563,11 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel className="flex items-center gap-2">
                           <Truck className="h-4 w-4 text-muted-foreground" />
-                          Delivery Time
+                          Delivery Time (No of days)
                         </FieldLabel>
 
                         <Input
-                          placeholder="e.g., 45-60 working days"
+                          placeholder="e.g., 45"
                           {...field}
                         />
 

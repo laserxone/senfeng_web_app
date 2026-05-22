@@ -131,6 +131,7 @@ const OwnerView = () => {
       approval_date: string | Date | null,
       commission_amount: number | null,
     ) {
+
       if (!id) return;
       setLoading(true);
       try {
@@ -279,15 +280,16 @@ const OwnerView = () => {
                 disabled={
                   showManual ? manualNumber === "" : !selectedPercentage
                 }
-                onClick={() =>
+                onClick={() => {
                   handleUpdate(
                     item.id,
                     true,
                     new Date(),
                     showManual
                       ? Number(manualNumber)
-                      : item.lead_id ? (item.total_amount * (selectedPercentage || 0)) / 100 : null,
+                      : (item.total_amount * (selectedPercentage || 0)) / 100,
                   )
+                }
                 }
               >
                 Approve
@@ -802,7 +804,7 @@ const CrmView = () => {
     }
   }, [userID]);
 
-  async function fetchData(id: number) {
+  async function fetchData(id: number | string) {
     return new Promise(async (resolve, reject) => {
       try {
         const route = `/${id}/commission?lead=true`;
