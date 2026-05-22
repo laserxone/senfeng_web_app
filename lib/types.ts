@@ -1433,3 +1433,8 @@ export interface QuotationData {
   user_id ?: number | string | null
   original_pdf ?: string 
 }
+export type PricesSearchProps = {
+  value: string | number
+  label: string
+  data: PricesProps
+}

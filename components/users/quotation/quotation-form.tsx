@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { QuotationPDF } from "@/components/users/quotation/quotation-pdf"
 import useUserDetail from "@/hooks/use-user-detail"
 import axios from "@/lib/axios"
-import { MyCustomer, QuotationData } from "@/lib/types"
+import { MyCustomer, PricesSearchProps, QuotationData } from "@/lib/types"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { pdf } from "@react-pdf/renderer"
 import {
@@ -112,7 +112,7 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
   const [open, setOpen] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(null)
-  const [selectedMachine, setSelectedMachine] = useState<any>(null)
+  const [selectedMachine, setSelectedMachine] = useState<PricesSearchProps | null>(null)
 
   const { userID } = useUserDetail()
 
@@ -256,7 +256,7 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
                 </div>
               </FieldSet>
 
-              <FieldSet className="rounded-xl border bg-muted/20 p-4">
+              <FieldSet className="rounded-xl border bg-muted/20 p-4 mt-2">
                 <FieldLegend className="flex items-center gap-2 px-2 text-sm font-medium">
                   <Building2 className="h-4 w-4 text-blue-600" />
                   Customer Information
@@ -403,7 +403,7 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
                 </div>
               </FieldSet>
 
-              <FieldSet className="rounded-xl border bg-muted/20 p-4">
+              <FieldSet className="rounded-xl border bg-muted/20 p-4 mt-2">
                 <FieldLegend className="flex items-center gap-2 px-2 text-sm font-medium">
                   <Settings className="h-4 w-4 text-blue-600" />
                   Machine Details
@@ -437,9 +437,6 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
                           shouldValidate: true,
                         })
 
-                        form.setValue("price", val.data?.ddp || "", {
-                          shouldValidate: true,
-                        })
 
                       }}
                     />
@@ -486,17 +483,45 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
                     )}
                   />
 
-                  <Controller
-                    name="price"
+                   <Controller
+                    name="payment_terms"
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
-                          Price of Machine
+                          <CreditCard className="h-4 w-4 text-muted-foreground" />
+                          Trade Terms
                         </FieldLabel>
 
-                        <Input placeholder="e.g., $50,000" {...field} />
+                        <Select
+                        disabled={!selectedMachine}
+                          onValueChange={(val) => {
+                            console.log(selectedMachine)
+                            field.onChange(val)
+                            if (val === 'FOB' || val === 'EXW') {
+                              form.setValue("price", selectedMachine?.data?.fob || "", {
+                                shouldValidate: true,
+                              })
+                            }
+                            if(val === 'DDP'){
+                            
+                              form.setValue("price", selectedMachine?.data?.ddp || "", {
+                                shouldValidate: true,
+                              })
+                            }
+                          }}
+                          value={field.value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select option" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={"EXW"}>EXW</SelectItem>
+                            <SelectItem value={"FOB"}>FOB</SelectItem>
+                            <SelectItem value={"CFR"}>CFR</SelectItem>
+                            <SelectItem value={"DDP"}>DDP</SelectItem>
+                          </SelectContent>
+                        </Select>
 
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />
@@ -504,6 +529,8 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
                       </Field>
                     )}
                   />
+
+                
 
                   <Controller
                     name="validity"
@@ -524,30 +551,19 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
                     )}
                   />
 
-                  <Controller
-                    name="payment_terms"
+                   <Controller
+                    name="price"
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel className="flex items-center gap-2">
-                          <CreditCard className="h-4 w-4 text-muted-foreground" />
-                          Trade Terms
+                          <DollarSign className="h-4 w-4 text-muted-foreground" />
+                          Price of Machine
                         </FieldLabel>
 
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select option" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value={"EXW"}>EXW</SelectItem>
-                            <SelectItem value={"FOB"}>FOB</SelectItem>
-                            <SelectItem value={"CFR"}>CFR</SelectItem>
-                            <SelectItem value={"DDP"}>DDP</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Input placeholder="e.g., $50,000" 
+                        // disabled={form.watch("payment_terms") !== 'CFR'}
+                         {...field} />
 
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />

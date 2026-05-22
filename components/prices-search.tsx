@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronLeft, ChevronRight, ChevronsUpDown, SearchIcon } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -15,17 +15,9 @@ import {
 } from "@/components/ui/command";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { MyCustomer, PricesProps } from "@/lib/types";
+import { PricesProps, PricesSearchProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
-import { Label } from "./ui/label";
-import { Switch } from "./ui/switch";
 
-type PricesSearchProps = {
-  value : string | number
-  label : string
-  data : PricesProps
-}
 
 export function PricesSearch({ value, onReturn }: { value: PricesSearchProps | null, onReturn: (val: PricesSearchProps) => void }) {
   const [open, setOpen] = React.useState(false);
@@ -58,54 +50,54 @@ export function PricesSearch({ value, onReturn }: { value: PricesSearchProps | n
   }, [userID]);
 
 
- 
+
 
   return (
     <>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="w-full justify-between"
-             onClick={(e) => {
+      <Button
+        variant="outline"
+        role="combobox"
+        aria-expanded={open}
+        className="w-full justify-between"
+        onClick={(e) => {
           e.preventDefault()
           setOpen(!open)
         }}
-          >
-            {value
-              ? data.find((item) => item.value === value.value)?.label
-              : "Select machine"}
-            <ChevronsUpDown className="opacity-50" />
-          </Button>
-       
-       <CommandDialog open={open} onOpenChange={setOpen}>
-          <Command>
-           
-            <CommandInput placeholder="Search machine..." className="h-9" />
-            <CommandList>
-              <CommandEmpty>No user found.</CommandEmpty>
-              <CommandGroup>
-                {data.map((item) => (
-                  <CommandItem
-                    key={item.value}
-                    value={item.label}
-                    onSelect={() => {
-                      onReturn?.(item);
-                      setOpen(false);
-                    }}
-                  >
-                    {item.label}
-                    <Check
-                      className={cn(
-                        "ml-auto",
-                        value?.value === item.value ? "opacity-100" : "opacity-0",
-                      )}
-                    />
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
+      >
+        {value
+          ? data.find((item) => item.value === value.value)?.label
+          : "Select machine"}
+        <ChevronsUpDown className="opacity-50" />
+      </Button>
+
+      <CommandDialog open={open} onOpenChange={setOpen}>
+        <Command>
+
+          <CommandInput placeholder="Search machine..." className="h-9" />
+          <CommandList>
+            <CommandEmpty>No user found.</CommandEmpty>
+            <CommandGroup>
+              {data.map((item) => (
+                <CommandItem
+                  key={item.value}
+                  value={item.label}
+                  onSelect={() => {
+                    onReturn?.(item);
+                    setOpen(false);
+                  }}
+                >
+                  {item.label}
+                  <Check
+                    className={cn(
+                      "ml-auto",
+                      value?.value === item.value ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
       </CommandDialog>
     </>
   );
