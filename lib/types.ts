@@ -1417,7 +1417,7 @@ export type EngineerPerformanceResponse = {
 };
 
 export interface QuotationData {
-  id?: number
+  id?: number | string
   date: Date
   customer_name: string
   contact_person: string

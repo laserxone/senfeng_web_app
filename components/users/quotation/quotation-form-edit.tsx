@@ -10,27 +10,27 @@ import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/componen
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { QuotationPDF } from "@/components/users/quotation/quotation-pdf"
 import useUserDetail from "@/hooks/use-user-detail"
 import axios from "@/lib/axios"
 import { MyCustomer, PricesSearchProps, QuotationData } from "@/lib/types"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { pdf } from "@react-pdf/renderer"
 import {
   Building2,
   Clock,
   CreditCard,
   DollarSign,
+  Edit2,
+  Edit3,
   FileText,
   Mail,
   Phone,
   Settings,
+  SquarePen,
   Truck,
   User,
   Users,
   Zap,
 } from "lucide-react"
-import { PDFDocument } from "pdf-lib"
 import { useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
@@ -108,12 +108,12 @@ const defaultValues: QuotationData = {
   original_pdf: ""
 }
 
-export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> }) {
+export function QuotationFormEdit({ onRefresh, data, id }: { onRefresh: () => Promise<void>, data: null | QuotationData, id?: number | string }) {
   const [open, setOpen] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(null)
   const [selectedMachine, setSelectedMachine] = useState<PricesSearchProps | null>(null)
-  const [disable, setDisable] = useState(true)
+   const [disable, setDisable] = useState(true)
 
   const { userID } = useUserDetail()
 
@@ -122,90 +122,29 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
     defaultValues,
   })
 
-  const handleGeneratePDF = async (data: QuotationData) => {
 
-    setIsGenerating(true)
 
-    try {
-      const res = await axios.post(`/${userID}/quotation`, { ...data, user_id: userID })
-      const resID = res.data?.id || ""
-      const finalData = { ...data, id: resID }
-
-      const generatedPdfBlob = await pdf(<QuotationPDF data={finalData} />).toBlob()
-      const generatedPdfBytes = await generatedPdfBlob.arrayBuffer()
-      const firebasePdfUrl = data?.original_pdf
-      if (firebasePdfUrl) {
-        const firebasePdfResponse = await fetch(firebasePdfUrl)
-        const firebasePdfBytes = await firebasePdfResponse.arrayBuffer()
-
-        const mergedPdf = await PDFDocument.create()
-
-        const generatedPdfDoc = await PDFDocument.load(generatedPdfBytes)
-        const firebasePdfDoc = await PDFDocument.load(firebasePdfBytes)
-
-        const generatedPages = await mergedPdf.copyPages(
-          generatedPdfDoc,
-          generatedPdfDoc.getPageIndices()
-        )
-
-        generatedPages.forEach((page) => mergedPdf.addPage(page))
-
-        const firebasePages = await mergedPdf.copyPages(
-          firebasePdfDoc,
-          firebasePdfDoc.getPageIndices()
-        )
-
-        firebasePages.forEach((page) => mergedPdf.addPage(page))
-
-        // 5. Download final merged PDF
-        const mergedPdfBytes = await mergedPdf.save()
-
-        const blob = new Blob([mergedPdfBytes.buffer as ArrayBuffer], {
-          type: "application/pdf",
-        })
-
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement("a")
-
-        link.href = url
-        link.download = `Quotation-${finalData.id || "download"}.pdf`
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-
-        URL.revokeObjectURL(url)
-      }
-      else {
-        const url = URL.createObjectURL(generatedPdfBlob)
-
-        const link = document.createElement("a")
-        link.href = url
-        link.download = `Quotation-${finalData.id}.pdf`
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-
-        URL.revokeObjectURL(url)
-      }
-      await onRefresh()
-      handleOpenChange(false)
-    } catch (error) {
-    } finally {
-      setIsGenerating(false)
+  useEffect(() => {
+    if (data) {
+      form.reset({
+        date: new Date(),
+        customer_name: data.customer_name,
+        contact_person: data.contact_person,
+        contact_number: data.contact_number,
+        email: data.email,
+        machine_model: data.machine_model,
+        machine_power: data.machine_power,
+        price: data.price,
+        validity: data.validity,
+        payment_terms: data.payment_terms,
+        delivery_time: data.delivery_time,
+        customer_id: data.customer_id,
+        original_pdf: data.original_pdf,
+      })
     }
-  }
+  }, [data])
 
-  const handleOpenChange = (value: boolean) => {
-    setOpen(value)
-
-    if (!value) {
-      form.reset(defaultValues)
-      setSelectedCustomer(null)
-      setSelectedMachine(null)
-    }
-  }
-
-
+ 
 
   const paymentTerms = form.watch("payment_terms")
 
@@ -252,9 +191,34 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
 
   }, [selectedMachine, paymentTerms])
 
+  const handleGeneratePDF = async (values: QuotationData) => {
+    if (!data?.id) return
+
+    setIsGenerating(true)
+
+    try {
+      await axios.put(`/${userID}/quotation/${data.id}`, { ...values })
+      await onRefresh()
+      handleOpenChange(false)
+    } catch (error) {
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handleOpenChange = (value: boolean) => {
+    setOpen(value)
+
+    if (!value) {
+      form.reset(defaultValues)
+      setSelectedCustomer(null)
+      setSelectedMachine(null)
+    }
+  }
+
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Create Quotation</Button>
+      <Button size={"icon"} onClick={() => setOpen(true)}><SquarePen /></Button>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="w-full sm:max-w-4xl">
@@ -597,8 +561,8 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
                           Price of Machine
                         </FieldLabel>
 
-                        <Input disabled={disable} placeholder="e.g., $50,000"
-                          // disabled={form.watch("payment_terms") !== 'CFR'}
+                        <Input placeholder="e.g., $50,000"
+                          disabled={disable}
                           {...field} />
 
                         {fieldState.invalid && (
@@ -641,11 +605,11 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
               disabled={isGenerating}
             >
               {isGenerating ? (
-                "Generating PDF..."
+                "Updating..."
               ) : (
                 <>
                   <FileText className="mr-2 h-5 w-5" />
-                  Generate & Download PDF
+                  Update Quotation
                 </>
               )}
             </Button>

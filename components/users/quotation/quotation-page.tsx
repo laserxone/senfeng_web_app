@@ -14,13 +14,15 @@ import { PDFDocument } from "pdf-lib";
 import { useEffect, useState } from "react";
 import Heading from "../../ui/heading";
 import { QuotationPDF } from "./quotation-pdf";
+import { QuotationFormEdit } from "./quotation-form-edit";
+import { toast } from "sonner";
 
 export default function QuotationPage() {
   const [data, setData] = useState<QuotationData[]>([])
   const [loading, setLoading] = useState(false)
   const { userID } = useUserDetail()
-  const [deleteItem, setDeleteItem] = useState<number | null | undefined>(null)
-  const [downloadItem, setDownloadItem] = useState<number | null | undefined>(null)
+  const [deleteItem, setDeleteItem] = useState<number | string | null | undefined>(null)
+  const [downloadItem, setDownloadItem] = useState<number | string | null | undefined>(null)
 
   useEffect(() => {
     if (userID) {
@@ -158,7 +160,7 @@ export default function QuotationPage() {
       ),
       cell: ({ row }) => (
         <div className="font-medium">
-          {Number(row.original.price).toFixed(0) || "-"}
+          {row.original.price || "-"}
         </div>
       ),
     },
@@ -216,6 +218,7 @@ export default function QuotationPage() {
 
         return (
           <div className="flex gap-2">
+            <QuotationFormEdit id={currentItem.id} data={currentItem} onRefresh={fetchData} />
             <Button
               size="icon"
               variant="outline"
@@ -247,70 +250,78 @@ export default function QuotationPage() {
 
   async function handleDownloadQuotation(quotation: QuotationData) {
     if (!quotation?.id) return
-    setDownloadItem(quotation.id)
 
-    const generatedPdfBlob = await pdf(<QuotationPDF data={quotation} />).toBlob()
-    const generatedPdfBytes = await generatedPdfBlob.arrayBuffer()
 
-   
-    const firebasePdfUrl = quotation?.original_pdf
+    try {
+      const generatedPdfBlob = await pdf(<QuotationPDF data={quotation} />).toBlob()
+      const generatedPdfBytes = await generatedPdfBlob.arrayBuffer()
 
-    if (firebasePdfUrl) {
-      const firebasePdfResponse = await fetch(firebasePdfUrl)
-      const firebasePdfBytes = await firebasePdfResponse.arrayBuffer()
 
-      const mergedPdf = await PDFDocument.create()
+      const firebasePdfUrl = quotation?.original_pdf
 
-      const generatedPdfDoc = await PDFDocument.load(generatedPdfBytes)
-      const firebasePdfDoc = await PDFDocument.load(firebasePdfBytes)
+      if (firebasePdfUrl) {
+        const firebasePdfResponse = await fetch(firebasePdfUrl)
+        const firebasePdfBytes = await firebasePdfResponse.arrayBuffer()
 
-      const generatedPages = await mergedPdf.copyPages(
-        generatedPdfDoc,
-        generatedPdfDoc.getPageIndices()
-      )
+        const mergedPdf = await PDFDocument.create()
 
-      generatedPages.forEach((page) => mergedPdf.addPage(page))
+        const generatedPdfDoc = await PDFDocument.load(generatedPdfBytes)
+        const firebasePdfDoc = await PDFDocument.load(firebasePdfBytes)
 
-      const firebasePages = await mergedPdf.copyPages(
-        firebasePdfDoc,
-        firebasePdfDoc.getPageIndices()
-      )
+        const generatedPages = await mergedPdf.copyPages(
+          generatedPdfDoc,
+          generatedPdfDoc.getPageIndices()
+        )
 
-      firebasePages.forEach((page) => mergedPdf.addPage(page))
+        generatedPages.forEach((page) => mergedPdf.addPage(page))
 
-      // 5. Download final merged PDF
-      const mergedPdfBytes = await mergedPdf.save()
+        const firebasePages = await mergedPdf.copyPages(
+          firebasePdfDoc,
+          firebasePdfDoc.getPageIndices()
+        )
 
-      const blob = new Blob([mergedPdfBytes.buffer as ArrayBuffer], {
-        type: "application/pdf",
-      })
+        firebasePages.forEach((page) => mergedPdf.addPage(page))
 
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement("a")
+        // 5. Download final merged PDF
+        const mergedPdfBytes = await mergedPdf.save()
 
-      link.href = url
-      link.download = `Quotation-${quotation.id || "download"}.pdf`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+        const blob = new Blob([mergedPdfBytes.buffer as ArrayBuffer], {
+          type: "application/pdf",
+        })
 
-      URL.revokeObjectURL(url)
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement("a")
+
+        link.href = url
+        link.download = `Quotation-${quotation.id || "download"}.pdf`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+
+        URL.revokeObjectURL(url)
+      }
+      else {
+        const url = URL.createObjectURL(generatedPdfBlob)
+
+        const link = document.createElement("a")
+        link.href = url
+        link.download = `Quotation-${quotation.id}.pdf`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+
+        URL.revokeObjectURL(url)
+      }
+
+
+    } catch (error: any) {
+      toast.error(error?.message || "Error creating pdf")
+    } finally {
+      setDownloadItem(null)
     }
-    else {
-      const url = URL.createObjectURL(generatedPdfBlob)
-
-      const link = document.createElement("a")
-      link.href = url
-      link.download = `Quotation-${quotation.id}.pdf`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-
-      URL.revokeObjectURL(url)
-    }
 
 
-   
+
 
 
   }
