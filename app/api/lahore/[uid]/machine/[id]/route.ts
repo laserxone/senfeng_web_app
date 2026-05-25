@@ -149,14 +149,14 @@ WHERE c.id = $1`;
 
       let editAllowed = false
 
-      if (
+       if (
         customer &&
-        customer?.ownership === uid
+        customer?.ownership === Number(uid)
       ) {
         editAllowed = true
       } else if (
         machine &&
-        machine?.sell_by === uid
+        machine?.sell_by === Number(uid)
       ) {
         editAllowed = true
       } else if (isAdmin) {
@@ -357,12 +357,12 @@ WHERE c.id = $1`;
 
       if (
         customer &&
-        customer?.ownership === uid
+        customer?.ownership === Number(uid)
       ) {
         editAllowed = true
       } else if (
         machine &&
-        machine?.sell_by === uid
+        machine?.sell_by === Number(uid)
       ) {
         editAllowed = true
       } else if (isAdmin) {
@@ -377,6 +377,8 @@ WHERE c.id = $1`;
       } else {
         editAllowed = false
       }
+
+      console.log(editAllowed)
 
       return NextResponse.json(
         {
