@@ -75,28 +75,30 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }: { visible:
     field: K,
     value: InventoryItem[K]
   ) => {
-    const newItems = [...items];
+    setItems((prevItems) => {
+      const newItems = [...prevItems]
 
-    newItems[index] = {
-      ...newItems[index],
-      [field]: value,
-    };
+      newItems[index] = {
+        ...newItems[index],
+        [field]: value,
+      }
 
-    setItems(newItems);
+      return newItems
+    })
 
     setErrors((prevErrors) => {
-      const newErrors = [...prevErrors];
+      const newErrors = [...prevErrors]
 
       if (newErrors[index]) {
         newErrors[index] = {
           ...newErrors[index],
           [field]: "",
-        };
+        }
       }
 
-      return newErrors;
-    });
-  };
+      return newErrors
+    })
+  }
 
   const addItem = () => {
     setItems([
@@ -258,7 +260,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }: { visible:
         buying_price: 0,
         threshold: 0,
         new_order: 0,
-        is_machine: false,
+        is_machine: true,
         machine_serial: "",
         machine_model: "",
         machine_source: "",
@@ -266,7 +268,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }: { visible:
         status: "Order Placed",
         isExisting: false,
         inventory_id: null,
-        show: false
+        show: true
       },
     ]);
 
@@ -338,6 +340,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }: { visible:
                         data={existingInventory}
                         value={item.inventory_id}
                         onReturn={(val) => {
+
                           handleItemChange(index, "inventory_id", val?.id ?? null);
                           handleItemChange(index, "name", val?.name ?? "");
                           handleItemChange(
@@ -528,7 +531,7 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }: { visible:
                                 "machine_serial",
                                 e.target.value
                               );
-                              handleItemChange(index, "name", e.target.value);
+
                             }}
                           />
                           {errors[index]?.machine_serial && (

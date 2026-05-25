@@ -73,38 +73,35 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
     });
   }
 
-  const handleItemChange = <K extends keyof InventoryItem>(
-    index: number,
-    field: K,
-    value: InventoryItem[K]
-  ) => {
-    const newItems = [...items];
+ const handleItemChange = <K extends keyof InventoryItem>(
+  index: number,
+  field: K,
+  value: InventoryItem[K]
+) => {
+  setItems((prevItems) => {
+    const newItems = [...prevItems]
 
     newItems[index] = {
       ...newItems[index],
       [field]: value,
-    };
-    if (field === 'machine_serial') {
-      newItems[index] = {
-        ...newItems[index],
-        "name": value as string
-      };
-
     }
-    setItems(newItems);
-    setErrors((prevErrors) => {
-      const newErrors = [...prevErrors];
 
-      if (newErrors[index]) {
-        newErrors[index] = {
-          ...newErrors[index],
-          [field]: "",
-        };
+    return newItems
+  })
+
+  setErrors((prevErrors) => {
+    const newErrors = [...prevErrors]
+
+    if (newErrors[index]) {
+      newErrors[index] = {
+        ...newErrors[index],
+        [field]: "",
       }
+    }
 
-      return newErrors;
-    });
-  };
+    return newErrors
+  })
+}
 
   const addItem = () => {
     setItems([
@@ -246,7 +243,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
         buying_price: 0,
         threshold: 0,
         new_order: 0,
-        is_machine: false,
+        is_machine: true,
         machine_serial: "",
         machine_model: "",
         machine_source: "",
