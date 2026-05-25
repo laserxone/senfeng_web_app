@@ -607,6 +607,7 @@ export type MachineResponse = {
     unmatchedFields: string[];
     installments: InstallmentProps[];
     customer: MyCustomer
+    editAllowed : boolean
 };
 
 export type CommissionProps = {

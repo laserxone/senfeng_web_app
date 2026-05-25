@@ -13,11 +13,14 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
 
   try {
     const isAdmin = await checkSuperadmin(uid);
+    const userDetail = await pool.query(`SELECT id, designation, limited_access, customer_full_access FROM users WHERE id = $1`, [uid])
+    const user = userDetail.rows?.[0]
 
     if (isAdmin) {
       
       const machineQuery = `
   SELECT s.*, 
+      co.commission_issued AS commission_issued,
          CASE WHEN cm.id IS NOT NULL THEN TRUE ELSE FALSE END AS cancelled_detail,
          cm.id AS cancelled_id,
          cm.created_at AS cancelled_at,
@@ -25,6 +28,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
          cm.reason AS cancelled_reason
   FROM sale s
   LEFT JOIN cancelled_machine cm ON s.id = cm.machine_id
+  LEFT JOIN commissions co ON s.id = co.sale_id 
   WHERE s.id = $1
 `;
 
@@ -143,6 +147,31 @@ WHERE c.id = $1`;
 
       const installments = installmentQuery.rows;
 
+      let editAllowed = false
+
+      if (
+        customer &&
+        customer?.ownership === uid
+      ) {
+        editAllowed = true
+      } else if (
+        machine &&
+        machine?.sell_by === uid
+      ) {
+        editAllowed = true
+      } else if (isAdmin) {
+        editAllowed = true
+      } else if (
+        user?.designation === "Customer Relationship Manager (After Sales)" &&
+        !user?.limited_access
+      ) {
+        editAllowed = true
+      } else if (user?.customer_full_access) {
+        editAllowed = true
+      } else {
+        editAllowed = false
+      }
+
       return NextResponse.json(
         {
           customer,
@@ -150,17 +179,13 @@ WHERE c.id = $1`;
           percentage_completion,
           unmatchedFields,
           installments,
+          editAllowed
         },
         { status: 200 },
       );
     } else {
-      const userQuery = await pool.query(
-        `SELECT id, designation, limited_access FROM users WHERE id = $1`,
-        [uid],
-      );
-
-      const user = userQuery.rows[0];
-
+     
+     
       if (!user) {
         return NextResponse.json(
           { message: "User not found" },
@@ -173,11 +198,13 @@ WHERE c.id = $1`;
   SELECT s.*, 
          CASE WHEN cm.id IS NOT NULL THEN TRUE ELSE FALSE END AS cancelled_detail,
          cm.id AS cancelled_id,
+        co.commission_issued AS commission_issued,
          cm.created_at AS cancelled_at,
          cm.issued AS cancelled_issued,
          cm.reason AS cancelled_reason
   FROM sale s
   LEFT JOIN cancelled_machine cm ON s.id = cm.machine_id
+  LEFT JOIN commissions co ON s.id = co.sale_id 
   WHERE s.id = $1
 `;
       const machineResult = await pool.query(machineQuery, [id]);
@@ -326,6 +353,31 @@ WHERE c.id = $1`;
 
       const installments = installmentQuery.rows;
 
+      let editAllowed = false
+
+      if (
+        customer &&
+        customer?.ownership === uid
+      ) {
+        editAllowed = true
+      } else if (
+        machine &&
+        machine?.sell_by === uid
+      ) {
+        editAllowed = true
+      } else if (isAdmin) {
+        editAllowed = true
+      } else if (
+        user?.designation === "Customer Relationship Manager (After Sales)" &&
+        !user?.limited_access
+      ) {
+        editAllowed = true
+      } else if (user?.customer_full_access) {
+        editAllowed = true
+      } else {
+        editAllowed = false
+      }
+
       return NextResponse.json(
         {
           customer,
@@ -333,6 +385,7 @@ WHERE c.id = $1`;
           percentage_completion,
           unmatchedFields,
           installments,
+          editAllowed
         },
         { status: 200 },
       );

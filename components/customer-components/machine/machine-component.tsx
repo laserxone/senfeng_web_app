@@ -13,17 +13,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowUpDown,
-  ClipboardList,
   EditIcon,
   Info,
-  InfoIcon,
   ShieldCheck,
-  Siren,
   Trash,
-  TriangleAlert,
-  Wrench,
+  TriangleAlert
 } from "lucide-react";
 import {
+  Fragment,
   memo,
   ReactNode,
   useCallback,
@@ -47,7 +44,7 @@ import EditPayment from "@/components/editPayment";
 import InvoicePDF from "@/components/invoicepdf";
 import { RequiredStar } from "@/components/RequiredStar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
@@ -62,14 +59,14 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+  TooltipTrigger
 } from "@/components/ui/tooltip";
 import { UserSearch } from "@/components/user-search";
 import { storage } from "@/config/firebase";
 import { Colors } from "@/constants/data";
 
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
+import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
@@ -80,6 +77,20 @@ import { OfficeContext } from "@/store/context/OfficeContext";
 import { pdf } from "@react-pdf/renderer";
 import { ColumnDef } from "@tanstack/react-table";
 import { getDownloadURL, ref } from "firebase/storage";
+import {
+  Banknote,
+  CalendarClock,
+  CreditCard,
+  Download,
+  Images,
+  Lock,
+  MoreHorizontal,
+  Package,
+  Pencil,
+  Trash2,
+  Truck,
+  Unlock,
+} from "lucide-react";
 import moment from "moment";
 import Image from "next/image";
 import * as pdfjsLib from "pdfjs-dist";
@@ -88,7 +99,14 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { toast } from "sonner";
 import AddCheque from "./add-cheque";
-import { useIsMobile } from "@/hooks/use-mobile";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Machine({ id, onLoading }: { id: string | number, onLoading?: (val: boolean) => void }) {
   const [data, setData] = useState<MachineResponse>();
@@ -96,7 +114,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
   const [installments, setInstallments] = useState<InstallmentProps[]>([]);
   const [total, setTotal] = useState(0);
   const [received, setReceived] = useState(0);
-
+  const [override, setOverride] = useState(false)
   const [imageURL, setImageURL] = useState<MachinePayment | null>(null);
   const [visible, setVisible] = useState(false);
   const [imagesVisible, setImagesVisible] = useState(false);
@@ -105,9 +123,8 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
   const [addPayment, setAddPayment] = useState(false);
   const [editPayment, setEditPayment] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<MachinePayment | null>(null);
-  const { userID, isAdmin, limited_access, designation, customer_full_access } =
+  const { userID, isAdmin } =
     useUserDetail();
-  const [editAllowed, setEditAllowed] = useState(false);
   const [zipDownloading, setZipDwonloading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [unmatched, setUnmatched] = useState<string[]>([]);
@@ -135,28 +152,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
       }
       setUnmatched(response.data.unmatchedFields);
 
-      if (
-        response.data?.customer &&
-        response.data?.customer?.ownership === userID
-      ) {
-        setEditAllowed(true);
-      } else if (
-        response.data?.machine &&
-        response.data?.machine?.sell_by === userID
-      ) {
-        setEditAllowed(true);
-      } else if (isAdmin) {
-        setEditAllowed(true);
-      } else if (
-        designation === "Customer Relationship Manager (After Sales)" &&
-        !limited_access
-      ) {
-        setEditAllowed(true);
-      } else if (customer_full_access) {
-        setEditAllowed(true);
-      } else {
-        setEditAllowed(false);
-      }
+
 
       setData(response.data);
       if (machine) {
@@ -375,7 +371,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                 </div>
               )}
 
-              {data?.machine && !currentItem?.payment_lock && editAllowed && (
+              {data?.machine && !currentItem?.payment_lock && data?.editAllowed && (
                 <EditIcon
                   style={{ color: Colors.button }}
                   className="cursor-pointer h-5 w-5"
@@ -400,7 +396,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
         },
       },
     ],
-    [data, editAllowed],
+    [data],
   );
 
   async function handleDownloadLedger() {
@@ -440,318 +436,336 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
     });
   }
 
-  const ClientCard = memo(({ data, payment, machine, children }: { data: MyCustomer | null, payment: [number, number], machine: MachineProps | null, children: ReactNode }) => {
-    const [showAlert, setShowAlert] = useState(false);
-    useEffect(() => {
-      if (machine) {
-        const payments = machine?.payments ?? [];
-        const result = findDuplicateNotes(payments);
-        if (result.length > 0) {
-          setShowAlert(true);
-        } else {
-          setShowAlert(false);
+  const ClientCard = memo(
+    ({
+      data,
+      payment,
+      machine,
+      children,
+    }: {
+      data: MyCustomer | null
+      payment: [number, number]
+      machine: MachineProps | null
+      children: ReactNode
+    }) => {
+      const [showAlert, setShowAlert] = useState(false)
+
+      useEffect(() => {
+        if (!machine) return
+
+        const payments = machine?.payments ?? []
+        const result = findDuplicateNotes(payments)
+        setShowAlert(result.length > 0)
+      }, [machine])
+
+      function findDuplicateNotes(array: MachinePayment[]) {
+        const noteMap = new Map()
+        const duplicates = []
+
+        for (const item of array) {
+          if (noteMap.has(item.note)) {
+            duplicates.push(item.note)
+          } else {
+            noteMap.set(item.note, true)
+          }
         }
-      }
-    }, [machine]);
 
-    function findDuplicateNotes(array: MachinePayment[]) {
-      const noteMap = new Map();
-      const duplicates = [];
-
-      for (const item of array) {
-        if (noteMap.has(item.note)) {
-          duplicates.push(item.note);
-        } else {
-          noteMap.set(item.note, true);
-        }
+        return [...new Set(duplicates)]
       }
 
-      return [...new Set(duplicates)];
-    }
-const isMobile = useIsMobile()
-    return (
-      <Card className="bg-gray-100 dark:bg-gray-900 rounded-xl shadow-md p-4 w-full">
+      const infoItem = (label: string, value?: string | number | null) => (
+        <div className="rounded-md border bg-muted/30 px-3 py-2">
+          <p className="text-[11px] text-muted-foreground">{label}</p>
+          <p className="truncate text-sm font-medium">{value || "N/A"}</p>
+        </div>
+      )
 
-  {/* HEADER */}
-  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-    
-    {/* Customer Info */}
-    <div className="flex flex-col gap-1">
-      <div className="flex flex-wrap items-center gap-2 text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
-        {data?.name || "Customer Name"}
-        {data?.owner && (
-          <span className="text-gray-500 text-sm">({data.owner})</span>
-        )}
-      </div>
+      return (
+        <Card className="w-full rounded-xl border bg-background shadow-sm">
+          <CardContent className="space-y-4 p-4">
+            <div className="flex flex-col gap-3 border-b pb-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="truncate text-lg font-semibold">
+                    {data?.name || "Customer Name"}
+                  </h2>
 
-      <div className="text-sm md:text-md font-medium text-primary flex flex-wrap gap-3">
-        <span>Sell by: {machine?.sell_by_name || "NA"}</span>
-        <span>Manager: {data?.ownership_name || "NA"}</span>
-      </div>
-    </div>
-
-    {/* Alerts */}
-    <div className="flex items-center gap-3">
-      {showAlert && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Siren className="text-red-600 h-6 w-6 animate-pulse" />
-          </TooltipTrigger>
-          <TooltipContent className="bg-red-600">
-            <p className="text-white">Duplicate TID found</p>
-          </TooltipContent>
-        </Tooltip>
-      )}
-
-      {unmatched.length > 0 && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <InfoIcon className="text-red-600 h-6 w-6 animate-pulse" />
-          </TooltipTrigger>
-          <TooltipContent className="bg-red-600">
-            {unmatched.map((item, i) => (
-              <p key={i} className="text-white">
-                {item.replace(/_/g, " ").toUpperCase()}
-              </p>
-            ))}
-          </TooltipContent>
-        </Tooltip>
-      )}
-    </div>
-  </div>
-
-  {/* MAIN CONTENT */}
-  <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_220px] gap-4">
-    
-    {/* LEFT: Machine / Parts */}
-    <Card className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-      <CardContent>
-       {machine?.type === "Parts" ? (
-              <>
-                <div className="flex gap-2 text-sm items-center">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                    Parts Information
-                  </h3>
-                  {machine?.status && (
-                    <div>
-                      <Badge
-                        variant={
-                          machine?.status === "delivered"
-                            ? "default"
-                            : "secondary"
-                        }
-                      >
-                        {machine?.status}
-                      </Badge>
-                    </div>
+                  {data?.owner && (
+                    <Badge variant="secondary" className="h-5 text-[11px]">
+                      {data.owner}
+                    </Badge>
                   )}
-                </div>
-                {machine ? (
-                  <div className="text-gray-600 dark:text-gray-300 text-sm flex flex-col gap-2">
-                    <div
-                      className={`w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${machine?.parts_information?.length > 3
-                        ? 3
-                        : machine?.parts_information?.length || 1
-                        } gap-6`}
-                    >
-                      {machine?.parts_information?.map((item: any, i: number) => (
-                        <div key={i} className="flex flex-col gap-2">
-                          <h3 className="font-semibold mb-2">Part {i + 1}</h3>
 
-                          {Object.entries(item).map(([key, val]: any, ind) => (
-                            <div key={ind} className="flex items-start gap-2">
-                              <ClipboardList className="h-4 w-4  mt-0.5" />
-                              <span className="text-sm ">
-                                {key.charAt(0).toUpperCase() +
-                                  key.slice(1).replace("_", " ")}
-                                :{" "}
-                                <span className="font-medium ">
-                                  {val || "N/A"}
-                                </span>
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
-                      <span>
-                        Contract:{" "}
-                        <span className="font-medium">
-                          {machine.contract_date
-                            ? moment(machine.contract_date).format("YYYY-MM-DD")
-                            : "N/A"}
-                        </span>
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-gray-500 dark:text-gray-400">
-                    No data available
-                  </p>
-                )}
-              </>
-            ) : (
-              <>
-                <div className="flex gap-2 text-sm items-center">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                    Machine Information
-                  </h3>
                   {machine?.status && (
-                    <div>
-                      <Badge variant={"secondary"}>{machine?.status}</Badge>
-                    </div>
+                    <Badge variant="outline" className="h-5 text-[11px]">
+                      {machine.status}
+                    </Badge>
                   )}
 
                   {machine?.cancelled_detail && (
-                    
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <div>
-                            <Badge variant={"destructive"}>Cancelled</Badge>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-red-600" arrowColor="bg-red-600 fill-red-600">
-                          <p className="text-white">
-                            {machine?.cancelled_reason}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          variant="destructive"
+                          className="h-5 cursor-pointer text-[11px]"
+                        >
+                          Cancelled
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-red-600" arrowColor="bg-red-600 fill-red-600">
+                        <p className="text-white">
+                          {machine?.cancelled_reason || "Cancelled"}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+
+                  {showAlert && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="destructive" className="h-5 text-[11px]">
+                          Duplicate TID
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-red-600" arrowColor="bg-red-600 fill-red-600">
+                        <p className="text-white">Duplicate TID found</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+
+                  {unmatched.length > 0 && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="destructive" className="h-5 text-[11px] animate-pulse">
+                          Missing Info
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-red-600 flex flex-col" arrowColor="bg-red-600 fill-red-600">
+                        {unmatched.map((item, i) => (
+                          <p key={i} className="text-white">
+                            {item.replace(/_/g, " ").toUpperCase()}
                           </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    
+                        ))}
+                      </TooltipContent>
+                    </Tooltip>
                   )}
                 </div>
-                {machine ? (
-                  <div className="text-gray-600 dark:text-gray-300 text-sm flex flex-col gap-2">
-                    <div className="flex items-start gap-2">
-                      <Wrench className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
-                      <span>
-                        Model:{" "}
-                        <span className="font-medium">
-                          {machine.serial_no || "N/A"}
-                        </span>
-                      </span>
-                    </div>
 
-                    <div className="flex items-start gap-2">
-                      <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
-                      <span>
-                        Power:{" "}
-                        <span className="font-medium">
-                          {machine.power || "N/A"}
-                        </span>
-                      </span>
-                    </div>
+                <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  <span>Sell by: {machine?.sell_by_name || "NA"}</span>
+                  <span>Manager: {data?.ownership_name || "NA"}</span>
+                </div>
+              </div>
 
-                    <div className="flex items-start gap-2">
-                      <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
-                      <span>
-                        Source:{" "}
-                        <span className="font-medium">
-                          {machine.source || "N/A"}
-                        </span>
-                      </span>
-                    </div>
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                {children}
+              </div>
+            </div>
 
-                    {(machine.order_no_arr && machine.order_no_arr.length > 0
-                      ? machine.order_no_arr
-                      : ["N/A"]
-                    ).map((item, index) => (
-                      <div className="flex items-start gap-2" key={index}>
-                        <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
-                        <span>
-                          Order No: <span className="font-medium">{item}</span>
-                        </span>
+            <div className="grid gap-3 xl:grid-cols-[1fr_340px]">
+              <Card className="relative border shadow-none">
+                {machine?.commission_issued && (
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <div
+                      className="
+        flex
+        h-44
+        w-44
+        rotate-[-18deg]
+        flex-col
+        items-center
+        justify-center
+        rounded-full
+        border-[8px]
+        border-sky-500/20
+        bg-sky-500/5
+        text-center
+        shadow-lg
+        backdrop-blur-[1px]
+        select-none
+      "
+                    >
+                      <div
+                        className="
+          text-[22px]
+          font-black
+          uppercase
+          leading-none
+          tracking-[0.35em]
+          text-sky-600/20
+        "
+                      >
+                        Commission
                       </div>
-                    ))}
 
-                    <div className="flex items-start gap-2">
-                      <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
-                      <span>
-                        Contract:{" "}
-                        <span className="font-medium">
-                          {machine.contract_date
-                            ? moment(machine.contract_date).format("YYYY-MM-DD")
-                            : "N/A"}
-                        </span>
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <ClipboardList className="h-4 w-4 text-gray-500 dark:text-gray-400 mt-0.5" />
-                      <span>
-                        Group:{" "}
-                        <span className="font-medium">
-                          {data?.customer_group}
-                        </span>
-                      </span>
+                      <div
+                        className="
+          mt-1
+          text-[20px]
+          font-black
+          uppercase
+          tracking-[0.3em]
+          text-sky-600/20
+        "
+                      >
+                        Issued
+                      </div>
                     </div>
                   </div>
-                ) : (
-                  <p className="text-gray-500 dark:text-gray-400">
-                    No data available
-                  </p>
                 )}
-              </>
-            )}
-      </CardContent>
-    </Card>
+                <CardHeader className="px-3 pb-2 pt-3">
+                  <CardTitle className="text-sm font-semibold">
+                    {machine?.type === "Parts"
+                      ? "Parts Information"
+                      : "Machine Information"}
+                  </CardTitle>
+                </CardHeader>
 
-    {/* MIDDLE: Billing */}
-    <Card className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-      <CardContent>
-        <h3 className="text-base font-semibold mb-3">
-          Billing Summary
-        </h3>
+                <CardContent className="px-3 pb-3">
+                  {machine?.type === "Parts" ? (
+                    machine ? (
+                      <div className="space-y-3">
+                        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                          {machine?.parts_information?.map(
+                            (item: any, i: number) => (
+                              <div
+                                key={i}
+                                className="rounded-md border bg-muted/20 p-2.5"
+                              >
+                                <h4 className="mb-2 text-xs font-semibold">
+                                  Part {i + 1}
+                                </h4>
 
-        <div className="grid grid-cols-3 gap-3 text-sm">
-          <div>
-            <p className="text-gray-500">Bill</p>
-            <p className="font-bold">
-              <CurrencyFormatter amount={payment[0]} />
-            </p>
-          </div>
+                                <div className="space-y-1.5">
+                                  {Object.entries(item).map(
+                                    ([key, val]: any, ind) => (
+                                      <div
+                                        key={ind}
+                                        className="flex justify-between gap-2 text-xs"
+                                      >
+                                        <span className="text-muted-foreground">
+                                          {key.charAt(0).toUpperCase() +
+                                            key.slice(1).replace("_", " ")}
+                                        </span>
+                                        <span className="max-w-[130px] truncate text-right font-medium">
+                                          {val || "N/A"}
+                                        </span>
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          )}
+                        </div>
 
-          <div>
-            <p className="text-gray-500">Received</p>
-            <p className="text-green-600 font-bold">
-              <CurrencyFormatter amount={payment[1]} />
-            </p>
-          </div>
+                        {infoItem(
+                          "Contract Date",
+                          machine.contract_date
+                            ? moment(machine.contract_date).format("YYYY-MM-DD")
+                            : "N/A"
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No data available
+                      </p>
+                    )
+                  ) : machine ? (
+                    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                      {infoItem("Model", machine.serial_no)}
+                      {infoItem("Power", machine.power)}
+                      {infoItem("Source", machine.source)}
+                      {infoItem(
+                        "Contract",
+                        machine.contract_date
+                          ? moment(machine.contract_date).format("YYYY-MM-DD")
+                          : "N/A"
+                      )}
+                      {infoItem("Group", data?.customer_group)}
 
-          <div>
-            <p className="text-gray-500">Balance</p>
-            <p className="text-red-600 font-bold">
-              <CurrencyFormatter
-                amount={(payment[0] || 0) - (payment[1] || 0)}
-              />
-            </p>
-          </div>
-        </div>
+                      {(machine.order_no_arr && machine.order_no_arr.length > 0
+                        ? machine.order_no_arr
+                        : ["N/A"]
+                      ).map((item, index) => (
+                        <Fragment key={index}>
+                          {infoItem(`Order ${index + 1}`, item)}
+                        </Fragment>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No data available
+                    </p>
+                  )}
+                </CardContent>
 
-        {machine?.speed_money && (
-          <div className="mt-4 border-t pt-3">
-            <p className="font-semibold">Speed Money</p>
-            <p className="text-sm">
-              {machine.speed_money_amount}
-            </p>
-            <p className="text-xs text-gray-500">
-              {machine.speed_money_note}
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
 
-    {/* RIGHT: ACTIONS */}
-    <div className="flex flex-col gap-2">
-      {children}
-    </div>
-  </div>
-</Card>
-    );
-  });
+              </Card>
+
+              <Card className="border shadow-none">
+                <CardHeader className="px-3 pb-2 pt-3">
+                  <CardTitle className="text-sm font-semibold">
+                    Billing Summary
+                  </CardTitle>
+                </CardHeader>
+
+                <CardContent className="space-y-2 px-3 pb-3">
+                  <div className="grid grid-cols-3 gap-2 xl:grid-cols-1">
+                    <div className="rounded-md border bg-muted/20 px-3 py-2">
+                      <p className="text-[11px] text-muted-foreground">Bill</p>
+                      <p className="text-sm font-semibold">
+                        <CurrencyFormatter amount={payment[0]} />
+                      </p>
+                    </div>
+
+                    <div className="rounded-md border bg-muted/20 px-3 py-2">
+                      <p className="text-[11px] text-muted-foreground">
+                        Received
+                      </p>
+                      <p className="text-sm font-semibold text-green-600">
+                        <CurrencyFormatter amount={payment[1]} />
+                      </p>
+                    </div>
+
+                    <div className="rounded-md border bg-muted/20 px-3 py-2">
+                      <p className="text-[11px] text-muted-foreground">
+                        Balance
+                      </p>
+                      <p className="text-sm font-semibold text-red-600">
+                        <CurrencyFormatter
+                          amount={(payment[0] || 0) - (payment[1] || 0)}
+                        />
+                      </p>
+                    </div>
+                  </div>
+
+                  {machine?.speed_money && (
+                    <div className="rounded-md border bg-orange-50 px-3 py-2 text-sm dark:bg-orange-950/20">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          Speed Money
+                        </span>
+                        <span className="text-sm font-semibold">
+                          {machine.speed_money_amount || "N/A"}
+                        </span>
+                      </div>
+
+                      {machine.speed_money_note && (
+                        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                          {machine.speed_money_note}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </CardContent>
+        </Card>
+      )
+    }
+  )
 
   async function onRefresh() {
     setCredit(false);
@@ -767,118 +781,201 @@ const isMobile = useIsMobile()
         payment={[total, received]}
       >
         {data && (
-        <div className="flex flex-col gap-2 w-full lg:w-[220px]">
-            {!data?.machine?.cancelled_detail && (
+          <>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" className="h-8 px-3 text-xs">
+                  <MoreHorizontal className="mr-1.5 h-3.5 w-3.5" />
+                  Actions
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" className="w-52">
+
+                <DropdownMenuItem
+                  className="text-xs"
+                  onClick={() => setImagesVisible(true)}
+                >
+                  <Images className="mr-1.5 h-3.5 w-3.5" />
+                  Images
+                </DropdownMenuItem>
+
+
+                {payments.length > 0 && (
+                  <DropdownMenuItem
+                    className="text-xs"
+                    onClick={handleDownloadLedger}
+                  >
+                    <Download className="mr-1.5 h-3.5 w-3.5" />
+                    Ledger
+                  </DropdownMenuItem>
+                )}
+
+                {data?.editAllowed && (
+                  <DropdownMenuItem
+                    className="text-xs"
+                    onClick={async () => {
+                      setZipDwonloading(true)
+                      await downloadCustomerZip(data)
+                      setZipDwonloading(false)
+                    }}
+                  >
+                    {zipDownloading ? (
+                      <Spinner />
+                    ) : (
+                      <Package className="mr-2 h-3.5 w-3.5" />
+                    )}
+                    ZIP
+                  </DropdownMenuItem>
+                )}
+
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+
+            {((!data?.machine?.cancelled_detail && !data?.machine?.commission_issued) || override) && (
               <>
+
+
                 <Button
                   size="sm"
+                  className="h-8 px-3 text-xs"
                   onClick={() => {
-                    if (!editAllowed) {
-                      toast.info("You are not allowed to edit machine");
-                      return;
+                    if (!data?.editAllowed) {
+                      toast.info("You are not allowed to edit machine")
+                      return
+                    }
+
+                    if (data?.machine?.type === "Parts") {
+                      setEditParts(true)
                     } else {
-                      if (data?.machine?.type === "Parts") {
-                        setEditParts(true);
-                      } else {
-                        setEditMachine(true);
-                      }
+                      setEditMachine(true)
                     }
                   }}
                 >
-                  {data?.machine?.type === "Parts"
-                    ? "Edit Parts"
-                    : "Edit Machine"}
+                  <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                  {data?.machine?.type === "Parts" ? "Edit Parts" : "Edit Machine"}
                 </Button>
 
-                {data?.machine && (
-                  // && !data?.machine?.payment_lock
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      if (!editAllowed) {
-                        toast.info("You are not allowed to add payment");
-                        return;
-                      } else {
-                        setAddPayment(true);
-                      }
-                    }}
-                  >
-                    Add Payment
-                  </Button>
-                )}
 
-                <Button onClick={() => setImagesVisible(true)}>
-                  View Images
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" variant="outline" className="h-8 px-3 text-xs">
+                      <MoreHorizontal className="mr-1.5 h-3.5 w-3.5" />
+                      More
+                    </Button>
+                  </DropdownMenuTrigger>
 
-                {payments.length > 0 && (
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      handleDownloadLedger();
-                    }}
-                  >
-                    Download Ledger
-                  </Button>
-                )}
-                {editAllowed && (
-                  <Button
-                    size="sm"
-                    onClick={async () => {
-                      setZipDwonloading(true);
-                      await downloadCustomerZip(data);
-                      setZipDwonloading(false);
-                    }}
-                  >
-                    {zipDownloading && <Spinner />} Download ZIP
-                  </Button>
-                )}
+                  <DropdownMenuContent align="end" className="w-52">
+                    {data?.machine && (!data?.machine?.payment_lock || override) &&
+                      <DropdownMenuItem
+                        className="text-xs"
+                        onClick={() => {
+                          if (!data?.editAllowed) {
+                            toast.info("You are not allowed to add payment")
+                            return
+                          }
 
-                {installments.length > 0 && (
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setInstallmentVisible(true);
-                    }}
-                  >
-                    Installments
-                  </Button>
-                )}
+                          setAddPayment(true)
+                        }}
+                      >
+                        <CreditCard className="mr-1.5 h-3.5 w-3.5" />
+                        Add Payment
+                      </DropdownMenuItem>}
 
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setCredit(true);
-                  }}
-                >
-                  Credit Cheque
-                </Button>
 
-                {data && !data?.machine?.ready_for_delivery && (
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setReadyForDelivery(data);
-                    }}
-                  >
-                    Apply For Delivery
-                  </Button>
-                )}
+                    {installments.length > 0 && (
+                      <DropdownMenuItem
+                        className="text-xs"
+                        onClick={() => setInstallmentVisible(true)}
+                      >
+                        <CalendarClock className="mr-2 h-3.5 w-3.5" />
+                        Installments
+                      </DropdownMenuItem>
+                    )}
 
-                <CancelDeal machine={data?.machine} onRefresh={onRefresh} />
+                    <DropdownMenuItem
+                      className="text-xs"
+                      onClick={() => setCredit(true)}
+                    >
+                      <Banknote className="mr-2 h-3.5 w-3.5" />
+                      Credit Cheque
+                    </DropdownMenuItem>
+
+                    {data && !data?.machine?.ready_for_delivery && (
+                      <DropdownMenuItem
+                        className="text-xs"
+                        onClick={() => setReadyForDelivery(data)}
+                      >
+                        <Truck className="mr-2 h-3.5 w-3.5" />
+                        Apply For Delivery
+                      </DropdownMenuItem>
+                    )}
+
+                    <DropdownMenuSeparator />
+
+                    <div className="px-1 py-1 w-full">
+                      <CancelDeal machine={data?.machine} onRefresh={onRefresh} />
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             )}
 
+
+
             {isAdmin && (
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() => setOpenDelete(true)}
-              >
-                Delete
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    className="
+    h-8
+    border
+    border-emerald-500/30
+    bg-emerald-500
+    px-3
+    text-xs
+    font-medium
+    text-white
+    shadow-sm
+    transition-all
+    hover:bg-emerald-600
+    hover:shadow
+    active:scale-[0.98]
+  "
+                  >
+                    Admin
+                  </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem
+                    className="text-xs"
+                    onClick={() => setOverride(!override)}
+                  >
+                    {override ? (
+                      <Lock className="mr-2 h-3.5 w-3.5" />
+                    ) : (
+                      <Unlock className="mr-2 h-3.5 w-3.5" />
+                    )}
+                    {override ? "Disable Override" : "Enable Override"}
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    className="text-xs text-red-600 focus:text-red-600"
+                    onClick={() => setOpenDelete(true)}
+                  >
+                    <Trash2 className="mr-2 h-3.5 w-3.5" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
-          </div>
+
+
+          </>
         )}
       </ClientCard>
 
@@ -894,7 +991,7 @@ const isMobile = useIsMobile()
         visible={editMachine}
         onClose={setEditMachine}
         machine_id={id}
-        onRefresh={async () => {await fetchData(id)}}
+        onRefresh={async () => { await fetchData(id) }}
         data={data?.machine}
       />
 
@@ -902,13 +999,13 @@ const isMobile = useIsMobile()
         visible={editParts}
         onClose={setEditParts}
         machine_id={id}
-        onRefresh={async () => {await fetchData(id)}}
+        onRefresh={async () => { await fetchData(id) }}
         data={data?.machine}
       />
 
       <ImageSheet
         payment_lock={imageURL?.payment_lock}
-        editAllowed={editAllowed}
+        editAllowed={data?.editAllowed || false}
         visible={visible}
         onClose={() => {
           setVisible(false);
@@ -922,9 +1019,10 @@ const isMobile = useIsMobile()
         onRefresh={async () => {
           await fetchData(id);
         }}
+        override={override}
       />
       <ViewImagesSheet
-        editAllowed={editAllowed}
+        editAllowed={data?.editAllowed || false}
         visible={imagesVisible}
         data={data?.machine}
         customer_id={data?.customer?.id}
@@ -996,6 +1094,34 @@ const isMobile = useIsMobile()
         onPressYes={() => deleteMachine()}
         onPressCancel={() => setOpenDelete(false)}
       />
+
+      {override && (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
+          <div
+            className="
+        absolute
+        -right-14
+        top-20
+        rotate-45
+        border
+        border-red-500/20
+        bg-red-500/10
+        px-20
+        py-2
+        text-[11px]
+        font-semibold
+        uppercase
+        tracking-[0.35em]
+        text-red-600
+        shadow-sm
+        backdrop-blur-[2px]
+        z-999
+      "
+          >
+            Override Enabled
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1268,6 +1394,7 @@ const CancelDeal = ({ machine, onRefresh }: { machine: MachineProps, onRefresh: 
           onClick={() => setConfirmation(true)}
           variant="destructive"
           size="sm"
+          className="w-full"
         >
           Cancel Deal
         </Button>
@@ -1308,6 +1435,7 @@ type ImageSheetProps = {
   onRefresh: () => Promise<void>,
   editAllowed: boolean,
   cheque_id: string | null,
+  override: boolean
 }
 
 const ImageSheet = ({
@@ -1321,6 +1449,7 @@ const ImageSheet = ({
   onRefresh,
   editAllowed,
   cheque_id,
+  override
 }: ImageSheetProps) => {
   const [imageOpen, setImageOpen] = useState(false);
   const [localImage, setLocalImage] = useState<string | null>(null);
@@ -1392,7 +1521,7 @@ const ImageSheet = ({
       <SheetContent>
         <SheetHeader className="mb-4">
           <SheetTitle>Payment Image</SheetTitle>
-          {!payment_lock && editAllowed && (
+          {(!payment_lock || override) && (editAllowed || override) && (
             <Button
               className="mb-2"
               variant="destructive"
@@ -1848,191 +1977,191 @@ const ViewImagesSheet = ({
   const maxwidth = isMobile ? "90vw" : "50vw"
 
   return (
-   <Sheet open={visible} onOpenChange={handleClose}>
-  <SheetContent
-    style={{ width: "100%", maxWidth : maxwidth }}
-  >
-    <SheetHeader>
-      <div className="flex items-center gap-2">
-        <SheetTitle className="text-2xl">View Images</SheetTitle>
-        <Button
-          size="sm"
-          onClick={() => {
-            if (editAllowed) {
-              setAddImageVisible(true);
-            } else {
-              toast.error("You are not allowed to perform this action");
-            }
-          }}
-        >
-          Add Image
-        </Button>
-      </div>
-    </SheetHeader>
-
-    <AddImages
-      customer_id={customer_id}
-      machine={data}
-      visible={addImageVisible}
-      onClose={setAddImageVisible}
-      onRefresh={onRefresh}
-    />
-
-    <ScrollArea className="h-[85vh] mt-4">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pr-4">
-
-        {/* Handshake Images */}
-        <FieldSet className="border rounded-md p-3 gap-3">
-          <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Handshake Images</FieldLegend>
-          <div className="flex flex-row gap-2 flex-wrap">
-            {handshakeImages.length > 0 ? (
-              handshakeImages.map((item, ind) => (
-                <RenderImage
-                  key={item}
-                  img={item}
-                  setImageOpen={setImageOpen}
-                  onDelete={(a, b) => {
-                    if (editAllowed) handleDeleteImage(a, b);
-                  }}
-                  imageType="handshake_images"
-                />
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No images found</p>
-            )}
+    <Sheet open={visible} onOpenChange={handleClose}>
+      <SheetContent
+        style={{ width: "100%", maxWidth: maxwidth }}
+      >
+        <SheetHeader>
+          <div className="flex items-center gap-2">
+            <SheetTitle className="text-2xl">View Images</SheetTitle>
+            <Button
+              size="sm"
+              onClick={() => {
+                if (editAllowed) {
+                  setAddImageVisible(true);
+                } else {
+                  toast.error("You are not allowed to perform this action");
+                }
+              }}
+            >
+              Add Image
+            </Button>
           </div>
-        </FieldSet>
+        </SheetHeader>
 
-        {/* Nameplate Images */}
-        <FieldSet className="border rounded-md p-3 gap-3">
-          <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Nameplate Images</FieldLegend>
-          <div className="flex flex-row gap-2 flex-wrap">
-            {nameplateImages.length > 0 ? (
-              nameplateImages.map((item, ind) => (
-                <RenderImage
-                  key={ind}
-                  img={item}
-                  setImageOpen={setImageOpen}
-                  onDelete={(a, b) => {
-                    if (editAllowed) handleDeleteImage(a, b);
-                  }}
-                  imageType="machine_nameplate_images"
-                />
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No images found</p>
-            )}
+        <AddImages
+          customer_id={customer_id}
+          machine={data}
+          visible={addImageVisible}
+          onClose={setAddImageVisible}
+          onRefresh={onRefresh}
+        />
+
+        <ScrollArea className="h-[85vh] mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pr-4">
+
+            {/* Handshake Images */}
+            <FieldSet className="border rounded-md p-3 gap-3">
+              <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Handshake Images</FieldLegend>
+              <div className="flex flex-row gap-2 flex-wrap">
+                {handshakeImages.length > 0 ? (
+                  handshakeImages.map((item, ind) => (
+                    <RenderImage
+                      key={item}
+                      img={item}
+                      setImageOpen={setImageOpen}
+                      onDelete={(a, b) => {
+                        if (editAllowed) handleDeleteImage(a, b);
+                      }}
+                      imageType="handshake_images"
+                    />
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No images found</p>
+                )}
+              </div>
+            </FieldSet>
+
+            {/* Nameplate Images */}
+            <FieldSet className="border rounded-md p-3 gap-3">
+              <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Nameplate Images</FieldLegend>
+              <div className="flex flex-row gap-2 flex-wrap">
+                {nameplateImages.length > 0 ? (
+                  nameplateImages.map((item, ind) => (
+                    <RenderImage
+                      key={ind}
+                      img={item}
+                      setImageOpen={setImageOpen}
+                      onDelete={(a, b) => {
+                        if (editAllowed) handleDeleteImage(a, b);
+                      }}
+                      imageType="machine_nameplate_images"
+                    />
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No images found</p>
+                )}
+              </div>
+            </FieldSet>
+
+            {/* Handover Images */}
+            <FieldSet className="border rounded-md p-3 gap-3">
+              <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Handover Images</FieldLegend>
+              <div className="flex flex-row gap-2 flex-wrap">
+                {handoverImages.length > 0 ? (
+                  handoverImages.map((item, ind) => (
+                    <RenderImage
+                      key={ind}
+                      img={item}
+                      setImageOpen={setImageOpen}
+                      onDelete={(a, b) => {
+                        if (editAllowed) handleDeleteImage(a, b);
+                      }}
+                      imageType="final_handover_images"
+                    />
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No images found</p>
+                )}
+              </div>
+            </FieldSet>
+
+            {/* Installation Report */}
+            <FieldSet className="border rounded-md p-3 gap-3">
+              <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Installation Report</FieldLegend>
+              <div className="flex flex-row gap-2 flex-wrap">
+                {installationReport.length > 0 ? (
+                  installationReport.map((item, ind) => (
+                    <RenderImage
+                      key={ind}
+                      img={item}
+                      setImageOpen={setImageOpen}
+                      onDelete={(a, b) => {
+                        if (editAllowed) handleDeleteImage(a, b);
+                      }}
+                      imageType="installation_report"
+                    />
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No report found</p>
+                )}
+              </div>
+            </FieldSet>
+
+            {/* Contract Images */}
+            <FieldSet className="border rounded-md p-3 gap-3">
+              <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Contract Images</FieldLegend>
+              <div className="flex flex-row gap-2 flex-wrap">
+                {contractImages.length > 0 ? (
+                  contractImages.map((item, ind) => (
+                    <RenderImage
+                      key={ind}
+                      img={item}
+                      setImageOpen={setImageOpen}
+                      onDelete={(a, b) => {
+                        if (editAllowed) handleDeleteImage(a, b);
+                      }}
+                      imageType="contract_images_png"
+                    />
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No images found</p>
+                )}
+                {contractPdfImages.map((item, ind) => (
+                  <RenderImage
+                    key={`pdf-${ind}`}
+                    img={item}
+                    type="pdf"
+                    setImageOpen={setImageOpen}
+                  />
+                ))}
+              </div>
+            </FieldSet>
+
+            {/* Additional Images */}
+            <FieldSet className="border rounded-md p-3 gap-3">
+              <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Additional Images</FieldLegend>
+              <div className="flex flex-row gap-2 flex-wrap">
+                {otherImages.length > 0 ? (
+                  otherImages.map((item, ind) => (
+                    <RenderImage
+                      key={ind}
+                      img={item}
+                      setImageOpen={setImageOpen}
+                      onDelete={(a, b) => {
+                        if (editAllowed) handleDeleteImage(a, b);
+                      }}
+                      imageType="other_images_png"
+                    />
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No images found</p>
+                )}
+                {otherPdfImages.map((item, ind) => (
+                  <RenderImage
+                    key={`pdf-${ind}`}
+                    img={item}
+                    type="pdf"
+                    setImageOpen={setImageOpen}
+                  />
+                ))}
+              </div>
+            </FieldSet>
+
           </div>
-        </FieldSet>
-
-        {/* Handover Images */}
-        <FieldSet className="border rounded-md p-3 gap-3">
-          <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Handover Images</FieldLegend>
-          <div className="flex flex-row gap-2 flex-wrap">
-            {handoverImages.length > 0 ? (
-              handoverImages.map((item, ind) => (
-                <RenderImage
-                  key={ind}
-                  img={item}
-                  setImageOpen={setImageOpen}
-                  onDelete={(a, b) => {
-                    if (editAllowed) handleDeleteImage(a, b);
-                  }}
-                  imageType="final_handover_images"
-                />
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No images found</p>
-            )}
-          </div>
-        </FieldSet>
-
-        {/* Installation Report */}
-        <FieldSet className="border rounded-md p-3 gap-3">
-          <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Installation Report</FieldLegend>
-          <div className="flex flex-row gap-2 flex-wrap">
-            {installationReport.length > 0 ? (
-              installationReport.map((item, ind) => (
-                <RenderImage
-                  key={ind}
-                  img={item}
-                  setImageOpen={setImageOpen}
-                  onDelete={(a, b) => {
-                    if (editAllowed) handleDeleteImage(a, b);
-                  }}
-                  imageType="installation_report"
-                />
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No report found</p>
-            )}
-          </div>
-        </FieldSet>
-
-        {/* Contract Images */}
-        <FieldSet className="border rounded-md p-3 gap-3">
-          <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Contract Images</FieldLegend>
-          <div className="flex flex-row gap-2 flex-wrap">
-            {contractImages.length > 0 ? (
-              contractImages.map((item, ind) => (
-                <RenderImage
-                  key={ind}
-                  img={item}
-                  setImageOpen={setImageOpen}
-                  onDelete={(a, b) => {
-                    if (editAllowed) handleDeleteImage(a, b);
-                  }}
-                  imageType="contract_images_png"
-                />
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No images found</p>
-            )}
-            {contractPdfImages.map((item, ind) => (
-              <RenderImage
-                key={`pdf-${ind}`}
-                img={item}
-                type="pdf"
-                setImageOpen={setImageOpen}
-              />
-            ))}
-          </div>
-        </FieldSet>
-
-        {/* Additional Images */}
-        <FieldSet className="border rounded-md p-3 gap-3">
-          <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Additional Images</FieldLegend>
-          <div className="flex flex-row gap-2 flex-wrap">
-            {otherImages.length > 0 ? (
-              otherImages.map((item, ind) => (
-                <RenderImage
-                  key={ind}
-                  img={item}
-                  setImageOpen={setImageOpen}
-                  onDelete={(a, b) => {
-                    if (editAllowed) handleDeleteImage(a, b);
-                  }}
-                  imageType="other_images_png"
-                />
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No images found</p>
-            )}
-            {otherPdfImages.map((item, ind) => (
-              <RenderImage
-                key={`pdf-${ind}`}
-                img={item}
-                type="pdf"
-                setImageOpen={setImageOpen}
-              />
-            ))}
-          </div>
-        </FieldSet>
-
-      </div>
-    </ScrollArea>
-  </SheetContent>
-</Sheet>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
   );
 };
 type RenderImageProps = {
@@ -2072,7 +2201,7 @@ const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }: Rend
     };
   }, [img, type]);
 
-  if(!localImage) return null
+  if (!localImage) return null
 
   return (
     <div className="space-y-2">

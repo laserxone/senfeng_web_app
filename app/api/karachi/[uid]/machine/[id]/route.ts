@@ -6,22 +6,21 @@ import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { generateLog } from "@/lib/generateLog";
 import { deleteObject, ref } from "firebase/storage";
 import { NextRequest, NextResponse } from "next/server";
+import admin from "@/lib/firebaseAdmin";
 
 export async function GET(req:NextRequest, { params }:{params:Promise<{id:string,uid:string}>}) {
   const { id, uid } = await params; 
 
-
-
   try {
-
-    const isAdmin = await checkSuperadmin(uid)
+    const isAdmin = await checkSuperadmin(uid);
+    const userDetail = await pool.query(`SELECT id, designation, limited_access, customer_full_access FROM users WHERE id = $1`, [uid])
+    const user = userDetail.rows?.[0]
 
     if (isAdmin) {
-
-
       
       const machineQuery = `
   SELECT s.*, 
+      co.commission_issued AS commission_issued,
          CASE WHEN cm.id IS NOT NULL THEN TRUE ELSE FALSE END AS cancelled_detail,
          cm.id AS cancelled_id,
          cm.created_at AS cancelled_at,
@@ -29,13 +28,17 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
          cm.reason AS cancelled_reason
   FROM sale s
   LEFT JOIN cancelled_machine cm ON s.id = cm.machine_id
+  LEFT JOIN commissions co ON s.id = co.sale_id 
   WHERE s.id = $1
 `;
 
       const machineResult = await pool.query(machineQuery, [id]);
 
       if (machineResult.rows.length === 0) {
-        return NextResponse.json({ message: "Machine not found" }, { status: 404 });
+        return NextResponse.json(
+          { message: "Machine not found" },
+          { status: 404 },
+        );
       }
 
       const machine = machineResult.rows[0];
@@ -43,146 +46,23 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
       const sellBy = machine.sell_by; 
 
       
-      const customerQuery = `SELECT * FROM customer WHERE id = $1`;
+     const customerQuery = `
+      SELECT 
+    c.*,
+    u.name AS ownership_name
+FROM customer c
+LEFT JOIN users u ON u.id = c.ownership
+WHERE c.id = $1`;
       const customerResult = await pool.query(customerQuery, [customerId]);
 
       if (customerResult.rows.length === 0) {
-        return NextResponse.json({ message: "Customer not found" }, { status: 404 });
+        return NextResponse.json(
+          { message: "Customer not found" },
+          { status: 404 },
+        );
       }
 
       const customer = customerResult.rows[0];
-
-      let sellByName = null;
-      if (sellBy) {
-        const sellerQuery = `SELECT name FROM users WHERE id = $1`;
-        const sellerResult = await pool.query(sellerQuery, [sellBy]);
-
-        if (sellerResult.rows.length > 0) {
-          sellByName = sellerResult.rows[0].name;
-        }
-      }
-
-      const paymentsQuery = `SELECT * FROM payment WHERE machine_id = $1 ORDER BY transaction_date ASC`;
-      const paymentsResult = await pool.query(paymentsQuery, [id]);
-
-      
-      const payments = paymentsResult.rows.map((payment, index) => ({
-        ...payment,
-        track: index + 1, 
-      }));
-
-      machine.payments = payments;
-      machine.sell_by_name = sellByName; 
-
-      const machineStatus = await pool.query(`SELECT status FROM order_items WHERE machine_id = $1`, [id])
-
-      machine.status = machineStatus.rows.length > 0 ? machineStatus.rows[0].status : null
-
-      let machineFilled = 0;
-      let unmatchedFields:any[] = [];
-
-      const hasContractImages =
-        (Array.isArray(machine.contract_images_pdf) && machine.contract_images_pdf.length > 0) ||
-        (Array.isArray(machine.contract_images_png) && machine.contract_images_png.length > 0);
-
-      if (hasContractImages) machineFilled++;
-
-     let checkingFields = []
-    
-          if(machine.type === 'machine'){
-            checkingFields = [...saleFields]
-          } else {
-            checkingFields = [...partFields]
-          }
-    
-          checkingFields.forEach(field => {
-            const value = machine[field];
-            const isFilled =
-              Array.isArray(value)
-                ? value.length > 0
-                : typeof value === 'number'
-                  ? ['price'].includes(field)
-                    ? value !== null && !isNaN(value)
-                    : true
-                  : typeof value === 'string'
-                    ? value.trim() !== '' && value !== 'null'
-                    : value !== null && value !== undefined;
-    
-            if (isFilled) {
-              machineFilled++;
-            } else {
-              unmatchedFields.push(field);
-            }
-          });
-    
-          const totalFields = checkingFields.length + 1;
-  
-      const percentage_completion = Math.round((machineFilled / totalFields) * 100)
-      const installmentQuery = await pool.query(`SELECT * FROM machine_installments WHERE sale_id = $1 ORDER BY date ASC`, [id])
-      const installments = installmentQuery.rows
-
-      return NextResponse.json({ customer, machine, percentage_completion, unmatchedFields, installments }, { status: 200 });
-
-    } else {
-      const userQuery = await pool.query(`SELECT id, designation, limited_access FROM users WHERE id = $1`, [uid])
-
-      const user = userQuery.rows[0]
-
-      if (!user) {
-        return NextResponse.json({ message: "User not found" }, { status: 500 })
-      }
-
-      
-       const machineQuery = `
-  SELECT s.*, 
-         CASE WHEN cm.id IS NOT NULL THEN TRUE ELSE FALSE END AS cancelled_detail,
-         cm.id AS cancelled_id,
-         cm.created_at AS cancelled_at,
-         cm.issued AS cancelled_issued,
-         cm.reason AS cancelled_reason
-  FROM sale s
-  LEFT JOIN cancelled_machine cm ON s.id = cm.machine_id
-  WHERE s.id = $1
-`;
-      const machineResult = await pool.query(machineQuery, [id]);
-
-      if (machineResult.rows.length === 0) {
-        return NextResponse.json({ message: "Machine not found" }, { status: 404 });
-      }
-
-      const machine = machineResult.rows[0];
-      const customerId = machine.customer_id;
-      const sellBy = machine.sell_by; 
-
-      
-      const customerQuery = `SELECT * FROM customer WHERE id = $1`;
-      const customerResult = await pool.query(customerQuery, [customerId]);
-
-      if (customerResult.rows.length === 0) {
-        return NextResponse.json({ message: "Customer not found" }, { status: 404 });
-      }
-
-      const customer = customerResult.rows[0];
-
-      if (user.designation === 'Dealer') {
-        if (user.id !== customer.ownership) {
-          return NextResponse.json({ message: "You don't have access to this page" }, { status: 404 })
-        }
-      }
-
-      if (user.limited_access) {
-        if (user.designation === 'Social Media Manager' || user.designation === 'Customer Relationship Manager') {
-          if (user.id !== customer.lead) {
-            return NextResponse.json({ message: "You don't have access to this page" }, { status: 404 })
-          }
-        }
-
-        if (user.designation === 'Sales') {
-          if (user.id !== customer.ownership) {
-            return NextResponse.json({ message: "You don't have access to this page" }, { status: 404 })
-          }
-        }
-      }
 
       let sellByName = null;
       if (sellBy) {
@@ -208,40 +88,44 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
       machine.payments = payments;
       machine.sell_by_name = sellByName; 
 
-      const machineStatus = await pool.query(`SELECT status FROM order_items WHERE machine_id = $1`, [id])
+      const machineStatus = await pool.query(
+        `SELECT status FROM order_items WHERE machine_id = $1`,
+        [id],
+      );
 
-      machine.status = machineStatus.rows.length > 0 ? machineStatus.rows[0].status : null
+      machine.status =
+        machineStatus.rows.length > 0 ? machineStatus.rows[0].status : null;
 
       let machineFilled = 0;
       let unmatchedFields:any[] = [];
 
       const hasContractImages =
-        (Array.isArray(machine.contract_images_pdf) && machine.contract_images_pdf.length > 0) ||
-        (Array.isArray(machine.contract_images_png) && machine.contract_images_png.length > 0);
+        (Array.isArray(machine.contract_images_pdf) &&
+          machine.contract_images_pdf.length > 0) ||
+        (Array.isArray(machine.contract_images_png) &&
+          machine.contract_images_png.length > 0);
 
       if (hasContractImages) machineFilled++;
 
-      let checkingFields = []
+      let checkingFields = [];
 
-      if(machine.type === 'machine'){
-        checkingFields = [...saleFields]
+      if (machine.type === "machine") {
+        checkingFields = [...saleFields];
       } else {
-        checkingFields = [...partFields]
+        checkingFields = [...partFields];
       }
 
-
-      checkingFields.forEach(field => {
+      checkingFields.forEach((field) => {
         const value = machine[field];
-        const isFilled =
-          Array.isArray(value)
-            ? value.length > 0
-            : typeof value === 'number'
-              ? ['price'].includes(field)
-                ? value !== null && !isNaN(value)
-                : true
-              : typeof value === 'string'
-                ? value.trim() !== '' && value !== 'null'
-                : value !== null && value !== undefined;
+        const isFilled = Array.isArray(value)
+          ? value.length > 0
+          : typeof value === "number"
+            ? ["price"].includes(field)
+              ? value !== null && !isNaN(value)
+              : true
+            : typeof value === "string"
+              ? value.trim() !== "" && value !== "null"
+              : value !== null && value !== undefined;
 
         if (isFilled) {
           machineFilled++;
@@ -252,25 +136,269 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
 
       const totalFields = checkingFields.length + 1;
 
+      const percentage_completion = Math.round(
+        (machineFilled / totalFields) * 100,
+      );
 
+      const installmentQuery = await pool.query(
+        `SELECT * FROM machine_installments WHERE sale_id = $1 ORDER BY date ASC`,
+        [id],
+      );
 
+      const installments = installmentQuery.rows;
 
-      const percentage_completion = Math.round((machineFilled / totalFields) * 100)
-      const installmentQuery = await pool.query(`SELECT * FROM machine_installments WHERE sale_id = $1 ORDER BY date ASC`, [id])
+      let editAllowed = false
 
-      const installments = installmentQuery.rows
+      if (
+        customer &&
+        customer?.ownership === uid
+      ) {
+        editAllowed = true
+      } else if (
+        machine &&
+        machine?.sell_by === uid
+      ) {
+        editAllowed = true
+      } else if (isAdmin) {
+        editAllowed = true
+      } else if (
+        user?.designation === "Customer Relationship Manager (After Sales)" &&
+        !user?.limited_access
+      ) {
+        editAllowed = true
+      } else if (user?.customer_full_access) {
+        editAllowed = true
+      } else {
+        editAllowed = false
+      }
 
+      return NextResponse.json(
+        {
+          customer,
+          machine,
+          percentage_completion,
+          unmatchedFields,
+          installments,
+          editAllowed
+        },
+        { status: 200 },
+      );
+    } else {
+     
+     
+      if (!user) {
+        return NextResponse.json(
+          { message: "User not found" },
+          { status: 500 },
+        );
+      }
 
-      return NextResponse.json({ customer, machine, percentage_completion, unmatchedFields, installments }, { status: 200 });
+      
+      const machineQuery = `
+  SELECT s.*, 
+         CASE WHEN cm.id IS NOT NULL THEN TRUE ELSE FALSE END AS cancelled_detail,
+         cm.id AS cancelled_id,
+        co.commission_issued AS commission_issued,
+         cm.created_at AS cancelled_at,
+         cm.issued AS cancelled_issued,
+         cm.reason AS cancelled_reason
+  FROM sale s
+  LEFT JOIN cancelled_machine cm ON s.id = cm.machine_id
+  LEFT JOIN commissions co ON s.id = co.sale_id 
+  WHERE s.id = $1
+`;
+      const machineResult = await pool.query(machineQuery, [id]);
 
+      if (machineResult.rows.length === 0) {
+        return NextResponse.json(
+          { message: "Machine not found" },
+          { status: 404 },
+        );
+      }
+
+      const machine = machineResult.rows[0];
+      const customerId = machine.customer_id;
+      const sellBy = machine.sell_by; 
+
+      
+      const customerQuery = `
+      SELECT 
+    c.*,
+    u.name AS ownership_name
+FROM customer c
+LEFT JOIN users u ON u.id = c.ownership
+WHERE c.id = $1`;
+      const customerResult = await pool.query(customerQuery, [customerId]);
+
+      if (customerResult.rows.length === 0) {
+        return NextResponse.json(
+          { message: "Customer not found" },
+          { status: 404 },
+        );
+      }
+
+      const customer = customerResult.rows[0];
+
+      if (user.designation === "Dealer") {
+        if (user.id !== customer.ownership) {
+          return NextResponse.json(
+            { message: "You don't have access to this page" },
+            { status: 404 },
+          );
+        }
+      }
+
+      if (user.limited_access) {
+        if (
+          user.designation === "Social Media Manager" ||
+          user.designation === "Customer Relationship Manager"
+        ) {
+          if (user.id !== customer.lead) {
+            return NextResponse.json(
+              { message: "You don't have access to this page" },
+              { status: 404 },
+            );
+          }
+        }
+
+        if (user.designation === "Sales") {
+          if (user.id !== customer.ownership) {
+            return NextResponse.json(
+              { message: "You don't have access to this page" },
+              { status: 404 },
+            );
+          }
+        }
+      }
+
+      let sellByName = null;
+      if (sellBy) {
+        const sellerQuery = `SELECT name FROM users WHERE id = $1`;
+        const sellerResult = await pool.query(sellerQuery, [sellBy]);
+
+        if (sellerResult.rows.length > 0) {
+          sellByName = sellerResult.rows[0].name;
+        }
+      }
+
+      
+      const paymentsQuery = `SELECT * FROM payment WHERE machine_id = $1 ORDER BY transaction_date ASC`;
+      const paymentsResult = await pool.query(paymentsQuery, [id]);
+
+      
+      const payments = paymentsResult.rows.map((payment, index) => ({
+        ...payment,
+        track: index + 1, 
+      }));
+
+      
+      machine.payments = payments;
+      machine.sell_by_name = sellByName; 
+
+      const machineStatus = await pool.query(
+        `SELECT status FROM order_items WHERE machine_id = $1`,
+        [id],
+      );
+
+      machine.status =
+        machineStatus.rows.length > 0 ? machineStatus.rows[0].status : null;
+
+      let machineFilled = 0;
+      let unmatchedFields:any[] = [];
+
+      const hasContractImages =
+        (Array.isArray(machine.contract_images_pdf) &&
+          machine.contract_images_pdf.length > 0) ||
+        (Array.isArray(machine.contract_images_png) &&
+          machine.contract_images_png.length > 0);
+
+      if (hasContractImages) machineFilled++;
+
+      let checkingFields = [];
+
+      if (machine.type === "machine") {
+        checkingFields = [...saleFields];
+      } else {
+        checkingFields = [...partFields];
+      }
+
+      checkingFields.forEach((field) => {
+        const value = machine[field];
+        const isFilled = Array.isArray(value)
+          ? value.length > 0
+          : typeof value === "number"
+            ? ["price"].includes(field)
+              ? value !== null && !isNaN(value)
+              : true
+            : typeof value === "string"
+              ? value.trim() !== "" && value !== "null"
+              : value !== null && value !== undefined;
+
+        if (isFilled) {
+          machineFilled++;
+        } else {
+          unmatchedFields.push(field);
+        }
+      });
+
+      const totalFields = checkingFields.length + 1;
+
+      const percentage_completion = Math.round(
+        (machineFilled / totalFields) * 100,
+      );
+      const installmentQuery = await pool.query(
+        `SELECT * FROM machine_installments WHERE sale_id = $1 ORDER BY date ASC`,
+        [id],
+      );
+
+      const installments = installmentQuery.rows;
+
+      let editAllowed = false
+
+      if (
+        customer &&
+        customer?.ownership === uid
+      ) {
+        editAllowed = true
+      } else if (
+        machine &&
+        machine?.sell_by === uid
+      ) {
+        editAllowed = true
+      } else if (isAdmin) {
+        editAllowed = true
+      } else if (
+        user?.designation === "Customer Relationship Manager (After Sales)" &&
+        !user?.limited_access
+      ) {
+        editAllowed = true
+      } else if (user?.customer_full_access) {
+        editAllowed = true
+      } else {
+        editAllowed = false
+      }
+
+      return NextResponse.json(
+        {
+          customer,
+          machine,
+          percentage_completion,
+          unmatchedFields,
+          installments,
+          editAllowed
+        },
+        { status: 200 },
+      );
     }
-
-
   } catch (error:any) {
     console.error("Error fetching data:", error);
-    return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 });
+    return NextResponse.json(
+      { message: error.message || "Something went wrong" },
+      { status: 500 },
+    );
   }
 }
+
 
 
 
