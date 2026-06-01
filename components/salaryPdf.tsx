@@ -208,12 +208,16 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         color: "#047857",
     },
+    dateText: {
+        fontSize: 7,
+        color: "#2563EB",
+    },
 })
 
 
 const SalaryPdf = ({ data }: { data: UserSalaryProps }) => {
 
-    const commissionDetail = data?.issued_commissions_detail?.filter((item)=> Number(item.commission_amount) > 0) ?? []
+    const commissionDetail = data?.issued_commissions_detail?.filter((item) => Number(item.commission_amount) > 0) ?? []
 
     return (
         <Document>
@@ -323,11 +327,24 @@ const SalaryPdf = ({ data }: { data: UserSalaryProps }) => {
                                     </Text>
 
                                     <Text style={[styles.commissionCell, { flex: 3 }]}>
-                                        <Text style={styles.primaryText}>{item.serial_no || "N/A"}</Text>
+                                        <Text style={styles.primaryText}>
+                                            {item.serial_no || "N/A"}
+                                        </Text>
+
                                         {"\n"}
+
                                         <Text style={styles.secondaryText}>
                                             {item.power || "N/A"} / {item.source || "N/A"}
                                         </Text>
+
+                                        {item.contract_date && (
+                                            <>
+                                                {"\n"}
+                                                <Text style={styles.dateText}>
+                                                    Contract: {moment(item.contract_date).format("YYYY-MM-DD")}
+                                                </Text>
+                                            </>
+                                        )}
                                     </Text>
 
                                     <Text style={[styles.commissionCell, { flex: 2 }]}>

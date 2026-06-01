@@ -57,6 +57,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ uid:
             c.commission_amount,
              s.serial_no,
         s.power,
+        s.contract_date,
         s.source,
         array_to_string(s.order_no_arr, ', ') AS order_numbers,
             cu.name AS customer_name,

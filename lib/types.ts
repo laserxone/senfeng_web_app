@@ -775,6 +775,7 @@ export type SaleRecordIssuedCommissionsDetail = {
     power: string
     source: string
     order_numbers : string
+    contract_date : Date
 }
 
 export type UserSalaryProps = {
