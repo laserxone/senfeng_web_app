@@ -44,7 +44,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClose: (val: boolean) => void, user_id: number }) => {
+const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClose: (val: boolean) => void, user_id: number | string }) => {
   const [loading, setLoading] = useState(false);
   const [sendTo, setSendTo] = useState<number | null>(null);
   const [data, setData] = useState<OldRecordProps[]>([]);

@@ -30,7 +30,8 @@ export const OwnerSidebarItems = [
       "customer",
       "member",
       "feedback",
-      "transfer-customers"
+      "transfer-customers",
+       "quotation"
     ],
     items: [
       {
@@ -42,6 +43,11 @@ export const OwnerSidebarItems = [
         title: "Members",
         url: "/member",
         shortcut: ["m", "e", "m"],
+      },
+       {
+        title: "Quotation",
+        url: "/quotation",
+        shortcut: ["q", "u", "o"],
       },
       {
         title: "Feedback",
@@ -96,7 +102,7 @@ export const OwnerSidebarItems = [
       "prices",
       "oldcommissions",
       "analytics",
-      "quotation"
+     
     ],
     items: [
        {
@@ -125,11 +131,7 @@ export const OwnerSidebarItems = [
         shortcut: ["a", "n", "a"],
       },
 
-       {
-        title: "Quotation",
-        url: "/quotation",
-        shortcut: ["q", "u", "o"],
-      },
+      
 
     ]
 
@@ -654,7 +656,8 @@ export const employeeNavItems = [
       "customer",
       "member",
       "feedback",
-      "transfer-customers"
+      "transfer-customers",
+      "quotation"
     ],
     items: [
       {
@@ -666,6 +669,11 @@ export const employeeNavItems = [
         title: "Members",
         url: "/member",
         shortcut: ["m", "e", "m"],
+      },
+       {
+        title: "Quotation",
+        url: "/quotation",
+        shortcut: ["q", "u", "o"],
       },
     ],
   },

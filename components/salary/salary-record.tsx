@@ -1,7 +1,7 @@
 
 "use client";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, Trash2 } from "lucide-react";
+import { ArrowUpDown, RotateCcw, Trash2 } from "lucide-react";
 import {
     memo,
     useEffect,
@@ -122,6 +122,7 @@ const RecordComponent = () => {
     }
 
     async function handleDownload(item : SalaryRecord) {
+       
         const passingData : UserSalaryProps = {
              salary_month: item.salary_month,
     id: String(item.id),
@@ -136,6 +137,7 @@ const RecordComponent = () => {
     absents: String(item.absents),
     late: String(item.late),
     fuel: item.fuel,
+    issued_commissions_detail : item.issued_commissions_detail
    
         }
         const blob = await pdf(<SalaryPdf data={passingData} />).toBlob();
@@ -156,10 +158,15 @@ const RecordComponent = () => {
                     loading={loading}
                     columns={columns}
                     data={data}
-                 />
+                 >
+                    <Button disabled={loading} onClick={fetchData} size={"icon"}>
+            <RotateCcw />
+            </Button>
+                 </PageTable>
           
         </div>
     );
 };
+
 
 export default memo(RecordComponent)

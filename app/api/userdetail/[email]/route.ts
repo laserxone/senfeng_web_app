@@ -61,6 +61,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ emai
                 base_route = `${branchOffice}/dealer`
             } else {
                 nav_items = [...employeeNavItems]
+                if (user.designation === 'Engineer' || user.designation === 'Social Media Manager') {
+                    nav_items = nav_items.map(item => {
+                        if (item.title !== "Customers") return item;
+
+                        return {
+                            ...item,
+                            items: item.items.filter(subItem => subItem.title !== "Quotation"),
+                            isActive: item.isActive?.filter(active => active !== "quotation"),
+                        };
+                    });
+                }
             }
             if (user.branch_expenses_assigned) {
                 nav_items.push(branchNavItem)

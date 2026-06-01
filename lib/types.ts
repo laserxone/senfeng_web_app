@@ -607,7 +607,7 @@ export type MachineResponse = {
     unmatchedFields: string[];
     installments: InstallmentProps[];
     customer: MyCustomer
-    editAllowed : boolean
+    editAllowed: boolean
 };
 
 export type CommissionProps = {
@@ -766,6 +766,16 @@ export type PartsProps = {
     fields: { name: string, qty: string, price: string, total: string }[]
     payments: { amount: string, mode: string, received_by: string, transaction_date: string, clearance_date: string, image: string }[]
 }
+export type SaleRecordIssuedCommissionsDetail = {
+    commission_amount: string
+    customer_name: string
+    customer_owner: string
+    id: number
+    serial_no: string
+    power: string
+    source: string
+    order_numbers : string
+}
 
 export type UserSalaryProps = {
     salary_month: string
@@ -789,6 +799,7 @@ export type UserSalaryProps = {
         amount: number
         balance: number
     }[]
+    issued_commissions_detail?: SaleRecordIssuedCommissionsDetail[]
 }
 
 export type OldRecordProps = {
@@ -1241,6 +1252,8 @@ export type ChequeProp = {
     img: string
 }
 
+
+
 export type SalaryRecord = {
     id: number;
     user_id: number;
@@ -1265,8 +1278,11 @@ export type SalaryRecord = {
     loan_repayment: any | null;
     basic_salary: string;
     user_name: string;
+    issued_commissions_detail?: SaleRecordIssuedCommissionsDetail[]
 
 }
+
+
 
 export type GenerateSalaryUser = {
     basic_salary: string
@@ -1418,24 +1434,24 @@ export type EngineerPerformanceResponse = {
 };
 
 export interface QuotationData {
-  id?: number | string
-  date: Date
-  customer_name: string
-  contact_person: string
-  contact_number: string
-  email?: string
-  machine_model: string
-  machine_power?: string
-  price: string
-  validity: string
-  payment_terms: string
-  delivery_time: string
-  customer_id : number | string 
-  user_id ?: number | string | null
-  original_pdf ?: string 
+    id?: number | string
+    date: Date
+    customer_name: string
+    contact_person: string
+    contact_number: string
+    email?: string
+    machine_model: string
+    machine_power?: string
+    price: string
+    validity: string
+    payment_terms: string
+    delivery_time: string
+    customer_id: number | string
+    user_id?: number | string | null
+    original_pdf?: string
 }
 export type PricesSearchProps = {
-  value: string | number
-  label: string
-  data: PricesProps
+    value: string | number
+    label: string
+    data: PricesProps
 }

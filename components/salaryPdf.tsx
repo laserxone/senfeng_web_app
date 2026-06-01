@@ -145,10 +145,75 @@ const styles = StyleSheet.create({
         height: 15,
         marginRight: 5,
     },
+
+    tableCommission: {
+        width: "100%",
+        borderWidth: 1,
+        borderColor: "#D9E2EC",
+        borderRadius: 6,
+        overflow: "hidden",
+        marginTop: 10,
+    },
+
+    commissionRow: {
+        flexDirection: "row",
+        alignItems: "stretch",
+    },
+
+    commissionHeaderRow: {
+        backgroundColor: "#0F172A",
+    },
+
+    commissionHeaderCell: {
+        paddingVertical: 7,
+        paddingHorizontal: 8,
+        fontSize: 8,
+        fontWeight: "bold",
+        color: "#FFFFFF",
+        textTransform: "uppercase",
+        letterSpacing: 0.4,
+    },
+
+    commissionCell: {
+        paddingVertical: 7,
+        paddingHorizontal: 8,
+        fontSize: 8,
+        color: "#1F2937",
+        borderRightWidth: 1,
+        borderRightColor: "#E5E7EB",
+        lineHeight: 1.4,
+    },
+
+    evenRow: {
+        backgroundColor: "#FFFFFF",
+    },
+
+    oddRow: {
+        backgroundColor: "#F8FAFC",
+    },
+
+    primaryText: {
+        fontSize: 8,
+        fontWeight: "bold",
+        color: "#111827",
+    },
+
+    secondaryText: {
+        fontSize: 7,
+        color: "#6B7280",
+    },
+
+    amountCell: {
+        textAlign: "right",
+        fontWeight: "bold",
+        color: "#047857",
+    },
 })
 
 
-const SalaryPdf = ({ data } : {data : UserSalaryProps}) => {
+const SalaryPdf = ({ data }: { data: UserSalaryProps }) => {
+
+    const commissionDetail = data?.issued_commissions_detail?.filter((item)=> Number(item.commission_amount) > 0) ?? []
 
     return (
         <Document>
@@ -156,7 +221,6 @@ const SalaryPdf = ({ data } : {data : UserSalaryProps}) => {
                 padding: 20,
                 width: '100%',
             }}>
-                {/* Header */}
                 <Header />
                 <View style={{ padding: '5px', borderWidth: 2, borderColor: '#0072BC', borderRadius: 20, paddingTop: 20 }}>
                     <View style={{ flexDirection: 'row', width: '100%' }}>
@@ -233,7 +297,56 @@ const SalaryPdf = ({ data } : {data : UserSalaryProps}) => {
                     </View>
 
 
+                    {commissionDetail && commissionDetail?.length > 0 &&
+                        <View style={styles.tableCommission}>
+                            <View style={[styles.commissionRow, styles.commissionHeaderRow]}>
+                                <Text style={[styles.commissionHeaderCell, { flex: 2 }]}>Customer</Text>
+                                <Text style={[styles.commissionHeaderCell, { flex: 3 }]}>Machine</Text>
+                                <Text style={[styles.commissionHeaderCell, { flex: 2 }]}>Order No</Text>
+                                <Text style={[styles.commissionHeaderCell, { flex: 1.5, textAlign: "right" }]}>
+                                    Commission
+                                </Text>
+                            </View>
 
+                            {commissionDetail?.map((item, index) => (
+                                <View
+                                    key={index}
+                                    style={[
+                                        styles.commissionRow,
+                                        index % 2 === 0 ? styles.evenRow : styles.oddRow,
+                                    ]}
+                                >
+                                    <Text style={[styles.commissionCell, { flex: 2 }]}>
+                                        <Text style={styles.primaryText}>{item.customer_name || "N/A"}</Text>
+                                        {"\n"}
+                                        <Text style={styles.secondaryText}>{item.customer_owner || "N/A"}</Text>
+                                    </Text>
+
+                                    <Text style={[styles.commissionCell, { flex: 3 }]}>
+                                        <Text style={styles.primaryText}>{item.serial_no || "N/A"}</Text>
+                                        {"\n"}
+                                        <Text style={styles.secondaryText}>
+                                            {item.power || "N/A"} / {item.source || "N/A"}
+                                        </Text>
+                                    </Text>
+
+                                    <Text style={[styles.commissionCell, { flex: 2 }]}>
+                                        {item.order_numbers || "N/A"}
+                                    </Text>
+
+                                    <Text
+                                        style={[
+                                            styles.commissionCell,
+                                            styles.amountCell,
+                                            { flex: 1.5 },
+                                        ]}
+                                    >
+                                        {Number(item.commission_amount || 0).toLocaleString()}
+                                    </Text>
+                                </View>
+                            ))}
+                        </View>
+                    }
 
 
                     <Disclaimer />
@@ -248,7 +361,7 @@ const SalaryPdf = ({ data } : {data : UserSalaryProps}) => {
 
 
 
-const FormField = ({ data } : {data : UserSalaryProps}) => {
+const FormField = ({ data }: { data: UserSalaryProps }) => {
     return (
         <View style={{ marginBottom: 5, flex: 1 }}>
             {[
@@ -371,11 +484,11 @@ const Footer = () => {
     )
 }
 
-function truncateText(text : string) {
+function truncateText(text: string) {
     return text.length > 13 ? text.slice(0, 13) + "..." : text;
 }
 
-function formatCurrency(number : number) {
+function formatCurrency(number: number) {
     return new Intl.NumberFormat("en-US", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
