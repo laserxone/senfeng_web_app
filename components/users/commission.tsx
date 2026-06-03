@@ -286,7 +286,7 @@ const OwnerView = () => {
                     true,
                     new Date(),
                     showManual
-                      ? Number(manualNumber)
+                      ? Number(manualNumber || 0)
                       : (item.total_amount * (selectedPercentage || 0)) / 100,
                   )
                 }
