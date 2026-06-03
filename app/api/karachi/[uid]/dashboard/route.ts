@@ -6,10 +6,12 @@ import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { partFields, profileFields, saleFields } from "@/constants/data";
 
 export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
-    
+
     const { uid } = await params
     const searchParams = req.nextUrl.searchParams
     const office = searchParams.get('office')
+
+
 
     try {
         const isAdmin = await checkSuperadmin(uid)
@@ -49,7 +51,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
     FROM sale s
     JOIN customer c ON s.customer_id = c.id
     WHERE s.contract_date BETWEEN $1 AND $2
-      AND LOWER(c.office) = '${office?.toLowerCase()}'
+      AND c.office = '${office}'
     GROUP BY sale_date
     ORDER BY sale_date;
 `;
@@ -87,7 +89,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
     JOIN sale s ON p.machine_id = s.id
     JOIN customer c ON s.customer_id = c.id
     WHERE p.transaction_date BETWEEN $1 AND $2
-      AND LOWER(c.office) = '${office?.toLocaleLowerCase()}';
+      AND c.office = '${office}';
 `;
 
             const machinesSoldQuery = `
@@ -95,7 +97,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
     FROM sale s
     JOIN customer c ON s.customer_id = c.id
     WHERE s.contract_date BETWEEN $1 AND $2
-      AND LOWER(c.office) = '${office?.toLocaleLowerCase()}';
+      AND c.office = '${office}';
 `;
 
             // Query to get new customers added this month
@@ -103,7 +105,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
     SELECT COUNT(*) AS total_new_customers
     FROM customer c
     WHERE c.created_at BETWEEN $1 AND $2
-      AND LOWER(c.office) = '${office?.toLocaleLowerCase()}';
+      AND c.office = '${office}';
 `;
 
 
@@ -121,7 +123,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
     FROM sale s
     JOIN users u ON u.id = s.sell_by
     JOIN customer c ON c.id = s.customer_id
-    WHERE LOWER(c.office) = '${office?.toLocaleLowerCase()}'
+    WHERE c.office = '${office}'
     ORDER BY s.contract_date DESC
     LIMIT 5;
 `;
@@ -135,7 +137,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
       END AS industry,
       COUNT(*) AS customer_count
     FROM customer
-    WHERE LOWER(c.office) = '${office?.toLocaleLowerCase()}'
+    WHERE office = '${office}'
     GROUP BY 
       CASE 
         WHEN industry IS NULL OR industry = '' THEN 'No industry'
@@ -159,7 +161,7 @@ LEFT JOIN feedback f
   ON TO_CHAR(f.created_at, 'YYYY-MM') = months.month
 LEFT JOIN customer c
   ON f.customer_id = c.id
-WHERE LOWER(c.office) = '${office?.toLocaleLowerCase()}'
+WHERE c.office = '${office}'
 GROUP BY months.month
 ORDER BY months.month;
 
@@ -171,7 +173,7 @@ ORDER BY months.month;
 WITH sales_users AS (
   SELECT id, name, email, monthly_target
   FROM users
-  WHERE designation = 'Sales' AND LOWER(c.office) = '${office?.toLocaleLowerCase()}'
+  WHERE designation = 'Sales' AND office = '${office}'
 ),
 feedback_count AS (
   SELECT f.user_id, COUNT(*) AS total_feedbacks
@@ -235,7 +237,7 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
   LEFT JOIN users ON task.assigned_to = users.id
   LEFT JOIN customer ON task.customer_id = customer.id
   WHERE task.created_at BETWEEN $1 AND $2
-    AND LOWER(users.office) = 'karachi'
+    AND users.office = '${office}'
   GROUP BY users.id, users.name
   ORDER BY MAX(task.created_at) DESC;
 `;
@@ -284,7 +286,7 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
             const totalNewCustomersThisMonth = newCustomersResult.rows[0].total_new_customers || 0;
             const totalNewCustomersLastMonth = lastMonthNewCustomersResult.rows[0].total_new_customers || 0;
 
-            const teamTasks:any[] = taskResult.rows
+            const teamTasks = taskResult.rows
             const updatedTasks = teamTasks.map(user => {
                 const updatedUserTasks = user.tasks.map((task:any) => {
                     if (task.customer_id) {
@@ -368,7 +370,6 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
             }
 
             const user = userResult.rows[0];
-            console.log(user.designation)
 
             if (user?.designation === 'Dealer') {
 
@@ -688,14 +689,14 @@ GROUP BY
 
                             if (hasContractImages) machineFilled++;
 
-                             let checkingFields = []
-                            
-                                  if(sale.type === 'machine'){
-                                    checkingFields = [...saleFields]
-                                  } else {
-                                    checkingFields = [...partFields]
-                                  }
-                            
+                            let checkingFields = []
+
+                            if (sale.type === 'machine') {
+                                checkingFields = [...saleFields]
+                            } else {
+                                checkingFields = [...partFields]
+                            }
+
 
                             checkingFields.forEach(field => {
                                 const value = sale[field];
@@ -757,7 +758,7 @@ GROUP BY
                 const customersResult = await pool.query(
                     `SELECT id, name, location, number, owner, member, created_at
             FROM customer
-            WHERE member IS TRUE AND LOWER(office) = 'karachi'`
+            WHERE member IS TRUE AND office = 'karachi'`
                 );
 
                 const customers = customersResult.rows;
