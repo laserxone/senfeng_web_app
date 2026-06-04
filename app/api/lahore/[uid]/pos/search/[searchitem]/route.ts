@@ -135,7 +135,7 @@ WHERE
           ...invoice,
           items_total: itemsTotal,
           discount,
-          final_amount: finalAmount,
+          final_amount: finalAmount - totalPaid,
           status,
         };
       });

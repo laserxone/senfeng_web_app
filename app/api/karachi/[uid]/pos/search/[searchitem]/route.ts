@@ -38,7 +38,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{searchite
           ...invoice,
           items_total: itemsTotal,
           discount,
-          final_amount: finalAmount,
+            final_amount: finalAmount - totalPaid,
           status,
         };
       });

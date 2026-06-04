@@ -14,11 +14,14 @@ import { PakCities } from "@/constants/data";
 import { useDebounce } from "@/hooks/use-debounce";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import formatCurrency from "@/lib/formatCurrency";
 import { AdminDashboard, AdminDashboardCustomers, AdminTeamTasks, TeamTaskForAdmin } from "@/lib/types";
 import { MapProvider } from "@/providers/map-provider";
 import { OfficeContext } from "@/store/context/OfficeContext";
+import { Banknote, CheckCircle2, ClipboardList, Clock3, MonitorCheck, UsersRound } from "lucide-react";
 import moment from "moment";
 import { useContext, useEffect, useState } from "react";
+import { FaCashRegister } from "react-icons/fa";
 
 export default function Page() {
   const [customers, setCustomers] = useState<AdminDashboardCustomers[]>([]);
@@ -40,6 +43,7 @@ export default function Page() {
     fetchCustomerList();
     fetchDashboardData();
   }
+
 
   async function fetchDashboardData() {
     axios
@@ -82,7 +86,7 @@ export default function Page() {
         setLoading(false);
       });
   }
-  
+
   async function fetchCustomerList() {
     try {
       axios.get(`/${debouncedUserId}/customer?map=true&office=${OfficeState.value.data}`).then((response) => {
@@ -123,117 +127,117 @@ export default function Page() {
           Hi, Welcome back 👋
         </h2>
       </div>
-      <div className="flex flex-row justify-between flex-wrap gap-4">
-        <Card className="w-full sm:w-auto sm:min-w-[350px]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Payments This Month
-            </CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-6 w-32" />
-            ) : (
-              <div className="text-2xl font-bold">
-                <CurrencyFormatter amount={data?.total_payment_this_month ?? 0} />
-              </div>
-            )}
-            {loading ? (
-              <Skeleton className="h-4 w-24" />
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                {data?.payment_change_percentage}% from last month
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+        <MiniStatsCard
+          title="Payments"
+          value={formatCurrency(data?.total_payment_this_month ?? 0)}
+          subtitle={`${data?.payment_change_percentage}% from last month`}
+          loading={loading}
+          icon={Banknote}
+          className="bg-green-50 text-green-700"
+        />
+
+        <MiniStatsCard
+          title="Machines Sold"
+          value={formatCurrency(data?.total_machines_sold_this_month ?? 0)}
+          subtitle={`${data?.machines_sold_change_percentage}% from last month`}
+          loading={loading}
+          icon={MonitorCheck}
+          className="bg-blue-50 text-blue-700"
+        />
+
+        <MiniStatsCard
+          title="New Customers"
+           value={formatCurrency(data?.total_new_customers_this_month ?? 0)}
+          subtitle={`${data?.new_customer_change_percentage}% from last month`}
+          loading={loading}
+          icon={UsersRound}
+          className="bg-purple-50 text-purple-700"
+        />
+
+        <Card className="shadow-sm">
+          <CardContent className="items-center gap-3">
+            <div className="flex justify-between">
+              <p className="truncate text-lg font-bold">
+                Complaint Stats
               </p>
-            )}
+              <div className={`rounded-lg p-2 bg-orange-50 text-orange-700`}>
+                <ClipboardList className="h-4 w-4 " />
+              </div>
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <div className="flex items-center gap-1.5 text-green-700">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span className="text-xs">Paid</span>
+                  </div>
+
+                  {loading ? (
+                    <Skeleton className="mt-1 h-5 w-12" />
+                  ) : (
+                    <p className="mt-1 text-lg font-semibold text-green-700">
+                      {formatCurrency(data?.complaint_stats?.total_paid)}
+                     
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-1.5 text-red-700">
+                    <Clock3 className="h-3.5 w-3.5" />
+                    <span className="text-xs">Pending</span>
+                  </div>
+
+                  {loading ? (
+                    <Skeleton className="mt-1 h-5 w-12" />
+                  ) : (
+                    <p className="mt-1 text-lg font-semibold text-red-700">
+                      {formatCurrency(data?.complaint_stats?.total_pending)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="w-full sm:w-auto sm:min-w-[350px]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Machines Sold This Month
-            </CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <rect width="20" height="14" x="2" y="5" rx="2" />
-              <path d="M2 10h20" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-6 w-24" />
-            ) : (
-              <div className="text-2xl font-bold">
-                {data?.total_machines_sold_this_month}
-              </div>
-            )}
-            {loading ? (
-              <Skeleton className="h-4 w-24" />
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                {data?.machines_sold_change_percentage}% from last month
+
+        <Card className="shadow-sm">
+          <CardContent className="items-center gap-3">
+            <div className="flex justify-between">
+              <p className="truncate text-lg font-bold">
+                POS Stats
               </p>
-            )}
+              <div className={`rounded-lg p-2 bg-yellow-50 text-yellow-700`}>
+                <FaCashRegister className="h-4 w-4 " />
+              </div>
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="grid grid-cols-2 gap-2">
+
+                <div>
+                  <div className="flex items-center gap-1.5 text-red-700">
+                    <Clock3 className="h-3.5 w-3.5" />
+                    <span className="text-xs">Pending</span>
+                  </div>
+
+                  {loading ? (
+                    <Skeleton className="mt-1 h-5 w-12" />
+                  ) : (
+                    <p className="mt-1 text-lg font-semibold text-red-700">
+                      {formatCurrency(data?.pos_stats?.pending)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="w-full sm:w-auto sm:min-w-[350px]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              New Customers This Month
-            </CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-6 w-24" />
-            ) : (
-              <div className="text-2xl font-bold">
-                {data?.total_new_customers_this_month}
-              </div>
-            )}
-            {loading ? (
-              <Skeleton className="h-4 w-24" />
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                {data?.new_customer_change_percentage}% from last month
-              </p>
-            )}
-          </CardContent>
-        </Card>
+
       </div>
 
       {loading ? (
@@ -339,3 +343,99 @@ const renderTaskCard = (tasks: TeamTaskForAdmin[], label: string) => (
     </CardContent>
   </Card>
 );
+
+
+function StatsCard({
+  title,
+  value,
+  change,
+  loading,
+  icon: Icon,
+  iconClassName,
+}: {
+  title: string;
+  value: React.ReactNode;
+  change: string;
+  loading: boolean;
+  icon: React.ElementType;
+  iconClassName: string;
+}) {
+  return (
+    <Card className="h-full shadow-sm">
+      <CardContent className="flex h-full items-center gap-4 p-4">
+        <div className={`rounded-xl p-2.5 ${iconClassName}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-medium text-muted-foreground">
+            {title}
+          </p>
+
+          {loading ? (
+            <Skeleton className="mt-2 h-6 w-24" />
+          ) : (
+            <div className="mt-1 truncate text-xl font-bold">{value}</div>
+          )}
+
+          {loading ? (
+            <Skeleton className="mt-2 h-3 w-28" />
+          ) : (
+            <p className="mt-1 truncate text-xs text-muted-foreground">
+              {change}
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function MiniStatsCard({
+  title,
+  value,
+  subtitle,
+  loading,
+  icon: Icon,
+  className,
+}: {
+  title: string;
+  value: React.ReactNode;
+  subtitle: string;
+  loading: boolean;
+  icon: React.ElementType;
+  className: string;
+}) {
+  return (
+    <Card className="shadow-sm">
+      <CardContent className="items-center gap-3">
+        <div className="flex justify-between">
+          <p className="truncate text-lg font-bold">
+            {title}
+          </p>
+          <div className={`rounded-lg p-2 ${className}`}>
+            <Icon className="h-4 w-4" />
+          </div>
+        </div>
+
+        <div className="min-w-0 flex-1">
+          {loading ? (
+            <Skeleton className="mt-1 h-5 w-20" />
+          ) : (
+            <div className="mt-0.5 truncate text-lg font-semibold">
+              {value}
+            </div>
+          )}
+
+          {loading ? (
+            <Skeleton className="mt-1 h-3 w-24" />
+          ) : (
+            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+              {subtitle}
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

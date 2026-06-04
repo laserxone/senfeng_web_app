@@ -1,13 +1,14 @@
-import CurrencyFormatter from "@/components/currency-formatter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import useUserDetail from "@/hooks/use-user-detail";
+import formatCurrency from "@/lib/formatCurrency";
 import { GetProfileImage } from "@/lib/getProfileImage";
+import { AdminDashboardRecentSales } from "@/lib/types";
 import moment from "moment";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-export function Sale({ data }) {
+export function Sale({ data } : {data : AdminDashboardRecentSales[]}) {
   const { base_route } = useUserDetail();
   return (
     <Card>
@@ -49,7 +50,7 @@ export function Sale({ data }) {
               </div>
               <div className="flex  flex-col items-start">
                 <div className="font-medium">
-                  <CurrencyFormatter amount={item?.price}/>
+                  {formatCurrency(item.price)}
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {moment(item.contract_date).format("YYYY-MM-DD")}
@@ -63,9 +64,9 @@ export function Sale({ data }) {
   );
 }
 
-const RenderImage = ({ img }) => {
+const RenderImage = ({ img }: { img: string }) => {
 
-  const [localImage, setLocalImage] = useState(null)
+  const [localImage, setLocalImage] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchImage() {
@@ -82,6 +83,7 @@ const RenderImage = ({ img }) => {
     }
   }, [img]);
 
+  if (!localImage) return null
   return (
     <AvatarImage src={localImage} alt="Avatar" />
   )

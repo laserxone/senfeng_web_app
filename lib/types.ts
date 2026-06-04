@@ -413,6 +413,8 @@ export type ComplaintProps = {
     complaint_status: string;
     complaint_created_at: string;
     complaint_paid: boolean
+    complaint_installation : boolean,
+    complaint_charges : number,
     customer_id: number;
     complaint_id: number;
     customer_name: string;
@@ -989,7 +991,27 @@ export type TeamTaskForAdmin = {
     customer_owner: string | null;
 }
 
+export type AdminDashboardRecentSales = {
+    
+        contract_date: string
+        customer_id: number
+        customer_name: string
+        customer_owner: string
+        price: string
+        seller_dp: string
+        seller_email: string
+        seller_name: string
+    
+}
+
 export type AdminDashboard = {
+    pos_stats : {
+        pending : string
+    }
+    complaint_stats : {
+        total_paid : string
+        total_pending : string
+    }
     feedback_status_last_6_months: {
         month: string
         satisfactory: number
@@ -1009,16 +1031,7 @@ export type AdminDashboard = {
     total_machines_sold_this_month: string
     total_new_customers_this_month: string
     total_payment_this_month: string
-    recent_sales: {
-        contract_date: string
-        customer_id: number
-        customer_name: string
-        customer_owner: string
-        price: string
-        seller_dp: string
-        seller_email: string
-        seller_name: string
-    }[]
+    recent_sales: AdminDashboardRecentSales[]
     team_progress: {
         id: number;
         name: string;
@@ -1461,6 +1474,7 @@ export interface QuotationData {
     customer_id: number | string
     user_id?: number | string | null
     original_pdf?: string
+    user_name?: string | null
 }
 export type PricesSearchProps = {
     value: string | number

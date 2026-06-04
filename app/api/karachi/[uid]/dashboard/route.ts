@@ -324,7 +324,90 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
                 ? 0
                 : ((customersThis - customersLast) / customersLast) * 100;
 
-            // Prepare the response data
+
+            const complaintStats = await pool.query(`
+  WITH payment_totals AS (
+    SELECT
+      complaint_id,
+      SUM(amount) AS paid_amount
+    FROM complaint_payments
+    GROUP BY complaint_id
+  )
+  SELECT
+    COALESCE(SUM(pt.paid_amount), 0) AS total_paid,
+    COALESCE(SUM(
+      CASE 
+        WHEN c.paid = true 
+        THEN GREATEST(c.charges - COALESCE(pt.paid_amount, 0), 0)
+        ELSE 0
+      END
+    ), 0) AS total_pending
+  FROM complaints c
+  LEFT JOIN payment_totals pt ON pt.complaint_id = c.id
+  WHERE c.managing_office = 'karachi';
+`);
+
+            const query = `
+  SELECT
+    si.*,
+    COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
+  FROM savedinvoices si
+  LEFT JOIN customer_parts cp ON cp.part_id = si.id
+  WHERE si.owner_paid IS FALSE
+  GROUP BY si.id
+`;
+
+            const result = await pool.query(query)
+
+            const invoices = result.rows.map((invoice) => {
+                const itemsTotal = Array.isArray(invoice.fields)
+                    ? invoice.fields.reduce((sum: number, item: any) => {
+                        const val = Number(item?.total ?? 0);
+                        return sum + (isNaN(val) ? 0 : val);
+                    }, 0)
+                    : 0;
+                const discount = Number(invoice.discount ?? 0);
+                const finalAmount = itemsTotal - discount;
+                const totalPaid = Number(invoice.total_paid ?? 0);
+                let status = "NA";
+                if (itemsTotal === 0) status = "Paid"
+                else if (totalPaid === 0) status = "Pending";
+                else if (finalAmount - totalPaid !== 0) status = "Partial";
+                else status = "Paid";
+
+                return {
+                    ...invoice,
+                    items_total: itemsTotal,
+                    discount,
+                    final_amount: finalAmount - totalPaid,
+                    status,
+                };
+            }).filter(
+                (item) =>
+                    moment(item.created_at).isSameOrAfter("2025-12-01") ||
+                    item.payment === false
+            ).filter((item) => item.status !== "Paid")
+
+            let totalPending = 0;
+
+            for (const invoice of invoices) {
+                const itemsTotal = Array.isArray(invoice.fields)
+                    ? invoice.fields.reduce((sum: number, item: any) => {
+                        const val = Number(item?.total ?? 0);
+                        return sum + (isNaN(val) ? 0 : val);
+                    }, 0)
+                    : 0;
+
+                const discount = Number(invoice.discount ?? 0);
+                const finalAmount = itemsTotal - discount;
+                const paid = Number(invoice.total_paid ?? 0);
+
+                const pending = Math.max(finalAmount - paid, 0);
+
+
+                totalPending += pending;
+            }
+
             const responseData = {
                 total_payment_this_month: totalPaymentThisMonth,
                 payment_change_percentage: paymentChangePercentage.toFixed(2), // rounded to 2 decimal places
@@ -346,7 +429,9 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
                 machines_sold_last_3_months: dateArray,
                 feedback_status_last_6_months: formattedFeedbackData,
                 team_progress: tempProgressResult.rows,
-                team_task: updatedTasks
+                team_task: updatedTasks,
+                complaint_stats: complaintStats.rows?.[0],
+                pos_stats: { pending: totalPending }
             };
 
             return NextResponse.json(responseData, { status: 200 });

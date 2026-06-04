@@ -105,18 +105,18 @@ export default function QuotationPage() {
       cell: ({ row }) => <div>{row.original.contact_number || "-"}</div>,
     },
     {
-      accessorKey: "email",
+      accessorKey: "user_name",
       filterFn: "includesString",
       header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Email
+          Sales Person
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div>{row.original.email || "-"}</div>,
+      cell: ({ row }) => <div>{row.original.user_name || "-"}</div>,
     },
     {
       accessorKey: "machine_model",
@@ -248,9 +248,26 @@ export default function QuotationPage() {
     },
   ]
 
+  const formatPrice = (price: string | number) => {
+    const priceStr = String(price);
+
+
+    if (priceStr.toUpperCase().includes("USD")) {
+      return priceStr;
+    }
+
+
+    const numeric = parseFloat(priceStr.replace(/[^0-9.]/g, ""));
+
+    if (isNaN(numeric)) return "0";
+
+
+    return (numeric / 1_000_000).toFixed(2);
+  };
+
   async function handleDownloadQuotation(quotation: QuotationData) {
     if (!quotation?.id) return
-
+    setDownloadItem(quotation.id)
 
     try {
       const generatedPdfBlob = await pdf(<QuotationPDF data={quotation} />).toBlob()
@@ -292,8 +309,19 @@ export default function QuotationPage() {
         const url = URL.createObjectURL(blob)
         const link = document.createElement("a")
 
+        let normalName = quotation.customer_name;
+
+        const nameParts = normalName.trim().split(/\s+/);
+
+        if (nameParts.length > 2) {
+          normalName = nameParts.slice(0, 2).join(" ");
+        }
+
+
+        let downloadName = `${normalName} ${quotation.contact_person || ""}-${quotation.machine_model}-${quotation.machine_power}-${quotation.payment_terms || ""}${formatPrice(quotation.price)}.pdf`
+
         link.href = url
-        link.download = `Quotation-${quotation.id || "download"}.pdf`
+        link.download = downloadName
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)

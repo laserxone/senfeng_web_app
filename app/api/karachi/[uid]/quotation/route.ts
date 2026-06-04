@@ -4,7 +4,12 @@ import pool from "@/config/db"
 export async function GET(){
 
     try {
-        const res = await pool.query(`SELECT * FROM quotation`)
+        const res = await pool.query(`
+               SELECT 
+            q.*,
+            u.name AS user_name
+        FROM quotation q
+        LEFT JOIN users u ON q.user_id = u.id`)
         return NextResponse.json(res?.rows)
     } catch (error : any) {
         return NextResponse.json({message : error?.message || "Server error"}, {status: 500})

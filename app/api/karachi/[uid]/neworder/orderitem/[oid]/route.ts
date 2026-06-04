@@ -27,7 +27,7 @@ export async function PUT(req:NextRequest, {params}:{params:Promise<{oid:string}
         machine_source = null,
         machine_power = null,
         inventory_id = null,
-        location = "Lahore",
+        location = "Karachi",
         show = false
     } = item;
 

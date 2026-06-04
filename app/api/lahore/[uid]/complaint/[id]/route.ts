@@ -1,8 +1,9 @@
 import pool from "@/config/db";
+import admin from "@/lib/firebaseAdmin";
 import { NextRequest, NextResponse } from "next/server";
 
 
-export async function GET(req:NextRequest, { params }:{params:Promise<{id:string}>}) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
   try {
@@ -50,11 +51,116 @@ WHERE c.id = $1;
 
 
     return NextResponse.json(result.rows[0] || {}, { status: 200 });
-  } catch (error:any) {
+  } catch (error: any) {
 
     return NextResponse.json({ message: error.message || "Server error" }, { status: 500 });
   }
 
+}
+
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const client = await pool.connect();
+
+  try {
+    const { id } = await params;
+
+    if (!id) {
+      return NextResponse.json(
+        { message: "Complaint ID is required." },
+        { status: 400 }
+      );
+    }
+
+    const bucket = admin.storage().bucket();
+
+    await client.query("BEGIN");
+
+    // 1. GET LOG FILES (signature + image)
+    const logsRes = await client.query(
+      `SELECT signature, image FROM complaint_logs WHERE complaint_id = $1`,
+      [id]
+    );
+
+    // delete log files from firebase
+    for (const log of logsRes.rows) {
+      if (log.signature) {
+        try {
+          await bucket.file(log.signature).delete();
+        } catch (err) {
+          console.error("Signature delete error:", err);
+        }
+      }
+
+      if (log.image) {
+        try {
+          await bucket.file(log.image).delete();
+        } catch (err) {
+          console.error("Image delete error:", err);
+        }
+      }
+    }
+
+    // 2. DELETE LOGS
+    await client.query(
+      `DELETE FROM complaint_logs WHERE complaint_id = $1`,
+      [id]
+    );
+
+    // 3. GET PAYMENT FILES (slip)
+    const paymentsRes = await client.query(
+      `SELECT slip FROM complaint_payments WHERE complaint_id = $1`,
+      [id]
+    );
+
+    for (const payment of paymentsRes.rows) {
+      if (payment.slip) {
+        try {
+          await bucket.file(payment.slip).delete();
+        } catch (err) {
+          console.error("Slip delete error:", err);
+        }
+      }
+    }
+
+    // 4. DELETE PAYMENTS
+    await client.query(
+      `DELETE FROM complaint_payments WHERE complaint_id = $1`,
+      [id]
+    );
+
+    // 5. DELETE ASSIGNMENTS
+    await client.query(
+      `DELETE FROM complaint_assignments WHERE complaint_id = $1`,
+      [id]
+    );
+
+    // 6. DELETE COMPLAINT
+    await client.query(
+      `DELETE FROM complaints WHERE id = $1`,
+      [id]
+    );
+
+    await client.query("COMMIT");
+
+    return NextResponse.json({
+      message: "Complaint and all related data deleted successfully.",
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+
+    console.error("Delete complaint error:", error);
+
+    return NextResponse.json(
+      { message: "Something went wrong." },
+      { status: 500 }
+    );
+  } finally {
+    client.release();
+  }
 }
 
 export const revalidate = 0

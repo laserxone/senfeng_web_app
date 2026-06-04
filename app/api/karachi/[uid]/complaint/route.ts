@@ -32,6 +32,8 @@ export async function GET(req : NextRequest, { params } : {params : Promise<{ ui
           c.solution AS complaint_solution,
           c.status AS complaint_status,
           c.paid AS complaint_paid,
+          c.installation AS complaint_installation,
+          c.charges AS complaint_charges,
           c.created_at AS complaint_created_at,
           c.customer_id,
           cu.name AS customer_name,
@@ -87,7 +89,7 @@ export async function GET(req : NextRequest, { params } : {params : Promise<{ ui
  
         LEFT JOIN users engineer ON ca.engineer_id = engineer.id
         LEFT JOIN users assigned_by_user ON ca.assigned_by = assigned_by_user.id
-        WHERE c.customer_id IS NOT NULL AND c.managing_office = 'lahore'
+        WHERE c.customer_id IS NOT NULL AND c.managing_office = 'karachi'
       `;
 
       if (start_date && end_date) {

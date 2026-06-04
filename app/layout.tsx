@@ -34,7 +34,7 @@ export default function RootLayout({
       
     >
       <link rel="icon" href="/favicon.ico" sizes="any" />
-      <body className="">
+      <body className="overflow-y-hidden">
         <Suspense fallback={<SenfengLogoLoader />}>
           <MainProviders>
             <MaintenanceWrapper>
