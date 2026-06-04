@@ -1,12 +1,12 @@
 import pool from "@/config/db";
-import { NextRequest, NextResponse } from "next/server";
+import { partFields, profileFields, saleFields } from "@/constants/data";
+import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import momentT from 'moment-timezone';
 import moment from "moment/moment";
-import { checkSuperadmin } from "@/lib/checkSuperadmin";
-import { partFields, profileFields, saleFields } from "@/constants/data";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
-    
+export async function GET(req: NextRequest, { params }: { params: Promise<{ uid: string }> }) {
+
     const { uid } = await params
     const searchParams = req.nextUrl.searchParams
     const office = searchParams.get('office')
@@ -284,9 +284,9 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
             const totalNewCustomersThisMonth = newCustomersResult.rows[0].total_new_customers || 0;
             const totalNewCustomersLastMonth = lastMonthNewCustomersResult.rows[0].total_new_customers || 0;
 
-            const teamTasks:any[] = taskResult.rows
+            const teamTasks: any[] = taskResult.rows
             const updatedTasks = teamTasks.map(user => {
-                const updatedUserTasks = user.tasks.map((task:any) => {
+                const updatedUserTasks = user.tasks.map((task: any) => {
                     if (task.customer_id) {
                         const [firstPart] = task.title.split("-");
                         const customerInfo = task.customer_name || task.customer_owner || "";
@@ -368,7 +368,6 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
             }
 
             const user = userResult.rows[0];
-            console.log(user.designation)
 
             if (user?.designation === 'Dealer') {
 
@@ -688,14 +687,14 @@ GROUP BY
 
                             if (hasContractImages) machineFilled++;
 
-                             let checkingFields = []
-                            
-                                  if(sale.type === 'machine'){
-                                    checkingFields = [...saleFields]
-                                  } else {
-                                    checkingFields = [...partFields]
-                                  }
-                            
+                            let checkingFields = []
+
+                            if (sale.type === 'machine') {
+                                checkingFields = [...saleFields]
+                            } else {
+                                checkingFields = [...partFields]
+                            }
+
 
                             checkingFields.forEach(field => {
                                 const value = sale[field];
@@ -754,32 +753,60 @@ GROUP BY
                 });
             } else if (user?.designation === 'Customer Relationship Manager (After Sales)') {
 
-                const customersResult = await pool.query(
-                    `SELECT id, name, location, number, owner, member, created_at
-            FROM customer
-            WHERE member IS TRUE AND office = 'lahore'`
-                );
+                const customersResult = await pool.query(`
+    SELECT
+        id,
+        name,
+        location,
+        number,
+        owner,
+        member,
+        created_at
+    FROM customer
+    WHERE member IS TRUE
+      AND office = 'lahore'
+`);
 
                 const customers = customersResult.rows;
+
+                const feedbackResult = await pool.query(
+                    `
+    SELECT DISTINCT ON (f.customer_id)
+        f.customer_id,
+        f.created_at,
+         u.name AS user_name
+    FROM feedback f
+    INNER JOIN users u ON u.id = f.user_id
+    WHERE u.designation = 'Customer Relationship Manager (After Sales)'
+      AND LOWER(u.office) = LOWER($1)
+      AND f.created_at BETWEEN $2 AND $3
+    ORDER BY f.customer_id, f.created_at DESC
+    `,
+                    ['lahore', currentMonthStart, currentMonthEnd]
+                );
+
+                const feedbackMap = new Map(
+                    feedbackResult.rows.map(row => [
+                        row.customer_id,
+                        {
+                            feedback_date: row.created_at,
+                            user_name: row.user_name,
+                        },
+                    ])
+                );
 
                 const customersWithFeedback = [];
                 const customersWithoutFeedback = [];
 
                 for (const customer of customers) {
-                    const feedbackResult = await pool.query(
-                        `
-              SELECT id, customer_id, user_id, created_at FROM feedback
-              WHERE customer_id = $1
-              AND user_id = $2
-              AND created_at BETWEEN $3 AND $4
-              ORDER BY created_at DESC
-              LIMIT 1
-              `,
-                        [customer.id, uid, currentMonthStart, currentMonthEnd]
-                    );
+                    const feedbackInfo = feedbackMap.get(customer.id);
 
-                    if (feedbackResult.rows.length > 0) {
-                        customersWithFeedback.push({ ...customer, feedback_date: feedbackResult.rows[0].created_at });
+                    if (feedbackInfo) {
+                        customersWithFeedback.push({
+                            ...customer,
+                            feedback_date: feedbackInfo.feedback_date,
+                            user_name: feedbackInfo.user_name,
+                        });
                     } else {
                         customersWithoutFeedback.push(customer);
                     }
@@ -805,7 +832,7 @@ GROUP BY
         }
 
 
-    } catch (error:any) {
+    } catch (error: any) {
         console.error('Error fetching data: ', error);
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 });
     }

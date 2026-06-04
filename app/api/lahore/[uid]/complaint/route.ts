@@ -56,7 +56,23 @@ export async function GET(req : NextRequest, { params } : {params : Promise<{ ui
               WHERE complaint_id = c.id
               ORDER BY created_at DESC
             ) cl
-          ), '[]') AS logs
+          ), '[]') AS logs,
+          COALESCE((
+  SELECT json_agg(cp)
+  FROM (
+    SELECT
+      id,
+      complaint_id,
+      amount,
+      purpose,
+      method,
+      slip,
+      created_at
+    FROM complaint_payments
+    WHERE complaint_id = c.id
+    ORDER BY created_at DESC
+  ) cp
+), '[]') AS payment_details
         FROM complaints c
         LEFT JOIN customer cu ON c.customer_id = cu.id
         LEFT JOIN users owner_user ON cu.ownership = owner_user.id

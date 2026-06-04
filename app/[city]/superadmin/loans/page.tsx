@@ -1,579 +1,852 @@
 "use client";
 
 import { RequiredStar } from "@/components/RequiredStar";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import AppCalendar from "@/components/appCalendar";
+import Dropzone from "@/components/dropzone";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+} from "@/components/ui/field";
 import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Spinner from "@/components/ui/spinner";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { UserSearch } from "@/components/user-search";
+import { storage } from "@/config/firebase";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { Loan, LoanPayment } from "@/lib/types";
-import moment from "moment";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
-import Dropzone from "@/components/dropzone";
 import { UploadImage } from "@/lib/uploadFunction";
 import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@/config/firebase";
+import {
+  ChevronRight,
+  CreditCard,
+  Edit,
+  FileText,
+  ImageIcon,
+  Pencil,
+  Plus,
+  Wallet,
+} from "lucide-react";
+import moment from "moment";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
-import { ChevronRight, Edit } from "lucide-react";
-import AppCalendar from "@/components/appCalendar";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-
+import { toast } from "sonner";
 
 type LoansByUser = {
-    [userId: number]: {
-        name: string;
-        loans: Loan[];
-    };
+  [userId: number]: {
+    name: string;
+    loans: Loan[];
+  };
 };
 
 export default function EmployeeLoans() {
-    const [loans, setLoans] = useState<Loan[]>([]);
-    const { userID } = useUserDetail();
+  const [loans, setLoans] = useState<Loan[]>([]);
+  const { userID } = useUserDetail();
 
-    useEffect(() => {
-        if (userID) fetchLoans();
-    }, [userID]);
+  useEffect(() => {
+    if (userID) fetchLoans();
+  }, [userID]);
 
-    const fetchLoans = async () => {
-        const res = await axios.get(`/${userID}/loans`);
-        setLoans(res.data);
-    };
+  const fetchLoans = async () => {
+    const res = await axios.get(`/${userID}/loans`);
+    setLoans(res.data);
+  };
 
+  const loansByUser = useMemo(() => {
+    return loans.reduce<LoansByUser>((acc, loan) => {
+      if (!acc[loan.user_id]) {
+        acc[loan.user_id] = {
+          name: loan.user_name,
+          loans: [],
+        };
+      }
 
-    const loansByUser = loans.reduce<LoansByUser>((acc, loan) => {
-        if (!acc[loan.user_id]) acc[loan.user_id] = { name: loan.user_name, loans: [] };
-        acc[loan.user_id].loans.push(loan);
-        return acc;
+      acc[loan.user_id].loans.push(loan);
+      return acc;
     }, {});
+  }, [loans]);
 
-    return (
-        <div className="flex flex-1 flex-col space-y-4">
-            <div className="flex justify-between flex-wrap items-end">
-                <Heading title="Loans" description="Manage employee loans" />
-                <LoanIssueModal userID={userID} onSuccess={fetchLoans} />
-            </div>
+  const totalLoans = loans.length;
+  const activeLoans = loans.filter((loan) => loan.status === "active").length;
+  const totalRemaining = loans.reduce(
+    (sum, loan) => sum + Number(loan.remaining_amount || 0),
+    0
+  );
 
+  return (
+    <div className="flex flex-1 flex-col gap-6 pb-6">
+      <div className="flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-sm sm:flex-row sm:items-end sm:justify-between">
+        <Heading title="Loans" description="Manage employee loans and repayments" />
 
-            <LoanAccordion loansByUser={loansByUser} userID={userID} onUpdate={fetchLoans} />
+        <LoanIssueModal userID={userID} onSuccess={fetchLoans} />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <SummaryCard
+          title="Total Loans"
+          value={totalLoans}
+          icon={<FileText className="h-5 w-5" />}
+        />
+        <SummaryCard
+          title="Active Loans"
+          value={activeLoans}
+          icon={<Wallet className="h-5 w-5" />}
+        />
+        <SummaryCard
+          title="Remaining Amount"
+          value={totalRemaining.toLocaleString()}
+          icon={<CreditCard className="h-5 w-5" />}
+        />
+      </div>
+
+      <LoanCollapsibleList
+        loansByUser={loansByUser}
+        userID={userID}
+        onUpdate={fetchLoans}
+      />
+    </div>
+  );
+}
+
+function SummaryCard({
+  title,
+  value,
+  icon,
+}: {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border bg-card p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm text-muted-foreground">{title}</p>
+          <p className="mt-1 text-2xl font-semibold">{value}</p>
         </div>
-    );
+
+        <div className="rounded-full bg-muted p-3 text-muted-foreground">
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
 }
 
+export function LoanIssueModal({
+  userID,
+  onSuccess,
+}: {
+  userID: number | string;
+  onSuccess: () => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<number | null>(null);
+  const [loanAmount, setLoanAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
 
-
-export function LoanIssueModal({ userID, onSuccess }: { userID: number | string, onSuccess: () => Promise<void> }) {
-    const [open, setOpen] = useState(false);
-    const [selectedUser, setSelectedUser] = useState<number | null>(null);
-    const [loanAmount, setLoanAmount] = useState("");
-    const [description, setDescription] = useState("");
-    const [loading, setLoading] = useState(false);
-
-
-    const createLoan = async () => {
-        if (!selectedUser || !loanAmount) return
-        toast.error("Employee and amount required");
-        setLoading(true);
-        try {
-            await axios.post(`/${userID}/loans`, {
-                user_id: selectedUser,
-                loan_amount: Number(loanAmount),
-                description,
-            });
-            setLoanAmount("");
-            setDescription("");
-            setSelectedUser(null);
-            setOpen(false);
-            onSuccess();
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button>Issue New Loan</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Issue Loan</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 mt-2">
-                    <div>
-                        <Label>Select Employee <RequiredStar /></Label>
-                        <UserSearch value={selectedUser} onReturn={setSelectedUser} />
-                    </div>
-                    <div>
-                        <Label>Loan amount <RequiredStar /></Label>
-                        <Input
-                            type="number"
-                            placeholder="Loan Amount"
-                            value={loanAmount}
-                            onChange={(e) => setLoanAmount(e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <Label>Note</Label>
-                        <Input
-                            placeholder="Description"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                        /></div>
-                </div>
-                <DialogFooter>
-                    <Button onClick={createLoan} disabled={loading}>
-                        {loading ? "Saving..." : "Submit"}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-}
-
-export function LoanPaymentModal({ userID, loan, onSuccess }: { userID: number | string, loan: Loan, onSuccess: () => Promise<void> }) {
-    const [open, setOpen] = useState(false);
-    const [repaymentAmount, setRepaymentAmount] = useState("");
-    const [loading, setLoading] = useState(false);
-
-    const makePayment = async () => {
-        if (!repaymentAmount) return;
-        setLoading(true);
-        try {
-            await axios.post(`/${userID}/loans/repayment`, {
-                loan_id: loan.id,
-                amount: Number(repaymentAmount),
-            });
-            setRepaymentAmount("");
-            setOpen(false);
-            onSuccess();
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button size="sm">Add Payment</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Loan Repayment</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 mt-2">
-                    <Input
-                        type="number"
-                        placeholder="Repayment Amount"
-                        value={repaymentAmount}
-                        onChange={(e) => setRepaymentAmount(e.target.value)}
-                    />
-
-                    <h3 className="font-semibold">Payment History</h3>
-                    <Table className="border">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Amount</TableHead>
-                                <TableHead>Date</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {loan.payments?.map((p) => (
-                                <TableRow key={p.id}>
-                                    <TableCell>{p.amount}</TableCell>
-                                    <TableCell>{new Date(p.payment_date).toLocaleString()}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-                <DialogFooter>
-                    <Button onClick={makePayment} disabled={loading}>
-                        {loading ? "Saving..." : "Submit Payment"}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-}
-
-
-export function LoanAccordion({ loansByUser, userID, onUpdate }: { loansByUser: LoansByUser, userID: number | string, onUpdate: () => Promise<void> }) {
-    return (
-        // <>
-            Object.entries(loansByUser).map(([userId, userData]) => (
-                <Collapsible key={`user-${userId}`}>
-                    <CollapsibleTrigger asChild>
-                        <Button
-                            variant="ghost"
-
-                            className="group w-full justify-start transition-none hover:bg-card hover:text-accent-foreground "
-                        >
-                            <ChevronRight className="transition-transform group-data-[state=open]:rotate-90" />
-                            {userData.name}
-                        </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="space-y-4 pl-4 rounded-md p-4 ml-5 ">
-                        {userData.loans.map((loan) => (
-                            <div key={loan.id} className="border rounded-md p-4 mb-4">
-                                <div className="flex justify-between mb-2">
-                                    <div>
-                                        <p><strong>Loan Amount:</strong> {loan.loan_amount}</p>
-                                        <p><strong>Remaining:</strong> {loan.remaining_amount}</p>
-                                        <p><strong>Status:</strong> {loan.status}</p>
-                                        <p><strong>Description:</strong> {loan.description}</p>
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        {loan.status === "active" && (
-                                            <LoanPaymentModal userID={userID} loan={loan} onSuccess={onUpdate} />
-                                        )}
-                                        <EditDescription loan={loan} onRefresh={onUpdate} />
-                                    </div>
-                                </div>
-
-                                {/* Nested Payments Accordion */}
-                                <Accordion type="single" collapsible className="mt-4">
-                                    <AccordionItem value={`payments-${loan.id}`}>
-                                        <AccordionTrigger>
-                                            Payment History ({loan.payments?.length || 0})
-                                        </AccordionTrigger>
-                                        <AccordionContent>
-                                            <Table className="border">
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>Amount</TableHead>
-                                                        <TableHead>Date</TableHead>
-                                                        <TableHead>Slip</TableHead>
-                                                        <TableHead>Actions</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {loan.payments?.map((p) => (
-                                                        <TableRow key={p.id}>
-                                                            <TableCell>{p.amount}</TableCell>
-                                                            <TableCell>{new Date(p.payment_date).toLocaleString()}</TableCell>
-                                                            <TableCell>
-                                                                {moment(p.payment_date).format("YYYY-MM-DD")}
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <ImageView img={p?.slip} />
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <EditPaymentLoan
-                                                                    p={p}
-                                                                    user_id={loan?.user_id}
-                                                                    onRefresh={onUpdate}
-                                                                />
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                </Accordion>
-                            </div>
-                        ))}
-                    </CollapsibleContent>
-
-                </Collapsible>
-            ))
-        
-        //</> 
-    );
-}
-
-
-const EditPaymentLoan = ({ p, user_id, onRefresh }: { p: LoanPayment, user_id: number, onRefresh: () => Promise<void> }) => {
-    const [selectedPayment, setSelectedPayment] = useState<LoanPayment | null>(null);
-    const [loading, setLoading] = useState(false);
-    const { userID } = useUserDetail();
-    async function handleSave() {
-
-        if (!selectedPayment?.id) return;
-        setLoading(true)
-        try {
-            let name =!p?.slip ? 
-                `/users/${user_id}/loans/payment_slip/${selectedPayment?.id}.png` : p.slip;
-            if (selectedPayment?.slip !== p?.slip) {
-                const imageRefResult = await UploadImage(
-                    selectedPayment?.slip,
-                    name,
-                    "image/png",
-                );
-            }
-          
-
-            await axios.put(`/${userID}/loans/repayment`, {
-                id: selectedPayment?.id,
-                payment_date: selectedPayment?.payment_date,
-                slip: name,
-            });
-
-            await onRefresh()
-            setSelectedPayment(null)
-        } finally {
-            setLoading(false);
-        }
+  const createLoan = async () => {
+    if (!selectedUser || !loanAmount) {
+      toast.error("Employee and amount required");
+      return;
     }
-    return (
-        <>
-            <Edit
-                size={16}
-                className="hover:text-primary cursor-pointer"
-                onClick={() => setSelectedPayment(p)}
+
+    setLoading(true);
+
+    try {
+      await axios.post(`/${userID}/loans`, {
+        user_id: selectedUser,
+        loan_amount: Number(loanAmount),
+        description,
+      });
+
+      setLoanAmount("");
+      setDescription("");
+      setSelectedUser(null);
+      setOpen(false);
+
+      await onSuccess();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Issue New Loan
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Issue New Loan</DialogTitle>
+        </DialogHeader>
+
+        <FieldGroup>
+          <FieldLegend>Loan Details</FieldLegend>
+
+          <Field>
+            <FieldLabel>
+              Select Employee <RequiredStar />
+            </FieldLabel>
+            <UserSearch value={selectedUser} onReturn={setSelectedUser} />
+          </Field>
+
+          <Field>
+            <FieldLabel>
+              Loan Amount <RequiredStar />
+            </FieldLabel>
+            <Input
+              type="number"
+              placeholder="Enter loan amount"
+              value={loanAmount}
+              onChange={(e) => setLoanAmount(e.target.value)}
             />
-            <Dialog
-                open={!!selectedPayment}
-                onOpenChange={() => setSelectedPayment(null)}
-            >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Edit Loan Payment</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-2">
-                        <div>
-                            <Label>Payment Slip</Label>
-                            <Dropzone
-                                value={selectedPayment?.slip}
-                                onDrop={(file) => {
-                                    setSelectedPayment((prev) => {
-                                        if (!prev) return prev;
-                                        return { ...prev, slip: file };
-                                    });
-                                }}
-                                title={"Click to upload"}
-                                subheading={"or drag and drop"}
-                                description={"PNG or JPG"}
-                                drag={"Drop the files here..."}
-                            />
-                        </div>
+          </Field>
 
-                        <div>
-                            <Label>Date</Label>
-                            <AppCalendar
-                                date={selectedPayment?.payment_date}
-                                onChange={(date) => {
-                                    setSelectedPayment((prev) => {
-                                        if (!prev) return prev;
-                                        return { ...prev, payment_date: date };
-                                    });
-                                }}
-                            />
-                        </div>
+          <Field>
+            <FieldLabel>Note</FieldLabel>
+            <Input
+              placeholder="Optional description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </Field>
+        </FieldGroup>
 
-                        <Button
-                            onClick={handleSave}
-                            disabled={!selectedPayment?.payment_date || loading || !selectedPayment?.slip}
-                        >
-                            {loading && <Spinner />} Save
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
-        </>
-    );
-};
-
-
-
-const ImageView = ({
-    img,
-}: { img: string }) => {
-    const [localImage, setLocalImage] = useState<string | null>(null);
-    const [isZoomed, setIsZoomed] = useState(false);
-    const [rotation, setRotation] = useState(0);
-
-    useEffect(() => {
-        if (img) {
-            if (img.includes("http")) {
-                setLocalImage(img);
-            } else {
-                getDownloadURL(ref(storage, img)).then((url) => {
-                    setLocalImage(url);
-                });
-            }
-        } else {
-            setLocalImage(null);
-        }
-    }, [img]);
-
-
-    const handleZoomChange = useCallback((shouldZoom: boolean) => {
-        setIsZoomed(shouldZoom);
-
-    }, []);
-
-
-
-    const rotateImageRight = () => {
-        setRotation((prev) => (prev + 90) % 360);
-    };
-
-    const rotateImageLeft = () => {
-        setRotation((prev) => (prev - 90 + 360) % 360);
-    };
-
-    const onPressClose = () => {
-        setIsZoomed(false);
-
-    };
-
-    return (
-        localImage ? (
-            <ControlledZoom
-                isZoomed={isZoomed}
-                onZoomChange={handleZoomChange}
-                ZoomContent={({ img }) =>
-                    isZoomed ? (
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexDirection: "column",
-                                width: "100vw",
-                                height: "100vh",
-                                overflow: "hidden",
-                                zIndex: 9999,
-                                pointerEvents: "auto",
-                            }}
-                        >
-                            <img
-                                src={localImage}
-                                alt="payment-img"
-                                style={{
-                                    transform: `rotate(${rotation}deg)`,
-                                    maxWidth: "90vw",
-                                    maxHeight: "90vh",
-                                    objectFit: "contain",
-                                    pointerEvents: "auto",
-                                }}
-                            />
-                            <div
-                                className="mt-2 flex gap-5"
-                                style={{
-                                    pointerEvents: "auto",
-                                    zIndex: 10000,
-                                }}
-                            >
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={rotateImageLeft}
-                                >
-                                    Rotate Left
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={rotateImageRight}
-                                >
-                                    Rotate Right
-                                </Button>
-
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={onPressClose}
-                                >
-                                    Close
-                                </Button>
-                            </div>
-                        </div>
-                    ) : (
-                        img ?? <></>
-                    )
-                }
-            >
-                <img
-                    src={localImage}
-                    alt="payment-img"
-                    style={{
-                        maxWidth: "100px",
-                        maxHeight: "100px",
-                        objectFit: "contain",
-                        cursor: "zoom-in",
-                    }}
-                />
-            </ControlledZoom>
-        ) : (
-            <Label>No Image found</Label>
-        )
-    );
-};
-
-const EditDescription = ({ loan, onRefresh }: { loan: Loan, onRefresh: () => Promise<void> }) => {
-    const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
-    const [loading, setLoading] = useState(false);
-    const { userID } = useUserDetail();
-
-    async function handleSave() {
-
-        if (!selectedLoan?.id) return;
-        setLoading(true)
-        try {
-            await axios.put(`/${userID}/loans`, {
-                id: selectedLoan?.id,
-                description: selectedLoan?.description,
-            });
-
-            await onRefresh()
-            setSelectedLoan(null)
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    return (
-        <>
-            <Button variant="outline" onClick={() => {
-                setSelectedLoan(loan)
-            }}>
-                Edit Description
-            </Button>
-
-            <Dialog
-                open={!!selectedLoan}
-                onOpenChange={() => setSelectedLoan(null)}
-            >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Edit Loan Description</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-2">
-                        <div>
-                            <Label>Description</Label>
-                            <Textarea value={selectedLoan?.description ?? ""} onChange={(e) => {
-                                if (selectedLoan) {
-                                    setSelectedLoan((prev) => {
-                                        if (!prev) return prev;
-                                        return { ...prev, description: e.target.value };
-                                    });
-                                }
-                            }}>
-
-                            </Textarea>
-                        </div>
-
-
-                        <Button
-                            onClick={handleSave}
-                            disabled={!selectedLoan?.description || loading}
-                        >
-                            {loading && <Spinner />} Save
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
-        </>
-    )
+        <DialogFooter>
+          <Button onClick={createLoan} disabled={loading}>
+            {loading && <Spinner />}
+            Submit
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
+
+export function LoanPaymentModal({
+  userID,
+  loan,
+  onSuccess,
+}: {
+  userID: number | string;
+  loan: Loan;
+  onSuccess: () => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [repaymentAmount, setRepaymentAmount] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const makePayment = async () => {
+    if (!repaymentAmount) return;
+
+    setLoading(true);
+
+    try {
+      await axios.post(`/${userID}/loans/repayment`, {
+        loan_id: loan.id,
+        amount: Number(repaymentAmount),
+      });
+
+      setRepaymentAmount("");
+      setOpen(false);
+
+      await onSuccess();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm">
+          <Plus className="mr-2 h-4 w-4" />
+          Add Payment
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Loan Repayment</DialogTitle>
+        </DialogHeader>
+
+        <FieldGroup>
+          <FieldLegend>Payment Details</FieldLegend>
+
+          <Field>
+            <FieldLabel>
+              Repayment Amount <RequiredStar />
+            </FieldLabel>
+            <Input
+              type="number"
+              placeholder="Enter repayment amount"
+              value={repaymentAmount}
+              onChange={(e) => setRepaymentAmount(e.target.value)}
+            />
+          </Field>
+
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Date</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {loan.payments?.length ? (
+                  loan.payments.map((p) => (
+                    <TableRow key={p.id}>
+                      <TableCell>{p.amount}</TableCell>
+                      <TableCell>
+                        {new Date(p.payment_date).toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={2}
+                      className="text-center text-muted-foreground"
+                    >
+                      No payment history found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </FieldGroup>
+
+        <DialogFooter>
+          <Button onClick={makePayment} disabled={loading}>
+            {loading && <Spinner />}
+            Submit Payment
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function LoanCollapsibleList({
+  loansByUser,
+  userID,
+  onUpdate,
+}: {
+  loansByUser: LoansByUser;
+  userID: number | string;
+  onUpdate: () => Promise<void>;
+}) {
+  const entries = Object.entries(loansByUser);
+
+  if (!entries.length) {
+    return (
+      <div className="rounded-xl border bg-card p-8 text-center shadow-sm">
+        <p className="font-medium">No loans found</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Issued loans will appear here.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {entries.map(([userId, userData]) => {
+        const userTotal = userData.loans.reduce(
+          (sum, loan) => sum + Number(loan.loan_amount || 0),
+          0
+        );
+
+        const userRemaining = userData.loans.reduce(
+          (sum, loan) => sum + Number(loan.remaining_amount || 0),
+          0
+        );
+
+        return (
+          <Collapsible
+            key={`user-${userId}`}
+            className="group rounded-xl border bg-card shadow-sm"
+          >
+            <CollapsibleTrigger asChild>
+              <button className="flex w-full items-center justify-between gap-4 rounded-xl px-5 py-4 text-left transition hover:bg-muted/50">
+                <div className="flex items-center gap-3">
+                  <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
+
+                  <div>
+                    <p className="font-semibold">{userData.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {userData.loans.length} loan(s)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="hidden text-right sm:block">
+                  <p className="text-sm font-medium">
+                    Remaining: {userRemaining.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Total: {userTotal.toLocaleString()}
+                  </p>
+                </div>
+              </button>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent>
+              <div className="space-y-4 border-t p-5">
+                {userData.loans.map((loan) => (
+                  <LoanCard
+                    key={loan.id}
+                    loan={loan}
+                    userID={userID}
+                    onUpdate={onUpdate}
+                  />
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        );
+      })}
+    </div>
+  );
+}
+
+function LoanCard({
+  loan,
+  userID,
+  onUpdate,
+}: {
+  loan: Loan;
+  userID: number | string;
+  onUpdate: () => Promise<void>;
+}) {
+  return (
+    <div className="rounded-xl border bg-background p-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <InfoBox label="Loan Amount" value={loan.loan_amount} />
+          <InfoBox label="Remaining" value={loan.remaining_amount} />
+          <InfoBox label="Status" value={loan.status} />
+          <InfoBox label="Description" value={loan.description || "N/A"} />
+        </div>
+
+        <div className="flex flex-wrap gap-2 lg:justify-end">
+          {loan.status === "active" && (
+            <LoanPaymentModal userID={userID} loan={loan} onSuccess={onUpdate} />
+          )}
+
+          <EditDescription loan={loan} onRefresh={onUpdate} />
+        </div>
+      </div>
+
+      <PaymentHistory loan={loan} onUpdate={onUpdate} />
+    </div>
+  );
+}
+
+function InfoBox({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="rounded-lg bg-muted/50 p-3">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 break-words text-sm font-medium">{value}</p>
+    </div>
+  );
+}
+
+function PaymentHistory({
+  loan,
+  onUpdate,
+}: {
+  loan: Loan;
+  onUpdate: () => Promise<void>;
+}) {
+  return (
+    <Collapsible className="group mt-4 rounded-lg border">
+      <CollapsibleTrigger asChild>
+        <button className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-muted/50">
+          <div>
+            <p className="font-medium">Payment History</p>
+            <p className="text-sm text-muted-foreground">
+              {loan.payments?.length || 0} payment(s)
+            </p>
+          </div>
+
+          <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
+        </button>
+      </CollapsibleTrigger>
+
+      <CollapsibleContent>
+        <div className="border-t">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Amount</TableHead>
+                <TableHead>Payment Date</TableHead>
+                <TableHead>Slip</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {loan.payments?.length ? (
+                loan.payments.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">{p.amount}</TableCell>
+                    <TableCell>
+                      {moment(p.payment_date).format("YYYY-MM-DD")}
+                    </TableCell>
+                    <TableCell>
+                      <ImageView img={p?.slip} />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <EditPaymentLoan
+                        p={p}
+                        user_id={loan?.user_id}
+                        onRefresh={onUpdate}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="py-6 text-center text-muted-foreground"
+                  >
+                    No payments found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+const EditPaymentLoan = ({
+  p,
+  user_id,
+  onRefresh,
+}: {
+  p: LoanPayment;
+  user_id: number;
+  onRefresh: () => Promise<void>;
+}) => {
+  const [selectedPayment, setSelectedPayment] = useState<LoanPayment | null>(
+    null
+  );
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
+
+  async function handleSave() {
+    if (!selectedPayment?.id) return;
+
+    setLoading(true);
+
+    try {
+      const name = !p?.slip
+        ? `/users/${user_id}/loans/payment_slip/${selectedPayment?.id}.png`
+        : p.slip;
+
+      if (selectedPayment?.slip !== p?.slip) {
+        await UploadImage(selectedPayment?.slip, name, "image/png");
+      }
+
+      await axios.put(`/${userID}/loans/repayment`, {
+        id: selectedPayment?.id,
+        payment_date: selectedPayment?.payment_date,
+        slip: name,
+      });
+
+      await onRefresh();
+      setSelectedPayment(null);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setSelectedPayment(p)}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+
+      <Dialog
+        open={!!selectedPayment}
+        onOpenChange={() => setSelectedPayment(null)}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Loan Payment</DialogTitle>
+          </DialogHeader>
+
+          <FieldGroup>
+            <FieldLegend>Payment Information</FieldLegend>
+
+            <Field>
+              <FieldLabel>Payment Slip</FieldLabel>
+              <Dropzone
+                value={selectedPayment?.slip}
+                onDrop={(file) => {
+                  setSelectedPayment((prev) => {
+                    if (!prev) return prev;
+                    return { ...prev, slip: file };
+                  });
+                }}
+                title="Click to upload"
+                subheading="or drag and drop"
+                description="PNG or JPG"
+                drag="Drop the files here..."
+              />
+            </Field>
+
+            <Field>
+              <FieldLabel>Date</FieldLabel>
+              <AppCalendar
+                date={selectedPayment?.payment_date}
+                onChange={(date) => {
+                  setSelectedPayment((prev) => {
+                    if (!prev) return prev;
+                    return { ...prev, payment_date: date };
+                  });
+                }}
+              />
+            </Field>
+          </FieldGroup>
+
+          <DialogFooter>
+            <Button
+              onClick={handleSave}
+              disabled={
+                !selectedPayment?.payment_date ||
+                loading ||
+                !selectedPayment?.slip
+              }
+            >
+              {loading && <Spinner />}
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+const ImageView = ({ img }: { img: string }) => {
+  const [localImage, setLocalImage] = useState<string | null>(null);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [rotation, setRotation] = useState(0);
+
+  useEffect(() => {
+    if (img) {
+      if (img.includes("http")) {
+        setLocalImage(img);
+      } else {
+        getDownloadURL(ref(storage, img)).then((url) => {
+          setLocalImage(url);
+        });
+      }
+    } else {
+      setLocalImage(null);
+    }
+  }, [img]);
+
+  const handleZoomChange = useCallback((shouldZoom: boolean) => {
+    setIsZoomed(shouldZoom);
+  }, []);
+
+  const rotateImageRight = () => {
+    setRotation((prev) => (prev + 90) % 360);
+  };
+
+  const rotateImageLeft = () => {
+    setRotation((prev) => (prev - 90 + 360) % 360);
+  };
+
+  const onPressClose = () => {
+    setIsZoomed(false);
+  };
+
+  return localImage ? (
+    <ControlledZoom
+      isZoomed={isZoomed}
+      onZoomChange={handleZoomChange}
+      ZoomContent={({ img }) =>
+        isZoomed ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "column",
+              width: "100vw",
+              height: "100vh",
+              overflow: "hidden",
+              zIndex: 9999,
+              pointerEvents: "auto",
+            }}
+          >
+            <img
+              src={localImage}
+              alt="payment-img"
+              style={{
+                transform: `rotate(${rotation}deg)`,
+                maxWidth: "90vw",
+                maxHeight: "90vh",
+                objectFit: "contain",
+                pointerEvents: "auto",
+              }}
+            />
+
+            <div className="mt-3 flex gap-3" style={{ pointerEvents: "auto" }}>
+              <Button variant="outline" size="sm" onClick={rotateImageLeft}>
+                Rotate Left
+              </Button>
+              <Button variant="outline" size="sm" onClick={rotateImageRight}>
+                Rotate Right
+              </Button>
+              <Button variant="outline" size="sm" onClick={onPressClose}>
+                Close
+              </Button>
+            </div>
+          </div>
+        ) : (
+          img ?? <></>
+        )
+      }
+    >
+      <img
+        src={localImage}
+        alt="payment-img"
+        className="h-14 w-14 rounded-md border object-cover"
+        style={{ cursor: "zoom-in" }}
+      />
+    </ControlledZoom>
+  ) : (
+    <div className="flex h-14 w-14 items-center justify-center rounded-md border bg-muted text-muted-foreground">
+      <ImageIcon className="h-4 w-4" />
+    </div>
+  );
+};
+
+const EditDescription = ({
+  loan,
+  onRefresh,
+}: {
+  loan: Loan;
+  onRefresh: () => Promise<void>;
+}) => {
+  const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
+
+  async function handleSave() {
+    if (!selectedLoan?.id) return;
+
+    setLoading(true);
+
+    try {
+      await axios.put(`/${userID}/loans`, {
+        id: selectedLoan?.id,
+        description: selectedLoan?.description,
+      });
+
+      await onRefresh();
+      setSelectedLoan(null);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => setSelectedLoan(loan)}>
+        <Pencil className="mr-2 h-4 w-4" />
+        Edit Description
+      </Button>
+
+      <Dialog
+        open={!!selectedLoan}
+        onOpenChange={() => setSelectedLoan(null)}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Loan Description</DialogTitle>
+          </DialogHeader>
+
+          <FieldGroup>
+            <FieldLegend>Description</FieldLegend>
+
+            <Field>
+              <FieldLabel>Loan Description</FieldLabel>
+              <Textarea
+                value={selectedLoan?.description ?? ""}
+                placeholder="Enter loan description"
+                onChange={(e) => {
+                  setSelectedLoan((prev) => {
+                    if (!prev) return prev;
+                    return { ...prev, description: e.target.value };
+                  });
+                }}
+              />
+            </Field>
+          </FieldGroup>
+
+          <DialogFooter>
+            <Button
+              onClick={handleSave}
+              disabled={!selectedLoan?.description || loading}
+            >
+              {loading && <Spinner />}
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};

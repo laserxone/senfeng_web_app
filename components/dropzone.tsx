@@ -8,7 +8,7 @@ import { GetProfileImage } from "@/lib/getProfileImage";
 import Spinner from "./ui/spinner";
 
 type DropzoneProps = {
-  onDrop: (file: any) => void;
+  onDrop: (file: string) => void;
   onDropFile ?: (file : File | Blob) => void
   title: string;
   subheading: string;

@@ -2,11 +2,7 @@ import pool from "@/config/db";
 import { NextRequest, NextResponse } from "next/server";
 
 
-export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string,id:string}>}) {
-  const { uid } = await params
-
-
-
+export async function GET(req:NextRequest, { params }:{params:Promise<{id:string}>}) {
   const { id } = await params
 
   try {

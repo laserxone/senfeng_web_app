@@ -31,6 +31,7 @@ export async function GET(req : NextRequest, { params } : {params : Promise<{ ui
           c.problem AS complaint_problem,
           c.solution AS complaint_solution,
           c.status AS complaint_status,
+          c.paid AS complaint_paid,
           c.created_at AS complaint_created_at,
           c.customer_id,
           cu.name AS customer_name,
@@ -55,7 +56,23 @@ export async function GET(req : NextRequest, { params } : {params : Promise<{ ui
               WHERE complaint_id = c.id
               ORDER BY created_at DESC
             ) cl
-          ), '[]') AS logs
+          ), '[]') AS logs,
+          COALESCE((
+  SELECT json_agg(cp)
+  FROM (
+    SELECT
+      id,
+      complaint_id,
+      amount,
+      purpose,
+      method,
+      slip,
+      created_at
+    FROM complaint_payments
+    WHERE complaint_id = c.id
+    ORDER BY created_at DESC
+  ) cp
+), '[]') AS payment_details
         FROM complaints c
         LEFT JOIN customer cu ON c.customer_id = cu.id
         LEFT JOIN users owner_user ON cu.ownership = owner_user.id
@@ -70,7 +87,7 @@ export async function GET(req : NextRequest, { params } : {params : Promise<{ ui
  
         LEFT JOIN users engineer ON ca.engineer_id = engineer.id
         LEFT JOIN users assigned_by_user ON ca.assigned_by = assigned_by_user.id
-        WHERE c.customer_id IS NOT NULL AND c.managing_office = 'karachi'
+        WHERE c.customer_id IS NOT NULL AND c.managing_office = 'lahore'
       `;
 
       if (start_date && end_date) {

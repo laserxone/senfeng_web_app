@@ -396,6 +396,16 @@ export type AssignForm = {
     managing_office: string
 }
 
+export type ComplaintPaymentDetail = {
+    id: number
+    complaint_id: number
+    amount: number
+    purpose: string
+    method: string
+    slip: string
+    created_at: Date
+}
+
 export type ComplaintProps = {
     complaint_title: string;
     complaint_problem: string;
@@ -426,6 +436,7 @@ export type ComplaintProps = {
         signature: string,
         image: string
     }[]
+    payment_details: ComplaintPaymentDetail[]
 }
 
 export type OfficeExpenseProps = {
@@ -774,8 +785,8 @@ export type SaleRecordIssuedCommissionsDetail = {
     serial_no: string
     power: string
     source: string
-    order_numbers : string
-    contract_date : Date
+    order_numbers: string
+    contract_date: Date
 }
 
 export type UserSalaryProps = {

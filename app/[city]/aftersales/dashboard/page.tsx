@@ -38,6 +38,7 @@ import AutoScrollMembers from "@/components/autoScroll";
 
 type WithFeedbackProps = MyCustomerResolved & {
   feedback_date: string
+  user_name ?: string
 }
 
 type DashboardData = {
@@ -440,6 +441,23 @@ const CustomerEmployeeAfterSales = ({
             : "Not taken"}
         </div>
       ),
+    },
+
+     {
+      accessorKey: "user_name",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Taken By
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("user_name") || "-"}</div>,
     },
 
     {
