@@ -23,25 +23,44 @@ import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { PricesProps } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import {
+  Download,
+  MoreHorizontal,
+  Paperclip,
+  Pencil,
+  RefreshCcw,
+  Upload,
+} from "lucide-react";
 import { toast } from "sonner";
 import ConfimationDialog from "./alert-dialog";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const emptyForm = {
+  model: "",
+  power: "",
+  ddp: "",
+  fob: "",
+  fob_bottom: "",
+  ddp_bottom: "",
+  description: "",
+};
 
 export default function PricesComponent() {
   const [loading, setLoading] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [data, setData] = useState<PricesProps[]>([]);
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
-  const emptyForm = {
-    model: "",
-    power: "",
-    ddp: "",
-    fob: "",
-    fob_bottom: "",
-    ddp_bottom: "",
-    description: "",
-  };
 
+  const [selectedForDelete, setSelectedForDelete] = useState<typeof emptyForm & { id?: number | null, attachment?: string | null } | null>(null)
   const [formData, setFormData] = useState<typeof emptyForm & { id?: number | null }>(emptyForm);
   const [isEdit, setIsEdit] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
@@ -51,7 +70,7 @@ export default function PricesComponent() {
   useEffect(() => {
     if (userID) {
       fetchData();
-    } 
+    }
   }, [userID]);
 
   async function fetchData() {
@@ -176,10 +195,17 @@ export default function PricesComponent() {
           id: "actions",
           header: "Actions",
           cell: ({ row }) => (
-            <div className="flex gap-2">
-              <Button size="sm" onClick={() => handleEditClick(row.original)}>
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleEditClick(row.original)}
+                className="h-8 gap-1.5"
+              >
+                <Pencil className="h-3.5 w-3.5" />
                 Edit
               </Button>
+
               <Attachment
                 attachment_url={row.original?.attachment_url}
                 attachment={row.original?.attachment}
@@ -217,6 +243,26 @@ export default function PricesComponent() {
 
     return [...baseColumns, ...advancedColumns, ...adminColumn, ...otherColumn];
   }, [userID, isAdmin, showAdvanced]);
+
+  async function handleDelete() {
+
+    if (!selectedForDelete) return
+    setDeleteLoading(true)
+    try {
+      if (selectedForDelete?.attachment) {
+        await DeleteFromStorage(selectedForDelete?.attachment)
+      }
+      await axios.delete(`/${userID}/prices/${selectedForDelete?.id}`)
+      toast.success("Entry deleted successfully")
+      setSelectedForDelete(null)
+      setFormData(emptyForm);
+      setIsEdit(false);
+      setOpenDialog(false);
+      await fetchData()
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -326,16 +372,27 @@ export default function PricesComponent() {
             ))}
           </div>
 
-          <DialogFooter>
-            <Button onClick={() => setOpenDialog(false)} variant="outline">
-              Cancel
-            </Button>
-            <Button disabled={loading} onClick={handleSave}>
-              {loading && <Spinner />}Save
-            </Button>
+          <DialogFooter >
+            <div className="flex flex-col w-full gap-2">
+              <Button disabled={loading} onClick={handleSave}>
+                {loading && <Spinner />}Save
+              </Button>
+              {formData?.id &&
+                <Button variant={"destructive"} onClick={() => setSelectedForDelete(formData)}>Delete</Button>}
+            </div>
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
+
+      <ConfimationDialog
+        loading={deleteLoading}
+        open={!!selectedForDelete}
+        title="Are you sure you want to delete?"
+        description="Your action will remove attachment from the system"
+        onPressYes={() => handleDelete()}
+        onPressCancel={() => setSelectedForDelete(null)}
+      />
     </div>
   );
 }
@@ -344,7 +401,6 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }: { attachment?
   const [open, setOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const { userID, isAdmin } = useUserDetail();
-
   const [uploadLoading, setUploadLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -364,6 +420,10 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }: { attachment?
     try {
       if (!selectedFile) return;
 
+      if (attachment) {
+        await DeleteFromStorage(attachment);
+      }
+
       const filePath = `attachments/${Date.now()}_${selectedFile.name}`;
       const storageRef = ref(storage, filePath);
       const snapshot = await uploadBytesResumable(storageRef, selectedFile);
@@ -380,6 +440,7 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }: { attachment?
       }
 
       await onRefresh();
+      toast.success("File uploaded successfully")
       setOpen(false);
     } catch (error: any) {
       toast.error(error?.message || "Upload failed")
@@ -411,53 +472,90 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }: { attachment?
 
   return (
     <>
-      {attachment ? (
-        <div className="flex gap-2">
-          <Button size="sm" onClick={() => handleDownload()}>
-            Download
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5">
+            <Paperclip className="h-3.5 w-3.5" />
+            Attachment
+            <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
           </Button>
+        </DropdownMenuTrigger>
 
-          {isAdmin && (
-            <Button
-              disabled={deleteLoading}
-              size="icon"
-              variant="destructive"
-              onClick={() => setDeleteOpen(true)}
-            >
-              <Trash2 />
-            </Button>
+        <DropdownMenuContent align="end" className="w-44">
+          {attachment ? (
+            <>
+              <DropdownMenuItem onClick={handleDownload} className="gap-2">
+                <Download className="h-4 w-4" />
+                Download
+              </DropdownMenuItem>
+
+              {isAdmin && (
+                <>
+                  <DropdownMenuItem onClick={() => setOpen(true)} className="gap-2">
+                    <RefreshCcw className="h-4 w-4" />
+                    Reupload
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+
+                  <DropdownMenuItem
+                    onClick={() => setDeleteOpen(true)}
+                    className="gap-2 text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </>
+              )}
+            </>
+          ) : isAdmin ? (
+            <DropdownMenuItem onClick={() => setOpen(true)} className="gap-2">
+              <Upload className="h-4 w-4" />
+              Upload
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem disabled className="gap-2">
+              <Paperclip className="h-4 w-4" />
+              No attachment
+            </DropdownMenuItem>
           )}
-        </div>
-      ) : isAdmin ? (
-        <Button variant="outline" size="sm" onClick={() => setOpen(!open)}>
-          Upload
-        </Button>
-      ) : (
-        <p>No attachment found</p>
-      )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Attach file</DialogTitle>
           </DialogHeader>
-          <div>
-            <div className="flex flex-col gap-2 items-center">
+
+          <div className="space-y-4">
+            <div className="rounded-lg border border-dashed p-4">
               <input
                 type="file"
                 ref={fileInputRef}
                 onChange={(e) => {
-                  if (e.target.files?.length && e.target.files.length > 0)
-                    setSelectedFile(e?.target?.files?.[0])
+                  if (e.target.files?.length && e.target.files.length > 0) {
+                    setSelectedFile(e.target.files[0]);
+                  }
                 }}
-                className="border p-2 rounded-md w-72"
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
               />
+
               {selectedFile && (
-                <Button disabled={uploadLoading} onClick={uploadFile}>
-                  {uploadLoading && <Spinner />} Upload File
-                </Button>
+                <p className="mt-2 truncate text-xs text-muted-foreground">
+                  Selected: {selectedFile.name}
+                </p>
               )}
             </div>
+
+            <Button
+              disabled={uploadLoading || !selectedFile}
+              onClick={uploadFile}
+              className="w-full gap-2"
+            >
+              {uploadLoading ? <Spinner /> : <Upload className="h-4 w-4" />}
+              Upload File
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -465,8 +563,8 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }: { attachment?
       <ConfimationDialog
         loading={deleteLoading}
         open={deleteOpen}
-        title={"Are you sure you want to delete?"}
-        description={"Your action will remove prices from the system"}
+        title="Are you sure you want to delete?"
+        description="Your action will remove attachment from the system"
         onPressYes={() => handleDelete()}
         onPressCancel={() => setDeleteOpen(false)}
       />
