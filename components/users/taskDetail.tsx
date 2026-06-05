@@ -32,7 +32,7 @@ const TaskDetail = ({
   visible : boolean,
   onClose : (val : boolean)=> void,
   onMark : ()=> Promise<void>
-  user_id : number
+  user_id : number | string
 }) => {
   if(!detail?.id) return null
   const [loading, setLoading] = useState(false);

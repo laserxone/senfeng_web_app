@@ -185,7 +185,7 @@ export default function TaskEmployee({ id }: { id: number }) {
     // },
   ];
 
-  async function fetchData(id: number, start_date: string, end_date: string) {
+  async function fetchData(id: number | string, start_date: string, end_date: string) {
     return new Promise((resolve, reject) => {
       axios
         .get(`/${id}/task?start_date=${start_date}&end_date=${end_date}`)
@@ -338,7 +338,7 @@ const formSchema = z
 
 type TaskFormValues = z.infer<typeof formSchema>;
 
-const AddTask = ({ visible, onClose, onRefresh, user_id }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, user_id: number }) => {
+const AddTask = ({ visible, onClose, onRefresh, user_id }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, user_id: number | string }) => {
   const [loading, setLoading] = useState(false);
 
 

@@ -69,15 +69,27 @@ import { UserSearch } from "./user-search";
 import { MyImg } from "./users/addVisit";
 import FilterSheet from "./users/filterSheet";
 
-const formSchema = z.object({
-  title: z.string().min(1, "Required"),
-  customer_id: z.number({ message: "Required" }),
-  problem: z.string().optional(),
-  solution: z.string().optional(),
-  installation: z.boolean(),
-  paid: z.boolean(),
-  charges: z.coerce.number<number>().min(1, "Amount is required"),
-});
+const formSchema = z
+  .object({
+    title: z.string().min(1, "Required"),
+    customer_id: z.number({ message: "Required" }),
+    problem: z.string().optional(),
+    solution: z.string().optional(),
+    installation: z.boolean(),
+    paid: z.boolean(),
+    charges: z.coerce.number<number>().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.paid) {
+      if (!data.charges || Number(data.charges) <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["charges"],
+          message: "Amount is required",
+        });
+      }
+    }
+  });
 
 const formSchemaEngineer = z.object({
   engineer_id: z.number({ message: "Engineer is required" }),
@@ -738,7 +750,9 @@ function ComplaintFormContent({
   onSubmit: (values: FormValues) => Promise<void>;
 }) {
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={form.handleSubmit(onSubmit,  (errors : any) => {
+      console.log("Validation Errors:", errors);
+    })} className="space-y-4">
       <FieldSet className="rounded-lg border p-4">
         <FieldLegend className="px-1 text-sm font-medium">
           Complaint Details
