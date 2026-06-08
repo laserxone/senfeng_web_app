@@ -30,7 +30,7 @@ export default function Page() {
   const [userTaskData, setUserTaskData] = useState<AdminTeamTasks[]>([]);
   const { userID } = useUserDetail()
   const debouncedUserId = useDebounce(userID, 1000);
-  const { state: OfficeState } = useContext(OfficeContext)
+  const { state: OfficeState } = useContext(OfficeContext)!
 
   useEffect(() => {
     if (debouncedUserId && OfficeState.value.data) {

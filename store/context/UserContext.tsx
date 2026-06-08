@@ -37,6 +37,22 @@ customer_full_access: boolean
 dp : string
 reimbursement_approval : boolean
 team_attendance_marking : boolean
+father ?: string
+number?: string
+official_number ?: string
+kin_number ?: string
+address ?: string
+pin ?: string
+basic_salary ?: string
+monthly_target ?: string
+total_salary ?: string
+cnic ?: string
+education ?: string
+police ?: string
+resume ?: string
+appointment_letter ?: string
+father_cnic ?: string
+other_docs ?: string[]
 }
 
 export interface UserState {
@@ -90,7 +106,7 @@ const setUser = (data: (AppUser & Partial<User>) | null) => {
           }
         } else {
           setAuthData(null)
-          if (!pathname.includes('login') && !pathname.includes('signup') && !pathname.includes('forgetpassword')) {
+          if (!pathname.includes('login') && !pathname.includes('signup') && !pathname.includes('forgetpassword') && !pathname.includes('passwordcreation')) {
             setLoading(false)
             router.replace('/login');
           }

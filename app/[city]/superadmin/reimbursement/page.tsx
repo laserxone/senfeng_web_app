@@ -617,7 +617,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }: { visible: bool
   const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(null);
   const [selectedRadio, setSelectedRadio] = useState("customer");
   const { userID } = useUserDetail();
-  const { state: OfficeState } = useContext(OfficeContext);
+  const { state: OfficeState } = useContext(OfficeContext)!
 
   const formSchema = z
     .object({

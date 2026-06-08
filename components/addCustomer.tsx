@@ -44,7 +44,7 @@ type AddCustomerDialogProps = {
   user_id: number | string;
   ownership: boolean;
   user_designation?: string | null;
-  office?: string;
+  office: string | null;
 };
 
 
@@ -109,7 +109,7 @@ function AddCustomerDialog({
       member: false,
       ownership: null,
       created_at: undefined,
-      office: office,
+      office: office || "lahore",
     },
   });
 
@@ -132,7 +132,7 @@ function AddCustomerDialog({
         member: false,
         ownership: null,
         created_at: undefined,
-        office: office,
+        office: office || "lahore",
       });
     }
   }, [user_designation, user_id]);

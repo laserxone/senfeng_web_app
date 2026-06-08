@@ -77,7 +77,7 @@ export default function Page() {
       const mode = new URLSearchParams(window.location.search).get("mode");
       const continueUrl = new URLSearchParams(window.location.search).get(
         "continueUrl"
-      ) ?? "";
+      ) ?? "http://app.senfenglaserpk.com/login";
       confirmPasswordReset(auth, oobCode, password)
         .then(() => {
           setLoading(false);

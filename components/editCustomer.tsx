@@ -94,7 +94,7 @@ const EditCustomerDialog = ({
   const [selectedNumber, setSelectedNumber] = useState(["+92"]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [originalUrl, setOriginalUrl] = useState<string | null>(null);
-  const { state: OfficeState } = useContext(OfficeContext);
+  const { state: OfficeState } = useContext(OfficeContext)!
 
   const canDelete = isAdmin || customer_delete_access;
 

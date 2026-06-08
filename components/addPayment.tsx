@@ -76,7 +76,7 @@ const AddPayment = ({
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const { userID, base_route } = useUserDetail()
-  const { state: OfficeState } = useContext(OfficeContext)
+  const { state: OfficeState } = useContext(OfficeContext)!
   const [lockTID, setLockTID] = useState(false)
   const [error, setError] = useState<ErrorType | null>(null);
 

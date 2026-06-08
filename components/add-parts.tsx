@@ -38,7 +38,7 @@ const AddParts = ({ customer_id, user_id, visible, onClose, onRefresh }: { custo
   const [cheque, setCheque] = useState(false);
   const [value, setValue] = useState<string>();
   const [total, setTotal] = useState<ChequeProp[]>([]);
-  const { state: OfficeState } = useContext(OfficeContext);
+  const { state: OfficeState } = useContext(OfficeContext)!
   const [newParts, setNewParts] = useState([{ name: "", model: "", power: "", serial_no: "" }])
   const [errors, setErrors] = useState<any>({})
 

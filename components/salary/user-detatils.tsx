@@ -399,7 +399,7 @@ const DocumentCardOther = ({ userID, otherDocs, employeeId, fetchData }: { userI
   const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const { state: OfficeState } = useContext(OfficeContext)
+  const { state: OfficeState } = useContext(OfficeContext)!
   const [open, setOpen] = useState(false)
   const userId = userID;
 
@@ -580,7 +580,7 @@ const DocumentCard =
     const [loading, setLoading] = useState(false);
     const [fileName, setFileName] = useState<string | undefined>("");
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const { state: OfficeState } = useContext(OfficeContext);
+    const { state: OfficeState } = useContext(OfficeContext)!
     const userId = userID;
 
     useEffect(() => {

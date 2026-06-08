@@ -569,7 +569,7 @@ export function DispatchOrderDialog({
   const [loading, setLoading] = useState(false);
   const [checklistLoading, setChecklistLoading] = useState(false);
   const [checklist, setChecklist] = useState<Record<string, any>>({});
-  const { state: OfficeState } = useContext(OfficeContext);
+  const { state: OfficeState } = useContext(OfficeContext)!
   const [progress, setProgress] = useState(0);
   const { userID, name: userName } = useUserDetail();
 

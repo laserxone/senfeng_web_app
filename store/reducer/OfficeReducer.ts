@@ -1,14 +1,36 @@
 import { SET_OFFICE } from '../action/OfficeAction'
 
-export const myOfficeReducer = (state, action) => {
+export interface OfficeState {
+  value: {
+    data: string | null;
+  };
+}
+
+export interface SetOfficeAction {
+  type: typeof SET_OFFICE;
+  payload: {
+    data: string | null;
+  };
+}
+
+export type OfficeAction = SetOfficeAction;
+
+export const myOfficeReducer = (
+  state: OfficeState,
+  action: OfficeAction
+): OfficeState => {
   switch (action.type) {
     case SET_OFFICE:
-      let newOfficeState = { ...state }
-      newOfficeState.value.data = action.payload.data       
-      return newOfficeState
-      break
+      return {
+        ...state,
+        value: {
+          ...state.value,
+          data: action.payload.data,
+        },
+      };
+
     default:
-      return state
+      return state;
   }
-}
+};
 

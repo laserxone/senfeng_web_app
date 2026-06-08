@@ -6,7 +6,7 @@ import { useContext } from "react";
 
 const useUserDetail = () => {
   const { state: UserState } = useContext(UserContext);
-  const { state: OfficeState } = useContext(OfficeContext)
+  const { state: OfficeState } = useContext(OfficeContext)!
 
   const data = UserState.value.data
   const isAdmin = (data?.designation === "Owner" || data?.full_access) ?? false;

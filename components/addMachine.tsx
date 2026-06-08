@@ -29,7 +29,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { cus
   const [cheque, setCheque] = useState(false);
   const [value, setValue] = useState<string | undefined>();
   const [total, setTotal] = useState<ChequeProp[]>([]);
-  const { state: OfficeState } = useContext(OfficeContext);
+  const { state: OfficeState } = useContext(OfficeContext)!
   const [manual, setManual] = useState(false);
   const { isAdmin } = useUserDetail();
 

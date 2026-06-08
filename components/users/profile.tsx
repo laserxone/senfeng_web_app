@@ -26,10 +26,10 @@ import { deleteObject, getDownloadURL, ref } from "firebase/storage";
 import { CheckCircle } from "lucide-react";
 import { ChangeEvent, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import Spinner from "../ui/spinner";
-import { Textarea } from "../ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
+import Spinner from "../ui/spinner";
+import { Textarea } from "../ui/textarea";
 
 type DocsDataType = {
   cnic: string;
@@ -43,7 +43,7 @@ type DocsDataType = {
 export default function ProfilePage() {
   const { state: UserState, setUser } = useContext(UserContext);
   const { userID } = useUserDetail();
-  const { state: OfficeState } = useContext(OfficeContext);
+  const { state: OfficeState } = useContext(OfficeContext)!
   const [isPasswordResetVisible, setIsPasswordResetVisible] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -72,7 +72,7 @@ export default function ProfilePage() {
     appointment_letter: "",
     father_cnic: "",
   });
-  const [otherDocs, setOtherDocs] = useState([])
+  const [otherDocs, setOtherDocs] = useState<string[]>([])
   const inputRef = useRef<HTMLInputElement | null>(null);
 
 
@@ -154,14 +154,14 @@ export default function ProfilePage() {
           confirmPassword: undefined,
           currentPassword: undefined,
         });
-        setUser({
-          ...UserState.value.data,
-          ...formData,
-          dp: name,
-          password: undefined,
-          confirmPassword: undefined,
-          currentPassword: undefined,
-        });
+        if (UserState.value.data?.id) {
+          setUser({
+            ...UserState.value.data,
+            ...formData,
+            dp: name,
+          });
+        }
+
         toast.success("Profile Updated");
       } catch (error: any) {
         toast.error(error?.message || "Error updating image")
@@ -215,13 +215,14 @@ export default function ProfilePage() {
         confirmPassword: undefined,
         currentPassword: undefined,
       });
-      setUser({
-        ...UserState.value.data,
-        ...formData,
-        password: undefined,
-        confirmPassword: undefined,
-        currentPassword: undefined,
-      });
+      if (UserState.value.data?.id) {
+        setUser({
+          ...UserState.value.data,
+          ...formData,
+
+        });
+      }
+
       toast.success("Profile Updated");
     } catch (error) {
     } finally {
@@ -475,13 +476,13 @@ export default function ProfilePage() {
 
 
 const DocumentCard =
-  ({ type, userID, docsData }: { type: keyof DocsDataType, userID: number, docsData: DocsDataType }) => {
+  ({ type, userID, docsData }: { type: keyof DocsDataType, userID: number | string, docsData: DocsDataType }) => {
     const [fileUrl, setFileUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [fileName, setFileName] = useState<string | undefined>("");
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const { state: UserState, setUser } = useContext(UserContext)
-    const { state: OfficeState } = useContext(OfficeContext)
+    const { state: OfficeState } = useContext(OfficeContext)!
     const userId = userID;
 
     useEffect(() => {
@@ -537,11 +538,13 @@ const DocumentCard =
           [type]: newFilePath,
         };
         await axios.put(`/${userId}`, updatedData);
+        if (UserState.value.data?.id) {
 
-        setUser({
-          ...UserState.value.data,
-          ...updatedData,
-        });
+          setUser({
+            ...UserState.value.data,
+            ...updatedData,
+          });
+        }
 
         toast.success("File uploaded successfully");
         setFileUrl(URL.createObjectURL(file))
@@ -609,7 +612,7 @@ const DocumentCard =
   }
 
 
-const DocumentCardOther = ({ userID, otherDocs }: { userID: number, otherDocs: string[] }) => {
+const DocumentCardOther = ({ userID, otherDocs }: { userID: number | string, otherDocs: string[] }) => {
   const [files, setFiles] = useState<
     {
       url: string;
@@ -622,7 +625,7 @@ const DocumentCardOther = ({ userID, otherDocs }: { userID: number, otherDocs: s
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { state: UserState, setUser } = useContext(UserContext)
-  const { state: OfficeState } = useContext(OfficeContext)
+  const { state: OfficeState } = useContext(OfficeContext)!
   const [open, setOpen] = useState(false)
   const userId = userID;
 
@@ -700,11 +703,13 @@ const DocumentCardOther = ({ userID, otherDocs }: { userID: number, otherDocs: s
       };
 
       await axios.put(`/${userId}`, updatedData);
+      if (UserState.value.data?.id) {
+        setUser({
+          ...UserState.value.data,
+          ...updatedData,
+        });
 
-      setUser({
-        ...UserState.value.data,
-        ...updatedData,
-      });
+      }
 
       setFiles((prev) => [
         ...prev,

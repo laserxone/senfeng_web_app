@@ -78,7 +78,7 @@ export default function VisitTab({
   const [addCustomer, setAddCustomer] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(null);
   const { userID, designation, office, base_route, route_branch } = useUserDetail()
-  const { state: OfficeState } = useContext(OfficeContext)
+  const { state: OfficeState } = useContext(OfficeContext)!
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedDelete, setSelectedDelete] = useState<number | null>(null);
   const [selectedSignature, setSelectedSignature] = useState(null);

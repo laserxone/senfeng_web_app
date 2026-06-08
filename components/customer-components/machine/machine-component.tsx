@@ -2254,7 +2254,7 @@ const formSchema = z
 const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }: { customer_id: number | undefined, machine: MachineProps, visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void> }) => {
   const [loading, setLoading] = useState(false);
   const { userID } = useUserDetail();
-  const { state: OfficeState } = useContext(OfficeContext);
+  const { state: OfficeState } = useContext(OfficeContext)!;
 
 
   const form = useForm<FormValues>({

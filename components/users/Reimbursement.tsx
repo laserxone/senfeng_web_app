@@ -456,7 +456,7 @@ const ImageSheet = ({ visible, onClose, img, submittedBy, description }: { visib
 const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, id: number | string }) => {
   const [selectedRadio, setSelectedRadio] = useState("customer");
   const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(null);
-  const { state: OfficeState } = useContext(OfficeContext);
+  const { state: OfficeState } = useContext(OfficeContext)!
   const [loading, setLoading] = useState(false);
 
   const formSchema = z.object({

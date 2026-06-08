@@ -36,7 +36,7 @@ export default function AddCheque({
   const [value, setValue] = useState<string>();
   const [errors, setErrors] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { state: OfficeState } = useContext(OfficeContext);
+  const { state: OfficeState } = useContext(OfficeContext)!
   const { userID } = useUserDetail();
 
   async function handleSubmit() {

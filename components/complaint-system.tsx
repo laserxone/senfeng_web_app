@@ -683,7 +683,7 @@ const AddNewComplaint = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const { userID } = useUserDetail();
-  const { state: OfficeState } = useContext(OfficeContext);
+  const { state: OfficeState } = useContext(OfficeContext)!
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

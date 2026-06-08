@@ -1,18 +1,45 @@
+// OfficeContext.tsx
 "use client";
 
-import { createContext, useReducer } from "react";
+import {
+  createContext,
+  useReducer,
+  ReactNode,
+  Dispatch,
+} from "react";
 import { SET_OFFICE } from "../action/OfficeAction";
-import { myOfficeReducer } from "../reducer/OfficeReducer";
+import {
+  myOfficeReducer,
+  OfficeState,
+  OfficeAction,
+} from "../reducer/OfficeReducer";
 
-export const OfficeContext = createContext<any>(null);
+interface OfficeContextType {
+  state: OfficeState;
+  setOffice: (data: string | null) => void;
+}
 
-export const OfficeContextProvider = ({ children }: any) => {
-  const [state, dispatch] = useReducer(myOfficeReducer, {
-    value: { data: null },
-  });
+export const OfficeContext = createContext<OfficeContextType | null>(null);
 
-  const setOffice = (data: string) => {
-    dispatch({ type: SET_OFFICE, payload: { data } });
+interface Props {
+  children: ReactNode;
+}
+
+const initialState: OfficeState = {
+  value: {
+    data: null,
+  },
+};
+
+export const OfficeContextProvider = ({ children }: Props) => {
+  const [state, dispatch]: [OfficeState, Dispatch<OfficeAction>] =
+    useReducer(myOfficeReducer, initialState);
+
+  const setOffice = (data: string | null) => {
+    dispatch({
+      type: SET_OFFICE,
+      payload: { data },
+    });
   };
 
   return (
@@ -22,4 +49,4 @@ export const OfficeContextProvider = ({ children }: any) => {
   );
 };
 
-export default OfficeContextProvider
+export default OfficeContextProvider;

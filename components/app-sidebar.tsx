@@ -58,12 +58,11 @@ export const company = {
 export default function AppSidebar({ office }: { office: string }) {
   const pathname = usePathname();
 
-  const { state: UserState, setUser } = useContext(UserContext);
-  const { state: OfficeState, setOffice } = useContext(OfficeContext)
+ const { setOffice } = useContext(OfficeContext)!;
   const profileImage = useProfileImage();
   const { toggleSidebar } = useSidebar();
   const isMobile = useIsMobile();
-  const { userID, isAdmin, name, email, base_route, nav_items } = useUserDetail()
+  const {  isAdmin, name, email, base_route, nav_items } = useUserDetail()
   const { pendingDelivery } = useMachineDelivery()
    const { pending } = useDuePayments()
 

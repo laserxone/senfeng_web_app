@@ -264,3 +264,30 @@
 .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: rgba(200, 200, 200, 0.6);
 }
+
+
+[data-sidebar="menu-button"] {
+  transition:
+    transform .2s ease,
+    background-color .2s ease,
+    color .2s ease;
+}
+
+[data-sidebar="menu-button"]:hover {
+  transform: translateX(4px);
+}
+
+[data-sidebar="menu-button"][data-active="true"] {
+  position: relative;
+}
+
+[data-sidebar="menu-button"][data-active="true"]::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 999px;
+  background: hsl(var(--primary));
+}

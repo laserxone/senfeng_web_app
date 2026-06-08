@@ -296,7 +296,7 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }: { open: boolean
     managing_office: ""
   });
   const [loading, setLoading] = useState(false);
-  const { state: OfficeState } = useContext(OfficeContext);
+  const { state: OfficeState } = useContext(OfficeContext)!
 
   const updateForm = (key: string, value: string | Date | number) => {
     setForm((prev) => ({
