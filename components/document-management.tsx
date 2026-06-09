@@ -40,6 +40,7 @@ import {
 } from "lucide-react"
 import moment from "moment"
 import { Fragment, memo, useCallback, useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
 
 export default function DocumentManagement() {
   const [folderTree, setFolderTree] = useState<FolderNode | null>(null)
@@ -51,10 +52,12 @@ export default function DocumentManagement() {
   const [folderToRename, setFolderToRename] = useState<FolderNode | null>(null)
   const [parentFolderForCreate, setParentFolderForCreate] = useState<FolderNode | null>(null)
   const [newFolderName, setNewFolderName] = useState("")
+  const [newFileName, setNewFileName] = useState("")
   const [loading, setLoading] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewFile, setPreviewFile] = useState<FileNode | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
+  const [selectedFileForRename, setSelectedFileForRename] = useState<FileNode | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadProgress, setUploadProgress] = useState<{ file: string; progress: number } | null>(null)
   const selectedFolder = selectedFolderId ? folderTree ? findFolderById(folderTree, selectedFolderId) : null : null
@@ -239,6 +242,62 @@ export default function DocumentManagement() {
   }, [])
 
 
+  const handleRename = useCallback(async (file: FileNode) => {
+    setSelectedFileForRename(file)
+  }, [])
+
+  function getExtension(filename?: string) {
+    return filename?.includes(".") ? filename.split(".").pop() : ""
+  }
+
+  const handleRenameFile = async () => {
+    if (!selectedFileForRename) return
+    if (!newFileName.trim()) return
+
+    setLoading(true)
+
+    try {
+      const oldPath = selectedFileForRename.path
+
+      const ext = getExtension(oldPath)
+      const cleanNewFileName = newFileName.trim()
+
+      const finalName = ext
+        ? `${cleanNewFileName}.${ext}`
+        : cleanNewFileName
+
+      const folderPath = oldPath.split("/").slice(0, -1).join("/")
+      const newPath = folderPath ? `${folderPath}/${finalName}` : finalName
+
+      const { error: moveError } = await supabase.storage
+        .from("documents")
+        .move(oldPath, newPath)
+
+      if (moveError) {
+        throw moveError
+      }
+
+      const { data } = supabase.storage
+        .from("documents")
+        .getPublicUrl(newPath)
+
+      await axios.put(`/${userID}/dms/document/${selectedFileForRename.id}`, {
+        path: newPath
+      })
+
+      await fetchData()
+
+      setSelectedFileForRename(null)
+      setNewFileName("")
+    } catch (error: any) {
+      toast.error(error?.message || "Error renaming file")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+
+
   const handleDownload = useCallback(async (file: FileNode) => {
 
     setWorkingFile((prev) => [...prev, file.id]);
@@ -415,30 +474,30 @@ export default function DocumentManagement() {
       </div>
 
       <div className="flex flex-1 border-t">
-        {!isMobile && 
-        <aside className="w-72 border-r flex flex-col shrink-0 bg-muted/30">
-          <div className="px-3 h-11.25 border-b flex items-center">
-            <h2 className="text-sm font-medium text-muted-foreground px-2">Folders</h2>
-          </div>
-          <ScrollArea className="flex-1">
-            <div className="p-2">
-              {folderTree &&
-                <FolderTreeItem
-                  folder={folderTree}
-                  expandedFolders={expandedFolders}
-                  selectedFolderId={selectedFolderId}
-                  onToggle={handleToggleFolder}
-                  onSelect={handleSelectFolder}
-                  onRename={openRenameDialog}
-                  onDelete={handleDeleteFolder}
-                  onCreateSubfolder={openCreateSubfolderDialog}
-                  workingFolder={workingFolder}
-                />
-              }
+        {!isMobile &&
+          <aside className="w-72 border-r flex flex-col shrink-0 bg-muted/30">
+            <div className="px-3 h-11.25 border-b flex items-center">
+              <h2 className="text-sm font-medium text-muted-foreground px-2">Folders</h2>
             </div>
-          </ScrollArea>
-        </aside>
-}
+            <ScrollArea className="flex-1">
+              <div className="p-2">
+                {folderTree &&
+                  <FolderTreeItem
+                    folder={folderTree}
+                    expandedFolders={expandedFolders}
+                    selectedFolderId={selectedFolderId}
+                    onToggle={handleToggleFolder}
+                    onSelect={handleSelectFolder}
+                    onRename={openRenameDialog}
+                    onDelete={handleDeleteFolder}
+                    onCreateSubfolder={openCreateSubfolderDialog}
+                    workingFolder={workingFolder}
+                  />
+                }
+              </div>
+            </ScrollArea>
+          </aside>
+        }
 
         <main className="flex-1 flex flex-col">
           <div className="border-b px-4 h-11.25 flex items-center justify-between shrink-0">
@@ -498,103 +557,103 @@ export default function DocumentManagement() {
             </div>
           )}
 
-       
-            {selectedFolder ? (
-              <>
-                {viewMode === "list" && (selectedFolder.children.length > 0 || selectedFolder.files.length > 0) && (
-                  <div className="flex items-center gap-3 px-4 py-2 border-b bg-muted/30 text-xs font-medium text-muted-foreground">
-                    <span className="w-5" />
-                    <span className="flex-1">Name</span>
-                    <span className="w-20 text-right">Size</span>
-                    <span className="w-24">Date</span>
-                    <span className="w-28">Added by</span>
-                  </div>
-                )}
 
-                {viewMode === "grid" ? (
-                  <div className="p-4 grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2">
-                    {selectedFolder.children.map((subfolder) => (
-                      <SubfolderItem
-                        key={subfolder.id}
-                        folder={subfolder}
-                        viewMode={viewMode}
-                        onOpen={handleOpenSubfolder}
-                        onRename={openRenameDialog}
-                        onDelete={handleDeleteFolder}
-                        workingFolder={workingFolder}
-                      />
-                    ))}
-                    {selectedFolder.files.map((file) => (
-                      <FileGridItem
-                        key={file.id}
-                        file={file}
-                        onPreview={handlePreview}
-                        onDownload={handleDownload}
-                        onDelete={handleDeleteFile}
-                        workingFile={workingFile}
+          {selectedFolder ? (
+            <>
+              {viewMode === "list" && (selectedFolder.children.length > 0 || selectedFolder.files.length > 0) && (
+                <div className="flex items-center gap-3 px-4 py-2 border-b bg-muted/30 text-xs font-medium text-muted-foreground">
+                  <span className="w-5" />
+                  <span className="flex-1">Name</span>
+                  <span className="w-20 text-right">Size</span>
+                  <span className="w-24">Date</span>
+                  <span className="w-28">Added by</span>
+                </div>
+              )}
 
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div>
-                    {selectedFolder.children.map((subfolder) => (
-                      <SubfolderItem
-                        key={subfolder.id}
-                        folder={subfolder}
-                        viewMode={viewMode}
-                        onOpen={handleOpenSubfolder}
-                        onRename={openRenameDialog}
-                        onDelete={handleDeleteFolder}
-                        workingFolder={workingFolder}
-                      />
-                    ))}
-                    {selectedFolder.files.map((file) => (
-                      <FileListItem
-                        key={file.id}
-                        file={file}
-                        onPreview={handlePreview}
-                        onDownload={handleDownload}
-                        onDelete={handleDeleteFile}
-                        workingFile={workingFile}
-                      />
-                    ))}
-                  </div>
-                )}
+              {viewMode === "grid" ? (
+                <div className="p-4 grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2">
+                  {selectedFolder.children.map((subfolder) => (
+                    <SubfolderItem
+                      key={subfolder.id}
+                      folder={subfolder}
+                      viewMode={viewMode}
+                      onOpen={handleOpenSubfolder}
+                      onRename={openRenameDialog}
+                      onDelete={handleDeleteFolder}
+                      workingFolder={workingFolder}
+                    />
+                  ))}
+                  {selectedFolder.files.map((file) => (
+                    <FileGridItem
+                      key={file.id}
+                      file={file}
+                      onPreview={handlePreview}
+                      onDownload={handleDownload}
+                      onDelete={handleDeleteFile}
+                      workingFile={workingFile}
+                      onRename={handleRename}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div>
+                  {selectedFolder.children.map((subfolder) => (
+                    <SubfolderItem
+                      key={subfolder.id}
+                      folder={subfolder}
+                      viewMode={viewMode}
+                      onOpen={handleOpenSubfolder}
+                      onRename={openRenameDialog}
+                      onDelete={handleDeleteFolder}
+                      workingFolder={workingFolder}
+                    />
+                  ))}
+                  {selectedFolder.files.map((file) => (
+                    <FileListItem
+                      key={file.id}
+                      file={file}
+                      onPreview={handlePreview}
+                      onDownload={handleDownload}
+                      onDelete={handleDeleteFile}
+                      workingFile={workingFile}
+                    />
+                  ))}
+                </div>
+              )}
 
 
-                {selectedFolder.children.length === 0 && selectedFolder.files.length === 0 && (
-                  <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                    <Folder className="h-16 w-16 text-muted-foreground/30 mb-4" />
-                    <h3 className="text-lg font-medium">This folder is empty</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Upload files or create subfolders to get started
-                    </p>
-                    <div className="flex gap-2 mt-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload File
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => openCreateSubfolderDialog(selectedFolder)}
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        New Folder
-                      </Button>
-                    </div>
+              {selectedFolder.children.length === 0 && selectedFolder.files.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                  <Folder className="h-16 w-16 text-muted-foreground/30 mb-4" />
+                  <h3 className="text-lg font-medium">This folder is empty</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Upload files or create subfolders to get started
+                  </p>
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload File
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => openCreateSubfolderDialog(selectedFolder)}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Folder
+                    </Button>
                   </div>
-                )}
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-muted-foreground">Select a folder to view its contents</p>
-              </div>
-            )}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-muted-foreground">Select a folder to view its contents</p>
+            </div>
+          )}
 
         </main>
       </div>
@@ -695,6 +754,35 @@ export default function DocumentManagement() {
                 />
               ) : null}
           </div>
+        </DialogContent>
+      </Dialog>
+
+
+      <Dialog open={!!selectedFileForRename} onOpenChange={() => setSelectedFileForRename(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename File</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="rename-file">File Name</Label>
+            <Input
+              id="rename-file"
+              value={newFileName}
+              onChange={(e) => setNewFileName(e.target.value)}
+              placeholder="Enter new name"
+              className="mt-2"
+              onKeyDown={(e) => e.key === "Enter" && handleRenameFile()}
+            />
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleRenameFile} disabled={!newFileName.trim() || loading}>
+              {loading && <Spinner className="mr-2 h-4 w-4" />}
+              Save
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
@@ -840,10 +928,12 @@ const FileGridItem = memo(({
   onPreview,
   onDownload,
   onDelete,
-  workingFile
+  workingFile,
+  onRename
 }: {
   file: FileNode
   onPreview: (file: FileNode) => void
+  onRename: (file: FileNode) => void
   onDownload: (file: FileNode) => void
   onDelete: (file: FileNode) => void
   workingFile: string[]
@@ -876,6 +966,9 @@ const FileGridItem = memo(({
       <ContextMenuContent>
         <ContextMenuItem disabled={isWorking} onClick={() => onPreview(file)}>
           Preview
+        </ContextMenuItem>
+        <ContextMenuItem disabled={isWorking} onClick={() => onRename(file)}>
+          Rename
         </ContextMenuItem>
         <ContextMenuItem disabled={isWorking} onClick={() => onDownload(file)}>
           Download
@@ -1029,7 +1122,7 @@ const SubfolderItem = memo(({
   workingFolder: string[]
 }) => {
   const { isAdmin } = useUserDetail()
-   const isWorking = workingFolder.includes(folder.id) || workingFolder.includes(folder.parentId as string)
+  const isWorking = workingFolder.includes(folder.id) || workingFolder.includes(folder.parentId as string)
   if (viewMode === "grid") {
     return (
       <ContextMenu modal={false}>
