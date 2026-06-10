@@ -27,7 +27,7 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useState
 } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -132,6 +132,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
   const [credit, setCredit] = useState(false);
   const [readyForDelivery, setReadyForDelivery] = useState<MachineResponse | null>(null);
   const [openDelete, setOpenDelete] = useState(false);
+  const [revokeDelivery, setRevokeDelivery] = useState<MachineResponse | null>(null)
 
   useEffect(() => {
     if (id && userID) {
@@ -913,7 +914,24 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                       </DropdownMenuItem>
                     )}
 
+
+                    {data && data?.machine?.ready_for_delivery && (
+                      <DropdownMenuItem
+                        className="text-xs text-destructive"
+                        onClick={() => setRevokeDelivery(data)}
+                      >
+                        <Truck className="mr-2 h-3.5 w-3.5" />
+                        Revoke Delivery
+                      </DropdownMenuItem>
+                    )}
+
+
+
+
                     <DropdownMenuSeparator />
+
+
+
 
                     <div className="px-1 py-1 w-full">
                       <CancelDeal machine={data?.machine} onRefresh={onRefresh} />
@@ -994,6 +1012,8 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
         onRefresh={async () => { await fetchData(id) }}
         data={data?.machine}
       />
+
+      <RevokeDelivery onRefresh={onRefresh} data={revokeDelivery} onClose={() => setRevokeDelivery(null)} />
 
       <EditParts
         visible={editParts}
@@ -1421,6 +1441,39 @@ const CancelDeal = ({ machine, onRefresh }: { machine: MachineProps, onRefresh: 
         </div>
       </ConfimationDialog>
     </>
+  );
+};
+
+const RevokeDelivery = ({ onRefresh, onClose, data }: { onRefresh: () => Promise<void>, onClose: () => void, data: MachineResponse | null }) => {
+  const [loading, setLoading] = useState(false)
+  const { userID } = useUserDetail();
+
+  async function handleSubmit() {
+    if (!data?.machine?.id) return;
+
+    setLoading(true);
+
+    axios
+      .get(`/${userID}/machine/${data?.machine?.id}/revoke`)
+      .then(async () => {
+        TriggerFirebaseForMachine()
+        await onRefresh();
+        onClose();
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }
+
+  return (
+    <ConfimationDialog
+      loading={loading}
+      open={!!data}
+      title={"Revoke requested delivery?"}
+      description={""}
+      onPressCancel={() => onClose()}
+      onPressYes={handleSubmit}
+    />
   );
 };
 

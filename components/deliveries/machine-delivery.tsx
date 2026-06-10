@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { DeliveryType, DispatchPdf } from "@/lib/types";
 import { pdf } from "@react-pdf/renderer";
 import { ColumnDef } from "@tanstack/react-table";
+import Link from "next/link";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
@@ -29,7 +30,7 @@ import { DispatchOrderDialog } from "./dispatch-dialoges";
 import DOPDFGatepass from "./do-pdf-gatepass";
 
 export default function MachineDelivery() {
-  const { userID, name } = useUserDetail();
+  const { userID, base_route } = useUserDetail();
   const [data, setData] = useState<DeliveryType[]>([]);
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryType | null>(null);
   const [loading, setLoading] = useState(false);
@@ -67,7 +68,7 @@ export default function MachineDelivery() {
         );
       },
       cell: ({ row }) => (
-        <div className="ml-2">{row.getValue("customer_owner")}</div>
+        <Link className="hover:underline" target="_blank" href={`/${base_route}/member/${row.original.customer_id}/${row.original.id}`}><div className="ml-2">{row.getValue("customer_owner")}</div></Link>
       ),
     },
 
@@ -85,7 +86,7 @@ export default function MachineDelivery() {
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("customer_name")}</div>,
+      cell: ({ row }) => <Link className="hover:underline" target="_blank" href={`/${base_route}/member/${row.original.customer_id}/${row.original.id}`}><div>{row.getValue("customer_name")}</div></Link>,
     },
     {
       accessorKey: "ownership_name",
