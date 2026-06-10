@@ -244,13 +244,16 @@ export default function DocumentManagement() {
 
   const handleRename = useCallback(async (file: FileNode) => {
     setSelectedFileForRename(file)
+  const  nameWithoutExtension = file?.name?.replace(/\.[^/.]+$/, "");
+  setNewFileName(nameWithoutExtension)
+
   }, [])
 
   function getExtension(filename?: string) {
     return filename?.includes(".") ? filename.split(".").pop() : ""
   }
 
-  const handleRenameFile = async () => {
+  const handleRenameFile = useCallback(async () => {
     if (!selectedFileForRename) return
     if (!newFileName.trim()) return
 
@@ -294,7 +297,7 @@ export default function DocumentManagement() {
     } finally {
       setLoading(false)
     }
-  }
+  },[newFileName, folderTree, selectedFileForRename])
 
 
 
@@ -616,6 +619,7 @@ export default function DocumentManagement() {
                       onDownload={handleDownload}
                       onDelete={handleDeleteFile}
                       workingFile={workingFile}
+                      onRename={handleRename}
                     />
                   ))}
                 </div>
@@ -1046,13 +1050,15 @@ const FileListItem = memo(({
   onPreview,
   onDownload,
   onDelete,
-  workingFile
+  workingFile,
+  onRename
 }: {
   file: FileNode
   onPreview: (file: FileNode) => void
   onDownload: (file: FileNode) => void
   onDelete: (file: FileNode) => void
   workingFile: string[]
+  onRename : (file : FileNode)=> void
 }) => {
   const { isAdmin } = useUserDetail()
   const isWorking = workingFile.includes(file.id)
@@ -1071,7 +1077,7 @@ const FileListItem = memo(({
               </div>
             )}
           </div>
-          <span className="text-sm font-medium flex-1 truncate">{file.name}</span>
+          <span className="text-sm font-medium flex-1">{file.name}</span>
           <span className="text-xs text-muted-foreground w-20 text-right">
             {formatFileSize(file.size)}
           </span>
@@ -1086,6 +1092,9 @@ const FileListItem = memo(({
       <ContextMenuContent>
         <ContextMenuItem disabled={isWorking} onClick={() => onPreview(file)}>
           Preview
+        </ContextMenuItem>
+          <ContextMenuItem disabled={isWorking} onClick={() => onRename(file)}>
+          Rename
         </ContextMenuItem>
         <ContextMenuItem disabled={isWorking} onClick={() => onDownload(file)}>
           Download
