@@ -774,7 +774,7 @@ function CustomersTab({
   );
 }
 
-function FeedbackTab({ userID, customerID, data, onRefresh, type }: { userID: number, customerID: number, data: CustomerFeedbackProps[], onRefresh: () => Promise<void>, type: string }) {
+function FeedbackTab({ userID, customerID, data, onRefresh, type }: { userID: number | string, customerID: number, data: CustomerFeedbackProps[], onRefresh: () => Promise<void>, type: string }) {
   const [writeFeedback, setWriteFeedback] = useState("");
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [loading, setLoading] = useState(false);

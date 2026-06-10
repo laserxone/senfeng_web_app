@@ -48,6 +48,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
 import { CustomerExtraData } from "@/components/users/ExtraData";
+import AutoScrollMembers from "@/components/autoScroll";
 
 export default function Page() {
   const [data, setData] = useState<SalesDashboard>();
@@ -406,7 +407,7 @@ export default function Page() {
         </Tabs>
       </div>
 
-      {/* <AutoScrollMembers /> */}
+      <AutoScrollMembers />
       <MachinesSold visible={visible} setVisible={setVisible} machineData={machineData} base_route={base_route} />
     </div>
   );
