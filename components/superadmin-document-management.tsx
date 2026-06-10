@@ -39,6 +39,7 @@ import {
 } from "lucide-react"
 import moment from "moment"
 import { Fragment, memo, useCallback, useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
 
 
 
@@ -63,6 +64,8 @@ export default function SuperadminDocumentManagement() {
   const [workingFile, setWorkingFile] = useState<string[]>([])
   const [workingFolder, setWorkingFolder] = useState<string[]>([])
   const { userID, name, email } = useUserDetail()
+  const [newFileName, setNewFileName] = useState("")
+  const [selectedFileForRename, setSelectedFileForRename] = useState<FileNode | null>(null)
 
   useEffect(() => {
     if (userID) fetchData()
@@ -217,6 +220,61 @@ export default function SuperadminDocumentManagement() {
     setNewFolderName("")
     setCreateFolderOpen(true)
   }, [])
+
+
+  const handleRename = useCallback(async (file: FileNode) => {
+    setSelectedFileForRename(file)
+    const nameWithoutExtension = file?.name?.replace(/\.[^/.]+$/, "");
+    setNewFileName(nameWithoutExtension)
+
+  }, [])
+
+  function getExtension(filename?: string) {
+    return filename?.includes(".") ? filename.split(".").pop() : ""
+  }
+
+  const handleRenameFile = useCallback(async () => {
+    if (!selectedFileForRename) return
+    if (!newFileName.trim()) return
+
+    setLoading(true)
+
+    try {
+      const oldPath = selectedFileForRename.path
+
+      const ext = getExtension(oldPath)
+      const cleanNewFileName = newFileName.trim()
+
+      const finalName = ext
+        ? `${cleanNewFileName}.${ext}`
+        : cleanNewFileName
+
+      const folderPath = oldPath.split("/").slice(0, -1).join("/")
+      const newPath = folderPath ? `${folderPath}/${finalName}` : finalName
+
+      const { error: moveError } = await supabase.storage
+        .from("superadmin.documents")
+        .move(oldPath, newPath)
+
+      if (moveError) {
+        throw moveError
+      }
+
+
+      await axios.put(`/${userID}/cloud/document/${selectedFileForRename.id}`, {
+        path: newPath
+      })
+
+      await fetchData()
+
+      setSelectedFileForRename(null)
+      setNewFileName("")
+    } catch (error: any) {
+      toast.error(error?.message || "Error renaming file")
+    } finally {
+      setLoading(false)
+    }
+  }, [newFileName, folderTree, selectedFileForRename])
 
 
   const handlePreview = useCallback(async (file: FileNode) => {
@@ -531,6 +589,7 @@ export default function SuperadminDocumentManagement() {
                         onDownload={handleDownload}
                         onDelete={handleDeleteFile}
                         workingFile={workingFile}
+                        onRename={handleRename}
 
                       />
                     ))}
@@ -556,6 +615,7 @@ export default function SuperadminDocumentManagement() {
                         onDownload={handleDownload}
                         onDelete={handleDeleteFile}
                         workingFile={workingFile}
+                        onRename={handleRename}
                       />
                     ))}
                   </div>
@@ -694,6 +754,34 @@ export default function SuperadminDocumentManagement() {
                 />
               ) : null}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!selectedFileForRename} onOpenChange={() => setSelectedFileForRename(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename File</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="rename-file">File Name</Label>
+            <Input
+              id="rename-file"
+              value={newFileName}
+              onChange={(e) => setNewFileName(e.target.value)}
+              placeholder="Enter new name"
+              className="mt-2"
+              onKeyDown={(e) => e.key === "Enter" && handleRenameFile()}
+            />
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleRenameFile} disabled={!newFileName.trim() || loading}>
+              {loading && <Spinner className="mr-2 h-4 w-4" />}
+              Save
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
@@ -839,13 +927,15 @@ const FileGridItem = memo(({
   onPreview,
   onDownload,
   onDelete,
-  workingFile
+  workingFile,
+  onRename
 }: {
   file: FileNode
   onPreview: (file: FileNode) => void
   onDownload: (file: FileNode) => void
   onDelete: (file: FileNode) => void
   workingFile: string[]
+  onRename: (file: FileNode) => void
 }) => {
   const { isAdmin } = useUserDetail()
   const isWorking = workingFile.includes(file.id)
@@ -875,6 +965,9 @@ const FileGridItem = memo(({
       <ContextMenuContent>
         <ContextMenuItem disabled={isWorking} onClick={() => onPreview(file)}>
           Preview
+        </ContextMenuItem>
+        <ContextMenuItem disabled={isWorking} onClick={() => onRename(file)}>
+          Rename
         </ContextMenuItem>
         <ContextMenuItem disabled={isWorking} onClick={() => onDownload(file)}>
           Download
@@ -952,13 +1045,15 @@ const FileListItem = memo(({
   onPreview,
   onDownload,
   onDelete,
-  workingFile
+  workingFile,
+  onRename
 }: {
   file: FileNode
   onPreview: (file: FileNode) => void
   onDownload: (file: FileNode) => void
   onDelete: (file: FileNode) => void
   workingFile: string[]
+  onRename: (file: FileNode) => void
 }) => {
   const { isAdmin } = useUserDetail()
   const isWorking = workingFile.includes(file.id)
@@ -977,7 +1072,7 @@ const FileListItem = memo(({
               </div>
             )}
           </div>
-          <span className="text-sm font-medium flex-1 truncate">{file.name}</span>
+          <span className="text-sm font-medium flex-1">{file.name}</span>
           <span className="text-xs text-muted-foreground w-20 text-right">
             {formatFileSize(file.size)}
           </span>
@@ -992,6 +1087,9 @@ const FileListItem = memo(({
       <ContextMenuContent>
         <ContextMenuItem disabled={isWorking} onClick={() => onPreview(file)}>
           Preview
+        </ContextMenuItem>
+        <ContextMenuItem disabled={isWorking} onClick={() => onRename(file)}>
+          Rename
         </ContextMenuItem>
         <ContextMenuItem disabled={isWorking} onClick={() => onDownload(file)}>
           Download
@@ -1028,7 +1126,7 @@ const SubfolderItem = memo(({
   workingFolder: string[]
 }) => {
   const { isAdmin } = useUserDetail()
-   const isWorking = workingFolder.includes(folder.id) || workingFolder.includes(folder.parentId as string)
+  const isWorking = workingFolder.includes(folder.id) || workingFolder.includes(folder.parentId as string)
   if (viewMode === "grid") {
     return (
       <ContextMenu modal={false}>

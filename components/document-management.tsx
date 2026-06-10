@@ -280,10 +280,6 @@ export default function DocumentManagement() {
         throw moveError
       }
 
-      const { data } = supabase.storage
-        .from("documents")
-        .getPublicUrl(newPath)
-
       await axios.put(`/${userID}/dms/document/${selectedFileForRename.id}`, {
         path: newPath
       })

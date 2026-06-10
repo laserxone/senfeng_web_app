@@ -7,7 +7,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{searchite
   const pending = searchParams.get("pending");
   const all = searchParams.get("all");
 
-  try {
+   try {
     if (all) {
       const query = `
   SELECT
@@ -21,16 +21,17 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{searchite
 
       const invoices = result.rows.map((invoice) => {
         const itemsTotal = Array.isArray(invoice.fields)
-          ? invoice.fields.reduce((sum:number, item:any) => {
-              const val = Number(item?.total ?? 0);
-              return sum + (isNaN(val) ? 0 : val);
-            }, 0)
+          ? invoice.fields.reduce((sum: number, item: any) => {
+            const val = Number(item?.total ?? 0);
+            return sum + (isNaN(val) ? 0 : val);
+          }, 0)
           : 0;
         const discount = Number(invoice.discount ?? 0);
         const finalAmount = itemsTotal - discount;
         const totalPaid = Number(invoice.total_paid ?? 0);
         let status = "NA";
-        if (totalPaid === 0) status = "Pending";
+        if (itemsTotal === 0) status = "Paid"
+        else if (totalPaid === 0) status = "Pending";
         else if (finalAmount - totalPaid !== 0) status = "Partial";
         else status = "Paid";
 
@@ -38,7 +39,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{searchite
           ...invoice,
           items_total: itemsTotal,
           discount,
-            final_amount: finalAmount - totalPaid,
+          final_amount: finalAmount,
           status,
         };
       });
@@ -74,19 +75,18 @@ WHERE
       const values = [`%${searchitem}%`];
       const result = await pool.query(query, values);
       const invoices = result.rows.map((invoice) => {
-        // Sum totals from fields array
         const itemsTotal = Array.isArray(invoice.fields)
-          ? invoice.fields.reduce((sum:number, item:any) => {
-              const val = Number(item?.total ?? 0);
-              return sum + (isNaN(val) ? 0 : val);
-            }, 0)
+          ? invoice.fields.reduce((sum: number, item: any) => {
+            const val = Number(item?.total ?? 0);
+            return sum + (isNaN(val) ? 0 : val);
+          }, 0)
           : 0;
-
         const discount = Number(invoice.discount ?? 0);
         const finalAmount = itemsTotal - discount;
         const totalPaid = Number(invoice.total_paid ?? 0);
         let status = "NA";
-        if (totalPaid === 0) status = "Pending";
+        if (itemsTotal === 0) status = "Paid"
+        else if (totalPaid === 0) status = "Pending";
         else if (finalAmount - totalPaid !== 0) status = "Partial";
         else status = "Paid";
 
@@ -104,25 +104,38 @@ WHERE
       const query = `
   SELECT
     si.*,
+    COALESCE(
+        NULLIF(TRIM(si.manager), ''),
+        u.name,
+        ''
+    ) AS manager,
     COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
-  FROM savedinvoices_karachi si
-  LEFT JOIN customer_parts_karachi cp ON cp.part_id = si.id
-  GROUP BY si.id
+FROM savedinvoices_karachi si
+LEFT JOIN customer_parts_karachi cp
+    ON cp.part_id = si.id
+LEFT JOIN customer c
+    ON c.id = si.customer_id
+LEFT JOIN users u
+    ON u.id = c.ownership
+WHERE si.owner_paid IS FALSE
+GROUP BY si.id, u.name
+ORDER BY created_at DESC
 `;
       const result = await pool.query(query);
 
       const invoices = result.rows.map((invoice) => {
         const itemsTotal = Array.isArray(invoice.fields)
-          ? invoice.fields.reduce((sum:number, item:any) => {
-              const val = Number(item?.total ?? 0);
-              return sum + (isNaN(val) ? 0 : val);
-            }, 0)
+          ? invoice.fields.reduce((sum: number, item: any) => {
+            const val = Number(item?.total ?? 0);
+            return sum + (isNaN(val) ? 0 : val);
+          }, 0)
           : 0;
         const discount = Number(invoice.discount ?? 0);
         const finalAmount = itemsTotal - discount;
         const totalPaid = Number(invoice.total_paid ?? 0);
         let status = "NA";
-        if (totalPaid === 0) status = "Pending";
+        if (itemsTotal === 0) status = "Paid"
+        else if (totalPaid === 0) status = "Pending";
         else if (finalAmount - totalPaid !== 0) status = "Partial";
         else status = "Paid";
 
@@ -130,7 +143,7 @@ WHERE
           ...invoice,
           items_total: itemsTotal,
           discount,
-          final_amount: finalAmount,
+          final_amount: finalAmount - totalPaid,
           status,
         };
       });

@@ -811,11 +811,11 @@ export default function POS() {
                 handlePendingPayments();
               }}
             >
-              {pendingLoading && <Spinner />}
+              
               <Label className="text-lg font-semibold text-gray-800 cursor-pointer">
                 Pending Payments
               </Label>
-              <NotificationBadge count={reminder.length} />
+              {pendingLoading ? <Spinner /> : <NotificationBadge count={reminder.length} />}
             </div>
             <div className="flex flex-row gap-2 items-center mr-2">
               <Label className="text-lg">Include warranty</Label>

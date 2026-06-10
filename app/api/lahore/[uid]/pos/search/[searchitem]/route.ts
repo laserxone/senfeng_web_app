@@ -76,14 +76,12 @@ WHERE
       const values = [`%${searchitem}%`];
       const result = await pool.query(query, values);
       const invoices = result.rows.map((invoice) => {
-        // Sum totals from fields array
         const itemsTotal = Array.isArray(invoice.fields)
           ? invoice.fields.reduce((sum: number, item: any) => {
             const val = Number(item?.total ?? 0);
             return sum + (isNaN(val) ? 0 : val);
           }, 0)
           : 0;
-
         const discount = Number(invoice.discount ?? 0);
         const finalAmount = itemsTotal - discount;
         const totalPaid = Number(invoice.total_paid ?? 0);
@@ -107,11 +105,22 @@ WHERE
       const query = `
   SELECT
     si.*,
+    COALESCE(
+        NULLIF(TRIM(si.manager), ''),
+        u.name,
+        ''
+    ) AS manager,
     COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
-  FROM savedinvoices si
-  LEFT JOIN customer_parts cp ON cp.part_id = si.id
-  WHERE si.owner_paid IS FALSE
-  GROUP BY si.id
+FROM savedinvoices si
+LEFT JOIN customer_parts cp
+    ON cp.part_id = si.id
+LEFT JOIN customer c
+    ON c.id = si.customer_id
+LEFT JOIN users u
+    ON u.id = c.ownership
+WHERE si.owner_paid IS FALSE
+GROUP BY si.id, u.name
+ORDER BY created_at DESC
 `;
       const result = await pool.query(query);
 

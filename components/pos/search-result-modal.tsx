@@ -115,7 +115,7 @@ const SearchResultModal = ({
     },
 
     {
-      accessorKey: "owner_name",
+      accessorKey: "manager",
       header: ({ column }) => {
         return (
           <Button
@@ -127,7 +127,7 @@ const SearchResultModal = ({
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("owner_name")}</div>,
+      cell: ({ row }) => <div>{row.getValue("manager")}</div>,
     },
 
     {
