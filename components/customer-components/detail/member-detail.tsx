@@ -197,6 +197,7 @@ export default function MemberDetail({
   }, [visitData, customer_id]);
 
   const RenderTaskTab = useCallback(() => {
+    
     return (
       <Card className="flex flex-1">
         <CardContent className="flex flex-1 pt-2">
@@ -293,7 +294,7 @@ export default function MemberDetail({
         onValueChange={setActiveTab}
       >
         <ScrollArea
-          className={`overflow-x-auto ${isMobile && "max-w-[calc(100vw-32px)]"}`}
+          className={`overflow-x-auto ${isMobile && "max-w-[calc(100vw-45px)]"}`}
         >
           <TabsList className=" flex justify-start relative gap-2 px-2">
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
@@ -534,7 +535,7 @@ function CustomersTab({
 }: {
   data?: MachineProps[] | [],
   customer_id?: number
-  user_id: number
+  user_id: number | string
   onRefresh: () => Promise<void>
   onReturn?: (a: number, b?: string) => void
   route: string

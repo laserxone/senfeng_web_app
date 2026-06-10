@@ -19,6 +19,7 @@ import VisitTab from "@/components/users/addVisit";
 import Attendance from "@/components/users/attendance";
 import CustomerEmployee from "@/components/users/customer";
 import Reimbursement from "@/components/users/Reimbursement";
+import { Scrollbar } from "@radix-ui/react-scroll-area";
 
 import AppCalendar from "@/components/appCalendar";
 import { RequiredStar } from "@/components/RequiredStar";
@@ -32,11 +33,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import Spinner from "@/components/ui/spinner";
-import { CustomerExtraData } from "@/components/users/ExtraData";
 import { ProfilePicture } from "@/components/users/ProfilePicture";
 import RenderFines from "@/components/users/render-fines";
 import RenderReturnable from "@/components/users/render-returnable";
 import SalaryRecord from "@/components/users/SalaryRecord";
+import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { SalesCustomer, SalesCustomerMachines, SalesDashboard, SalesMachine, SalesVisitTypes, UserAttendanceRecord, UserCallData, UserExtraTypes, UserReimbursementType } from "@/lib/types";
@@ -46,7 +47,7 @@ import moment from "moment";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
-import AutoScrollMembers from "@/components/autoScroll";
+import { CustomerExtraData } from "@/components/users/ExtraData";
 
 export default function Page() {
   const [data, setData] = useState<SalesDashboard>();
@@ -60,6 +61,7 @@ export default function Page() {
   const [machineData, setMachineData] = useState<SalesMachine[]>([]);
   const [visible, setVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("newCustomers");
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     if (userID) {
@@ -199,31 +201,34 @@ export default function Page() {
 
   const RenderNewCustomer = useCallback(() => {
     return (
-      <Card className="flex flex-1">
-        <CardContent className="pt-2 flex flex-1">
-          <div className="flex flex-1 gap-5">
-            <CustomerExtraData
-            showold={false}
-              data={extraData || {}}
-              option={selectedOption}
-              onSelect={(val) => {
-                setSelectedOption(val);
-              }}
-            />
-            <CustomerEmployee
-              height="min-h-[calc(100dvh-470px)]"
-              ownership={false}
-              customer_data={
-                selectedOption && extraData ? extraData[selectedOption as Exclude<keyof UserExtraTypes, "user">] : []
-              }
-              onRefresh={() => {
-                fetchData()
-                fetchExtraCustomerOptions()
-              }}
-            />
-          </div>
-        </CardContent>
-      </Card>
+    <div className="flex min-w-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-5">
+  <div className="w-full shrink-0 lg:w-[280px]">
+    <CustomerExtraData
+      showold={false}
+      data={extraData || {}}
+      option={selectedOption}
+      onSelect={(val) => {
+        setSelectedOption(val)
+      }}
+    />
+  </div>
+
+  <div className="min-w-0 flex-1 overflow-hidden">
+    <CustomerEmployee
+      height="min-h-[calc(100dvh-370px)]"
+      ownership={false}
+      customer_data={
+        selectedOption && extraData
+          ? extraData[selectedOption as Exclude<keyof UserExtraTypes, "user">]
+          : []
+      }
+      onRefresh={() => {
+        fetchData()
+        fetchExtraCustomerOptions()
+      }}
+    />
+  </div>
+</div>
     );
   }, [userID, data, extraData, selectedOption]);
 
@@ -289,8 +294,8 @@ export default function Page() {
 
   const RenderCallTab = useCallback(() => {
     return (
-      <Card className="flex flex-1">
-        <CardContent className="pt-0 flex flex-1">
+      <Card className="flex flex-1 p-0">
+        <CardContent className="pt-0 flex flex-1 p-0">
           <Calls
             data={callData}
             onRefresh={async () => {
@@ -344,29 +349,33 @@ export default function Page() {
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-          className="flex w-full flex-1 flex-col"
+          className="relative flex w-full flex-1 flex-col"
         >
-          <TabsList className="justify-start">
-            <TabsTrigger value="newCustomers">New Customers</TabsTrigger>
-            <TabsTrigger value="members">Members</TabsTrigger>
-            <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>
+          <ScrollArea
+            className={`overflow-x-auto ${isMobile && "max-w-[calc(100vw-45px)]"}`}
+          >
+            <TabsList className="justify-start">
+              <TabsTrigger value="newCustomers">New Customers</TabsTrigger>
+              <TabsTrigger value="members">Members</TabsTrigger>
+              <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>
 
-            <TabsTrigger value="visit">Visit</TabsTrigger>
-            <TabsTrigger value="calls">Calls</TabsTrigger>
-            <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="salary">Salary</TabsTrigger>
-            <TabsTrigger value="issued">Returnable</TabsTrigger>
-            <TabsTrigger value="fines">Fines</TabsTrigger>
-          </TabsList>
+              <TabsTrigger value="visit">Visit</TabsTrigger>
+              <TabsTrigger value="calls">Calls</TabsTrigger>
+              <TabsTrigger value="attendance">Attendance</TabsTrigger>
+              <TabsTrigger value="salary">Salary</TabsTrigger>
+              <TabsTrigger value="issued">Returnable</TabsTrigger>
+              <TabsTrigger value="fines">Fines</TabsTrigger>
+            </TabsList>
+            <Scrollbar orientation="horizontal" />
+          </ScrollArea>
 
-
-          <div hidden={activeTab !== "newCustomers"}>
+          <div hidden={activeTab !== "newCustomers"} className={`${isMobile && "max-w-[calc(100vw-45px)]"}`}>
             <RenderNewCustomer />
           </div>
-          <div hidden={activeTab !== "members"}>
+          <div hidden={activeTab !== "members"} className={`${isMobile && "max-w-[calc(100vw-45px)]"}`}>
             <RenderMembers />
           </div>
-          <div hidden={activeTab !== "reimbursement"}>
+          <div hidden={activeTab !== "reimbursement"} className={`${isMobile && "max-w-[calc(100vw-45px)]"}`}>
             <RenderReimbursement />
           </div>
           <div hidden={activeTab !== "visit"}>
@@ -375,10 +384,10 @@ export default function Page() {
           <div hidden={activeTab !== "calls"}>
             <RenderCallTab />
           </div>
-          <div hidden={activeTab !== "attendance"}>
+          <div hidden={activeTab !== "attendance"} className={`${isMobile && "max-w-[calc(100vw-45px)]"}`}>
             <RenderAttendance />
           </div>
-          <div hidden={activeTab !== "salary"}>
+          <div hidden={activeTab !== "salary"} className={`${isMobile && "max-w-[calc(100vw-45px)]"}`}>
 
             <Card className="flex flex-1 p-0">
               <CardContent className="pt-0 flex flex-1">
@@ -387,152 +396,172 @@ export default function Page() {
             </Card>
 
           </div>
-          <div hidden={activeTab !== "issued"}>
+          <div hidden={activeTab !== "issued"} className={`${isMobile && "max-w-[calc(100vw-45px)]"}`}>
             <RenderReturnable height="min-h-[calc(100dvh-420px)]" />
           </div>
-          <div hidden={activeTab !== "fines"}>
+          <div hidden={activeTab !== "fines"} className={`${isMobile && "max-w-[calc(100vw-45px)]"}`}>
             <RenderFines height="min-h-[calc(100dvh-480px)]" />
           </div>
 
         </Tabs>
       </div>
 
-      <AutoScrollMembers />
+      {/* <AutoScrollMembers /> */}
       <MachinesSold visible={visible} setVisible={setVisible} machineData={machineData} base_route={base_route} />
     </div>
   );
 }
 
-function CustomersTab({ data, height = "h-[calc(100dvh-250px)]" }: { data: SalesCustomer[], height?: string }) {
-  const [localData, setLocalData] = useState<(SalesCustomer & { overall: string })[]>([]);
-  const { base_route } = useUserDetail();
+function CustomersTab({
+  data,
+  height = "h-[calc(100dvh-250px)]",
+}: {
+  data: SalesCustomer[]
+  height?: string
+}) {
+  const [localData, setLocalData] = useState<
+    (SalesCustomer & { overall: string })[]
+  >([])
+  const { base_route } = useUserDetail()
 
   useEffect(() => {
     if (data.length > 0) {
       const temp = data.map((customer) => {
-        const customerCompletion = Number(customer.profile_completion) || 0;
-        const machines = customer.sales || [];
+        const customerCompletion = Number(customer.profile_completion) || 0
+        const machines = customer.sales || []
 
         const totalMachineCompletion = machines.reduce(
           (sum, item) => sum + Number(item.percentage_completion || 0),
           0
-        );
+        )
 
         const overallCompletion =
-          (customerCompletion + totalMachineCompletion) / (machines.length + 1);
+          (customerCompletion + totalMachineCompletion) / (machines.length + 1)
 
-        return { ...customer, overall: overallCompletion.toFixed(0) };
-      });
-      setLocalData(temp);
+        return { ...customer, overall: overallCompletion.toFixed(0) }
+      })
+
+      setLocalData(temp)
+    } else {
+      setLocalData([])
     }
-  }, [data]);
+  }, [data])
 
-  const RenderEachMachine = ({ machine, customer_id }: { machine: SalesCustomerMachines, customer_id: number }) => {
+  const RenderEachMachine = ({
+    machine,
+    customer_id,
+  }: {
+    machine: SalesCustomerMachines
+    customer_id: number
+  }) => {
     const totalPayments = machine.payments.reduce(
       (sum, payment) => sum + Number(payment.amount),
       0
-    );
+    )
+
+    const isCompleted =
+      Number(machine.price) === totalPayments &&
+      Number(machine?.percentage_completion) === 100
 
     return (
-      <div className="flex justify-between items-center border-b pb-2 w-full">
+      <div className="flex w-full flex-col gap-2 border-b pb-3 sm:flex-row sm:items-center sm:justify-between">
         <Link href={`/${base_route}/member/${customer_id}/${machine.id}`}>
-          <span className="hover:underline">{machine.serial_no}</span>
+          <span className="break-words font-medium hover:underline">
+            {machine.serial_no}
+          </span>
         </Link>
-        <div className="flex items-center">
-          <span className="font-normal text-sm text-gray-600 mr-2">
+
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+          <span className="text-xs font-normal text-gray-600 sm:text-sm">
             Data completion: {machine?.percentage_completion || 0}%
           </span>
-          {Number(machine.price) === totalPayments &&
-            machine?.percentage_completion === 100 ? (
-            <CheckCircle className="text-green-500 w-5 h-5 mr-2" />
+
+          {isCompleted ? (
+            <CheckCircle className="h-5 w-5 shrink-0 text-green-500" />
           ) : (
-            <Clock className="text-yellow-500 w-5 h-5 mr-2" />
+            <Clock className="h-5 w-5 shrink-0 text-yellow-500" />
           )}
 
           <Badge
-            variant={
-              Number(machine.price) === totalPayments ? "default" : "destructive"
-            }
+            variant={Number(machine.price) === totalPayments ? "default" : "destructive"}
           >
             {Number(machine.price) === totalPayments ? "Completed" : "Pending"}
           </Badge>
         </div>
       </div>
-    );
-  };
+    )
+  }
+
+
 
   return (
-    <ScrollArea className={`${height} w-full pr-4`}>
-      <Accordion type="single" collapsible className="w-full space-y-4 p-2">
-        {localData.length == 0 ? (
+    <ScrollArea className={`${height} w-full pr-2 sm:pr-4`}>
+      <Accordion type="single" collapsible className="w-full space-y-3 p-1 sm:p-2">
+        {localData.length === 0 ? (
           <Label>No Data found</Label>
         ) : (
           localData.map((customer) => (
-            <div className="flex gap-5" key={customer.id}>
-              <div className="flex flex-1">
-                <AccordionItem
-                  className="w-full"
-                  value={`customer-${customer.id}`}
-                >
-                  <Card>
-                    <AccordionTrigger className="px-4 py-2 hover:no-underline">
-                      <div className="flex justify-between items-center w-full">
-                        <Link
-                          href={`/${base_route}/${customer.member ? "member" : "customer"
-                            }/${customer.id}`}
-                        >
-                          <h3 className="font-semibold text-lg hover:underline">
-                            {customer.name}
-                          </h3>
-                        </Link>
-                        <div className="flex flex-row gap-2">
-                          <span className="font-normal text-sm text-gray-600 mr-2">
-                            Overall profile completion: {customer.overall}%
-                          </span>
-                          <Badge
-                            className={"mr-2"}
-                            variant={
-                              customer.sales.length === 0
-                                ? "secondary"
-                                : "default"
-                            }
-                          >
-                            {customer.sales.length === 0
-                              ? "Assigned"
-                              : "Purchased"}
-                          </Badge>
-                        </div>
+            <AccordionItem
+              key={customer.id}
+              className="w-[calc(100vw-80px)] sm:w-full border-none"
+              value={`customer-${customer.id}`}
+            >
+              <Card >
+                <AccordionTrigger className="px-3 py-3 hover:no-underline sm:px-4">
+                  <div className="flex w-full min-w-0 flex-col gap-3 pr-2 sm:flex-row sm:items-center sm:justify-between">
+                    <Link
+                      href={`/${base_route}/${customer.member ? "member" : "customer"
+                        }/${customer.id}`}
+                      className="min-w-0"
+                    >
+                      <h3 className="truncate text-left whitespace-normal break-words text-base font-semibold hover:underline sm:text-lg">
+                        {customer.name}
+                      </h3>
+                    </Link>
+
+                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                      <span className="text-left text-xs font-normal text-gray-600 sm:text-sm">
+                        Overall profile completion: {customer.overall}%
+                      </span>
+
+                      <Badge
+                        variant={
+                          customer.sales.length === 0 ? "secondary" : "default"
+                        }
+                      >
+                        {customer.sales.length === 0 ? "Assigned" : "Purchased"}
+                      </Badge>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+
+                <AccordionContent>
+                  <CardContent className="px-3 pt-0 sm:px-4">
+                    {customer.sales.length > 0 ? (
+                      <div className="space-y-3">
+                        {customer.sales.map((machine) => (
+                          <RenderEachMachine
+                            key={machine.id}
+                            machine={machine}
+                            customer_id={customer.id}
+                          />
+                        ))}
                       </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <CardContent className="pt-0">
-                        {customer.sales.length > 0 ? (
-                          <div className="space-y-2">
-                            {customer.sales.map((machine) => (
-                              <RenderEachMachine
-                                key={machine.id}
-                                machine={machine}
-                                customer_id={customer.id}
-                              />
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="flex items-center text-muted-foreground">
-                            <AlertCircle className="w-5 h-5 mr-2" />
-                            No machines purchased yet
-                          </div>
-                        )}
-                      </CardContent>
-                    </AccordionContent>
-                  </Card>
-                </AccordionItem>
-              </div>
-            </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <AlertCircle className="h-5 w-5 shrink-0" />
+                        No machines purchased yet
+                      </div>
+                    )}
+                  </CardContent>
+                </AccordionContent>
+              </Card>
+            </AccordionItem>
           ))
         )}
       </Accordion>
     </ScrollArea>
-  );
+  )
 }
 
 function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Promise<void> }) {
@@ -569,27 +598,28 @@ function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Pro
   const RenderEachCall = ({ call }: { call: UserCallData }) => {
     return (
       <Card key={call.id} className="w-full p-0">
-        <CardContent className="px-4 py-2">
-          <div className="grid grid-cols-12 gap-4 items-center">
-            {/* Name / Owner */}
-            <div className="col-span-4 font-semibold text-lg truncate">
-              {call.name || call.owner}
+        <CardContent className="px-3 py-3 sm:px-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-12 sm:items-center">
+            <div className="min-w-0 sm:col-span-4">
+              <p className="truncate text-base font-semibold sm:text-lg">
+                {call.name || call.owner}
+              </p>
             </div>
 
-            {/* Phone Number(s) */}
-            <div className="col-span-6 text-sm text-muted-foreground truncate">
-              {call.number.join(", ")}
+            <div className="min-w-0 sm:col-span-6">
+              <p className="break-words text-sm text-muted-foreground sm:truncate">
+                {call.number.join(", ")}
+              </p>
             </div>
 
-            {/* Button */}
-            <div className="col-span-2 text-right">
+            <div className="sm:col-span-2 sm:text-right">
               <Button
                 onClick={() => {
-                  setSelectedCustomer(call);
-                  setVisible(true);
+                  setSelectedCustomer(call)
+                  setVisible(true)
                 }}
                 variant="secondary"
-                className="w-full sm:w-auto"
+                className="w-full"
               >
                 Call
               </Button>
@@ -597,8 +627,8 @@ function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Pro
           </div>
         </CardContent>
       </Card>
-    );
-  };
+    )
+  }
 
   return (
     <div className="w-full">
@@ -631,7 +661,7 @@ function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Pro
               <h1>
                 Next Follow Up <RequiredStar />
               </h1>
-              <AppCalendar date={next} onChange={setNext} min={new Date()} max={""}/>
+              <AppCalendar date={next} onChange={setNext} min={new Date()} max={""} />
 
               <div className="flex flex-row items-center gap-2">
                 <h1>Top Follow Up?</h1>

@@ -40,75 +40,80 @@ const ChequeCredit = ({ total, value, setTotal, setValue }: { total: ChequeProp[
     });
   }
 
-  return (
-    <div className="flex flex-col gap-2 flex-1 p-4 w-full">
-      <Label>No. of Installments</Label>
-      <Select onValueChange={setValue} value={value}>
-        <SelectTrigger>
-          <SelectValue placeholder="Select installments" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {[...Array(20)].map((_, index) => {
-              return (
+return (
+    <div className="flex w-full flex-col gap-4 p-1 sm:p-4 overflow-hidden">
+      <div className="flex flex-col gap-2">
+        <Label>No. of Installments</Label>
+        <Select onValueChange={setValue} value={value}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select installments" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {[...Array(20)].map((_, index) => (
                 <SelectItem key={index} value={(index + 1).toString()}>
                   {index + 1}
                 </SelectItem>
-              );
-            })}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
 
-      {total.map((item, index) => (
-        <div
-          key={index}
-          className="flex flex-row gap-4 items-start p-2 border-b"
-        >
-          {/* Date */}
-          <div className="flex flex-col gap-1">
-            <Label>Deposit date</Label>
-            <AppCalendar
-              date={item.date}
-              onChange={(val) => handleUpdateData(val, index, "date")}
-              max={""}
-            />
+      <div className="flex flex-col gap-4">
+        {total.map((item, index) => (
+          <div
+            key={index}
+            className="rounded-lg border p-3 sm:p-4"
+          >
+            <div className="mb-3 text-sm font-medium text-muted-foreground">
+              Installment {index + 1}
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="flex min-w-0 flex-col gap-1">
+                <Label>Deposit date</Label>
+                <AppCalendar
+                  date={item.date}
+                  onChange={(val) => handleUpdateData(val, index, "date")}
+                  max={""}
+                />
+              </div>
+
+              <div className="flex min-w-0 flex-col gap-1">
+                <Label>Amount</Label>
+                <Input
+                  type="number"
+                  placeholder="Enter amount"
+                  value={item?.amount || ""}
+                  className="w-full"
+                  onChange={(e) => {
+                    if (!isNaN(Number(e.target.value))) {
+                      handleUpdateData(Number(e.target.value), index, "amount")
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="flex min-w-0 flex-col gap-1">
+                <Label>Image</Label>
+                <Dropzone
+                  value={item.img}
+                  onDrop={(file) => {
+                    handleUpdateData(file, index, "img")
+                  }}
+                  title="Click to upload"
+                  subheading="or drag and drop"
+                  description="PNG or JPG"
+                  drag="Drop the files here..."
+                />
+              </div>
+            </div>
           </div>
-
-          {/* Amount */}
-          <div className="flex flex-col gap-1">
-            <Label>Amount</Label>
-            <Input
-              type="number"
-              placeholder="Enter amount"
-              value={item?.amount || ""}
-              onChange={(e) => {
-                if (!isNaN(Number(e.target.value))) {
-                  handleUpdateData(Number(e.target.value), index, "amount");
-                }
-              }}
-            />
-          </div>
-
-          {/* Image */}
-          <div className="flex flex-col gap-1">
-            <Label>Image</Label>
-            <Dropzone
-              value={item.img}
-              onDrop={(file) => {
-                handleUpdateData(file, index, "img");
-              }}
-              title={"Click to upload"}
-              subheading={"or drag and drop"}
-              description={"PNG or JPG"}
-              drag={"Drop the files here..."}
-            />
-          </div>
-        </div>
-      ))}
-
+        ))}
+      </div>
     </div>
-  );
+  )
 };
 
 export default ChequeCredit

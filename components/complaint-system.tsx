@@ -32,7 +32,6 @@ import { z } from "zod";
 import ConfimationDialog from "./alert-dialog";
 import { CustomerSearch } from "./customer-search";
 import { RequiredStar } from "./RequiredStar";
-import { Card, CardContent } from "./ui/card";
 import { Checkbox } from "./ui/checkbox";
 import {
   Collapsible,
@@ -54,8 +53,6 @@ import {
   FieldLegend,
   FieldSet,
 } from "./ui/field";
-import { Label } from "./ui/label";
-import { ScrollArea } from "./ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -68,6 +65,7 @@ import Spinner from "./ui/spinner";
 import { UserSearch } from "./user-search";
 import { MyImg } from "./users/addVisit";
 import FilterSheet from "./users/filterSheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const formSchema = z
   .object({
@@ -243,101 +241,101 @@ export default function ComplaintSystem() {
 
   return (
     <div className="flex flex-1 flex-col gap-5 pb-6">
-     
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <Heading
-            title="Complaint & Installation System"
-            description="Manage complaints, installations, engineers and payments"
-          />
 
-          <div className="flex flex-wrap items-center gap-3">
-            <SummaryBox label="Paid" value={totals.totalPaid} />
-            <SummaryBox label="Pending" value={totals.totalPending} />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <Heading
+          title="Complaint & Installation System"
+          description="Manage complaints, installations, engineers and payments"
+        />
 
-            {(complaint_assigned || isAdmin) && (
-              <Button onClick={() => setVisible(true)}>Register</Button>
-            )}
-          </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <SummaryBox label="Paid" value={totals.totalPaid} />
+          <SummaryBox label="Pending" value={totals.totalPending} />
+
+          {(complaint_assigned || isAdmin) && (
+            <Button onClick={() => setVisible(true)}>Register</Button>
+          )}
         </div>
-      
+      </div>
 
-    
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="relative w-full lg:max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={search}
-                placeholder="Search by title, customer, owner or manager..."
-                onChange={(event) => setSearch(event.target.value)}
-                className="pl-9"
-              />
-            </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <Select value={selected} onValueChange={(v) => setSelected(v)}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Select option" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="paid">Payable</SelectItem>
-                  <SelectItem value="unpaid">Free</SelectItem>
-                </SelectContent>
-              </Select>
 
-              <Button
-                onClick={() => setFilterVisible(true)}
-                variant="outline"
-                size="icon"
-              >
-                <Filter className="h-4 w-4" />
-              </Button>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative w-full lg:max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            placeholder="Search by title, customer, owner or manager..."
+            onChange={(event) => setSearch(event.target.value)}
+            className="pl-9"
+          />
+        </div>
 
-              <Button variant="destructive" onClick={handleReset}>
-                {resetLoading && <Spinner />}
-                Reset
-              </Button>
-            </div>
-          </div>
-    
+        <div className="flex flex-wrap items-center gap-2">
+          <Select value={selected} onValueChange={(v) => setSelected(v)}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Select option" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="paid">Payable</SelectItem>
+              <SelectItem value="unpaid">Free</SelectItem>
+            </SelectContent>
+          </Select>
 
-     
-        {loading ? (
-          <div className="flex h-40 items-center justify-center rounded-xl border bg-card">
-            <Spinner />
-          </div>
-        ) : filteredData.length === 0 ? (
-          <div className="flex h-40 flex-col items-center justify-center rounded-xl border bg-card text-center">
-            <p className="font-medium">No records found</p>
-            <p className="text-sm text-muted-foreground">
-              Try changing filters or search text.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredData.map((complaint) => (
-              <ComplaintCard
-                key={complaint.complaint_id}
-                complaint={complaint}
-                isOpen={!!openItems[complaint.complaint_id]}
-                onOpenChange={(open) =>
-                  setOpenItems((prev) => ({
-                    ...prev,
-                    [complaint.complaint_id]: open,
-                  }))
-                }
-                onAssignEngineer={handleAssignEngineer}
-                onCloseComplaint={setSelectedComplaintForClose}
-                onEditComplaint={setSelectedComplaintForEdit}
-                onAddPayment={setSelectedComplaintForPayment}
-                onRefresh={() =>
-                  fetchData(dates.start.toISOString(), dates.end.toISOString())
-                }
-              />
-            ))}
-          </div>
-        )}
-   
+          <Button
+            onClick={() => setFilterVisible(true)}
+            variant="outline"
+            size="icon"
+          >
+            <Filter className="h-4 w-4" />
+          </Button>
+
+          <Button variant="destructive" onClick={handleReset}>
+            {resetLoading && <Spinner />}
+            Reset
+          </Button>
+        </div>
+      </div>
+
+
+
+      {loading ? (
+        <div className="flex h-40 items-center justify-center rounded-xl border bg-card">
+          <Spinner />
+        </div>
+      ) : filteredData.length === 0 ? (
+        <div className="flex h-40 flex-col items-center justify-center rounded-xl border bg-card text-center">
+          <p className="font-medium">No records found</p>
+          <p className="text-sm text-muted-foreground">
+            Try changing filters or search text.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filteredData.map((complaint) => (
+            <ComplaintCard
+              key={complaint.complaint_id}
+              complaint={complaint}
+              isOpen={!!openItems[complaint.complaint_id]}
+              onOpenChange={(open) =>
+                setOpenItems((prev) => ({
+                  ...prev,
+                  [complaint.complaint_id]: open,
+                }))
+              }
+              onAssignEngineer={handleAssignEngineer}
+              onCloseComplaint={setSelectedComplaintForClose}
+              onEditComplaint={setSelectedComplaintForEdit}
+              onAddPayment={setSelectedComplaintForPayment}
+              onRefresh={() =>
+                fetchData(dates.start.toISOString(), dates.end.toISOString())
+              }
+            />
+          ))}
+        </div>
+      )}
+
 
       <FilterSheet
         visible={filterVisible}
@@ -428,10 +426,9 @@ function StatusBadge({ status }: { status?: string }) {
 
   return (
     <span
-      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-        statusColor[status?.toLowerCase() as keyof typeof statusColor] ||
+      className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusColor[status?.toLowerCase() as keyof typeof statusColor] ||
         "bg-gray-100 text-gray-800"
-      }`}
+        }`}
     >
       {status || "N/A"}
     </span>
@@ -489,40 +486,40 @@ function ComplaintCard({
   onAddPayment: (id: number) => void;
   onRefresh: () => Promise<void>;
 }) {
+
   return (
     <Collapsible
       open={isOpen}
       onOpenChange={onOpenChange}
-      className="rounded-xl border bg-card shadow-sm"
+      className={`overflow-hidden rounded-xl border bg-card shadow-sm w-[calc(100vw-44px)] sm:w-full`}
     >
       <CollapsibleTrigger asChild>
-        <button className="w-full px-4 py-3 text-left transition hover:bg-muted/50">
+        <button className="w-full px-3 py-3 text-left transition hover:bg-muted/50 sm:px-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="truncate font-semibold">
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <p className="min-w-0 max-w-full truncate text-sm font-semibold sm:text-base">
                   {complaint.complaint_title}
                 </p>
                 <StatusBadge status={complaint.complaint_status} />
               </div>
 
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
                 {complaint.customer_name} • {complaint.customer_owner}
               </p>
             </div>
 
-            <div className="flex items-center justify-between gap-4 lg:justify-end">
-              <div className="text-left lg:text-right">
+            <div className="flex w-full items-center justify-between gap-3 lg:w-auto lg:justify-end">
+              <div className="min-w-0 text-left lg:text-right">
                 <p className="text-xs text-muted-foreground">Manager</p>
-                <p className="text-sm font-medium">
+                <p className="truncate text-sm font-medium">
                   {complaint.customer_ownership_name || "N/A"}
                 </p>
               </div>
 
               <ChevronDown
-                className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${
-                  isOpen ? "rotate-180" : ""
-                }`}
+                className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""
+                  }`}
               />
             </div>
           </div>
@@ -530,11 +527,12 @@ function ComplaintCard({
       </CollapsibleTrigger>
 
       <CollapsibleContent>
-        <div className="space-y-4 border-t p-4">
-          <div className="flex flex-wrap gap-2">
+        <div className="space-y-4 border-t p-3 sm:p-4">
+          <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
             {complaint.complaint_status !== "completed" && (
               <Button
                 size="sm"
+                className="w-full sm:w-auto"
                 onClick={() => onCloseComplaint(complaint.complaint_id)}
               >
                 Close Complaint
@@ -544,22 +542,25 @@ function ComplaintCard({
             <Button
               size="sm"
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={() => onEditComplaint(complaint)}
             >
               Edit Complaint
             </Button>
 
             {complaint.payment_details?.length > 0 ? (
-              <RenderPaymentViewButton
-                onRefresh={onRefresh}
-                id={complaint.complaint_id}
-                payments={complaint.payment_details}
-              />
+              <div className="w-full sm:w-auto">
+                <RenderPaymentViewButton
+                  onRefresh={onRefresh}
+                  id={complaint.complaint_id}
+                  payments={complaint.payment_details}
+                />
+              </div>
             ) : (
               complaint.complaint_paid && (
                 <Button
                   size="sm"
-                  className="bg-green-600 hover:bg-green-700"
+                  className="w-full bg-green-600 hover:bg-green-700 sm:w-auto"
                   onClick={() => onAddPayment(complaint.complaint_id)}
                 >
                   Add Payment
@@ -572,10 +573,7 @@ function ComplaintCard({
             <SectionCard title="Complaint Details">
               <div className="grid gap-3 md:grid-cols-2">
                 <InfoItem label="Problem" value={complaint.complaint_problem} />
-                <InfoItem
-                  label="Solution"
-                  value={complaint.complaint_solution}
-                />
+                <InfoItem label="Solution" value={complaint.complaint_solution} />
               </div>
             </SectionCard>
           )}
@@ -584,21 +582,15 @@ function ComplaintCard({
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <InfoItem label="Name" value={complaint.customer_name} />
               <InfoItem label="Owner" value={complaint.customer_owner} />
-              <InfoItem
-                label="Manager"
-                value={complaint.customer_ownership_name}
-              />
+              <InfoItem label="Manager" value={complaint.customer_ownership_name} />
               <InfoItem label="Address" value={complaint.customer_address} />
               <InfoItem label="Location" value={complaint.customer_location} />
-              <InfoItem
-                label="Contact"
-                value={complaint.customer_number?.join(", ")}
-              />
+              <InfoItem label="Contact" value={complaint.customer_number?.join(", ")} />
 
               {complaint?.customer_pin?.includes("http") && (
                 <div className="sm:col-span-2 lg:col-span-3">
                   <Link target="_blank" href={complaint.customer_pin}>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
                       Open Google Location
                     </Button>
                   </Link>
@@ -611,14 +603,12 @@ function ComplaintCard({
             {complaint.engineer_id ? (
               <div className="grid gap-3 sm:grid-cols-2">
                 <InfoItem label="Engineer" value={complaint.engineer_name} />
-                <InfoItem
-                  label="Assigned By"
-                  value={complaint.assigned_by_name}
-                />
+                <InfoItem label="Assigned By" value={complaint.assigned_by_name} />
               </div>
             ) : (
               <Button
                 size="sm"
+                className="w-full sm:w-auto"
                 onClick={() => onAssignEngineer(complaint.complaint_id)}
               >
                 Assign Engineer
@@ -630,13 +620,10 @@ function ComplaintCard({
             <SectionCard title="Complaint Updates">
               <div className="grid gap-2">
                 {complaint.logs.map((item, index) => (
-                  <div
-                    key={index}
-                    className="rounded-lg border bg-muted/30 p-3"
-                  >
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <p className="text-sm font-medium">
+                  <div key={index} className="rounded-lg border bg-muted/30 p-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <p className="break-words text-sm font-medium">
                           {item?.remark || "No remarks"}
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
@@ -644,12 +631,12 @@ function ComplaintCard({
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-4">
+                      <div className="flex shrink-0 flex-wrap items-center gap-3 sm:justify-end">
                         {item.location && item.location.length > 0 ? (
                           <MapPin
                             onClick={() => {
-                              const mapUrl = `https://www.google.com/maps?q=${item.location[0]},${item.location[1]}`;
-                              window.open(mapUrl, "_blank");
+                              const mapUrl = `https://www.google.com/maps?q=${item.location[0]},${item.location[1]}`
+                              window.open(mapUrl, "_blank")
                             }}
                             className="h-5 w-5 cursor-pointer text-red-500 hover:opacity-70"
                           />
@@ -669,7 +656,7 @@ function ComplaintCard({
         </div>
       </CollapsibleContent>
     </Collapsible>
-  );
+  )
 }
 
 const AddNewComplaint = ({
@@ -750,7 +737,7 @@ function ComplaintFormContent({
   onSubmit: (values: FormValues) => Promise<void>;
 }) {
   return (
-    <form onSubmit={form.handleSubmit(onSubmit,  (errors : any) => {
+    <form onSubmit={form.handleSubmit(onSubmit, (errors: any) => {
       console.log("Validation Errors:", errors);
     })} className="space-y-4">
       <FieldSet className="rounded-lg border p-4">
@@ -811,9 +798,8 @@ function ComplaintFormContent({
               </FieldLabel>
               <Input
                 {...field}
-                placeholder={`Enter ${
-                  form.watch("installation") ? "title" : "complaint"
-                }`}
+                placeholder={`Enter ${form.watch("installation") ? "title" : "complaint"
+                  }`}
                 aria-invalid={fieldState.invalid}
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}

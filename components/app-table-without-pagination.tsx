@@ -43,6 +43,7 @@ type PageTableProps<T extends Record<string, any>> = {
   download?: boolean;
   onRowClick?: (row: T, event: React.MouseEvent<HTMLTableRowElement>) => void;
   height?: string
+  tableWidth ?:string
 };
 const PageTable = <T extends Record<string, any>>({
   children,
@@ -52,7 +53,8 @@ const PageTable = <T extends Record<string, any>>({
   onRowClick = () => { },
   loading = false,
   download = false,
-  height = "min-h-[calc(100dvh-280px)]"
+  height = "min-h-[calc(100dvh-280px)]",
+  tableWidth
 }: PageTableProps<T>) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -169,7 +171,7 @@ const PageTable = <T extends Record<string, any>>({
       </div>
 
       <div
-        className={`relative flex flex-1 ${height} ${isMobile && "w-[calc(100vw-44px)]"}`}
+        className={`relative flex flex-1 ${height} ${isMobile ? tableWidth ? tableWidth : "w-[calc(100vw-44px)]" : ""}`}
       >
         <div className="absolute bottom-0 left-0 right-0 top-0 flex rounded-md border md:overflow-auto custom-scrollbar overflow-auto">
           <Table className="relative">

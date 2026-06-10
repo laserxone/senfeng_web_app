@@ -298,6 +298,8 @@ export default function Reimbursement({
             <Filter />
           </Button>
 
+          <div className="flex flex-wrap gap-2">
+
           <Button
             variant="destructive"
             onClick={async () => {
@@ -315,8 +317,11 @@ export default function Reimbursement({
             Add Reimbursement
           </Button>
 
-          <div className="flex flex-1 justify-between items-center">
-            <Button onClick={handleDownload}>Download</Button>
+          <Button onClick={handleDownload}>Download</Button>
+          </div>
+
+          <div className="flex flex-1 justify-start sm:justify-end gap-2 flex-wrap items-center">
+            
             <Card>
 
               <CardContent>

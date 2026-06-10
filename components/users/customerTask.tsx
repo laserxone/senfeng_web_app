@@ -25,16 +25,11 @@ import axios from "@/lib/axios";
 import moment from "moment";
 import Spinner from "../ui/spinner";
 import { toast } from "sonner";
+import { ColumnDef } from "@tanstack/react-table";
+import { CustomerTaskProps } from "@/lib/types";
 
-const getSchema = (isClientSelected) =>
-  z.object({
-    radio: z.enum(["office", "client"]),
-    task: z.string().min(5, { message: "Task must be at least 5 characters." }),
-    client: isClientSelected
-      ? z.number({ required_error: "Client is required." }) // Required when "client" is selected
-      : z.number().optional().nullable(), // Ensure optional & nullable when "office" is selected
-  });
-type CustomerTaskProps = {
+
+type CustomerTask = {
   id: any;
   base?: any;
   customer_id?: any;
@@ -56,12 +51,11 @@ export default function CustomerTask({
   height = "min-h-[calc(100dvh-300px)]",
   onFetchData,
   data,
-}:CustomerTaskProps) {
+}:CustomerTask) {
  
   const [visible, setVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState({});
-
-  const columns = [
+  const columns : ColumnDef<CustomerTaskProps>[] = [
     {
       accessorKey: "status",
       filterFn: "includesString",
@@ -173,14 +167,14 @@ export default function CustomerTask({
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex flex-1">
         <PageTable
+        tableWidth = "w-calc[100vw-60px]"
           columns={columns}
           data={data}
-        
           onRowClick={(val, e) => {
             setSelectedTask(val);
             setVisible(true);
           }}
-        ></PageTable>
+      />
       </div>
       <TaskDetail
         user_id={id}
@@ -207,7 +201,7 @@ const TaskDetail = ({
   const [deleteLoading, setDeleteLoading] = useState(false);
  
  
-  async function handleUpdateStatus(values) {
+  async function handleUpdateStatus(values : {id : number | string, status : string}) {
     setLoading(true);
     axios
       .put(`/${user_id}/task/${detail.id}`, {

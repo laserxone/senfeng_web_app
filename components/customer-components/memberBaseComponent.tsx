@@ -27,107 +27,108 @@ export default function CustomerBaseComponent() {
     const ids = [...new Set(tabsParam.split(",").filter(Boolean))];
 
     return ids.map((id) => {
-        if (id.startsWith("customer-")) {
-          const cid = id.split("-")[1];
+      if (id.startsWith("customer-")) {
+        const cid = id.split("-")[1];
 
-          return {
-            id,
-            title: `Customer ${cid}`,
-            closable: true,
-            component: <MemoizedCustomerTab
-              onLoading={(val) => {
-                if (val) {
-                  setLoading((prevState) => {
-                    const newState = [...prevState];
-                    newState.push(id);
-                    return newState;
-                  });
-                } else {
-                  setLoading((prevState) => {
-                    const newState = prevState.filter(
-                      (item) => item !== id
-                    );
-                    return newState;
-                  });
-                }
-              }}
-              customerId={Number(cid)}
-              onReturn={(mid, type = "Machine") => {
-
-                if (isMobile) {
-
-                  router.push(
-                    `/${base_route}/member/${cid}/${mid}`
+        return {
+          id,
+          title: `Customer ${cid}`,
+          closable: true,
+          component: <MemoizedCustomerTab
+            onLoading={(val) => {
+              if (val) {
+                setLoading((prevState) => {
+                  const newState = [...prevState];
+                  newState.push(id);
+                  return newState;
+                });
+              } else {
+                setLoading((prevState) => {
+                  const newState = prevState.filter(
+                    (item) => item !== id
                   );
-                } else {
-                  const id = `machine-${mid}`;
-                  openTab(id);
-                }
-              }}
-            />,
-          };
-        }
+                  return newState;
+                });
+              }
+            }}
+            customerId={Number(cid)}
+            onReturn={(mid, type = "Machine") => {
 
-        if (id.startsWith("machine-")) {
-          const mid = id.split("-")[1];
+              if (isMobile) {
 
-          return {
-            id,
-            title: `Machine ${mid}`,
-            closable: true,
-            component: <MemoizedMachineTab
+                router.push(
+                  `/${base_route}/member/${cid}/${mid}`
+                );
+              } else {
+                const id = `machine-${mid}`;
+                openTab(id);
+              }
+            }}
+          />,
+        };
+      }
 
-              machineId={Number(mid)}
-              onLoading={(val) => {
-                if (val) {
-                  setLoading((prevState) => {
-                    const newState = [...prevState];
-                    newState.push(id);
-                    return newState;
-                  });
-                } else {
-                  setLoading((prevState) => {
-                    const newState = prevState.filter(
-                      (item) => item !== id
-                    );
-                    return newState;
-                  });
-                }
-              }}
-            />,
-          };
-        }
+      if (id.startsWith("machine-")) {
+        const mid = id.split("-")[1];
 
-        return null;
-      }).filter((tab) => tab !== null);
+        return {
+          id,
+          title: `Machine ${mid}`,
+          closable: true,
+          component: <MemoizedMachineTab
+
+            machineId={Number(mid)}
+            onLoading={(val) => {
+              if (val) {
+                setLoading((prevState) => {
+                  const newState = [...prevState];
+                  newState.push(id);
+                  return newState;
+                });
+              } else {
+                setLoading((prevState) => {
+                  const newState = prevState.filter(
+                    (item) => item !== id
+                  );
+                  return newState;
+                });
+              }
+            }}
+          />,
+        };
+      }
+
+      return null;
+    }).filter((tab) => tab !== null);
   }, [tabsParam]);
 
   const openTab = (id: string) => {
-  const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(window.location.search);
 
-  const current = params.get("tabs")?.split(",").filter(Boolean) || [];
+    const current = params.get("tabs")?.split(",").filter(Boolean) || [];
 
-  const updated = [...new Set([...current, id])];
+    const updated = [...new Set([...current, id])];
 
-  params.set("tabs", updated.join(","));
-  params.set("active", id);
+    params.set("tabs", updated.join(","));
+    params.set("active", id);
 
-  window.history.pushState({}, "", `?${params.toString()}`);
-};
-
-useEffect(() => {
-  const handler = () => {
-    setActiveTabId(new URLSearchParams(window.location.search).get("active") || "dashboard");
+    window.history.pushState({}, "", `?${params.toString()}`);
   };
 
-  window.addEventListener("popstate", handler);
-  return () => window.removeEventListener("popstate", handler);
-}, []);
+  useEffect(() => {
+    const handler = () => {
+      setActiveTabId(new URLSearchParams(window.location.search).get("active") || "dashboard");
+    };
+
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
   const dashboardComponent = useMemo(() => {
     return (
       <MemberMainPage
         onReturn={(cid) => {
           console.log(cid)
+          console.log(isMobile)
           if (isMobile) {
             router.push(`/${base_route}/member/${cid}`);
           } else {
@@ -137,7 +138,7 @@ useEffect(() => {
         }}
       />
     );
-  }, [openTab]);
+  }, [openTab, isMobile]);
 
   useEffect(() => {
     setTabs([
@@ -151,7 +152,7 @@ useEffect(() => {
     ]);
 
     setActiveTabId(activeParam || "dashboard");
-  }, [tabsFromUrl, activeParam]);
+  }, [tabsFromUrl, activeParam, isMobile]);
 
   return (
     <div className="w-full flex flex-1">

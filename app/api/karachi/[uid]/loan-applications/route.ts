@@ -1,4 +1,5 @@
 import pool from "@/config/db";
+import { sendNotification } from "@/lib/sendNotification";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -41,7 +42,8 @@ export async function GET(request: NextRequest) {
         `,
         [parseInt(applicantId)]
       );
-    } else if (approverId) {
+    }
+    else if (approverId) {
       const approverIdInt = parseInt(approverId);
 
       // const userResult = await pool.query(
@@ -86,8 +88,8 @@ export async function GET(request: NextRequest) {
       //     `
       //   );
       // } else {
-        result = await pool.query(
-          `
+      result = await pool.query(
+        `
           SELECT 
             la.*,
             u.name as applicant_name,
@@ -138,8 +140,8 @@ export async function GET(request: NextRequest) {
             CASE WHEN la.status = 'in_progress' THEN 0 ELSE 1 END,
             la.created_at DESC
           `,
-          [approverIdInt]
-        );
+        [approverIdInt]
+      );
       // }
     } else {
       result = await pool.query(`
@@ -171,11 +173,11 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(result.rows);
-  } catch (error) {
-    console.error("Error fetching loan applications:", error);
+  } catch (error: any) {
+    console.log("Error fetching loan applications:", error);
 
     return NextResponse.json(
-      { error: "Failed to fetch loan applications" },
+      { message: error?.message || "Failed to fetch loan applications" },
       { status: 500 }
     );
   }
@@ -317,9 +319,20 @@ export async function POST(request: NextRequest) {
         `,
         [application.id]
       );
+
+      if (approversResult.rows.length > 0) {
+        const nameQuery = await pool.query(`SELECT name from users WHERE id = $1`, applicant_id)
+        const name = nameQuery.rows?.[0]?.name || ""
+        const sendTo = approversResult.rows?.[0].user_id ?? null
+        sendNotification(`${name} submitted loan application requesting your approval`, "applications", sendTo)
+      }
     }
 
     await client.query("COMMIT");
+
+
+
+
 
     return NextResponse.json(application, {
       status: 201,

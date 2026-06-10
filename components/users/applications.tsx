@@ -37,6 +37,7 @@ import {
     Layers,
     Receipt,
     Settings,
+    Trash2,
     Upload,
     User,
     Wallet,
@@ -54,6 +55,7 @@ import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
 import { Textarea } from "../ui/textarea";
+import ConfimationDialog from "../alert-dialog";
 
 interface LoanFormData {
     employeeId: string
@@ -175,20 +177,23 @@ const urgencyColors: Record<string, string> = {
 }
 
 export default function Applications() {
-    const { userID } = useUserDetail()
+    const { userID, isAdmin } = useUserDetail()
     const [formData, setFormData] = useState<LoanFormData>(initialFormData)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [detailApplication, setDetailApplication] = useState<LoanApplication | null>(null)
     const [isDetailOpen, setIsDetailOpen] = useState(false)
     const [applications, setApplications] = useState<LoanApplication[]>([])
+    const [allApplications, setAllApplications] = useState<LoanApplication[]>([])
     const [hierarchies, setHierarchies] = useState<Hierarchy[]>([])
     const [loading, setLoading] = useState(true)
     const [tab, setTab] = useState("applications")
-
+    const [selectedForDelete, setSelectedForDelete] = useState<LoanApplication | null>(null)
+    const [deleteLoading, setDeleteLoading] = useState(false)
     useEffect(() => {
         if (userID) {
             fetchData()
             fetchHierarchy()
+            fetchDataAll()
         }
     }, [userID])
 
@@ -197,6 +202,17 @@ export default function Applications() {
         try {
             const res = await axios.get(`/${userID}/loan-applications?applicant_id=${userID}`)
             setApplications(res.data)
+        } finally {
+            setLoading(false)
+        }
+
+    }
+
+    async function fetchDataAll() {
+        setLoading(true)
+        try {
+            const res = await axios.get(`/${userID}/loan-applications`)
+            setAllApplications(res.data)
         } finally {
             setLoading(false)
         }
@@ -217,6 +233,20 @@ export default function Applications() {
 
         }
 
+    }
+
+    async function handleDelete() {
+        if (!selectedForDelete?.id) return
+        setDeleteLoading(true)
+        try {
+
+            await axios.delete(`/${userID}/loan-applications/${selectedForDelete.id}`)
+            await fetchData()
+            await fetchDataAll()
+            setSelectedForDelete(null)
+        } finally {
+            setDeleteLoading(false)
+        }
     }
 
     const updateField = <K extends keyof LoanFormData>(field: K, value: LoanFormData[K]) => {
@@ -343,6 +373,7 @@ export default function Applications() {
                         <TabsTrigger value="new">New Application</TabsTrigger>
                         <TabsTrigger value="applications">My Applications</TabsTrigger>
                         <TabsTrigger value="approvals">My Approvals</TabsTrigger>
+                        <TabsTrigger value="all">All Applications</TabsTrigger>
                     </TabsList>
                     <div className="space-y-4" hidden={tab !== "applications"}>
                         <div className="flex items-center justify-between">
@@ -684,8 +715,8 @@ export default function Applications() {
                                                     <CalendarDays className="size-3.5 text-emerald-600" />
                                                     Return Date
                                                 </FieldLabel>
-                                                <AppCalendar min={new Date()} date={formData.returnDate} onChange={(d) => updateField("returnDate", d)} 
-                                                    max={""}/>
+                                                <AppCalendar min={new Date()} date={formData.returnDate} onChange={(d) => updateField("returnDate", d)}
+                                                    max={""} />
 
                                             </Field>
 
@@ -694,8 +725,8 @@ export default function Applications() {
                                                     <CalendarDays className="size-3.5 text-emerald-600" />
                                                     First Installment
                                                 </FieldLabel>
-                                                <AppCalendar min={new Date()} date={formData.firstInstallmentDate} onChange={(d) => updateField("firstInstallmentDate", d)} 
-                                                    max={""}/>
+                                                <AppCalendar min={new Date()} date={formData.firstInstallmentDate} onChange={(d) => updateField("firstInstallmentDate", d)}
+                                                    max={""} />
 
                                             </Field>
                                         </div>
@@ -897,6 +928,152 @@ export default function Applications() {
                     <div className="space-y-4" hidden={tab !== "approvals"}>
                         <RenderMyApprovals />
                     </div>
+
+                    <div className="space-y-4" hidden={tab !== "all"}>
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-semibold">All Applications</h2>
+                        </div>
+
+                        {!allApplications ? (
+                            <div className="grid gap-4 md:grid-cols-2">
+                                {[1, 2].map((i) => (
+                                    <Card key={i} className="animate-pulse">
+                                        <CardHeader>
+                                            <div className="h-5 bg-muted rounded w-2/3" />
+                                            <div className="h-4 bg-muted rounded w-1/2 mt-2" />
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="h-20 bg-muted rounded" />
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        ) : allApplications.length === 0 ? (
+                            <Card className="border-dashed">
+                                <CardContent className="flex flex-col items-center justify-center py-12">
+                                    <div className="size-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                                        <FileText className="size-8 text-muted-foreground" />
+                                    </div>
+                                    <h3 className="text-lg font-medium mb-1">No applications yet</h3>
+                                    <p className="text-muted-foreground text-center max-w-sm mb-4">
+                                        You haven&apos;t submitted any loan applications. Click the button below to apply.
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        ) : (
+                            <div className="grid gap-4 md:grid-cols-3">
+                                {allApplications.map((application) => (
+                                    <Card key={application.id} className="overflow-hidden">
+                                        <div
+                                            className={cn(
+                                                "h-1",
+                                                application.status === "approved" && "bg-emerald-500",
+                                                application.status === "rejected" && "bg-red-500",
+                                                application.status === "in_progress" && "bg-blue-500",
+                                                application.status === "pending" && "bg-amber-500",
+                                                application.status === "disbursed" && "bg-purple-500"
+                                            )}
+                                        />
+                                        <CardHeader className="pb-3">
+                                            <div className="flex items-start justify-between">
+                                                <div>
+                                                    <CardTitle className="text-base">
+                                                        {formatCurrency(Number(application.loan_amount))}
+                                                    </CardTitle>
+                                                    <CardDescription className="font-mono text-xs">
+                                                        {application.application_number}
+                                                    </CardDescription>
+                                                </div>
+                                                <Badge className={cn("capitalize", statusColors[application.status])}>
+                                                    {application.status.replace("_", " ")}
+                                                </Badge>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                                <div>
+                                                    <p className="text-muted-foreground text-xs">Applicant</p>
+                                                    <p className="font-bold">{application.applicant_name}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-muted-foreground text-xs">Type</p>
+                                                    <p className="capitalize">{application.loan_type}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-muted-foreground text-xs">Applied</p>
+                                                    <p>{formatDate(application.created_at)}</p>
+                                                </div>
+                                            </div>
+
+                                            {/* Approval Timeline */}
+                                            {application.approval_steps && application.approval_steps.length > 0 && (
+                                                <div className="space-y-2">
+                                                    <p className="text-xs font-medium text-muted-foreground">
+                                                        Approval Progress
+                                                    </p>
+                                                    <div className="flex items-center gap-1">
+                                                        {application.approval_steps.map((step, index) => (
+                                                            <div key={step.id} className="flex items-center">
+                                                                <div
+                                                                    className={cn(
+                                                                        "size-6 rounded-full flex items-center justify-center text-xs",
+                                                                        step.status === "approved" &&
+                                                                        "bg-emerald-100 text-emerald-700",
+                                                                        step.status === "rejected" && "bg-red-100 text-red-700",
+                                                                        step.status === "pending" &&
+                                                                            step.approval_order === application.current_approver_order
+                                                                            ? "bg-blue-100 text-blue-700 ring-2 ring-blue-400"
+                                                                            : step.status === "pending" && "bg-gray-100 text-gray-500"
+                                                                    )}
+                                                                    title={`${step.approver_name} - ${step.status}`}
+                                                                >
+                                                                    {step.status === "approved" ? (
+                                                                        <Check className="size-3" />
+                                                                    ) : step.status === "rejected" ? (
+                                                                        <X className="size-3" />
+                                                                    ) : (
+                                                                        index + 1
+                                                                    )}
+                                                                </div>
+                                                                {index < application.approval_steps!.length - 1 && (
+                                                                    <ChevronRight className="size-3 text-muted-foreground mx-0.5" />
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="w-full"
+                                                onClick={() => {
+                                                    setDetailApplication(application)
+                                                    setIsDetailOpen(true)
+                                                }}
+                                            >
+                                                <Eye className="size-4 mr-2" />
+                                                View Details
+                                            </Button>
+
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                className="w-full"
+                                                onClick={() => {
+                                                    setSelectedForDelete(application)
+                                                }}
+                                            >
+                                                <Trash2 className="size-4 mr-2" />
+                                                Delete
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </Tabs>
             }
 
@@ -910,7 +1087,7 @@ export default function Applications() {
 
                     <ScrollArea className="h-[70vh] pr-2">
                         {detailApplication && (
-                            <div className="space-y-6">
+                            <div className="space-y-6 px-2">
                                 <div className="flex items-center gap-3">
                                     <Badge className={cn("capitalize", statusColors[detailApplication.status])}>
                                         {detailApplication.status.replace("_", " ")}
@@ -1047,6 +1224,15 @@ export default function Applications() {
                     </ScrollArea>
                 </DialogContent>
             </Dialog>
+
+            <ConfimationDialog
+                loading={deleteLoading}
+                open={!!selectedForDelete}
+                title={"Are you sure you want to delete?"}
+                description={"Your action will remove application from the system"}
+                onPressYes={() => handleDelete()}
+                onPressCancel={() => setSelectedForDelete(null)}
+            />
 
         </div>
     )

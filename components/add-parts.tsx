@@ -32,7 +32,7 @@ const formSchema = z
   })
 
 
-const AddParts = ({ customer_id, user_id, visible, onClose, onRefresh }: { customer_id?: number, user_id: number, visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void> }) => {
+const AddParts = ({ customer_id, user_id, visible, onClose, onRefresh }: { customer_id?: number, user_id: number | string, visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void> }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
   const [cheque, setCheque] = useState(false);

@@ -16,6 +16,7 @@ import Heading from "../../ui/heading";
 import { QuotationPDF } from "./quotation-pdf";
 import { QuotationFormEdit } from "./quotation-form-edit";
 import { toast } from "sonner";
+import { formatPrice } from "@/lib/formatPrice";
 
 export default function QuotationPage() {
   const [data, setData] = useState<QuotationData[]>([])
@@ -248,22 +249,7 @@ export default function QuotationPage() {
     },
   ]
 
-  const formatPrice = (price: string | number) => {
-    const priceStr = String(price);
-
-
-    if (priceStr.toUpperCase().includes("USD")) {
-      return priceStr;
-    }
-
-
-    const numeric = parseFloat(priceStr.replace(/[^0-9.]/g, ""));
-
-    if (isNaN(numeric)) return "0";
-
-
-    return (numeric / 1_000_000).toFixed(2);
-  };
+  
 
   async function handleDownloadQuotation(quotation: QuotationData) {
     if (!quotation?.id) return

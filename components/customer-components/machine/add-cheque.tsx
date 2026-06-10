@@ -84,12 +84,12 @@ export default function AddCheque({
 
   return (
     <Dialog open={visible} onOpenChange={onClose}>
-      <DialogContent className="max-w-max min-w-[40vw]">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-2xl lg:max-w-6xl">
         <DialogHeader>
           <DialogTitle>Credit Cheque</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="px-2 h-[80vh] ">
+        <ScrollArea className="px-2 h-[70vh] ">
           <ChequeCredit
             setTotal={setTotal}
             setValue={setValue}

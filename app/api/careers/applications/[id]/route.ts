@@ -16,7 +16,7 @@ export async function DELETE(
       );
     }
 
-    const res = await pool.query(`SELECT * FROM resumes`)
+    const res = await pool.query(`SELECT cv_url FROM resumes WHERE id = $1`, [id])
     const data =res.rows?.[0] ?? null
 
     if(!data){

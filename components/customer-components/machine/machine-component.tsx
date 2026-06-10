@@ -355,6 +355,15 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
 
       {
         id: "actions",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+            >
+              Actions
+            </Button>
+          );
+        },
         cell: ({ row }) => {
           const currentItem = row.original;
           return (

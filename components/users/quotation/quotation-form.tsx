@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { QuotationPDF } from "@/components/users/quotation/quotation-pdf"
 import useUserDetail from "@/hooks/use-user-detail"
 import axios from "@/lib/axios"
+import { formatPrice } from "@/lib/formatPrice"
 import { MyCustomer, PricesSearchProps, QuotationData } from "@/lib/types"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { pdf } from "@react-pdf/renderer"
@@ -167,8 +168,20 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
         const url = URL.createObjectURL(blob)
         const link = document.createElement("a")
 
+
+        let normalName = data.customer_name;
+
+        const nameParts = normalName.trim().split(/\s+/);
+
+        if (nameParts.length > 2) {
+          normalName = nameParts.slice(0, 2).join(" ");
+        }
+
+
+        let downloadName = `${normalName} ${data.contact_person || ""}-${data.machine_model}-${data.machine_power}-${data.payment_terms || ""}${formatPrice(data.price)}.pdf`
+
         link.href = url
-        link.download = `Quotation-${finalData.id || "download"}.pdf`
+        link.download = downloadName
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
@@ -231,9 +244,9 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
       setDisable(false)
     }
     else if (paymentTerms === 'FOB' || paymentTerms === 'EXW') {
-    
+
       if (!selectedMachine?.data?.fob?.trim()) {
-       
+
         setDisable(false)
       }
       else {
@@ -241,14 +254,14 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
       }
     }
     else if (paymentTerms === 'DDP') {
-     
+
       if (!selectedMachine?.data?.ddp?.trim()) {
-      
+
         setDisable(false)
       } else {
         setDisable(true)
       }
-    } 
+    }
 
   }, [selectedMachine, paymentTerms])
 

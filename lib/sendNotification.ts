@@ -4,6 +4,7 @@ import admin from "./firebaseAdmin"
 
 
 export const sendNotification = async (title : string, page : string, sendTo : string) => {
+  if(!sendTo) return
     try {
       const TimeStamp = moment().valueOf()
   
