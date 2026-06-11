@@ -85,7 +85,7 @@ export default function Page() {
   );
 
   return (
-    <div className="flex flex-1 flex-col space-y-4">
+    <div className="flex flex-1 flex-col space-y-4 pb-4">
       <div className="flex items-start justify-between">
         <Heading title="Old Commissions" description="Clear old commissions" />
       </div>
@@ -297,8 +297,7 @@ const RenderEachMachine = ({ machine, onReturn } : {machine : Machine, onReturn 
             disabled={
               loading ||
               !selectedUser ||
-              !commissionAmount ||
-              commissionAmount === 0
+              commissionAmount < 0
             }
             onClick={() => handleClearCommission(machine)}
           >

@@ -19,3 +19,20 @@ export async function checkSuperadmin(id: string, reimbursement: boolean = false
 
     return user.designation === "Owner" || user.full_access === true;
 }
+
+export async function getDesignation(id: string) {
+
+    if (!id) throw new Error("User ID is missing");
+
+    const userQuery = await pool.query(
+        `SELECT id, designation FROM users WHERE id = $1`,
+        [id]
+    );
+
+
+    let user = userQuery.rows[0];
+
+    if (!user) throw new Error("User not found");
+
+    return user.designation
+}

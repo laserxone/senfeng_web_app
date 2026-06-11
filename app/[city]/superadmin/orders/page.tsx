@@ -22,7 +22,8 @@ import {
   Filter,
   Package,
   Plus,
-  Trash2
+  Trash2,
+  Warehouse
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -74,6 +75,7 @@ export default function Page() {
   const [search, setSearch] = useState("")
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [selectedShipment, setSelectedShipment] = useState<number | null | undefined>(null)
+  const [selectedStock, setSelectedStock] = useState("")
 
   useEffect(() => {
     const savedOrder = localStorage.getItem("cardOrder");
@@ -229,16 +231,28 @@ export default function Page() {
     setSelectedItemForBook(itemId)
   }
 
-  const filteredData = orderedData?.map((order) => {
-    if (!search.trim()) return order;
+ const filteredData = orderedData
+  ?.map((order) => {
+    if (!search.trim() && !selectedStock) return order;
 
+    const filteredItems = order.order_items
+      .filter((item) => {
+        if (!selectedStock) return true;
 
-    const filteredItems = order.order_items.filter((item) =>
-      Object.entries(item).some(([_, value]) => {
-        if (value === null || value === undefined) return false;
-        return String(value).toLowerCase().includes(search.toLowerCase());
+        return (
+          item.location?.toLowerCase() === selectedStock.toLowerCase()
+        );
       })
-    );
+      .filter((item) =>
+        !search.trim()
+          ? true
+          : Object.entries(item).some(([_, value]) => {
+              if (value === null || value === undefined) return false;
+              return String(value)
+                .toLowerCase()
+                .includes(search.toLowerCase());
+            })
+      );
 
     if (filteredItems.length === 0) return null;
 
@@ -246,13 +260,80 @@ export default function Page() {
       ...order,
       order_items: filteredItems,
     };
-  }).filter(Boolean);
+  })
+  .filter((order): order is typeof order => order !== null);
 
 
   return (
-    <div className="flex flex-1 flex-col space-y-4">
+    <div className="flex flex-1 flex-col space-y-4 py-2">
       <div className="flex justify-between flex-wrap">
         <Heading title="Orders" description="Manage orders" />
+
+        <div className="flex flex-wrap gap-2">
+          {[
+            {
+              key: "lahore",
+              label: "Lahore Stock",
+            },
+            {
+              key: "karachi",
+              label: "Karachi Stock",
+            },
+          ].map((item) => {
+            const active = selectedStock === item.key;
+
+            const total = orderedData.flatMap(
+              (order) => order.order_items
+            ).filter((it)=> !it.customer_id).filter(
+              (it) => it.location?.toLowerCase() === item.key?.toLocaleLowerCase()
+            ).length;
+
+            return (
+              <button
+                key={item.key}
+                onClick={() =>
+                  setSelectedStock(
+                    active ? "" : item.key
+                  )
+                }
+                className={`
+          flex items-center gap-3 rounded-xl border px-4 py-3
+          transition-all duration-200
+          hover:shadow-sm
+          ${active
+                    ? "border-primary bg-primary/5 shadow-sm"
+                    : "bg-background hover:bg-muted/40"
+                  }
+        `}
+              >
+                <div
+                  className={`
+            rounded-lg p-2
+            ${active
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                    }
+          `}
+                >
+                  <Warehouse className="h-4 w-4" />
+                </div>
+
+                <div className="text-left">
+                  <p className="text-xs text-muted-foreground">
+                    Warehouse
+                  </p>
+                  <p className="text-sm font-semibold">
+                    {item.label}
+                  </p>
+
+                  <p className="text-sm font-semibold">
+                    {total || "0"}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="flex gap-2 justify-between items-center">
@@ -381,12 +462,12 @@ export default function Page() {
                                         <span className="font-medium">
                                           {item.name}
                                           {item.location &&
-                                            item.location === "Lahore" ? (
+                                            item.location?.toLocaleLowerCase() === "lahore" ? (
                                             <Badge
                                               variant="outline"
                                               className="bg-blue-500 text-white dark:bg-blue-600 ml-2 hover:none"
                                             >
-                                              {item?.location}
+                                              {item?.location?.charAt(0)?.toUpperCase() + item?.location?.slice(1)}
                                             </Badge>
                                           ) : (
                                             <Badge

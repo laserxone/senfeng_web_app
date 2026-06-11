@@ -6,7 +6,7 @@ export async function GET() {
 
     try {
         const result = await pool.query(`
-      SELECT 
+     SELECT 
   s.id AS sale_id,
   s.customer_id,
   s.serial_no,
@@ -26,11 +26,17 @@ export async function GET() {
   owner_user.name AS customer_owner_name
 FROM sale s
 INNER JOIN customer cu ON s.customer_id = cu.id
-INNER JOIN payment p ON p.machine_id = s.id
-LEFT JOIN commissions com ON com.sale_id = s.id
 LEFT JOIN users u ON s.sell_by = u.id
 LEFT JOIN users owner_user ON cu.ownership = owner_user.id
-WHERE com.sale_id IS NULL
+LEFT JOIN commissions com ON com.sale_id = s.id
+WHERE u.office = 'karachi'
+AND com.commission_issued IS DISTINCT FROM TRUE
+AND NOT EXISTS (
+  SELECT 1
+  FROM cancelled_machine cm
+  WHERE cm.machine_id = s.id
+)
+ORDER BY s.contract_date DESC;
     `);
 
         const groupedData = groupByCustomer(result.rows);
@@ -77,7 +83,7 @@ export async function POST(req:NextRequest) {
 }
 
 
-function groupByCustomer(rows:any) {
+function groupByCustomer(rows:any[]) {
   const customerMap = new Map();
 
   for (const row of rows) {
@@ -141,8 +147,10 @@ function groupByCustomer(rows:any) {
   // Sort machines by contract_date ascending
   for (const customer of customerMap.values()) {
     customer.machines.sort(
-      (a:any, b:any) => new Date(a.contract_date).getTime() - new Date(b.contract_date).getTime()
-    );
+  (a: any, b: any) =>
+    new Date(a.contract_date).getTime() -
+    new Date(b.contract_date).getTime()
+);
   }
 
   return Array.from(customerMap.values());

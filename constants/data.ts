@@ -255,6 +255,12 @@ export const OwnerSidebarItems = [
         url: "/orders",
         shortcut: ["o", "r", "d"],
       },
+
+        {
+        title: "Orders List",
+        url: "/orderlist",
+        shortcut: ["o", "r", "l"],
+      },
     ],
   },
 

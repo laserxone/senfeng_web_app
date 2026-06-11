@@ -1050,6 +1050,9 @@ export type AdminDashboard = {
     }
 }
 
+
+
+
 export type AdminTeamTasks = {
     assigned_user_id: number
     assigned_user_name: string
@@ -1480,4 +1483,181 @@ export type PricesSearchProps = {
     value: string | number
     label: string
     data: PricesProps
+}
+
+
+///////// CMR ////////////
+
+
+export interface CRMDashboardData {
+  total_payment_this_month: string;
+  payment_change_percentage: string;
+  total_machines_sold_this_month: string;
+  machines_sold_change_percentage: string;
+  total_new_customers_this_month: string;
+  new_customer_change_percentage: string;
+
+  recent_sales: CRMRecentSale[];
+  industry_count: CRMIndustryCount[];
+  machines_sold_last_3_months: CRMMachinesSoldTrend[];
+  feedback_status_last_6_months: CRMFeedbackStatus[];
+
+  team_progress: CRMTeamProgress[];
+  team_task: CRMTeamTask[];
+
+  complaint_stats: CRMComplaintStats;
+  total_due_payment: number;
+
+  pos_stats: CRMPosStats;
+  unassigned_customers: CRMUnassignedCustomers;
+  top_followup: CRMTopFollowupData;
+  resumes: CRMResumeData;
+  loans: CRMLoan[];
+}
+
+export interface CRMRecentSale {
+  price: string;
+  contract_date: string;
+  seller_name: string;
+  seller_email: string;
+  seller_dp: string;
+  customer_id: number;
+  customer_name: string;
+  customer_owner: string;
+}
+
+export interface CRMIndustryCount {
+  industry: string;
+  customer_count: string;
+}
+
+export interface CRMMachinesSoldTrend {
+  date: string;
+  total_machines_sold: number;
+}
+
+export interface CRMFeedbackStatus {
+  month: string;
+  satisfactory: number;
+  unsatisfactory: number;
+}
+
+export interface CRMTeamProgress {
+  id: number;
+  name: string;
+  email: string;
+  monthly_target: string;
+  customers_assigned: string;
+  sale_produced_customers: string;
+  repeated_customers: string;
+  customer_to_member_conversion: string;
+}
+
+export interface CRMTeamTask {
+  assigned_user_id: number;
+  assigned_user_name: string;
+  total_tasks: string;
+  tasks: CRMTask[];
+}
+
+export interface CRMTask {
+  id: number;
+  title: string;
+  status: string;
+  created_at: string;
+  customer_id: number | null;
+  customer_name: string | null;
+  customer_owner: string | null;
+}
+
+export interface CRMComplaintStats {
+  total_paid: string;
+  total_pending: string;
+}
+
+export interface CRMPosStats {
+  pending: number;
+}
+
+export interface CRMUnassignedCustomers {
+  total: number;
+  data: CRMCustomer[];
+  with_feedback: CRMCustomerGroup;
+  without_feedback: CRMCustomerGroup;
+}
+
+export interface CRMCustomerGroup {
+  total: number;
+  data: CRMCustomer[];
+}
+
+export interface CRMCustomer {
+  id: number;
+  name: string;
+  email: string;
+  customer_group: string;
+  industry: string;
+  location: string;
+  number: string[];
+  owner: string;
+  ownership: number | null;
+  old_ref: string | null;
+  created_at: string;
+  address: string;
+  remarks: string;
+  rating: number;
+  image: string | null;
+  member: boolean;
+  created_by: number;
+  lead: number;
+  platform: string;
+  other: string;
+  pin: string;
+  top_followup: boolean;
+  lead_commission: boolean;
+  office: string;
+  has_feedback_this_month: boolean;
+  feedback_count_this_month: string;
+}
+
+export interface CRMTopFollowupData {
+  total: number;
+  data: CRMTopFollowup[];
+}
+
+export interface CRMTopFollowup {
+  id: number;
+  customer_id: number;
+  created_at: string;
+  next_followup: string;
+  feedback: string;
+  user_id: number;
+  top_follow: boolean;
+  status: "Satisfactory" | "Unsatisfactory";
+  type: string;
+  followup_type: string;
+  customer_name: string;
+  customer_owner: string;
+  customer_phone: string[];
+}
+
+export interface CRMResumeData {
+  total: number;
+  data: CRMResume[];
+}
+
+export interface CRMResume {
+  id?: number;
+}
+
+export interface CRMLoan {
+  id: number;
+  user_id: number;
+  loan_amount: string;
+  issued_date: string;
+  remaining_amount: string;
+  status: "active" | "closed";
+  description: string;
+  loan_applications_id: number | null;
+  user_name: string;
 }

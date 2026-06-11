@@ -6,7 +6,7 @@ export async function GET() {
 
     try {
         const result = await pool.query(`
-      SELECT 
+     SELECT 
   s.id AS sale_id,
   s.customer_id,
   s.serial_no,
@@ -26,11 +26,17 @@ export async function GET() {
   owner_user.name AS customer_owner_name
 FROM sale s
 INNER JOIN customer cu ON s.customer_id = cu.id
-INNER JOIN payment p ON p.machine_id = s.id
-LEFT JOIN commissions com ON com.sale_id = s.id
 LEFT JOIN users u ON s.sell_by = u.id
 LEFT JOIN users owner_user ON cu.ownership = owner_user.id
-WHERE com.sale_id IS NULL
+LEFT JOIN commissions com ON com.sale_id = s.id
+WHERE u.office = 'lahore'
+AND com.commission_issued IS DISTINCT FROM TRUE
+AND NOT EXISTS (
+  SELECT 1
+  FROM cancelled_machine cm
+  WHERE cm.machine_id = s.id
+)
+ORDER BY s.contract_date DESC;
     `);
 
         const groupedData = groupByCustomer(result.rows);
