@@ -1,11 +1,11 @@
-import {
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -21,43 +21,119 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { PartsProps } from "@/lib/types";
 import { Scrollbar } from "@radix-ui/react-scroll-area";
 import { getDownloadURL, ref } from "firebase/storage";
+import { ChevronDown, CreditCard, Package, ReceiptText } from "lucide-react";
 import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 
-export default function InvoiceDetails({ invoice } : {invoice : PartsProps}) {
+export default function InvoiceDetails({ invoice }: { invoice: PartsProps }) {
   const isMobile = useIsMobile();
 
-  return (
-    <AccordionItem
-      value={`invoice-${invoice.invoicenumber}`}
-      className="border rounded-lg"
-    >
-      <AccordionTrigger className="px-4 py-2 hover:bg-muted rounded-lg  hover:no-underline">
-        <div className="flex justify-between items-center w-full">
-          <span className="font-semibold">
-            Invoice #{invoice.invoicenumber}
-          </span>
-          {invoice.payment ? (
-            <Badge variant="default">Paid</Badge>
-          ) : (
-            <Badge variant="destructive">Pending</Badge>
-          )}
-        </div>
-      </AccordionTrigger>
+  function calculatePartStatus(data: PartsProps) {
+    const itemsTotal = (data.fields || []).reduce(
+      (sum: number, item: any) => sum + Number(item.total || 0),
+      0
+    );
 
-      <AccordionContent>
+    const totalPaid = (data.payments || []).reduce(
+      (sum: number, payment: any) => sum + Number(payment.amount || 0),
+      0
+    );
+
+    const finalAmount = itemsTotal - Number(data.discount || 0);
+
+    let status = "NA";
+
+    if (itemsTotal === 0) {
+      status = "Paid";
+    } else if (totalPaid === 0) {
+      status = "Pending";
+    } else if (finalAmount - totalPaid !== 0) {
+      status = "Partial";
+    } else {
+      status = "Paid";
+    }
+
+    return {
+      itemsTotal,
+      totalPaid,
+      finalAmount,
+      status,
+    };
+  }
+
+  const stats = calculatePartStatus(invoice)
+
+  return (
+    <Collapsible className="overflow-hidden rounded-xl bg-background shadow-sm ring-1 ring-black/5">
+      <CollapsibleTrigger className="group flex w-full items-center justify-between gap-3 px-3 py-2 text-left transition-colors hover:bg-muted/35">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <ReceiptText className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="truncate text-sm font-semibold">
+                Invoice #{invoice.invoicenumber}
+              </span>
+              {stats?.status === 'Paid' ? (
+                <Badge className="h-5 rounded-full px-2 text-[10px]">
+                  {stats?.status}
+                </Badge>
+              ) : (
+                <Badge variant="destructive" className="h-5 rounded-full px-2 text-[10px]">
+                  {stats?.status}
+                </Badge>
+              )}
+            </div>
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <Package className="h-3.5 w-3.5" />
+                {invoice.fields.length} products
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <CreditCard className="h-3.5 w-3.5" />
+                {invoice.payments.length} payments
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="hidden text-right sm:block">
+          <p className="text-xs text-muted-foreground">Total</p>
+          <p className="text-sm font-semibold">{stats?.finalAmount}</p>
+        </div>
+        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+      </CollapsibleTrigger>
+
+      <CollapsibleContent>
         <ScrollArea
           className={`overflow-x-auto ${isMobile && "max-w-[calc(100vw-64px)]"}`}
         >
-          <Card className="shadow-none border-none">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Invoice Details</CardTitle>
+          <Card className="rounded-none border-0 bg-muted/10 shadow-none">
+            <CardHeader className="px-3 py-2">
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div className="rounded-lg bg-background px-3 py-2 shadow-sm ring-1 ring-black/5">
+                  <p className="text-xs text-muted-foreground">Invoice Total</p>
+                  <p className="text-sm font-semibold">{stats?.finalAmount}</p>
+                </div>
+                <div className="rounded-lg bg-background px-3 py-2 shadow-sm ring-1 ring-black/5">
+                  <p className="text-xs text-muted-foreground">Received</p>
+                  <p className="text-sm font-semibold">{stats?.totalPaid}</p>
+                </div>
+                <div className="rounded-lg bg-background px-3 py-2 shadow-sm ring-1 ring-black/5">
+                  <p className="text-xs text-muted-foreground">Balance</p>
+                  <p className="text-sm font-semibold">
+                    {stats?.finalAmount - stats?.totalPaid}
+                  </p>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="flex flex-col gap-6 text-sm">
-              {/* Products Table */}
-              <div>
-                <Label className="font-bold mb-2 block">Products</Label>
+            <CardContent className="flex flex-col gap-3 px-3 pb-3 text-sm">
+              <div className="rounded-lg bg-background p-2 shadow-sm ring-1 ring-black/5">
+                <Label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <Package className="h-3.5 w-3.5" />
+                  Products
+                </Label>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -70,7 +146,7 @@ export default function InvoiceDetails({ invoice } : {invoice : PartsProps}) {
                   <TableBody>
                     {invoice.fields.map((item, ind) => (
                       <TableRow key={ind}>
-                        <TableCell>{item.name}</TableCell>
+                        <TableCell>{item.description}</TableCell>
                         <TableCell>{item.qty}</TableCell>
                         <TableCell>{item.price}</TableCell>
                         <TableCell>{item.total}</TableCell>
@@ -80,9 +156,11 @@ export default function InvoiceDetails({ invoice } : {invoice : PartsProps}) {
                 </Table>
               </div>
 
-              {/* Payments Table */}
-              <div>
-                <Label className="font-bold mb-2 block">Payments</Label>
+              <div className="rounded-lg bg-background p-2 shadow-sm ring-1 ring-black/5">
+                <Label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <CreditCard className="h-3.5 w-3.5" />
+                  Payments
+                </Label>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -118,14 +196,14 @@ export default function InvoiceDetails({ invoice } : {invoice : PartsProps}) {
               </div>
             </CardContent>
           </Card>
-          <Scrollbar orientation="horizontal"/>
+          <Scrollbar orientation="horizontal" />
         </ScrollArea>
-      </AccordionContent>
-    </AccordionItem>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
-const RenderImage = ({ img } :{img : string}) => {
+const RenderImage = ({ img }: { img: string }) => {
   const [localImage, setLocalImage] = useState<string | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
   const [rotation, setRotation] = useState(0);
@@ -144,7 +222,7 @@ const RenderImage = ({ img } :{img : string}) => {
     }
   }, [img]);
 
-  const handleZoomChange = useCallback((shouldZoom : boolean) => {
+  const handleZoomChange = useCallback((shouldZoom: boolean) => {
     setIsZoomed(shouldZoom);
   }, []);
 
@@ -211,7 +289,7 @@ const RenderImage = ({ img } :{img : string}) => {
               </div>
             </div>
           ) : (
-            img ??<></>
+            img ?? <></>
           )
         }
       >

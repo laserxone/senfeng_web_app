@@ -5,7 +5,7 @@ import admin from "@/lib/firebaseAdmin";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req:NextRequest) {
+export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
 
@@ -74,7 +74,7 @@ export async function POST(req:NextRequest) {
   }
 }
 
-export async function GET(req:NextRequest, { params }: { params: Promise<{ uid: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ uid: string }> }) {
   const { uid } = await params;
 
   const searchParams = req.nextUrl.searchParams;
@@ -139,7 +139,16 @@ ORDER BY
         return NextResponse.json(result.rows, { status: 200 });
       } else {
         const salesResult = await pool.query(
-          "SELECT * FROM sale WHERE sell_by = $1",
+          `
+  SELECT *
+  FROM sale s
+  WHERE s.sell_by = $1
+    AND NOT EXISTS (
+      SELECT 1
+      FROM cancelled_machine cm
+      WHERE cm.machine_id = s.id
+    )
+  `,
           [uid],
         );
         const sales = salesResult.rows;
@@ -253,7 +262,7 @@ ORDER BY
         return NextResponse.json(enrichedSales, { status: 200 });
       }
     }
-  } catch (err:any) {
+  } catch (err: any) {
     console.error(err);
     return NextResponse.json(
       { message: "Failed to fetch commissions", details: err.message },

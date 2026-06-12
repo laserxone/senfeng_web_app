@@ -7,11 +7,17 @@ import { Label } from "@/components/ui/label";
 import axios from "@/lib/axios";
 import {
   Calendar,
+  CircleDollarSign,
+  Cpu,
   Factory,
   Mail,
   MapPin,
+  MessageSquareText,
+  Package,
   Phone,
+  Plus,
   Trash2,
+  UserRound,
   Wrench,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -42,6 +48,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import VisitTab from "@/components/users/addVisit";
 import CustomerTask from "@/components/users/customerTask";
 import useUserDetail from "@/hooks/use-user-detail";
@@ -49,18 +56,18 @@ import { debounce } from "@/lib/debounce";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { GetProfileImage } from "@/lib/getProfileImage";
 
+import AddParts from "@/components/add-parts";
+import CurrencyFormatter from "@/components/currency-formatter";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { CustomerFeedbackProps, CustomerTaskProps, CustomerVisitProps, MachineProps, MyCustomer, PartsProps } from "@/lib/types";
+import { Scrollbar } from "@radix-ui/react-scroll-area";
 import { CheckCircle, Clock } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
-import InvoiceDetails from "./invoice-details";
-import CurrencyFormatter from "@/components/currency-formatter";
-import AddParts from "@/components/add-parts";
-import { Scrollbar } from "@radix-ui/react-scroll-area";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { CustomerFeedbackProps, CustomerTaskProps, CustomerVisitProps, MachineProps, MyCustomer, PartsProps } from "@/lib/types";
 import { toast } from "sonner";
+import InvoiceDetails from "./invoice-details";
 
 
 type MemberDetailProps = {
@@ -183,21 +190,27 @@ export default function MemberDetail({
 
   const RenderVisitTab = useCallback(() => {
     return (
-      <VisitTab
-        customer_data={customer_id || null}
-        disable={true}
-        id={userID}
-        data={visitData}
-        height={height}
-        onRefresh={async () => {
-          await fetchCustomerDashboard();
-        }}
-      />
+    
+        <div className="overflow-hidden w-full">
+          <ScrollArea className={`${height} w-full pr-2`}>
+            <VisitTab
+              customer_data={customer_id || null}
+              disable={true}
+              id={userID}
+              data={visitData}
+              height={height}
+              onRefresh={async () => {
+                await fetchCustomerDashboard();
+              }}
+            />
+          </ScrollArea>
+        </div>
+      
     );
-  }, [visitData, customer_id]);
+  }, [visitData, customer_id, height]);
 
   const RenderTaskTab = useCallback(() => {
-    
+
     return (
       <Card className="flex flex-1">
         <CardContent className="flex flex-1 pt-2">
@@ -228,7 +241,7 @@ export default function MemberDetail({
 
 
   return (
-    <div className="flex w-full flex-col">
+    <div className="flex w-full flex-col pb-2">
       <div className="flex items-center mb-2 justify-between gap-2 flex-wrap">
         <div className="flex gap-2 items-center">
           <ProfilePicture
@@ -351,7 +364,10 @@ export default function MemberDetail({
             <PartsTab data={data?.parts || []} height={height} />
           )}
 
-          {activeTab === "visit" && <RenderVisitTab />}
+          {activeTab === "visit" &&
+
+            <RenderVisitTab />
+          }
           {activeTab === "task" && <RenderTaskTab />}
           {activeTab === "about" && <AboutTab data={data} />}
         </div>
@@ -543,6 +559,9 @@ function CustomersTab({
   const [visible, setVisible] = useState(false);
   const [visibleParts, setVisibleParts] = useState(false);
   const { base_route } = useUserDetail();
+  const machineCount = data?.filter((item) => item.type === "Machine").length || 0;
+  const partsCount = data?.filter((item) => item.type !== "Machine").length || 0;
+  const totalValue = data?.reduce((sum, item) => sum + Number(item.price || 0), 0) || 0;
 
   const RenderEachMachine = ({ machine, index }: {
     machine: MachineProps & {
@@ -553,13 +572,15 @@ function CustomersTab({
       .filter((item) => item.clearance_date)
       ?.reduce((sum, payment) => sum + Number(payment.amount), 0);
     const total = Number(machine.price || 0);
+    const paymentComplete = Number(machine.price) === totalPayments;
+    const fullyReady = paymentComplete && machine?.percentage_completion === 100;
     return (
       <AccordionItem key={machine.id} value={`customer-${machine.id}`} className="border-none">
-        <Card>
-          <AccordionTrigger className="px-4 py-0 hover:no-underline">
-            <div className="flex justify-between items-center w-full flex-wrap gap-2">
+        <Card className="overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 transition-shadow hover:shadow-md dark:bg-zinc-950 dark:ring-white/10">
+          <AccordionTrigger className=" p-0 px-3 hover:no-underline">
+            <div className="flex w-full flex-wrap items-center justify-between gap-2 text-left">
               <Link
-                className="flex gap-4 items-center"
+                className="flex items-center gap-2"
                 href={
                   !route
                     ? "#"
@@ -567,68 +588,69 @@ function CustomersTab({
                 }
                 onClick={() => onReturn?.(machine.id)}
               >
-                <Badge variant={"outline"}>Machine no:{index}</Badge>
-                <h3 className="font-semibold text-lg hover:underline flex items-center gap-2">
-                  {machine.serial_no}
-                  {machine.cancelled_detail && (
-                    <span className="text-red-500 text-xs font-medium">
-                      Cancelled
-                    </span>
-                  )}
-                </h3>
-              </Link>
-              <div className="flex items-center">
-                <span className="font-normal text-sm text-gray-600 mr-2">
-                  Data completion: {machine?.percentage_completion || 0}%
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300">
+                  <Cpu className="h-4 w-4" />
                 </span>
-                {Number(machine.price) === totalPayments &&
-                  machine?.percentage_completion === 100 ? (
-                  <CheckCircle className="text-green-500 w-5 h-5 mr-2" />
+                <span className="min-w-0">
+                  <span className="flex min-w-0 flex-wrap items-center gap-1.5">
+                    <span className="truncate text-sm font-semibold hover:underline">
+                      {machine.serial_no}
+                    </span>
+                    {machine.cancelled_detail && (
+                      <Badge variant="destructive" className="h-5 rounded-full px-2 text-[10px]">
+                        Cancelled
+                      </Badge>
+                    )}
+                  </span>
+                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                    Machine #{index} {machine.name ? `- ${machine.name}` : ""}
+                  </span>
+                </span>
+              </Link>
+              <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                <Badge variant="outline" className="h-6 rounded-full bg-background px-2 text-[10px]">
+                  {machine?.percentage_completion || 0}% data
+                </Badge>
+                {fullyReady ? (
+                  <CheckCircle className="h-4 w-4 text-emerald-500" />
                 ) : (
-                  <Clock className="text-yellow-500 w-5 h-5 mr-2" />
+                  <Clock className="h-4 w-4 text-amber-500" />
                 )}
                 <Badge
                   variant={
-                    Number(machine.price) === totalPayments
+                    paymentComplete
                       ? "default"
                       : "destructive"
                   }
+                  className="h-6 rounded-full px-2 text-[10px]"
                 >
-                  {Number(machine.price) === totalPayments
-                    ? "Completed"
-                    : "Pending"}
+                  {paymentComplete ? "Paid" : "Balance"}
                 </Badge>
               </div>
             </div>
           </AccordionTrigger>
           <AccordionContent >
-            <CardContent className="pt-0">
-              <h4 className="text-lg font-semibold">{machine.name}</h4>
-              <div className=" gap-2 text-sm ">
+            <CardContent className="space-y-2 border-t bg-slate-50/60 px-3 py-3 dark:bg-zinc-900/50">
+              <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
                 {machine?.status && (
-                  <div>
-                    <strong>Status:</strong> <Badge>{machine?.status}</Badge>
-                  </div>
+                  <CompactDetail label="Status" value={<Badge className="h-5 rounded-full px-2 text-[10px]">{machine?.status}</Badge>} />
                 )}
-                <p>
-                  <strong>Contract Date:</strong>{" "}
-                  {machine?.created_at
-                    ? new Date(machine.contract_date).toLocaleDateString(
+                <CompactDetail
+                  label="Contract"
+                  value={
+                    machine?.contract_date
+                      ? new Date(machine.contract_date).toLocaleDateString(
                       "en-GB",
                     )
-                    : ""}
-                </p>
+                      : "N/A"
+                  }
+                />
                 {machine?.order_no_arr &&
                   machine?.order_no_arr.map((item, index) => (
-                    <p key={index}>
-                      <strong>Order No:</strong> {item}
-                    </p>
+                    <CompactDetail key={index} label="Order No" value={item} />
                   ))}
 
-                <p>
-                  <strong>Model No:</strong>{" "}
-                  {machine?.model_no || machine.serial_no}
-                </p>
+                <CompactDetail label="Model No" value={machine?.model_no || machine.serial_no} />
               </div>
               <BillingInformationMachine payment={[total, totalPayments]} />
             </CardContent>
@@ -647,13 +669,15 @@ function CustomersTab({
       .filter((item) => item.clearance_date)
       ?.reduce((sum, payment) => sum + Number(payment.amount), 0);
     const total = Number(machine.price || 0);
+    const paymentComplete = Number(machine.price) === totalPayments;
+    const fullyReady = paymentComplete && machine?.percentage_completion === 100;
     return (
-      <AccordionItem key={machine.id} value={`customer-${machine.id}`}>
-        <Card>
-          <AccordionTrigger className="px-4 py-2 hover:no-underline">
-            <div className="flex justify-between items-center w-full flex-wrap gap-2">
+      <AccordionItem key={machine.id} value={`customer-${machine.id}`} className="border-none">
+        <Card className="overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 transition-shadow hover:shadow-md dark:bg-zinc-950 dark:ring-white/10">
+           <AccordionTrigger className=" p-0 px-3 hover:no-underline">
+            <div className="flex w-full flex-wrap items-center justify-between gap-2 text-left">
               <Link
-                className="flex gap-4 items-center"
+                className="flex items-center gap-2"
                 href={
                   !route
                     ? "#"
@@ -661,63 +685,62 @@ function CustomersTab({
                 }
                 onClick={() => onReturn?.(machine.id, "Parts")}
               >
-                <Badge variant={"outline"}>Part no:{index}</Badge>
-                <h3 className="font-semibold text-lg hover:underline">
-                  {machine.serial_no}
-                </h3>
-              </Link>
-              <div className="flex items-center">
-                <span className="font-normal text-sm text-gray-600 mr-2">
-                  Data completion: {machine?.percentage_completion || 0}%
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300">
+                  <Package className="h-4 w-4" />
                 </span>
-                {Number(machine.price) === totalPayments &&
-                  machine?.percentage_completion === 100 ? (
-                  <CheckCircle className="text-green-500 w-5 h-5 mr-2" />
+                <span className="min-w-0">
+                  <span className="truncate text-sm font-semibold hover:underline">
+                    {machine.serial_no}
+                  </span>
+                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                    Part #{index} {machine.name ? `- ${machine.name}` : ""}
+                  </span>
+                </span>
+              </Link>
+              <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                <Badge variant="outline" className="h-6 rounded-full bg-background px-2 text-[10px]">
+                  {machine?.percentage_completion || 0}% data
+                </Badge>
+                {fullyReady ? (
+                  <CheckCircle className="h-4 w-4 text-emerald-500" />
                 ) : (
-                  <Clock className="text-yellow-500 w-5 h-5 mr-2" />
+                  <Clock className="h-4 w-4 text-amber-500" />
                 )}
                 <Badge
                   variant={
-                    Number(machine.price) === totalPayments
+                    paymentComplete
                       ? "default"
                       : "destructive"
                   }
+                  className="h-6 rounded-full px-2 text-[10px]"
                 >
-                  {Number(machine.price) === totalPayments
-                    ? "Completed"
-                    : "Pending"}
+                  {paymentComplete ? "Paid" : "Balance"}
                 </Badge>
               </div>
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <CardContent className="pt-0">
-              <h4 className="text-lg font-semibold">{machine.name}</h4>
-              <div className=" gap-2 text-sm ">
+            <CardContent className="space-y-2 border-t bg-slate-50/60 px-3 py-3 dark:bg-zinc-900/50">
+              <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
                 {machine?.status && (
-                  <div>
-                    <strong>Status:</strong> <Badge>{machine?.status}</Badge>
-                  </div>
+                  <CompactDetail label="Status" value={<Badge className="h-5 rounded-full px-2 text-[10px]">{machine?.status}</Badge>} />
                 )}
-                <p>
-                  <strong>Contract Date:</strong>{" "}
-                  {machine?.created_at
-                    ? new Date(machine.contract_date).toLocaleDateString(
+                <CompactDetail
+                  label="Contract"
+                  value={
+                    machine?.contract_date
+                      ? new Date(machine.contract_date).toLocaleDateString(
                       "en-GB",
                     )
-                    : ""}
-                </p>
+                      : "N/A"
+                  }
+                />
                 {machine?.order_no_arr &&
                   machine?.order_no_arr.map((item, index) => (
-                    <p key={index}>
-                      <strong>Order No:</strong> {item}
-                    </p>
+                    <CompactDetail key={index} label="Order No" value={item} />
                   ))}
 
-                <p>
-                  <strong>Model No:</strong>{" "}
-                  {machine?.model_no || machine.serial_no}
-                </p>
+                <CompactDetail label="Model No" value={machine?.model_no || machine.serial_no} />
               </div>
               <BillingInformationMachine payment={[total, totalPayments]} />
             </CardContent>
@@ -728,15 +751,42 @@ function CustomersTab({
   };
 
   return (
-    <Card className="flex flex-1">
-      <CardContent className="flex flex-1 flex-col">
-        <div className=" pb-4 flex justify-end">
+    <Card className="flex flex-1 overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 dark:bg-zinc-950 dark:ring-white/10 p-0">
+      <CardContent className="flex flex-1 flex-col p-0">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-slate-50/80 px-3 py-2.5 dark:bg-zinc-900/70">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-sm font-semibold">Machines & Parts</h3>
+            </div>
+            <div className="mt-1 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1 rounded-full bg-background px-2 py-1">
+                <Cpu className="h-3.5 w-3.5" />
+                {machineCount} machines
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-background px-2 py-1">
+                <Package className="h-3.5 w-3.5" />
+                {partsCount} Parts
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-background px-2 py-1">
+                <CircleDollarSign className="h-3.5 w-3.5" />
+                <CurrencyFormatter amount={totalValue} />
+              </span>
+            </div>
+          </div>
           {user_id && customer_id && (
-            <div className="flex gap-2">
-              <Button onClick={() => setVisibleParts(true)}>Sell Parts</Button>
-              <Button onClick={() => setVisible(true)}>Add Machine</Button>
+            <div className="flex flex-wrap gap-2">
+              <Button className="h-8 rounded-lg px-3" variant="outline" onClick={() => setVisibleParts(true)}>
+                <Package className="h-3.5 w-3.5" />
+                Sell Parts
+              </Button>
+              <Button className="h-8 rounded-lg px-3" onClick={() => setVisible(true)}>
+                <Plus className="h-3.5 w-3.5" />
+                Add Machine
+              </Button>
             </div>
           )}
+        </div>
+        <div className="p-3">
           <AddParts
             visible={visibleParts}
             onClose={setVisibleParts}
@@ -751,26 +801,43 @@ function CustomersTab({
             customer_id={customer_id}
             user_id={user_id}
           />
-        </div>
-        <Accordion type="single" collapsible className="w-full space-y-4">
-          {data?.map((machine, index) =>
-            machine.type === "Machine" ? (
-              <RenderEachMachine
-                key={machine.id}
-                machine={machine}
-                index={index + 1}
-              />
-            ) : (
-              <RenderEachPart
-                key={machine.id}
-                machine={machine}
-                index={index + 1}
-              />
-            ),
+          {data?.length === 0 ? (
+            <div className="flex min-h-28 items-center justify-center rounded-xl border border-dashed bg-slate-50 text-sm text-muted-foreground dark:bg-zinc-900/50">
+              No machines or POS records found
+            </div>
+          ) : (
+            <Accordion type="single" collapsible className="w-full space-y-2">
+              {data?.map((machine, index) =>
+                machine.type === "Machine" ? (
+                  <RenderEachMachine
+                    key={machine.id}
+                    machine={machine}
+                    index={index + 1}
+                  />
+                ) : (
+                  <RenderEachPart
+                    key={machine.id}
+                    machine={machine}
+                    index={index + 1}
+                  />
+                ),
+              )}
+            </Accordion>
           )}
-        </Accordion>
+        </div>
       </CardContent>
     </Card>
+  );
+}
+
+function CompactDetail({ label, value }: { label: string, value: ReactNode }) {
+  return (
+    <div className="min-w-0 rounded-lg border bg-background px-3 py-2">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <div className="mt-0.5 truncate text-sm font-medium">{value}</div>
+    </div>
   );
 }
 
@@ -834,91 +901,165 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }: { userID: nu
   }
 
   return (
-    <div className="space-y-4 w-full">
-      <Card>
-        <CardContent className="p-4">
-          <h2 className="font-semibold mb-2">
-            Feedback <RequiredStar />
-          </h2>
-          <textarea
-            value={writeFeedback}
-            onChange={(e) => setWriteFeedback(e.target.value)}
-            className="w-full p-2 border rounded-md"
-            rows={3}
-            placeholder="Write something..."
-          ></textarea>
-          <div className="flex gap-5 items-center mt-2 flex-wrap">
-            <h1>
-              Next Follow Up <RequiredStar />
-            </h1>
-            <div className="w-[250px]">
-              <AppCalendar date={date} onChange={setDate} min={new Date()} max={""}/>
+    <div className="w-full space-y-2.5 p-1">
+      <Card className="overflow-hidden border-0">
+        <CardContent className="grid gap-2.5 p-3 xl:grid-cols-[1fr_260px]">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {type === "aftersales" ? "After Sales Note" : "Feedback"}{" "}
+                <RequiredStar />
+              </Label>
+              <Badge variant="secondary" className="h-5 rounded-full px-2 text-[11px]">
+                {localData.length} records
+              </Badge>
             </div>
-
-            <h1>Top Follow Up?</h1>
-            <Checkbox
-              checked={topFollow}
-              onCheckedChange={(checked) => {
-                setTopFollow(checked === true);
-              }}
-            />
-            <h1>Satisfactory?</h1>
-            <Checkbox
-              checked={satisfactory}
-              onCheckedChange={(checked) => {
-                setSatisfactory(checked === true);
-              }}
+            <Textarea
+              value={writeFeedback}
+              onChange={(e) => setWriteFeedback(e.target.value)}
+              className="min-h-16 resize-none rounded-lg border-0 bg-muted/30 px-3 py-2 text-sm shadow-inner focus-visible:ring-2"
+              rows={2}
+              placeholder="Write something..."
             />
           </div>
-          <Button
-            className="w-full mt-4"
-            disabled={!writeFeedback || !date}
-            onClick={() => {
-              handleSavePost();
-            }}
-          >
-            {loading && <Spinner />} Post
-          </Button>
+
+          <div className="grid gap-2 sm:grid-cols-[minmax(190px,1fr)_auto] xl:grid-cols-1">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Next Follow Up <RequiredStar />
+              </Label>
+              <AppCalendar date={date} onChange={setDate} min={new Date()} max={""} />
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto] xl:grid-cols-2">
+              <label className="flex h-8 items-center justify-between gap-2 rounded-lg bg-muted/35 px-2.5">
+                <span className="text-xs font-medium">Top</span>
+                <Checkbox
+                  checked={topFollow}
+                  onCheckedChange={(checked) => {
+                    setTopFollow(checked === true);
+                  }}
+                />
+              </label>
+              <label className="flex h-8 items-center justify-between gap-2 rounded-lg bg-muted/35 px-2.5">
+                <span className="text-xs font-medium">Satisfactory</span>
+                <Checkbox
+                  checked={satisfactory}
+                  onCheckedChange={(checked) => {
+                    setSatisfactory(checked === true);
+                  }}
+                />
+              </label>
+              <Button
+                className="h-8 rounded-lg px-5 xl:col-span-2"
+                disabled={!writeFeedback || !date}
+                onClick={() => {
+                  handleSavePost();
+                }}
+              >
+                {loading && <Spinner />} Post
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {localData.map((item, index) => (
-        <Card key={index} className="p-0">
-          <CardHeader className="p-0 flex overflow-hidden">
-            <div
-              className="flex flex-1 justify-between items-center bg-gray-200 dark:bg-gray-700 py-2 px-4"
-              style={{ borderTopRightRadius: 10, borderTopLeftRadius: 10 }}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-sm font-semibold">History</h3>
+          <span className="text-xs text-muted-foreground">Latest first</span>
+        </div>
+
+        {localData.length === 0 ? (
+          <Card className="border-0 bg-muted/20 shadow-sm ring-1 ring-black/5">
+            <CardContent className="flex min-h-20 items-center justify-center gap-2 p-4 text-sm text-muted-foreground">
+              <MessageSquareText className="h-5 w-5" />
+              No records yet
+            </CardContent>
+          </Card>
+        ) : (
+          localData.map((item, index) => (
+            <Card
+              key={index}
+              className="group overflow-hidden border-0 transition-shadow hover:shadow-md"
             >
-              <div className="flex gap-5">
-                <Label style={{ fontWeight: 600, fontSize: "16px" }}>
-                  Quick Record
-                </Label>
-                <Label>Operated by: {item?.user_name}</Label>
-              </div>
-              <div className="flex gap-5">
-                <Label>
-                  {moment(new Date(item.created_at)).format(
-                    "YYYY-MM-DD hh:mm A",
-                  )}
-                </Label>
-                {selectedDelete === item.id ? (
-                  <Spinner />
-                ) : (
-                  <Trash2
-                    size={16}
-                    color="red"
-                    className="hover:opacity-70 cursor-pointer"
-                    onClick={() => handleDelete(item.id)}
-                  />
+              <CardContent className="space-y-2 px-3 py-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <span
+                      className={
+                        item.status === "Satisfactory"
+                          ? "h-2 w-2 rounded-full bg-emerald-500"
+                          : "h-2 w-2 rounded-full bg-rose-500"
+                      }
+                    />
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold">
+                      <UserRound className="h-3.5 w-3.5 text-muted-foreground" />
+                      {item?.user_name}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5" />
+                      {moment(new Date(item.created_at)).format(
+                        "YYYY-MM-DD hh:mm A",
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    {item.top_follow && (
+                      <Badge variant="outline" className="h-5 rounded-full px-2 text-[10px]">
+                        Top
+                      </Badge>
+                    )}
+                    {item.status && (
+                      <Badge
+                        variant={
+                          item.status === "Satisfactory"
+                            ? "default"
+                            : "destructive"
+                        }
+                        className="h-5 rounded-full px-2 text-[10px]"
+                      >
+                        {item.status}
+                      </Badge>
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 rounded-full text-destructive hover:text-destructive"
+                      disabled={selectedDelete === item.id}
+                      onClick={() => handleDelete(item.id)}
+                    >
+                      {selectedDelete === item.id ? (
+                        <Spinner />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <p className="whitespace-pre-wrap text-sm leading-5">
+                  {item.feedback}
+                </p>
+
+                {item.next_followup && (
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs">
+                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="font-medium">Next</span>
+                    <span>
+                      {moment(new Date(item.next_followup)).format(
+                        "YYYY-MM-DD",
+                      )}
+                    </span>
+                  </div>
                 )}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-4">
-            <p>{item.feedback}</p>
-          </CardContent>
-        </Card>
-      ))}
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
     </div>
   );
 }
@@ -1023,7 +1164,7 @@ const RenderTimeline = ({
             localData.push({
               id: `payment-${payment.id}`,
               title: `Payment for Parts  ${machine.serial_no}`,
-              description: `Tx: ${payment.note}, Amount: $${payment.amount
+              description: `Tx: ${payment.note}, Amount: ${payment.amount
                 }, Mode: ${payment.mode}, Received by: ${payment.received_by
                 }, Clearance Date: ${payment.clearance_date
                   ? moment(payment.clearance_date).format("YYYY-MM-DD")
@@ -1132,17 +1273,22 @@ const RenderTimeline = ({
 const PartsTab = ({ data, height }: { data?: PartsProps[], height?: string }) => {
 
   return (
-    <Card className="flex flex-1 shadow-lg rounded-2xl p-4 self-center">
-      {data?.length === 0 ?
-        <div>No data found</div> :
-      <ScrollArea className={`flex flex-1 ${height}`}>
-        <Accordion type="single" collapsible className="w-full space-y-2">
-          {data?.map((item, index) => (
-            <InvoiceDetails key={index} invoice={item} />
-          ))}
-        </Accordion>
-      </ScrollArea>
-}
+    <Card className="flex flex-1 border-0 p-0">
+      {data?.length === 0 ? (
+        <CardContent className="flex min-h-28 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">
+          No parts invoices found
+        </CardContent>
+      ) : (
+        <CardContent className="flex flex-1 p-3">
+          <ScrollArea className={`flex flex-1 ${height}`}>
+            <div className="w-full space-y-2 pr-2">
+              {data?.map((item, index) => (
+                <InvoiceDetails key={item.id || index} invoice={item} />
+              ))}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      )}
     </Card>
   );
 };

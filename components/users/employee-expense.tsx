@@ -1,5 +1,5 @@
 "use client";
-import { ArrowUpDown, Filter } from "lucide-react";
+import { ArrowUpDown, ChevronDown, Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Heading from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -38,7 +44,9 @@ import { OfficeExpenseProps } from "@/lib/types";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Document, Page, pdf, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { ColumnDef } from "@tanstack/react-table";
+import { saveAs } from "file-saver";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import momentT from "moment-timezone";
@@ -51,6 +59,138 @@ import { z } from "zod";
 import { Card, CardContent, CardTitle } from "../ui/card";
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 import Spinner from "../ui/spinner";
+
+const expensePdfStyles = StyleSheet.create({
+  page: {
+    padding: 28,
+    fontSize: 10,
+    fontFamily: "Helvetica",
+    color: "#111827",
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 6,
+  },
+  totalText: {
+    fontSize: 11,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  table: {
+    width: "100%",
+    borderStyle: "solid",
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+  },
+  row: {
+    flexDirection: "row",
+    borderBottomStyle: "solid",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+    minHeight: 28,
+  },
+  lastRow: {
+    flexDirection: "row",
+    minHeight: 28,
+  },
+  headerCell: {
+    padding: 6,
+    backgroundColor: "#F3F4F6",
+    fontWeight: "bold",
+    borderRightStyle: "solid",
+    borderRightWidth: 1,
+    borderRightColor: "#D1D5DB",
+  },
+  cell: {
+    padding: 6,
+    borderRightStyle: "solid",
+    borderRightWidth: 1,
+    borderRightColor: "#E5E7EB",
+  },
+  dateCell: {
+    width: "18%",
+  },
+  noteCell: {
+    width: "42%",
+  },
+  amountCell: {
+    width: "18%",
+  },
+  submittedByCell: {
+    width: "22%",
+    borderRightWidth: 0,
+  },
+  emptyText: {
+    padding: 10,
+    color: "#6B7280",
+  },
+});
+
+const ExpensePdfDocument = ({ data }: { data: OfficeExpenseProps[] }) => (
+  <Document>
+    <Page size="A4" style={expensePdfStyles.page}>
+      <Text style={expensePdfStyles.title}>Office Expenses</Text>
+      <Text style={expensePdfStyles.totalText}>
+        Total PKR:{" "}
+        {formatCurrency(
+          data.reduce((sum, item) => sum + Number(item.amount || 0), 0),
+        )}
+      </Text>
+      <View style={expensePdfStyles.table}>
+        <View style={expensePdfStyles.row} fixed>
+          <Text style={[expensePdfStyles.headerCell, expensePdfStyles.dateCell]}>
+            Date
+          </Text>
+          <Text style={[expensePdfStyles.headerCell, expensePdfStyles.noteCell]}>
+            Note
+          </Text>
+          <Text style={[expensePdfStyles.headerCell, expensePdfStyles.amountCell]}>
+            Amount
+          </Text>
+          <Text
+            style={[
+              expensePdfStyles.headerCell,
+              expensePdfStyles.submittedByCell,
+            ]}
+          >
+            Submitted By
+          </Text>
+        </View>
+        {data.length === 0 ? (
+          <Text style={expensePdfStyles.emptyText}>No expenses found</Text>
+        ) : (
+          data.map((item, index) => (
+            <View
+              key={`${item.id || index}-${item.date}`}
+              style={
+                index === data.length - 1
+                  ? expensePdfStyles.lastRow
+                  : expensePdfStyles.row
+              }
+              wrap={false}
+            >
+              <Text style={[expensePdfStyles.cell, expensePdfStyles.dateCell]}>
+                {item.date ? moment(item.date).format("YYYY-MM-DD") : ""}
+              </Text>
+              <Text style={[expensePdfStyles.cell, expensePdfStyles.noteCell]}>
+                {item.note || ""}
+              </Text>
+              <Text style={[expensePdfStyles.cell, expensePdfStyles.amountCell]}>
+                {Number(item.amount || 0)}
+              </Text>
+              <Text
+                style={[expensePdfStyles.cell, expensePdfStyles.submittedByCell]}
+              >
+                {item.submitted_by_name || ""}
+              </Text>
+            </View>
+          ))
+        )}
+      </View>
+    </Page>
+  </Document>
+);
 
 export default function EmployeeBranchExpenses() {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -65,7 +205,9 @@ export default function EmployeeBranchExpenses() {
     branch_expenses_write_access,
   } = useUserDetail();
   const [visibleAdd, setVisibleAdd] = useState(false);
-  const [downloadLoading, setDownloadLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState<"excel" | "pdf" | null>(
+    null,
+  );
   const router = useRouter();
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
@@ -187,8 +329,8 @@ export default function EmployeeBranchExpenses() {
     },
   ];
 
-  function handleDownload() {
-    setDownloadLoading(true);
+  async function handleExcelExport() {
+    setExportLoading("excel");
     try {
       const headers = ["Date", "Note", "Amount", "Submitted By"];
       let finalData = [];
@@ -200,7 +342,7 @@ export default function EmployeeBranchExpenses() {
         item.submitted_by_name,
         item.image,
       ]);
-      exportToExcel(
+      await exportToExcel(
         headers,
         formattedData,
         "Branch-Expenses.xlsx",
@@ -209,9 +351,23 @@ export default function EmployeeBranchExpenses() {
         true,
       );
     } catch (error) {
-      console.log("error");
+      console.log(error);
+      toast.error("Failed to export Excel");
     } finally {
-      setDownloadLoading(false);
+      setExportLoading(null);
+    }
+  }
+
+  async function handlePdfExport() {
+    setExportLoading("pdf");
+    try {
+      const blob = await pdf(<ExpensePdfDocument data={data} />).toBlob();
+      saveAs(blob, "Branch-Expenses.pdf");
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to export PDF");
+    } finally {
+      setExportLoading(null);
     }
   }
 
@@ -308,9 +464,28 @@ export default function EmployeeBranchExpenses() {
             >
               {resetLoading && <Spinner />} Reset
             </Button>
-            <Button onClick={handleDownload}>
-              {downloadLoading && <Spinner />} Download
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant={"outline"} disabled={!!exportLoading}>
+                  {exportLoading && <Spinner />} Export
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-36">
+                <DropdownMenuItem
+                  disabled={!!exportLoading}
+                  onClick={handleExcelExport}
+                >
+                  {exportLoading === "excel" && <Spinner />} Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!!exportLoading}
+                  onClick={handlePdfExport}
+                >
+                  {exportLoading === "pdf" && <Spinner />} PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           <Card className="self-end">
             <CardContent className="px-4 py-2">

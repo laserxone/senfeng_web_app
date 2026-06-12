@@ -1,46 +1,49 @@
-import Dropzone from "@/components/dropzone";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import Dropzone from "@/components/dropzone"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Textarea } from "@/components/ui/textarea"
+import { storage } from "@/config/firebase"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { DeleteFromStorage } from "@/lib/deleteFunction"
+import { UploadImage } from "@/lib/uploadFunction"
+import { OfficeContext } from "@/store/context/OfficeContext"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { getDownloadURL, ref } from "firebase/storage"
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
-import { storage } from "@/config/firebase";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
-import { UploadImage } from "@/lib/uploadFunction";
-import { OfficeContext } from "@/store/context/OfficeContext";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { getDownloadURL, ref } from "firebase/storage";
-import {
+  CalendarDays,
+  Camera,
+  CirclePlus,
+  Clock3,
+  ExternalLink,
   Filter,
+  ImageIcon,
   MapPin,
   MapPinOff,
-  Trash2
-} from "lucide-react";
-import moment from "moment";
-import Link from "next/link";
-import { useCallback, useContext, useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import Zoom from "react-medium-image-zoom";
-import "react-medium-image-zoom/dist/styles.css";
-import { z } from "zod";
-import AddCustomerDialog from "../addCustomer";
-import AppCalendar from "../appCalendar";
-import { CustomerSearchWithData } from "../customer-search-with-data";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Label } from "../ui/label";
-import { ScrollArea } from "../ui/scroll-area";
-import Spinner from "../ui/spinner";
-import FilterSheet from "./filterSheet";
-import { MyCustomer, SalesVisitTypes } from "@/lib/types";
-import { Field, FieldError, FieldLabel } from "../ui/field";
+  MessageSquareText,
+  Phone,
+  Sparkles,
+  Trash2,
+  UserRound,
+} from "lucide-react"
+import moment from "moment"
+import Image from "next/image"
+import Link from "next/link"
+import { ReactNode, useContext, useEffect, useMemo, useState } from "react"
+import { Controller, useForm } from "react-hook-form"
+import Zoom from "react-medium-image-zoom"
+import "react-medium-image-zoom/dist/styles.css"
+import { z } from "zod"
+import AddCustomerDialog from "../addCustomer"
+import AppCalendar from "../appCalendar"
+import { CustomerSearchWithData } from "../customer-search-with-data"
+import { Label } from "../ui/label"
+import Spinner from "../ui/spinner"
+import FilterSheet from "./filterSheet"
+import { MyCustomer, SalesVisitTypes } from "@/lib/types"
+import { Field, FieldError, FieldLabel } from "../ui/field"
+import { cn } from "@/lib/utils"
 
 const formSchema = z.object({
   note: z.string().min(1, "Note cannot be empty"),
@@ -49,39 +52,45 @@ const formSchema = z.object({
   city: z.string().min(1, "City is required"),
   name: z.string().min(1, "Name is required"),
   phone: z.string().min(1, "Phone is required"),
-  company: z.string().min(1, "Company is required")
-});
+  company: z.string().min(1, "Company is required"),
+})
 
-type FormValues = z.infer<typeof formSchema>;
-
+type FormValues = z.infer<typeof formSchema>
 
 type VisitTabProps = {
-  id: number | null | string;
-  data: SalesVisitTypes[];
-  onRefresh: () => Promise<void>;
-  disable?: boolean;
-  customer_data?: number | null;
-  height?: string;
-  onFetchData?: (a: string, b: string, c?: number) => Promise<void>;
-};
+  id: number | null | string
+  data: SalesVisitTypes[]
+  onRefresh: () => Promise<void>
+  disable?: boolean
+  customer_data?: number | null
+  height?: string
+  onFetchData?: (a: string, b: string, c?: number) => Promise<void>
+}
 export default function VisitTab({
   id,
   data,
   onRefresh,
   disable = false,
   customer_data,
-  height,
   onFetchData,
 }: VisitTabProps) {
-  const [loading, setLoading] = useState(false);
-  const [feedbacks] = useState<SalesVisitTypes[]>(data || []);
-  const [addCustomer, setAddCustomer] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(null);
-  const { userID, designation, office, base_route, route_branch } = useUserDetail()
+  const [loading, setLoading] = useState(false)
+  const [addCustomer, setAddCustomer] = useState(false)
+  const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(
+    null
+  )
+  const { userID, designation, base_route, route_branch } = useUserDetail()
   const { state: OfficeState } = useContext(OfficeContext)!
-  const [filterVisible, setFilterVisible] = useState(false);
-  const [selectedDelete, setSelectedDelete] = useState<number | null>(null);
-  const [selectedSignature, setSelectedSignature] = useState(null);
+  const [filterVisible, setFilterVisible] = useState(false)
+  const [selectedDelete, setSelectedDelete] = useState<number | null>(null)
+  const feedbacks = useMemo(
+    () =>
+      [...(data || [])].sort(
+        (a, b) =>
+          moment(b?.created_at).valueOf() - moment(a?.created_at).valueOf()
+      ),
+    [data]
+  )
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -92,129 +101,157 @@ export default function VisitTab({
       city: "",
       name: "",
       phone: "",
-      company: ""
+      company: "",
     },
-  });
+  })
 
   useEffect(() => {
     if (customer_data) {
-      setSelectedCustomer({ id: customer_data });
+      queueMicrotask(() => {
+        setSelectedCustomer({ id: customer_data })
+      })
     }
-  }, [customer_data]);
+  }, [customer_data])
 
   const onSubmit = async (values: FormValues) => {
-    setLoading(true);
+    setLoading(true)
     try {
       if (values.image) {
         const name = `${OfficeState.value.data}/customer/${selectedCustomer?.id}/visit/${moment()
           .valueOf()
-          .toString()}.png`;
-        const uploadRef = await UploadImage(values.image, name);
-        const response = await axios.post(`/${id}/visit`, {
+          .toString()}.png`
+        await UploadImage(values.image, name)
+        await axios.post(`/${id}/visit`, {
           ...values,
           user_id: id,
           image: name,
           customer_id: selectedCustomer?.id,
-        });
-        await onRefresh();
-        form.reset();
-        setSelectedCustomer(null);
-        setLoading(false);
+        })
+        await onRefresh()
+        form.reset()
+        setSelectedCustomer(customer_data ? { id: customer_data } : null)
+        setLoading(false)
       } else {
-        const response = await axios.post(`/${id}/visit`, {
+        await axios.post(`/${id}/visit`, {
           ...values,
           user_id: id,
           customer_id: selectedCustomer?.id,
-        });
-        await onRefresh();
-        form.reset();
-        setSelectedCustomer(null);
-        setLoading(false);
+        })
+        await onRefresh()
+        form.reset()
+        setSelectedCustomer(customer_data ? { id: customer_data } : null)
+        setLoading(false)
       }
     } catch (error) {
-      console.log(error);
-      setLoading(false);
+      console.log(error)
+      setLoading(false)
     }
-  };
-
-  const RenderCustomerSearch = useCallback(() => {
-    return (
-      <CustomerSearchWithData
-        value={selectedCustomer}
-        onReturn={(val) => {
-          setSelectedCustomer(val);
-          form.setValue("city", val?.location || "");
-          form.setValue("name", val?.owner || "");
-          form.setValue("phone", val.number ? val?.number?.join(", ") : "");
-          form.setValue("company", val?.name || "");
-        }}
-      />
-    );
-  }, [selectedCustomer]);
+  }
 
   async function handleDelete(item: SalesVisitTypes) {
     try {
-      setSelectedDelete(item.id);
-      DeleteFromStorage(item.image);
+      setSelectedDelete(item.id)
+      DeleteFromStorage(item.image)
       axios
         .delete(`/${userID}/visit/${item.id}`)
         .then(async () => {
-          await onRefresh();
+          await onRefresh()
         })
         .finally(() => {
-          setSelectedDelete(null);
-        });
+          setSelectedDelete(null)
+        })
     } catch (error) {
-      console.log(error);
+      console.log(error)
     }
   }
 
   return (
-    <div className="w-full">
-      <div className="space-y-4 w-full">
-        <Card>
-          <CardContent className="p-4 space-y-4">
-            <h2 className="font-semibold">Remarks</h2>
+    <div className="w-full p-1">
+      <div className="w-full space-y-3">
+        <Card className="overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 dark:bg-zinc-950 dark:ring-white/10 p-0">
+          <CardContent className="p-0">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-slate-50/80 px-3 py-2 dark:bg-zinc-900/70">
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Sparkles className="h-4 w-4" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-semibold leading-none">
+                    Add Visit
+                  </h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Quick note, follow-up, and proof in one place
+                  </p>
+                </div>
+              </div>
+              <Badge variant="secondary" className="rounded-full px-2.5 text-[11px]">
+                {feedbacks.length} visits
+              </Badge>
+            </div>
             <form
               onSubmit={form.handleSubmit(onSubmit, (err) => {
-                console.log("Validation Errors", err);
+                console.log("Validation Errors", err)
               })}
-              className="space-y-3"
+              className="space-y-2.5 p-3"
             >
               {!disable && (
-                <div className="flex flex-row gap-2 items-end flex-wrap">
-                  <div>
-                    <Label>Select Customer</Label>
-                    <RenderCustomerSearch />
+                <div className="flex flex-wrap items-end gap-2 rounded-lg bg-muted/25 p-2 ring-1 ring-border/50">
+                  <div className="min-w-[260px] flex-1 space-y-1">
+                    <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                      Customer
+                    </Label>
+                    <CustomerSearchWithData
+                      value={selectedCustomer}
+                      onReturn={(val) => {
+                        setSelectedCustomer(val)
+                        form.setValue("city", val?.location || "")
+                        form.setValue("name", val?.owner || "")
+                        form.setValue(
+                          "phone",
+                          val.number ? val?.number?.join(", ") : ""
+                        )
+                        form.setValue("company", val?.name || "")
+                      }}
+                    />
                   </div>
 
-                  <Button onClick={() => setAddCustomer(true)}>
-                    Add new customer
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setAddCustomer(true)}
+                  >
+                    <CirclePlus className="h-3.5 w-3.5" />
+                    Add
                   </Button>
 
                   <Button
-                    variant="destructive"
+                    type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
-                      setSelectedCustomer(null);
-                      form.reset();
+                      setSelectedCustomer(null)
+                      form.reset()
                     }}
                   >
                     Clear
                   </Button>
 
                   <Button
+                    type="button"
                     onClick={() => setFilterVisible(true)}
-                    variant="ghost"
-                    className="p-0 w-8"
+                    variant="outline"
+                    size="icon-sm"
+                    aria-label="Filter visits"
                   >
-                    <Filter />
+                    <Filter className="h-4 w-4" />
                   </Button>
 
                   <FilterSheet
                     visible={filterVisible}
                     onClose={() => setFilterVisible(false)}
                     onReturn={async (val) => {
-                      await onFetchData?.(val.start, val.end, val.user);
+                      await onFetchData?.(val.start, val.end, val.user)
                     }}
                   />
 
@@ -225,7 +262,8 @@ export default function VisitTab({
                     ownership={
                       designation === "Owner" ||
                       designation === "Customer Relationship Manager" ||
-                      designation === "Customer Relationship Manager (After Sales)"
+                      designation ===
+                        "Customer Relationship Manager (After Sales)"
                     }
                     visible={addCustomer}
                     onClose={setAddCustomer}
@@ -233,21 +271,26 @@ export default function VisitTab({
                       const finalData = {
                         ...newRow,
                         search: newRow.name || newRow.owner,
-                      };
-                      setSelectedCustomer(finalData);
+                      }
+                      setSelectedCustomer(finalData)
                     }}
                   />
                 </div>
               )}
 
-              <div className="flex flex-1 gap-5 flex-wrap">
+              <div className="grid gap-2.5 xl:grid-cols-[240px_minmax(0,1fr)_210px]">
                 <Controller
                   name="image"
                   control={form.control}
                   render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>Image</FieldLabel>
-                      <div className="flex flex-1 items-center justify-center">
+                    <Field
+                      data-invalid={fieldState.invalid}
+                      className="gap-1.5"
+                    >
+                      <FieldLabel className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                        Image
+                      </FieldLabel>
+                      <div className="flex items-center">
                         <Dropzone
                           value={field.value}
                           onDrop={(file) => field.onChange(file)}
@@ -255,6 +298,7 @@ export default function VisitTab({
                           subheading={"or drag and drop"}
                           description={"PNG or JPG"}
                           drag={"Drop the files here..."}
+                          className="min-h-20 w-full border-dashed bg-slate-50/70 dark:bg-zinc-900/70"
                         />
                       </div>
                       {fieldState.invalid && (
@@ -268,8 +312,13 @@ export default function VisitTab({
                   name="next"
                   control={form.control}
                   render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>Next follow Up</FieldLabel>
+                    <Field
+                      data-invalid={fieldState.invalid}
+                      className="gap-1.5 xl:order-3"
+                    >
+                      <FieldLabel className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                        Next follow up
+                      </FieldLabel>
                       <AppCalendar
                         date={field.value}
                         onChange={field.onChange}
@@ -282,225 +331,338 @@ export default function VisitTab({
                     </Field>
                   )}
                 />
-              </div>
 
-              <Controller
-                name="note"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>Write something</FieldLabel>
-                    <Textarea
-                      {...field}
-                      rows={3}
-                      placeholder="Write something..."
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
+                <Controller
+                  name="note"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field
+                      data-invalid={fieldState.invalid}
+                      className="gap-1.5 xl:order-2"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <FieldLabel className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                          Remarks
+                        </FieldLabel>
+                        <Badge
+                          variant="secondary"
+                          className="rounded-full px-2 text-[10px]"
+                        >
+                          {feedbacks.length} visits
+                        </Badge>
+                      </div>
+                      <Textarea
+                        {...field}
+                        rows={3}
+                        placeholder="Write visit summary, decisions, and pending work..."
+                        aria-invalid={fieldState.invalid}
+                        className="min-h-20 resize-none rounded-lg bg-slate-50/70 text-sm shadow-inner dark:bg-zinc-900/70"
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </div>
 
               <Button
                 disabled={!selectedCustomer?.id || loading}
                 type="submit"
-                className="mt-2 w-full"
+                className="h-8 w-full rounded-lg"
               >
-                {loading && <Spinner />} Post
+                {loading && <Spinner />} Post Visit
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        {feedbacks.length > 0 && (
-          <div className="space-y-3">
-            {feedbacks.map((feedback, index) => (
-              <Card key={index} className="p-0">
-
-                <CardContent className="p-0">
-                  <CardHeader className="p-0 flex overflow-hidden">
-                    <div
-                      className="flex flex-1 justify-between items-center bg-gray-200 dark:bg-gray-700 py-2 px-4"
-                      style={{
-                        borderTopRightRadius: 10,
-                        borderTopLeftRadius: 10,
-                      }}
-                    >
-                      <div className="flex gap-5">
-                        <Label style={{ fontWeight: 600, fontSize: "16px" }}>
-                          Visit Record
-                        </Label>
-                        <Label>Operated by: {feedback?.user_name}</Label>
-                      </div>
-                      <div className="flex gap-5">
-                        <Label>
-                          {moment(new Date(feedback.created_at)).format(
-                            "YYYY-MM-DD hh:mm A"
-                          )}
-                        </Label>
-                        {selectedDelete === feedback.id ? (
-                          <Spinner />
-                        ) : (
-                          <Trash2
-                            size={16}
-                            color="red"
-                            className="hover:opacity-70 cursor-pointer"
-                            onClick={() => handleDelete(feedback)}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <div className="p-2">
-                  <Link
-                    target="blank"
-                    href={`/${base_route}/${feedback.customer_member ? "member" : "customer"
-                      }${feedback.customer_id}`}
-                  >
-                    <p className="text-sm text-gray-500">
-                      {feedback?.customer_name || feedback?.customer_owner} -{" "}
-                      {feedback?.customer_location} -{" "}
-                      {feedback?.customer_number.join(", ")}
-                    </p>
-                  </Link>
-                  {feedback?.problem && (
-                    <p className="mt-2">Problem: {feedback?.problem}</p>
-                  )}
-                  {feedback?.solution && (
-                    <p className="mt-2">Solution: {feedback?.solution}</p>
-                  )}
-                  <p className="mt-2">Remarks: {feedback.note}</p>
-                  <div className="flex flex-row gap-5 mt-2">
-                    {feedback.location && feedback.location.length > 0 ? (
-                      <MapPin
-                        onClick={() => {
-                          const mapUrl = `https://www.google.com/maps?q=${feedback.location[0]},${feedback.location[1]}`;
-                          window.open(mapUrl, "_blank");
-                        }}
-                        className="text-red-500 h-5 w-5 cursor-pointer hover:opacity-50"
-                      />
-                    ) : (
-                      <MapPinOff className="text-red-500 h-5 w-5 opacity-50" />
-                    )}
-                    {feedback.signature && <MyImg img={feedback.signature} />}
-                    {feedback.image && <MyImg img={feedback.image} />}
-                  </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+        <div className="rounded-xl border bg-white shadow-sm dark:bg-zinc-950">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-slate-50/70 px-3 py-2 dark:bg-zinc-900/70">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300">
+                <Clock3 className="h-3.5 w-3.5" />
+              </span>
+              <div>
+                <h3 className="text-sm font-semibold leading-none">
+                  Visit History
+                </h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Latest visits first
+                </p>
+              </div>
+            </div>
+            <Badge variant="outline" className="rounded-full bg-background text-[10px]">
+              {feedbacks.length} total
+            </Badge>
           </div>
-        )}
+
+          {feedbacks.length === 0 ? (
+            <div className="flex min-h-24 items-center justify-center gap-2 p-4 text-sm text-muted-foreground">
+              <MessageSquareText className="h-5 w-5" />
+              No visits recorded yet
+            </div>
+          ) : (
+            <div className="divide-y">
+              {feedbacks.map((feedback, index) => (
+                <VisitRecord
+                  key={feedback.id || index}
+                  feedback={feedback}
+                  baseRoute={base_route}
+                  deleting={selectedDelete === feedback.id}
+                  onDelete={() => handleDelete(feedback)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-
-      <Dialog
-        open={!!selectedSignature}
-        onOpenChange={() => setSelectedSignature(null)}
-      >
-
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Signature</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-1 items-center justify-center">
-            <RenderSignature img={selectedSignature} />
-          </div>
-        </DialogContent>
-      </Dialog>
-
     </div>
-  );
+  )
 }
 
-const RenderSignature = ({ img }: { img: string | null }) => {
-  const [localImage, setLocalImage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    if (!img) {
-      setLocalImage(null);
-      setError(false);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(false);
-
-    if (img.includes("http")) {
-      setLocalImage(img);
-      setLoading(false);
-    } else {
-      getDownloadURL(ref(storage, img))
-        .then((url) => {
-          setLocalImage(url);
-        })
-        .catch(() => {
-          setError(true);
-          setLocalImage(null);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-  }, [img]);
-
-  if (loading) return <Spinner />;
-  if (!img || error || !localImage) return <p>No signature</p>;
+function VisitRecord({
+  feedback,
+  baseRoute,
+  deleting,
+  onDelete,
+}: {
+  feedback: SalesVisitTypes
+  baseRoute: string
+  deleting: boolean
+  onDelete: () => void
+}) {
+  const hasLocation = feedback.location && feedback.location.length > 0
+  const customerLabel =
+    feedback?.customer_name ||
+    feedback?.company ||
+    feedback?.customer_owner ||
+    "Customer"
+  const customerNumber =
+    feedback?.customer_number?.join(", ") || feedback.phone || "No phone"
 
   return (
-    <Zoom>
-      <img alt="visit image" className="dark:invert" src={localImage} width="100" />
-    </Zoom>
-  );
-};
+    <div className="group bg-background/95 transition-colors hover:bg-slate-50/70 dark:hover:bg-zinc-900/70">
+      <div className="grid gap-0 p-3 lg:grid-cols-[minmax(0,1fr)_148px]">
+        <div className="min-w-0 space-y-2">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0 space-y-1">
+              <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                  <CalendarDays className="h-3 w-3" />
+                  {moment(new Date(feedback.created_at)).format("YYYY-MM-DD")}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {moment(new Date(feedback.created_at)).format("hh:mm A")}
+                </span>
+                <span className="inline-flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+                  <UserRound className="h-3.5 w-3.5" />
+                  <span className="truncate">{feedback?.user_name || "Unknown"}</span>
+                </span>
+              </div>
 
-export const MyImg = ({ img }: { img: string }) => {
-  const [localImage, setLocalImage] = useState<string>("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+              <Link
+                target="_blank"
+                href={`/${baseRoute}/${
+                  feedback.customer_member ? "member" : "customer"
+                }/${feedback.customer_id}`}
+                className="group/link inline-flex max-w-full items-center gap-1.5 text-sm font-semibold hover:text-primary"
+              >
+                <span className="truncate">{customerLabel}</span>
+                <ExternalLink className="h-3.5 w-3.5 opacity-60 transition-opacity group-hover/link:opacity-100" />
+              </Link>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 rounded-full px-2 text-xs"
+                disabled={!hasLocation}
+                onClick={() => {
+                  if (!hasLocation) return
+                  const mapUrl = `https://www.google.com/maps?q=${feedback.location[0]},${feedback.location[1]}`
+                  window.open(mapUrl, "_blank")
+                }}
+              >
+                {hasLocation ? (
+                  <MapPin className="h-3.5 w-3.5 text-red-500" />
+                ) : (
+                  <MapPinOff className="h-3.5 w-3.5 text-muted-foreground" />
+                )}
+                Map
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="h-7 w-7 rounded-full text-destructive hover:text-destructive"
+                disabled={deleting}
+                onClick={onDelete}
+                aria-label="Delete visit"
+              >
+                {deleting ? <Spinner /> : <Trash2 className="h-3.5 w-3.5" />}
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5 text-xs text-muted-foreground">
+            <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-slate-100 px-2 py-1 dark:bg-zinc-900">
+              <MapPin className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">
+                {feedback?.customer_location || feedback.city || "No location"}
+              </span>
+            </span>
+            <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-slate-100 px-2 py-1 dark:bg-zinc-900">
+              <Phone className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{customerNumber}</span>
+            </span>
+          </div>
+
+          {(feedback?.problem || feedback?.solution) && (
+            <div className="grid gap-1.5 sm:grid-cols-2">
+              {feedback?.problem && (
+                <VisitDetail label="Problem" value={feedback.problem} />
+              )}
+              {feedback?.solution && (
+                <VisitDetail label="Solution" value={feedback.solution} />
+              )}
+            </div>
+          )}
+
+          <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm leading-5 whitespace-pre-wrap dark:bg-zinc-900/80">
+            {feedback.note}
+          </p>
+        </div>
+
+        <div className="mt-2 grid grid-cols-2 gap-2 lg:mt-0 lg:grid-cols-1 lg:border-l lg:pl-3">
+          {feedback.signature ? (
+            <MediaPreview
+              icon={<ImageIcon className="h-3.5 w-3.5" />}
+              label="Signature"
+            >
+              <MyImg img={feedback.signature} compact />
+            </MediaPreview>
+          ) : null}
+          {feedback.image ? (
+            <MediaPreview
+              icon={<Camera className="h-3.5 w-3.5" />}
+              label="Photo"
+            >
+              <MyImg img={feedback.image} compact />
+            </MediaPreview>
+          ) : null}
+          {!feedback.signature && !feedback.image && (
+            <div className="flex min-h-16 items-center justify-center rounded-lg border border-dashed text-xs text-muted-foreground lg:min-h-full">
+              No media
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function VisitDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border bg-background px-3 py-2">
+      <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+        {label}
+      </p>
+      <p className="line-clamp-2 text-sm leading-5 text-slate-700 dark:text-zinc-200">
+        {value}
+      </p>
+    </div>
+  )
+}
+
+function MediaPreview({
+  icon,
+  label,
+  children,
+}: {
+  icon: ReactNode
+  label: string
+  children: ReactNode
+}) {
+  return (
+    <div className="min-w-0 rounded-lg bg-slate-50 p-2 ring-1 ring-slate-200 dark:bg-zinc-900 dark:ring-white/10">
+      <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+        {icon}
+        {label}
+      </div>
+      <div className="flex min-h-12 items-center justify-center overflow-hidden rounded-md bg-background">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+export const MyImg = ({
+  img,
+  compact = false,
+}: {
+  img: string
+  compact?: boolean
+}) => {
+  const [remoteImage, setRemoteImage] = useState<{
+    key: string
+    url: string
+    error: boolean
+  } | null>(null)
 
   useEffect(() => {
-    if (!img) {
-      setLocalImage("");
-      setError(false);
-      setLoading(false);
-      return;
+    if (!img || img.includes("http")) {
+      return
     }
 
-    setLoading(true);
-    setError(false);
+    let active = true
 
-    if (img.includes("http")) {
-      setLocalImage(img);
-      setLoading(false);
-    } else {
-      getDownloadURL(ref(storage, img))
-        .then((url) => {
-          console.log(url)
-          setLocalImage(url);
-        })
-        .catch((e) => {
-          console.log("error loading image", e)
-          setError(true);
-          setLocalImage("");
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+    getDownloadURL(ref(storage, img))
+      .then((url) => {
+        if (active) {
+          setRemoteImage({ key: img, url, error: false })
+        }
+      })
+      .catch((e) => {
+        console.log("error loading image", e)
+        if (active) {
+          setRemoteImage({ key: img, url: "", error: true })
+        }
+      })
+
+    return () => {
+      active = false
     }
-  }, [img]);
+  }, [img])
 
-  if (loading) return <Spinner />;
-  if (!img || !localImage) return <p>No image</p>;
+  const localImage = img?.includes("http")
+    ? img
+    : remoteImage?.key === img
+      ? remoteImage.url
+      : ""
+  const error =
+    !img?.includes("http") && remoteImage?.key === img && remoteImage.error
+  const loading = !!img && !img.includes("http") && remoteImage?.key !== img
+
+  if (loading) return <Spinner />
+  if (!img || !localImage) return <p>No image</p>
   if (error) return <p>Failed to load image</p>
 
   return (
     <Zoom>
-      <img alt="image" src={localImage} className="h-[100px] w-auto object-contain" />
+      <Image
+        alt="image"
+        src={localImage}
+        width={compact ? 96 : 180}
+        height={compact ? 48 : 100}
+        unoptimized
+        className={cn(
+          "w-auto object-contain",
+          compact ? "h-12 max-w-full" : "h-[100px]"
+        )}
+      />
     </Zoom>
-  );
-};
+  )
+}

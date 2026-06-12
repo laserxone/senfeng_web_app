@@ -183,8 +183,9 @@ export default function Page() {
 
   const RenderVisitTab = useCallback(() => {
     return (
-      <VisitTab
-        height="h-[calc(100dvh-360px)]"
+       <div className="overflow-hidden w-full">
+          <ScrollArea className={`h-[calc(100dvh-350px)] w-full pr-2`}>
+      <VisitTab 
         id={userID}
         data={visitData}
         onRefresh={async () => {
@@ -197,6 +198,8 @@ export default function Page() {
           await fetchVisitData(start, end);
         }}
       />
+      </ScrollArea>
+      </div>
     );
   }, [visitData]);
 

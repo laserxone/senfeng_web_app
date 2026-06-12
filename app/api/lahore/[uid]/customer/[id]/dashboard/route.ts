@@ -171,6 +171,9 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
         payments: payments.filter((payment) => payment.part_id === part.id),
       }));
 
+
+      
+
       customer.machines = machines;
       customer.bill_received = parseFloat(`${billReceived}`);
       customer.bill_total = parseFloat(billTotal);

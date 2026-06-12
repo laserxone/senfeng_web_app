@@ -5,6 +5,7 @@ import axios from "@/lib/axios";
 import {
     CircleDollarSign,
     Clock3,
+    Edit,
     Loader2,
     Wallet
 } from "lucide-react";
@@ -50,6 +51,7 @@ type PaymentRequest = {
     customer_owner: string;
     ownership_name: string;
     dispatch_information: { other_information?: { transporter?: string } }
+    note: string
 };
 
 export default function PaymentRequestsPage() {
@@ -67,7 +69,9 @@ export default function PaymentRequestsPage() {
         tid: "",
         amount: "",
         slip: "",
+        note: ""
     });
+    const [edit, setEdit] = useState(false)
 
     const fetchPaymentRequests = async () => {
         if (!userID) return;
@@ -88,7 +92,7 @@ export default function PaymentRequestsPage() {
             fetchPaymentRequests();
         }
     }, [userID]);
-   
+
     const handleOpenDialog = (item: PaymentRequest) => {
         setSelected(item);
 
@@ -97,42 +101,63 @@ export default function PaymentRequestsPage() {
             tid: "",
             amount: item.amount,
             slip: "",
+            note: ""
         });
 
         setDialogOpen(true);
     };
 
+
+    const handleEditDialog = (item: PaymentRequest) => {
+        setSelected(item);
+        setEdit(true)
+
+        setForm({
+            date: item.date,
+            tid: item.tid,
+            amount: item.amount,
+            slip: item.slip,
+            note: item?.note ?? ""
+        });
+
+        setDialogOpen(true);
+    };
+
+
+
     const handleRecordPayment = async () => {
         if (!selected) return;
 
+        setSubmitting(true);
+
         try {
-            setSubmitting(true);
-
-            let name = `/payment-requests/${selected.id}.png`
-
-
-            const imageRefResult = await UploadImage(
-                form?.slip,
-                name,
-                "image/png",
-            );
-
-
-            await axios.put(`/${userID}/payment-requests`, {
+            const formData: any = {
                 id: selected.id,
                 date: form.date,
                 tid: form.tid,
                 amount: form.amount,
-                slip: name,
-                request_type: false
-            });
+                note: form.note,
+                request_type: false,
+            };
 
-            TriggerFirebaseForPendingPayments()
+            const shouldUploadSlip = !edit || selected.slip !== form.slip;
 
-            await fetchPaymentRequests()
+            if (shouldUploadSlip && form?.slip) {
+                const slipPath = edit
+                    ? selected.slip
+                    : `/payment-requests/${selected.id}.png`;
 
+                await UploadImage(form.slip, slipPath, "image/png");
+
+                formData.slip = slipPath;
+            }
+
+            await axios.put(`/${userID}/payment-requests`, formData);
+            TriggerFirebaseForPendingPayments();
+            await fetchPaymentRequests();
 
             setDialogOpen(false);
+            setEdit(false);
         } finally {
             setSubmitting(false);
         }
@@ -159,7 +184,7 @@ export default function PaymentRequestsPage() {
         };
     }, [requests]);
 
-    const columns: ColumnDef<PaymentRequest>[] = useMemo(()=>[
+    const columns: ColumnDef<PaymentRequest>[] = useMemo(() => [
         {
             accessorKey: "order_no_arr",
             filterFn: "includesString",
@@ -179,7 +204,7 @@ export default function PaymentRequestsPage() {
             ),
         },
 
-         {
+        {
             accessorKey: "dispatch_information",
             filterFn: "includesString",
             header: ({ column }) => (
@@ -330,7 +355,9 @@ export default function PaymentRequestsPage() {
                 const item = row.original;
 
                 if (!item.request_type) {
-                    return <span className="text-sm text-muted-foreground">Completed</span>;
+                    return <Button size="icon" variant={"outline"} onClick={() => handleEditDialog(item)}>
+                        <Edit />
+                    </Button>;
                 }
 
                 return (
@@ -340,7 +367,7 @@ export default function PaymentRequestsPage() {
                 );
             },
         },
-    ],[requests]);
+    ], [requests]);
 
     return (
         <div className="flex flex-1 flex-col space-y-6">
@@ -449,6 +476,20 @@ export default function PaymentRequestsPage() {
                         </div>
 
                         <div className="grid gap-2">
+                            <label className="text-sm font-medium">Note</label>
+                            <Input
+                                placeholder="Enter note"
+                                value={form.tid}
+                                onChange={(e) =>
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        note: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+
+                        <div className="grid gap-2">
                             <label className="text-sm font-medium">Slip</label>
                             <div className="flex w-full justify-center">
                                 <Dropzone
@@ -469,7 +510,7 @@ export default function PaymentRequestsPage() {
 
                         <Button disabled={submitting} onClick={handleRecordPayment}>
                             {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Submit Payment
+                            {edit ? "Edit" : "Submit"} Payment
                         </Button>
                     </div>
                 </DialogContent>

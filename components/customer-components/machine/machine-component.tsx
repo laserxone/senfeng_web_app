@@ -574,56 +574,42 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
 
             <div className="grid gap-3 xl:grid-cols-[1fr_340px]">
               <Card className="relative border shadow-none">
-                {machine?.commission_issued && (
-                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                    <div
-                      className="
-        flex
-        h-44
-        w-44
-        rotate-[-18deg]
-        flex-col
-        items-center
-        justify-center
-        rounded-full
-        border-[8px]
-        border-sky-500/20
-        bg-sky-500/5
-        text-center
-        shadow-lg
-        backdrop-blur-[1px]
-        select-none
-      "
-                    >
-                      <div
-                        className="
-          text-[22px]
-          font-black
-          uppercase
-          leading-none
-          tracking-[0.35em]
-          text-sky-600/20
-        "
-                      >
-                        Commission
+                {machine?.cancelled_detail ? (
+                  <div className="pointer-events-none absolute left-2 top-2 z-10 select-none">
+                    <div className="relative flex h-14 w-28 -rotate-6 items-center justify-center overflow-hidden rounded-md border-2 border-red-600/75 bg-red-50/85 text-red-700 shadow-[0_8px_22px_rgba(220,38,38,0.18)] ring-1 ring-red-900/10 backdrop-blur-sm dark:bg-red-950/45 dark:text-red-300">
+                      <div className="absolute inset-1 rounded border border-dashed border-red-600/55" />
+                      <div className="absolute -left-5 top-1/2 h-10 w-40 -translate-y-1/2 rotate-[-18deg] bg-white/25 dark:bg-white/5" />
+                      <div className="relative flex flex-col items-center gap-0.5 text-center">
+                        <div className="flex items-center gap-1 text-[9px] font-black uppercase leading-none tracking-[0.22em]">
+                          <TriangleAlert className="h-3 w-3" />
+                          Deal
+                        </div>
+                        <div className="text-[14px] font-black uppercase leading-none tracking-[0.14em]">
+                          Cancelled
+                        </div>
+                        <div className="h-px w-16 bg-red-600/50" />
                       </div>
-
-                      <div
-                        className="
-          mt-1
-          text-[20px]
-          font-black
-          uppercase
-          tracking-[0.3em]
-          text-sky-600/20
-        "
-                      >
-                        Issued
+                    </div>
+                  </div>
+                ) : machine?.commission_issued && (
+                  <div className="pointer-events-none absolute left-2 top-2 z-10 select-none">
+                    <div className="relative flex h-14 w-28 -rotate-6 items-center justify-center overflow-hidden rounded-md border-2 border-emerald-600/75 bg-emerald-50/80 text-emerald-700 shadow-[0_8px_22px_rgba(16,185,129,0.18)] ring-1 ring-emerald-900/10 backdrop-blur-sm dark:bg-emerald-950/45 dark:text-emerald-300">
+                      <div className="absolute inset-1 rounded border border-dashed border-emerald-600/55" />
+                      <div className="absolute -left-5 top-1/2 h-10 w-40 -translate-y-1/2 rotate-[-18deg] bg-white/25 dark:bg-white/5" />
+                      <div className="relative flex flex-col items-center gap-0.5 text-center">
+                        <div className="flex items-center gap-1 text-[9px] font-black uppercase leading-none tracking-[0.24em]">
+                          <ShieldCheck className="h-3 w-3" />
+                          Commission
+                        </div>
+                        <div className="text-[15px] font-black uppercase leading-none tracking-[0.18em]">
+                          Issued
+                        </div>
+                        <div className="h-px w-16 bg-emerald-600/50" />
                       </div>
                     </div>
                   </div>
                 )}
-                <CardHeader className="px-3 pb-2 pt-3">
+                <CardHeader className={`px-3 pb-2 pt-3 ${machine?.commission_issued || machine?.cancelled_detail ? "pl-32 sm:pl-36" : ""}`}>
                   <CardTitle className="text-sm font-semibold">
                     {machine?.type === "Parts"
                       ? "Parts Information"
@@ -2036,18 +2022,163 @@ const ViewImagesSheet = ({
   };
 
   const isMobile = useIsMobile()
-  const maxwidth = isMobile ? "90vw" : "50vw"
+  const maxwidth = isMobile ? "94vw" : "72vw"
+  const totalImages =
+    handshakeImages.length +
+    nameplateImages.length +
+    handoverImages.length +
+    installationReport.length +
+    contractImages.length +
+    contractPdfImages.length +
+    otherImages.length +
+    otherPdfImages.length;
+
+  type SheetImageGroup = {
+    title: string
+    description: string
+    images: string[]
+    imageType: string
+    pdfImages?: string[]
+    emptyText: string
+  };
+
+  const imageGroups: SheetImageGroup[] = [
+    {
+      title: "Handshake",
+      description: "Customer handover and handshake proof",
+      images: handshakeImages,
+      imageType: "handshake_images",
+      emptyText: "No handshake images found",
+    },
+    {
+      title: "Nameplate",
+      description: "Machine identity and serial plate",
+      images: nameplateImages,
+      imageType: "machine_nameplate_images",
+      emptyText: "No nameplate images found",
+    },
+    {
+      title: "Handover",
+      description: "Final delivery and handover records",
+      images: handoverImages,
+      imageType: "final_handover_images",
+      emptyText: "No handover images found",
+    },
+    {
+      title: "Installation Report",
+      description: "Installation report images",
+      images: installationReport,
+      imageType: "installation_report",
+      emptyText: "No report found",
+    },
+    {
+      title: "Contract",
+      description: "Contract pages and converted PDFs",
+      images: contractImages,
+      imageType: "contract_images_png",
+      pdfImages: contractPdfImages,
+      emptyText: "No contract images found",
+    },
+    {
+      title: "Additional",
+      description: "Other supporting machine images",
+      images: otherImages,
+      imageType: "other_images_png",
+      pdfImages: otherPdfImages,
+      emptyText: "No additional images found",
+    },
+  ];
+
+  const renderImageGroup = (group: SheetImageGroup) => {
+    const count = group.images.length + (group.pdfImages?.length || 0);
+
+    return (
+      <Card key={group.title} className="overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 dark:bg-zinc-950 dark:ring-white/10 p-0">
+        <CardHeader className="border-b bg-slate-50/80 px-3 py-2.5 dark:bg-zinc-900/70">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Images className="h-3.5 w-3.5" />
+                </span>
+                {group.title}
+              </CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {group.description}
+              </p>
+            </div>
+            <Badge variant="outline" className="h-6 rounded-full bg-background px-2 text-[10px]">
+              {count} files
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-3">
+          {count > 0 ? (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+              {group.images.map((item, ind) => (
+                <RenderImage
+                  key={`${group.imageType}-${item}-${ind}`}
+                  img={item}
+                  setImageOpen={setImageOpen}
+                  onDelete={(a, b) => {
+                    if (editAllowed) handleDeleteImage(a, b);
+                  }}
+                  imageType={group.imageType}
+                />
+              ))}
+              {group.pdfImages?.map((item, ind) => (
+                <RenderImage
+                  key={`${group.imageType}-pdf-${ind}`}
+                  img={item}
+                  type="pdf"
+                  setImageOpen={setImageOpen}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex min-h-24 items-center justify-center rounded-lg border border-dashed bg-slate-50 px-3 text-center text-sm text-muted-foreground dark:bg-zinc-900/50">
+              {group.emptyText}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
       <SheetContent
+        className="p-0"
         style={{ width: "100%", maxWidth: maxwidth }}
       >
-        <SheetHeader>
-          <div className="flex items-center gap-2">
-            <SheetTitle className="text-2xl">View Images</SheetTitle>
+        <SheetHeader className="border-b bg-slate-50/90 px-4 py-3 dark:bg-zinc-950">
+          <div className="flex flex-wrap items-center justify-between gap-3 pr-8">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Images className="h-4 w-4" />
+                </span>
+                <div>
+                  <SheetTitle className="text-lg font-semibold">
+                    Machine Images
+                  </SheetTitle>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Organized documents, proofs, and delivery records
+                  </p>
+                </div>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
+                <span className="rounded-full bg-background px-2 py-1 ring-1 ring-border">
+                  {totalImages} total files
+                </span>
+                <span className="rounded-full bg-background px-2 py-1 ring-1 ring-border">
+                  {imageGroups.length} sections
+                </span>
+              </div>
+            </div>
             <Button
               size="sm"
+              className="h-8 rounded-lg px-3"
               onClick={() => {
                 if (editAllowed) {
                   setAddImageVisible(true);
@@ -2056,6 +2187,7 @@ const ViewImagesSheet = ({
                 }
               }}
             >
+              <Images className="h-3.5 w-3.5" />
               Add Image
             </Button>
           </div>
@@ -2069,157 +2201,9 @@ const ViewImagesSheet = ({
           onRefresh={onRefresh}
         />
 
-        <ScrollArea className="h-[85vh] mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pr-4">
-
-            {/* Handshake Images */}
-            <FieldSet className="border rounded-md p-3 gap-3">
-              <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Handshake Images</FieldLegend>
-              <div className="flex flex-row gap-2 flex-wrap">
-                {handshakeImages.length > 0 ? (
-                  handshakeImages.map((item, ind) => (
-                    <RenderImage
-                      key={item}
-                      img={item}
-                      setImageOpen={setImageOpen}
-                      onDelete={(a, b) => {
-                        if (editAllowed) handleDeleteImage(a, b);
-                      }}
-                      imageType="handshake_images"
-                    />
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">No images found</p>
-                )}
-              </div>
-            </FieldSet>
-
-            {/* Nameplate Images */}
-            <FieldSet className="border rounded-md p-3 gap-3">
-              <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Nameplate Images</FieldLegend>
-              <div className="flex flex-row gap-2 flex-wrap">
-                {nameplateImages.length > 0 ? (
-                  nameplateImages.map((item, ind) => (
-                    <RenderImage
-                      key={ind}
-                      img={item}
-                      setImageOpen={setImageOpen}
-                      onDelete={(a, b) => {
-                        if (editAllowed) handleDeleteImage(a, b);
-                      }}
-                      imageType="machine_nameplate_images"
-                    />
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">No images found</p>
-                )}
-              </div>
-            </FieldSet>
-
-            {/* Handover Images */}
-            <FieldSet className="border rounded-md p-3 gap-3">
-              <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Handover Images</FieldLegend>
-              <div className="flex flex-row gap-2 flex-wrap">
-                {handoverImages.length > 0 ? (
-                  handoverImages.map((item, ind) => (
-                    <RenderImage
-                      key={ind}
-                      img={item}
-                      setImageOpen={setImageOpen}
-                      onDelete={(a, b) => {
-                        if (editAllowed) handleDeleteImage(a, b);
-                      }}
-                      imageType="final_handover_images"
-                    />
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">No images found</p>
-                )}
-              </div>
-            </FieldSet>
-
-            {/* Installation Report */}
-            <FieldSet className="border rounded-md p-3 gap-3">
-              <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Installation Report</FieldLegend>
-              <div className="flex flex-row gap-2 flex-wrap">
-                {installationReport.length > 0 ? (
-                  installationReport.map((item, ind) => (
-                    <RenderImage
-                      key={ind}
-                      img={item}
-                      setImageOpen={setImageOpen}
-                      onDelete={(a, b) => {
-                        if (editAllowed) handleDeleteImage(a, b);
-                      }}
-                      imageType="installation_report"
-                    />
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">No report found</p>
-                )}
-              </div>
-            </FieldSet>
-
-            {/* Contract Images */}
-            <FieldSet className="border rounded-md p-3 gap-3">
-              <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Contract Images</FieldLegend>
-              <div className="flex flex-row gap-2 flex-wrap">
-                {contractImages.length > 0 ? (
-                  contractImages.map((item, ind) => (
-                    <RenderImage
-                      key={ind}
-                      img={item}
-                      setImageOpen={setImageOpen}
-                      onDelete={(a, b) => {
-                        if (editAllowed) handleDeleteImage(a, b);
-                      }}
-                      imageType="contract_images_png"
-                    />
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">No images found</p>
-                )}
-                {contractPdfImages.map((item, ind) => (
-                  <RenderImage
-                    key={`pdf-${ind}`}
-                    img={item}
-                    type="pdf"
-                    setImageOpen={setImageOpen}
-                  />
-                ))}
-              </div>
-            </FieldSet>
-
-            {/* Additional Images */}
-            <FieldSet className="border rounded-md p-3 gap-3">
-              <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Additional Images</FieldLegend>
-              <div className="flex flex-row gap-2 flex-wrap">
-                {otherImages.length > 0 ? (
-                  otherImages.map((item, ind) => (
-                    <RenderImage
-                      key={ind}
-                      img={item}
-                      setImageOpen={setImageOpen}
-                      onDelete={(a, b) => {
-                        if (editAllowed) handleDeleteImage(a, b);
-                      }}
-                      imageType="other_images_png"
-                    />
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">No images found</p>
-                )}
-                {otherPdfImages.map((item, ind) => (
-                  <RenderImage
-                    key={`pdf-${ind}`}
-                    img={item}
-                    type="pdf"
-                    setImageOpen={setImageOpen}
-                  />
-                ))}
-              </div>
-            </FieldSet>
-
+        <ScrollArea className="h-[calc(100vh-120px)]">
+          <div className="grid grid-cols-1 gap-3 p-4 lg:grid-cols-2">
+            {imageGroups.map(renderImageGroup)}
           </div>
         </ScrollArea>
       </SheetContent>
@@ -2266,18 +2250,26 @@ const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }: Rend
   if (!localImage) return null
 
   return (
-    <div className="space-y-2">
-      <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
-        <img
-          src={localImage || ""}
-          alt="payment-img"
-          className="h-[150px] w-auto object-contain"
-        />
-      </ControlledZoom>
+    <div className="group relative overflow-hidden rounded-lg border bg-slate-50 shadow-sm transition-shadow hover:shadow-md dark:bg-zinc-900/70">
+      <div className="flex aspect-[4/3] items-center justify-center p-2">
+        <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
+          <img
+            src={localImage || ""}
+            alt="payment-img"
+            className="max-h-32 w-auto object-contain"
+          />
+        </ControlledZoom>
+      </div>
+      {type && (
+        <Badge className="absolute left-2 top-2 h-5 rounded-full bg-slate-900/80 px-2 text-[10px] text-white">
+          PDF
+        </Badge>
+      )}
       {onDelete && (
         <Button
           variant="destructive"
-          size="icon"
+          size="icon-sm"
+          className="absolute right-2 top-2 h-7 w-7 rounded-full opacity-90 shadow-sm transition-opacity group-hover:opacity-100"
           onClick={(e) => {
             setDeleteLoading(true);
             if (imageType)

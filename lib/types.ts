@@ -776,7 +776,8 @@ export type PartsProps = {
     id: number
     invoicenumber: number | string
     payment: boolean
-    fields: { name: string, qty: string, price: string, total: string }[]
+    discount : string
+    fields: { name?: string,  description: string, qty: string, price: string, total: string }[]
     payments: { amount: string, mode: string, received_by: string, transaction_date: string, clearance_date: string, image: string }[]
 }
 export type SaleRecordIssuedCommissionsDetail = {
