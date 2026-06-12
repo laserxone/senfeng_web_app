@@ -42,7 +42,7 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { SalesCustomer, SalesCustomerMachines, SalesDashboard, SalesMachine, SalesVisitTypes, UserAttendanceRecord, UserCallData, UserExtraTypes, UserReimbursementType } from "@/lib/types";
 import { updateItemPurpose } from "@/lib/updatePurpose";
-import { AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { AlertCircle, Building2, CheckCircle, Clock, Cpu, Gauge, MessageSquareText, PhoneCall, Star, UserRound } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -236,21 +236,21 @@ export default function Page() {
     );
   }, [userID, data, extraData, selectedOption]);
 
-  const RenderMembers = useCallback(() => {
-    return (
-      <Card className="flex flex-1">
-        <CardContent className="pt-0 pr-0 flex flex-1">
-          <CustomersTab
-            height="h-[calc(100dvh-380px)]"
-            data={
-              data?.customers.filter((customer) => customer.sales.length > 0) ||
-              []
-            }
-          />
-        </CardContent>
-      </Card>
-    );
-  }, [userID, data]);
+   const RenderMembers = useCallback(() => {
+      return (
+        <Card className="flex flex-1 p-0">
+          <CardContent className="p-0 flex flex-1">
+            <CustomersTab
+              height="h-[calc(100dvh-400px)]"
+              data={
+                data?.customers.filter((customer) => customer.sales.length > 0) ||
+                []
+              }
+            />
+          </CardContent>
+        </Card>
+      );
+    }, [userID, data]);
 
   const RenderReimbursement = useCallback(() => {
     return (
@@ -468,28 +468,40 @@ function CustomersTab({
       Number(machine?.percentage_completion) === 100
 
     return (
-      <div className="flex w-full flex-col gap-2 border-b pb-3 sm:flex-row sm:items-center sm:justify-between">
-        <Link href={`/${base_route}/member/${customer_id}/${machine.id}`}>
-          <span className="break-words font-medium hover:underline">
-            {machine.serial_no}
+      <div className="flex w-full flex-col gap-2 rounded-lg border bg-background px-3 py-2.5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <Link
+          href={`/${base_route}/member/${customer_id}/${machine.id}`}
+          className="flex min-w-0 items-center gap-2"
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300">
+            <Cpu className="h-4 w-4" />
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-semibold hover:underline">
+              {machine.serial_no}
+            </span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              Machine record
+            </span>
           </span>
         </Link>
 
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <span className="text-xs font-normal text-gray-600 sm:text-sm">
-            Data completion: {machine?.percentage_completion || 0}%
-          </span>
+        <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
+          <Badge variant="outline" className="h-6 rounded-full bg-slate-50 px-2 text-[10px] dark:bg-zinc-900">
+            {machine?.percentage_completion || 0}% data
+          </Badge>
 
           {isCompleted ? (
-            <CheckCircle className="h-5 w-5 shrink-0 text-green-500" />
+            <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
           ) : (
-            <Clock className="h-5 w-5 shrink-0 text-yellow-500" />
+            <Clock className="h-4 w-4 shrink-0 text-amber-500" />
           )}
 
           <Badge
+            className="h-6 rounded-full px-2 text-[10px]"
             variant={Number(machine.price) === totalPayments ? "default" : "destructive"}
           >
-            {Number(machine.price) === totalPayments ? "Completed" : "Pending"}
+            {Number(machine.price) === totalPayments ? "Paid" : "Balance"}
           </Badge>
         </div>
       </div>
@@ -499,36 +511,83 @@ function CustomersTab({
 
 
   return (
-    <ScrollArea className={`${height} w-full pr-2 sm:pr-4`}>
-      <Accordion type="single" collapsible className="w-full space-y-3 p-1 sm:p-2">
+    <div className="w-full overflow-hidden rounded-xl border bg-white shadow-sm dark:bg-zinc-950">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-slate-50/80 px-4 py-3 dark:bg-zinc-900/70">
+        <div className="flex items-center gap-2">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Building2 className="h-4 w-4" />
+          </span>
+          <div>
+            <h3 className="text-sm font-semibold leading-none">Member Workspace</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Assigned customers, members, and machine activity
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          <Badge variant="outline" className="rounded-full bg-background px-2.5 text-[11px]">
+            {localData.length} customers
+          </Badge>
+          <Badge variant="secondary" className="rounded-full px-2.5 text-[11px]">
+            {localData.reduce((sum, item) => sum + item.sales.length, 0)} machines
+          </Badge>
+        </div>
+      </div>
+
+      <ScrollArea className={`${height} w-full`}>
+        <Accordion type="single" collapsible className="w-full space-y-2 p-3">
         {localData.length === 0 ? (
-          <Label>No Data found</Label>
+          <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed bg-slate-50 p-6 text-center dark:bg-zinc-900/50">
+            <div>
+              <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-muted-foreground dark:bg-zinc-800">
+                <AlertCircle className="h-5 w-5" />
+              </span>
+              <Label className="mt-3 block text-sm font-medium">
+                No data found
+              </Label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Customer records will appear here when assigned
+              </p>
+            </div>
+          </div>
         ) : (
           localData.map((customer) => (
             <AccordionItem
               key={customer.id}
-              className="w-[calc(100vw-80px)] sm:w-full border-none"
+              className="w-[calc(100vw-80px)] border-none sm:w-full"
               value={`customer-${customer.id}`}
             >
-              <Card >
-                <AccordionTrigger className="px-3 py-3 hover:no-underline sm:px-4">
+              <Card className="overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 transition-shadow hover:shadow-md dark:bg-zinc-950 dark:ring-white/10 p-0">
+                <AccordionTrigger className="hover:no-underline sm:px-4">
                   <div className="flex w-full min-w-0 flex-col gap-3 pr-2 sm:flex-row sm:items-center sm:justify-between">
                     <Link
                       href={`/${base_route}/${customer.member ? "member" : "customer"
                         }/${customer.id}`}
-                      className="min-w-0"
+                      className="flex min-w-0 items-center gap-3"
                     >
-                      <h3 className="truncate text-left whitespace-normal break-words text-base font-semibold hover:underline sm:text-lg">
-                        {customer.name}
-                      </h3>
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <UserRound className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0 text-left">
+                        <span className="block truncate text-sm font-semibold hover:underline sm:text-base">
+                          {customer.name}
+                        </span>
+                        <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                          <span>{customer.member ? "Member" : "Customer"}</span>
+                          <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
+                          <span>{customer.sales.length} machines</span>
+                        </span>
+                      </span>
                     </Link>
 
                     <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                      <span className="text-left text-xs font-normal text-gray-600 sm:text-sm">
-                        Overall profile completion: {customer.overall}%
-                      </span>
+                      <Badge variant="outline" className="h-6 rounded-full bg-background px-2 text-[10px]">
+                        <Gauge className="mr-1 h-3 w-3" />
+                        {customer.overall}% profile
+                      </Badge>
 
                       <Badge
+                        className="h-6 rounded-full px-2 text-[10px]"
                         variant={
                           customer.sales.length === 0 ? "secondary" : "default"
                         }
@@ -540,9 +599,9 @@ function CustomersTab({
                 </AccordionTrigger>
 
                 <AccordionContent>
-                  <CardContent className="px-3 pt-0 sm:px-4">
+                  <CardContent className="border-t bg-slate-50/60 px-3 py-3 sm:px-4 dark:bg-zinc-900/50">
                     {customer.sales.length > 0 ? (
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {customer.sales.map((machine) => (
                           <RenderEachMachine
                             key={machine.id}
@@ -552,7 +611,7 @@ function CustomersTab({
                         ))}
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="flex min-h-16 items-center justify-center gap-2 rounded-lg border border-dashed bg-background p-4 text-sm text-muted-foreground">
                         <AlertCircle className="h-5 w-5 shrink-0" />
                         No machines purchased yet
                       </div>
@@ -563,8 +622,9 @@ function CustomersTab({
             </AccordionItem>
           ))
         )}
-      </Accordion>
-    </ScrollArea>
+        </Accordion>
+      </ScrollArea>
+    </div>
   )
 }
 
@@ -601,31 +661,41 @@ function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Pro
 
   const RenderEachCall = ({ call }: { call: UserCallData }) => {
     return (
-      <Card key={call.id} className="w-full p-0">
-        <CardContent className="px-3 py-3 sm:px-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-12 sm:items-center">
-            <div className="min-w-0 sm:col-span-4">
-              <p className="truncate text-base font-semibold sm:text-lg">
-                {call.name || call.owner}
-              </p>
+      <Card key={call.id} className="group overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 transition-shadow hover:shadow-md dark:bg-zinc-950 dark:ring-white/10">
+        <CardContent className="p-0">
+          <div className="flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <UserRound className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="truncate text-sm font-semibold sm:text-base">
+                    {call.name || call.owner || "Unnamed customer"}
+                  </p>
+                  <Badge variant="secondary" className="h-5 rounded-full px-2 text-[10px]">
+                    Pending call
+                  </Badge>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
+                  <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-slate-50 px-2 py-1 ring-1 ring-slate-200 dark:bg-zinc-900 dark:ring-white/10">
+                    <PhoneCall className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{call.number?.join(", ") || "No number"}</span>
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <div className="min-w-0 sm:col-span-6">
-              <p className="break-words text-sm text-muted-foreground sm:truncate">
-                {call.number.join(", ")}
-              </p>
-            </div>
-
-            <div className="sm:col-span-2 sm:text-right">
+            <div className="flex shrink-0 items-center gap-2 sm:justify-end">
               <Button
                 onClick={() => {
                   setSelectedCustomer(call)
                   setVisible(true)
                 }}
-                variant="secondary"
-                className="w-full"
+                className="h-8 w-full rounded-lg px-3 sm:w-auto"
               >
-                Call
+                <PhoneCall className="h-3.5 w-3.5" />
+                Add Feedback
               </Button>
             </div>
           </div>
@@ -635,12 +705,41 @@ function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Pro
   }
 
   return (
-    <div className="w-full">
-      <ScrollArea className="h-[calc(100dvh-380px)] p-4 ">
+    <div className="w-full overflow-hidden rounded-xl border bg-white shadow-sm dark:bg-zinc-950">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-slate-50/80 px-4 py-3 dark:bg-zinc-900/70">
+        <div className="flex items-center gap-2">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <PhoneCall className="h-4 w-4" />
+          </span>
+          <div>
+            <h3 className="text-sm font-semibold leading-none">Call Queue</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Follow up customers and record feedback
+            </p>
+          </div>
+        </div>
+        <Badge variant="outline" className="rounded-full bg-background px-2.5 text-[11px]">
+          {data.length} remaining
+        </Badge>
+      </div>
+
+      <ScrollArea className="h-[calc(100dvh-410px)]">
         {data.length === 0 ? (
-          <Label>No calls remaining</Label>
+          <div className="flex min-h-40 items-center justify-center p-6">
+            <div className="text-center">
+              <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300">
+                <CheckCircle className="h-5 w-5" />
+              </span>
+              <Label className="mt-3 block text-sm font-medium">
+                No calls remaining
+              </Label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Everything is clear for this period
+              </p>
+            </div>
+          </div>
         ) : (
-          <div className="flex flex-col gap-4 p-2">
+          <div className="flex flex-col gap-2 p-3">
             {data.map((call) => (
               <RenderEachCall call={call} key={call.id} />
             ))}
@@ -649,53 +748,88 @@ function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Pro
       </ScrollArea>
 
       <Dialog open={visible} onOpenChange={setVisible}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Feedback</DialogTitle>
-            <div className="flex flex-1 flex-col gap-2">
-              <h1>
-                Enter Feedback <RequiredStar />
-              </h1>
-              <Input
-                placeholder="feedback"
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-              />
-
-              <h1>
-                Next Follow Up <RequiredStar />
-              </h1>
-              <AppCalendar date={next} onChange={setNext} min={new Date()} max={""} />
-
-              <div className="flex flex-row items-center gap-2">
-                <h1>Top Follow Up?</h1>
-                <Checkbox
-                  checked={top}
-                  onCheckedChange={(checked: boolean) => {
-                    setTop(checked);
-                  }}
-                />
+        <DialogContent className="overflow-hidden p-0 sm:max-w-[520px]">
+          <DialogHeader className="border-b bg-slate-50/90 px-4 py-3 dark:bg-zinc-950">
+            <div className="flex items-center gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <MessageSquareText className="h-4 w-4" />
+              </span>
+              <div>
+                <DialogTitle className="text-base font-semibold">
+                  Add Feedback
+                </DialogTitle>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {selectedCustomer?.name || selectedCustomer?.owner || "Customer"}
+                </p>
               </div>
-
-              <div className="flex flex-row items-center gap-2">
-                <h1>Satisfactory?</h1>
-                <Checkbox
-                  checked={satisfactory}
-                  onCheckedChange={(checked: boolean) => {
-                    setSatisfactory(checked);
-                  }}
-                />
-              </div>
-              <Button
-                disabled={!next || !feedback}
-                onClick={() => {
-                  handleSaveFeedback();
-                }}
-              >
-                {loading && <Spinner />} Save
-              </Button>
             </div>
           </DialogHeader>
+
+          <div className="space-y-3 p-4">
+            <div className="rounded-lg border bg-slate-50/70 px-3 py-2 dark:bg-zinc-900/70">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <PhoneCall className="h-3.5 w-3.5" />
+                <span>{selectedCustomer?.number?.join(", ") || "No number"}</span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Enter Feedback <RequiredStar />
+              </Label>
+              <Input
+                placeholder="Write call feedback..."
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                className="h-10 rounded-lg bg-slate-50/70 dark:bg-zinc-900/70"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Next Follow Up <RequiredStar />
+              </Label>
+              <AppCalendar date={next} onChange={setNext} min={new Date()} max={""} />
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className="flex h-10 items-center justify-between rounded-lg border bg-slate-50/70 px-3 text-sm dark:bg-zinc-900/70">
+                <span className="inline-flex items-center gap-2">
+                  <Star className="h-3.5 w-3.5 text-amber-500" />
+                  Top Follow Up
+                </span>
+                <Checkbox
+                  checked={top}
+                  onCheckedChange={(checked) => {
+                    setTop(checked === true);
+                  }}
+                />
+              </label>
+
+              <label className="flex h-10 items-center justify-between rounded-lg border bg-slate-50/70 px-3 text-sm dark:bg-zinc-900/70">
+                <span className="inline-flex items-center gap-2">
+                  <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                  Satisfactory
+                </span>
+                <Checkbox
+                  checked={satisfactory}
+                  onCheckedChange={(checked) => {
+                    setSatisfactory(checked === true);
+                  }}
+                />
+              </label>
+            </div>
+
+            <Button
+              className="h-9 w-full rounded-lg"
+              disabled={!next || !feedback}
+              onClick={() => {
+                handleSaveFeedback();
+              }}
+            >
+              {loading && <Spinner />} Save Feedback
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
