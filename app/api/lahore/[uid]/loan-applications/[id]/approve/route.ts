@@ -256,7 +256,7 @@ export async function POST(
         const approverIdQuery = await pool.query(`SELECT approver_id WHERE loan_application_id = $1 AND approval_order = $2`, [applicationId, application.current_approver_order + 1])
         const approverId = approverIdQuery.rows?.[0]?.approver_id ?? null
         if (approverId) {
-          const nameQuery = await pool.query(`SELECT name from users WHERE id = $1`, approverId)
+          const nameQuery = await pool.query(`SELECT name from users WHERE id = $1`, [approverId])
           const name = nameQuery.rows?.[0]?.name || ""
           sendNotification(`${name} submitted loan application requesting your approval`, "applications", approverId)
         }

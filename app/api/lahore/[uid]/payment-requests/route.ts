@@ -20,6 +20,7 @@ export async function GET() {
       c.id AS customer_id,
       c.name AS customer_name,
       c.owner AS customer_owner,
+      c.location AS customer_location,
 
       u.name AS ownership_name
 

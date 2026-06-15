@@ -353,10 +353,18 @@ ORDER BY u.name ASC;
   LEFT JOIN feedback f
     ON f.customer_id = c.id
     AND f.created_at BETWEEN $1 AND $2
-  WHERE c.ownership IS NULL
     AND c.office = $3
     AND c.created_at BETWEEN $1 AND $2
   GROUP BY c.id
+  ORDER BY c.created_at DESC
+`;
+
+    const unassignedCustomersQueryTotal = `
+  SELECT
+    c.*
+  FROM customer c
+  WHERE c.ownership IS NULL
+    AND c.office = $1
   ORDER BY c.created_at DESC
 `;
 
@@ -408,6 +416,7 @@ ORDER BY u.name ASC;
         topFollowupResult,
         resumesResult,
         loansResult,
+        totalUnassigned
     ] = await Promise.all([
         pool.query(paymentQuery, [firstDayOfCurrentMonth, lastDayOfCurrentMonth]),
         pool.query(machinesSoldQuery, [firstDayOfCurrentMonth, lastDayOfCurrentMonth]),
@@ -433,6 +442,7 @@ ORDER BY u.name ASC;
             lastDayOfCurrentMonth,
         ]),
         pool.query(loansQuery, [office]),
+        pool.query(unassignedCustomersQueryTotal, [office])
     ]);
 
     const formattedFeedbackData = feedbackResult.rows.map(row => ({
@@ -565,7 +575,10 @@ ORDER BY created_at DESC
             final_amount: finalAmount - totalPaid,
             status,
         };
-    }).filter((item) => item.status !== "Paid")
+    }).filter(
+        (item) =>
+            item.payment === false
+    ).filter((item) => item.status !== "Paid")
 
     let totalPending = 0;
 
@@ -608,7 +621,7 @@ ORDER BY created_at DESC
 
         unassigned_customers: {
             total: unassignedCustomers.length,
-            data : [...customersWithFeedback, ...customersWithoutFeedback],
+            data: [...customersWithFeedback, ...customersWithoutFeedback],
             with_feedback: {
                 total: customersWithFeedback.length,
                 data: customersWithFeedback,
@@ -630,6 +643,11 @@ ORDER BY created_at DESC
         },
 
         loans: loansResult.rows,
+
+        total_unassigned: {
+            data: totalUnassigned.rows,
+            length: totalUnassigned.rows.length
+        }
     };
     return responseData
 }

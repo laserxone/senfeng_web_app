@@ -146,7 +146,7 @@ export const OwnerSidebarItems = [
       "team",
       "salary",
       "careers",
-      "applications",
+      // "applications",
       "taks",
       "map"
     ],
@@ -173,11 +173,11 @@ export const OwnerSidebarItems = [
         url: "/careers",
         shortcut: ["c", "a", "r"],
       },
-      {
-        title: "Applications",
-        url: "/applications",
-        shortcut: ["a", "p", "p"],
-      },
+      // {
+      //   title: "Applications",
+      //   url: "/applications",
+      //   shortcut: ["a", "p", "p"],
+      // },
 
       {
         title: "Assign Tasks",
@@ -693,14 +693,14 @@ export const employeeNavItems = [
     items: [],
   },
 
-  {
-    title: "Applications",
-    url: "/applications",
-    icon: "applications",
-    shortcut: ["a", "p", "p"],
+  // {
+  //   title: "Applications",
+  //   url: "/applications",
+  //   icon: "applications",
+  //   shortcut: ["a", "p", "p"],
 
-    items: [],
-  },
+  //   items: [],
+  // },
 
 ];
 

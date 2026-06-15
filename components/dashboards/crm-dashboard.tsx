@@ -13,19 +13,26 @@ import {
   Banknote,
   BriefcaseBusiness,
   CalendarClock,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  CircleDashed,
+  Clock3,
   MessageSquareText,
   Phone,
   PhoneCall,
+  Search,
   UserRound,
   UsersRound
 } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import SalesTeamProgressChartCRM from "../charts/sales_progress/crm-sales-progress";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Input } from "../ui/input";
 
 export default function CRMDashboard() {
   const [data, setData] = useState<CRMDashboardData>();
@@ -35,6 +42,7 @@ export default function CRMDashboard() {
   const debouncedUserId = useDebounce(userID, 1000);
   const { state: OfficeState } = useContext(OfficeContext)!
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+   const [unassigned, setUnassigned] = useState(false)
   const [topOpen, setTopOpen] = useState(false)
   const router = useRouter()
 
@@ -133,13 +141,13 @@ export default function CRMDashboard() {
           loading={loading}
           items={[
             {
-              label: "Total This Month",
-              value: data?.unassigned_customers?.total ?? 0,
+              label: "Total",
+              value: data?.total_unassigned?.length ?? 0,
               className: "text-purple-700",
-              onClick: () => setFeedbackOpen(true),
+              onClick: () => setUnassigned(true),
             },
             {
-              label: "With / Without Feedback",
+              label: "With / Without Feedback This Month",
               value: `${data?.unassigned_customers?.with_feedback?.total ?? 0} / ${data?.unassigned_customers?.without_feedback?.total ?? 0
                 }`,
               onClick: () => setFeedbackOpen(true),
@@ -231,6 +239,16 @@ export default function CRMDashboard() {
         ]}
         onClose={() => setFeedbackOpen(false)}
       />
+
+
+       <UnassignedDialog
+        open={unassigned}
+        data={[
+          ...(data?.total_unassigned?.data ?? []),
+        ]}
+        onClose={() => setUnassigned(false)}
+      />
+
       <TopDialog
         open={topOpen}
         data={[
@@ -331,6 +349,67 @@ const TopDialog = ({
     </Dialog>
   );
 }
+
+const UnassignedDialog = ({
+  open,
+  data = [],
+  onClose,
+}: {
+  open: boolean;
+  data: CRMCustomer[];
+  onClose: () => void;
+}) => {
+  const { base_route } = useUserDetail()
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="w-full sm:max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Unassigned Customers</DialogTitle>
+        </DialogHeader>
+
+        <ScrollArea className="h-[80vh] pr-3">
+          <div className="space-y-3">
+            {data.length > 0 ? (
+              data.map((item: any) => (
+                <div
+                  key={item.id}
+                  className="rounded-lg border bg-card p-4 text-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <Link target="_blank" href={`/${base_route}/${item?.member ? "member" : "customer"}/${item.id}`} className="hover:underline">
+                        <p className="font-semibold">
+                          {item.name || "No customer name"}
+                        </p>
+                      </Link>
+
+                      <div className="mt-1 flex items-center gap-1 text-muted-foreground">
+                        <UserRound className="h-3.5 w-3.5" />
+                        <span>{item.owner || "No owner"}</span>
+                      </div>
+                    </div>
+
+
+                  </div>
+
+                  
+
+                  
+                </div>
+              ))
+            ) : (
+              <p className="py-10 text-center text-sm text-muted-foreground">
+                No Unassigned customers found.
+              </p>
+            )}
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
 const FeedbackDialog = ({
   open,
   data = [],
@@ -383,19 +462,118 @@ const CustomerList = ({
   data: CRMCustomer[];
 }) => {
   const { base_route } = useUserDetail()
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const pageSize = 10;
+  const filteredCustomers = useMemo(() => {
+    const term = search.trim().toLowerCase();
+
+    if (!term) {
+      return data;
+    }
+
+    return data.filter((customer: any) => {
+      const searchableValues = [
+        customer.id,
+        customer.name,
+        customer.customer_name,
+        customer.company,
+        customer.company_name,
+        customer.owner,
+        customer.customer_owner,
+        customer.phone,
+        customer.mobile,
+        customer.number,
+        customer.numbers,
+        customer.customer_phone,
+        customer.customer_number,
+      ];
+
+      return searchableValues
+        .flatMap((value) => (Array.isArray(value) ? value : [value]))
+        .filter((value) => value !== undefined && value !== null)
+        .join(" ")
+        .toLowerCase()
+        .includes(term);
+    });
+  }, [data, search]);
+  const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / pageSize));
+  const startItem = filteredCustomers.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endItem = Math.min(page * pageSize, filteredCustomers.length);
+  const visibleCustomers = useMemo(
+    () => filteredCustomers.slice((page - 1) * pageSize, page * pageSize),
+    [filteredCustomers, page]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [data, search]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
   return (
     <div className="rounded-lg border">
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <h3 className="font-semibold">{title}</h3>
-        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-          {count}
-        </span>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
+        <div>
+          <h3 className="font-semibold">{title}</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {filteredCustomers.length > 0
+              ? `Showing ${startItem}-${endItem} of ${filteredCustomers.length}`
+              : "No records"}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+            {filteredCustomers.length}/{count}
+          </span>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              disabled={page <= 1}
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              aria-label={`Previous ${title} page`}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="min-w-12 text-center text-xs font-medium text-muted-foreground">
+              {page}/{totalPages}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              aria-label={`Next ${title} page`}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-b p-3">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={`Search ${title.toLowerCase()}...`}
+            className="pl-9"
+          />
+        </div>
       </div>
 
       <ScrollArea className="h-[70vh]">
         <div className="space-y-2 p-3">
-          {data.length > 0 ? (
-            data.map((customer: any) => (
+          {visibleCustomers.length > 0 ? (
+            visibleCustomers.map((customer: any) => (
               <div
                 key={customer.id}
                 className="rounded-lg border bg-card p-3 text-sm"
@@ -453,32 +631,97 @@ const CustomerList = ({
   );
 };
 
-const renderTaskCard = (tasks: TeamTaskForAdmin[], label: string) => (
-  <Card className="w-full">
-    <CardHeader className="text-base font-semibold">{label}</CardHeader>
-    <CardContent className="space-y-2">
-      {tasks.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No tasks</p>
-      ) : (
-        tasks.map((task) => (
-          <div
-            key={task.id}
-            className={`p-3 rounded text-sm border border-muted-foreground/10 ${task.status === "Completed" ? "bg-green-200" : "bg-red-200"
-              }`}
-          >
-            <p className="font-medium text-black">
-              {task.title || `Task #${task.id}`}{" "}
-            </p>
+const renderTaskCard = (tasks: TeamTaskForAdmin[], label: string) => {
+  const completedCount = tasks.filter((task) => task.status === "Completed").length;
+  const pendingCount = tasks.length - completedCount;
 
-            <p className="text-xs text-muted-foreground">
-              {moment(task.created_at).format("YYYY-MM-DD hh:mm A")}
+  return (
+    <Card className="w-full overflow-hidden border-border/70 bg-card shadow-sm">
+      <CardHeader className="border-b bg-muted/20 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-base font-semibold text-foreground">{label}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {tasks.length} total tasks
             </p>
           </div>
-        ))
-      )}
-    </CardContent>
-  </Card>
-);
+
+          <div className="flex shrink-0 items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground shadow-sm">
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+            {completedCount}
+            <span className="text-border">/</span>
+            <CircleDashed className="h-3.5 w-3.5 text-rose-500" />
+            {pendingCount}
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-3">
+        {tasks.length === 0 ? (
+          <div className="flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed bg-muted/20 px-4 py-8 text-center">
+            <CircleDashed className="mb-2 h-6 w-6 text-muted-foreground" />
+            <p className="text-sm font-medium text-foreground">No tasks</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Nothing assigned for this window.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {tasks.map((task) => {
+              const completed = task.status === "Completed";
+
+              return (
+                <div
+                  key={task.id}
+                  className={`group rounded-lg border p-3 text-sm shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${completed
+                    ? "border-emerald-200 bg-emerald-50/70"
+                    : "border-rose-200 bg-rose-50/70"
+                    }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full border bg-background ${completed
+                        ? "border-emerald-200 text-emerald-700"
+                        : "border-rose-200 text-rose-600"
+                        }`}
+                    >
+                      {completed ? (
+                        <CheckCircle2 className="h-4 w-4" />
+                      ) : (
+                        <CircleDashed className="h-4 w-4" />
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <p className="font-semibold leading-snug text-foreground">
+                          {task.title || `Task #${task.id}`}
+                        </p>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${completed
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-rose-100 text-rose-700"
+                            }`}
+                        >
+                          {task.status || "Pending"}
+                        </span>
+                      </div>
+
+                      <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Clock3 className="h-3.5 w-3.5" />
+                        {moment(task.created_at).format("YYYY-MM-DD hh:mm A")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
 function DashboardInfoCard({
   title,

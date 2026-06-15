@@ -321,7 +321,7 @@ export async function POST(request: NextRequest) {
       );
 
       if (approversResult.rows.length > 0) {
-        const nameQuery = await pool.query(`SELECT name from users WHERE id = $1`, applicant_id)
+        const nameQuery = await pool.query(`SELECT name from users WHERE id = $1`, [applicant_id])
         const name = nameQuery.rows?.[0]?.name || ""
         const sendTo = approversResult.rows?.[0].user_id ?? null
         sendNotification(`${name} submitted loan application requesting your approval`, "applications", sendTo)

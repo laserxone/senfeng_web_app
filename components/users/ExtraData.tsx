@@ -20,7 +20,7 @@ export const CustomerExtraData = ({
   ]
 
   return (
-    <div className="mt-3 flex w-full flex-col gap-3 lg:mt-5">
+    <div className="mt-3 flex flex-col gap-3 lg:mt-5">
       <div className="rounded-lg bg-gray-100 px-4 py-2 dark:bg-gray-800">
         <h2 className="text-lg font-bold tracking-tight sm:text-xl lg:text-2xl">
           Customer Group

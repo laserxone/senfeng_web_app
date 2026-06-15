@@ -50,6 +50,7 @@ type PaymentRequest = {
     customer_name: string;
     customer_owner: string;
     ownership_name: string;
+    customer_location : string;
     dispatch_information: { other_information?: { transporter?: string } }
     note: string
 };
@@ -249,6 +250,21 @@ export default function PaymentRequestsPage() {
                 </Button>
             ),
             cell: ({ row }) => <div>{row.original.customer_owner || "-"}</div>,
+        },
+
+         {
+            accessorKey: "customer_location",
+            filterFn: "includesString",
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Owner
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => <div>{row.original.customer_location || "-"}</div>,
         },
         {
             accessorKey: "ownership_name",

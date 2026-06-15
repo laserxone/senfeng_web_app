@@ -1514,6 +1514,12 @@ export interface CRMDashboardData {
   top_followup: CRMTopFollowupData;
   resumes: CRMResumeData;
   loans: CRMLoan[];
+  total_unassigned : TotalUnassignedCustomers
+}
+
+export interface TotalUnassignedCustomers {
+    length : number
+    data : CRMCustomer[]
 }
 
 export interface CRMRecentSale {
