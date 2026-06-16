@@ -67,6 +67,7 @@ export type SalesDashboard = {
     totalCustomersWithSale: number
     totalVisits: number
     user: UserDashboard
+    new_entries : SalesNewEntries
 }
 
 export type SalesVisitTypes = {
@@ -1668,3 +1669,249 @@ export interface CRMLoan {
   loan_applications_id: number | null;
   user_name: string;
 }
+
+
+export type ID = string | number;
+
+export type DateValue = string | Date | null;
+
+export type AnyObject = Record<string, any>;
+
+export type ApiCollection<T> = {
+  total: number;
+  data: T[];
+};
+
+export type ApiAmountCollection<T> = {
+  total: number;
+  total_amount: number;
+  data: T[];
+};
+
+export type CustomerMini = {
+  id: ID | null;
+  name: string | null;
+  owner: string | null;
+  number: string[] | string | null;
+  location: string | null;
+  industry: string | null;
+  member: boolean | null;
+  created_at: DateValue;
+};
+
+
+export type DispatchInformation = {
+  checklist?: Record<string, string | number>;
+  other_information?: {
+    note?: string;
+    image?: string;
+    manager?: string;
+    orderNo?: string | string[];
+    issuedBy?: string;
+    vehicleNo?: string;
+    driverName?: string;
+    transporter?: string;
+    dispatchTime?: string;
+    driverNumber?: string;
+  };
+};
+
+export type PartInformation = {
+  name?: string;
+  model?: string;
+  power?: string;
+  serial_no?: string;
+  [key: string]: any;
+};
+
+export type PendingPayment = {
+  id: ID;
+  created_at: DateValue;
+  customer_id: ID;
+  type: "Machine" | "Parts" | string;
+
+  speed_money_note: string | null;
+  speed_money: boolean;
+  sell_by: ID;
+  commission: boolean;
+  order_no: string | null;
+  price: string | number;
+  qty: number | null;
+  serial_no: string | null;
+
+  contract_images_png: string[];
+  contract_images_pdf: string[];
+  other_images_png: string[];
+  other_images_pdf: string[];
+
+  contract_date: DateValue;
+  usd_tt_rate: string | number | null;
+  speed_money_amount: string | number | null;
+  power: string | null;
+  source: string | null;
+  cnic: string | null;
+
+  commission_issued: boolean;
+  payment_lock: boolean;
+  order_no_arr: string[];
+
+  machine_nameplate_images: string[];
+  final_handover_images: string[];
+  handover_user_id: ID | null;
+  installation_report: string[];
+  handshake_images: string[];
+
+  parts_information: PartInformation[] | null;
+
+  ready_for_delivery: boolean;
+  delivery_date: DateValue;
+  delivery_request_date: DateValue;
+
+  total_paid: number;
+  pending_amount: number;
+
+  customer: CustomerMini;
+};
+
+export type InvoiceField = {
+  id?: ID;
+  img?: string | null;
+  qty?: number;
+  gift?: number;
+  name?: string;
+  rack?: string | null;
+  type?: string;
+  unit?: string | null;
+  price?: string | number;
+  total?: string | number;
+  buying?: string | number;
+  remarks?: string;
+  category?: string | null;
+  new_order?: number;
+  threshold?: number;
+  description?: string;
+  chinese_name?: string;
+  [key: string]: any;
+};
+
+export type PendingPartsPayment = {
+  id: ID;
+  name: string | null;
+  company: string | null;
+  phone: string | null;
+  address: string | null;
+  invoicenumber: string | null;
+  manager: string | null;
+
+  fields: InvoiceField[];
+
+  created_at: DateValue;
+  payment: boolean;
+  customer_id: ID;
+  discount: number;
+  owner_paid: boolean;
+
+  total_paid: number;
+  items_total: number;
+  final_amount: number;
+  status: "Pending" | "Partial" | "Paid" | "NA" | string;
+
+  customer: CustomerMini;
+};
+
+export type PendingDelivery = PendingPayment;
+
+export type TopFollow = {
+  id: ID;
+  customer_id: ID;
+  created_at: DateValue;
+  next_followup: DateValue;
+  feedback: string | null;
+  user_id: ID;
+  top_follow: boolean;
+  status: string | null;
+  type: string | null;
+  followup_type: string | null;
+  customer: CustomerMini;
+};
+
+export type NewlyAssignedCustomer = {
+  id: ID;
+  name: string | null;
+  email?: string | null;
+  customer_group?: string | null;
+  industry: string | null;
+  location: string | null;
+  number: string[] | string | null;
+  owner: string | null;
+  ownership: ID | null;
+  old_ref?: string | null;
+  created_at: DateValue;
+  address?: string | null;
+  remarks?: string | null;
+  rating?: number | null;
+  image?: string | null;
+  member: boolean;
+  created_by?: ID | null;
+  lead?: ID | null;
+  platform?: string | null;
+  other?: string | null;
+  pin?: string | null;
+  top_followup?: boolean;
+  lead_commission?: boolean;
+  office?: string | null;
+};
+
+export type TodayTask = {
+  id: ID;
+  created_at: DateValue;
+  assigned_to: ID;
+  status: "Pending" | "Completed" | string;
+  task_name: string | null;
+  type: string | null;
+  assigned_by: ID | null;
+  customer_id: ID | null;
+  problem: string | null;
+  solution: string | null;
+  remarks: string | null;
+  site_reached: boolean;
+  location: string | null;
+  customer: CustomerMini;
+};
+
+export type SalePayment = {
+  id: ID;
+  amount: string | number;
+  machine_id: ID;
+};
+
+export type CustomerSale = {
+  id: ID;
+  serial_no: string | null;
+  payments: SalePayment[];
+  percentage_completion: number;
+};
+
+export type CustomerWithSaleOrMember = {
+  profile_completion: number;
+  sales: CustomerSale[];
+  id: ID;
+  name: string | null;
+  owner: string | null;
+  industry: string | null;
+  number: string;
+  location: string | null;
+  created_at: DateValue;
+  member: boolean;
+};
+
+
+export type SalesNewEntries = {
+  pending_payments: ApiAmountCollection<PendingPayment>;
+  pending_parts_payments: ApiAmountCollection<PendingPartsPayment>;
+  pending_deliveries: ApiCollection<PendingDelivery>;
+  top_follow: ApiCollection<TopFollow>;
+  newly_assigned_customers: ApiCollection<NewlyAssignedCustomer>;
+  today_tasks: ApiCollection<TodayTask>;
+  customers_with_sale_or_member: ApiCollection<CustomerWithSaleOrMember>;
+};

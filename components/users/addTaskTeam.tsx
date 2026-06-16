@@ -23,6 +23,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { TaskRadio } from "@/components/users/task";
 import axios from "@/lib/axios";
 import { toast } from "sonner";
+import { ScrollArea } from "../ui/scroll-area";
 
 
 const formSchema = z
@@ -60,7 +61,7 @@ const formSchema = z
 
 type TaskFormValues = z.infer<typeof formSchema>;
 
-export const AddTaskTeam = ({ visible, onClose, onRefresh, assigned_by }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, assigned_by: number }) => {
+export const AddTaskTeam = ({ visible, onClose, onRefresh, assigned_by }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, assigned_by: number | string }) => {
   const [loading, setLoading] = useState(false);
 
 
@@ -120,10 +121,11 @@ export const AddTaskTeam = ({ visible, onClose, onRefresh, assigned_by }: { visi
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-full sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Add new task</DialogTitle>
         </DialogHeader>
+        <ScrollArea className="max-h-[calc(100dvh-160px)]">
         <div className="py-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <FieldGroup>
@@ -258,6 +260,7 @@ export const AddTaskTeam = ({ visible, onClose, onRefresh, assigned_by }: { visi
             </FieldGroup>
           </form>
         </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

@@ -1288,8 +1288,21 @@ GROUP BY
 
 async function getSalesData(currentMonthStart: string, currentMonthEnd: string, lastMonthStart: string, lastMonthEnd: string, uid: string) {
 
+    const TIMEZONE = "Asia/Karachi";
+
+    const todayStart = momentT.tz(TIMEZONE).startOf("day").utc().toISOString();
+    const todayEnd = momentT.tz(TIMEZONE).endOf("day").utc().toISOString();
+
     const [customersQuery] = await Promise.all([
-        pool.query("SELECT * FROM customer WHERE ownership = $1", [uid]),
+        pool.query(`SELECT DISTINCT c.*
+    FROM customer c
+    LEFT JOIN sale s ON s.customer_id = c.id
+    WHERE c.ownership = $1
+      AND (
+        c.member IS TRUE
+        OR s.id IS NOT NULL
+      )
+    ORDER BY c.created_at DESC`, [uid]),
 
     ]);
 
@@ -1321,13 +1334,154 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
       WHERE contract_date BETWEEN $1 AND $2 AND sell_by = $3
     `;
 
+    const pendingPaymentsQuery = `
+  WITH payment_totals AS (
+    SELECT
+      machine_id,
+      COALESCE(SUM(amount::numeric), 0) AS total_paid
+    FROM payment
+    GROUP BY machine_id
+  )
+  SELECT
+    s.*,
+    COALESCE(pt.total_paid, 0) AS total_paid,
+    GREATEST(COALESCE(s.price::numeric, 0) - COALESCE(pt.total_paid, 0), 0) AS pending_amount,
+    JSON_BUILD_OBJECT(
+      'id', c.id,
+      'name', c.name,
+      'owner', c.owner,
+      'number', c.number,
+      'location', c.location,
+      'industry', c.industry,
+      'member', c.member,
+      'created_at', c.created_at
+    ) AS customer
+  FROM sale s
+  LEFT JOIN payment_totals pt ON pt.machine_id = s.id
+  LEFT JOIN customer c ON c.id = s.customer_id
+  WHERE s.sell_by = $1
+    AND GREATEST(COALESCE(s.price::numeric, 0) - COALESCE(pt.total_paid, 0), 0) > 0
+  ORDER BY s.contract_date DESC
+`;
+
+    const pendingPartsPaymentQuery = `
+  SELECT
+    si.*,
+    COALESCE(
+      NULLIF(TRIM(si.manager), ''),
+      u.name,
+      ''
+    ) AS manager,
+    COALESCE(SUM(cp.amount::numeric), 0) AS total_paid,
+    JSON_BUILD_OBJECT(
+      'id', c.id,
+      'name', c.name,
+      'owner', c.owner,
+      'number', c.number,
+      'location', c.location,
+      'industry', c.industry,
+      'member', c.member,
+      'created_at', c.created_at
+    ) AS customer
+  FROM savedinvoices si
+  LEFT JOIN customer_parts cp ON cp.part_id = si.id
+  LEFT JOIN customer c ON c.id = si.customer_id
+  LEFT JOIN users u ON u.id = c.ownership
+  WHERE si.owner_paid IS FALSE
+    AND c.ownership = $1
+  GROUP BY si.id, u.name, c.id
+  ORDER BY si.created_at DESC
+`;
+
+    const pendingDeliveriesQuery = `
+  SELECT
+    s.*,
+    JSON_BUILD_OBJECT(
+      'id', c.id,
+      'name', c.name,
+      'owner', c.owner,
+      'number', c.number,
+      'location', c.location,
+      'industry', c.industry,
+      'member', c.member,
+      'created_at', c.created_at
+    ) AS customer
+  FROM sale s
+  LEFT JOIN customer c ON c.id = s.customer_id
+  WHERE s.sell_by = $1
+    AND s.ready_for_delivery IS FALSE
+  ORDER BY s.contract_date DESC
+`;
+
+   const topFollowQuery = `
+  WITH latest_feedback AS (
+    SELECT DISTINCT ON (f.customer_id)
+      f.*
+    FROM feedback f
+    INNER JOIN customer c ON c.id = f.customer_id
+    WHERE c.ownership = $3
+    ORDER BY f.customer_id, f.created_at DESC, f.id DESC
+  )
+  SELECT
+    lf.*,
+    JSON_BUILD_OBJECT(
+      'id', c.id,
+      'name', c.name,
+      'owner', c.owner,
+      'number', c.number,
+      'location', c.location,
+      'industry', c.industry,
+      'member', c.member,
+      'created_at', c.created_at
+    ) AS customer
+  FROM latest_feedback lf
+  INNER JOIN customer c ON c.id = lf.customer_id
+  WHERE lf.top_follow IS TRUE
+    AND lf.next_followup BETWEEN $1 AND $2
+  ORDER BY lf.next_followup ASC
+`;
+
+    const newlyAssignedCustomersQuery = `
+  SELECT *
+  FROM customer
+  WHERE ownership = $1
+    AND created_at BETWEEN $2 AND $3
+  ORDER BY created_at DESC
+`;
+
+    const todayTasksQuery = `
+  SELECT
+    t.*,
+    JSON_BUILD_OBJECT(
+      'id', c.id,
+      'name', c.name,
+      'owner', c.owner,
+      'number', c.number,
+      'location', c.location,
+      'industry', c.industry,
+      'member', c.member,
+      'created_at', c.created_at
+    ) AS customer
+  FROM task t
+  LEFT JOIN customer c ON c.id = t.customer_id
+  WHERE t.assigned_to = $1
+    AND t.created_at BETWEEN $2 AND $3
+  ORDER BY t.created_at DESC
+`;
+
     const [
         currentMonthSalesResult,
         lastMonthSalesResult,
         saleDetailsQueryResult,
         feedbackQueryResult,
         visitQueryResult,
-        allTasksQueryResult
+        allTasksQueryResult,
+        pendingPaymentsResult,
+        pendingPartsPaymentResult,
+        pendingDeliveriesResult,
+        topFollowResult,
+        newlyAssignedCustomersResult,
+        todayTasksResult,
     ] = await Promise.all([
         pool.query(machinesSoldQuery, [currentMonthStart, currentMonthEnd, uid]),
         pool.query(machinesSoldQuery, [lastMonthStart, lastMonthEnd, uid]),
@@ -1352,7 +1506,22 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
         FROM visit 
         WHERE created_at BETWEEN $1 AND $2 
         AND user_id = $3`, [currentMonthStart, currentMonthEnd, uid]),
-        pool.query(`SELECT * FROM task WHERE assigned_to = $1 AND status = 'Pending'`, [uid])
+        pool.query(`SELECT * FROM task WHERE assigned_to = $1 AND status = 'Pending'`, [uid]),
+        pool.query(pendingPaymentsQuery, [uid]),
+
+        pool.query(pendingPartsPaymentQuery, [uid]),
+
+        pool.query(pendingDeliveriesQuery, [uid]),
+
+        pool.query(topFollowQuery, [currentMonthStart, currentMonthEnd, uid]),
+
+        pool.query(newlyAssignedCustomersQuery, [
+            uid,
+            currentMonthStart,
+            currentMonthEnd,
+        ]),
+
+        pool.query(todayTasksQuery, [uid, todayStart, todayEnd]),
     ]);
 
     const machinesSoldThisMonth = parseInt(currentMonthSalesResult.rows[0].total, 10) || 0;
@@ -1440,6 +1609,63 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
     });
 
 
+    const pendingPayments = pendingPaymentsResult.rows.map((item: any) => ({
+        ...item,
+        total_paid: Number(item.total_paid || 0),
+        pending_amount: Number(item.pending_amount || 0),
+    }));
+
+    const totalPendingPaymentAmount = pendingPayments.reduce(
+        (sum: number, item: any) => sum + Number(item.pending_amount || 0),
+        0
+    );
+
+    const pendingPartsPayments = pendingPartsPaymentResult.rows
+        .map((invoice: any) => {
+            const itemsTotal = Array.isArray(invoice.fields)
+                ? invoice.fields.reduce((sum: number, item: any) => {
+                    const val = Number(item?.total ?? 0);
+                    return sum + (isNaN(val) ? 0 : val);
+                }, 0)
+                : 0;
+
+            const discount = Number(invoice.discount ?? 0);
+            const finalAmount = itemsTotal - discount;
+            const totalPaid = Number(invoice.total_paid ?? 0);
+            const pendingAmount = Math.max(finalAmount - totalPaid, 0);
+
+            let status = "NA";
+
+            if (itemsTotal === 0) status = "Paid";
+            else if (totalPaid === 0) status = "Pending";
+            else if (pendingAmount > 0) status = "Partial";
+            else status = "Paid";
+
+            return {
+                ...invoice,
+                items_total: itemsTotal,
+                discount,
+                total_paid: totalPaid,
+                final_amount: pendingAmount,
+                status,
+            };
+        })
+        .filter(
+            (item: any) =>
+                item.payment === false
+        )
+        .filter((item: any) => item.status !== "Paid");
+
+    const totalPendingPartsPaymentAmount = pendingPartsPayments.reduce(
+        (sum: number, item: any) => sum + Number(item.final_amount || 0),
+        0
+    );
+
+    const customersWithSaleOrMember = enrichedCustomers.filter(
+        (customer: any) => customer.member === true || customer.sales.length > 0
+    );
+
+
 
     return {
 
@@ -1453,6 +1679,44 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
         allTasks: allTasksQueryResult.rows.length,
         percentageChange: percentageChange.toFixed(2),
         customers: enrichedCustomers,
+        new_entries: {
+            pending_payments: {
+                total: pendingPayments.length,
+                total_amount: totalPendingPaymentAmount,
+                data: pendingPayments,
+            },
+
+            pending_parts_payments: {
+                total: pendingPartsPayments.length,
+                total_amount: totalPendingPartsPaymentAmount,
+                data: pendingPartsPayments,
+            },
+
+            pending_deliveries: {
+                total: pendingDeliveriesResult.rows.length,
+                data: pendingDeliveriesResult.rows,
+            },
+
+            top_follow: {
+                total: topFollowResult.rows.length,
+                data: topFollowResult.rows,
+            },
+
+            newly_assigned_customers: {
+                total: newlyAssignedCustomersResult.rows.length,
+                data: newlyAssignedCustomersResult.rows,
+            },
+
+            today_tasks: {
+                total: todayTasksResult.rows.length,
+                data: todayTasksResult.rows,
+            },
+
+            customers_with_sale_or_member: {
+                total: customersWithSaleOrMember.length,
+                data: customersWithSaleOrMember,
+            },
+        },
     }
 }
 

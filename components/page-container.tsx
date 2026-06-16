@@ -11,9 +11,9 @@ export default function PageContainer({
   className,
 }: Props) {
   return (
-    <ScrollArea className="h-[calc(100dvh-62px)] w-full">
-      <div className="w-full flex justify-center">
-        <div className="flex flex-col w-full p-6 pt-0 pb-0 gap-6">
+    <ScrollArea className="h-[calc(100dvh-62px)] flex flex-1">
+      <div className="flex flex-1 justify-center">
+        <div className="flex flex-col flex-1 sm:px-6 px-4 gap-6">
           <div className={`flex flex-1 ${className}`}>
             {children}
           </div>

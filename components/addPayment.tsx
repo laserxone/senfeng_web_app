@@ -28,6 +28,7 @@ import {
 } from "./ui/select";
 import Spinner from "./ui/spinner";
 import { Textarea } from "./ui/textarea";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const formSchema = z.object({
   note: z.string().min(1, { message: "TID is required." }),
@@ -131,6 +132,8 @@ const AddPayment = ({
 
   const imageFile = form.watch("image");
 
+  const isMobile = useIsMobile()
+
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === "note") {
@@ -185,7 +188,7 @@ const AddPayment = ({
           )}>
 
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-              <ScrollArea className="h-[75vh] pr-3">
+              <ScrollArea className="h-[calc(100dvh-160px)] pr-3">
                 {/* Payment Info */}
                 <FieldSet className="border rounded-md p-3 gap-3">
                   <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Payment Info</FieldLegend>
@@ -358,22 +361,24 @@ const AddPayment = ({
                     )}
                   />
                 </FieldSet>
-              </ScrollArea>
-              {/* Submit */}
-              <Button
+
+                 <Button
                 type="submit"
                 disabled={!!error?.errorMessage || checking || loading}
                 className="w-full"
               >
                 {loading && <Spinner />} Submit
               </Button>
+              </ScrollArea>
+              {/* Submit */}
+             
 
             </form>
 
           </div>
 
           {/* Image Preview Section */}
-          {imageFile && (
+          {imageFile && !isMobile && (
             <div className="flex-1 flex items-center justify-center bg-muted/30 rounded-md p-4">
               <img
                 src={imageFile}

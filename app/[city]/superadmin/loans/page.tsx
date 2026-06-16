@@ -102,7 +102,7 @@ export default function EmployeeLoans() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4 pb-6">
-      <div className="flex items-center justify-between space-y-2">
+      <div className="flex items-center justify-between space-y-2 flex-wrap">
         <Heading title="Loans" description="Manage employee loans and repayments" />
 
         <LoanIssueModal userID={userID} onSuccess={fetchLoans} />

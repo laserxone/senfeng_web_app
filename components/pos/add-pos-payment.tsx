@@ -161,7 +161,7 @@ const AddPOSPayment = ({
           <DialogTitle>Add New Payment</DialogTitle>
         </DialogHeader>
         <div
-          className="flex flex-col sm:flex-row gap-4 sm:gap-6 max-h-[90vh]"
+          className="flex flex-col sm:flex-row gap-4 sm:gap-6 max-h-[7d5vh] sm:max-h-[85vh]"
           style={{
             display: "flex",
             flexDirection: imageFile ? "row" : "column",
@@ -169,7 +169,7 @@ const AddPOSPayment = ({
           }}
         >
           <div className="w-full sm:w-[30%] flex">
-            <ScrollArea className="px-2 w-full h-[90vh]">
+            <ScrollArea className="px-2 w-full h-[calc(100dvh-160px)]">
               <div className="px-2">
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}

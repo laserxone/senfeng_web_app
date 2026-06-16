@@ -41,20 +41,20 @@ import SalaryRecord from "@/components/users/SalaryRecord";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { SalesCustomer, SalesCustomerMachines, SalesDashboard, SalesMachine, SalesVisitTypes, UserAttendanceRecord, UserCallData, UserExtraTypes, UserReimbursementType } from "@/lib/types";
+import { PendingDelivery, PendingPartsPayment, PendingPayment, SalesCustomer, SalesCustomerMachines, SalesDashboard, SalesMachine, SalesVisitTypes, TopFollow, UserAttendanceRecord, UserCallData, UserExtraTypes, UserReimbursementType } from "@/lib/types";
 import { updateItemPurpose } from "@/lib/updatePurpose";
-import { AlertCircle, Building2, CheckCircle, Clock, Cpu, Gauge, MessageSquareText, PhoneCall, Star, UserRound } from "lucide-react";
+import { AlertCircle, BadgeAlert, Banknote, Building2, CalendarCheck, CheckCircle, Clock, Cpu, Gauge, Hash, MapPinned, MessageSquareText, PackageCheck, PhoneCall, ReceiptText, RotateCcw, Star, Truck, UserPlus, UserRound, Users, Wallet } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ElementType } from "react";
 
 
 export default function UserDashboard({ id: userID, owner = false }: { id: string | null, owner: boolean }) {
 
   if (!userID) return null
 
-  const [data, setData] = useState<SalesDashboard>();
-  const { userID: ownerId, base_route } = useUserDetail();
+const [data, setData] = useState<SalesDashboard>();
+  const { userID : ownerId, base_route } = useUserDetail();
   const [visitData, setVisitData] = useState<SalesVisitTypes[]>([]);
   const [extraData, setExtraData] = useState<UserExtraTypes>();
   const [selectedOption, setSelectedOption] = useState("thisMonth");
@@ -65,6 +65,9 @@ export default function UserDashboard({ id: userID, owner = false }: { id: strin
   const [visible, setVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("newCustomers");
   const isMobile = useIsMobile()
+  const [allFines, setAllFines] = useState(0)
+  const [allReturnables, setAllReturnables] = useState(0)
+  const [selectedMetric, setSelectedMetric] = useState<MetricDialogState | null>(null)
 
   useEffect(() => {
     if (ownerId && userID) {
@@ -80,7 +83,7 @@ export default function UserDashboard({ id: userID, owner = false }: { id: strin
     }
   }, [userID]);
 
-  async function fetchCallData(startDate: string, endDate: string) {
+ async function fetchCallData(startDate: string, endDate: string) {
     return new Promise<void>((resolve) => {
       axios
         .get(`/${userID}/call?start_date=${startDate}&end_date=${endDate}`)
@@ -163,6 +166,7 @@ export default function UserDashboard({ id: userID, owner = false }: { id: strin
         });
     });
   }
+  console.log(data)
 
   async function fetchVisitData(start: string, end: string) {
     return new Promise((res, rej) => {
@@ -185,8 +189,8 @@ export default function UserDashboard({ id: userID, owner = false }: { id: strin
 
   const RenderVisitTab = useCallback(() => {
     return (
-      <div className="overflow-hidden w-full">
-        <ScrollArea className={`h-[calc(100dvh-350px)] w-full pr-2`}>
+      <div className="w-full">
+     
           <VisitTab
             id={userID}
             data={visitData}
@@ -200,15 +204,15 @@ export default function UserDashboard({ id: userID, owner = false }: { id: strin
               await fetchVisitData(start, end);
             }}
           />
-        </ScrollArea>
+      
       </div>
     );
   }, [visitData]);
 
   const RenderNewCustomer = useCallback(() => {
     return (
-      <div className="flex min-w-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-5">
-        <div className="w-full shrink-0 lg:w-[280px]">
+      <div className="relative flex min-w-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-5">
+        <div className="w-full shrink-0 lg:sticky lg:top-4 lg:z-10 lg:h-fit lg:w-[280px] lg:self-start">
           <CustomerExtraData
             showold={false}
             data={extraData || {}}
@@ -228,6 +232,8 @@ export default function UserDashboard({ id: userID, owner = false }: { id: strin
                 ? extraData[selectedOption as Exclude<keyof UserExtraTypes, "user">]
                 : []
             }
+            task_data={data?.new_entries?.today_tasks || null}
+            newly_assigned={data?.new_entries?.newly_assigned_customers || null}
             onRefresh={() => {
               fetchData()
               fetchExtraCustomerOptions()
@@ -235,9 +241,8 @@ export default function UserDashboard({ id: userID, owner = false }: { id: strin
           />
         </div>
       </div>
-    );
-  }, [userID, data, extraData, selectedOption]);
-
+    )
+  }, [userID, data, extraData, selectedOption])
   const RenderMembers = useCallback(() => {
     return (
       <Card className="flex flex-1 p-0">
@@ -260,7 +265,6 @@ export default function UserDashboard({ id: userID, owner = false }: { id: strin
         <CardContent className="pt-0 flex flex-1">
           <Reimbursement
             id={userID}
-            height="min-h-[calc(100dvh-530px)]"
             passingData={reimbursementData || []}
             onAddRefresh={async () => {
               const startDate = moment().startOf("month").toISOString();
@@ -317,9 +321,9 @@ export default function UserDashboard({ id: userID, owner = false }: { id: strin
   }, [callData]);
 
   return (
-    <div className="flex flex-1 gap-5">
+    <div className="flex flex-1 gap-4 pb-4">
       <div className="flex flex-1 flex-col gap-4">
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
           <div>
             <h1 className="text-3xl font-bold">{data?.user?.name}</h1>
@@ -327,9 +331,79 @@ export default function UserDashboard({ id: userID, owner = false }: { id: strin
               {data?.user?.designation}
             </p>
           </div>
-        </div>
-        <div className="flex justify-between gap-4 flex-wrap">
+        </div> */}
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-4">
+          <SalesMetricCard
+            title="Pending Payments"
+            value={data?.new_entries?.pending_payments?.total || 0}
+            icon={Wallet}
+            accent="from-blue-50 via-white to-cyan-50 text-blue-700 ring-blue-100"
+            iconClassName="bg-blue-600"
+            onClick={() =>
+              setSelectedMetric({
+                kind: "pending_payments",
+                title: "Pending Payments",
+                total: data?.new_entries?.pending_payments?.total || 0,
+                totalAmount: data?.new_entries?.pending_payments?.total_amount,
+                data: data?.new_entries?.pending_payments?.data || [],
+              })
+            }
+          />
 
+          <SalesMetricCard
+            title="Pending Parts Payments"
+            value={data?.new_entries?.pending_parts_payments?.total || 0}
+            icon={ReceiptText}
+            accent="from-violet-50 via-white to-fuchsia-50 text-violet-700 ring-violet-100"
+            iconClassName="bg-violet-600"
+            onClick={() =>
+              setSelectedMetric({
+                kind: "pending_parts_payments",
+                title: "Pending Parts Payments",
+                total: data?.new_entries?.pending_parts_payments?.total || 0,
+                totalAmount: data?.new_entries?.pending_parts_payments?.total_amount,
+                data: data?.new_entries?.pending_parts_payments?.data || [],
+              })
+            }
+          />
+
+          <SalesMetricCard
+            title="Pending Deliveries"
+            value={data?.new_entries?.pending_deliveries?.total || 0}
+            icon={Cpu}
+            accent="from-amber-50 via-white to-orange-50 text-amber-700 ring-amber-100"
+            iconClassName="bg-amber-600"
+            onClick={() =>
+              setSelectedMetric({
+                kind: "pending_deliveries",
+                title: "Pending Deliveries",
+                total: data?.new_entries?.pending_deliveries?.total || 0,
+                data: data?.new_entries?.pending_deliveries?.data || [],
+              })
+            }
+          />
+
+          <SalesMetricCard
+            title="Follow up Required"
+            value={data?.new_entries?.top_follow?.total || 0}
+            icon={MessageSquareText}
+            accent="from-rose-50 via-white to-red-50 text-rose-700 ring-rose-100"
+            iconClassName="bg-rose-600"
+            onClick={() =>
+              setSelectedMetric({
+                kind: "top_follow",
+                title: "Follow up Required",
+                total: data?.new_entries?.top_follow?.total || 0,
+                data: data?.new_entries?.top_follow?.data || [],
+              })
+            }
+          />
+
+
+
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3">
           <MachinesSoldCard
             value={data?.machinesSoldThisMonth || 0}
             percentage={Number(data?.percentageChange || "0")}
@@ -358,42 +432,107 @@ export default function UserDashboard({ id: userID, owner = false }: { id: strin
           className="relative flex w-full flex-1 flex-col"
         >
           <ScrollArea
-            className={`overflow-x-auto ${isMobile && "max-w-[calc(100vw-45px)]"}`}
+            className={`overflow-x-auto ${isMobile && "max-w-[calc(100vw-30px)]"}`}
           >
-            <TabsList className="justify-start">
-              <TabsTrigger value="newCustomers">New Customers</TabsTrigger>
-              <TabsTrigger value="members">Members</TabsTrigger>
-              <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>
+            <TabsList className="justify-start group-data-horizontal/tabs:h-10">
+              <TabsTrigger
+                value="newCustomers"
+                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                <UserPlus className="h-4 w-4" />
+                New Customers <Badge variant={"secondary"}>{data?.new_entries?.newly_assigned_customers?.total}</Badge>
+              </TabsTrigger>
 
-              <TabsTrigger value="visit">Visit</TabsTrigger>
-              <TabsTrigger value="calls">Calls</TabsTrigger>
-              <TabsTrigger value="attendance">Attendance</TabsTrigger>
-              <TabsTrigger value="salary">Salary</TabsTrigger>
-              <TabsTrigger value="issued">Returnable</TabsTrigger>
-              <TabsTrigger value="fines">Fines</TabsTrigger>
+              <TabsTrigger
+                value="members"
+                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                <Users className="h-4 w-4" />
+                Members <Badge variant={"secondary"}>{data?.customers.filter((customer) => customer.sales.length > 0).length ||
+                  0}</Badge>
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="reimbursement"
+                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                <ReceiptText className="h-4 w-4" />
+                Reimbursement
+                <Badge variant={"secondary"}>{reimbursementData?.length || 0}</Badge>
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="visit"
+                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                <MapPinned className="h-4 w-4" />
+                Visit  <Badge variant={"secondary"}>{visitData?.length || 0}</Badge>
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="calls"
+                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                <PhoneCall className="h-4 w-4" />
+                Calls
+                <Badge variant={"secondary"}>{callData?.length || 0}</Badge>
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="attendance"
+                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                <CalendarCheck className="h-4 w-4" />
+                Attendance
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="salary"
+                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                <Wallet className="h-4 w-4" />
+                Salary
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="issued"
+                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Returnable  <Badge variant={"secondary"}>{allReturnables}</Badge>
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="fines"
+                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                <BadgeAlert className="h-4 w-4" />
+                Fines <Badge variant={"secondary"}>{allFines}</Badge>
+              </TabsTrigger>
             </TabsList>
+
             <Scrollbar orientation="horizontal" />
           </ScrollArea>
 
-          <div hidden={activeTab !== "newCustomers"} className={`${isMobile && "max-w-[calc(100vw-45px)]"}`}>
+          <div hidden={activeTab !== "newCustomers"} className={`${isMobile && "max-w-[calc(100vw-30px)]"}`}>
             <RenderNewCustomer />
           </div>
-          <div hidden={activeTab !== "members"} className={`${isMobile && "max-w-[calc(100vw-45px)]"}`}>
+          <div hidden={activeTab !== "members"} >
             <RenderMembers />
           </div>
-          <div hidden={activeTab !== "reimbursement"} className={`${isMobile && "max-w-[calc(100vw-45px)]"}`}>
+          <div hidden={activeTab !== "reimbursement"} >
             <RenderReimbursement />
           </div>
           <div hidden={activeTab !== "visit"}>
             <RenderVisitTab />
           </div>
-          <div hidden={activeTab !== "calls"}>
+          <div hidden={activeTab !== "calls"} > 
             <RenderCallTab />
           </div>
-          <div hidden={activeTab !== "attendance"} className={`${isMobile && "max-w-[calc(100vw-45px)]"}`}>
+          <div hidden={activeTab !== "attendance"} >
             <RenderAttendance />
           </div>
-          <div hidden={activeTab !== "salary"} className={`${isMobile && "max-w-[calc(100vw-45px)]"}`}>
+          <div hidden={activeTab !== "salary"} >
 
             <Card className="flex flex-1 p-0">
               <CardContent className="pt-0 flex flex-1">
@@ -402,17 +541,297 @@ export default function UserDashboard({ id: userID, owner = false }: { id: strin
             </Card>
 
           </div>
-          <div hidden={activeTab !== "issued"} className={`${isMobile && "max-w-[calc(100vw-45px)]"}`}>
-            <RenderReturnable height="min-h-[calc(100dvh-420px)]" />
+          <div hidden={activeTab !== "issued"} >
+            <RenderReturnable height="min-h-[calc(100dvh-420px)]" onUpdateTotal={(val) => setAllReturnables(val)} />
           </div>
-          <div hidden={activeTab !== "fines"} className={`${isMobile && "max-w-[calc(100vw-45px)]"}`}>
-            <RenderFines height="min-h-[calc(100dvh-480px)]" />
+          <div hidden={activeTab !== "fines"} >
+            <RenderFines height="min-h-[calc(100dvh-480px)]" onUpdateTotal={(val) => setAllFines(val)} />
           </div>
 
         </Tabs>
       </div>
 
+      {/* <AutoScrollMembers /> */}
       <MachinesSold visible={visible} setVisible={setVisible} machineData={machineData} base_route={base_route} />
+      <SalesMetricDetailsDialog
+        metric={selectedMetric}
+        onClose={() => setSelectedMetric(null)}
+        baseRoute={base_route}
+      />
+    </div >
+  );
+}
+
+type MetricDialogState =
+  | {
+    kind: "pending_payments";
+    title: string;
+    total: number;
+    totalAmount?: number;
+    data: PendingPayment[];
+  }
+  | {
+    kind: "pending_parts_payments";
+    title: string;
+    total: number;
+    totalAmount?: number;
+    data: PendingPartsPayment[];
+  }
+  | {
+    kind: "pending_deliveries";
+    title: string;
+    total: number;
+    data: PendingDelivery[];
+  }
+  | {
+    kind: "top_follow";
+    title: string;
+    total: number;
+    data: TopFollow[];
+  };
+
+function SalesMetricDetailsDialog({
+  metric,
+  onClose,
+  baseRoute,
+}: {
+  metric: MetricDialogState | null;
+  onClose: () => void;
+  baseRoute: string;
+}) {
+  const amountText =
+    metric && "totalAmount" in metric && typeof metric.totalAmount === "number"
+      ? formatMetricAmount(metric.totalAmount)
+      : null;
+
+  return (
+    <Dialog open={!!metric} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-[94vw] overflow-hidden p-0 sm:max-w-4xl">
+        <DialogHeader className="border-b bg-muted/20 px-5 py-5 text-left">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+                <Banknote className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-xl font-bold tracking-tight">
+                  {metric?.title || "Details"}
+                </DialogTitle>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {metric?.total || 0} records found
+                  {amountText ? ` - ${amountText}` : ""}
+                </p>
+              </div>
+            </div>
+            <Badge variant="outline" className="w-fit rounded-full bg-background px-3 py-1">
+              Total: {metric?.total || 0}
+            </Badge>
+          </div>
+        </DialogHeader>
+
+        <ScrollArea className="max-h-[calc(100dvh-150px)]">
+          <div className="space-y-3 p-5">
+            {!metric || metric.data.length === 0 ? (
+              <div className="grid min-h-40 place-items-center rounded-2xl border border-dashed bg-muted/15 p-6 text-center">
+                <div>
+                  <AlertCircle className="mx-auto h-9 w-9 text-muted-foreground" />
+                  <p className="mt-3 text-sm font-semibold">No records found</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Records will appear here when available.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              metric.data.map((item) => (
+                <MetricDetailCard
+                  key={`${metric.kind}-${item.id}`}
+                  item={item}
+                  kind={metric.kind}
+                  baseRoute={baseRoute}
+                />
+              ))
+            )}
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function MetricDetailCard({
+  item,
+  kind,
+  baseRoute,
+}: {
+  item: PendingPayment | PendingPartsPayment | PendingDelivery | TopFollow;
+  kind: MetricDialogState["kind"];
+  baseRoute: string;
+}) {
+  const customer = item.customer;
+  const customerUrl = `/${baseRoute}/${customer?.member ? "member" : "customer"}/${customer?.id || item.customer_id}`;
+
+  if (kind === "pending_parts_payments") {
+    const parts = item as PendingPartsPayment;
+    return (
+      <MetricCardShell
+        href={customerUrl}
+        icon={ReceiptText}
+        title={parts.customer?.name || parts.company || "Parts invoice"}
+        subtitle={parts.customer?.owner || parts.name || "No owner"}
+        badge={parts.status || "Pending"}
+        details={[
+          { icon: Hash, label: "Invoice", value: parts.invoicenumber || "N/A" },
+          { icon: Building2, label: "Company", value: parts.company || "N/A" },
+          { icon: Banknote, label: "Balance", value: formatMetricAmount(Number(parts.final_amount || 0) - Number(parts.total_paid || 0)) },
+          { icon: UserRound, label: "Manager", value: parts.manager || "N/A" },
+        ]}
+      />
+    );
+  }
+
+  if (kind === "top_follow") {
+    const follow = item as TopFollow;
+    return (
+      <MetricCardShell
+        href={customerUrl}
+        icon={MessageSquareText}
+        title={follow.customer?.name || "Follow up"}
+        subtitle={follow.customer?.owner || "No owner"}
+        badge={follow.status || "Follow up"}
+        details={[
+          { icon: CalendarCheck, label: "Next follow up", value: formatMetricDate(follow.next_followup) },
+          { icon: ReceiptText, label: "Type", value: follow.followup_type || follow.type || "N/A" },
+          { icon: MessageSquareText, label: "Feedback", value: follow.feedback || "N/A" },
+        ]}
+      />
+    );
+  }
+
+  const payment = item as PendingPayment;
+  const isDelivery = kind === "pending_deliveries";
+
+  return (
+    <MetricCardShell
+      href={`/${baseRoute}/member/${payment.customer_id}/${payment.id}`}
+      icon={isDelivery ? Truck : Wallet}
+      title={payment.customer?.name || "No customer"}
+      subtitle={payment.customer?.owner || payment.serial_no || "No owner"}
+      badge={isDelivery ? "Delivery" : payment.type || "Machine"}
+      details={[
+        { icon: Cpu, label: "Serial No", value: payment.serial_no || "N/A" },
+        { icon: Hash, label: "Order No", value: payment.order_no_arr?.join(", ") || payment.order_no || "N/A" },
+        { icon: Banknote, label: isDelivery ? "Price" : "Pending", value: formatMetricAmount(isDelivery ? Number(payment.price || 0) : Number(payment.pending_amount || 0)) },
+        { icon: isDelivery ? PackageCheck : Cpu, label: isDelivery ? "Delivery Date" : "Power", value: isDelivery ? formatMetricDate(payment.delivery_date || payment.delivery_request_date) : payment.power || "N/A" },
+      ]}
+    />
+  );
+}
+
+function MetricCardShell({
+  href,
+  icon: Icon,
+  title,
+  subtitle,
+  badge,
+  details,
+}: {
+  href: string;
+  icon: ElementType;
+  title: string;
+  subtitle: string;
+  badge: string;
+  details: { icon: ElementType; label: string; value: string }[];
+}) {
+  return (
+    <div className="rounded-2xl border bg-background p-4 shadow-sm transition hover:bg-muted/15">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <Link href={href} target="_blank" className="flex min-w-0 items-start gap-3">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+            <Icon className="h-5 w-5" />
+          </span>
+          <span className="min-w-0">
+            <span className="block break-words text-base font-bold hover:underline">
+              {title}
+            </span>
+            <span className="mt-1 block break-words text-sm text-muted-foreground">
+              {subtitle}
+            </span>
+          </span>
+        </Link>
+
+        <Badge variant="outline" className="w-fit rounded-full bg-muted/20 px-2.5 py-1">
+          {badge}
+        </Badge>
+      </div>
+
+      <div className="mt-4 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2 xl:grid-cols-3">
+        {details.map((detail) => {
+          const DetailIcon = detail.icon;
+
+          return (
+            <span
+              key={`${detail.label}-${detail.value}`}
+              className="inline-flex min-w-0 items-start gap-2 rounded-xl border bg-muted/10 px-3 py-2"
+            >
+              <DetailIcon className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+              <span className="min-w-0">
+                <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {detail.label}
+                </span>
+                <span className="block whitespace-pre-wrap break-words font-semibold text-foreground">
+                  {detail.value}
+                </span>
+              </span>
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function formatMetricAmount(value: number) {
+  return new Intl.NumberFormat("en-PK", {
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0));
+}
+
+function formatMetricDate(value: string | Date | null) {
+  return value ? moment(new Date(value)).format("YYYY-MM-DD") : "N/A";
+}
+
+function SalesMetricCard({
+  title,
+  value,
+  icon: Icon,
+  accent,
+  iconClassName,
+  onClick
+}: {
+  title: string;
+  value: number;
+  icon: ElementType;
+  accent: string;
+  iconClassName: string;
+  onClick ?: () => void
+}) {
+  return (
+    <div className={`relative flex h-full min-h-[136px] w-full overflow-hidden rounded-2xl border bg-gradient-to-r ${accent} p-4 shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md`}>
+      <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rotate-12 rounded-[2rem] bg-white/55" />
+      <div className="relative flex w-full items-start gap-3">
+        <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-white shadow-sm ring-1 ring-white/40 ${iconClassName}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {title}
+          </p>
+
+          <p onClick={()=>onClick?.()} className="hover:underline cursor-pointer mt-3 text-3xl font-black tracking-tight text-slate-950">
+            {value}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -535,96 +954,98 @@ function CustomersTab({
         </div>
       </div>
 
-      <ScrollArea className={`${height} w-full`}>
+    
         <Accordion type="single" collapsible className="w-full space-y-2 p-3">
-        {localData.length === 0 ? (
-          <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed bg-slate-50 p-6 text-center dark:bg-zinc-900/50">
-            <div>
-              <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-muted-foreground dark:bg-zinc-800">
-                <AlertCircle className="h-5 w-5" />
-              </span>
-              <Label className="mt-3 block text-sm font-medium">
-                No data found
-              </Label>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Customer records will appear here when assigned
-              </p>
+          {localData.length === 0 ? (
+            <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed bg-slate-50 p-6 text-center dark:bg-zinc-900/50">
+              <div>
+                <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-muted-foreground dark:bg-zinc-800">
+                  <AlertCircle className="h-5 w-5" />
+                </span>
+                <Label className="mt-3 block text-sm font-medium">
+                  No data found
+                </Label>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Customer records will appear here when assigned
+                </p>
+              </div>
             </div>
-          </div>
-        ) : (
-          localData.map((customer) => (
-            <AccordionItem
-              key={customer.id}
-              className="w-[calc(100vw-80px)] border-none sm:w-full"
-              value={`customer-${customer.id}`}
-            >
-              <Card className="overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 transition-shadow hover:shadow-md dark:bg-zinc-950 dark:ring-white/10 p-0">
-                <AccordionTrigger className="hover:no-underline sm:px-4">
-                  <div className="flex w-full min-w-0 flex-col gap-3 pr-2 sm:flex-row sm:items-center sm:justify-between">
-                    <Link
-                      href={`/${base_route}/${customer.member ? "member" : "customer"
-                        }/${customer.id}`}
-                      className="flex min-w-0 items-center gap-3"
-                    >
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <UserRound className="h-4 w-4" />
-                      </span>
-                      <span className="min-w-0 text-left">
-                        <span className="block truncate text-sm font-semibold hover:underline sm:text-base">
-                          {customer.name}
-                        </span>
-                        <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                          <span>{customer.member ? "Member" : "Customer"}</span>
-                          <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
-                          <span>{customer.sales.length} machines</span>
-                        </span>
-                      </span>
-                    </Link>
-
-                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                      <Badge variant="outline" className="h-6 rounded-full bg-background px-2 text-[10px]">
-                        <Gauge className="mr-1 h-3 w-3" />
-                        {customer.overall}% profile
-                      </Badge>
-
-                      <Badge
-                        className="h-6 rounded-full px-2 text-[10px]"
-                        variant={
-                          customer.sales.length === 0 ? "secondary" : "default"
-                        }
+          ) : (
+            localData.map((customer) => (
+              <AccordionItem
+                key={customer.id}
+                className="w-[calc(100vw-60px)] border-none sm:w-full"
+                value={`customer-${customer.id}`}
+              >
+                <Card className="overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 transition-shadow hover:shadow-md dark:bg-zinc-950 dark:ring-white/10 p-0">
+                  <AccordionTrigger className="hover:no-underline sm:px-4">
+                    <div className="flex w-full min-w-0 flex-col gap-3 pr-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div
+                      
+                        className="flex min-w-0 items-center gap-3"
                       >
-                        {customer.sales.length === 0 ? "Assigned" : "Purchased"}
-                      </Badge>
-                    </div>
-                  </div>
-                </AccordionTrigger>
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                          <UserRound className="h-4 w-4" />
+                        </span>
+                        <span className="min-w-0 text-left">
+                          <Link   href={`/${base_route}/${customer.member ? "member" : "customer"
+                          }/${customer.id}`}>
+                          <span className="block truncate text-sm font-semibold hover:underline sm:text-base">
+                            {customer.name}
+                          </span>
+                          </Link>
+                          <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                            <span>{customer.member ? "Member" : "Customer"}</span>
+                            <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
+                            <span>{customer.sales.length} machines</span>
+                          </span>
+                        </span>
+                      </div>
 
-                <AccordionContent>
-                  <CardContent className="border-t bg-slate-50/60 px-3 py-3 sm:px-4 dark:bg-zinc-900/50">
-                    {customer.sales.length > 0 ? (
-                      <div className="space-y-2">
-                        {customer.sales.map((machine) => (
-                          <RenderEachMachine
-                            key={machine.id}
-                            machine={machine}
-                            customer_id={customer.id}
-                          />
-                        ))}
+                      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                        <Badge variant="outline" className="h-6 rounded-full bg-background px-2 text-[10px]">
+                          <Gauge className="mr-1 h-3 w-3" />
+                          {customer.overall}% profile
+                        </Badge>
+
+                        <Badge
+                          className="h-6 rounded-full px-2 text-[10px]"
+                          variant={
+                            customer.sales.length === 0 ? "secondary" : "default"
+                          }
+                        >
+                          {customer.sales.length === 0 ? "Assigned" : "Purchased"}
+                        </Badge>
                       </div>
-                    ) : (
-                      <div className="flex min-h-16 items-center justify-center gap-2 rounded-lg border border-dashed bg-background p-4 text-sm text-muted-foreground">
-                        <AlertCircle className="h-5 w-5 shrink-0" />
-                        No machines purchased yet
-                      </div>
-                    )}
-                  </CardContent>
-                </AccordionContent>
-              </Card>
-            </AccordionItem>
-          ))
-        )}
+                    </div>
+                  </AccordionTrigger>
+
+                  <AccordionContent>
+                    <CardContent className="border-t bg-slate-50/60 px-3 py-3 sm:px-4 dark:bg-zinc-900/50">
+                      {customer.sales.length > 0 ? (
+                        <div className="space-y-2">
+                          {customer.sales.map((machine) => (
+                            <RenderEachMachine
+                              key={machine.id}
+                              machine={machine}
+                              customer_id={customer.id}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex min-h-16 items-center justify-center gap-2 rounded-lg border border-dashed bg-background p-4 text-sm text-muted-foreground">
+                          <AlertCircle className="h-5 w-5 shrink-0" />
+                          No machines purchased yet
+                        </div>
+                      )}
+                    </CardContent>
+                  </AccordionContent>
+                </Card>
+              </AccordionItem>
+            ))
+          )}
         </Accordion>
-      </ScrollArea>
+ 
     </div>
   )
 }
@@ -664,36 +1085,36 @@ function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Pro
     return (
       <Card key={call.id} className="group overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 transition-shadow hover:shadow-md dark:bg-zinc-950 dark:ring-white/10">
         <CardContent className="p-0">
-          <div className="flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 px-3 py-3 md:flex-row md:items-center md:justify-between">
             <div className="flex min-w-0 items-start gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <UserRound className="h-4 w-4" />
               </span>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="truncate text-sm font-semibold sm:text-base">
+                  <p className="break-words text-sm font-semibold sm:text-base">
                     {call.name || call.owner || "Unnamed customer"}
                   </p>
                   <Badge variant="secondary" className="h-5 rounded-full px-2 text-[10px]">
                     Pending call
                   </Badge>
                 </div>
-                <div className="mt-1 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
-                  <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-slate-50 px-2 py-1 ring-1 ring-slate-200 dark:bg-zinc-900 dark:ring-white/10">
+                <div className="mt-2 flex min-w-0 flex-wrap gap-1.5 text-xs text-muted-foreground">
+                  <span className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full bg-slate-50 px-2 py-1 ring-1 ring-slate-200 dark:bg-zinc-900 dark:ring-white/10">
                     <PhoneCall className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">{call.number?.join(", ") || "No number"}</span>
+                    <span className="break-all">{call.number?.join(", ") || "No number"}</span>
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-2 sm:justify-end">
+            <div className="flex w-full shrink-0 items-center gap-2 md:w-auto md:justify-end">
               <Button
                 onClick={() => {
                   setSelectedCustomer(call)
                   setVisible(true)
                 }}
-                className="h-8 w-full rounded-lg px-3 sm:w-auto"
+                className="h-9 w-full rounded-lg px-3 md:w-auto"
               >
                 <PhoneCall className="h-3.5 w-3.5" />
                 Add Feedback
@@ -706,25 +1127,25 @@ function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Pro
   }
 
   return (
-    <div className="w-full overflow-hidden rounded-xl border bg-white shadow-sm dark:bg-zinc-950">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-slate-50/80 px-4 py-3 dark:bg-zinc-900/70">
-        <div className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+    <div className="w-full min-w-0 overflow-hidden rounded-xl border bg-white shadow-sm dark:bg-zinc-950">
+      <div className="flex flex-col gap-3 border-b bg-slate-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:bg-zinc-900/70">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <PhoneCall className="h-4 w-4" />
           </span>
-          <div>
+          <div className="min-w-0">
             <h3 className="text-sm font-semibold leading-none">Call Queue</h3>
             <p className="mt-1 text-xs text-muted-foreground">
               Follow up customers and record feedback
             </p>
           </div>
         </div>
-        <Badge variant="outline" className="rounded-full bg-background px-2.5 text-[11px]">
+        <Badge variant="outline" className="w-fit rounded-full bg-background px-2.5 text-[11px]">
           {data.length} remaining
         </Badge>
       </div>
 
-      <ScrollArea className="h-[calc(100dvh-410px)]">
+      <ScrollArea className="h-[min(620px,calc(100dvh-300px))] sm:h-[calc(100dvh-410px)]">
         {data.length === 0 ? (
           <div className="flex min-h-40 items-center justify-center p-6">
             <div className="text-center">
@@ -749,28 +1170,28 @@ function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Pro
       </ScrollArea>
 
       <Dialog open={visible} onOpenChange={setVisible}>
-        <DialogContent className="overflow-hidden p-0 sm:max-w-[520px]">
+        <DialogContent className="max-w-[94vw] overflow-hidden p-0 sm:max-w-[520px]">
           <DialogHeader className="border-b bg-slate-50/90 px-4 py-3 dark:bg-zinc-950">
-            <div className="flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <MessageSquareText className="h-4 w-4" />
               </span>
-              <div>
+              <div className="min-w-0">
                 <DialogTitle className="text-base font-semibold">
                   Add Feedback
                 </DialogTitle>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 truncate text-xs text-muted-foreground">
                   {selectedCustomer?.name || selectedCustomer?.owner || "Customer"}
                 </p>
               </div>
             </div>
           </DialogHeader>
 
-          <div className="space-y-3 p-4">
+          <div className="max-h-[calc(100dvh-120px)] space-y-3 overflow-y-auto p-4">
             <div className="rounded-lg border bg-slate-50/70 px-3 py-2 dark:bg-zinc-900/70">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <PhoneCall className="h-3.5 w-3.5" />
-                <span>{selectedCustomer?.number?.join(", ") || "No number"}</span>
+              <div className="flex min-w-0 items-start gap-2 text-xs text-muted-foreground">
+                <PhoneCall className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span className="break-all">{selectedCustomer?.number?.join(", ") || "No number"}</span>
               </div>
             </div>
 
@@ -794,7 +1215,7 @@ function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Pro
             </div>
 
             <div className="grid gap-2 sm:grid-cols-2">
-              <label className="flex h-10 items-center justify-between rounded-lg border bg-slate-50/70 px-3 text-sm dark:bg-zinc-900/70">
+              <label className="flex min-h-10 items-center justify-between gap-3 rounded-lg border bg-slate-50/70 px-3 py-2 text-sm dark:bg-zinc-900/70">
                 <span className="inline-flex items-center gap-2">
                   <Star className="h-3.5 w-3.5 text-amber-500" />
                   Top Follow Up
@@ -807,7 +1228,7 @@ function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Pro
                 />
               </label>
 
-              <label className="flex h-10 items-center justify-between rounded-lg border bg-slate-50/70 px-3 text-sm dark:bg-zinc-900/70">
+              <label className="flex min-h-10 items-center justify-between gap-3 rounded-lg border bg-slate-50/70 px-3 py-2 text-sm dark:bg-zinc-900/70">
                 <span className="inline-flex items-center gap-2">
                   <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
                   Satisfactory

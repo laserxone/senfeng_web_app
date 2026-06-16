@@ -6,8 +6,9 @@ import { UserReturnableField, UserReturnableType } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import moment from "moment";
+import { useEffect } from "react";
 
-const RenderReturnable = ({ height }: { height?: string }) => {
+const RenderReturnable = ({ height, onUpdateTotal }: { height?: string, onUpdateTotal?: (val: number) => void }) => {
   const { issuedItems } = useIssuedItem();
 
   const columns: ColumnDef<UserReturnableType>[] = [
@@ -80,6 +81,10 @@ const RenderReturnable = ({ height }: { height?: string }) => {
       },
     },
   ];
+
+  useEffect(() => {
+    onUpdateTotal?.(issuedItems.length)
+  }, [issuedItems])
 
   return (
     <Card className="flex flex-1 p-0">

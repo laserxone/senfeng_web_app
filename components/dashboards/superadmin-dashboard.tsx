@@ -244,7 +244,7 @@ export default function SuperadminDashboard() {
             ) : (
                 <SalesTeamProgressChart passingData={data?.team_progress || []} />
             )}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
+             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <div className="col-span-4">
                     {loading ? (
                         <Skeleton className="h-64" />
@@ -274,7 +274,7 @@ export default function SuperadminDashboard() {
                     )}
                 </div>
             </div>
-            {loading ?
+           {loading ?
                 <Skeleton className="h-64" />
                 :
 
@@ -301,7 +301,7 @@ export default function SuperadminDashboard() {
                 </Card>
             }
 
-            <div className="mb-5">
+             <div className="mb-5">
                 {loading ? (
                     <Skeleton className="h-96" />
                 ) : (

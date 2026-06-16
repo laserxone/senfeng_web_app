@@ -220,6 +220,7 @@ export default function Page() {
         </Button>
       </div>
       <PageTable
+      tableWidth="w-[calc(100dvw-30px)]"
         loading={loading}
         columns={columns}
         data={data.filter((item) => {
@@ -240,7 +241,7 @@ export default function Page() {
           }
         }}
       >
-        <div className="w-lg">
+        <div className="w-fit">
           <Select onValueChange={setStatus} value={status}>
             <SelectTrigger>
               <SelectValue placeholder="Filter by status" />

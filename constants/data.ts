@@ -147,7 +147,7 @@ export const OwnerSidebarItems = [
       "salary",
       "careers",
       // "applications",
-      "taks",
+      "task",
       "map"
     ],
     items: [

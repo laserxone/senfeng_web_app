@@ -3,11 +3,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   ArrowUpDown,
+  Banknote,
+  CalendarDays,
+  Download,
+  FileText,
   Filter,
   Info,
   Loader2,
+  Plus,
+  ReceiptText,
+  RotateCcw,
   ShieldCheck,
-  Trash
+  Trash,
+  UserRound,
+  WalletCards
 } from "lucide-react";
 import {
   useCallback,
@@ -24,7 +33,7 @@ import CurrencyFormatter from "@/components/currency-formatter";
 import { CustomerSearchWithData } from "@/components/customer-search-with-data";
 import Dropzone from "@/components/dropzone";
 import { RequiredStar } from "@/components/RequiredStar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -33,7 +42,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
-import Heading from "@/components/ui/heading";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -75,6 +83,7 @@ import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { MyImgZooming } from "@/components/img-zooming";
 
 export default function Page() {
   const [filterVisible, setFilterVisible] = useState(false);
@@ -360,23 +369,89 @@ export default function Page() {
   }, [data]);
 
   return (
-    <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex justify-between flex-wrap">
-        <Heading title="Reimbursement" description="Manage reimbursements" />
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              <CurrencyFormatter amount={total} />
+    <div className="flex flex-1 flex-col gap-5">
+      <section className="overflow-hidden rounded-2xl border bg-background shadow-sm">
+        <div className="flex flex-col gap-5 border-b bg-muted/20 p-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-start gap-4">
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+              <WalletCards className="h-6 w-6" />
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Expense control
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight">
+                Reimbursement
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                Manage reimbursement claims, receipt proofs, verification state, and monthly totals.
+              </p>
+            </div>
+          </div>
 
-      <div className="flex flex-1 min-h-[600px]">
+          <Button
+            onClick={() => setReimbursementVisible(true)}
+            className="w-full gap-2 sm:w-auto"
+          >
+            <Plus className="h-4 w-4" />
+            Add Reimbursement
+          </Button>
+        </div>
+
+        <div className="grid gap-3 p-4 sm:grid-cols-3">
+          <Card className="rounded-2xl shadow-none">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
+                  <Banknote className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-xs font-medium text-muted-foreground">
+                    Total Amount
+                  </CardTitle>
+                  <div className="text-xl font-bold">
+                    <CurrencyFormatter amount={total} />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="rounded-2xl shadow-none">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-700 ring-1 ring-violet-100">
+                  <ReceiptText className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-xs font-medium text-muted-foreground">
+                    Claims
+                  </CardTitle>
+                  <div className="text-xl font-bold">{data.length}</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="rounded-2xl shadow-none">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-700 ring-1 ring-amber-100">
+                  <CalendarDays className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-xs font-medium text-muted-foreground">
+                    View
+                  </CardTitle>
+                  <div className="text-xl font-bold">Monthly</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <section className="flex flex-1 overflow-hidden rounded-2xl border bg-background p-3 shadow-sm">
         <PageTable
+          tableWidth="w-[calc(100dvw-30px)]"
           loading={loading}
           columns={columns}
           data={data}
@@ -385,46 +460,61 @@ export default function Page() {
             setVisible(true);
           }}
         >
-          <Button
-            onClick={() => setFilterVisible(true)}
-            variant="ghost"
-            className="p-0 w-8"
-          >
-            <Filter />
-          </Button>
+          <div className="flex w-full flex-col gap-3 rounded-xl border bg-muted/15 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={() => setFilterVisible(true)}
+                variant="outline"
+                className="gap-2"
+              >
+                <Filter className="h-4 w-4" />
+                Filter
+              </Button>
 
-          <Button
-            variant="destructive"
-            onClick={async () => {
-              setResetLoading(true);
-              const startDate = momentT
-                .tz(TIMEZONE)
-                .startOf("month")
-                .startOf("day")
-                .utc()
-                .toISOString();
-              const endDate = momentT
-                .tz(TIMEZONE)
-                .endOf("month")
-                .endOf("day")
-                .utc()
-                .toISOString();
-              await fetchData(startDate, endDate);
-              setResetLoading(false);
-            }}
-          >
-            {resetLoading && <Spinner />} Reset
-          </Button>
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={async () => {
+                  setResetLoading(true);
+                  const startDate = momentT
+                    .tz(TIMEZONE)
+                    .startOf("month")
+                    .startOf("day")
+                    .utc()
+                    .toISOString();
+                  const endDate = momentT
+                    .tz(TIMEZONE)
+                    .endOf("month")
+                    .endOf("day")
+                    .utc()
+                    .toISOString();
+                  await fetchData(startDate, endDate);
+                  setResetLoading(false);
+                }}
+              >
+                {resetLoading ? <Spinner /> : <RotateCcw className="h-4 w-4" />}
+                Reset
+              </Button>
 
-          <Button onClick={() => setReimbursementVisible(true)}>
-            Add Reimbursement
-          </Button>
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={handleDownload}
+              >
+                <Download className="h-4 w-4" />
+                Download
+              </Button>
+            </div>
 
-          <div className="flex flex-1 justify-between items-center">
-            <Button onClick={handleDownload}>Download</Button>
+            <div className="rounded-xl border bg-background px-4 py-2 text-sm font-medium text-muted-foreground">
+              Total:{" "}
+              <span className="font-bold text-foreground">
+                <CurrencyFormatter amount={total} />
+              </span>
+            </div>
           </div>
         </PageTable>
-      </div>
+      </section>
       <FilterSheet
         user_disable={false}
         visible={filterVisible}
@@ -552,16 +642,65 @@ const ImageSheet = ({
 
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle>Bill Detail</SheetTitle>
+      <SheetContent className="w-full overflow-hidden p-0 sm:max-w-md">
+        <SheetHeader className="border-b bg-muted/20 px-5 py-5 text-left">
+          <div className="flex items-start gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+              <ReceiptText className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <SheetTitle className="text-xl font-bold tracking-tight">
+                Bill Detail
+              </SheetTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Review receipt proof, description, and submitter details.
+              </p>
+            </div>
+          </div>
         </SheetHeader>
-        <ScrollArea className="flex flex-1 h-[80vh] px-4">
-          <div className="flex flex-col">
+        <ScrollArea className="h-[calc(100dvh-150px)]">
+          <div className="space-y-4 p-5">
+            <div className="rounded-2xl border bg-background p-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-700 ring-1 ring-violet-100">
+                  <UserRound className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Submitted by
+                  </p>
+                  <p className="mt-1 break-words text-sm font-semibold">
+                    {submittedBy || "N/A"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border bg-background p-4 shadow-sm">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-700 ring-1 ring-amber-100">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <p className="font-semibold">Description</p>
+              </div>
+              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
+                {description || "No description available"}
+              </p>
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border bg-muted/15 p-3">
+              {memoizedImage ? (
+               <MyImgZooming img={memoizedImage}/>
+              ) : (
+                <div className="grid h-[240px] place-items-center rounded-xl border border-dashed bg-background text-sm text-muted-foreground">
+                  Loading image...
+                </div>
+              )}
+            </div>
+
             <Button
-              className="mb-2"
+              className="w-full gap-2"
               variant="destructive"
-              size="icon"
               onClick={(e) => {
                 // e.stopPropagation()
                 // setSelectedCustomerId(currentItem?.id);
@@ -572,39 +711,12 @@ const ImageSheet = ({
               }}
             >
               {deleteLoading ? (
-                <Loader2 className="animate-spin" size={16} />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Trash size={16} />
+                <Trash className="h-4 w-4" />
               )}
+              Delete
             </Button>
-
-            <strong>Submitted by</strong>
-            <p>{submittedBy || "N/A"}</p>
-
-            <strong>Description</strong>
-            <p>{description || "No description available"}</p>
-
-            {memoizedImage ? (
-              <ControlledZoom
-                isZoomed={isZoomed}
-                onZoomChange={handleZoomChange}
-              >
-                <img
-                  onClick={() => setImageOpen(true)}
-                  className="hover:cursor-pointer"
-                  src={memoizedImage}
-                  alt="reimbursement-img"
-                  style={{
-                    flex: 1,
-                    maxWidth: "100%",
-                    maxHeight: "400px",
-                    objectFit: "contain",
-                  }}
-                />
-              </ControlledZoom>
-            ) : (
-              <p>Loading image...</p>
-            )}
           </div>
         </ScrollArea>
       </SheetContent>
@@ -697,33 +809,45 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }: { visible: bool
         onClose(val);
       }}
     >
-      <DialogContent className="max-w-[90vw] sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Add New Reimbursement</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden p-0 sm:max-w-3xl">
+        <DialogHeader className="border-b bg-muted/20 px-5 py-5 text-left">
+          <div className="flex items-start gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
+              <Plus className="h-5 w-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-bold tracking-tight">
+                Add New Reimbursement
+              </DialogTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Capture visit purpose, expense details, submitter, and receipt attachment.
+              </p>
+            </div>
+          </div>
         </DialogHeader>
 
-        <ScrollArea className="h-[80vh] px-2">
-          <div className="px-2 space-y-4">
+        <ScrollArea className="max-h-[calc(100dvh-160px)]">
+          <div className="space-y-4 p-5">
             <RadioGroup
               defaultValue={selectedRadio}
               onValueChange={setSelectedRadio}
-              className="flex"
+              className="grid gap-3 sm:grid-cols-2"
             >
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 rounded-2xl border bg-background p-3">
                 <RadioGroupItem value="customer" id="r1" />
                 <Label htmlFor="r1">Customer</Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 rounded-2xl border bg-background p-3">
                 <RadioGroupItem value="other" id="r2" />
                 <Label htmlFor="r2">Other</Label>
               </div>
             </RadioGroup>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
 
                 {/* Trip Details */}
-                <FieldSet className="border rounded-md p-3 gap-3">
-                  <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Trip Details</FieldLegend>
+                <FieldSet className="gap-4 rounded-2xl border bg-background p-4 shadow-sm">
+                  <FieldLegend className="px-1 text-sm font-semibold text-foreground">Trip Details</FieldLegend>
 
                   {/* Customer (conditional) */}
                   {selectedRadio === "customer" && (
@@ -816,8 +940,8 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }: { visible: bool
                 </FieldSet>
 
                 {/* Expense Details */}
-                <FieldSet className="border rounded-md p-3 gap-3">
-                  <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Expense Details</FieldLegend>
+                <FieldSet className="gap-4 rounded-2xl border bg-background p-4 shadow-sm">
+                  <FieldLegend className="px-1 text-sm font-semibold text-foreground">Expense Details</FieldLegend>
 
                   {/* Amount */}
                   <Controller
@@ -875,8 +999,8 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }: { visible: bool
                 </FieldSet>
 
                 {/* Description */}
-                <FieldSet className="border rounded-md p-3 gap-3 lg:col-span-2">
-                  <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Description</FieldLegend>
+                <FieldSet className="gap-4 rounded-2xl border bg-background p-4 shadow-sm lg:col-span-2">
+                  <FieldLegend className="px-1 text-sm font-semibold text-foreground">Description</FieldLegend>
 
                   <Controller
                     name="description"
@@ -891,8 +1015,8 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }: { visible: bool
                 </FieldSet>
 
                 {/* Attachment */}
-                <FieldSet className="border rounded-md p-3 gap-3 lg:col-span-2">
-                  <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Attachment</FieldLegend>
+                <FieldSet className="gap-4 rounded-2xl border bg-muted/15 p-4 lg:col-span-2">
+                  <FieldLegend className="px-1 text-sm font-semibold text-foreground">Attachment</FieldLegend>
 
                   <Controller
                     name="image"
@@ -916,7 +1040,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }: { visible: bool
               </div>
 
               {/* Submit */}
-              <Button className="w-full" type="submit">
+              <Button className="w-full" type="submit" disabled={loading}>
                 {loading && <Spinner />} Submit
               </Button>
             </form>

@@ -82,6 +82,7 @@ import {
   CalendarClock,
   CreditCard,
   Download,
+  FileText,
   Images,
   Lock,
   MoreHorizontal,
@@ -90,6 +91,7 @@ import {
   Trash2,
   Truck,
   Unlock,
+  UploadCloud,
 } from "lucide-react";
 import moment from "moment";
 import Image from "next/image";
@@ -384,7 +386,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
               {data?.machine && !currentItem?.payment_lock && data?.editAllowed && (
                 <EditIcon
                   style={{ color: Colors.button }}
-                  className="cursor-pointer h-5 w-5"
+                  className="cursor-pointer h-10 w-10 sm:h-5 sm:w-5"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedPayment(currentItem);
@@ -1206,7 +1208,7 @@ const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }: { open: boole
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="w-full sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Sending for Delivery</DialogTitle>
         </DialogHeader>
@@ -1216,7 +1218,7 @@ const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }: { open: boole
             console.log("Validation Errors", err);
           })}
         >
-          <ScrollArea className="h-[70vh] pr-2">
+          <ScrollArea className="h-[calc(100dvh-160px)] pr-2">
             <div className="grid gap-4 py-4 px-2">
 
               <Controller
@@ -1362,18 +1364,20 @@ const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }: { open: boole
               Make sure everything is ready and completed before sending for
               delivery request.
             </div>
-          </ScrollArea>
 
-          <DialogFooter className="mt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+              <div className="mt-2 flex flex-1 gap-2">
+            <Button type="button" variant="outline" className="flex flex-1" onClick={onClose}>
               Cancel
             </Button>
 
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="flex flex-1">
               {loading && <Spinner />}
               Yes
             </Button>
-          </DialogFooter>
+          </div>
+          </ScrollArea>
+
+        
         </form>
       </DialogContent>
     </Dialog>
@@ -2420,15 +2424,40 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }: { cust
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogTrigger asChild></DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add New Images</DialogTitle>
+      <DialogContent className="w-full sm:max-w-4xl">
+        <DialogHeader className="border-b bg-muted/20 px-4 py-4 sm:px-6">
+          <div className="flex items-start gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+              <Images className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="text-lg font-bold tracking-tight">
+                Add Machine Images
+              </DialogTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Upload categorized machine documents, reports, and delivery photos.
+              </p>
+            </div>
+          </div>
         </DialogHeader>
-        <ScrollArea className="h-[80vh] px-2">
-          <div className="px-2">
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
 
-              {/* NOTE (Radio) */}
+        <ScrollArea className="h-[calc(92dvh-160px)]">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4 sm:p-6">
+            <div className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Image Category
+                  </h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Choose where these files should be saved.
+                  </p>
+                </div>
+                <Badge variant="outline" className="shrink-0">
+                  Required
+                </Badge>
+              </div>
+
               <Controller
                 name="note"
                 control={form.control}
@@ -2437,7 +2466,7 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }: { cust
                     <RadioGroup
                       value={field.value}
                       onValueChange={field.onChange}
-                      className="flex flex-wrap"
+                      className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3"
                     >
                       {[
                         { label: "Contract", value: "contract" },
@@ -2447,10 +2476,17 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }: { cust
                         { label: "Installation report", value: "installation" },
                         { label: "Additional", value: "additional" },
                       ].map((item, i) => (
-                        <div key={i} className="flex items-center space-x-2">
+                        <Label
+                          key={i}
+                          htmlFor={item.value}
+                          className={`flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm transition hover:border-primary/40 hover:bg-muted/30 ${field.value === item.value
+                            ? "border-primary bg-primary/5 text-primary shadow-sm"
+                            : "border-border bg-background"
+                            }`}
+                        >
                           <RadioGroupItem value={item.value} id={item.value} />
-                          <Label htmlFor={item.value}>{item.label}</Label>
-                        </div>
+                          <span className="font-medium">{item.label}</span>
+                        </Label>
                       ))}
                     </RadioGroup>
 
@@ -2460,15 +2496,18 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }: { cust
                   </Field>
                 )}
               />
+            </div>
 
-              {/* HANDOVER USER */}
-              {form.watch("note") === "handover" && (
+            {form.watch("note") === "handover" && (
+              <div className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
                 <Controller
                   name="handover_user_id"
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>Handover User</FieldLabel>
+                      <FieldLabel className="text-sm font-semibold">
+                        Handover User
+                      </FieldLabel>
                       <UserSearch
                         value={field.value}
                         onReturn={field.onChange}
@@ -2479,16 +2518,29 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }: { cust
                     </Field>
                   )}
                 />
-              )}
+              </div>
+            )}
 
-              {/* IMAGES */}
+            <div className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+              <div className="mb-3 flex items-start gap-3">
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
+                  <UploadCloud className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Upload Images
+                  </h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Add multiple PNG or JPG files. You can also paste images directly.
+                  </p>
+                </div>
+              </div>
+
               <Controller
                 name="images"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>Add Images</FieldLabel>
-
                     <DropzoneMulti
                       value={field.value || []}
                       onDrop={(files) => field.onChange(files)}
@@ -2504,28 +2556,57 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }: { cust
                   </Field>
                 )}
               />
+            </div>
 
-              {/* PDF */}
-              <div className="flex flex-1 gap-2 items-center">
-                <Separator className="flex flex-1" />
-                <Label className="mx-2 text-[16px]">or</Label>
-                <Separator className="flex flex-1" />
+            <div className="flex items-center gap-3">
+              <Separator className="flex-1" />
+              <span className="rounded-full border bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
+                or convert PDF
+              </span>
+              <Separator className="flex-1" />
+            </div>
+
+            <div className="rounded-2xl border bg-muted/15 p-3 shadow-sm sm:p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-50 text-amber-700 ring-1 ring-amber-100">
+                    <FileText className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-semibold">
+                      Select PDF
+                    </Label>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Each page will be converted into an image preview.
+                    </p>
+                  </div>
+                </div>
+
+                <Input
+                  multiple
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleFileChange}
+                  className="h-auto w-full cursor-pointer rounded-xl border-dashed bg-background py-2 text-xs sm:max-w-xs"
+                />
               </div>
+            </div>
 
-              <Label className="font-medium text-[16px]">Select Pdf</Label>
-
-              <input
-                multiple
-                type="file"
-                accept="application/pdf"
-                onChange={handleFileChange}
-              />
-
-              <Button className="w-full" type="submit" disabled={loading}>
-                {loading && <Spinner />} Submit
+            <div className="flex flex-1 gap-2 flex-wrap">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleClose(false)}
+                disabled={loading}
+                className="flex-1 flex"
+              >
+                Cancel
               </Button>
-            </form>
-          </div>
+              <Button className="flex-1 flex" type="submit" disabled={loading}>
+                {loading && <Spinner />} Submit Images
+              </Button>
+            </div>
+          </form>
         </ScrollArea>
       </DialogContent>
     </Dialog>

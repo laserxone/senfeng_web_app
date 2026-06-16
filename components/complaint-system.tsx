@@ -63,9 +63,10 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 import Spinner from "./ui/spinner";
 import { UserSearch } from "./user-search";
-import { MyImg } from "./users/addVisit";
+
 import FilterSheet from "./users/filterSheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { MyImgZooming } from "./img-zooming";
 
 const formSchema = z
   .object({
@@ -644,8 +645,8 @@ function ComplaintCard({
                           <MapPinOff className="h-5 w-5 text-red-500 opacity-50" />
                         )}
 
-                        {item.signature && <MyImg img={item.signature} />}
-                        {item.image && <MyImg img={item.image} />}
+                        {item.signature && <MyImgZooming img={item.signature} />}
+                        {item.image && <MyImgZooming img={item.image} />}
                       </div>
                     </div>
                   </div>

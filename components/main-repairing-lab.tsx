@@ -26,6 +26,7 @@ import { ArrowUpDown, Trash2 } from "lucide-react";
 import moment from "moment";
 import { useContext, useEffect, useState } from "react";
 import ConfimationDialog from "./alert-dialog";
+import { Field, FieldLabel, FieldLegend, FieldSet } from "./ui/field";
 import {
   Select,
   SelectContent,
@@ -34,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Field, FieldLabel, FieldLegend, FieldSet } from "./ui/field";
+import { ScrollArea } from "./ui/scroll-area";
 
 export default function MainRepairingLab() {
   const [data, setData] = useState<RepairingProps[]>([]);
@@ -232,7 +233,7 @@ export default function MainRepairingLab() {
       <div className="flex items-center justify-between space-y-2">
         <Heading title="Repair and Maintenance" description="" />
         <div className="flex gap-2">
-          <Button onClick={() => setAssignTask(true)}>Assign Tasks</Button>
+          <Button onClick={() => setAssignTask(true)}>Register Lab Task</Button>
         </div>
       </div>
 
@@ -333,111 +334,113 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }: { open: boolean
     <Dialog open={open} onOpenChange={onChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-xl">Assign Task</DialogTitle>
-         <div className="flex flex-1 flex-col gap-3">
-  
-  {/* Schedule */}
-  <FieldSet className="border rounded-md p-3 gap-3">
-    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Schedule</FieldLegend>
-    
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {/* Assign Date */}
-      <Field>
-        <FieldLabel>
-          Assign Date <RequiredStar />
-        </FieldLabel>
-        <AppCalendar
-          date={form.assign_date}
-          onChange={(date) => updateForm("assign_date", date)}
-          min={YESTERDAY}
-        />
-      </Field>
+          <DialogTitle className="text-xl">Assign Lab Task</DialogTitle>
+          <ScrollArea className="max-h-[calc(100dvh-200px)]">
+          <div className="flex flex-1 flex-col gap-3">
 
-      {/* Delivery Date */}
-      <Field>
-        <FieldLabel>
-          Delivery Date <RequiredStar />
-        </FieldLabel>
-        <AppCalendar
-          date={form.deliver_date}
-          onChange={(date) => updateForm("deliver_date", date)}
-          min={YESTERDAY}
-          max={""}
-        />
-      </Field>
-    </div>
-  </FieldSet>
+            {/* Schedule */}
+            <FieldSet className="border rounded-md p-3 gap-3">
+              <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Schedule</FieldLegend>
 
-  {/* Assignment Details */}
-  <FieldSet className="border rounded-md p-3 gap-3">
-    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Assignment Details</FieldLegend>
-    
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {/* Assigned To */}
-      <Field>
-        <FieldLabel>
-          Assigned To <RequiredStar />
-        </FieldLabel>
-        <UserSearch
-          value={form.user_id}
-          onReturn={(e) => updateForm("user_id", e)}
-        />
-      </Field>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Assign Date */}
+                <Field>
+                  <FieldLabel>
+                    Assign Date <RequiredStar />
+                  </FieldLabel>
+                  <AppCalendar
+                    date={form.assign_date}
+                    onChange={(date) => updateForm("assign_date", date)}
+                    min={YESTERDAY}
+                  />
+                </Field>
 
-      {/* Customer */}
-      <Field>
-        <FieldLabel>
-          Customer <RequiredStar />
-        </FieldLabel>
-        <CustomerSearch
-          value={form.customer_id}
-          onReturn={(e) => updateForm("customer_id", e)}
-        />
-      </Field>
-    </div>
+                {/* Delivery Date */}
+                <Field>
+                  <FieldLabel>
+                    Delivery Date <RequiredStar />
+                  </FieldLabel>
+                  <AppCalendar
+                    date={form.deliver_date}
+                    onChange={(date) => updateForm("deliver_date", date)}
+                    min={YESTERDAY}
+                    max={""}
+                  />
+                </Field>
+              </div>
+            </FieldSet>
 
-    {/* Charges */}
-    <Field>
-      <FieldLabel>
-        Charges <RequiredStar />
-      </FieldLabel>
-      <Input
-        type="number"
-        placeholder="Enter charges"
-        value={form.charges}
-        onChange={(e) => updateForm("charges", Number(e.target.value))}
-      />
-    </Field>
-  </FieldSet>
+            {/* Assignment Details */}
+            <FieldSet className="border rounded-md p-3 gap-3">
+              <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Assignment Details</FieldLegend>
 
-  {/* Remarks */}
-  <FieldSet className="border rounded-md p-3 gap-3">
-    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Remarks</FieldLegend>
-    
-    <Field>
-      <Textarea
-        placeholder="Enter remarks"
-        value={form.remarks}
-        onChange={(e) => updateForm("remarks", e.target.value)}
-      />
-    </Field>
-  </FieldSet>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Assigned To */}
+                <Field>
+                  <FieldLabel>
+                    Assigned To <RequiredStar />
+                  </FieldLabel>
+                  <UserSearch
+                    value={form.user_id}
+                    onReturn={(e) => updateForm("user_id", e)}
+                  />
+                </Field>
 
-  {/* Save Button */}
-  <Button
-    className="w-full"
-    disabled={
-      !form.assign_date ||
-      !form.deliver_date ||
-      !form.user_id ||
-      !form.customer_id ||
-      !form.charges
-    }
-    onClick={handleSaveTask}
-  >
-    {loading && <Spinner />} Save
-  </Button>
-</div>
+                {/* Customer */}
+                <Field>
+                  <FieldLabel>
+                    Customer <RequiredStar />
+                  </FieldLabel>
+                  <CustomerSearch
+                    value={form.customer_id}
+                    onReturn={(e) => updateForm("customer_id", e)}
+                  />
+                </Field>
+              </div>
+
+              {/* Charges */}
+              <Field>
+                <FieldLabel>
+                  Charges <RequiredStar />
+                </FieldLabel>
+                <Input
+                  type="number"
+                  placeholder="Enter charges"
+                  value={form.charges}
+                  onChange={(e) => updateForm("charges", Number(e.target.value))}
+                />
+              </Field>
+            </FieldSet>
+
+            {/* Remarks */}
+            <FieldSet className="border rounded-md p-3 gap-3">
+              <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Remarks</FieldLegend>
+
+              <Field>
+                <Textarea
+                  placeholder="Enter remarks"
+                  value={form.remarks}
+                  onChange={(e) => updateForm("remarks", e.target.value)}
+                />
+              </Field>
+            </FieldSet>
+
+            {/* Save Button */}
+            <Button
+              className="w-full"
+              disabled={
+                !form.assign_date ||
+                !form.deliver_date ||
+                !form.user_id ||
+                !form.customer_id ||
+                !form.charges
+              }
+              onClick={handleSaveTask}
+            >
+              {loading && <Spinner />} Save
+            </Button>
+          </div>
+          </ScrollArea>
         </DialogHeader>
       </DialogContent>
     </Dialog>

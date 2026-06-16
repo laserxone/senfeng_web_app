@@ -390,7 +390,7 @@ const AddTask = ({ visible, onClose, onRefresh, user_id }: { visible: boolean, o
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-full sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Add new task</DialogTitle>
         </DialogHeader>

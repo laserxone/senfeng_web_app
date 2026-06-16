@@ -175,7 +175,7 @@ const EditPayment = ({
           <DialogTitle>Edit Payment</DialogTitle>
         </DialogHeader>
         <div className="w-full ">
-          <ScrollArea className="px-2 w-full h-[80vh]">
+          <ScrollArea className="px-2 w-full h-[calc(100dvh-160px)]">
             <div className="px-2">
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FieldGroup>

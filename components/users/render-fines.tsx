@@ -105,7 +105,7 @@ const columns: ColumnDef<UserFines>[] = [
   },
 ];
 
-const RenderFines = ({ height }: { height?: string }) => {
+const RenderFines = ({ height, onUpdateTotal }: { height?: string, onUpdateTotal ?: (item : number)=> void }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
@@ -135,6 +135,7 @@ const RenderFines = ({ height }: { height?: string }) => {
         .get(`/${userID}/fine?start_date=${startDate}&end_date=${endDate}`)
         .then((response) => {
           setData(response.data);
+          onUpdateTotal?.(response.data?.length || 0)
           resolve(true);
         })
         .catch((e) => {

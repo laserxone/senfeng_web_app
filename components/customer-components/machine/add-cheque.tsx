@@ -89,7 +89,7 @@ export default function AddCheque({
           <DialogTitle>Credit Cheque</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="px-2 h-[70vh] ">
+        <ScrollArea className="px-2 h-[calc(100dvh-160px)]">
           <ChequeCredit
             setTotal={setTotal}
             setValue={setValue}

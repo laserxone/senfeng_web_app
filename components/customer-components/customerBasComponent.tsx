@@ -125,7 +125,7 @@ export default function CustomerBaseComponent() {
         }}
       />
     );
-  }, [openTab]);
+  }, [openTab, isMobile]);
 
   useEffect(() => {
     setTabs([
@@ -139,7 +139,7 @@ export default function CustomerBaseComponent() {
     ]);
 
     setActiveTabId(activeParam || "dashboard");
-  }, [tabsFromUrl, activeParam]);
+  }, [tabsFromUrl, activeParam, isMobile]);
 
   return (
     <div className="w-full flex flex-1">

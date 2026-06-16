@@ -171,9 +171,9 @@ const PageTable = <T extends Record<string, any>>({
       </div>
 
       <div
-        className={`relative flex flex-1 ${height} ${isMobile ? tableWidth ? tableWidth : "w-[calc(100vw-44px)]" : ""}`}
+        className={`relative flex flex-1 ${height}`}
       >
-        <div className="absolute bottom-0 left-0 right-0 top-0 flex rounded-md border md:overflow-auto custom-scrollbar overflow-auto">
+        <div className="absolute bottom-0 left-0 right-0 top-0 flex rounded-md border custom-scrollbar">
           <Table className="relative">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

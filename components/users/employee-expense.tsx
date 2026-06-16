@@ -1,10 +1,23 @@
 "use client";
-import { ArrowUpDown, ChevronDown, Filter } from "lucide-react";
+import {
+  ArrowUpDown,
+  CalendarDays,
+  ChevronDown,
+  FileDown,
+  Filter,
+  ImageIcon,
+  Plus,
+  ReceiptText,
+  RotateCcw,
+  Trash2,
+  UserRound,
+  WalletCards,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import ConfimationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table-without-pagination";
@@ -22,7 +35,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Heading from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
@@ -52,13 +64,13 @@ import moment from "moment";
 import momentT from "moment-timezone";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
-import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Card, CardContent, CardTitle } from "../ui/card";
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 import Spinner from "../ui/spinner";
+import { MyImgZooming } from "../img-zooming";
 
 const expensePdfStyles = StyleSheet.create({
   page: {
@@ -404,15 +416,79 @@ export default function EmployeeBranchExpenses() {
   const total = data.reduce((sum, item) => sum + Number(item.amount || 0), 0);
 
   return (
-    <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <Heading title="Office Expenses" description="Manage office expenses" />
-        {branch_expenses_write_access && (
-          <Button onClick={() => setVisibleAdd(true)}>
-            Add Office Expenses
-          </Button>
-        )}
-      </div>
+    <div className="flex flex-1 flex-col gap-5">
+      <section className="overflow-hidden rounded-2xl border bg-background shadow-sm">
+        <div className="flex flex-col gap-5 border-b bg-muted/20 p-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-start gap-4">
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+              <ReceiptText className="h-6 w-6" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Branch finance
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight">
+                Office Expenses
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                Manage branch expense entries, receipts, exports, and monthly totals.
+              </p>
+            </div>
+          </div>
+
+          {branch_expenses_write_access && (
+            <Button
+              onClick={() => setVisibleAdd(true)}
+              className="w-full gap-2 sm:w-auto"
+            >
+              <Plus className="h-4 w-4" />
+              Add Office Expenses
+            </Button>
+          )}
+        </div>
+
+        <div className="grid gap-3 p-4 sm:grid-cols-3">
+          <div className="rounded-2xl border bg-background p-4">
+            <div className="flex items-center gap-3">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
+                <WalletCards className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Total PKR
+                </p>
+                <p className="text-xl font-bold">{formatCurrency(total)}</p>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-2xl border bg-background p-4">
+            <div className="flex items-center gap-3">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-700 ring-1 ring-violet-100">
+                <ReceiptText className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Entries
+                </p>
+                <p className="text-xl font-bold">{data.length}</p>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-2xl border bg-background p-4">
+            <div className="flex items-center gap-3">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-700 ring-1 ring-amber-100">
+                <CalendarDays className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">
+                  View
+                </p>
+                <p className="text-xl font-bold">Monthly</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <ConfimationDialog
         open={showConfirmation}
@@ -422,28 +498,31 @@ export default function EmployeeBranchExpenses() {
         onPressCancel={() => setShowConfirmation(false)}
         loading={deleteLoading}
       />
-      <PageTable
-        loading={loading}
-        columns={columns}
-        data={data}
-        onRowClick={(val, e) => {
-          setImageURL(val);
-          setVisible(true);
-        }}
-      // filter={true}
-      // onFilterClick={() => setFilterVisible(true)}
-      >
-        <div className="flex flex-1 items-center justify-between flex-wrap gap-2">
-          <div className="flex gap-4 flex-wrap">
+      <section className="overflow-hidden rounded-2xl border bg-background shadow-sm">
+        <PageTable
+          loading={loading}
+          columns={columns}
+          data={data}
+          onRowClick={(val, e) => {
+            setImageURL(val);
+            setVisible(true);
+          }}
+        // filter={true}
+        // onFilterClick={() => setFilterVisible(true)}
+        >
+          <div className="flex flex-1 flex-col gap-3 rounded-xl border bg-muted/15 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-2">
             <Button
               onClick={() => setFilterVisible(true)}
-              variant="ghost"
-              className="p-0 w-8"
+              variant="outline"
+              className="gap-2"
             >
-              <Filter />
+              <Filter className="h-4 w-4" />
+              Filter
             </Button>
             <Button
-              variant="destructive"
+              variant="outline"
+              className="gap-2"
               onClick={async () => {
                 setResetLoading(true);
                 const startDate = momentT
@@ -462,12 +541,14 @@ export default function EmployeeBranchExpenses() {
                 setResetLoading(false);
               }}
             >
-              {resetLoading && <Spinner />} Reset
+              {resetLoading ? <Spinner /> : <RotateCcw className="h-4 w-4" />}
+              Reset
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant={"outline"} disabled={!!exportLoading}>
-                  {exportLoading && <Spinner />} Export
+                <Button variant={"outline"} disabled={!!exportLoading} className="gap-2">
+                  {exportLoading ? <Spinner /> : <FileDown className="h-4 w-4" />}
+                  Export
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -487,16 +568,19 @@ export default function EmployeeBranchExpenses() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <Card className="self-end">
-            <CardContent className="px-4 py-2">
-              <CardTitle className="font-medium">
-                Total PKR:{" "}
-                <span className="font-bold">{formatCurrency(total)}</span>
-              </CardTitle>
-            </CardContent>
-          </Card>
-        </div>
-      </PageTable>
+            <Card className="w-full border bg-background shadow-none sm:w-auto">
+              <CardContent className="px-4 py-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total PKR:{" "}
+                  <span className="text-base font-bold text-foreground">
+                    {formatCurrency(total)}
+                  </span>
+                </CardTitle>
+              </CardContent>
+            </Card>
+          </div>
+        </PageTable>
+      </section>
 
       <FilterSheet
         visible={filterVisible}
@@ -558,7 +642,6 @@ const ImageSheet = ({
   loading,
   date,
 }: ImageSheetProps) => {
-  const [imageOpen, setImageOpen] = useState(false);
   const [localImage, setLocalImage] = useState<null | string>(null);
   const { isAdmin, branch_expenses_delete_access } = useUserDetail();
 
@@ -582,47 +665,69 @@ const ImageSheet = ({
   }, [img]);
 
   function handleClose() {
-    if (!imageOpen) {
-      onClose();
-    }
+    onClose();
   }
-
-  const [isZoomed, setIsZoomed] = useState(false);
-
-  const handleZoomChange = useCallback((shouldZoom: boolean) => {
-    setIsZoomed(shouldZoom);
-    if (!shouldZoom) {
-      setImageOpen(false);
-    }
-  }, []);
 
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
-      <SheetContent>
-        <SheetHeader className="mb-4">
-          <SheetTitle>Bill detail</SheetTitle>
+      <SheetContent className="w-full overflow-hidden p-0 sm:max-w-md">
+        <SheetHeader className="border-b bg-muted/20 px-5 py-5 text-left">
+          <div className="flex items-start gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+              <ImageIcon className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <SheetTitle className="text-xl font-bold tracking-tight">
+                Bill detail
+              </SheetTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Receipt preview and submitted by information.
+              </p>
+            </div>
+          </div>
+        </SheetHeader>
 
-          <strong>Submitted by</strong>
-          <Label>{submittedBy}</Label>
+        <div className="space-y-4 p-5">
+          <div className="rounded-2xl border bg-background p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-700 ring-1 ring-violet-100">
+                <UserRound className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Submitted by
+                </p>
+                <Label className="mt-1 block break-words text-sm font-semibold">
+                  {submittedBy || "N/A"}
+                </Label>
+              </div>
+            </div>
+          </div>
 
-          {localImage &&
-
-            <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
-              <img
-                onClick={() => setImageOpen(true)}
-                className="hover:cursor-pointer"
-                src={localImage}
-                alt="officeexpenses-img"
-                style={{ flex: 1 }}
+          <div className="overflow-hidden rounded-2xl border bg-muted/15 p-3">
+            {localImage ? (
+              <MyImgZooming
+                img={localImage}
+                className="h-[260px] w-full rounded-xl object-contain"
               />
-            </ControlledZoom>
-          }
+            ) : (
+              <div className="grid h-[220px] place-items-center rounded-xl border border-dashed bg-background text-sm text-muted-foreground">
+                No receipt image available
+              </div>
+            )}
+          </div>
+
           {isAllowed && (
-            <Button variant="destructive" onClick={onDelete}>
-              {loading && <Spinner />} Delete
+            <Button
+              variant="destructive"
+              onClick={onDelete}
+              className="w-full gap-2"
+            >
+              {loading ? <Spinner /> : <Trash2 className="h-4 w-4" />}
+              Delete
             </Button>
           )}
-        </SheetHeader>
+        </div>
       </SheetContent>
     </Sheet>
   );
@@ -688,18 +793,32 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { visible: 
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Add New Office Expense</DialogTitle>
+      <DialogContent className="overflow-hidden p-0 sm:max-w-lg">
+        <DialogHeader className="border-b bg-muted/20 px-5 py-5 text-left">
+          <div className="flex items-start gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
+              <Plus className="h-5 w-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-bold tracking-tight">
+                Add New Office Expense
+              </DialogTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Record amount, date, note, and receipt attachment.
+              </p>
+            </div>
+          </div>
         </DialogHeader>
 
-        
-          <div className="px-2">
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+        <ScrollArea className="max-h-[calc(100dvh-140px)]">
+          <div className="p-5">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 
               {/* Entry Details */}
-              <FieldSet className="border rounded-md p-3 gap-3">
-                <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Entry Details</FieldLegend>
+              <FieldSet className="gap-4 rounded-2xl border bg-background p-4 shadow-sm">
+                <FieldLegend className="px-1 text-sm font-semibold text-foreground">
+                  Entry Details
+                </FieldLegend>
 
                 {/* Note */}
                 <Controller
@@ -714,7 +833,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { visible: 
                   )}
                 />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {/* Amount */}
                   <Controller
                     name="amount"
@@ -748,8 +867,10 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { visible: 
               </FieldSet>
 
               {/* Attachment */}
-              <FieldSet className="border rounded-md p-3 gap-3">
-                <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Attachment</FieldLegend>
+              <FieldSet className="gap-4 rounded-2xl border bg-muted/15 p-4">
+                <FieldLegend className="px-1 text-sm font-semibold text-foreground">
+                  Attachment
+                </FieldLegend>
 
                 <Controller
                   name="image"
@@ -776,6 +897,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { visible: 
               </Button>
             </form>
           </div>
+        </ScrollArea>
       
       </DialogContent>
     </Dialog>

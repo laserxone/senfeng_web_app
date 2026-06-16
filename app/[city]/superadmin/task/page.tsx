@@ -202,7 +202,7 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <Heading title="Task Management" description="Manage team tasks" />
 
         <Button
@@ -238,6 +238,7 @@ export default function Page() {
       </div>
 
       <PageTable
+      tableWidth="w-[calc(100dvw-30px)]"
         loading={dataLoading}
         columns={columns}
         data={data}

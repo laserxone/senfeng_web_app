@@ -13,10 +13,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ uid:
 
     try {
        const customersResult = await pool.query(
-  `SELECT DISTINCT customer.id, customer.name, customer.ownership, customer.number, customer.owner
-   FROM customer
-   INNER JOIN sale ON sale.customer_id = customer.id
-   WHERE customer.ownership = $1`,
+  `SELECT DISTINCT c.*
+    FROM customer c
+    LEFT JOIN sale s ON s.customer_id = c.id
+    WHERE c.ownership = $1
+      AND (
+        c.member IS TRUE
+        OR s.id IS NOT NULL
+      )
+    ORDER BY c.created_at DESC`,
   [uid]
 );
 

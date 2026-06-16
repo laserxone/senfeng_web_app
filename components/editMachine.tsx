@@ -158,7 +158,7 @@ const EditMachine = (
 
     
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            <ScrollArea className="pr-2 w-full h-[75vh]">
+            <ScrollArea className="pr-2 w-full h-[calc(100dvh-160px)]">
 
               {/* Machine Details */}
               <FieldSet className="border rounded-md p-3 gap-3">

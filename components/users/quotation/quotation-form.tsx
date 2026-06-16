@@ -284,7 +284,7 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
             onSubmit={form.handleSubmit(handleGeneratePDF)}
             className="space-y-5"
           >
-            <ScrollArea className="h-[80vh] pr-4">
+            <ScrollArea className="h-[calc(100dvh-200px)] pr-4">
               <FieldSet className="rounded-xl border bg-muted/20 p-4">
                 <FieldLegend className="px-2 text-sm font-medium">
                   Basic Information

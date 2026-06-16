@@ -6,7 +6,17 @@ import axios from "@/lib/axios";
 import { debounce, debouncePromise } from "@/lib/debounce";
 import { CustomerFormData, MyCustomer } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Trash } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  Building2,
+  CalendarDays,
+  MapPin,
+  Phone,
+  Settings2,
+  Sparkles,
+  Trash,
+  UserPlus,
+} from "lucide-react";
 import Link from "next/link";
 import { memo, useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -20,8 +30,8 @@ import { RequiredStar } from "./RequiredStar";
 import StarRating from "./startRating";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "./ui/field";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "./ui/field";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
@@ -276,32 +286,43 @@ function AddCustomerDialog({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="w-full sm:w-[80vw] sm:max-w-[80vw]">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Add new customer</DialogTitle>
+      <DialogContent className="w-full sm:max-w-6xl">
+        <DialogHeader className="border-b bg-muted/20 px-4 py-4 sm:px-6">
+          <div className="flex items-start gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+              <UserPlus className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="text-xl font-bold tracking-tight">Add New Customer</DialogTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Register customer profile, contact, location, ownership, and lead details.
+              </p>
+            </div>
+          </div>
         </DialogHeader>
-        <ScrollArea className="h-[85dvh] px-2">
-          <div className="px-2">
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ScrollArea className="h-[70dvh] sm:h-[80dvh]">
+          <div className="p-4 sm:p-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
                 {/* CONTACT INFORMATION */}
-                <FieldSet className="md:col-span-2 border rounded-md p-3">
-                  <FieldLegend className="px-2 text-sm font-medium text-muted-foreground">
+                <FieldSet className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4 lg:col-span-2">
+                  <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
+                    <Phone className="h-4 w-4 text-emerald-700" />
                     Contact Information
                   </FieldLegend>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     {/* Phone Numbers - Full Width */}
                     <div className="md:col-span-2">
                       <Label style={{ color: numberError ? "hsl(var(--destructive))" : undefined }} className="text-sm font-medium">
                         Phone Number <RequiredStar />
                       </Label>
 
-                      <div className="space-y-2 mt-1">
+                      <div className="mt-2 space-y-2">
                         {numbers.map((num, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <div className="w-28">
+                          <div key={index} className="grid gap-2 rounded-xl border bg-muted/15 p-2 sm:grid-cols-[112px_1fr_auto] sm:items-center">
+                            <div>
                               <NumberSearch
                                 value={selectedNumber[index]}
                                 onReturn={(val: any) => handlePrefixChange(index, val)}
@@ -312,22 +333,24 @@ function AddCustomerDialog({
                               placeholder="xxxxxxxxx"
                               value={num}
                               onChange={(e) => handleNumberChange(index, e.target.value)}
-                              className="flex-1"
+                              className="bg-background"
                             />
-                            {index > 0 && (
-                              <Button
-                                variant="destructive"
-                                size="icon"
-                                className="size-8"
-                                onClick={() => {
-                                  removeNumberField(index)
-                                  setCustomerInfo([])
-                                }}
-                              >
-                                <Trash size={14} />
-                              </Button>
-                            )}
-                            {checking && <Spinner className="size-4" />}
+                            <div className="flex items-center justify-end gap-2">
+                              {index > 0 && (
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="icon-sm"
+                                  onClick={() => {
+                                    removeNumberField(index)
+                                    setCustomerInfo([])
+                                  }}
+                                >
+                                  <Trash size={14} />
+                                </Button>
+                              )}
+                              {checking && <Spinner className="size-4" />}
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -338,23 +361,23 @@ function AddCustomerDialog({
                         variant="outline"
                         size="sm"
                         onClick={addNumberField}
-                        className="mt-2"
+                        className="mt-3"
                       >
                         + Add Number
                       </Button>
 
                       {customerInfo.length > 0 && (
-                        <div className="mt-2 p-2 bg-destructive/10 rounded border border-destructive/20 text-sm">
-                          <Label className="text-destructive font-medium text-xs">
+                        <div className="mt-3 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm">
+                          <Label className="text-xs font-semibold text-destructive">
                             Number exists with the following:
                           </Label>
-                          <div className="mt-1 space-y-0.5">
+                          <div className="mt-2 space-y-1">
                             {customerInfo.map((item, index) => (
                               <Link
                                 key={index}
                                 target="_blank"
                                 href={`/${base_route}/customer/${item?.id}`}
-                                className="block text-destructive text-xs hover:underline"
+                                className="block rounded-lg bg-background/80 px-2 py-1 text-xs text-destructive hover:underline"
                               >
                                 {item?.name || item?.owner} - {item?.number?.join(", ")}
                               </Link>
@@ -363,7 +386,7 @@ function AddCustomerDialog({
                         </div>
                       )}
 
-                      {numberError && <Label className="text-destructive text-xs mt-1">{numberError}</Label>}
+                      {numberError && <Label className="mt-1 text-xs text-destructive">{numberError}</Label>}
                     </div>
 
                     {/* Email */}
@@ -393,8 +416,9 @@ function AddCustomerDialog({
                 </FieldSet>
 
                 {/* CUSTOMER DETAILS */}
-                <FieldSet className="border rounded-md p-3">
-                  <FieldLegend className="px-2 text-sm font-medium text-muted-foreground">
+                <FieldSet className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                  <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
+                    <Building2 className="h-4 w-4 text-blue-700" />
                     Customer Details
                   </FieldLegend>
 
@@ -448,8 +472,9 @@ function AddCustomerDialog({
                 </FieldSet>
 
                 {/* LOCATION */}
-                <FieldSet className="border rounded-md p-3">
-                  <FieldLegend className="px-2 text-sm font-medium text-muted-foreground">
+                <FieldSet className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                  <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
+                    <MapPin className="h-4 w-4 text-rose-700" />
                     Location
                   </FieldLegend>
 
@@ -491,8 +516,9 @@ function AddCustomerDialog({
                 </FieldSet>
 
                 {/* BUSINESS SETTINGS */}
-                <FieldSet className="border rounded-md p-3">
-                  <FieldLegend className="px-2 text-sm font-medium text-muted-foreground">
+                <FieldSet className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                  <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
+                    <Settings2 className="h-4 w-4 text-amber-700" />
                     Business Settings
                   </FieldLegend>
 
@@ -563,8 +589,9 @@ function AddCustomerDialog({
                 </FieldSet>
 
                 {/* LEAD & REMARKS */}
-                <FieldSet className="border rounded-md p-3">
-                  <FieldLegend className="px-2 text-sm font-medium text-muted-foreground">
+                <FieldSet className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                  <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
+                    <BriefcaseBusiness className="h-4 w-4 text-violet-700" />
                     Lead & Remarks
                   </FieldLegend>
 
@@ -607,8 +634,9 @@ function AddCustomerDialog({
                 </FieldSet>
 
                 {/* ADDITIONAL OPTIONS */}
-                <FieldSet className="border rounded-md p-3">
-                  <FieldLegend className="px-2 text-sm font-medium text-muted-foreground">
+                <FieldSet className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                  <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
+                    <CalendarDays className="h-4 w-4 text-slate-700" />
                     Additional Options
                   </FieldLegend>
 
@@ -641,9 +669,9 @@ function AddCustomerDialog({
                       name="member"
                       control={control}
                       render={({ field }) => (
-                        <Field className="flex flex-row items-center gap-2 pt-1">
-                          <div className="flex gap-2">
-                            <FieldLabel htmlFor="member" className="cursor-pointer text-sm">
+                        <Field className="rounded-xl border bg-muted/15 p-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <FieldLabel htmlFor="member" className="cursor-pointer text-sm font-medium">
                               Member?
                             </FieldLabel>
                             <div>
@@ -661,9 +689,24 @@ function AddCustomerDialog({
                 </FieldSet>
 
               </div>
+            </form>
 
-              {/* SUBMIT BUTTON */}
-              <div className="mt-4 pt-4 border-t">
+             <div className="w-full mt-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                Duplicate number checks and required fields are validated before save.
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleClose(false)}
+                  disabled={loading}
+                  className="w-full sm:w-auto"
+                >
+                  Cancel
+                </Button>
                 <Button
                   disabled={
                     loading ||
@@ -671,16 +714,19 @@ function AddCustomerDialog({
                     checking ||
                     numbers.filter(Boolean).length === 0
                   }
-                  className="w-full"
+                  className="w-full sm:w-auto"
                   type="submit"
                 >
                   {loading && <Spinner className="mr-2 size-4" />}
                   Register Customer
                 </Button>
               </div>
-            </form>
+            </div>
+          </div>
           </div>
         </ScrollArea>
+
+     
       </DialogContent>
     </Dialog>
   );

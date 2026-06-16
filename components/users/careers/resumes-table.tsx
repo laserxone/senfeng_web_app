@@ -18,7 +18,7 @@ import Spinner from "@/components/ui/spinner";
 import { Resume } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import axios from "axios";
-import { ArrowUpDown, MoreVertical } from "lucide-react";
+import { ArrowUpDown, FileText, MoreVertical } from "lucide-react";
 import { useState } from "react";
 
 
@@ -183,14 +183,24 @@ export default function ResumesTable({ resumes, onRefresh, loading }: { resumes:
 
     <>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Applications</CardTitle>
+      <Card className="overflow-hidden rounded-2xl border-border/70 shadow-sm">
+        <CardHeader className="border-b bg-muted/15 p-4 sm:p-5">
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+              <FileText className="h-4 w-4" />
+            </div>
+            <div>
+              <CardTitle>Applications</CardTitle>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Review candidate details, CVs, and cover letters.
+              </p>
+            </div>
+          </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="p-4 sm:p-5">
           {!loading && resumes.length === 0 ? (
-            <div className="rounded-lg border border-dashed p-10 text-center">
+            <div className="rounded-2xl border border-dashed bg-muted/15 p-10 text-center">
               <h2 className="text-lg font-medium">No applications yet</h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 New submissions will appear here.
@@ -198,6 +208,7 @@ export default function ResumesTable({ resumes, onRefresh, loading }: { resumes:
             </div>
           ) : (
             <PageTable
+            tableWidth="w-[calc(100dvw-60px)]"
               loading={loading}
               columns={columns}
               data={resumes}
@@ -207,15 +218,15 @@ export default function ResumesTable({ resumes, onRefresh, loading }: { resumes:
         </CardContent>
       </Card>
       <Dialog open={!!openCover} onOpenChange={() => setOpenCover(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-h-[88dvh] max-w-2xl overflow-hidden p-0">
+          <DialogHeader className="border-b bg-muted/20 px-4 py-4 sm:px-6">
             <DialogTitle className="text-xl font-semibold">
               Cover Letter
             </DialogTitle>
           </DialogHeader>
 
-          <div className="mt-4 max-h-[60vh] overflow-y-auto rounded-lg border bg-muted/30 p-4">
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
+          <div className="max-h-[calc(88dvh-80px)] overflow-y-auto p-4 sm:p-6">
+            <p className="whitespace-pre-wrap rounded-2xl border bg-muted/20 p-4 text-sm leading-relaxed text-foreground">
               {openCover || "No cover letter provided."}
             </p>
           </div>

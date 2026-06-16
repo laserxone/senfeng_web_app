@@ -44,6 +44,7 @@ import FilterSheet from "./filterSheet"
 import { MyCustomer, SalesVisitTypes } from "@/lib/types"
 import { Field, FieldError, FieldLabel } from "../ui/field"
 import { cn } from "@/lib/utils"
+import { MyImgZooming } from "../img-zooming"
 
 const formSchema = z.object({
   note: z.string().min(1, "Note cannot be empty"),
@@ -542,7 +543,7 @@ function VisitRecord({
               icon={<ImageIcon className="h-3.5 w-3.5" />}
               label="Signature"
             >
-              <MyImg img={feedback.signature} compact />
+              <MyImgZooming img={feedback.signature} compact />
             </MediaPreview>
           ) : null}
           {feedback.image ? (
@@ -550,7 +551,7 @@ function VisitRecord({
               icon={<Camera className="h-3.5 w-3.5" />}
               label="Photo"
             >
-              <MyImg img={feedback.image} compact />
+              <MyImgZooming img={feedback.image} compact />
             </MediaPreview>
           ) : null}
           {!feedback.signature && !feedback.image && (
@@ -599,70 +600,3 @@ function MediaPreview({
   )
 }
 
-export const MyImg = ({
-  img,
-  compact = false,
-}: {
-  img: string
-  compact?: boolean
-}) => {
-  const [remoteImage, setRemoteImage] = useState<{
-    key: string
-    url: string
-    error: boolean
-  } | null>(null)
-
-  useEffect(() => {
-    if (!img || img.includes("http")) {
-      return
-    }
-
-    let active = true
-
-    getDownloadURL(ref(storage, img))
-      .then((url) => {
-        if (active) {
-          setRemoteImage({ key: img, url, error: false })
-        }
-      })
-      .catch((e) => {
-        console.log("error loading image", e)
-        if (active) {
-          setRemoteImage({ key: img, url: "", error: true })
-        }
-      })
-
-    return () => {
-      active = false
-    }
-  }, [img])
-
-  const localImage = img?.includes("http")
-    ? img
-    : remoteImage?.key === img
-      ? remoteImage.url
-      : ""
-  const error =
-    !img?.includes("http") && remoteImage?.key === img && remoteImage.error
-  const loading = !!img && !img.includes("http") && remoteImage?.key !== img
-
-  if (loading) return <Spinner />
-  if (!img || !localImage) return <p>No image</p>
-  if (error) return <p>Failed to load image</p>
-
-  return (
-    <Zoom>
-      <Image
-        alt="image"
-        src={localImage}
-        width={compact ? 96 : 180}
-        height={compact ? 48 : 100}
-        unoptimized
-        className={cn(
-          "w-auto object-contain",
-          compact ? "h-12 max-w-full" : "h-[100px]"
-        )}
-      />
-    </Zoom>
-  )
-}

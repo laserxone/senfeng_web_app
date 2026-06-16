@@ -71,35 +71,41 @@ const DropzoneMulti = ({ onDrop, title, subheading, description, drag, borderCol
   return (
     <div
       {...getRootProps()}
-      className="w-full flex flex-col items-center justify-center py-8 border rounded-md"
+      className="flex w-full flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/15 px-3 py-6 transition hover:border-primary/40 hover:bg-muted/25 sm:px-4 sm:py-8"
       style={{ borderColor }}
     >
-      <div className="flex flex-col items-center">
+      <div className="flex w-full flex-col items-center">
         {isDragActive ? (
-          <Label>{drag}</Label>
+          <Label className="text-sm font-semibold text-primary">{drag}</Label>
         ) : value.length === 0 ? (
           <div className="flex flex-col items-center">
-            <Image src="/upload-cloud-02.png" height={20} width={20} alt="Cloud upload" />
+            <div className="mb-3 grid h-12 w-12 place-items-center rounded-2xl border bg-background shadow-sm">
+              <Image src="/upload-cloud-02.png" height={24} width={24} alt="Cloud upload" />
+            </div>
             <div className="flex flex-col text-center">
-              <span className="text-gray-500 font-medium text-[14px]">{title}</span>
-              <span className="text-gray-500 text-[14px]">{subheading}</span>
-              <span className="text-gray-400 text-[11px]">({description})</span>
+              <span className="text-sm font-semibold text-foreground">{title}</span>
+              <span className="text-sm text-muted-foreground">{subheading}</span>
+              <span className="text-[11px] text-muted-foreground">({description})</span>
             </div>
             <Input {...getInputProps()} id="image-input" style={{ display: "none" }} />
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-4 mt-4">
+          <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {value.map((imageUrl, index) => (
-              <div key={index} className="relative flex flex-col items-center">
+              <div key={index} className="relative overflow-hidden rounded-xl border bg-background p-2 shadow-sm">
                 <img
                   src={imageUrl} // Using the URL directly
                   alt={`Selected ${index}`}
-                  className="w-24 h-24 object-cover rounded-md shadow-md"
+                  className="aspect-square w-full rounded-lg object-cover"
                 />
-                <div className="mt-2 flex space-x-2">
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <span className="truncate text-[11px] font-medium text-muted-foreground">
+                    Image {index + 1}
+                  </span>
                   <button
+                    type="button"
                     onClick={() => handleDelete(index)}
-                    className="text-red-500 text-sm"
+                    className="rounded-full border border-red-100 bg-red-50 px-2 py-1 text-[11px] font-semibold text-red-600 transition hover:bg-red-100"
                   >
                     Delete
                   </button>

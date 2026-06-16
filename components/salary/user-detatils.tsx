@@ -21,7 +21,16 @@ import axios from "@/lib/axios";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { deleteObject, getDownloadURL, ref } from "firebase/storage";
-import { CheckCircle } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  CalendarDays,
+  CheckCircle,
+  FileText,
+  Phone,
+  ShieldCheck,
+  StickyNote,
+  WalletCards,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ChangeEvent, Dispatch, SetStateAction, useCallback, useContext, useEffect, useRef, useState } from "react";
@@ -248,43 +257,57 @@ export default function DetailComponent({ id }: { id: string | null }) {
 
   return (
    <div className="flex w-full justify-center pb-4">
-  <div className="w-full space-y-3">
+  <div className="w-full space-y-5">
 
     {/* Header */}
-    <div className="flex flex-col md:flex-row md:items-center gap-3 border-b pb-3">
-      <ProfilePictureTeam
-        img={fixedData?.dp}
-        name={fixedData?.name}
-        loading={loading}
-      />
+    <div className="overflow-hidden rounded-2xl border bg-background shadow-sm">
+      <div className="flex flex-col gap-4 p-4 sm:p-5 md:flex-row md:items-center">
+        <div className="rounded-2xl border bg-muted/20 p-2">
+          <ProfilePictureTeam
+            img={fixedData?.dp}
+            name={fixedData?.name}
+            loading={loading}
+          />
+        </div>
 
-      <div className="flex-1">
-        <h1 className="text-2xl font-semibold">{fixedData?.name}</h1>
-        <p className="text-muted-foreground">{fixedData?.designation}</p>
+        <div className="min-w-0 flex-1">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full border bg-muted/30 px-3 py-1 text-xs font-medium text-muted-foreground">
+            <BriefcaseBusiness className="h-3.5 w-3.5 text-blue-600" />
+            Employee profile
+          </div>
+          <h1 className="truncate text-2xl font-bold tracking-tight">{fixedData?.name || "Employee"}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{fixedData?.designation || "No designation"}</p>
 
-        {fixedData?.designation === "Sales" && (
-          <Link
-            href={`/lahore/superadmin/team/${id}/dashboard`}
-            target="blank"
-            className="text-sm text-blue-500 hover:underline mt-1 inline-block"
-          >
-            Open Dashboard
-          </Link>
-        )}
-      </div>
+          {fixedData?.designation === "Sales" && (
+            <Link
+              href={`/lahore/superadmin/team/${id}/dashboard`}
+              target="blank"
+              className="mt-2 inline-flex items-center rounded-full border bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 hover:underline"
+            >
+              Open Dashboard
+            </Link>
+          )}
+        </div>
 
-      <div className="flex justify-end">
-        <Button onClick={handleSave}>
-          {dataLoading && <Spinner />} Save Changes
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row md:justify-end">
+          <div className={`rounded-full border px-3 py-1 text-xs font-semibold ${active ? "bg-emerald-50 text-emerald-700" : "bg-muted/30 text-muted-foreground"}`}>
+            {active ? "Active" : "Inactive"}
+          </div>
+          <Button onClick={handleSave} className="w-full sm:w-auto">
+            {dataLoading && <Spinner />} Save Changes
+          </Button>
+        </div>
       </div>
     </div>
 
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       
       {/* Personal Details */}
-      <FieldSet className="border rounded-md p-3 gap-3">
-        <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Personal Details</FieldLegend>
+      <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+        <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+          <WalletCards className="h-4 w-4 text-emerald-700" />
+          Salary Details
+        </FieldLegend>
         {Object.keys(form).map(
           (key) =>
             key !== "note" && (
@@ -300,22 +323,30 @@ export default function DetailComponent({ id }: { id: string | null }) {
       </FieldSet>
 
       {/* Preferences */}
-      <FieldSet className="border rounded-md p-3 gap-3">
-        <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Preferences</FieldLegend>
-        {Object.keys(checks).map((key) => (
-          <div key={key} className="flex items-center gap-3">
-            <Checkbox
-              checked={checks[key as keyof typeof checks]}
-              onCheckedChange={(checked: boolean) => handleCheck(key, checked)}
-            />
-            <Label>{key.replace(/_/g, " ").toUpperCase()}</Label>
-          </div>
-        ))}
+      <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+        <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+          <ShieldCheck className="h-4 w-4 text-blue-700" />
+          Access & Preferences
+        </FieldLegend>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {Object.keys(checks).map((key) => (
+            <div key={key} className="flex min-h-11 items-center gap-3 rounded-xl border bg-muted/15 px-3 py-2">
+              <Checkbox
+                checked={checks[key as keyof typeof checks]}
+                onCheckedChange={(checked: boolean) => handleCheck(key, checked)}
+              />
+              <Label className="text-xs font-medium leading-snug">{key.replace(/_/g, " ").toUpperCase()}</Label>
+            </div>
+          ))}
+        </div>
       </FieldSet>
 
       {/* Contact Information */}
-      <FieldSet className="border rounded-md p-3 gap-3">
-        <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Contact Information</FieldLegend>
+      <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+        <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+          <Phone className="h-4 w-4 text-violet-700" />
+          Contact Information
+        </FieldLegend>
         
         <Field>
           <FieldLabel>PHONE NUMBER</FieldLabel>
@@ -329,8 +360,11 @@ export default function DetailComponent({ id }: { id: string | null }) {
       </FieldSet>
 
       {/* Dates & Status */}
-      <FieldSet className="border rounded-md p-3 gap-3">
-        <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Dates & Status</FieldLegend>
+      <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+        <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+          <CalendarDays className="h-4 w-4 text-amber-700" />
+          Dates & Status
+        </FieldLegend>
         
         <Field>
           <FieldLabel>JOINING DATE</FieldLabel>
@@ -348,15 +382,18 @@ export default function DetailComponent({ id }: { id: string | null }) {
           />
         </Field>
 
-        <div className="flex items-center gap-3">
-          <Label>Status</Label>
+        <div className="flex items-center justify-between rounded-xl border bg-muted/15 p-3">
+          <Label className="font-medium">Status</Label>
           <Switch checked={active} onCheckedChange={setActive} />
         </div>
       </FieldSet>
 
       {/* Note */}
-      <FieldSet className="border rounded-md p-3 gap-3 lg:col-span-2">
-        <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Note</FieldLegend>
+      <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4 lg:col-span-2">
+        <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+          <StickyNote className="h-4 w-4 text-slate-700" />
+          Note
+        </FieldLegend>
         <Field>
           <Textarea
             value={form.note}
@@ -366,9 +403,12 @@ export default function DetailComponent({ id }: { id: string | null }) {
       </FieldSet>
 
       {/* Documents */}
-      <FieldSet className="border rounded-md p-3 gap-3 lg:col-span-2">
-        <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Documents</FieldLegend>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4 lg:col-span-2">
+        <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+          <FileText className="h-4 w-4 text-rose-700" />
+          Documents
+        </FieldLegend>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <DocumentCard type={"cnic"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
           <DocumentCard type={"father_cnic"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
           <DocumentCard type={"police"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
@@ -509,8 +549,8 @@ const DocumentCardOther = ({ userID, otherDocs, employeeId, fetchData }: { userI
           />
 
           <Popover>
-            <PopoverTrigger asChild className="w-full flex gap-4">
-              <Button variant={"outline"}>
+            <PopoverTrigger asChild className="flex w-full gap-4">
+              <Button variant={"outline"} className="h-auto w-full justify-between rounded-xl px-3 py-3 text-left">
                 OTHER DOCS
                 {files.length > 0 && (
                   <CheckCircle className="text-green-500" />
@@ -663,8 +703,8 @@ const DocumentCard =
             />
 
             <Popover>
-              <PopoverTrigger asChild className="w-full flex gap-4">
-                <Button variant={"outline"}>
+              <PopoverTrigger asChild className="flex w-full gap-4">
+                <Button variant={"outline"} className="h-auto w-full justify-between rounded-xl px-3 py-3 text-left">
                   {type?.replace("_", " ").toUpperCase()}{" "}
                   {fileUrl && <CheckCircle className="text-green-500" />}
                 </Button>

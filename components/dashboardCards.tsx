@@ -1,144 +1,147 @@
-export const MachinesSoldCard = ({ value, percentage, onClick } : {value :number, percentage : number, onClick : ()=> void}) => {
-  return (
-    <>
-      <div
-        className="shadow-md border border-gray-200 rounded-lg bg-white p-4"
-        style={{ height: "fit-content" }}
-      >
-        {/* Header */}
-        <div className="flex flex-row items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-gray-500"
-            >
-              <rect width="20" height="14" x="2" y="5" rx="2" />
-              <path d="M2 10h20" />
-            </svg>
-            <span className="text-xs font-medium text-gray-600">
-              Machines Sold This Month
-            </span>
-          </div>
-          <div
-            onClick={onClick}
-            className="text-2xl font-bold text-gray-900 ml-4 hover:underline cursor-pointer"
-          >
-            {value}
-          </div>
-        </div>
+import { Activity, CreditCard, MessageSquareText, type LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
-        {/* Content */}
-        <div className="mt-1">
-          <p
-            className={`text-xs font-medium ${
-              percentage >= 0 ? "text-green-500" : "text-red-500"
-            } flex items-center`}
-          >
-            {percentage >= 0 ? "▲" : "▼"} {Math.abs(percentage)}% from last
-            month
+type MetricShellProps = {
+  title: string;
+  value: number;
+  icon: LucideIcon;
+  accent: string;
+  iconClassName: string;
+  children?: ReactNode;
+  onClick?: () => void;
+};
+
+function MetricShell({
+  title,
+  value,
+  icon: Icon,
+  accent,
+  iconClassName,
+  children,
+  onClick,
+}: MetricShellProps) {
+  return (
+    <div className={`relative flex h-full min-h-[136px] w-full overflow-hidden rounded-2xl border bg-gradient-to-r ${accent} p-4 shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md`}>
+      <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rotate-12 rounded-[2rem] bg-white/55" />
+      <div className="relative flex w-full items-start gap-3">
+        <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-white shadow-sm ring-1 ring-white/40 ${iconClassName}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {title}
           </p>
+          {onClick ? (
+            <button
+              type="button"
+              onClick={onClick}
+              className="mt-3 text-left text-3xl font-black tracking-tight text-slate-950 hover:underline"
+            >
+              {value}
+            </button>
+          ) : (
+            <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">
+              {value}
+            </p>
+          )}
+          {children && <div className="mt-auto pt-3">{children}</div>}
         </div>
-      </div>
-    </>
-  );
-};
-
-export const FeedbackTakenCard = ({ value, remaining, total } : {value : number, remaining : number, total : number}) => {
-  return (
-    <div
-      className="shadow-md border border-gray-200 rounded-lg bg-white p-4"
-      style={{ height: "fit-content" }}
-    >
-      {/* Header */}
-      <div className="flex flex-row items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            className="h-4 w-4 text-gray-500"
-          >
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-          </svg>
-          <span className="text-xs font-medium text-gray-600">
-            Calls This Month
-          </span>
-        </div>
-        <div className="flex items-baseline space-x-1 text-gray-900 ml-4">
-          <span className="text-2xl font-extrabold">{value}</span>
-          <span className="text-sm font-medium text-gray-600">/ {total}</span>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="mt-1">
-        <p
-          className={`text-xs font-medium ${
-            remaining === 0 ? "text-green-500" : "text-red-500"
-          } flex items-center`}
-        >
-          {remaining === 0 ? "No" : remaining} feedbacks remaining
-        </p>
       </div>
     </div>
   );
-};
+}
 
-export const VisitsDoneCard = ({ value, remaining, total } : {value : number, remaining : number, total : number}) => {
+export const MachinesSoldCard = ({
+  value,
+  percentage,
+  onClick,
+}: {
+  value: number;
+  percentage: number;
+  onClick: () => void;
+}) => {
   return (
-    <div
-      className="shadow-md border border-gray-200 rounded-lg bg-white p-4"
-      style={{ height: "fit-content" }}
+    <MetricShell
+      title="Machines Sold This Month"
+      value={value}
+      icon={CreditCard}
+      accent="from-emerald-50 via-white to-teal-50 text-emerald-700 ring-emerald-100"
+      iconClassName="bg-emerald-600"
+      onClick={onClick}
     >
-      {/* Header */}
-      <div className="flex flex-row items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            className="h-4 w-4 text-gray-500"
-          >
-            <path d="M3 12h3l3 8 4-16 3 8h4" />
-          </svg>
-          <span className="text-xs font-medium text-gray-600">
-            Visits Done This Month
-          </span>
-        </div>
-        <div className="flex items-baseline space-x-1 text-gray-900 ml-4">
-          <span className="text-2xl font-extrabold">{value}</span>
-          <span className="text-sm font-medium text-gray-600">/ {total}</span>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="mt-1">
-        <p
-          className={`text-xs font-medium ${
-            remaining === 0 ? "text-green-500" : "text-red-500"
-          } flex items-center`}
-        >
-          {remaining === 0 ? "No" : remaining} visits remaining
-        </p>
-      </div>
-    </div>
+      <p
+        className={`text-xs font-semibold ${
+          percentage >= 0 ? "text-emerald-600" : "text-red-600"
+        }`}
+      >
+        {percentage >= 0 ? "+" : "-"}{Math.abs(percentage)}% from last month
+      </p>
+    </MetricShell>
   );
 };
 
+export const FeedbackTakenCard = ({
+  value,
+  remaining,
+  total,
+}: {
+  value: number;
+  remaining: number;
+  total: number;
+}) => {
+  return (
+    <MetricShell
+      title="Calls This Month"
+      value={value}
+      icon={MessageSquareText}
+      accent="from-indigo-50 via-white to-blue-50 text-indigo-700 ring-indigo-100"
+      iconClassName="bg-indigo-600"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-semibold text-slate-700">of {total}</span>
+        <span
+          className={`rounded-full border bg-white/70 px-2.5 py-1 text-xs font-semibold ${
+            remaining === 0
+              ? "border-emerald-100 text-emerald-700"
+              : "border-red-100 text-red-700"
+          }`}
+        >
+          {remaining === 0 ? "No" : remaining} remaining
+        </span>
+      </div>
+    </MetricShell>
+  );
+};
 
+export const VisitsDoneCard = ({
+  value,
+  remaining,
+  total,
+}: {
+  value: number;
+  remaining: number;
+  total: number;
+}) => {
+  return (
+    <MetricShell
+      title="Visits Done This Month"
+      value={value}
+      icon={Activity}
+      accent="from-sky-50 via-white to-cyan-50 text-sky-700 ring-sky-100"
+      iconClassName="bg-sky-600"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-semibold text-slate-700">of {total}</span>
+        <span
+          className={`rounded-full border bg-white/70 px-2.5 py-1 text-xs font-semibold ${
+            remaining === 0
+              ? "border-emerald-100 text-emerald-700"
+              : "border-red-100 text-red-700"
+          }`}
+        >
+          {remaining === 0 ? "No" : remaining} remaining
+        </span>
+      </div>
+    </MetricShell>
+  );
+};

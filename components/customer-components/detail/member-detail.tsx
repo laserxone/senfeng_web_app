@@ -191,8 +191,7 @@ export default function MemberDetail({
   const RenderVisitTab = useCallback(() => {
     return (
     
-        <div className="overflow-hidden w-full">
-          <ScrollArea className={`${height} w-full pr-2`}>
+       
             <VisitTab
               customer_data={customer_id || null}
               disable={true}
@@ -203,8 +202,7 @@ export default function MemberDetail({
                 await fetchCustomerDashboard();
               }}
             />
-          </ScrollArea>
-        </div>
+         
       
     );
   }, [visitData, customer_id, height]);
@@ -344,9 +342,9 @@ export default function MemberDetail({
           )}
 
           {activeTab === "feedback" && (
-            <ScrollArea className={`${height} w-full pr-2`}>
+            
               <RenderFeedbackTabs />
-            </ScrollArea>
+           
           )}
 
           {activeTab === "machines" && (
@@ -1232,7 +1230,7 @@ const RenderTimeline = ({
 
   return (
     <Card className="flex flex-1 shadow-lg rounded-2xl p-4 self-center">
-      <ScrollArea className={`flex flex-1 ${height}`}>
+     
         <Timeline className="mt-4">
           {timelineData.map((item) => (
             <TimelineItem key={item.id}>
@@ -1265,7 +1263,7 @@ const RenderTimeline = ({
             </TimelineItem>
           ))}
         </Timeline>
-      </ScrollArea>
+     
     </Card>
   );
 };
@@ -1280,13 +1278,13 @@ const PartsTab = ({ data, height }: { data?: PartsProps[], height?: string }) =>
         </CardContent>
       ) : (
         <CardContent className="flex flex-1 p-3">
-          <ScrollArea className={`flex flex-1 ${height}`}>
+       
             <div className="w-full space-y-2 pr-2">
               {data?.map((item, index) => (
                 <InvoiceDetails key={item.id || index} invoice={item} />
               ))}
             </div>
-          </ScrollArea>
+   
         </CardContent>
       )}
     </Card>

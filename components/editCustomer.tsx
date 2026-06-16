@@ -11,7 +11,16 @@ import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getDownloadURL, ref } from "firebase/storage";
-import { Trash } from "lucide-react";
+import {
+  Building2,
+  CalendarDays,
+  MapPin,
+  Pencil,
+  Phone,
+  Settings2,
+  Sparkles,
+  Trash,
+} from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useCallback, useContext, useEffect, useState } from "react";
@@ -28,7 +37,7 @@ import StarRating from "./startRating";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "./ui/field";
+import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "./ui/field";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
@@ -311,29 +320,45 @@ const EditCustomerDialog = ({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="w-full sm:w-[90vw] sm:max-w-[90vw]">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Edit customer</DialogTitle>
+      <DialogContent className="w-full sm:max-w-6xl">
+        <DialogHeader className="border-b bg-muted/20 px-4 py-4 sm:px-6">
+          <div className="flex items-start gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+              <Pencil className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="text-xl font-bold tracking-tight">
+                Edit Customer
+              </DialogTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Update profile, contact, location, ownership, image, and lead details.
+              </p>
+            </div>
+          </div>
         </DialogHeader>
-        <div>
-          <ScrollArea className="h-[85vh] px-2">
-            <div className="px-2">
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
 
-                  {/* Contact Information */}
-                  <FieldSet className="border rounded-md p-3 gap-3">
-                    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Contact Information</FieldLegend>
+        <ScrollArea className="h-[70dvh] sm:h-[80dvh]">
+          <div className="p-4 sm:p-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
-                    {/* Phone Numbers */}
-                    <Field>
-                      <FieldLabel style={{ color: numberError ? "red" : undefined }}>
-                        Phone Number <RequiredStar />
-                      </FieldLabel>
+                {/* Contact Information */}
+                <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                  <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+                    <Phone className="h-4 w-4 text-emerald-700" />
+                    Contact Information
+                  </FieldLegend>
 
+                  {/* Phone Numbers */}
+                  <Field>
+                    <FieldLabel style={{ color: numberError ? "red" : undefined }}>
+                      Phone Number <RequiredStar />
+                    </FieldLabel>
+
+                    <div className="space-y-2">
                       {numbers.map((num, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <div className="w-[180px]">
+                        <div key={index} className="grid gap-2 rounded-xl border bg-muted/15 p-2 sm:grid-cols-[112px_1fr_auto] sm:items-center">
+                          <div>
                             <NumberSearch
                               value={selectedNumber[index]}
                               onReturn={(val) => handlePrefixChange(index, val)}
@@ -346,371 +371,408 @@ const EditCustomerDialog = ({
                             placeholder="xxxxxxxxx"
                             value={num}
                             onChange={(e) => handleNumberChange(index, e.target.value)}
-                            className="flex-1"
+                            className="bg-background"
                           />
 
-                          {index > 0 && (
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              onClick={() => {
-                                removeNumberField(index);
-                                setCustomerInfo([]);
-                              }}
-                            >
-                              <Trash size={14} />
-                            </Button>
-                          )}
+                          <div className="flex items-center justify-end gap-2">
+                            {index > 0 && (
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon-sm"
+                                onClick={() => {
+                                  removeNumberField(index);
+                                  setCustomerInfo([]);
+                                }}
+                              >
+                                <Trash size={14} />
+                              </Button>
+                            )}
 
-                          {checking && <Spinner />}
+                            {checking && <Spinner />}
+                          </div>
                         </div>
                       ))}
+                    </div>
 
-                      <Button
-                        disabled={customerInfo.length > 0 || checking}
-                        type="button"
-                        onClick={addNumberField}
-                        size="sm"
-                        className="mt-1"
-                      >
-                        + Add Number
-                      </Button>
-                    </Field>
+                    <Button
+                      disabled={customerInfo.length > 0 || checking}
+                      type="button"
+                      variant="outline"
+                      onClick={addNumberField}
+                      size="sm"
+                      className="mt-2"
+                    >
+                      + Add Number
+                    </Button>
+                  </Field>
 
-                    {/* Existing customer warning */}
-                    {customerInfo.length > 0 && (
-                      <div className="p-2 bg-red-100 dark:bg-red-900 rounded border border-red-400">
-                        <Label className="text-red-700 dark:text-red-300 text-xs">
-                          Warning: Number exists with:
-                        </Label>
-                        {customerInfo.map((item, index) => (
-                          <Link
-                            key={index}
-                            target="_blank"
-                            href={`/${base_route}/${item.member ? "member" : "customer"}/${item.id}`}
-                            className="block text-red-600 text-xs hover:underline"
-                          >
-                            {item.name || item.owner} - {item.number?.join(", ")}
-                          </Link>
-                        ))}
-                      </div>
+                  {/* Existing customer warning */}
+                  {customerInfo.length > 0 && (
+                    <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-3">
+                      <Label className="text-xs font-semibold text-destructive">
+                        Warning: Number exists with:
+                      </Label>
+                      {customerInfo.map((item, index) => (
+                        <Link
+                          key={index}
+                          target="_blank"
+                          href={`/${base_route}/${item.member ? "member" : "customer"}/${item.id}`}
+                          className="mt-1 block rounded-lg bg-background/80 px-2 py-1 text-xs text-destructive hover:underline"
+                        >
+                          {item.name || item.owner} - {item.number?.join(", ")}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+
+                  {numberError && <Label className="text-xs text-destructive">{numberError}</Label>}
+
+                  {/* Email */}
+                  <Controller
+                    name="email"
+                    control={control}
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel>Email</FieldLabel>
+                        <Input placeholder="Enter email" {...field} />
+                      </Field>
                     )}
+                  />
 
-                    {numberError && <Label className="text-red-500 text-xs">{numberError}</Label>}
+                  {/* Other IDs */}
+                  <Controller
+                    name="other"
+                    control={control}
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel>Other IDs</FieldLabel>
+                        <Input placeholder="wechat / qq / facebook / twitter" {...field} />
+                      </Field>
+                    )}
+                  />
+                </FieldSet>
 
-                    {/* Email */}
+                {/* Customer Details */}
+                <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                  <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+                    <Building2 className="h-4 w-4 text-blue-700" />
+                    Customer Details
+                  </FieldLegend>
+
+                  {/* Owner */}
+                  <Controller
+                    name="owner"
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>
+                          Customer <RequiredStar />
+                        </FieldLabel>
+                        <Input placeholder="Enter customer name" {...field} />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+
+                  {/* Company */}
+                  <Controller
+                    name="company"
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>
+                          Company <RequiredStar />
+                        </FieldLabel>
+                        <Input placeholder="Enter company name" {...field} />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+
+                  {/* Group */}
+                  <Controller
+                    name="group"
+                    control={control}
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel>Group</FieldLabel>
+                        <Input placeholder="Enter group name" {...field} />
+                      </Field>
+                    )}
+                  />
+
+                  {/* Industry */}
+                  <Controller
+                    name="industry"
+                    control={control}
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel>Industry</FieldLabel>
+                        <IndustrySearch value={field.value} onReturn={field.onChange} />
+                      </Field>
+                    )}
+                  />
+
+                  {/* Image */}
+                  <Controller
+                    name="image"
+                    control={control}
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel>Image</FieldLabel>
+                        <Dropzone
+                          value={imageUrl}
+                          onDrop={(file) => setImageUrl(file)}
+                          title="Click to upload"
+                          subheading="or drag and drop"
+                          description="PNG or JPG"
+                          drag="Drop the files here..."
+                        />
+                      </Field>
+                    )}
+                  />
+                </FieldSet>
+
+                {/* Location */}
+                <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                  <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+                    <MapPin className="h-4 w-4 text-rose-700" />
+                    Location
+                  </FieldLegend>
+
+                  {/* City */}
+                  <Controller
+                    name="city"
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>
+                          City <RequiredStar />
+                        </FieldLabel>
+                        <CitiesSearch value={field.value} onReturn={field.onChange} />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+
+                  {/* Address */}
+                  <Controller
+                    name="address"
+                    control={control}
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel>Address</FieldLabel>
+                        <Input placeholder="Enter address" {...field} />
+                      </Field>
+                    )}
+                  />
+
+                  {/* Pin */}
+                  <Controller
+                    name="pin"
+                    control={control}
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel>Google Location Pin</FieldLabel>
+                        <Input placeholder="Enter pin location" {...field} />
+                      </Field>
+                    )}
+                  />
+                </FieldSet>
+
+                {/* Business Settings */}
+                <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                  <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+                    <Settings2 className="h-4 w-4 text-amber-700" />
+                    Business Settings
+                  </FieldLegend>
+
+                  {/* Platform */}
+                  <Controller
+                    name="platform"
+                    control={control}
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel>Platform</FieldLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select platform" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {["SOCIAL MEDIA", "SENFENG", "DIRECT"].map((item) => (
+                              <SelectItem key={item} value={item}>
+                                {item}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                    )}
+                  />
+
+                  {/* Office */}
+                  {!(designation === "Sales" || designation === "Dealer") && (
                     <Controller
-                      name="email"
-                      control={control}
-                      render={({ field }) => (
-                        <Field>
-                          <FieldLabel>Email</FieldLabel>
-                          <Input placeholder="Enter email" {...field} />
-                        </Field>
-                      )}
-                    />
-
-                    {/* Other IDs */}
-                    <Controller
-                      name="other"
-                      control={control}
-                      render={({ field }) => (
-                        <Field>
-                          <FieldLabel>Other IDs</FieldLabel>
-                          <Input placeholder="wechat / qq / facebook / twitter" {...field} />
-                        </Field>
-                      )}
-                    />
-                  </FieldSet>
-
-                  {/* Customer Details */}
-                  <FieldSet className="border rounded-md p-3 gap-3">
-                    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Customer Details</FieldLegend>
-
-                    {/* Owner */}
-                    <Controller
-                      name="owner"
+                      name="office"
                       control={control}
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
                           <FieldLabel>
-                            Customer <RequiredStar />
+                            Office branch <RequiredStar />
                           </FieldLabel>
-                          <Input placeholder="Enter customer name" {...field} />
-                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                        </Field>
-                      )}
-                    />
-
-                    {/* Company */}
-                    <Controller
-                      name="company"
-                      control={control}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>
-                            Company <RequiredStar />
-                          </FieldLabel>
-                          <Input placeholder="Enter company name" {...field} />
-                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                        </Field>
-                      )}
-                    />
-
-                    {/* Group */}
-                    <Controller
-                      name="group"
-                      control={control}
-                      render={({ field }) => (
-                        <Field>
-                          <FieldLabel>Group</FieldLabel>
-                          <Input placeholder="Enter group name" {...field} />
-                        </Field>
-                      )}
-                    />
-
-                    {/* Industry */}
-                    <Controller
-                      name="industry"
-                      control={control}
-                      render={({ field }) => (
-                        <Field>
-                          <FieldLabel>Industry</FieldLabel>
-                          <IndustrySearch value={field.value} onReturn={field.onChange} />
-                        </Field>
-                      )}
-                    />
-
-                    {/* Image */}
-                    <Controller
-                      name="image"
-                      control={control}
-                      render={({ field }) => (
-                        <Field>
-                          <FieldLabel>Image</FieldLabel>
-                          <Dropzone
-                            value={imageUrl}
-                            onDrop={(file) => setImageUrl(file)}
-                            title="Click to upload"
-                            subheading="or drag and drop"
-                            description="PNG or JPG"
-                            drag="Drop the files here..."
-                          />
-                        </Field>
-                      )}
-                    />
-                  </FieldSet>
-
-                  {/* Location */}
-                  <FieldSet className="border rounded-md p-3 gap-3">
-                    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Location</FieldLegend>
-
-                    {/* City */}
-                    <Controller
-                      name="city"
-                      control={control}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>
-                            City <RequiredStar />
-                          </FieldLabel>
-                          <CitiesSearch value={field.value} onReturn={field.onChange} />
-                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                        </Field>
-                      )}
-                    />
-
-                    {/* Address */}
-                    <Controller
-                      name="address"
-                      control={control}
-                      render={({ field }) => (
-                        <Field>
-                          <FieldLabel>Address</FieldLabel>
-                          <Input placeholder="Enter address" {...field} />
-                        </Field>
-                      )}
-                    />
-
-                    {/* Pin */}
-                    <Controller
-                      name="pin"
-                      control={control}
-                      render={({ field }) => (
-                        <Field>
-                          <FieldLabel>Google Location Pin</FieldLabel>
-                          <Input placeholder="Enter pin location" {...field} />
-                        </Field>
-                      )}
-                    />
-                  </FieldSet>
-
-                  {/* Business Settings */}
-                  <FieldSet className="border rounded-md p-3 gap-3">
-                    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Business Settings</FieldLegend>
-
-                    {/* Platform */}
-                    <Controller
-                      name="platform"
-                      control={control}
-                      render={({ field }) => (
-                        <Field>
-                          <FieldLabel>Platform</FieldLabel>
                           <Select value={field.value} onValueChange={field.onChange}>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select platform" />
+                              <SelectValue placeholder="Select office" />
                             </SelectTrigger>
                             <SelectContent>
-                              {["SOCIAL MEDIA", "SENFENG", "DIRECT"].map((item) => (
+                              {["lahore", "karachi"].map((item) => (
                                 <SelectItem key={item} value={item}>
                                   {item}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                         </Field>
                       )}
                     />
+                  )}
 
-                    {/* Office */}
-                    {!(designation === "Sales" || designation === "Dealer") && (
-                      <Controller
-                        name="office"
-                        control={control}
-                        render={({ field, fieldState }) => (
-                          <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel>
-                              Office branch <RequiredStar />
-                            </FieldLabel>
-                            <Select value={field.value} onValueChange={field.onChange}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select office" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {["lahore", "karachi"].map((item) => (
-                                  <SelectItem key={item} value={item}>
-                                    {item}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                          </Field>
-                        )}
-                      />
-                    )}
-
-                    {/* Ownership */}
-                    {ownership && (
-                      <Controller
-                        name="ownership"
-                        control={control}
-                        render={({ field }) => (
-                          <Field>
-                            <FieldLabel>Ownership</FieldLabel>
-                            <UserSearch value={field.value} onReturn={field.onChange} />
-                          </Field>
-                        )}
-                      />
-                    )}
-
-                    {/* Lead */}
-                    {designation !== "Sales" && (
-                      <Controller
-                        name="lead"
-                        control={control}
-                        render={({ field }) => (
-                          <Field>
-                            <FieldLabel>Lead Generated By</FieldLabel>
-                            <UserSearch lead value={field.value} onReturn={field.onChange} />
-                          </Field>
-                        )}
-                      />
-                    )}
-
-                    {/* Remarks */}
+                  {/* Ownership */}
+                  {ownership && (
                     <Controller
-                      name="remarks"
+                      name="ownership"
                       control={control}
                       render={({ field }) => (
                         <Field>
-                          <FieldLabel>Remarks</FieldLabel>
-                          <Input placeholder="Enter remarks" {...field} />
+                          <FieldLabel>Ownership</FieldLabel>
+                          <UserSearch value={field.value} onReturn={field.onChange} />
                         </Field>
                       )}
                     />
-                  </FieldSet>
+                  )}
 
-                  {/* Additional Options */}
-                  <FieldSet className="border rounded-md p-3 gap-3 lg:col-span-2">
-                    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Additional Options</FieldLegend>
+                  {/* Lead */}
+                  {designation !== "Sales" && (
+                    <Controller
+                      name="lead"
+                      control={control}
+                      render={({ field }) => (
+                        <Field>
+                          <FieldLabel>Lead Generated By</FieldLabel>
+                          <UserSearch lead value={field.value} onReturn={field.onChange} />
+                        </Field>
+                      )}
+                    />
+                  )}
 
-                    <div className="flex gap-6 flex-wrap items-end">
+                  {/* Remarks */}
+                  <Controller
+                    name="remarks"
+                    control={control}
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel>Remarks</FieldLabel>
+                        <Input placeholder="Enter remarks" {...field} />
+                      </Field>
+                    )}
+                  />
+                </FieldSet>
+
+                {/* Additional Options */}
+                <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4 lg:col-span-2">
+                  <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+                    <CalendarDays className="h-4 w-4 text-slate-700" />
+                    Additional Options
+                  </FieldLegend>
+
+                  <div className="flex gap-6 flex-wrap items-end">
+                    <Controller
+                      name="rating"
+                      control={control}
+                      render={({ field }) => (
+                        <Field>
+                          <FieldLabel>Rating</FieldLabel>
+                          <StarRating value={field.value} onChange={field.onChange} />
+                        </Field>
+                      )}
+                    />
+
+                    {(isAdmin || designation === "Customer Relationship Manager") && (
                       <Controller
-                        name="rating"
+                        name="created_at"
                         control={control}
                         render={({ field }) => (
                           <Field>
-                            <FieldLabel>Rating</FieldLabel>
-                            <StarRating value={field.value} onChange={field.onChange} />
+                            <FieldLabel>Date</FieldLabel>
+                            <AppCalendar date={field.value} onChange={field.onChange} />
                           </Field>
                         )}
                       />
+                    )}
 
-                      {(isAdmin || designation === "Customer Relationship Manager") && (
-                        <Controller
-                          name="created_at"
-                          control={control}
-                          render={({ field }) => (
-                            <Field>
-                              <FieldLabel>Date</FieldLabel>
-                              <AppCalendar date={field.value} onChange={field.onChange} />
-                            </Field>
-                          )}
-                        />
-                      )}
-
-                      {designation !== "Sales" && (
-                        <Controller
-                      name="member"
-                      control={control}
-                      render={({ field }) => (
-                        <Field className="flex flex-row items-center gap-2 pt-1">
-                          <div className="flex gap-2">
-                            <FieldLabel htmlFor="member" className="cursor-pointer text-sm">
-                              Member?
-                            </FieldLabel>
-                            <div>
+                    {designation !== "Sales" && (
+                      <Controller
+                        name="member"
+                        control={control}
+                        render={({ field }) => (
+                          <Field className="rounded-xl border bg-muted/15 p-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <FieldLabel htmlFor="member" className="cursor-pointer text-sm font-medium">
+                                Member?
+                              </FieldLabel>
                               <Checkbox
                                 id="member"
                                 checked={field.value}
                                 onCheckedChange={field.onChange}
                               />
                             </div>
-                          </div>
-                        </Field>
-                      )}
-                    />
-                      )}
-                    </div>
-                  </FieldSet>
-                </div>
+                          </Field>
+                        )}
+                      />
+                    )}
+                  </div>
+                </FieldSet>
+              </div>
 
-                {/* Submit */}
-                <Button
-                  disabled={
-                    customerInfo.length > 0 ||
-                    checking ||
-                    numbers.filter((item) => item).length === 0
-                  }
-                  className="w-full"
-                  type="submit"
-                >
-                  {loading && <Spinner />} Submit
-                </Button>
-              </form>
+
+            </form>
+
+            <div className="w-full mt-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                  Duplicate number checks and required fields are validated before save.
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleClose(false)}
+                    disabled={loading}
+                    className="w-full sm:w-auto"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    disabled={
+                      loading ||
+                      customerInfo.length > 0 ||
+                      checking ||
+                      numbers.filter(Boolean).length === 0
+                    }
+                    className="w-full sm:w-auto"
+                    type="submit"
+                  >
+                    {loading && <Spinner className="mr-2 size-4" />}
+                    Save Changes
+                  </Button>
+                </div>
+              </div>
               {canDelete && (
                 <Button
+                  type="button"
                   onClick={(e) => {
                     e.preventDefault();
                     onClickDelete();
@@ -718,12 +780,15 @@ const EditCustomerDialog = ({
                   variant="destructive"
                   className="mt-2 w-full"
                 >
-                  Delete
+                  Delete Customer
                 </Button>
               )}
             </div>
-          </ScrollArea>
-        </div>
+
+          </div>
+        </ScrollArea>
+
+
       </DialogContent>
     </Dialog>
   );

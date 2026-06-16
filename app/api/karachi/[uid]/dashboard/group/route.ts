@@ -262,7 +262,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
                 }
 
                 // Top Follow based on latest only
-                if (latest.top_followup === true) {
+                if (latest.top_follow === true) {
                     topFollow.push({ ...customer, number: customer.number.join(", ") });
                 }
             });

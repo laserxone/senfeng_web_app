@@ -1,9 +1,7 @@
 
 
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-
-import { Label } from "@/components/ui/label";
+import { useState, type ElementType } from "react";
 
 import {
     Sheet,
@@ -19,6 +17,8 @@ import { TaskProps } from "@/lib/types";
 import moment from "moment";
 import { toast } from "sonner";
 import Spinner from "../ui/spinner";
+import { ScrollArea } from "../ui/scroll-area";
+import { CalendarClock, CheckCircle2, ClipboardList, Lightbulb, MessageSquareText, Sparkles } from "lucide-react";
 
 
 const TaskDetail = ({
@@ -34,8 +34,8 @@ const TaskDetail = ({
   onMark : ()=> Promise<void>
   user_id : number | string
 }) => {
-  if(!detail?.id) return null
   const [loading, setLoading] = useState(false);
+  if(!detail?.id) return null
   
 
   async function handleUpdateStatus(values : {id : number, status :string}) {
@@ -58,64 +58,92 @@ const TaskDetail = ({
 
   return (
     <Sheet open={visible} onOpenChange={onClose}>
-      <SheetContent
-      >
-        <SheetHeader>
-          <SheetTitle>Task Detail</SheetTitle>
-          <SheetDescription>Check task details</SheetDescription>
-        </SheetHeader>
-       
-          <div className="px-4 grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="flex flex-col gap-4">
-              <h3 className="text-sm font-medium text-gray-600">Status</h3>
-              <h3 className="text-sm font-medium text-gray-600">
-                Assigned Date
-              </h3>
-              {/* <h3 className="text-sm font-medium text-gray-600">Assigned To</h3>
-              <h3 className="text-sm font-medium text-gray-600">
-                Assignee Email
-              </h3> */}
-              <h3 className="text-sm font-medium text-gray-600">
-                Assigned Task
-              </h3>
+      <SheetContent className="w-full overflow-hidden p-0 sm:max-w-xl">
+        <SheetHeader className="border-b bg-muted/20 px-5 py-5 text-left">
+          <div className="flex items-start gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+              <ClipboardList className="h-5 w-5" />
             </div>
-
-            <div className="flex flex-col gap-4">
-              <Label htmlFor="status" className="text-sm text-gray-800">
-                {detail?.status}
-              </Label>
-              <Label htmlFor="assign_date" className="text-sm text-gray-800">
-                {detail?.created_at
-                  ? moment(detail?.created_at).format("YYYY-MM-DD")
-                  : ""}
-              </Label>
-              {/* <Label htmlFor="assigned_to" className="text-sm text-gray-800">
-                {detail?.assigned_to_name}
-              </Label>
-              <Label htmlFor="assignee_email" className="text-sm text-gray-800">
-                {detail?.assigned_to_email}
-              </Label> */}
-              <Label htmlFor="assigned_task" className="text-sm text-gray-800">
-                {detail?.task_name}
-              </Label>
-
-              {detail?.problem && (
-                <>
-                  <Label htmlFor="problem" className="text-sm text-gray-800">
-                    {detail?.problem}
-                  </Label>
-                  <Label htmlFor="solution" className="text-sm text-gray-800">
-                    {detail?.solution}
-                  </Label>
-                </>
-              )}
+            <div className="min-w-0">
+              <SheetTitle className="text-xl font-bold tracking-tight">Task Detail</SheetTitle>
+              <SheetDescription className="mt-1">
+                Review task scope, timeline, and completion status.
+              </SheetDescription>
             </div>
           </div>
-       
+        </SheetHeader>
 
-        <SheetFooter className={"mt-4"}>
-          {detail?.status !== "Completed" && (
+        <ScrollArea className="h-[calc(100dvh-200px)]">
+          <div className="space-y-4 p-5">
+            <section className="overflow-hidden rounded-2xl border bg-background shadow-sm">
+              <div className="border-b bg-muted/15 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="mb-2 inline-flex items-center gap-2 rounded-full border bg-muted/30 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                      <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                      Assigned task
+                    </div>
+                    <h3 className="break-words text-lg font-bold leading-snug">
+                      {detail?.task_name || "Untitled task"}
+                    </h3>
+                  </div>
+
+                  <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${detail?.status === "Completed"
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-amber-50 text-amber-700"
+                    }`}>
+                    {detail?.status || "Pending"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid gap-3 p-4 sm:grid-cols-2">
+                <DetailTile
+                  icon={CheckCircle2}
+                  label="Status"
+                  value={detail?.status || "N/A"}
+                  iconClassName="bg-emerald-50 text-emerald-700 ring-emerald-100"
+                />
+                <DetailTile
+                  icon={CalendarClock}
+                  label="Assigned Date"
+                  value={detail?.created_at ? moment(detail?.created_at).format("YYYY-MM-DD") : "N/A"}
+                  iconClassName="bg-blue-50 text-blue-700 ring-blue-100"
+                />
+              </div>
+            </section>
+
+            {detail?.problem && (
+              <section className="grid gap-4">
+                <InfoCard
+                  icon={MessageSquareText}
+                  title="Problem"
+                  value={detail?.problem}
+                  iconClassName="bg-rose-50 text-rose-700 ring-rose-100"
+                />
+                {detail?.solution && (
+                  <InfoCard
+                    icon={Lightbulb}
+                    title="Solution"
+                    value={detail?.solution}
+                    iconClassName="bg-amber-50 text-amber-700 ring-amber-100"
+                  />
+                )}
+              </section>
+            )}
+
+            {!detail?.problem && (
+              <div className="rounded-2xl border border-dashed bg-muted/15 p-8 text-center text-sm text-muted-foreground">
+                No problem or solution details were added for this task.
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+
+        <SheetFooter className="border-t bg-background/95 p-4 backdrop-blur">
+          {detail?.status !== "Completed" ? (
             <Button
+              className="w-full sm:w-auto"
               onClick={() => {
                 handleUpdateStatus({
                   ...detail,
@@ -124,13 +152,70 @@ const TaskDetail = ({
               }}
             >
               {loading && <Spinner />}
-              {"Mark as Completed"}
+              Mark as Completed
             </Button>
+          ) : (
+            <div className="flex w-full items-center justify-center gap-2 rounded-xl border bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 sm:w-auto">
+              <CheckCircle2 className="h-4 w-4" />
+              Completed
+            </div>
           )}
         </SheetFooter>
       </SheetContent>
     </Sheet>
   );
 };
+
+function DetailTile({
+  icon: Icon,
+  label,
+  value,
+  iconClassName,
+}: {
+  icon: ElementType;
+  label: string;
+  value: string;
+  iconClassName: string;
+}) {
+  return (
+    <div className="rounded-xl border bg-muted/15 p-3">
+      <div className="flex items-start gap-3">
+        <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1 ${iconClassName}`}>
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+          <p className="mt-1 break-words text-sm font-semibold">{value}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoCard({
+  icon: Icon,
+  title,
+  value,
+  iconClassName,
+}: {
+  icon: ElementType;
+  title: string;
+  value: string;
+  iconClassName: string;
+}) {
+  return (
+    <section className="rounded-2xl border bg-background p-4 shadow-sm">
+      <div className="mb-3 flex items-center gap-3">
+        <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1 ${iconClassName}`}>
+          <Icon className="h-4 w-4" />
+        </div>
+        <h3 className="font-semibold">{title}</h3>
+      </div>
+      <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
+        {value}
+      </p>
+    </section>
+  );
+}
 
 export default TaskDetail

@@ -72,13 +72,13 @@ export default function NewsPage() {
 
 
   return (
-    <div className="flex flex-1 flex-col space-y-6 p-4">
+    <div className="flex flex-1 flex-col space-y-6">
       <Heading title="News" description="Manage all news updates" />
 
       {/* Form */}
       <div className="bg-white dark:bg-zinc-900 p-4 rounded-lg border space-y-4">
         <div>
-          <Label htmlFor="news">News Text</Label>
+          <Label htmlFor="news" className="pb-2">News Text</Label>
           <Textarea
             id="news"
             value={newsText}
@@ -88,12 +88,12 @@ export default function NewsPage() {
         </div>
 
         <div className="flex gap-4">
-          <div className="flex-1">
+          <div className="flex-1 space-y-2">
             <Label htmlFor="start_date">Start Date</Label>
             <AppCalendar date={startDate} onChange={setStartDate} max={""}/>
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 space-y-2">
             <Label htmlFor="end_date">End Date</Label>
             <AppCalendar date={endDate} onChange={setEndDate} max={""}/>
           </div>
@@ -108,7 +108,7 @@ export default function NewsPage() {
       </div>
 
       {/* News List */}
-      <ScrollArea className="h-[calc(100dvh-450px)] pr-4">
+     
         <div className="space-y-4">
           {newsList.length > 0 ? (
             newsList.map((item) => <RenderEachRow key={item.id} item={item} handleDelete={handleDelete} />)
@@ -116,7 +116,7 @@ export default function NewsPage() {
             <div className="text-gray-500 text-center">No news available</div>
           )}
         </div>
-      </ScrollArea>
+   
     </div>
   );
 }

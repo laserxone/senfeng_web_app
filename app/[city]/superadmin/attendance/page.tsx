@@ -1,8 +1,7 @@
 "use client";
-import { Filter } from "lucide-react";
+import { Clock3, Filter, ImageIcon, LogIn, LogOut, MapPin } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { useCallback, useEffect, useState } from "react";
 
 import PageTable from "@/components/app-table-without-pagination";
@@ -172,6 +171,7 @@ export default function Page() {
       <PageTable
         columns={columns}
         data={data}
+        tableWidth="w-[calc(100dvw-30px)]"
         onRowClick={(val, event) => {
           if (val?.time_in) {
             setSelectedAttendance(val);
@@ -251,55 +251,149 @@ export default function Page() {
 }
 
 export const AttendanceDetail = ({ detail, visible, onClose }: { detail: UserAttendanceRecord | null, visible: boolean, onClose: (val: boolean) => void }) => {
+  const entries = [
+    {
+      key: "time-in",
+      title: "Time In",
+      time: detail?.time_in,
+      image: detail?.image_time_in,
+      position: detail?.location_time_in,
+      note: detail?.note_time_in,
+      icon: LogIn,
+      accentClassName: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+    },
+    {
+      key: "time-out",
+      title: "Time Out",
+      time: detail?.time_out,
+      image: detail?.image_time_out,
+      position: detail?.location_time_out,
+      note: detail?.note_time_out,
+      icon: LogOut,
+      accentClassName: "bg-blue-50 text-blue-700 ring-blue-100",
+    },
+  ].filter((item) => item.time);
+
   return (
     <Dialog open={visible} onOpenChange={onClose}>
       <DialogContent
         className={`${detail?.time_out
-          ? " sm:max-w-4xl lg:max-w-5xl"
-          : "sm:max-w-2xl lg:max-w-xl"
-          } `}
+          ? "sm:max-w-5xl"
+          : "sm:max-w-2xl"
+          } max-h-[92dvh] overflow-hidden p-0`}
       >
-        <DialogHeader>
-          <DialogTitle>Attendance detail</DialogTitle>
+        <DialogHeader className="border-b bg-muted/20 px-4 py-4 sm:px-6">
+          <div className="flex items-start gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+              <Clock3 className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="text-lg font-bold tracking-tight">
+                Attendance Detail
+              </DialogTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {detail?.user_name || detail?.user_email || "Employee"} attendance activity and location proof.
+              </p>
+            </div>
+          </div>
         </DialogHeader>
-        <div>
-          <ScrollArea className="h-[80vh] px-2">
-            <div className="px-2 flex flex-col gap-4 sm:flex-row">
-              {detail?.time_in && (
-                <div className="flex-1 flex flex-col gap-4">
-                  <Label>Time In</Label>
-                  {detail?.image_time_in ? (
-                    <RenderImage img={detail?.image_time_in} />
-                  ) : (
-                    <div>N/A</div>
-                  )}
 
-                  <MapProvider>
-                    <LocationMap position={detail.location_time_in} />
-                  </MapProvider>
-                </div>
-              )}
+        <ScrollArea className="h-[calc(92dvh-92px)]">
+          <div className="space-y-4 p-4 sm:p-6">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <InfoTile label="Date" value={detail?.date ? moment(detail.date).format("YYYY-MM-DD") : "N/A"} />
+              <InfoTile label="Status" value={detail?.status || "N/A"} />
+              <InfoTile label="Email" value={detail?.user_email || "N/A"} />
+            </div>
 
-              {detail?.time_out && (
-                <div className="flex-1 flex flex-col gap-4 sm:ml-4">
-                  <Label>Time Out</Label>
-                  {detail?.image_time_out ? (
-                    <RenderImage img={detail?.image_time_out} />
-                  ) : (
-                    <div>N/A</div>
-                  )}
-                  <MapProvider>
-                    <LocationMap position={detail.location_time_out} />
-                  </MapProvider>
+            <div className={`grid gap-4 ${entries.length > 1 ? "lg:grid-cols-2" : "lg:grid-cols-1"}`}>
+              {entries.map((entry) => {
+                const Icon = entry.icon;
+
+                return (
+                  <section key={entry.key} className="overflow-hidden rounded-2xl border bg-background shadow-sm">
+                    <div className="border-b bg-muted/15 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ring-1 ${entry.accentClassName}`}>
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">{entry.title}</h3>
+                            <p className="mt-0.5 text-sm text-muted-foreground">
+                              {entry.time ? moment(entry.time).format("YYYY-MM-DD hh:mm A") : "No time recorded"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <span className="rounded-full border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                          {entry.position ? "GPS available" : "No GPS"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 p-4">
+                      {entry.note && (
+                        <div className="rounded-xl border bg-muted/15 p-3 text-sm text-muted-foreground">
+                          {entry.note}
+                        </div>
+                      )}
+
+                      <div>
+                        <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                          <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                          Photo Proof
+                        </div>
+                        {entry.image ? (
+                          <RenderImage img={entry.image} />
+                        ) : (
+                          <EmptyProof label="No image available" />
+                        )}
+                      </div>
+
+                      <div>
+                        <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          Location
+                        </div>
+                        {entry.position ? (
+                          <MapProvider>
+                            <LocationMap position={entry.position} />
+                          </MapProvider>
+                        ) : (
+                          <EmptyProof label="No location available" />
+                        )}
+                      </div>
+                    </div>
+                  </section>
+                );
+              })}
+
+              {entries.length === 0 && (
+                <div className="rounded-2xl border border-dashed bg-muted/15 p-10 text-center text-sm text-muted-foreground">
+                  No attendance detail available.
                 </div>
               )}
             </div>
-          </ScrollArea>
-        </div>
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
 };
+
+const InfoTile = ({ label, value }: { label: string; value: string }) => (
+  <div className="rounded-xl border bg-muted/15 px-3 py-2">
+    <p className="text-[11px] font-medium uppercase text-muted-foreground">{label}</p>
+    <p className="mt-1 truncate text-sm font-semibold">{value}</p>
+  </div>
+);
+
+const EmptyProof = ({ label }: { label: string }) => (
+  <div className="flex min-h-[180px] items-center justify-center rounded-xl border border-dashed bg-muted/15 text-sm text-muted-foreground">
+    {label}
+  </div>
+);
 
 const RenderImage = ({ img }: { img: string | null }) => {
   const [localImage, setLocalImage] = useState<string | null>(null);
@@ -323,7 +417,7 @@ const RenderImage = ({ img }: { img: string | null }) => {
     <img
       src={localImage}
       alt="timein-img"
-      className="w-full object-cover rounded-lg"
+      className="max-h-[360px] w-full rounded-xl border object-cover shadow-sm"
     />
   );
 };
@@ -335,8 +429,8 @@ const LocationMap = ({ position }: { position: number[] | null }) => {
 
   const defaultMapContainerStyle = {
     width: "100%",
-    height: "80vh",
-    borderRadius: "15px 0px 0px 15px",
+    height: "clamp(220px, 42vh, 360px)",
+    borderRadius: "12px",
   };
 
   const defaultMapCenter: google.maps.LatLngLiteral = {
@@ -390,7 +484,7 @@ const LocationMap = ({ position }: { position: number[] | null }) => {
   );
 
   return (
-    <div className="w-full">
+    <div className="w-full overflow-hidden rounded-xl border shadow-sm">
       <RenderMap position={position} />
     </div>
   );

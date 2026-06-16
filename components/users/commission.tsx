@@ -74,6 +74,7 @@ const OwnerView = () => {
   const [selectedRow, setSelectedRow] = useState<CommissionOwnerProps | null>(null)
   const [search, setSearch] = useState("");
   const { state } = useSidebar()
+  const isMobile = useIsMobile()
   useEffect(() => {
     if (userID) {
       fetchData();
@@ -180,13 +181,13 @@ const OwnerView = () => {
 
     return (
       <TableRow className={`${getRowBg(item, index)} hover:${getRowBg(item, index)}`}>
-        <TableCell className="max-w-50 whitespace-normal break-words">
+        <TableCell className="min-w-[120px] whitespace-nowrap">
           {item.request_date
             ? moment(item.request_date).format("YYYY-MM-DD")
             : ""}
         </TableCell>
-        <TableCell className="max-w-50 whitespace-normal break-words">{item.user_name}</TableCell>
-        <TableCell className="max-w-50 whitespace-normal break-words">
+        <TableCell className="min-w-[150px] max-w-[220px] whitespace-normal break-words">{item.user_name}</TableCell>
+        <TableCell className="min-w-[180px] max-w-[260px] whitespace-normal break-words">
           <Link
             target="blank"
             href={`/${base_route}/member/${item.customer_id}/${item.sale_id}`}
@@ -195,7 +196,7 @@ const OwnerView = () => {
             {item.customer_name}
           </Link>
         </TableCell>
-        <TableCell className="max-w-50 whitespace-normal break-words">
+        <TableCell className="min-w-[170px] max-w-[240px] whitespace-normal break-words">
           <Link
             target="blank"
             href={`/${base_route}/member/${item.customer_id}/${item.sale_id}`}
@@ -204,11 +205,11 @@ const OwnerView = () => {
             {item.customer_owner}
           </Link>
         </TableCell>
-        <TableCell className="max-w-50 whitespace-normal break-words">{item.customer_group}</TableCell>
-        <TableCell className="max-w-50 whitespace-normal break-words">{item.machine_name}</TableCell>
-        <TableCell className="max-w-50 whitespace-normal break-words">{item.order_no_arr?.join(", ")}</TableCell>
-        <TableCell className="max-w-50 whitespace-normal break-words">{item.total_amount}</TableCell>
-        <TableCell>
+        <TableCell className="min-w-[150px] max-w-[220px] whitespace-normal break-words">{item.customer_group}</TableCell>
+        <TableCell className="min-w-[190px] max-w-[300px] whitespace-normal break-words">{item.machine_name}</TableCell>
+        <TableCell className="min-w-[180px] max-w-[280px] whitespace-normal break-words">{item.order_no_arr?.join(", ")}</TableCell>
+        <TableCell className="min-w-[110px] whitespace-nowrap">{item.total_amount}</TableCell>
+        <TableCell className="min-w-[100px]">
           <Button
             onClick={() => {
               onReturn(item);
@@ -218,8 +219,8 @@ const OwnerView = () => {
             Open
           </Button>
         </TableCell>
-        <TableCell>
-          <div className="min-h-[40px] flex items-center gap-2">
+        <TableCell className="min-w-[300px]">
+          <div className="flex min-h-[40px] min-w-[280px] items-center gap-2">
             {item.is_approved ? (
               item.commission_amount
             ) : (
@@ -264,9 +265,9 @@ const OwnerView = () => {
             )}
           </div>
         </TableCell>
-        <TableCell className="max-w-50 whitespace-normal break-words">{item.note}</TableCell>
+        <TableCell className="min-w-[220px] max-w-[340px] whitespace-normal break-words">{item.note}</TableCell>
 
-        <TableCell className="sticky right-0 z-20 bg-inherit min-w-[120px] border-l">
+        <TableCell className={`min-w-[220px] bg-inherit ${!isMobile && "sticky right-0 z-30"}`}>
           {loading ? (
             <Spinner />
           ) : item.commission_issued === true ? (
@@ -348,8 +349,8 @@ const OwnerView = () => {
   }
 
   return (
-    <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="flex min-w-0 flex-1 flex-col space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Heading title="Commission" description="Approve employee commission" />
       </div>
 
@@ -358,8 +359,8 @@ const OwnerView = () => {
           <Spinner />
         </div>
       ) : (
-        <div className="space-y-4">
-          <div className="max-w-3xl">
+        <div className="min-w-0 space-y-4">
+          <div className="w-full max-w-3xl">
             <Input
               placeholder="Search customer, company, user"
               value={search}
@@ -372,43 +373,46 @@ const OwnerView = () => {
           ) : (
 
             Object.entries(groupedData).map(([month, items]) => (
-              <Collapsible key={month}>
+              <Collapsible key={month} className="min-w-0 rounded-xl border bg-background">
                 <CollapsibleTrigger asChild>
                   <Button
                     variant="ghost"
 
-                    className="group w-full justify-start transition-none hover:bg-card hover:text-accent-foreground "
+                    className="group h-auto w-full justify-start gap-2 rounded-xl px-3 py-3 text-left transition-none hover:bg-card hover:text-accent-foreground sm:px-4"
                   >
                     <ChevronRight className="transition-transform group-data-[state=open]:rotate-90" />
-                    <span>{moment(month, "YYYY-MM").format("MMMM YYYY")}</span>
+                    <span className="font-semibold">{moment(month, "YYYY-MM").format("MMMM YYYY")}</span>
+                    <span className="ml-auto rounded-full border bg-muted/30 px-2 py-0.5 text-xs text-muted-foreground">
+                      {items.length} rows
+                    </span>
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <div className="flex-1 min-w-0 relative custom-scrollbar">
+                  <div className="relative min-w-0 flex-1 p-2 pt-0 sm:p-3 sm:pt-0">
                     {/* <ScrollArea
                         className={`w-full  ${state === 'expanded' ? "max-w-[calc(100dvw-310px)]" : "max-w-[calc(100dvw-100px)]"}  overflow-x-auto`}
                       > */}
                     <div
-                      className={`overflow-x-auto ${state === "expanded"
-                        ? "max-w-[calc(100dvw-310px)]"
-                        : "max-w-[calc(100dvw-100px)]"
-                        }`}
+                      className={`custom-scrollbar rounded-lg border ${!isMobile && state === "expanded"
+                        ? "xl:max-w-[calc(100dvw-330px)]"
+                        : "xl:max-w-[calc(100dvw-130px)]"
+                        } ${isMobile && "w-[calc(100dvw-50px)]"}`}
                     >
-                      <Table className="min-w-max w-max">
+                      <Table className="w-[2100px] min-w-[2100px]">
                         <TableHeader>
                           <TableRow>
-                            <TableHead >Request Date</TableHead>
-                            <TableHead >Employee</TableHead>
-                            <TableHead >Customer</TableHead>
-                            <TableHead >Owner</TableHead>
-                            <TableHead >Group</TableHead>
-                            <TableHead >Machine</TableHead>
-                            <TableHead >Order No</TableHead>
-                            <TableHead >Price</TableHead>
-                            <TableHead >Images</TableHead>
-                            <TableHead >Commission</TableHead>
-                            <TableHead >Note</TableHead>
-                            <TableHead className="sticky right-0 z-30 bg-background min-w-[120px] border-l">
+                            <TableHead className="min-w-[120px]">Request Date</TableHead>
+                            <TableHead className="min-w-[150px]">Employee</TableHead>
+                            <TableHead className="min-w-[180px]">Customer</TableHead>
+                            <TableHead className="min-w-[170px]">Owner</TableHead>
+                            <TableHead className="min-w-[150px]">Group</TableHead>
+                            <TableHead className="min-w-[190px]">Machine</TableHead>
+                            <TableHead className="min-w-[180px]">Order No</TableHead>
+                            <TableHead className="min-w-[110px]">Price</TableHead>
+                            <TableHead className="min-w-[100px]">Images</TableHead>
+                            <TableHead className="min-w-[300px]">Commission</TableHead>
+                            <TableHead className="min-w-[220px]">Note</TableHead>
+                            <TableHead className={`min-w-[220px] ${!isMobile && "sticky right-0 z-30  border-l"} bg-background shadow-[-8px_0_12px_-12px_rgba(0,0,0,0.35)]`}>
                               Status
                             </TableHead>
                           </TableRow>

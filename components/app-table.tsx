@@ -63,6 +63,7 @@ type PageTableProps<T extends Record<string, any>> = {
   loading?: boolean;
   defaultPageSize ?: number
   download?: boolean;
+  tableWidth ?: string
 };
 
 const PageTable = <T extends Record<string, any>>({
@@ -76,6 +77,7 @@ const PageTable = <T extends Record<string, any>>({
   loading = false,
   defaultPageSize = 20,
   download = false,
+  tableWidth = ""
 }: PageTableProps<T>) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -223,7 +225,7 @@ const PageTable = <T extends Record<string, any>>({
       </div>
 
       <div
-        className={`relative flex flex-1 min-h-[calc(100dvh-280px)] ${isMobile && "w-[calc(100vw-44px)]"}`}
+        className={`relative flex flex-1 min-h-[calc(100dvh-280px)]`}
       >
         <div className="absolute bottom-0 left-0 right-0 top-0 flex rounded-md border md:overflow-auto custom-scrollbar overflow-auto">
           {/* <ScrollArea className="flex-1"> */}
