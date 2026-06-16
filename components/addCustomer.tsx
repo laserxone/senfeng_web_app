@@ -30,7 +30,7 @@ import { RequiredStar } from "./RequiredStar";
 import StarRating from "./startRating";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "./ui/field";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -300,8 +300,8 @@ function AddCustomerDialog({
             </div>
           </div>
         </DialogHeader>
-            <ScrollArea className="h-[70dvh] sm:h-[80dvh]">
-          <div className="p-4 sm:p-6">
+        <ScrollArea className="h-[70dvh] sm:h-[80dvh]">
+          <div className="px-4 sm:px-6">
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
@@ -689,44 +689,46 @@ function AddCustomerDialog({
                 </FieldSet>
 
               </div>
+
+              <div className="w-full mt-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                    Duplicate number checks and required fields are validated before save.
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleClose(false)}
+                      disabled={loading}
+                      className="w-full sm:w-auto"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      disabled={
+                        loading ||
+                        customerInfo.length > 0 ||
+                        checking ||
+                        numbers.filter(Boolean).length === 0
+                      }
+                      className="w-full sm:w-auto"
+                      type="submit"
+                    >
+                      {loading && <Spinner className="mr-2 size-4" />}
+                      Register Customer
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </form>
 
-             <div className="w-full mt-2">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-                Duplicate number checks and required fields are validated before save.
-              </div>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleClose(false)}
-                  disabled={loading}
-                  className="w-full sm:w-auto"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  disabled={
-                    loading ||
-                    customerInfo.length > 0 ||
-                    checking ||
-                    numbers.filter(Boolean).length === 0
-                  }
-                  className="w-full sm:w-auto"
-                  type="submit"
-                >
-                  {loading && <Spinner className="mr-2 size-4" />}
-                  Register Customer
-                </Button>
-              </div>
-            </div>
-          </div>
+
           </div>
         </ScrollArea>
 
-     
+
       </DialogContent>
     </Dialog>
   );

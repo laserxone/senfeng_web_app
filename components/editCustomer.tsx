@@ -736,54 +736,54 @@ const EditCustomerDialog = ({
                 </FieldSet>
               </div>
 
-
-            </form>
-
-            <div className="w-full mt-2">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-                  Duplicate number checks and required fields are validated before save.
+              <div className="w-full mt-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                    Duplicate number checks and required fields are validated before save.
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleClose(false)}
+                      disabled={loading}
+                      className="w-full sm:w-auto"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      disabled={
+                        loading ||
+                        customerInfo.length > 0 ||
+                        checking ||
+                        numbers.filter(Boolean).length === 0
+                      }
+                      className="w-full sm:w-auto"
+                      type="submit"
+                    >
+                      {loading && <Spinner className="mr-2 size-4" />}
+                      Save Changes
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2 sm:flex-row">
+                {canDelete && (
                   <Button
                     type="button"
-                    variant="outline"
-                    onClick={() => handleClose(false)}
-                    disabled={loading}
-                    className="w-full sm:w-auto"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onClickDelete();
+                    }}
+                    variant="destructive"
+                    className="mt-2 w-full"
                   >
-                    Cancel
+                    Delete Customer
                   </Button>
-                  <Button
-                    disabled={
-                      loading ||
-                      customerInfo.length > 0 ||
-                      checking ||
-                      numbers.filter(Boolean).length === 0
-                    }
-                    className="w-full sm:w-auto"
-                    type="submit"
-                  >
-                    {loading && <Spinner className="mr-2 size-4" />}
-                    Save Changes
-                  </Button>
-                </div>
+                )}
               </div>
-              {canDelete && (
-                <Button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onClickDelete();
-                  }}
-                  variant="destructive"
-                  className="mt-2 w-full"
-                >
-                  Delete Customer
-                </Button>
-              )}
-            </div>
+            </form>
+
+
 
           </div>
         </ScrollArea>
