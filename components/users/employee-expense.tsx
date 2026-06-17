@@ -855,7 +855,7 @@ const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { visible: 
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel>Date</FieldLabel>
                         <AppCalendar
-                          min={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
+                          // min={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
                           date={field.value ? new Date(field.value) : undefined}
                           onChange={field.onChange}
                         />
