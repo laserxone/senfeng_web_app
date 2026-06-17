@@ -4,10 +4,9 @@ import axios from "@/lib/axios";
 import { UserReturnableType } from "@/lib/types";
 
 
-export default function useIssuedItem() {
+export default function useIssuedItem(userID : number | string) {
     const [issuedItems, setIssuedItems] = useState<UserReturnableType[]>([])
-    const { userID } = useUserDetail()
-
+  
     useEffect(() => {
 
         function fetchData() {

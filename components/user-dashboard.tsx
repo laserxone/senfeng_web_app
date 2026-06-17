@@ -1,6 +1,6 @@
 "use client";
 import {
-  Accordion, 
+  Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
@@ -15,7 +15,6 @@ import CustomerEmployee from "@/components/users/customer";
 import Reimbursement from "@/components/users/Reimbursement";
 
 import AppCalendar from "@/components/appCalendar";
-import AutoScrollMembers from "@/components/autoScroll";
 import { RequiredStar } from "@/components/RequiredStar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -45,11 +44,11 @@ import { useCallback, useEffect, useState, type ElementType } from "react";
 import "./styles.css";
 
 
-export default function UserDashboard({ id: userID, owner = false }: { id: string | null, owner: boolean }) {
+export default function UserDashboard({ id: userID, }: { id: string | null }) {
 
   if (!userID) return null
-const { userID : ownerId, base_route } = useUserDetail();
- const [data, setData] = useState<SalesDashboard>();
+  const { userID: ownerId, base_route } = useUserDetail();
+  const [data, setData] = useState<SalesDashboard>();
   const [visitData, setVisitData] = useState<SalesVisitTypes[]>([]);
   const [extraData, setExtraData] = useState<UserExtraTypes>();
   const [selectedOption, setSelectedOption] = useState("thisMonth");
@@ -68,17 +67,17 @@ const { userID : ownerId, base_route } = useUserDetail();
   const { open } = useSidebar()
   useEffect(() => {
     if (ownerId && userID) {
-       const startDate = moment().startOf("month").toISOString();
-            const endDate = moment().endOf("month").toISOString();
-            fetchData();
-            fetchVisitData(startDate, endDate);
-            fetchExtraCustomerOptions();
-            fetchReimbursementData(startDate, endDate);
-            fetchAttendanceData(startDate, endDate);
-            fetchCallData(startDate, endDate);
-            const start = moment().startOf("day").toISOString();
-            const end = moment().endOf("day").toISOString();
-            fetchTasks(start, end)
+      const startDate = moment().startOf("month").toISOString();
+      const endDate = moment().endOf("month").toISOString();
+      fetchData();
+      fetchVisitData(startDate, endDate);
+      fetchExtraCustomerOptions();
+      fetchReimbursementData(startDate, endDate);
+      fetchAttendanceData(startDate, endDate);
+      fetchCallData(startDate, endDate);
+      const start = moment().startOf("day").toISOString();
+      const end = moment().endOf("day").toISOString();
+      fetchTasks(start, end)
     }
   }, [userID]);
 
@@ -86,7 +85,7 @@ const { userID : ownerId, base_route } = useUserDetail();
     const paramTab = searchParams.get("p");
     if (paramTab) {
       setActiveTab(paramTab);
-    } 
+    }
 
   }, [searchParams]);
 
@@ -315,7 +314,7 @@ const { userID : ownerId, base_route } = useUserDetail();
     return (
 
       <Attendance
-       
+
         passingData={attendanceData}
         onFilterReturn={async (start, end) => {
           await fetchAttendanceData(start, end)
@@ -422,20 +421,20 @@ const { userID : ownerId, base_route } = useUserDetail();
   ]
 
   const tabsMaxWidth =
-  isMobile 
-  ?"max-w-[calc(100dvw-35px)]"
-  : showingAutoScroll
-    ? open
-      ? "max-w-[calc(100dvw-550px)]"
-      : "max-w-[calc(100dvw-340px)]"
-    :
-    open ? "max-w-[calc(100dvw-290px)]"
-      : "max-w-[calc(100dvw-80px)]"
+    isMobile
+      ? "max-w-[calc(100dvw-35px)]"
+      : showingAutoScroll
+        ? open
+          ? "max-w-[calc(100dvw-550px)]"
+          : "max-w-[calc(100dvw-340px)]"
+        :
+        open ? "max-w-[calc(100dvw-290px)]"
+          : "max-w-[calc(100dvw-80px)]"
   return (
     <div className="flex flex-1 gap-4 bg-background  py-2">
       <div className="flex flex-1 flex-col gap-4">
-      
-       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
           <SalesMetricCard
             title="Pending Payments"
             value={data?.new_entries?.pending_payments?.total || 0}
@@ -525,7 +524,7 @@ const { userID : ownerId, base_route } = useUserDetail();
           />
         </div>
 
-     
+
 
         <ScrollArea className={`${tabsMaxWidth}`}>
 
@@ -591,17 +590,17 @@ const { userID : ownerId, base_route } = useUserDetail();
 
         </div>
         <div hidden={activeTab !== "issued"} >
-          <RenderReturnable height="min-h-[calc(100dvh-420px)]" onUpdateTotal={(val) => setAllReturnables(val)} />
+          <RenderReturnable userID={userID} height="min-h-[calc(100dvh-420px)]" onUpdateTotal={(val) => setAllReturnables(val)} />
         </div>
         <div hidden={activeTab !== "fines"} >
-          <RenderFines height="min-h-[calc(100dvh-480px)]" onUpdateTotal={(val) => setAllFines(val)} />
+          <RenderFines userID={userID} height="min-h-[calc(100dvh-480px)]" onUpdateTotal={(val) => setAllFines(val)} />
         </div>
 
 
       </div>
 
-      <AutoScrollMembers onUpdate={setShowingAutoScroll} />
-    
+      {/* <AutoScrollMembers onUpdate={setShowingAutoScroll} /> */}
+
       <SalesMetricDetailsDialog
         metric={selectedMetric}
         onClose={() => setSelectedMetric(null)}

@@ -218,8 +218,8 @@ export default function Page() {
                 </CardContent>
               </Card>
             )}
-            {activeTab === 'fines' && <RenderFines height="min-h-[calc(100dvh-370px)]" />}
-            {activeTab === "issued" && <RenderReturnable  height="min-h-[calc(100dvh-310px)]"/>}
+            {activeTab === 'fines' && <RenderFines userID={userID} height="min-h-[calc(100dvh-370px)]" />}
+            {activeTab === "issued" && <RenderReturnable userID={userID}  height="min-h-[calc(100dvh-310px)]"/>}
             {activeTab === "repair" && <RenderRepair />}
           </div>
         </Tabs>

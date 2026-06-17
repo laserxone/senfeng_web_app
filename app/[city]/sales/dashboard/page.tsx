@@ -15,7 +15,6 @@ import CustomerEmployee from "@/components/users/customer";
 import Reimbursement from "@/components/users/Reimbursement";
 
 import AppCalendar from "@/components/appCalendar";
-import AutoScrollMembers from "@/components/autoScroll";
 import { RequiredStar } from "@/components/RequiredStar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -614,16 +613,16 @@ export default function Page() {
 
         </div>
         <div hidden={activeTab !== "issued"} >
-          <RenderReturnable height="min-h-[calc(100dvh-420px)]" onUpdateTotal={(val) => setAllReturnables(val)} />
+          <RenderReturnable userID={userID} height="min-h-[calc(100dvh-420px)]" onUpdateTotal={(val) => setAllReturnables(val)} />
         </div>
         <div hidden={activeTab !== "fines"} >
-          <RenderFines height="min-h-[calc(100dvh-480px)]" onUpdateTotal={(val) => setAllFines(val)} />
+          <RenderFines userID={userID} height="min-h-[calc(100dvh-480px)]" onUpdateTotal={(val) => setAllFines(val)} />
         </div>
 
 
       </div>
 
-      <AutoScrollMembers onUpdate={setShowingAutoScroll} />
+      {/* <AutoScrollMembers onUpdate={setShowingAutoScroll} /> */}
       {/* <MachinesSold visible={visible} setVisible={setVisible} machineData={machineData} base_route={base_route} /> */}
       <SalesMetricDetailsDialog
         metric={selectedMetric}

@@ -245,7 +245,7 @@ export default function Page() {
 
           </div>
           <div hidden={activeTab !== 'fines'}>
-            <RenderFines height="min-h-[calc(100dvh-370px)]" />
+            <RenderFines userID={userID} height="min-h-[calc(100dvh-370px)]" />
           </div>
 
         </Tabs>

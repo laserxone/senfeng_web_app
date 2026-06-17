@@ -6,6 +6,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     if (!id) return
 
     return (
-        <UserDashboard id={id as string} owner={true} />
+        <UserDashboard id={id as string} />
     )
 }

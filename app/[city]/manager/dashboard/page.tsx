@@ -188,7 +188,7 @@ export default function Page() {
             )}
 
 
-            {activeTab === 'fines' && <RenderFines height="min-h-[calc(100dvh-370px)]" />}
+            {activeTab === 'fines' && <RenderFines userID={userID} height="min-h-[calc(100dvh-370px)]" />}
           </div>
         </Tabs>
       </div>

@@ -105,11 +105,10 @@ const columns: ColumnDef<UserFines>[] = [
   },
 ];
 
-const RenderFines = ({ height, onUpdateTotal }: { height?: string, onUpdateTotal ?: (item : number)=> void }) => {
+const RenderFines = ({ height, onUpdateTotal,userID  }: { height?: string, onUpdateTotal ?: (item : number)=> void, userID : number | string }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
-  const { userID } = useUserDetail();
   useEffect(() => {
     if (userID) {
       const startDate = momentT

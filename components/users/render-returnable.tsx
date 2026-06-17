@@ -8,8 +8,8 @@ import { ArrowUpDown } from "lucide-react";
 import moment from "moment";
 import { useEffect } from "react";
 
-const RenderReturnable = ({ height, onUpdateTotal }: { height?: string, onUpdateTotal?: (val: number) => void }) => {
-  const { issuedItems } = useIssuedItem();
+const RenderReturnable = ({ height, onUpdateTotal, userID }: { height?: string, onUpdateTotal?: (val: number) => void, userID : number | string }) => {
+  const { issuedItems } = useIssuedItem(userID);
 
   const columns: ColumnDef<UserReturnableType>[] = [
     {
