@@ -109,9 +109,9 @@ export async function GET() {
     const res = await pool.query(`
       SELECT 
         s.*,
-        row_to_json(o) AS outward_gatepass_karachi
+        row_to_json(o) AS outward_gatepass
       FROM savedinvoices_karachi s
-      LEFT JOIN outward_gatepass o
+      LEFT JOIN outward_gatepass_karachi o
         ON o.savedinvoice_id = s.id
     `);
     return NextResponse.json(res.rows)

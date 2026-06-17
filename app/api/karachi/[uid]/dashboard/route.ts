@@ -538,8 +538,8 @@ ORDER BY u.name ASC;
         ''
     ) AS manager,
     COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
-FROM savedinvoices si
-LEFT JOIN customer_parts cp
+FROM savedinvoices_karachi si
+LEFT JOIN customer_parts_karachi cp
     ON cp.part_id = si.id
 LEFT JOIN customer c
     ON c.id = si.customer_id
@@ -995,8 +995,8 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
         ''
     ) AS manager,
     COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
-FROM savedinvoices si
-LEFT JOIN customer_parts cp
+FROM savedinvoices_karachi si
+LEFT JOIN customer_parts_karachi cp
     ON cp.part_id = si.id
 LEFT JOIN customer c
     ON c.id = si.customer_id
@@ -1032,11 +1032,7 @@ ORDER BY created_at DESC
             final_amount: finalAmount - totalPaid,
             status,
         };
-    }).filter(
-        (item) =>
-            moment(item.created_at).isSameOrAfter("2025-12-01") ||
-            item.payment === false
-    ).filter((item) => item.status !== "Paid")
+    }).filter((item) => item.status !== "Paid")
 
     let totalPending = 0;
 
@@ -1383,8 +1379,8 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
       'member', c.member,
       'created_at', c.created_at
     ) AS customer
-  FROM savedinvoices si
-  LEFT JOIN customer_parts cp ON cp.part_id = si.id
+  FROM savedinvoices_karachi si
+  LEFT JOIN customer_parts_karachi cp ON cp.part_id = si.id
   LEFT JOIN customer c ON c.id = si.customer_id
   LEFT JOIN users u ON u.id = c.ownership
   WHERE si.owner_paid IS FALSE
