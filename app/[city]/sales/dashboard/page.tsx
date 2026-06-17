@@ -90,7 +90,7 @@ export default function Page() {
     const paramTab = searchParams.get("p");
     if (paramTab) {
       setActiveTab(paramTab);
-    } 
+    }
 
   }, [searchParams]);
 
@@ -426,15 +426,15 @@ export default function Page() {
   ]
 
   const tabsMaxWidth =
-  isMobile 
-  ?"max-w-[calc(100dvw-35px)]"
-  : showingAutoScroll
-    ? open
-      ? "max-w-[calc(100dvw-550px)]"
-      : "max-w-[calc(100dvw-340px)]"
-    :
-    open ? "max-w-[calc(100dvw-290px)]"
-      : "max-w-[calc(100dvw-80px)]"
+    isMobile
+      ? "max-w-[calc(100dvw-35px)]"
+      : showingAutoScroll
+        ? open
+          ? "max-w-[calc(100dvw-550px)]"
+          : "max-w-[calc(100dvw-340px)]"
+        :
+        open ? "max-w-[calc(100dvw-290px)]"
+          : "max-w-[calc(100dvw-80px)]"
   return (
     <div className="flex flex-1 gap-4 bg-background  py-2">
       <div className="flex flex-1 flex-col gap-4">
@@ -447,7 +447,7 @@ export default function Page() {
             </p>
           </div>
         </div> */}
-       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
           <SalesMetricCard
             title="Pending Payments"
             value={data?.new_entries?.pending_payments?.total || 0}
