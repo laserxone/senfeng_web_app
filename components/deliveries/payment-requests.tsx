@@ -495,7 +495,7 @@ export default function PaymentRequestsPage() {
                             <label className="text-sm font-medium">Note</label>
                             <Input
                                 placeholder="Enter note"
-                                value={form.tid}
+                                value={form.note}
                                 onChange={(e) =>
                                     setForm((prev) => ({
                                         ...prev,
@@ -524,7 +524,7 @@ export default function PaymentRequestsPage() {
                             </div>
                         </div>
 
-                        <Button disabled={submitting} onClick={handleRecordPayment}>
+                        <Button disabled={submitting || !form.amount || !form.date || !form.slip || !form.note} onClick={handleRecordPayment}>
                             {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {edit ? "Edit" : "Submit"} Payment
                         </Button>
