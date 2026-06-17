@@ -289,7 +289,7 @@ function AddCustomerDialog({
       <DialogContent className="w-full sm:max-w-6xl">
         <DialogHeader className="border-b bg-muted/20 px-4 py-4 sm:px-6">
           <div className="flex items-start gap-3">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-700 ring-1 ring-blue-100">
               <UserPlus className="h-5 w-5" />
             </div>
             <div className="min-w-0">
@@ -300,13 +300,13 @@ function AddCustomerDialog({
             </div>
           </div>
         </DialogHeader>
-        <ScrollArea className="h-[70dvh] sm:h-[80dvh]">
+        <ScrollArea className="max-h-[calc(100dvh-200px)]">
           <div className="px-4 sm:px-6">
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
                 {/* CONTACT INFORMATION */}
-                <FieldSet className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4 lg:col-span-2">
+                <FieldSet className="rounded-lg border bg-background p-3 shadow-sm sm:p-4 lg:col-span-2">
                   <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
                     <Phone className="h-4 w-4 text-emerald-700" />
                     Contact Information
@@ -416,7 +416,7 @@ function AddCustomerDialog({
                 </FieldSet>
 
                 {/* CUSTOMER DETAILS */}
-                <FieldSet className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                <FieldSet className="rounded-lg border bg-background p-3 shadow-sm sm:p-4">
                   <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
                     <Building2 className="h-4 w-4 text-blue-700" />
                     Customer Details
@@ -472,7 +472,7 @@ function AddCustomerDialog({
                 </FieldSet>
 
                 {/* LOCATION */}
-                <FieldSet className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                <FieldSet className="rounded-lg border bg-background p-3 shadow-sm sm:p-4">
                   <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
                     <MapPin className="h-4 w-4 text-rose-700" />
                     Location
@@ -516,7 +516,7 @@ function AddCustomerDialog({
                 </FieldSet>
 
                 {/* BUSINESS SETTINGS */}
-                <FieldSet className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                <FieldSet className="rounded-lg border bg-background p-3 shadow-sm sm:p-4">
                   <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
                     <Settings2 className="h-4 w-4 text-amber-700" />
                     Business Settings
@@ -589,7 +589,7 @@ function AddCustomerDialog({
                 </FieldSet>
 
                 {/* LEAD & REMARKS */}
-                <FieldSet className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                <FieldSet className="rounded-lg border bg-background p-3 shadow-sm sm:p-4">
                   <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
                     <BriefcaseBusiness className="h-4 w-4 text-violet-700" />
                     Lead & Remarks
@@ -634,7 +634,7 @@ function AddCustomerDialog({
                 </FieldSet>
 
                 {/* ADDITIONAL OPTIONS */}
-                <FieldSet className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                <FieldSet className="rounded-lg border bg-background p-3 shadow-sm sm:p-4">
                   <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
                     <CalendarDays className="h-4 w-4 text-slate-700" />
                     Additional Options

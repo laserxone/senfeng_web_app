@@ -1,9 +1,8 @@
 "use client";
-import { Filter } from "lucide-react";
+import { Clock3, Filter, ImageIcon, LogIn, LogOut, MapPin } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { useCallback, useEffect, useState } from "react";
+import { ElementType, useEffect, useMemo, useState } from "react";
 
 import PageTable from "@/components/app-table-without-pagination";
 import {
@@ -27,6 +26,7 @@ import { GoogleMap, Marker } from "@react-google-maps/api";
 import moment from "moment";
 import momentT from "moment-timezone";
 import { useTheme } from "next-themes";
+import { Badge } from "../ui/badge";
 import { columns } from "./AttendanceColumns";
 import RenderMarkAttendance from "./attendance-marking";
 
@@ -273,148 +273,278 @@ export default function TeamAttendance() {
   );
 }
 
-export const AttendanceDetail = ({ detail, visible, onClose }: { detail: UserAttendanceRecord | null, visible: boolean, onClose: (val: boolean) => void }) => {
+export const AttendanceDetail = ({
+  detail,
+  visible,
+  onClose,
+}: {
+  detail: UserAttendanceRecord | null
+  visible: boolean
+  onClose: (val: boolean) => void
+}) => {
+  const entries = [
+    {
+      key: "time-in",
+      title: "Time In",
+      time: detail?.time_in,
+      image: detail?.image_time_in,
+      position: detail?.location_time_in,
+      note: detail?.note_time_in,
+      icon: LogIn,
+      accentClassName:
+        "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-900",
+    },
+    {
+      key: "time-out",
+      title: "Time Out",
+      time: detail?.time_out,
+      image: detail?.image_time_out,
+      position: detail?.location_time_out,
+      note: detail?.note_time_out,
+      icon: LogOut,
+      accentClassName:
+        "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-900",
+    },
+  ].filter((item) => item.time)
+
   return (
     <Dialog open={visible} onOpenChange={onClose}>
       <DialogContent
-        className={`${detail?.time_out
-          ? " sm:max-w-4xl lg:max-w-5xl"
-          : "sm:max-w-2xl lg:max-w-xl"
-          } `}
-      >
-        <DialogHeader>
-          <DialogTitle>Attendance detail</DialogTitle>
+        className={`
+    w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)]
+    max-h-[95dvh] overflow-hidden rounded-xl border p-0
+    sm:w-full sm:rounded-2xl
+    ${entries.length > 1 ? "lg:max-w-5xl xl:max-w-6xl" : "lg:max-w-4xl"}
+  `}>
+        <DialogHeader className="border-b bg-slate-50 px-3 py-3 dark:bg-slate-950 sm:px-5">
+          <div className="flex items-start gap-3">
+            <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-blue-100 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:ring-blue-900 sm:size-10">
+              <Clock3 className="h-4 w-4 sm:h-5 sm:w-5" />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <DialogTitle className="break-words text-base font-bold tracking-tight sm:text-lg">
+                Attendance Detail
+              </DialogTitle>
+              <p className="mt-0.5 break-words text-xs font-medium text-muted-foreground sm:text-sm">
+                {detail?.user_name || detail?.user_email || "Employee"} attendance activity and proof.
+              </p>
+            </div>
+          </div>
         </DialogHeader>
-        <div>
-          <ScrollArea className="h-[80vh] px-2">
-            <div className="px-2 flex flex-col gap-4 sm:flex-row">
-              {detail?.time_in && (
-                <div className="flex-1 flex flex-col gap-4">
-                  <Label>Time In</Label>
-                  {detail?.image_time_in ? (
-                    <RenderImage img={detail?.image_time_in} />
-                  ) : (
-                    <div>N/A</div>
-                  )}
 
-                  <MapProvider>
-                    <LocationMap position={detail.location_time_in} />
-                  </MapProvider>
-                </div>
-              )}
+        <ScrollArea className="h-[calc(92dvh-76px)]">
+          <div className="space-y-3 p-3 sm:p-4">
+            <div className="grid gap-2 sm:grid-cols-3">
+              <InfoTile
+                label="Date"
+                value={detail?.date ? moment(detail.date).format("YYYY-MM-DD") : "N/A"}
+              />
+              <InfoTile label="Status" value={detail?.status || "N/A"} />
+              <InfoTile label="Email" value={detail?.user_email || "N/A"} />
+            </div>
 
-              {detail?.time_out && (
-                <div className="flex-1 flex flex-col gap-4 sm:ml-4">
-                  <Label>Time Out</Label>
-                  {detail?.image_time_out ? (
-                    <RenderImage img={detail?.image_time_out} />
-                  ) : (
-                    <div>N/A</div>
-                  )}
-                  <MapProvider>
-                    <LocationMap position={detail.location_time_out} />
-                  </MapProvider>
+            <div className={`grid gap-3 ${entries.length > 1 ? "xl:grid-cols-2" : "grid-cols-1"}`}>
+              {entries.map((entry) => {
+                const Icon = entry.icon
+
+                return (
+                  <section
+                    key={entry.key}
+                    className="overflow-hidden rounded-2xl border bg-background  flex-wrap"
+                  >
+                    <div className="border-b bg-slate-50/80 px-3 py-3 dark:bg-slate-900/70 sm:px-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div
+                            className={`grid size-9 shrink-0 place-items-center rounded-xl border ${entry.accentClassName}`}
+                          >
+                            <Icon className="h-4 w-4" />
+                          </div>
+
+                          <div className="min-w-0">
+                            <h3 className="truncate text-sm font-bold text-foreground">
+                              {entry.title}
+                            </h3>
+                            <p className="mt-0.5 truncate text-xs font-medium text-muted-foreground">
+                              {entry.time
+                                ? moment(entry.time).format("YYYY-MM-DD hh:mm A")
+                                : "No time recorded"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <Badge
+                          variant="outline"
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${entry.position
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
+                              : "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
+                            }`}
+                        >
+                          {entry.position ? "GPS available" : "No GPS"}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 p-3 sm:p-4">
+                      {entry.note && (
+                        <div className="rounded-xl border bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                          <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                            Note
+                          </p>
+                          <p className="whitespace-pre-wrap break-words">{entry.note}</p>
+                        </div>
+                      )}
+
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <ProofBlock title="Photo Proof" icon={ImageIcon}>
+                          {entry.image ? (
+                            <RenderImage img={entry.image} />
+                          ) : (
+                            <EmptyProof label="No image available" />
+                          )}
+                        </ProofBlock>
+
+                        <ProofBlock title="Location" icon={MapPin}>
+                          {entry.position ? (
+                            <MapProvider>
+                              <LocationMap position={entry.position} />
+                            </MapProvider>
+                          ) : (
+                            <EmptyProof label="No location available" />
+                          )}
+                        </ProofBlock>
+                      </div>
+                    </div>
+                  </section>
+                )
+              })}
+
+              {entries.length === 0 && (
+                <div className="rounded-2xl border border-dashed bg-slate-50 p-8 text-center text-sm text-muted-foreground dark:bg-slate-900">
+                  No attendance detail available.
                 </div>
               )}
             </div>
-          </ScrollArea>
-        </div>
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
+
+const ProofBlock = ({
+  title,
+  icon: Icon,
+  children,
+}: {
+  title: string
+  icon: ElementType
+  children: React.ReactNode
+}) => (
+  <div className="min-w-0">
+    <div className="mb-2 flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200">
+      <Icon className="h-4 w-4 text-slate-400" />
+      {title}
+    </div>
+
+    <div className="overflow-hidden rounded-xl border bg-slate-50 dark:bg-slate-900">
+      {children}
+    </div>
+  </div>
+)
+
+
+
+const InfoTile = ({ label, value }: { label: string; value: string }) => (
+  <div className="min-w-0 rounded-xl border bg-white px-3 py-2 dark:bg-slate-950">
+    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+      {label}
+    </p>
+    <p className="mt-1 truncate text-sm font-semibold text-slate-900 dark:text-white">
+      {value}
+    </p>
+  </div>
+)
+
+const EmptyProof = ({ label }: { label: string }) => (
+  <div className="grid min-h-[180px] place-items-center px-3 text-center text-xs font-medium text-muted-foreground">
+    {label}
+  </div>
+)
 
 const RenderImage = ({ img }: { img: string | null }) => {
-  const [localImage, setLocalImage] = useState<string | null>(null);
+  const [localImage, setLocalImage] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchImage() {
       if (img?.includes("http")) {
-        setLocalImage(img);
+        setLocalImage(img)
       } else {
-        const imgResult = await GetProfileImage(img);
-        setLocalImage(imgResult);
+        const imgResult = await GetProfileImage(img)
+        setLocalImage(imgResult)
       }
     }
 
-    if (img) {
-      fetchImage();
-    }
-  }, [img]);
+    if (img) fetchImage()
+  }, [img])
 
-  if (!localImage) return null
+  if (!localImage) {
+    return (
+      <div className="grid min-h-[180px] place-items-center text-xs text-muted-foreground">
+        Loading image...
+      </div>
+    )
+  }
 
   return (
     <img
       src={localImage}
-      alt="timein-img"
-      className="w-full object-cover rounded-lg"
+      alt="attendance-proof"
+      className="h-[clamp(180px,32vh,280px)] w-full object-contain"
     />
-  );
-};
+  )
+}
 
 const LocationMap = ({ position }: { position: number[] | null }) => {
-  if (!position) return null
-  const { theme } = useTheme();
+  const { theme } = useTheme()
 
-  const defaultMapContainerStyle = {
-    width: "100%",
-    height: "80vh",
-    borderRadius: "15px 0px 0px 15px",
-  };
+  const defaultMapOptions = useMemo(
+    () => ({
+      zoomControl: true,
+      tilt: 0,
+      gestureHandling: "auto",
+      mapTypeId: "roadmap",
+      colorScheme: theme === "dark" ? "DARK" : "LIGHT",
+    }),
+    [theme]
+  )
+
+  if (!position) return null
 
   const defaultMapCenter: google.maps.LatLngLiteral = {
     lat: position[0],
     lng: position[1],
-  };
-  const defaultMapZoom = 16;
-
-  const [defaultMapOptions, setDefaultMapOptions] = useState({
-    zoomControl: true,
-    tilt: 0,
-    gestureHandling: "auto",
-    mapTypeId: "roadmap",
-    colorScheme: "DARK",
-  });
-
-  useEffect(() => {
-    if (theme === "dark") {
-      setDefaultMapOptions((prevState) => ({
-        ...prevState,
-        colorScheme: "DARK",
-      }));
-    } else {
-      setDefaultMapOptions((prevState) => ({
-        ...prevState,
-        colorScheme: "LIGHT",
-      }));
-    }
-  }, [theme]);
-
-  const RenderMap = useCallback(
-    ({ position }: { position: number[] }) => {
-      return (
-        <GoogleMap
-          mapContainerStyle={defaultMapContainerStyle}
-          center={defaultMapCenter}
-          zoom={defaultMapZoom}
-          options={defaultMapOptions}
-        >
-          <Marker
-            position={{
-              lat: position[0],
-              lng: position[1],
-            }}
-          />
-        </GoogleMap>
-      );
-    },
-    [defaultMapOptions],
-  );
+  }
 
   return (
-    <div className="w-full">
-      <RenderMap position={position} />
+    <div className="h-[clamp(180px,32vh,280px)] w-full overflow-hidden">
+      <GoogleMap
+        mapContainerStyle={{
+          width: "100%",
+          height: "100%",
+        }}
+        center={defaultMapCenter}
+        zoom={16}
+        options={defaultMapOptions}
+      >
+        <Marker
+          position={{
+            lat: position[0],
+            lng: position[1],
+          }}
+        />
+      </GoogleMap>
     </div>
-  );
-};
+  )
+}

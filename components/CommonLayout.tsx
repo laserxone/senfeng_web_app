@@ -11,7 +11,7 @@ export default async function CommonLayout({ office, children }: { office: strin
         <AppSidebar office={office} />
         <SidebarInset>
           <div className="flex flex-1 flex-col">
-            <div className="w-full h-[61.5px]">
+            <div className="w-full">
               <Header />
             </div>
             <div className="flex flex-1">{children}</div>

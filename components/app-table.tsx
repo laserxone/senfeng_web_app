@@ -14,7 +14,7 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table";
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, Download, Search } from "lucide-react";
 
 import {
   DoubleArrowLeftIcon,
@@ -32,7 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { memo, ReactNode, useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 
 import {
   Select,
@@ -64,6 +64,7 @@ type PageTableProps<T extends Record<string, any>> = {
   defaultPageSize ?: number
   download?: boolean;
   tableWidth ?: string
+  height ?: string
 };
 
 const PageTable = <T extends Record<string, any>>({
@@ -77,7 +78,9 @@ const PageTable = <T extends Record<string, any>>({
   loading = false,
   defaultPageSize = 20,
   download = false,
-  tableWidth = ""
+  tableWidth = "",
+  height = "min-h-[calc(100dvh-280px)]"
+
 }: PageTableProps<T>) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -208,38 +211,47 @@ const PageTable = <T extends Record<string, any>>({
  
 
   return (
-    <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex w-full flex-wrap gap-4 items-center ">
+    <div className="flex flex-1 flex-col gap-3">
+      <div className="flex w-full flex-wrap items-center gap-2 rounded-lg border bg-background/95 p-2 shadow-sm">
         {!disableInput && (
-          <Input
-            value={search}
-            placeholder={`Search...`}
-            onChange={(event) => {
-              setSearch(event.target.value);
-            }}
-            className="w-[60vw] max-w-sm"
-          />
+          <div className="relative min-w-[220px] flex-1 sm:max-w-sm">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              placeholder={`Search...`}
+              onChange={(event) => {
+                setSearch(event.target.value);
+              }}
+              className="h-8 rounded-md bg-muted/20 pl-9 text-xs"
+            />
+          </div>
         )}
-        {download && <Button onClick={handleDownload}>Download list</Button>}
+        {download && (
+          <Button variant="outline" className="h-9 gap-2" onClick={handleDownload}>
+            <Download className="h-4 w-4" />
+            Download
+          </Button>
+        )}
         {children}
       </div>
 
       <div
-        className={`relative flex flex-1 min-h-[calc(100dvh-280px)]`}
+        className={`relative flex flex-1 ${height} ${isMobile && tableWidth ? tableWidth : ""}`}
       >
-        <div className="absolute bottom-0 left-0 right-0 top-0 flex rounded-md border md:overflow-auto custom-scrollbar overflow-auto">
+        <div className="absolute bottom-0 left-0 right-0 top-0 flex overflow-auto rounded-md border bg-background shadow-sm custom-scrollbar md:overflow-auto">
           {/* <ScrollArea className="flex-1"> */}
-          <Table className="relative">
+          <Table className="relative text-xs">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow
                   key={headerGroup.id}
-                  className="sticky top-0 z-20 bg-background"
+                  className="sticky top-0 z-30 border-b border-border bg-slate-100 shadow-sm hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-900"
                 >
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       style={{ width: header.getSize() }}
                       key={header.id}
+                      className="h-8 whitespace-nowrap px-3 text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:text-zinc-200"
                     >
                       {header.isPlaceholder
                         ? null
@@ -252,17 +264,17 @@ const PageTable = <T extends Record<string, any>>({
                 </TableRow>
               ))}
             </TableHeader>
-            <TableBody className="bg-white dark:bg-gray-900">
+            <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     onClick={(e) => onRowClick?.(row.original, e)}
-                    className="even:bg-gray-100 dark:even:bg-gray-800 dark:text-white text-black cursor-pointer"
+                    className="cursor-pointer border-b transition-colors odd:bg-white even:bg-slate-50/80 hover:bg-blue-50/70 data-[state=selected]:bg-blue-50 dark:odd:bg-zinc-950 dark:even:bg-zinc-900/70 dark:hover:bg-zinc-800/80 dark:data-[state=selected]:bg-zinc-800"
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell className="text-[13px] whitespace-normal break-words" key={cell.id}>
+                      <TableCell className="whitespace-normal break-words px-3 py-1.5 text-[12px] leading-snug text-slate-800 dark:text-zinc-100" key={cell.id}>
                         {flexRender(cell.column.columnDef.cell, {
                           ...cell.getContext(),
                           stopRowClick: (e: React.MouseEvent<HTMLTableRowElement>) => e.stopPropagation(),
@@ -275,14 +287,16 @@ const PageTable = <T extends Record<string, any>>({
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
-                    className="h-24 text-center"
+                    className="h-32 text-center"
                   >
                     {loading ? (
                       <div className="flex flex-1 justify-center">
                         <Spinner />
                       </div>
                     ) : (
-                      "No results."
+                      <div className="text-xs font-medium text-muted-foreground">
+                        No results.
+                      </div>
                     )}
                   </TableCell>
                 </TableRow>
@@ -294,9 +308,9 @@ const PageTable = <T extends Record<string, any>>({
         </div>
       </div>
 
-      <div className="flex flex-col items-center justify-end gap-2 space-x-2 py-2 sm:flex-row">
-        <div className="flex w-full items-center justify-between">
-          <div className="flex-1 text-sm text-muted-foreground">
+      <div className="flex flex-col items-center justify-end gap-2 rounded-lg border bg-background/95 p-2 shadow-sm sm:flex-row">
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex-1 text-xs font-medium text-muted-foreground">
             {filteredData.length > 0 ? (
               <>
                 Showing {startIndex} to {endIndex} of {filteredData.length}{" "}
@@ -306,9 +320,9 @@ const PageTable = <T extends Record<string, any>>({
               "No entries found"
             )}
           </div>
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6 lg:gap-8">
-            <div className="flex items-center space-x-2">
-              <p className="whitespace-nowrap text-sm font-medium">
+          <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <div className="flex items-center gap-2">
+              <p className="whitespace-nowrap text-xs font-semibold text-muted-foreground">
                 Rows per page
               </p>
               <Select
@@ -317,7 +331,7 @@ const PageTable = <T extends Record<string, any>>({
                   table.setPageSize(Number(value));
                 }}
               >
-                <SelectTrigger className="h-8 w-[70px]">
+                <SelectTrigger className="h-8 w-[72px] rounded-md text-xs">
                   <SelectValue placeholder={paginationState.pageSize} />
                 </SelectTrigger>
                 <SelectContent side="top">
@@ -331,8 +345,8 @@ const PageTable = <T extends Record<string, any>>({
             </div>
           </div>
         </div>
-        <div className="flex w-full items-center justify-between gap-2 sm:justify-end">
-          <div className="flex sm:w-[250px] items-center justify-center text-sm font-medium">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
+          <div className="flex items-center text-xs font-semibold text-muted-foreground sm:w-[220px] sm:justify-center">
             {filteredData.length > 0 ? (
               <>
                 {totalCustomerText &&
@@ -343,11 +357,11 @@ const PageTable = <T extends Record<string, any>>({
               "No pages"
             )}
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-1">
             <Button
               aria-label="Go to first page"
               variant="outline"
-              className="hidden h-8 w-8 p-0 lg:flex"
+              className="hidden h-8 w-8 rounded-md p-0 lg:flex"
               onClick={() => table.setPageIndex(0)}
               disabled={!table.getCanPreviousPage()}
             >
@@ -356,7 +370,7 @@ const PageTable = <T extends Record<string, any>>({
             <Button
               aria-label="Go to previous page"
               variant="outline"
-              className="p-0 w-8"
+              className="h-8 w-8 rounded-md p-0"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
@@ -365,7 +379,7 @@ const PageTable = <T extends Record<string, any>>({
             <Button
               aria-label="Go to next page"
               variant="outline"
-              className="p-0 w-8"
+              className="h-8 w-8 rounded-md p-0"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
@@ -374,7 +388,7 @@ const PageTable = <T extends Record<string, any>>({
             <Button
               aria-label="Go to last page"
               variant="outline"
-              className="hidden h-8 w-8 p-0 lg:flex"
+              className="hidden h-8 w-8 rounded-md p-0 lg:flex"
               onClick={() => table.setPageIndex(table.getPageCount() - 1)}
               disabled={!table.getCanNextPage()}
             >

@@ -21,30 +21,30 @@ function MetricShell({
   onClick,
 }: MetricShellProps) {
   return (
-    <div className={`relative flex h-full min-h-[136px] w-full overflow-hidden rounded-2xl border bg-gradient-to-r ${accent} p-4 shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md`}>
-      <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rotate-12 rounded-[2rem] bg-white/55" />
-      <div className="relative flex w-full items-start gap-3">
-        <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-white shadow-sm ring-1 ring-white/40 ${iconClassName}`}>
-          <Icon className="h-5 w-5" />
+    <div className={`relative flex h-full min-h-[92px] w-full overflow-hidden rounded-xl border bg-gradient-to-br ${accent} p-3 shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md`}>
+      <div className="pointer-events-none absolute -right-5 -bottom-10 h-16 w-24 rotate-[-18deg] rounded-[2rem] bg-white/50" />
+      <div className="relative flex w-full items-start gap-2.5">
+        <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg text-white shadow-sm ${iconClassName}`}>
+          <Icon className="h-4 w-4" />
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <p className="break-words text-xs font-bold leading-tight text-slate-950">
             {title}
           </p>
           {onClick ? (
             <button
               type="button"
               onClick={onClick}
-              className="mt-3 text-left text-3xl font-black tracking-tight text-slate-950 hover:underline"
+              className="mt-1 text-left text-2xl font-black leading-none tracking-tight text-slate-950 hover:underline"
             >
               {value}
             </button>
           ) : (
-            <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">
+            <p className="mt-1 text-2xl font-black leading-none tracking-tight text-slate-950">
               {value}
             </p>
           )}
-          {children && <div className="mt-auto pt-3">{children}</div>}
+          {children && <div className="mt-auto pt-2">{children}</div>}
         </div>
       </div>
     </div>
@@ -70,7 +70,7 @@ export const MachinesSoldCard = ({
       onClick={onClick}
     >
       <p
-        className={`text-xs font-semibold ${
+        className={`text-[11px] font-semibold ${
           percentage >= 0 ? "text-emerald-600" : "text-red-600"
         }`}
       >
@@ -98,9 +98,9 @@ export const FeedbackTakenCard = ({
       iconClassName="bg-indigo-600"
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-semibold text-slate-700">of {total}</span>
+        <span className="text-xs font-semibold text-slate-700">of {total}</span>
         <span
-          className={`rounded-full border bg-white/70 px-2.5 py-1 text-xs font-semibold ${
+          className={`rounded-full border bg-white/70 px-2 py-0.5 text-[11px] font-semibold ${
             remaining === 0
               ? "border-emerald-100 text-emerald-700"
               : "border-red-100 text-red-700"
@@ -131,9 +131,9 @@ export const VisitsDoneCard = ({
       iconClassName="bg-sky-600"
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-semibold text-slate-700">of {total}</span>
+        <span className="text-xs font-semibold text-slate-700">of {total}</span>
         <span
-          className={`rounded-full border bg-white/70 px-2.5 py-1 text-xs font-semibold ${
+          className={`rounded-full border bg-white/70 px-2 py-0.5 text-[11px] font-semibold ${
             remaining === 0
               ? "border-emerald-100 text-emerald-700"
               : "border-red-100 text-red-700"

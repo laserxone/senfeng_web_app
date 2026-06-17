@@ -6,13 +6,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
-import { AttendanceDetail } from "@/app/[city]/superadmin/attendance/page";
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import { UserAttendanceRecord } from "@/lib/types";
 import moment from "moment";
 import Spinner from "../ui/spinner";
 import { columns } from "./AttendanceColumns";
 import FilterSheet from "./filterSheet";
+import { AttendanceDetail } from "./teamAttendance";
 
 type AttendanceProps = {
   passingData: UserAttendanceRecord[];

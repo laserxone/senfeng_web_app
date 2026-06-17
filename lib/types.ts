@@ -1912,6 +1912,10 @@ export type SalesNewEntries = {
   pending_deliveries: ApiCollection<PendingDelivery>;
   top_follow: ApiCollection<TopFollow>;
   newly_assigned_customers: ApiCollection<NewlyAssignedCustomer>;
-  today_tasks: ApiCollection<TodayTask>;
   customers_with_sale_or_member: ApiCollection<CustomerWithSaleOrMember>;
 };
+
+export type SalesTodayTasks = {
+    total : number
+    data : TaskProps[] 
+}

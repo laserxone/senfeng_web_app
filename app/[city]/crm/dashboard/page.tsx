@@ -131,12 +131,13 @@ export default function Page() {
               }}
             />
             <CustomerEmployee
+
               height="min-h-[calc(100dvh-400px)]"
               ownership={true}
               customer_data={
                 selectedOption && extraData ? extraData[selectedOption as Exclude<keyof UserExtraTypes, "user">] : []
               }
-              onRefresh={() => fetchExtraCustomerOptions()}
+              onRefresh={async () => await fetchExtraCustomerOptions()}
             />
           </div>
         </CardContent>

@@ -338,7 +338,7 @@ const formSchema = z
 
 type TaskFormValues = z.infer<typeof formSchema>;
 
-const AddTask = ({ visible, onClose, onRefresh, user_id }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, user_id: number | string }) => {
+export const AddTask = ({ visible, onClose, onRefresh, user_id }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, user_id: number | string }) => {
   const [loading, setLoading] = useState(false);
 
 

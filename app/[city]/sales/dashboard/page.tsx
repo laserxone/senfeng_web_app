@@ -1,10 +1,5 @@
 "use client";
 import {
-  FeedbackTakenCard,
-  MachinesSoldCard,
-  VisitsDoneCard,
-} from "@/components/dashboardCards";
-import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -13,15 +8,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import VisitTab from "@/components/users/addVisit";
 import Attendance from "@/components/users/attendance";
 import CustomerEmployee from "@/components/users/customer";
 import Reimbursement from "@/components/users/Reimbursement";
-import { Scrollbar } from "@radix-ui/react-scroll-area";
 
 import AppCalendar from "@/components/appCalendar";
+import AutoScrollMembers from "@/components/autoScroll";
 import { RequiredStar } from "@/components/RequiredStar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,22 +26,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useSidebar } from "@/components/ui/sidebar";
 import Spinner from "@/components/ui/spinner";
 import { CustomerExtraData } from "@/components/users/ExtraData";
-import { ProfilePicture } from "@/components/users/ProfilePicture";
 import RenderFines from "@/components/users/render-fines";
 import RenderReturnable from "@/components/users/render-returnable";
 import SalaryRecord from "@/components/users/SalaryRecord";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { PendingDelivery, PendingPartsPayment, PendingPayment, SalesCustomer, SalesCustomerMachines, SalesDashboard, SalesMachine, SalesVisitTypes, TopFollow, UserAttendanceRecord, UserCallData, UserExtraTypes, UserReimbursementType } from "@/lib/types";
+import { PendingDelivery, PendingPartsPayment, PendingPayment, SalesCustomer, SalesCustomerMachines, SalesDashboard, SalesMachine, SalesTodayTasks, SalesVisitTypes, TopFollow, UserAttendanceRecord, UserCallData, UserExtraTypes, UserReimbursementType } from "@/lib/types";
 import { updateItemPurpose } from "@/lib/updatePurpose";
-import { AlertCircle, BadgeAlert, Banknote, Building2, CalendarCheck, CheckCircle, Clock, Cpu, Gauge, Hash, MapPinned, MessageSquareText, PackageCheck, PhoneCall, ReceiptText, RotateCcw, Star, Truck, UserPlus, UserRound, Users, Wallet } from "lucide-react";
+import { AlertCircle, BadgeAlert, Banknote, Building2, CalendarCheck, CheckCircle, Clock, Cpu, Gauge, Hash, MapPinned, MessageSquareText, MessageSquareWarning, PackageCheck, PhoneCall, ReceiptText, RotateCcw, Star, Truck, UserPlus, UserRound, Users, Wallet, WalletCards } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, type ElementType } from "react";
 import "./styles.css";
+
+
+
 
 export default function Page() {
   const [data, setData] = useState<SalesDashboard>();
@@ -65,6 +63,11 @@ export default function Page() {
   const [allFines, setAllFines] = useState(0)
   const [allReturnables, setAllReturnables] = useState(0)
   const [selectedMetric, setSelectedMetric] = useState<MetricDialogState | null>(null)
+  const [todayTasks, setTodayTasks] = useState<SalesTodayTasks | null>(null)
+  const [showingAutoScroll, setShowingAutoScroll] = useState(false)
+  const searchParams = useSearchParams()
+
+  const { open } = useSidebar()
 
   useEffect(() => {
     if (userID) {
@@ -77,8 +80,24 @@ export default function Page() {
       fetchAttendanceData(startDate, endDate);
       fetchCallData(startDate, endDate);
       // fetchScrollData()
+      const start = moment().startOf("day").toISOString();
+      const end = moment().endOf("day").toISOString();
+      fetchTasks(start, end)
     }
   }, [userID]);
+
+  useEffect(() => {
+    const paramTab = searchParams.get("p");
+    if (paramTab) {
+      setActiveTab(paramTab);
+    } 
+
+  }, [searchParams]);
+
+
+  function routeTo(targetTab: string) {
+    window.history.pushState({}, "", `${window.location.pathname}?p=${targetTab}`)
+  }
 
   async function fetchCallData(startDate: string, endDate: string) {
     return new Promise<void>((resolve) => {
@@ -151,6 +170,20 @@ export default function Page() {
     });
   }
 
+  async function fetchTasks(start: string, end: string) {
+
+    return new Promise<void>((resolve) => {
+      axios
+        .get(`/${userID}/task?start_date=${start}&end_date=${end}`)
+        .then((response) => {
+          setTodayTasks({ total: response.data.length, data: response.data });
+        })
+        .finally(() => {
+          resolve();
+        });
+    });
+  }
+
   async function fetchData() {
     return new Promise<void>((resolve) => {
       axios
@@ -163,7 +196,6 @@ export default function Page() {
         });
     });
   }
-  console.log(data)
 
   async function fetchVisitData(start: string, end: string) {
     return new Promise((res, rej) => {
@@ -187,21 +219,21 @@ export default function Page() {
   const RenderVisitTab = useCallback(() => {
     return (
       <div className="w-full">
-     
-          <VisitTab
-            id={userID}
-            data={visitData}
-            onRefresh={async () => {
-              const startDate = moment().startOf("month").toISOString();
-              const endDate = moment().endOf("month").toISOString();
-              await fetchVisitData(startDate, endDate);
-              await fetchData();
-            }}
-            onFetchData={async (start, end) => {
-              await fetchVisitData(start, end);
-            }}
-          />
-      
+
+        <VisitTab
+          id={userID}
+          data={visitData}
+          onRefresh={async () => {
+            const startDate = moment().startOf("month").toISOString();
+            const endDate = moment().endOf("month").toISOString();
+            await fetchVisitData(startDate, endDate);
+            await fetchData();
+          }}
+          onFetchData={async (start, end) => {
+            await fetchVisitData(start, end);
+          }}
+        />
+
       </div>
     );
   }, [visitData]);
@@ -222,14 +254,15 @@ export default function Page() {
 
         <div className="min-w-0 flex-1 overflow-hidden">
           <CustomerEmployee
-            height="min-h-[calc(100dvh-370px)]"
+            onRefreshTask={fetchTasks}
+            height="min-h-[calc(100dvh-420px)]"
             ownership={false}
             customer_data={
               selectedOption && extraData
                 ? extraData[selectedOption as Exclude<keyof UserExtraTypes, "user">]
                 : []
             }
-            task_data={data?.new_entries?.today_tasks || null}
+            task_data={todayTasks}
             newly_assigned={data?.new_entries?.newly_assigned_customers || null}
             onRefresh={() => {
               fetchData()
@@ -240,6 +273,7 @@ export default function Page() {
       </div>
     )
   }, [userID, data, extraData, selectedOption])
+
   const RenderMembers = useCallback(() => {
     return (
       <Card className="flex flex-1 p-0">
@@ -258,44 +292,40 @@ export default function Page() {
 
   const RenderReimbursement = useCallback(() => {
     return (
-      <Card className="flex flex-1">
-        <CardContent className="pt-0 flex flex-1">
-          <Reimbursement
-            id={userID}
-            passingData={reimbursementData || []}
-            onAddRefresh={async () => {
-              const startDate = moment().startOf("month").toISOString();
-              const endDate = moment().endOf("month").toISOString();
-              await fetchReimbursementData(startDate, endDate);
-            }}
-            onFilterReturn={async (start, end) => { await fetchReimbursementData(start, end) }
-            }
-            onReset={async (start: string, end: string) => {
-              await fetchReimbursementData(start, end);
-            }}
-            onUpdatePurpose={(val) => {
-              const newData = updateItemPurpose(reimbursementData, val);
-              setReimbursementData(newData);
-            }}
-          />
-        </CardContent>
-      </Card>
+
+      <Reimbursement
+        id={userID}
+        passingData={reimbursementData || []}
+        onAddRefresh={async () => {
+          const startDate = moment().startOf("month").toISOString();
+          const endDate = moment().endOf("month").toISOString();
+          await fetchReimbursementData(startDate, endDate);
+        }}
+        onFilterReturn={async (start, end) => { await fetchReimbursementData(start, end) }
+        }
+        onReset={async (start: string, end: string) => {
+          await fetchReimbursementData(start, end);
+        }}
+        onUpdatePurpose={(val) => {
+          const newData = updateItemPurpose(reimbursementData, val);
+          setReimbursementData(newData);
+        }}
+      />
+
     );
   }, [reimbursementData]);
 
   const RenderAttendance = useCallback(() => {
     return (
-      <Card className="flex flex-1 p-0">
-        <CardContent className="pt-0 flex flex-1">
-          <Attendance
-            height="min-h-[calc(100dvh-470px)]"
-            passingData={attendanceData}
-            onFilterReturn={async (start, end) => {
-              await fetchAttendanceData(start, end)
-            }}
-          />
-        </CardContent>
-      </Card>
+
+      <Attendance
+        // height="min-h-[calc(100dvh-350px)]"
+        passingData={attendanceData}
+        onFilterReturn={async (start, end) => {
+          await fetchAttendanceData(start, end)
+        }}
+      />
+
     );
   }, [attendanceData]);
 
@@ -317,8 +347,96 @@ export default function Page() {
     );
   }, [callData]);
 
+  const tabTriggerBase =
+    "h-8 gap-1.5 rounded-md px-3 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:text-white hover:shadow-md cursor-pointer"
+
+  const tabs = [
+    {
+      value: "newCustomers",
+      label: "New Customers",
+      icon: UserPlus,
+      count: data?.new_entries?.newly_assigned_customers?.total || 0,
+      className: "bg-blue-600 hover:bg-blue-700 data-[state=active]:bg-blue-700 data-[state=active]:ring-blue-300",
+      badgeClassName: "text-blue-700",
+    },
+    {
+      value: "members",
+      label: "Members",
+      icon: Users,
+      count: data?.customers?.filter((customer) => customer.sales.length > 0).length || 0,
+      className: "bg-emerald-600 hover:bg-emerald-700 data-[state=active]:bg-emerald-700 data-[state=active]:ring-emerald-300",
+      badgeClassName: "text-emerald-700",
+    },
+    {
+      value: "reimbursement",
+      label: "Reimbursement",
+      icon: ReceiptText,
+      count: reimbursementData?.length || 0,
+      className: "bg-orange-500 hover:bg-orange-600 data-[state=active]:bg-orange-600 data-[state=active]:ring-orange-300",
+      badgeClassName: "text-orange-600",
+    },
+    {
+      value: "visit",
+      label: "Visit",
+      icon: MapPinned,
+      count: visitData?.length || 0,
+      className: "bg-sky-600 hover:bg-sky-700 data-[state=active]:bg-sky-700 data-[state=active]:ring-sky-300",
+      badgeClassName: "text-sky-700",
+    },
+    {
+      value: "calls",
+      label: "Calls",
+      icon: PhoneCall,
+      count: callData?.length || 0,
+      className: "bg-violet-600 hover:bg-violet-700 data-[state=active]:bg-violet-700 data-[state=active]:ring-violet-300",
+      badgeClassName: "text-violet-700",
+    },
+    {
+      value: "attendance",
+      label: "Attendance",
+      icon: CalendarCheck,
+      count: attendanceData?.filter((item) => item.status !== 'Absent').length || 0,
+      className: "bg-cyan-600 hover:bg-cyan-700 data-[state=active]:bg-cyan-700 data-[state=active]:ring-cyan-300",
+      badgeClassName: "text-cyan-700",
+    },
+    {
+      value: "salary",
+      label: "Salary",
+      icon: Wallet,
+      count: null,
+      className: "bg-amber-500 hover:bg-amber-600 data-[state=active]:bg-amber-600 data-[state=active]:ring-amber-300",
+      badgeClassName: "text-amber-700",
+    },
+    {
+      value: "issued",
+      label: "Returnable",
+      icon: RotateCcw,
+      count: allReturnables,
+      className: "bg-indigo-600 hover:bg-indigo-700 data-[state=active]:bg-indigo-700 data-[state=active]:ring-indigo-300",
+      badgeClassName: "text-indigo-700",
+    },
+    {
+      value: "fines",
+      label: "Fines",
+      icon: BadgeAlert,
+      count: allFines,
+      className: "bg-red-600 hover:bg-red-700 data-[state=active]:bg-red-700 data-[state=active]:ring-red-300",
+      badgeClassName: "text-red-700",
+    },
+  ]
+
+  const tabsMaxWidth =
+  isMobile 
+  ?"max-w-[calc(100dvw-35px)]"
+  : showingAutoScroll
+    ? open
+      ? "max-w-[calc(100dvw-550px)]"
+      : "max-w-[calc(100dvw-340px)]"
+    :
+    open ? "max-w-[calc(100dvw-290px)]"
+      : "max-w-[calc(100dvw-80px)]"
   return (
-    <div className="flex flex-1 gap-4 pb-4">
+    <div className="flex flex-1 gap-4 bg-background  py-2">
       <div className="flex flex-1 flex-col gap-4">
         {/* <div className="flex items-center">
           <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
@@ -329,13 +447,14 @@ export default function Page() {
             </p>
           </div>
         </div> */}
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-4">
+       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
           <SalesMetricCard
             title="Pending Payments"
             value={data?.new_entries?.pending_payments?.total || 0}
-            icon={Wallet}
-            accent="from-blue-50 via-white to-cyan-50 text-blue-700 ring-blue-100"
+            icon={WalletCards}
+            accent="from-blue-50 via-sky-50 to-white text-blue-700 ring-blue-100"
             iconClassName="bg-blue-600"
+            description="Machine payments"
             onClick={() =>
               setSelectedMetric({
                 kind: "pending_payments",
@@ -351,8 +470,9 @@ export default function Page() {
             title="Pending Parts Payments"
             value={data?.new_entries?.pending_parts_payments?.total || 0}
             icon={ReceiptText}
-            accent="from-violet-50 via-white to-fuchsia-50 text-violet-700 ring-violet-100"
+            accent="from-violet-50 via-purple-50 to-white text-violet-700 ring-violet-100"
             iconClassName="bg-violet-600"
+            description="Parts invoices"
             onClick={() =>
               setSelectedMetric({
                 kind: "pending_parts_payments",
@@ -367,9 +487,10 @@ export default function Page() {
           <SalesMetricCard
             title="Pending Deliveries"
             value={data?.new_entries?.pending_deliveries?.total || 0}
-            icon={Cpu}
-            accent="from-amber-50 via-white to-orange-50 text-amber-700 ring-amber-100"
+            icon={Truck}
+            accent="from-amber-50 via-orange-50 to-white text-amber-700 ring-amber-100"
             iconClassName="bg-amber-600"
+            description="Ready / awaiting"
             onClick={() =>
               setSelectedMetric({
                 kind: "pending_deliveries",
@@ -383,9 +504,10 @@ export default function Page() {
           <SalesMetricCard
             title="Follow up Required"
             value={data?.new_entries?.top_follow?.total || 0}
-            icon={MessageSquareText}
-            accent="from-rose-50 via-white to-red-50 text-rose-700 ring-rose-100"
+            icon={MessageSquareWarning}
+            accent="from-rose-50 via-red-50 to-white text-rose-700 ring-rose-100"
             iconClassName="bg-rose-600"
+            description="Priority follow ups"
             onClick={() =>
               setSelectedMetric({
                 kind: "top_follow",
@@ -396,11 +518,26 @@ export default function Page() {
             }
           />
 
+          <SalesMetricCard
+            title="Calls This Month"
+            value={data?.feedbacksTakenThisMonth || 0}
+            icon={PhoneCall}
+            accent="from-emerald-50 via-teal-50 to-white text-emerald-700 ring-emerald-100"
+            iconClassName="bg-emerald-600"
+            description={`of ${data?.totalCustomersWithSale || 0}`}
+          />
 
-
+          <SalesMetricCard
+            title="Visits This Month"
+            value={data?.totalVisits || 0}
+            icon={MapPinned}
+            accent="from-indigo-50 via-blue-50 to-white text-indigo-700 ring-indigo-100"
+            iconClassName="bg-indigo-600"
+            description="of 15"
+          />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3">
+        {/* <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <MachinesSoldCard
             value={data?.machinesSoldThisMonth || 0}
             percentage={Number(data?.percentageChange || "0")}
@@ -410,146 +547,84 @@ export default function Page() {
             }}
           />
 
-          <FeedbackTakenCard
-            value={data?.feedbacksTakenThisMonth || 0}
-            total={data?.totalCustomersWithSale || 0}
-            remaining={data?.remainingFeedbacks || 0}
-          />
+         
+        </div> */}
 
-          <VisitsDoneCard
-            value={data?.totalVisits || 0}
-            total={15}
-            remaining={Math.max(15 - (data?.totalVisits || 0), 0)}
-          />
+        <ScrollArea className={`${tabsMaxWidth}`}>
+
+
+          <div className="flex gap-2 pb-4 py-2">
+
+            {tabs.map((tab) => {
+              const Icon = tab.icon
+
+              return (
+                <div
+                  key={tab.value}
+                  onClick={() => routeTo(tab.value)}
+                  className={`${tabTriggerBase} ${tab.className} flex gap-1 items-center ${activeTab === tab.value && "-translate-y-1"}`}
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+
+                  <span className="whitespace-nowrap">{tab.label}</span>
+
+                  {tab.count !== null && tab.count !== undefined && (
+                    <Badge
+                      className={`ml-0.5 h-5 rounded-full bg-white px-1.5 text-[10px] font-bold hover:bg-white ${tab.badgeClassName}`}
+                    >
+                      {tab.count > 999 ? "999+" : tab.count}
+                    </Badge>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+
+          <ScrollBar orientation="horizontal" />
+
+        </ScrollArea>
+
+
+        <div hidden={activeTab !== "newCustomers"} className={`${isMobile && "max-w-[calc(100vw-30px)]"}`}>
+          <RenderNewCustomer />
+        </div>
+        <div hidden={activeTab !== "members"} >
+          <RenderMembers />
+        </div>
+        <div hidden={activeTab !== "reimbursement"} >
+          <RenderReimbursement />
+        </div>
+        <div hidden={activeTab !== "visit"}>
+          <RenderVisitTab />
+        </div>
+        <div hidden={activeTab !== "calls"} >
+          <RenderCallTab />
+        </div>
+        <div hidden={activeTab !== "attendance"} >
+          <RenderAttendance />
+        </div>
+        <div hidden={activeTab !== "salary"} >
+
+          <Card>
+            <CardContent>
+              <SalaryRecord id={userID} height="min-h-[calc(100dvh-420px)]" />
+            </CardContent>
+          </Card>
+
+        </div>
+        <div hidden={activeTab !== "issued"} >
+          <RenderReturnable height="min-h-[calc(100dvh-420px)]" onUpdateTotal={(val) => setAllReturnables(val)} />
+        </div>
+        <div hidden={activeTab !== "fines"} >
+          <RenderFines height="min-h-[calc(100dvh-480px)]" onUpdateTotal={(val) => setAllFines(val)} />
         </div>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="relative flex w-full flex-1 flex-col"
-        >
-          <ScrollArea
-            className={`overflow-x-auto ${isMobile && "max-w-[calc(100vw-30px)]"}`}
-          >
-            <TabsList className="justify-start group-data-horizontal/tabs:h-10">
-              <TabsTrigger
-                value="newCustomers"
-                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                <UserPlus className="h-4 w-4" />
-                New Customers <Badge variant={"secondary"}>{data?.new_entries?.newly_assigned_customers?.total}</Badge>
-              </TabsTrigger>
 
-              <TabsTrigger
-                value="members"
-                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                <Users className="h-4 w-4" />
-                Members <Badge variant={"secondary"}>{data?.customers.filter((customer) => customer.sales.length > 0).length ||
-                  0}</Badge>
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="reimbursement"
-                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                <ReceiptText className="h-4 w-4" />
-                Reimbursement
-                <Badge variant={"secondary"}>{reimbursementData?.length || 0}</Badge>
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="visit"
-                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                <MapPinned className="h-4 w-4" />
-                Visit  <Badge variant={"secondary"}>{visitData?.length || 0}</Badge>
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="calls"
-                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                <PhoneCall className="h-4 w-4" />
-                Calls
-                <Badge variant={"secondary"}>{callData?.length || 0}</Badge>
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="attendance"
-                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                <CalendarCheck className="h-4 w-4" />
-                Attendance
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="salary"
-                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                <Wallet className="h-4 w-4" />
-                Salary
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="issued"
-                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                <RotateCcw className="h-4 w-4" />
-                Returnable  <Badge variant={"secondary"}>{allReturnables}</Badge>
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="fines"
-                className="gap-2 rounded-md px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                <BadgeAlert className="h-4 w-4" />
-                Fines <Badge variant={"secondary"}>{allFines}</Badge>
-              </TabsTrigger>
-            </TabsList>
-
-            <Scrollbar orientation="horizontal" />
-          </ScrollArea>
-
-          <div hidden={activeTab !== "newCustomers"} className={`${isMobile && "max-w-[calc(100vw-30px)]"}`}>
-            <RenderNewCustomer />
-          </div>
-          <div hidden={activeTab !== "members"} >
-            <RenderMembers />
-          </div>
-          <div hidden={activeTab !== "reimbursement"} >
-            <RenderReimbursement />
-          </div>
-          <div hidden={activeTab !== "visit"}>
-            <RenderVisitTab />
-          </div>
-          <div hidden={activeTab !== "calls"} > 
-            <RenderCallTab />
-          </div>
-          <div hidden={activeTab !== "attendance"} >
-            <RenderAttendance />
-          </div>
-          <div hidden={activeTab !== "salary"} >
-
-            <Card className="flex flex-1 p-0">
-              <CardContent className="pt-0 flex flex-1">
-                <SalaryRecord id={userID} height="min-h-[calc(100dvh-420px)]" />
-              </CardContent>
-            </Card>
-
-          </div>
-          <div hidden={activeTab !== "issued"} >
-            <RenderReturnable height="min-h-[calc(100dvh-420px)]" onUpdateTotal={(val) => setAllReturnables(val)} />
-          </div>
-          <div hidden={activeTab !== "fines"} >
-            <RenderFines height="min-h-[calc(100dvh-480px)]" onUpdateTotal={(val) => setAllFines(val)} />
-          </div>
-
-        </Tabs>
       </div>
 
-      {/* <AutoScrollMembers /> */}
-      <MachinesSold visible={visible} setVisible={setVisible} machineData={machineData} base_route={base_route} />
+      <AutoScrollMembers onUpdate={setShowingAutoScroll} />
+      {/* <MachinesSold visible={visible} setVisible={setVisible} machineData={machineData} base_route={base_route} /> */}
       <SalesMetricDetailsDialog
         metric={selectedMetric}
         onClose={() => setSelectedMetric(null)}
@@ -803,34 +878,109 @@ function SalesMetricCard({
   icon: Icon,
   accent,
   iconClassName,
-  onClick
+  onClick,
+  description = "Current Total",
 }: {
   title: string;
   value: number;
   icon: ElementType;
   accent: string;
   iconClassName: string;
-  onClick ?: () => void
+  onClick?: () => void;
+  description?: string;
 }) {
-  return (
-    <div className={`relative flex h-full min-h-[136px] w-full overflow-hidden rounded-2xl border bg-gradient-to-r ${accent} p-4 shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md`}>
-      <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rotate-12 rounded-[2rem] bg-white/55" />
-      <div className="relative flex w-full items-start gap-3">
-        <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-white shadow-sm ring-1 ring-white/40 ${iconClassName}`}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            {title}
-          </p>
 
-          <p onClick={()=>onClick?.()} className="hover:underline cursor-pointer mt-3 text-3xl font-black tracking-tight text-slate-950">
-            {value}
-          </p>
+  const getChartStrokeClass = (className: string) => {
+    return className.replace("bg", "stroke")
+  }
+
+  const getChartFillClass = (className: string) => {
+    return className.replace("bg", "fill")
+  }
+
+  return (
+    <div
+
+      className={`
+      group relative flex h-full min-h-[118px] w-full overflow-hidden
+      rounded-lg border border-white/60 bg-gradient-to-br ${accent}
+      p-4 ring-1 ring-black/5
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400
+    `}
+    >
+      {/* soft background glow only */}
+      <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/40 blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-12 left-8 h-28 w-28 rounded-full bg-white/20 blur-2xl" />
+
+      {/* glass shine */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent" />
+
+      <div className="relative z-10 flex w-full flex-col justify-between gap-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="line-clamp-2 text-[13px] font-semibold leading-snug tracking-tight text-slate-800">
+              {title}
+            </p>
+
+            <p className="mt-1 text-[11px] font-medium text-slate-600">
+              {description}
+            </p>
+          </div>
+
+          <div
+            className={`
+            grid size-11 shrink-0 place-items-center rounded-lg text-white
+            ring-1 ring-white/40 ${iconClassName}
+          `}
+          >
+            <Icon className="h-5 w-5" />
+          </div>
+        </div>
+
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onClick?.()
+              }}
+              disabled={!onClick}
+              className={`
+              text-left text-3xl font-black leading-none tracking-tight text-slate-950
+              ${onClick ? "cursor-pointer transition hover:text-blue-700 hover:underline" : "cursor-default"}
+            `}
+            >
+              {value?.toLocaleString?.() ?? value}
+            </button>
+          </div>
+
+          <div className="flex h-10 w-24 items-center justify-center px-1">
+            <svg
+              viewBox="0 0 96 40"
+              fill="none"
+              className="h-9 w-full overflow-visible"
+              aria-hidden="true"
+            >
+              <path
+                d="M6 26 L14 18 L22 24 L30 16 L38 22 L48 13 L58 19 L68 10 L78 25 L86 6 L90 27 L90 36 L6 36 Z"
+                className={`${getChartFillClass(iconClassName)} opacity-10`}
+              />
+
+              <path
+                d="M6 26 L14 18 L22 24 L30 16 L38 22 L48 13 L58 19 L68 10 L78 25 L86 6 L90 27"
+                className={`${getChartStrokeClass(iconClassName)}`}
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+
+            </svg>
+          </div>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 function CustomersTab({
@@ -951,98 +1101,98 @@ function CustomersTab({
         </div>
       </div>
 
-    
-        <Accordion type="single" collapsible className="w-full space-y-2 p-3">
-          {localData.length === 0 ? (
-            <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed bg-slate-50 p-6 text-center dark:bg-zinc-900/50">
-              <div>
-                <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-muted-foreground dark:bg-zinc-800">
-                  <AlertCircle className="h-5 w-5" />
-                </span>
-                <Label className="mt-3 block text-sm font-medium">
-                  No data found
-                </Label>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Customer records will appear here when assigned
-                </p>
-              </div>
+
+      <Accordion type="single" collapsible className="w-full space-y-2 p-3">
+        {localData.length === 0 ? (
+          <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed bg-slate-50 p-6 text-center dark:bg-zinc-900/50">
+            <div>
+              <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-muted-foreground dark:bg-zinc-800">
+                <AlertCircle className="h-5 w-5" />
+              </span>
+              <Label className="mt-3 block text-sm font-medium">
+                No data found
+              </Label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Customer records will appear here when assigned
+              </p>
             </div>
-          ) : (
-            localData.map((customer) => (
-              <AccordionItem
-                key={customer.id}
-                className="w-[calc(100vw-60px)] border-none sm:w-full"
-                value={`customer-${customer.id}`}
-              >
-                <Card className="overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 transition-shadow hover:shadow-md dark:bg-zinc-950 dark:ring-white/10 p-0">
-                  <AccordionTrigger className="hover:no-underline sm:px-4">
-                    <div className="flex w-full min-w-0 flex-col gap-3 pr-2 sm:flex-row sm:items-center sm:justify-between">
-                      <div
-                      
-                        className="flex min-w-0 items-center gap-3"
-                      >
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                          <UserRound className="h-4 w-4" />
-                        </span>
-                        <span className="min-w-0 text-left">
-                          <Link   href={`/${base_route}/${customer.member ? "member" : "customer"
+          </div>
+        ) : (
+          localData.map((customer) => (
+            <AccordionItem
+              key={customer.id}
+              className="w-[calc(100vw-60px)] border-none sm:w-full"
+              value={`customer-${customer.id}`}
+            >
+              <Card className="overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 transition-shadow hover:shadow-md dark:bg-zinc-950 dark:ring-white/10 p-0">
+                <AccordionTrigger className="hover:no-underline sm:px-4">
+                  <div className="flex w-full min-w-0 flex-col gap-3 pr-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div
+
+                      className="flex min-w-0 items-center gap-3"
+                    >
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <UserRound className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0 text-left">
+                        <Link href={`/${base_route}/${customer.member ? "member" : "customer"
                           }/${customer.id}`}>
                           <span className="block truncate text-sm font-semibold hover:underline sm:text-base">
                             {customer.name}
                           </span>
-                          </Link>
-                          <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                            <span>{customer.member ? "Member" : "Customer"}</span>
-                            <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
-                            <span>{customer.sales.length} machines</span>
-                          </span>
+                        </Link>
+                        <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                          <span>{customer.member ? "Member" : "Customer"}</span>
+                          <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
+                          <span>{customer.sales.length} machines</span>
                         </span>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                        <Badge variant="outline" className="h-6 rounded-full bg-background px-2 text-[10px]">
-                          <Gauge className="mr-1 h-3 w-3" />
-                          {customer.overall}% profile
-                        </Badge>
-
-                        <Badge
-                          className="h-6 rounded-full px-2 text-[10px]"
-                          variant={
-                            customer.sales.length === 0 ? "secondary" : "default"
-                          }
-                        >
-                          {customer.sales.length === 0 ? "Assigned" : "Purchased"}
-                        </Badge>
-                      </div>
+                      </span>
                     </div>
-                  </AccordionTrigger>
 
-                  <AccordionContent>
-                    <CardContent className="border-t bg-slate-50/60 px-3 py-3 sm:px-4 dark:bg-zinc-900/50">
-                      {customer.sales.length > 0 ? (
-                        <div className="space-y-2">
-                          {customer.sales.map((machine) => (
-                            <RenderEachMachine
-                              key={machine.id}
-                              machine={machine}
-                              customer_id={customer.id}
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="flex min-h-16 items-center justify-center gap-2 rounded-lg border border-dashed bg-background p-4 text-sm text-muted-foreground">
-                          <AlertCircle className="h-5 w-5 shrink-0" />
-                          No machines purchased yet
-                        </div>
-                      )}
-                    </CardContent>
-                  </AccordionContent>
-                </Card>
-              </AccordionItem>
-            ))
-          )}
-        </Accordion>
- 
+                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                      <Badge variant="outline" className="h-6 rounded-full bg-background px-2 text-[10px]">
+                        <Gauge className="mr-1 h-3 w-3" />
+                        {customer.overall}% profile
+                      </Badge>
+
+                      <Badge
+                        className="h-6 rounded-full px-2 text-[10px]"
+                        variant={
+                          customer.sales.length === 0 ? "secondary" : "default"
+                        }
+                      >
+                        {customer.sales.length === 0 ? "Assigned" : "Purchased"}
+                      </Badge>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+
+                <AccordionContent>
+                  <CardContent className="border-t bg-slate-50/60 px-3 py-3 sm:px-4 dark:bg-zinc-900/50">
+                    {customer.sales.length > 0 ? (
+                      <div className="space-y-2">
+                        {customer.sales.map((machine) => (
+                          <RenderEachMachine
+                            key={machine.id}
+                            machine={machine}
+                            customer_id={customer.id}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex min-h-16 items-center justify-center gap-2 rounded-lg border border-dashed bg-background p-4 text-sm text-muted-foreground">
+                        <AlertCircle className="h-5 w-5 shrink-0" />
+                        No machines purchased yet
+                      </div>
+                    )}
+                  </CardContent>
+                </AccordionContent>
+              </Card>
+            </AccordionItem>
+          ))
+        )}
+      </Accordion>
+
     </div>
   )
 }
@@ -1057,6 +1207,7 @@ function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Pro
   const [next, setNext] = useState<Date | undefined>(undefined);
   const [top, setTop] = useState(false);
   const { userID } = useUserDetail();
+
 
   async function handleSaveFeedback() {
     setLoading(true);
@@ -1142,29 +1293,29 @@ function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Pro
         </Badge>
       </div>
 
-      <ScrollArea className="h-[min(620px,calc(100dvh-300px))] sm:h-[calc(100dvh-410px)]">
-        {data.length === 0 ? (
-          <div className="flex min-h-40 items-center justify-center p-6">
-            <div className="text-center">
-              <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300">
-                <CheckCircle className="h-5 w-5" />
-              </span>
-              <Label className="mt-3 block text-sm font-medium">
-                No calls remaining
-              </Label>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Everything is clear for this period
-              </p>
-            </div>
+
+      {data.length === 0 ? (
+        <div className="flex min-h-40 items-center justify-center p-6">
+          <div className="text-center">
+            <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300">
+              <CheckCircle className="h-5 w-5" />
+            </span>
+            <Label className="mt-3 block text-sm font-medium">
+              No calls remaining
+            </Label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Everything is clear for this period
+            </p>
           </div>
-        ) : (
-          <div className="flex flex-col gap-2 p-3">
-            {data.map((call) => (
-              <RenderEachCall call={call} key={call.id} />
-            ))}
-          </div>
-        )}
-      </ScrollArea>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2 p-3">
+          {data.map((call) => (
+            <RenderEachCall call={call} key={call.id} />
+          ))}
+        </div>
+      )}
+
 
       <Dialog open={visible} onOpenChange={setVisible}>
         <DialogContent className="max-w-[94vw] overflow-hidden p-0 sm:max-w-[520px]">

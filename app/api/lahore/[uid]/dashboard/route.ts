@@ -1289,11 +1289,6 @@ GROUP BY
 
 async function getSalesData(currentMonthStart: string, currentMonthEnd: string, lastMonthStart: string, lastMonthEnd: string, uid: string) {
 
-    const TIMEZONE = "Asia/Karachi";
-
-    const todayStart = momentT.tz(TIMEZONE).startOf("day").utc().toISOString();
-    const todayEnd = momentT.tz(TIMEZONE).endOf("day").utc().toISOString();
-
     const [customersQuery] = await Promise.all([
         pool.query(`SELECT DISTINCT c.*
     FROM customer c
@@ -1335,7 +1330,7 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
       WHERE contract_date BETWEEN $1 AND $2 AND sell_by = $3
     `;
 
-    const pendingPaymentsQuery = `
+   const pendingPaymentsQuery = `
   WITH payment_totals AS (
     SELECT
       machine_id,
@@ -1362,6 +1357,11 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
   LEFT JOIN customer c ON c.id = s.customer_id
   WHERE s.sell_by = $1
     AND GREATEST(COALESCE(s.price::numeric, 0) - COALESCE(pt.total_paid, 0), 0) > 0
+    AND NOT EXISTS (
+      SELECT 1
+      FROM cancelled_machine cm
+      WHERE cm.machine_id = s.id
+    )
   ORDER BY s.contract_date DESC
 `;
 
@@ -1394,7 +1394,7 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
   ORDER BY si.created_at DESC
 `;
 
-    const pendingDeliveriesQuery = `
+   const pendingDeliveriesQuery = `
   SELECT
     s.*,
     JSON_BUILD_OBJECT(
@@ -1411,6 +1411,11 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
   LEFT JOIN customer c ON c.id = s.customer_id
   WHERE s.sell_by = $1
     AND s.ready_for_delivery IS FALSE
+    AND NOT EXISTS (
+      SELECT 1
+      FROM cancelled_machine cm
+      WHERE cm.machine_id = s.id
+    )
   ORDER BY s.contract_date DESC
 `;
 
@@ -1450,25 +1455,7 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
   ORDER BY created_at DESC
 `;
 
-    const todayTasksQuery = `
-  SELECT
-    t.*,
-    JSON_BUILD_OBJECT(
-      'id', c.id,
-      'name', c.name,
-      'owner', c.owner,
-      'number', c.number,
-      'location', c.location,
-      'industry', c.industry,
-      'member', c.member,
-      'created_at', c.created_at
-    ) AS customer
-  FROM task t
-  LEFT JOIN customer c ON c.id = t.customer_id
-  WHERE t.assigned_to = $1
-    AND t.created_at BETWEEN $2 AND $3
-  ORDER BY t.created_at DESC
-`;
+   
 
     const [
         currentMonthSalesResult,
@@ -1482,7 +1469,7 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
         pendingDeliveriesResult,
         topFollowResult,
         newlyAssignedCustomersResult,
-        todayTasksResult,
+       
     ] = await Promise.all([
         pool.query(machinesSoldQuery, [currentMonthStart, currentMonthEnd, uid]),
         pool.query(machinesSoldQuery, [lastMonthStart, lastMonthEnd, uid]),
@@ -1522,7 +1509,7 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
             currentMonthEnd,
         ]),
 
-        pool.query(todayTasksQuery, [uid, todayStart, todayEnd]),
+       
     ]);
 
     const machinesSoldThisMonth = parseInt(currentMonthSalesResult.rows[0].total, 10) || 0;
@@ -1709,10 +1696,7 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
                 data: newlyAssignedCustomersResult.rows,
             },
 
-            today_tasks: {
-                total: todayTasksResult.rows.length,
-                data: todayTasksResult.rows,
-            },
+           
 
             customers_with_sale_or_member: {
                 total: customersWithSaleOrMember.length,

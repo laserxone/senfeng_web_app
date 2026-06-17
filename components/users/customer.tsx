@@ -9,7 +9,7 @@ import PageTable from "@/components/app-table";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 
-import { ExtraCustomer, NewlyAssignedCustomer, TodayTask } from "@/lib/types";
+import { ExtraCustomer, NewlyAssignedCustomer, TaskProps, TodayTask } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import moment from "moment";
 import Link from "next/link";
@@ -26,6 +26,7 @@ import { Input } from "../ui/input";
 import { Progress } from "../ui/progress";
 import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
+import { AddTask } from "./task";
 
 
 type CustomerEmployeeProps = {
@@ -35,8 +36,9 @@ type CustomerEmployeeProps = {
   ownership: boolean;
   totalCustomerText?: string;
   height?: string
-  task_data: { total: number, data: TodayTask[] } | null
-  newly_assigned: null | { total: number, data: NewlyAssignedCustomer[] }
+  task_data?: { total: number, data: TaskProps[] } | null
+  newly_assigned?: null | { total: number, data: NewlyAssignedCustomer[] }
+  onRefreshTask?: (start: string, end: string) => Promise<void>
 };
 
 export default function CustomerEmployee({
@@ -45,7 +47,8 @@ export default function CustomerEmployee({
   ownership,
   height,
   task_data,
-  newly_assigned
+  newly_assigned,
+  onRefreshTask
 }: CustomerEmployeeProps) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState<ExtraCustomer[]>([]);
@@ -209,38 +212,39 @@ export default function CustomerEmployee({
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-    
-        <PageTable
-          columns={columns}
-          data={data}
-          onRowClick={(val, event) => {
-            if (val?.id) {
-              const url = `/${base_route}/${val?.member ? "member" : "customer"
-                }/${val.id}`;
 
-              if (event.ctrlKey || event.metaKey) {
-                window.open(url, "_blank");
-              } else {
+      <PageTable
+        height={height}
+        columns={columns}
+        data={data}
+        onRowClick={(val, event) => {
+          if (val?.id) {
+            const url = `/${base_route}/${val?.member ? "member" : "customer"
+              }/${val.id}`;
 
-                router.push(url);
-              }
+            if (event.ctrlKey || event.metaKey) {
+              window.open(url, "_blank");
+            } else {
+
+              router.push(url);
             }
-          }}
-        >
-          <div className=" flex justify-between">
-            <div className="flex gap-4 flex-wrap">
-              {customer_add_access && (
-                <Button size={"lg"} onClick={() => setAddCustomer(true)}>
-                  <Plus />   Add Customer
-                </Button>
-              )}
-              {newly_assigned && <RenderNewlyAssigned data={newly_assigned} />}
-            </div>
+          }
+        }}
+      >
+        <div className=" flex justify-between">
+          <div className="flex gap-4 flex-wrap">
+            {customer_add_access && (
+              <Button onClick={() => setAddCustomer(true)}>
+                <Plus />   Add Customer
+              </Button>
+            )}
+            {newly_assigned && <RenderNewlyAssigned data={newly_assigned} />}
           </div>
-        </PageTable>
-  
+        </div>
+      </PageTable>
 
-      {task_data && <RenderTodayTasks data={task_data} />}
+
+      {task_data && <RenderTodayTasks data={task_data} onRefresh={onRefreshTask} />}
 
       <AddCustomerDialog
         office={route_branch}
@@ -318,11 +322,14 @@ export default function CustomerEmployee({
   );
 }
 
-const RenderTodayTasks = ({ data }: { data: { total: number, data: TodayTask[] } | null }) => {
+const RenderTodayTasks = ({ data, onRefresh }: {
+  data: { total: number, data: TaskProps[] } | null,
+  onRefresh?: (start: string, end: string) => Promise<void>
+}) => {
   const { userID } = useUserDetail();
-  const [tasks, setTasks] = useState<TodayTask[]>([]);
-  const [loadingId, setLoadingId] = useState<TodayTask["id"] | null>(null);
-
+  const [tasks, setTasks] = useState<TaskProps[]>([]);
+  const [loadingId, setLoadingId] = useState<TaskProps["id"] | null>(null);
+  const [addTaskVisible, setAddTaskVisible] = useState(false)
   useEffect(() => {
     setTasks(data?.data || []);
   }, [data]);
@@ -331,7 +338,7 @@ const RenderTodayTasks = ({ data }: { data: { total: number, data: TodayTask[] }
   const completedTasks = tasks.filter((task) => task.status?.toLowerCase() === "completed").length;
   const progress = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  async function handleMarkCompleted(task: TodayTask) {
+  async function handleMarkCompleted(task: TaskProps) {
     setLoadingId(task.id);
     try {
       await axios.put(`/${userID}/task/${task.id}`, {
@@ -353,43 +360,49 @@ const RenderTodayTasks = ({ data }: { data: { total: number, data: TodayTask[] }
   }
 
   return (
-    <Card className="overflow-hidden rounded-md border bg-background">
-      <CardHeader className="border-b bg-muted/20 p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <Card className="overflow-hidden rounded-lg border bg-background shadow-sm">
+      <CardHeader className="border-b bg-slate-50/80 p-4 dark:bg-zinc-900/70">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-              <ClipboardList className="h-5 w-5" />
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-600 text-white shadow-sm">
+              <ClipboardList className="h-4 w-4" />
             </div>
             <div>
-              <CardTitle className="text-xl font-bold tracking-tight">
+              <CardTitle className="text-base font-bold tracking-tight">
                 Today Tasks
               </CardTitle>
-              <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                <CalendarDays className="h-4 w-4" />
+              <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                <CalendarDays className="h-3.5 w-3.5" />
                 {moment().format("dddd, MMMM D, YYYY")}
               </div>
             </div>
           </div>
 
-          <Badge variant="outline" className="w-fit rounded-full bg-background px-3 py-1 text-sm">
-            {totalTasks} tasks today
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="w-fit rounded-full bg-background px-2.5 py-1 text-xs">
+              {totalTasks} tasks today
+            </Badge>
+            <Button onClick={() => setAddTaskVisible(true)} type="button" variant="outline" size="sm" className="h-8 gap-2 rounded-md bg-background">
+              <CalendarDays className="h-3.5 w-3.5" />
+              Plan your day
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4 p-5">
+      <CardContent className="space-y-3 p-4">
         {tasks.length === 0 ? (
-          <div className="grid min-h-32 place-items-center rounded-2xl border border-dashed bg-muted/15 p-6 text-center">
+          <div className="grid min-h-28 place-items-center rounded-lg border border-dashed bg-muted/15 p-5 text-center">
             <div>
-              <ClipboardList className="mx-auto h-9 w-9 text-muted-foreground" />
-              <p className="mt-3 text-sm font-semibold">No tasks for today</p>
+              <ClipboardList className="mx-auto h-8 w-8 text-muted-foreground" />
+              <p className="mt-2 text-sm font-semibold">No tasks for today</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 New assigned tasks will appear here.
               </p>
             </div>
           </div>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid gap-2">
             {tasks.map((task) => {
               const normalizedStatus = task.status?.toLowerCase();
               const isCompleted = normalizedStatus === "completed";
@@ -398,14 +411,14 @@ const RenderTodayTasks = ({ data }: { data: { total: number, data: TodayTask[] }
               return (
                 <div
                   key={task.id}
-                  className="rounded-2xl border bg-muted/15 p-4 transition hover:bg-muted/25"
+                  className="rounded-lg border bg-muted/10 p-3 transition hover:bg-muted/20"
                 >
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge
                           variant="outline"
-                          className={`rounded-full px-2.5 py-1 ${isCompleted
+                          className={`h-6 rounded-full px-2 text-[11px] ${isCompleted
                             ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
                             : isPending
                               ? "bg-amber-50 text-amber-700 hover:bg-amber-50"
@@ -413,37 +426,37 @@ const RenderTodayTasks = ({ data }: { data: { total: number, data: TodayTask[] }
                             }`}
                         >
                           {isCompleted ? (
-                            <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+                            <CheckCircle2 className="mr-1 h-3 w-3" />
                           ) : (
-                            <Clock className="mr-1 h-3.5 w-3.5" />
+                            <Clock className="mr-1 h-3 w-3" />
                           )}
                           {task.status || "Pending"}
                         </Badge>
                         {task.type && (
-                          <Badge variant="outline" className="rounded-full bg-background px-2.5 py-1">
+                          <Badge variant="outline" className="h-6 rounded-full bg-background px-2 text-[11px]">
                             {task.type}
                           </Badge>
                         )}
                       </div>
 
-                      <h3 className="mt-3 break-words text-base font-bold">
+                      <h3 className="mt-2 break-words text-sm font-bold">
                         {task.task_name || "Untitled task"}
                       </h3>
 
-                      <div className="mt-3 flex flex-wrap gap-2 text-sm text-muted-foreground">
-                        <span className="inline-flex items-center gap-1 rounded-full border bg-background px-3 py-1">
-                          <UserRound className="h-3.5 w-3.5" />
-                          {task.customer?.name || "No customer"}
+                      <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1 rounded-full border bg-background px-2.5 py-1">
+                          <UserRound className="h-3 w-3" />
+                          {task.customer_name || "No customer"}
                         </span>
                         {task.location && (
-                          <span className="rounded-full border bg-background px-3 py-1">
+                          <span className="rounded-full border bg-background px-2.5 py-1">
                             {task.location}
                           </span>
                         )}
                       </div>
 
                       {task.problem && (
-                        <p className="mt-3 line-clamp-2 break-words text-sm leading-relaxed text-muted-foreground">
+                        <p className="mt-2 line-clamp-2 break-words text-xs leading-relaxed text-muted-foreground">
                           {task.problem}
                         </p>
                       )}
@@ -451,14 +464,14 @@ const RenderTodayTasks = ({ data }: { data: { total: number, data: TodayTask[] }
 
                     {isPending && (
                       <Button
-                        className="w-full gap-2 lg:w-auto"
+                        className="h-8 w-full gap-2 rounded-md text-xs lg:w-auto"
                         disabled={loadingId === task.id}
                         onClick={() => handleMarkCompleted(task)}
                       >
                         {loadingId === task.id ? (
                           <Spinner />
                         ) : (
-                          <CheckCircle2 className="h-4 w-4" />
+                          <CheckCircle2 className="h-3.5 w-3.5" />
                         )}
                         Mark Completed
                       </Button>
@@ -470,18 +483,29 @@ const RenderTodayTasks = ({ data }: { data: { total: number, data: TodayTask[] }
           </div>
         )}
 
-        <div className="rounded-2xl border bg-background p-4">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-semibold">
+        <div className="rounded-lg border bg-background p-3">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold">
               {completedTasks} of {totalTasks} completed
             </p>
-            <p className="text-sm font-medium text-muted-foreground">
+            <p className="text-xs font-medium text-muted-foreground">
               {progress}%
             </p>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-1.5" />
         </div>
       </CardContent>
+
+      <AddTask
+        onRefresh={async () => {
+          const startDate = moment().startOf("day").toISOString();
+          const endDate = moment().endOf("day").toISOString();
+          await onRefresh?.(startDate, endDate)
+        }}
+        user_id={userID}
+        visible={addTaskVisible}
+        onClose={setAddTaskVisible}
+      />
     </Card>
   )
 }
@@ -500,10 +524,9 @@ const RenderNewlyAssigned = ({ data }: { data: { total: number, data: NewlyAssig
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          size="lg"
           className="bg-white rounded-md"
         >
-        <DownloadIcon />  New Customers Assigned
+          <DownloadIcon />  New Customers Assigned
           <Badge >
             {data?.total || 0}
           </Badge>

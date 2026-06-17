@@ -1,20 +1,13 @@
+import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from "./ui/card";
-import { Label } from "./ui/label";
-import { useIsMobile } from "@/hooks/use-mobile";
 
-const AutoScrollMembers = () => {
-  const {userID, base_route} = useUserDetail()
-  const [localData, setLocalData] = useState<{id : number, member : boolean, name : string }[]>([]);
+const AutoScrollMembers = ({onUpdate} : {onUpdate ?: (item : boolean)=> void}) => {
+  const { userID, base_route } = useUserDetail()
+  const [localData, setLocalData] = useState<{ id: number, member: boolean, name: string }[]>([]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   const isMobile = useIsMobile()
@@ -33,9 +26,8 @@ const AutoScrollMembers = () => {
             ...item,
             name:
               item.name?.trim() ||
-              `${item.owner?.trim() || ""} ${
-                item.location?.trim() || ""
-              }`.trim(),
+              `${item.owner?.trim() || ""} ${item.location?.trim() || ""
+                }`.trim(),
           }))
           .filter((item) => !!item.name)
           .sort((a, b) => a.name.localeCompare(b.name));
@@ -51,104 +43,102 @@ const AutoScrollMembers = () => {
     }
   }, [userID]);
 
+  useEffect(()=>{
+    onUpdate?.(localData.length > 0)
+  
+  },[localData.length, onUpdate])
+
   useEffect(() => {
     if (localData.length === 0) return;
+
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
 
-    let scrollSpeed = 1;
-    let direction = 1;
-    let interval : any;
+    const interval = window.setInterval(() => {
+      if (isHovered) return;
 
-    const scroll = () => {
-      if (!isHovered) {
-        if (
-          scrollContainer.scrollTop + scrollContainer.clientHeight >=
-          scrollContainer.scrollHeight
-        ) {
-          scrollContainer.scrollTop = 0;
-        } else {
-          scrollContainer.scrollTop += scrollSpeed * direction;
-        }
+      if (
+        scrollContainer.scrollTop + scrollContainer.clientHeight >=
+        scrollContainer.scrollHeight
+      ) {
+        scrollContainer.scrollTop = 0;
+        return;
       }
-    };
 
-    const startScrolling = () => {
-      interval = setInterval(scroll, 10);
-    };
-
-    const stopScrolling = () => {
-      clearInterval(interval);
-    };
-
-    scrollContainer.addEventListener("mouseenter", () => {
-      setIsHovered(true);
-      stopScrolling();
-    });
-
-    scrollContainer.addEventListener("mouseleave", () => {
-      setIsHovered(false);
-      startScrolling();
-    });
-
-    startScrolling();
+      scrollContainer.scrollTop += 1;
+    }, 18);
 
     return () => {
-      stopScrolling();
-      scrollContainer.removeEventListener("mouseenter", stopScrolling);
-      scrollContainer.removeEventListener("mouseleave", startScrolling);
+      window.clearInterval(interval);
     };
-  }, [isHovered, localData]);
+  }, [isHovered, localData.length]);
 
   const colors = [
-    "bg-red-300",
-    "bg-blue-300",
-    "bg-green-300",
-    "bg-yellow-300",
-    "bg-purple-300",
-    "bg-pink-300",
-    "bg-teal-300",
-    "bg-orange-300",
+    "bg-red-500",
+    "bg-blue-600",
+    "bg-emerald-600",
+    "bg-amber-500",
+    "bg-violet-600",
+    "bg-pink-600",
+    "bg-teal-600",
+    "bg-orange-500",
   ];
 
   if (localData.length == 0) return null;
 
-  const duplicatedList = [...localData, ...localData];
-  if(isMobile) return null
-  return (
-    <div className="w-[310px]">
-    <Card className="mt-1 fixed">
-      <CardContent>
-         <CardHeader>
-        <CardTitle>Members</CardTitle>
-      </CardHeader>
-        <div ref={scrollRef} className="h-[calc(100dvh-150px)] no-scrollbar overflow-y-auto">
-          {duplicatedList.map((item, index) => {
-            const randomColor = colors[index % colors.length];
-            return (
-              <Link
-                key={index}
-                className="flex items-center m-2 cursor-pointer"
-                href={`/${base_route}/${
-                  item.member ? "member" : "customer"
-                }/${item.id}`}
-              >
-                <Avatar className="w-12 h-12 mr-4 ">
-                  <AvatarImage src="/" alt="Customer Picture" />
-                  <AvatarFallback className={`text-white ${randomColor}`}>
-                    {item?.name?.substring(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
+  const duplicatedList = [...localData];
 
-                <Label style={{ fontWeight: "600" }}>
-                  {item?.name?.substring(0, 20)}
-                </Label>
-              </Link>
-            );
-          })}
+  if (isMobile) return null
+  return (
+    <div className="w-[240px] shrink-0">
+      <div className="fixed mt-1 w-[240px] overflow-hidden rounded-md border bg-background/95 shadow-sm ring-1 ring-border/40 backdrop-blur">
+        <div className="border-b bg-gradient-to-r from-muted/45 via-background to-muted/25 px-3 py-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-sm font-bold tracking-tight">
+              Customers
+            </div>
+            <span className="rounded-md border bg-background px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+              {localData.length}
+            </span>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+        <div className="p-2">
+          <div
+            ref={scrollRef}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className="h-[calc(100dvh-158px)] space-y-1 overflow-y-auto pr-1 no-scrollbar"
+          >
+              {duplicatedList.map((item, index) => {
+                const randomColor = colors[index % colors.length];
+                return (
+                  <Link
+                    key={`${item.id}-${index}`}
+                    className="group flex h-[42px] min-w-0 cursor-pointer items-center gap-2 rounded-md border border-transparent px-2 transition hover:border-border hover:bg-muted/45"
+                    href={`/${base_route}/${item.member ? "member" : "customer"
+                      }/${item.id}`}
+                  >
+                    <Avatar className="h-8 w-8 shrink-0 ring-1 ring-border/60">
+                      <AvatarImage src="/" alt="Customer Picture" />
+                      <AvatarFallback className={`text-[11px] font-bold uppercase text-white ${randomColor}`}>
+                        {item?.name?.substring(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-semibold leading-4 text-foreground">
+                        {item?.name}
+                      </p>
+                      <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                        {item.member ? "Member" : "Customer"}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

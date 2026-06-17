@@ -13,7 +13,7 @@ export default function PageContainer({
   return (
     <ScrollArea className="h-[calc(100dvh-62px)] flex flex-1">
       <div className="flex flex-1 justify-center">
-        <div className="flex flex-col flex-1 sm:px-6 px-4 gap-6">
+        <div className="flex flex-col flex-1 px-4">
           <div className={`flex flex-1 ${className}`}>
             {children}
           </div>

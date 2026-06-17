@@ -21,7 +21,7 @@ export function Breadcrumbs() {
   if (items.length === 0) return null;
   return (
     <Breadcrumb>
-      <BreadcrumbList>
+      <BreadcrumbList className="text-sm">
         {items.map((item: BreadcrumbItem, index: number) => (
           <Fragment key={item.title}>
             {index !== items.length - 1 && (

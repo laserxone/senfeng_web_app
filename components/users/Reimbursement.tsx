@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowUpDown, Edit, Filter } from "lucide-react";
+import { ArrowUpDown, DownloadIcon, Edit, Filter, Plus, PlusCircle, RotateCcw } from "lucide-react";
 import {
   useCallback,
   useContext,
@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import AppCalendar from "@/components/appCalendar";
 import Dropzone from "@/components/dropzone";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -310,14 +310,14 @@ export default function Reimbursement({
               setResetLoading(false);
             }}
           >
-            {resetLoading && <Spinner />} Reset
+            {resetLoading && <Spinner />} <RotateCcw/> Reset
           </Button>
 
           <Button onClick={() => setReimbursementVisible(true)}>
-            Add Reimbursement
+          <Plus/>  Add Reimbursement
           </Button>
 
-          <Button onClick={handleDownload}>Download</Button>
+          <Button variant={"outline"} onClick={handleDownload}><DownloadIcon /> Download</Button>
           </div>
 
           <div className="flex flex-1 justify-start sm:justify-end gap-2 flex-wrap items-center">
@@ -546,7 +546,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: 
           <DialogTitle className="text-xl">Add New Reimbursement</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="h-[80vh] px-2">
+        <ScrollArea className="max-h-[calc(100dvh-160px)] px-2">
           <div className="px-2 space-y-4">
             <RadioGroup
               defaultValue={selectedRadio}

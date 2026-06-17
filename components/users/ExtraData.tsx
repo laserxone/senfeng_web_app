@@ -19,54 +19,80 @@ export const CustomerExtraData = ({
     { key: "next", label: "Next Month", dataKey: "nextMonth" },
   ]
 
-  return (
-    <div className="mt-3 flex flex-col gap-3 lg:mt-5 bg-gray-100 dark:bg-gray-800">
-      <div className="rounded-lg bg-gray-100 dark:bg-gray-800 px-4 py-2 ">
-        <h2 className="text-lg font-bold tracking-tight sm:text-xl lg:text-2xl">
-          Customer Group
-        </h2>
-      </div>
-
-      <div className="flex w-full gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
-        {menuItems.map(({ key, label, dataKey }) => {
-          const count = data?.[dataKey as keyof typeof data]?.length ?? 0
-
-          return (
-            <div
-              onClick={() => onSelect(dataKey)}
-              key={key}
-              className={`flex min-w-[160px] shrink-0 cursor-pointer items-center justify-between rounded-lg px-4 py-2 transition-all duration-300 lg:min-w-0 lg:w-full
-                ${
-                  option === dataKey
-                    ? "bg-blue-700 text-white"
-                    : "hover:bg-blue-300"
-                }
-              `}
-            >
-              <h1 className="truncate text-sm font-medium sm:text-base lg:text-lg">
-                {label}
-              </h1>
-
-              {count > 0 && (
-                <Badge variant={"secondary"} className="bg-white">
-                  {count > 999 ? "999+" : count}
-                </Badge>
-              )}
-            </div>
-          )
-        })}
-
-        {showold && (
-          <div
-            onClick={() => onSelect("record")}
-            className="flex min-w-[160px] shrink-0 cursor-pointer items-center justify-between rounded-lg px-4 py-2 transition-all duration-300 hover:bg-[hsl(180,85%,90%)] hover:text-[hsl(180,85%,30%)] lg:min-w-0 lg:w-full"
-          >
-            <h1 className="truncate text-sm font-medium sm:text-base lg:text-lg">
-              Old Record
-            </h1>
-          </div>
-        )}
-      </div>
+return (
+  <div className="rounded-md border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+    <div className="mb-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-900">
+      <h2 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+        Customer Group
+      </h2>
+      <p className="mt-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+        Filter customer records
+      </p>
     </div>
-  )
+
+    <div className="flex w-full gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
+      {menuItems.map(({ key, label, dataKey }) => {
+        const count = data?.[dataKey as keyof typeof data]?.length ?? 0
+        const isActive = option === dataKey
+
+        return (
+          <button
+            type="button"
+            onClick={() => onSelect(dataKey)}
+            key={key}
+            className={`
+              group flex min-w-[145px] shrink-0 items-center justify-between gap-2 rounded-md px-3 py-2.5 text-left transition-all duration-200
+              lg:min-w-0 lg:w-full
+              ${
+                isActive
+                  ? "border border-blue-200 bg-blue-50 text-blue-800 shadow-sm dark:border-blue-800/70 dark:bg-blue-950/50 dark:text-blue-100"
+                  : "border border-transparent bg-slate-50 text-slate-700 hover:border-slate-200 hover:bg-slate-100 hover:text-slate-950 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-700 dark:hover:bg-slate-800 dark:hover:text-white"
+              }
+            `}
+          >
+            <span className="truncate text-xs font-semibold sm:text-sm">
+              {label}
+            </span>
+
+            {count > 0 && (
+              <Badge
+                variant="secondary"
+                className={`
+                  h-5 rounded-full px-2 text-[10px] font-bold shadow-none
+                  ${
+                    isActive
+                      ? "bg-blue-600 text-white dark:bg-blue-500 dark:text-white"
+                      : "bg-white text-slate-700 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700"
+                  }
+                `}
+              >
+                {count > 999 ? "999+" : count}
+              </Badge>
+            )}
+          </button>
+        )
+      })}
+
+      {showold && (
+        <button
+          type="button"
+          onClick={() => onSelect("record")}
+          className={`
+            flex min-w-[145px] shrink-0 items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left transition-all duration-200
+            lg:min-w-0 lg:w-full
+            ${
+              option === "record"
+                ? "border border-slate-300 bg-slate-200 text-slate-950 shadow-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                : "border border-transparent bg-slate-50 text-slate-700 hover:border-slate-200 hover:bg-slate-100 hover:text-slate-950 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-700 dark:hover:bg-slate-800 dark:hover:text-white"
+            }
+          `}
+        >
+          <span className="truncate text-xs font-semibold sm:text-sm">
+            Old Record
+          </span>
+        </button>
+      )}
+    </div>
+  </div>
+)
 }
