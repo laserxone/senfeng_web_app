@@ -40,7 +40,7 @@ import { AlertCircle, BadgeAlert, Banknote, Building2, CalendarCheck, CheckCircl
 import moment from "moment";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState, type ElementType } from "react";
+import { useCallback, useEffect, useId, useState, type ElementType } from "react";
 import "./styles.css";
 
 
@@ -889,13 +889,23 @@ function SalesMetricCard({
   description?: string;
 }) {
 
-  const getChartStrokeClass = (className: string) => {
-    return className.replace("bg", "stroke")
+  const getChartColor = (className: string) => {
+    if (className.includes("rose")) return "#e11d48"
+    if (className.includes("blue")) return "#2563eb"
+    if (className.includes("emerald")) return "#059669"
+    if (className.includes("amber")) return "#d97706"
+    if (className.includes("violet")) return "#7c3aed"
+    if (className.includes("indigo")) return "#4f46e5"
+    if (className.includes("cyan")) return "#0891b2"
+    if (className.includes("orange")) return "#ea580c"
+    if (className.includes("red")) return "#dc2626"
+
+    return "#334155"
   }
 
-  const getChartFillClass = (className: string) => {
-    return className.replace("bg", "fill")
-  }
+  const chartColor = getChartColor(iconClassName)
+
+  const chartId = useId()
 
   return (
     <div
@@ -954,26 +964,82 @@ function SalesMetricCard({
             </button>
           </div>
 
-          <div className="flex h-10 w-24 items-center justify-center px-1">
+          <div className="flex h-11 w-28 items-center justify-center">
             <svg
-              viewBox="0 0 96 40"
+              viewBox="0 0 60 44"
               fill="none"
-              className="h-9 w-full overflow-visible"
+              className="h-10 w-full overflow-visible"
               aria-hidden="true"
             >
+              <defs>
+                <linearGradient
+                  id={`${chartId}-line`}
+                  x1="6"
+                  y1="26"
+                  x2="90"
+                  y2="6"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop stopColor={chartColor} stopOpacity="0.35" />
+                  <stop offset="0.45" stopColor={chartColor} stopOpacity="0.9" />
+                  <stop offset="1" stopColor={chartColor} stopOpacity="1" />
+                </linearGradient>
+
+                <linearGradient
+                  id={`${chartId}-area`}
+                  x1="48"
+                  y1="8"
+                  x2="48"
+                  y2="38"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop stopColor={chartColor} stopOpacity="0.16" />
+                  <stop offset="1" stopColor={chartColor} stopOpacity="0" />
+                </linearGradient>
+
+                <filter id={`${chartId}-glow`} x="-20%" y="-40%" width="140%" height="180%">
+                  <feGaussianBlur stdDeviation="2.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              {/* area */}
               <path
-                d="M6 26 L14 18 L22 24 L30 16 L38 22 L48 13 L58 19 L68 10 L78 25 L86 6 L90 27 L90 36 L6 36 Z"
-                className={`${getChartFillClass(iconClassName)} opacity-10`}
+                d="M6 26 L14 18 L22 24 L30 16 L38 22 L48 13 L58 19 L68 10 L78 25 L86 6 L86 38 L6 38 Z"
+                fill={`url(#${chartId}-area)`}
               />
 
+              {/* glow line */}
               <path
-                d="M6 26 L14 18 L22 24 L30 16 L38 22 L48 13 L58 19 L68 10 L78 25 L86 6 L90 27"
-                className={`${getChartStrokeClass(iconClassName)}`}
-                strokeWidth="1.8"
+                d="M6 26 L14 18 L22 24 L30 16 L38 22 L48 13 L58 19 L68 10 L78 25 L86 6"
+                stroke={chartColor}
+                strokeOpacity="0.1"
+                strokeWidth="5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter={`url(#${chartId}-glow)`}
+              />
+
+              {/* main line */}
+              <path
+                d="M6 26 L14 18 L22 24 L30 16 L38 22 L48 13 L58 19 L68 10 L78 25 L86 6"
+                stroke={`url(#${chartId}-line)`}
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
 
+              {/* end point */}
+              <circle
+                cx="86"
+                cy="6"
+                r="3"
+                fill="white"
+                stroke={chartColor}
+                strokeWidth="2"
+              />
             </svg>
           </div>
         </div>

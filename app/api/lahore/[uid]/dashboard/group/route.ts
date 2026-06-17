@@ -283,6 +283,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
         return NextResponse.json({}, { status: 200 })
 
     } catch (error:any) {
+        console.log(error)
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }
 
