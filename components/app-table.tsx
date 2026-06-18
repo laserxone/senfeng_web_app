@@ -71,12 +71,12 @@ const PageTable = <T extends Record<string, any>>({
   children,
   columns,
   data,
-  pageSizeOptions = [10, 20, 30, 40, 50],
+  pageSizeOptions = [10, 20, 30, 40, 50, 100],
   disableInput = false,
   totalCustomerText,
   onRowClick,
   loading = false,
-  defaultPageSize = 20,
+  defaultPageSize = 100,
   download = false,
   tableWidth = "",
   height = "min-h-[calc(100dvh-280px)]"
@@ -276,7 +276,7 @@ const PageTable = <T extends Record<string, any>>({
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell className="whitespace-normal break-words px-3 py-1.5 text-[12px] leading-snug text-slate-800 dark:text-zinc-100" key={cell.id}>
+                      <TableCell className="whitespace-normal break-words px-3 py-1.5 text-[12px] leading-snug text-slate-800 dark:text-zinc-100 max-w-[200px]" key={cell.id}>
                         {flexRender(cell.column.columnDef.cell, {
                           ...cell.getContext(),
                           stopRowClick: (e: React.MouseEvent<HTMLTableRowElement>) => e.stopPropagation(),

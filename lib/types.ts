@@ -1921,3 +1921,167 @@ export type SalesTodayTasks = {
     total : number
     data : TaskProps[] 
 }
+
+////////////STORE///////////////
+
+
+
+export type StoreInvoiceStatus = "Pending" | "Partial" | "Paid" | "NA";
+
+export type StoreNullable<T> = T | null;
+
+export interface StoreInvoiceField {
+  id?: number;
+  img?: StoreNullable<string>;
+  qty: number;
+  gift?: number;
+  name?: string;
+  rack?: StoreNullable<string>;
+  type: string;
+  unit?: StoreNullable<string>;
+  price: string | number;
+  total: string | number;
+  buying?: string;
+  remarks?: StoreNullable<string>;
+  category?: StoreNullable<string>;
+  new_order?: number;
+  threshold?: number;
+  description: string;
+  chinese_name?: StoreNullable<string>;
+  modified?: boolean;
+}
+
+export interface StorePosInvoice {
+  id: number;
+  name: string;
+  company: string;
+  phone: string;
+  address: string;
+  invoicenumber: string;
+  manager: string;
+  fields: StoreInvoiceField[];
+  created_at: string;
+  payment: boolean;
+  customer_id: StoreNullable<number>;
+  discount: number;
+  owner_paid: boolean;
+  customer_location: string;
+  total_paid: number;
+  items_total: number;
+  final_amount: number;
+  status: StoreInvoiceStatus;
+}
+
+export interface StorePosStats {
+  pending: number;
+  data: SearchItem[];
+}
+
+export interface StoreStockItem {
+  id: number;
+  machine_serial: string;
+  machine_model: string;
+  machine_power: string;
+}
+
+export interface StoreStockGroup {
+  machine_model: string;
+  machine_power: string;
+  quantity: number;
+  data: StoreStockItem[];
+}
+
+export interface StoreAvailableStock {
+  total_quantity: number;
+  groups: StoreStockGroup[];
+}
+
+export interface StoreTask {
+  id: number;
+  created_at: string;
+  assigned_to: number;
+  status: StoreNullable<string>;
+  task_name: string;
+  type: string;
+  assigned_by: StoreNullable<number>;
+  customer_id: StoreNullable<number>;
+  problem: StoreNullable<string>;
+  solution: StoreNullable<string>;
+  remarks: StoreNullable<string>;
+  site_reached: boolean;
+  location: StoreNullable<number[]>;
+
+  customer_name?: StoreNullable<string>;
+  customer_number?: StoreNullable<string[]>;
+  customer_location?: StoreNullable<string>;
+
+  [key: string]: unknown;
+}
+
+export interface StoreTodayTasks {
+  total: number;
+  data: TaskProps[];
+}
+
+export interface StoreSalesInvoice {
+  id: number;
+  fields: StoreInvoiceField[];
+  discount: string | number;
+  created_at: string;
+  payment: boolean;
+  owner_paid: boolean;
+  customer_id: StoreNullable<number>;
+  name: string;
+  company: string;
+  phone: string;
+  address: string;
+  items_total: number;
+  final_amount: number;
+}
+
+export interface StoreSalesStats {
+  today: number;
+  this_week: number;
+  this_month: number;
+  last_month: number;
+  data: StoreSalesInvoice[];
+}
+
+export interface StoreBranchExpense {
+  id: number;
+  created_at?: string;
+  amount: number;
+  description?: StoreNullable<string>;
+  image?: StoreNullable<string>;
+  submitted_by: number;
+  title?: StoreNullable<string>;
+  date: string;
+  city?: StoreNullable<string>;
+  resolved?: boolean;
+  verified?: boolean;
+
+  [key: string]: unknown;
+}
+
+export interface StoreBranchExpenses {
+  today_total: number;
+  this_month_total: number;
+  data: StoreBranchExpense[];
+}
+
+export interface StoreUser {
+  id: number;
+  dp: string;
+  name: string;
+  designation: string;
+  limited_access: boolean;
+}
+
+export interface StoreDashboardResponse {
+  pos_stats: StorePosStats;
+  available_stock: StoreAvailableStock;
+  today_tasks: StoreTodayTasks;
+  sales_stats: StoreSalesStats;
+  branch_expenses: StoreBranchExpenses;
+  user: StoreUser;
+}

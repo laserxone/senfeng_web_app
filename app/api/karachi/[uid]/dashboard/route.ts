@@ -70,6 +70,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ uid:
 
                 return NextResponse.json({ ...responseData, user }, { status: 200 });
             }
+            else if (user?.designation === 'Store Manager') {
+
+                const responseData = await getStoreData(uid)
+
+                return NextResponse.json({ ...responseData, user }, { status: 200 });
+            }
             else {
                 return NextResponse.json({ user }, { status: 200 })
             }
@@ -1779,6 +1785,307 @@ async function getEngineerData(uid: string) {
       WHERE ca.engineer_id = $1 AND c.status != 'completed'
         `, [uid])
     return NextResponse.json({ allTasks: allTasksQueryResult.rows.length, allComplaints: allComplaintsQueryResult.rows[0].total }, { status: 200 })
+}
+
+async function getStoreData(uid: string) {
+    const TIMEZONE = "Asia/Karachi";
+
+    const now = moment.tz(TIMEZONE);
+
+    const todayStart = now.clone().startOf("day").toISOString();
+    const todayEnd = now.clone().endOf("day").toISOString();
+
+    const currentWeekStart = now.clone().startOf("isoWeek").toISOString();
+    const currentWeekEnd = now.clone().endOf("isoWeek").toISOString();
+
+    const currentMonthStart = now.clone().startOf("month").toISOString();
+    const currentMonthEnd = now.clone().endOf("month").toISOString();
+
+    const lastMonthStart = now
+        .clone()
+        .subtract(1, "month")
+        .startOf("month")
+        .toISOString();
+
+    const lastMonthEnd = now
+        .clone()
+        .subtract(1, "month")
+        .endOf("month")
+        .toISOString();
+
+    const userId = Number(uid);
+
+    if (!Number.isInteger(userId)) {
+        throw new Error("Invalid user id");
+    }
+
+    const pendingInvoicesQuery = `
+    SELECT
+      si.*,
+      COALESCE(
+        NULLIF(TRIM(si.manager), ''),
+        u.name,
+        ''
+      ) AS manager,
+      COALESCE(
+        NULLIF(TRIM(c.location), ''),
+        si.address,
+        ''
+      ) AS customer_location,
+      COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
+    FROM savedinvoices_karachi si
+    LEFT JOIN customer_parts_karachi cp
+      ON cp.part_id = si.id
+    LEFT JOIN customer c
+      ON c.id = si.customer_id
+    LEFT JOIN users u
+      ON u.id = c.ownership
+    WHERE si.owner_paid IS FALSE
+    GROUP BY si.id, u.name, c.location
+    ORDER BY si.created_at DESC
+  `;
+
+    const availableOrderItemsQuery = `
+    SELECT
+      oi.machine_model,
+      oi.machine_power,
+      COUNT(*)::int AS quantity,
+      JSON_AGG(
+        JSON_BUILD_OBJECT(
+          'id', oi.id,
+          'machine_serial', oi.machine_serial,
+          'machine_model', oi.machine_model,
+          'machine_power', oi.machine_power
+        )
+        ORDER BY oi.id DESC
+      ) AS data
+    FROM order_items oi
+    WHERE oi.booked IS FALSE
+    AND LOWER(oi.location) = 'karachi'
+    GROUP BY oi.machine_model, oi.machine_power
+    ORDER BY oi.machine_model ASC, oi.machine_power ASC
+  `;
+
+
+    const todayTasksQuery = `
+    SELECT
+      t.*,
+      u.id AS user_id, 
+    u.name AS assigned_to_name,
+    u.email AS assigned_to_email,
+    c.name AS customer_name,
+    c.owner AS customer_owner,
+    c.number AS customer_number,
+    c.address AS customer_address,
+    c.pin AS customer_pin
+    FROM task t
+    INNER JOIN users u ON t.assigned_to = u.id
+    LEFT JOIN customer c
+      ON c.id = t.customer_id
+    WHERE t.assigned_to = $1
+    AND t.created_at BETWEEN $2 AND $3
+    ORDER BY t.created_at DESC
+  `;
+
+    const salesInvoicesQuery = `
+    SELECT
+      id,
+      fields,
+      discount,
+      created_at,
+      payment,
+      owner_paid,
+      customer_id,
+      name,
+      company,
+      phone,
+      address
+    FROM savedinvoices_karachi
+    WHERE created_at BETWEEN $1 AND $2
+    ORDER BY created_at DESC
+  `;
+
+    const branchExpensesQuery = `
+    SELECT
+      be.*
+    FROM branchexpenses be
+    WHERE be.submitted_by = $1
+    AND be.date BETWEEN $2 AND $3
+    ORDER BY be.date DESC
+  `;
+
+    const [
+        pendingInvoicesResult,
+        availableOrderItemsResult,
+        todayTasksResult,
+        salesInvoicesResult,
+        branchExpensesResult,
+    ] = await Promise.all([
+        pool.query(pendingInvoicesQuery),
+        pool.query(availableOrderItemsQuery),
+        pool.query(todayTasksQuery, [userId, todayStart, todayEnd]),
+        pool.query(salesInvoicesQuery, [lastMonthStart, currentMonthEnd]),
+        pool.query(branchExpensesQuery, [
+            userId,
+            currentMonthStart,
+            currentMonthEnd,
+        ]),
+    ]);
+
+
+
+
+
+    const teamTasks = todayTasksResult.rows
+    const updatedTasks = teamTasks.map(task => {
+
+        if (task.customer_id) {
+            const [firstPart] = task.task_name.split("-");
+            const customerInfo = task.customer_name || task.customer_owner || "";
+            const updatedTitle = `${firstPart.trim()} - ${customerInfo}`;
+            return {
+                ...task,
+                task_name: updatedTitle,
+                
+            };
+        }
+        return task;
+    }).map((item)=>{
+        return {...item, created_at_time: item.created_at}
+    })
+
+
+    const getInvoiceItemsTotal = (fields: any) => {
+        if (!Array.isArray(fields)) return 0;
+
+        return fields.reduce((sum: number, item: any) => {
+            const value = Number(item?.total ?? 0);
+            return sum + (Number.isNaN(value) ? 0 : value);
+        }, 0);
+    };
+
+    const getInvoiceFinalAmount = (invoice: any) => {
+        const itemsTotal = getInvoiceItemsTotal(invoice.fields);
+        const discount = Number(invoice.discount ?? 0);
+
+        return Math.max(itemsTotal - discount, 0);
+    };
+
+    const pendingInvoices = pendingInvoicesResult.rows
+        .map((invoice) => {
+            const itemsTotal = getInvoiceItemsTotal(invoice.fields);
+            const discount = Number(invoice.discount ?? 0);
+            const finalAmount = Math.max(itemsTotal - discount, 0);
+            const totalPaid = Number(invoice.total_paid ?? 0);
+            const pendingAmount = Math.max(finalAmount - totalPaid, 0);
+
+            let status = "NA";
+
+            if (itemsTotal === 0) status = "Paid";
+            else if (totalPaid === 0) status = "Pending";
+            else if (pendingAmount > 0) status = "Partial";
+            else status = "Paid";
+
+            return {
+                ...invoice,
+                items_total: itemsTotal,
+                discount,
+                total_paid: totalPaid,
+                final_amount: pendingAmount,
+                status,
+            };
+        })
+        .filter(
+            (item) =>
+                moment(item.created_at).isSameOrAfter("2025-12-01") ||
+                item.payment === false
+        )
+        .filter((item) => item.status !== "Paid");
+
+    const totalPending = pendingInvoices.reduce(
+        (sum, item) => sum + Number(item.final_amount || 0),
+        0
+    );
+
+    const availableStock = availableOrderItemsResult.rows.map((group) => ({
+        machine_model: group.machine_model,
+        machine_power: group.machine_power,
+        quantity: Number(group.quantity || 0),
+        data: group.data || [],
+    }));
+
+    const totalAvailableStock = availableStock.reduce(
+        (sum, group) => sum + Number(group.quantity || 0),
+        0
+    );
+
+    const salesInvoices = salesInvoicesResult.rows.map((invoice) => ({
+        ...invoice,
+        items_total: getInvoiceItemsTotal(invoice.fields),
+        final_amount: getInvoiceFinalAmount(invoice),
+    }));
+
+    const isBetween = (date: string, start: string, end: string) => {
+        return moment(date).isBetween(start, end, undefined, "[]");
+    };
+
+    const getSalesTotal = (start: string, end: string) => {
+        return salesInvoices
+            .filter((invoice) => isBetween(invoice.created_at, start, end))
+            .reduce((sum, invoice) => sum + Number(invoice.final_amount || 0), 0);
+    };
+
+    const todaySaleTotal = getSalesTotal(todayStart, todayEnd);
+    const weekSaleTotal = getSalesTotal(currentWeekStart, currentWeekEnd);
+    const monthSaleTotal = getSalesTotal(currentMonthStart, currentMonthEnd);
+    const lastMonthSaleTotal = getSalesTotal(lastMonthStart, lastMonthEnd);
+
+    const branchExpenses = branchExpensesResult.rows.map((expense) => ({
+        ...expense,
+        amount: Number(expense.amount || 0),
+    }));
+
+    const branchExpenseTotalToday = branchExpenses
+        .filter((expense) => isBetween(expense.date, todayStart, todayEnd))
+        .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+
+    const branchExpenseTotalThisMonth = branchExpenses.reduce(
+        (sum, expense) => sum + Number(expense.amount || 0),
+        0
+    );
+
+    const responseData = {
+        pos_stats: {
+            pending: totalPending,
+            data: pendingInvoices,
+        },
+
+        available_stock: {
+            total_quantity: totalAvailableStock,
+            groups: availableStock,
+        },
+
+        today_tasks: {
+            total: updatedTasks.length,
+            data: updatedTasks,
+        },
+
+        sales_stats: {
+            today: todaySaleTotal,
+            this_week: weekSaleTotal,
+            this_month: monthSaleTotal,
+            last_month: lastMonthSaleTotal,
+            data: salesInvoices,
+        },
+
+        branch_expenses: {
+            today_total: branchExpenseTotalToday,
+            this_month_total: branchExpenseTotalThisMonth,
+            data: branchExpenses,
+        },
+    };
+
+    return responseData;
 }
 
 

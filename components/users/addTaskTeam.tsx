@@ -86,7 +86,7 @@ export const AddTaskTeam = ({ visible, onClose, onRefresh, assigned_by }: { visi
   const onSubmit = (values: TaskFormValues) => {
     setLoading(true);
     axios
-      .post(`/task`, {
+      .post(`${assigned_by}/task`, {
         task_name: values.task,
         type: values.radio == "office" ? "Office Task" : "Client Task",
         client: values.client,

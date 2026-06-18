@@ -154,7 +154,7 @@ const PageTable = <T extends Record<string, any>>({
   }
 
   return (
-    <div className="flex flex-1 flex-col space-y-4">
+    <div className="flex flex-1 flex-col space-y-2">
       <div className="flex w-full flex-wrap gap-4 items-center ">
         {!disableInput && (
           <Input
@@ -185,6 +185,8 @@ const PageTable = <T extends Record<string, any>>({
                     <TableHead
                       style={{ width: header.getSize() }}
                       key={header.id}
+                      className="h-8 whitespace-nowrap px-3 text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:text-zinc-200"
+             
                     >
                       {header.isPlaceholder
                         ? null
@@ -202,12 +204,12 @@ const PageTable = <T extends Record<string, any>>({
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     onClick={(e) => onRowClick(row.original, e)}
-                    className="even:bg-gray-100 dark:even:bg-gray-800 dark:text-white text-black cursor-pointer"
+                    className="cursor-pointer border-b transition-colors odd:bg-white even:bg-slate-50/80 hover:bg-blue-50/70 data-[state=selected]:bg-blue-50 dark:odd:bg-zinc-950 dark:even:bg-zinc-900/70 dark:hover:bg-zinc-800/80 dark:data-[state=selected]:bg-zinc-800"
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell className="text-[13px] whitespace-normal break-words" key={cell.id}>
+                      <TableCell className="whitespace-normal break-words px-3 py-1.5 text-[12px] leading-snug text-slate-800 dark:text-zinc-100 max-w-[200px]" key={cell.id}>
                         {flexRender(cell.column.columnDef.cell, {
                           ...cell.getContext(),
                           stopRowClick: (e: React.MouseEvent<HTMLTableRowElement>) => e.stopPropagation(),
@@ -219,17 +221,19 @@ const PageTable = <T extends Record<string, any>>({
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    {loading ? (
-                      <div className="flex flex-1 justify-center">
-                        <Spinner />
-                      </div>
-                    ) : (
-                      "No results."
-                    )}
-                  </TableCell>
+                                     colSpan={columns.length}
+                                     className="h-32 text-center"
+                                   >
+                                     {loading ? (
+                                       <div className="flex flex-1 justify-center">
+                                         <Spinner />
+                                       </div>
+                                     ) : (
+                                       <div className="text-xs font-medium text-muted-foreground">
+                                         No results.
+                                       </div>
+                                     )}
+                                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
@@ -237,7 +241,7 @@ const PageTable = <T extends Record<string, any>>({
         </div>
       </div>
 
-      <div className="flex flex-col items-center justify-end gap-2 space-x-2 py-2 sm:flex-row">
+      <div className="flex flex-col items-center justify-end gap-2 space-x-2  sm:flex-row">
         <div className="flex w-full items-center justify-between">
           <div className="flex-1 text-sm text-muted-foreground">
             {filteredData.length > 0 ? (

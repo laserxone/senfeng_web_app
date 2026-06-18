@@ -37,9 +37,9 @@ import { useProfileImage } from "@/hooks/use-profile-image";
 import useUserDetail from "@/hooks/use-user-detail";
 import { setUserOffice } from "@/lib/axios";
 
+import { useDuePayments } from "@/hooks/use-due-payments";
 import { useMachineDelivery } from "@/hooks/use-machine-delivery";
 import { OfficeContext } from "@/store/context/OfficeContext";
-import { UserContext } from "@/store/context/UserContext";
 import { signOut } from "firebase/auth";
 import { ChevronRight, ChevronsUpDown, CreditCard, LogOut } from "lucide-react";
 import Link from "next/link";
@@ -47,7 +47,6 @@ import { usePathname } from "next/navigation";
 import { useContext, useEffect } from "react";
 import NotificationBadge from "./NotificationBadge";
 import { ScrollArea } from "./ui/scroll-area";
-import { useDuePayments } from "@/hooks/use-due-payments";
 
 export const company = {
   name: "SENFENG",
@@ -58,14 +57,13 @@ export const company = {
 export default function AppSidebar({ office }: { office: string }) {
   const pathname = usePathname();
 
- const { setOffice } = useContext(OfficeContext)!;
+  const { setOffice } = useContext(OfficeContext)!;
   const profileImage = useProfileImage();
   const { toggleSidebar } = useSidebar();
   const isMobile = useIsMobile();
-  const {  isAdmin, name, email, base_route, nav_items } = useUserDetail()
+  const { isAdmin, name, email, base_route, nav_items } = useUserDetail()
   const { pendingDelivery } = useMachineDelivery()
-   const { pending } = useDuePayments()
-
+  const { pending } = useDuePayments()
 
   useEffect(() => {
     if (office) {
@@ -94,7 +92,7 @@ export default function AppSidebar({ office }: { office: string }) {
               {
                 nav_items.map((item, index) => {
                   const Icon = item.icon ? Icons[item.icon as keyof typeof Icons] : Icons.logo;
-                   const openCollapsible = item?.isActive ? item.isActive?.some(val => pathname.includes(val)) : false
+                  const openCollapsible = item?.isActive ? item.isActive?.some(val => pathname.includes(val)) : false
                   return item?.items && item?.items?.length > 0 ? (
                     <Collapsible
                       key={item.title}
@@ -130,7 +128,7 @@ export default function AppSidebar({ office }: { office: string }) {
                                     href={`/${base_route}${subItem.url}`}
                                   >
                                     <span className="text-[14px]">
-                                      {subItem.title} {subItem.title === "Machine Delivery" && pendingDelivery > 0 && <NotificationBadge count={pendingDelivery}/>} {subItem.title === "Due Payment" && pending > 0 && <NotificationBadge count={pending}/>} 
+                                      {subItem.title} {subItem.title === "Machine Delivery" && pendingDelivery > 0 && <NotificationBadge count={pendingDelivery} />} {subItem.title === "Due Payment" && pending > 0 && <NotificationBadge count={pending} />}
                                     </span>
                                   </Link>
                                 </SidebarMenuSubButton>

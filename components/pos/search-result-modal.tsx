@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import "./Button.css";
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 import useUserDetail from "@/hooks/use-user-detail";
 import formatCurrency from "@/lib/formatCurrency";
@@ -31,16 +31,16 @@ const SearchResultModal = ({
   onClose,
   data,
   onselect,
-  
+  showSelect = true
 }: {
   visible: boolean,
   onClose: Dispatch<SetStateAction<boolean>>,
   data: SearchItem[],
-  onselect: (item: SearchItem) => void,
-  
+  onselect?: (item: SearchItem) => void,
+  showSelect?: boolean
 }) => {
-  
- 
+
+
   const total = data.reduce((sum, item) => sum + (item.final_amount || 0), 0);
   const { base_route, } = useUserDetail();
 
@@ -114,7 +114,7 @@ const SearchResultModal = ({
       cell: ({ row }) => <div>{row.getValue("company")}</div>,
     },
 
-     {
+    {
       accessorKey: "customer_location",
       header: ({ column }) => {
         return (
@@ -185,13 +185,15 @@ const SearchResultModal = ({
         const id = row.original?.id ?? null;
         return (
           <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => onselect(row.original)}>
-              Select
-            </Button>
+            {showSelect &&
+              <Button variant="secondary" onClick={() => onselect?.(row.original)}>
+                Select
+              </Button>
+            }
             {id && (
               <Link href={`/${base_route}/pos/${id}`} target="_blank">
-                <Button >
-                  Payment Record
+                <Button variant={"outline"}>
+                  Record
                 </Button>
               </Link>
             )}
@@ -213,7 +215,7 @@ const SearchResultModal = ({
           data={data}
         >
           <div className="flex flex-1 flex-wrap gap-2 items-center justify-between">
-            <div className="flex gap-4"/>
+            <div className="flex gap-4" />
 
             <div className="flex justify-between items-center p-2 w-full max-w-xs border-b border-gray-300 dark:border-gray-700">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
