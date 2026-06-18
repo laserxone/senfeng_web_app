@@ -18,7 +18,7 @@ type AttendanceProps = {
   passingData: UserAttendanceRecord[];
   onFilterReturn: (start: string, end: string) => Promise<void> | void;
   onRefresh?: (startDate: string, endDate: string) => Promise<void> | void;
-  height ?: string
+  height?: string
 };
 
 export default function Attendance({
@@ -34,6 +34,7 @@ export default function Attendance({
   const [selectedAttendance, setSelectedAttendance] = useState<UserAttendanceRecord | null>(null);
   const [resetLoading, setResetLoading] = useState(false);
 
+
   useEffect(() => {
     setData(passingData);
   }, [passingData]);
@@ -42,7 +43,7 @@ export default function Attendance({
     <div className="flex flex-1 flex-col space-y-4 mt-4">
       <div className="flex flex-1">
         <PageTable
-       height={height}
+          height={height}
           columns={columns}
           data={data}
           onRowClick={(val: any) => {

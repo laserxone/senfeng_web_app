@@ -2,7 +2,7 @@
 import { ArrowUpDown, BadgeCheck, CircleDashed, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import FilterSheet from "@/components/users/filterSheet";
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
@@ -141,7 +141,7 @@ const columns: ColumnDef<TaskProps>[] = [
 
 
 
-export default function TeamTask({height}  : {height ?:string}) {
+export default function TeamTask({height, onUpdateTotal}  : {height ?:string, onUpdateTotal ?: (item : number)=> void}) {
   const { userID } = useUserDetail()
   const [data, setData] = useState<TaskProps[]>([]);
   const [visible, setVisible] = useState(false);
@@ -191,6 +191,10 @@ export default function TeamTask({height}  : {height ?:string}) {
         });
     });
   }
+
+  useEffect(()=>{
+onUpdateTotal?.(data.length)
+  },[data])
 
   async function handleUpdateMark() {
     const startDate = momentT

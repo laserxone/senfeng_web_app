@@ -1,5 +1,6 @@
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { ChequeProp } from "@/lib/types";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +19,6 @@ import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import Spinner from "./ui/spinner";
 import { Textarea } from "./ui/textarea";
-import { ChequeProp } from "@/lib/types";
 
 
 
@@ -47,6 +47,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { cus
       totalPrice: z.coerce.number<number>({ error: "Price is required" }),
       cnic: z.string().optional(),
       order_item: z.number().nullable().optional(),
+      note: z.string().optional()
     })
     .refine(
       (data) => {
@@ -77,6 +78,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { cus
       totalPrice: 0,
       cnic: "",
       order_item: null,
+      note: ""
     },
   });
 
@@ -101,6 +103,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { cus
         price: values.totalPrice,
         contract_date: values.contractDate,
         cnic: values.cnic,
+        note: values.note
       })
       .then(async (response) => {
         if (response.data?.sale_id) {
@@ -238,6 +241,23 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { cus
                           </Field>
                         )}
                       />
+                      <div className="col-span-1 md:col-span-2">
+                        <Controller
+                          name="note"
+                          control={form.control}
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                              <FieldLabel>Machine Note</FieldLabel>
+                              <Textarea
+                                placeholder="Add any machine note, delivery instruction, or internal detail"
+                                className="min-h-24 resize-y"
+                                {...field}
+                              />
+                              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                            </Field>
+                          )}
+                        />
+                      </div>
                     </div>
                   </FieldSet>
 
@@ -251,7 +271,7 @@ const AddMachine = ({ customer_id, user_id, visible, onClose, onRefresh }: { cus
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
                           <FieldLabel>Contract Date</FieldLabel>
-                          <AppCalendar date={field.value} onChange={field.onChange}  />
+                          <AppCalendar date={field.value} onChange={field.onChange} />
                           {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                         </Field>
                       )}

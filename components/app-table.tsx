@@ -44,8 +44,8 @@ import {
 import { useDebounce } from "@/hooks/use-debounce";
 import { useIsMobile } from "@/hooks/use-mobile";
 import exportToExcel from "@/lib/exportToExcel";
-import Spinner from "./ui/spinner";
 import moment from "moment";
+import Spinner from "./ui/spinner";
 
 
 type ExtendedColumnDef<T> = ColumnDef<T> & {
@@ -56,15 +56,15 @@ type PageTableProps<T extends Record<string, any>> = {
   children?: React.ReactNode;
   columns: ColumnDef<T>[];
   data: T[];
-  pageSizeOptions ?: number[]
-  totalCustomerText ?:string
+  pageSizeOptions?: number[]
+  totalCustomerText?: string
   disableInput?: boolean;
   onRowClick?: (row: T, event: React.MouseEvent<HTMLTableRowElement>) => void;
   loading?: boolean;
-  defaultPageSize ?: number
+  defaultPageSize?: number
   download?: boolean;
-  tableWidth ?: string
-  height ?: string
+  tableWidth?: string
+  height?: string
 };
 
 const PageTable = <T extends Record<string, any>>({
@@ -90,14 +90,14 @@ const PageTable = <T extends Record<string, any>>({
   const [pageSize, setPageSize] = useState(defaultPageSize);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
-   const isMobile = useIsMobile();
+  const isMobile = useIsMobile();
 
   const paginationState = {
     pageIndex: currentPage - 1,
     pageSize: pageSize,
   };
 
-   const filteredData = useMemo(() => {
+  const filteredData = useMemo(() => {
     let filtered = data;
     columnFilters.forEach((filter) => {
       filtered = filtered.filter((row) => {
@@ -149,13 +149,13 @@ const PageTable = <T extends Record<string, any>>({
       columnVisibility,
       rowSelection,
       pagination: paginationState,
-    
+
     },
     onPaginationChange: handlePaginationChange,
     defaultColumn: {
       size: 200,
     },
-   
+
   });
 
   const startIndex = paginationState.pageIndex * paginationState.pageSize + 1;
@@ -165,75 +165,77 @@ const PageTable = <T extends Record<string, any>>({
   );
 
   function handleDownload() {
-      try {
-        if (!filteredData || !filteredData.length) return;
-  
-  
-  
-        const exportableColumns = columns.filter(
-          (col  : ExtendedColumnDef<T>): col is ExtendedColumnDef<T> & { accessorKey: keyof T } =>
-            typeof col.accessorKey === "string"
-        );
-  
-        const headers = exportableColumns.map((col) =>
-          String(col.accessorKey)
-        );
-  
-        const formattedData = filteredData.map((row) =>
-          exportableColumns.map((col) => {
-            const key = col.accessorKey as keyof T;
-            const value = row[key];
-            if (isValidDateString(value) && value) {
-              return moment(value as any).format("YYYY-MM-DD");
-            }
-            return value != null ? String(value) : "";
-          })
-        );
-  
-        exportToExcel(
-          headers,
-          formattedData,
-          "Table-Export.xlsx",
-          false,
-          "",
-          false
-        );
-      } catch (error) {
-        console.error("Error exporting Excel:", error);
-      }
+    try {
+      if (!filteredData || !filteredData.length) return;
+
+
+
+      const exportableColumns = columns.filter(
+        (col: ExtendedColumnDef<T>): col is ExtendedColumnDef<T> & { accessorKey: keyof T } =>
+          typeof col.accessorKey === "string"
+      );
+
+      const headers = exportableColumns.map((col) =>
+        String(col.accessorKey)
+      );
+
+      const formattedData = filteredData.map((row) =>
+        exportableColumns.map((col) => {
+          const key = col.accessorKey as keyof T;
+          const value = row[key];
+          if (isValidDateString(value) && value) {
+            return moment(value as any).format("YYYY-MM-DD");
+          }
+          return value != null ? String(value) : "";
+        })
+      );
+
+      exportToExcel(
+        headers,
+        formattedData,
+        "Table-Export.xlsx",
+        false,
+        "",
+        false
+      );
+    } catch (error) {
+      console.error("Error exporting Excel:", error);
     }
+  }
 
-     function isValidDateString(value: string): boolean {
-        console.log(value, moment(value, moment.ISO_8601, true).isValid())
-        return moment(value, moment.ISO_8601, true).isValid();
-      }
+  function isValidDateString(value: string): boolean {
+    console.log(value, moment(value, moment.ISO_8601, true).isValid())
+    return moment(value, moment.ISO_8601, true).isValid();
+  }
 
- 
+
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      <div className="flex w-full flex-wrap items-center gap-2 rounded-lg border bg-background/95 p-2 shadow-sm">
-        {!disableInput && (
-          <div className="relative min-w-[220px] flex-1 sm:max-w-sm">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              placeholder={`Search...`}
-              onChange={(event) => {
-                setSearch(event.target.value);
-              }}
-              className="h-8 rounded-md bg-muted/20 pl-9 text-xs"
-            />
-          </div>
-        )}
-        {download && (
-          <Button variant="outline" className="h-9 gap-2" onClick={handleDownload}>
-            <Download className="h-4 w-4" />
-            Download
-          </Button>
-        )}
-        {children}
-      </div>
+      {(children || !disableInput || download) &&
+        <div className="flex w-full flex-wrap items-center gap-2 rounded-lg border bg-background/95 p-2 shadow-sm">
+          {!disableInput && (
+            <div className="relative min-w-[220px] flex-1 sm:max-w-sm">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                placeholder={`Search...`}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                }}
+                className="h-8 rounded-md bg-muted/20 pl-9 text-xs"
+              />
+            </div>
+          )}
+          {download && (
+            <Button variant="outline" className="h-9 gap-2" onClick={handleDownload}>
+              <Download className="h-4 w-4" />
+              Download
+            </Button>
+          )}
+          {children}
+        </div>
+      }
 
       <div
         className={`relative flex flex-1 ${height} ${isMobile && tableWidth ? tableWidth : ""}`}

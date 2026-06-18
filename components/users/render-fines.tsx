@@ -1,16 +1,14 @@
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { TIMEZONE } from "@/constants/data";
-import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { UserFines } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, Filter } from "lucide-react";
 import moment from "moment";
 import momentT from "moment-timezone";
 import { useEffect, useState } from "react";
 import FilterSheet from "./filterSheet";
-import axios from "@/lib/axios";
-import { ColumnDef } from "@tanstack/react-table";
-import { UserFines } from "@/lib/types";
 
 
 const columns: ColumnDef<UserFines>[] = [
@@ -105,7 +103,7 @@ const columns: ColumnDef<UserFines>[] = [
   },
 ];
 
-const RenderFines = ({ height, onUpdateTotal,userID  }: { height?: string, onUpdateTotal ?: (item : number)=> void, userID : number | string }) => {
+const RenderFines = ({ height, onUpdateTotal, userID }: { height?: string, onUpdateTotal?: (item: number) => void, userID: number | string }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
@@ -148,27 +146,26 @@ const RenderFines = ({ height, onUpdateTotal,userID  }: { height?: string, onUpd
   }
 
   return (
-    <Card className="flex flex-1">
-      <CardContent className="pt-0 flex flex-1">
-        <div className="flex flex-1 flex-col space-y-4">
-          <div className="flex flex-1">
-            <PageTable
-              height={height}
-              loading={loading}
-              columns={columns}
-              data={data}
+    <>
+      <div className="flex flex-1 flex-col space-y-4">
+        <div className="flex flex-1">
+          <PageTable
+            height={height}
+            loading={loading}
+            columns={columns}
+            data={data}
+          >
+            <Button
+              onClick={() => setFilterVisible(true)}
+              variant="ghost"
+              className="p-0 w-8"
             >
-              <Button
-                onClick={() => setFilterVisible(true)}
-                variant="ghost"
-                className="p-0 w-8"
-              >
-                <Filter />
-              </Button>
-            </PageTable>
-          </div>
+              <Filter />
+            </Button>
+          </PageTable>
         </div>
-      </CardContent>
+      </div>
+
 
       <FilterSheet
         visible={filterVisible}
@@ -177,7 +174,7 @@ const RenderFines = ({ height, onUpdateTotal,userID  }: { height?: string, onUpd
           await fetchData(val.start, val.end);
         }}
       />
-    </Card>
+    </>
   );
 };
 

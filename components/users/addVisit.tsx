@@ -3,14 +3,13 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { storage } from "@/config/firebase"
 import useUserDetail from "@/hooks/use-user-detail"
 import axios from "@/lib/axios"
 import { DeleteFromStorage } from "@/lib/deleteFunction"
+import { MyCustomer, SalesVisitTypes } from "@/lib/types"
 import { UploadImage } from "@/lib/uploadFunction"
 import { OfficeContext } from "@/store/context/OfficeContext"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { getDownloadURL, ref } from "firebase/storage"
 import {
   CalendarDays,
   Camera,
@@ -28,23 +27,19 @@ import {
   UserRound,
 } from "lucide-react"
 import moment from "moment"
-import Image from "next/image"
 import Link from "next/link"
 import { ReactNode, useContext, useEffect, useMemo, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
-import Zoom from "react-medium-image-zoom"
 import "react-medium-image-zoom/dist/styles.css"
 import { z } from "zod"
 import AddCustomerDialog from "../addCustomer"
 import AppCalendar from "../appCalendar"
 import { CustomerSearchWithData } from "../customer-search-with-data"
+import { MyImgZooming } from "../img-zooming"
+import { Field, FieldError, FieldLabel } from "../ui/field"
 import { Label } from "../ui/label"
 import Spinner from "../ui/spinner"
 import FilterSheet from "./filterSheet"
-import { MyCustomer, SalesVisitTypes } from "@/lib/types"
-import { Field, FieldError, FieldLabel } from "../ui/field"
-import { cn } from "@/lib/utils"
-import { MyImgZooming } from "../img-zooming"
 
 const formSchema = z.object({
   note: z.string().min(1, "Note cannot be empty"),
@@ -264,7 +259,7 @@ export default function VisitTab({
                       designation === "Owner" ||
                       designation === "Customer Relationship Manager" ||
                       designation ===
-                        "Customer Relationship Manager (After Sales)"
+                      "Customer Relationship Manager (After Sales)"
                     }
                     visible={addCustomer}
                     onClose={setAddCustomer}
@@ -464,9 +459,8 @@ function VisitRecord({
 
               <Link
                 target="_blank"
-                href={`/${baseRoute}/${
-                  feedback.customer_member ? "member" : "customer"
-                }/${feedback.customer_id}`}
+                href={`/${baseRoute}/${feedback.customer_member ? "member" : "customer"
+                  }/${feedback.customer_id}`}
                 className="group/link inline-flex max-w-full items-center gap-1.5 text-sm font-semibold hover:text-primary"
               >
                 <span className="truncate">{customerLabel}</span>
@@ -532,9 +526,12 @@ function VisitRecord({
             </div>
           )}
 
-          <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm leading-5 whitespace-pre-wrap dark:bg-zinc-900/80">
-            {feedback.note}
-          </p>
+          <div className="flex gap-2 bg-muted rounded-lg px-3 py-2 text-sm leading-5 whitespace-pre-wrap dark:bg-zinc-900/80 items-center mr-2">
+            <MessageSquareText className="h-3 w-3" />
+            <p className="text-xs">
+              {feedback.note}
+            </p>
+          </div>
         </div>
 
         <div className="mt-2 grid grid-cols-2 gap-2 lg:mt-0 lg:grid-cols-1 lg:border-l lg:pl-3">

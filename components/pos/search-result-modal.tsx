@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import "./Button.css";
-import PageTable from "./app-table";
+import PageTable from "@/components/app-table-without-pagination";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 import useUserDetail from "@/hooks/use-user-detail";
 import formatCurrency from "@/lib/formatCurrency";
@@ -39,8 +39,8 @@ const SearchResultModal = ({
   onselect: (item: SearchItem) => void,
   
 }) => {
-  const pageTableRef = useRef<PageTableRef | null>(null);
-  const [value, setValue] = useState("");
+  
+ 
   const total = data.reduce((sum, item) => sum + (item.final_amount || 0), 0);
   const { base_route, } = useUserDetail();
 
@@ -114,6 +114,22 @@ const SearchResultModal = ({
       cell: ({ row }) => <div>{row.getValue("company")}</div>,
     },
 
+     {
+      accessorKey: "customer_location",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Location
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("customer_location")}</div>,
+    },
+
     {
       accessorKey: "manager",
       header: ({ column }) => {
@@ -185,32 +201,6 @@ const SearchResultModal = ({
     },
   ];
 
-  const tableHeader = [
-    {
-      value: "invoicenumber",
-      label: "Invoice Number",
-    },
-    {
-      value: "name",
-      label: "Name",
-    },
-    {
-      value: "company",
-      label: "Company",
-    },
-    {
-      value: "phone",
-      label: "Phone Number",
-    },
-  ];
-
-  function handleClear() {
-    if (pageTableRef.current) {
-      pageTableRef.current?.handleClear();
-      setValue("");
-    }
-  }
-
   return (
     <Dialog open={visible} onOpenChange={onClose}>
       <DialogContent className="max-w-[90vw] h-[90vh] min-w-[90vw]">
@@ -219,50 +209,11 @@ const SearchResultModal = ({
         </DialogHeader>
 
         <PageTable
-          ref={pageTableRef}
           columns={columns}
           data={data}
-          totalItems={data.length}
-          searchItem={value.toLowerCase()}
-          searchName={value ? `Search ${value}...` : "Select filter first..."}
-          tableHeader={tableHeader}
         >
           <div className="flex flex-1 flex-wrap gap-2 items-center justify-between">
-            <div className="flex gap-4">
-              <Select
-                onValueChange={(val) => {
-                  setValue(val);
-                }}
-                value={value}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Select filter..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {tableHeader.map((framework) => (
-                    <SelectItem
-                      key={framework.value}
-                      value={framework.value}
-                      onClick={() => {
-                        setValue(
-                          framework.value === value ? "" : framework.value,
-                        );
-                      }}
-                    >
-                      {framework.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Button
-                onClick={() => {
-                  handleClear();
-                }}
-              >
-                Clear
-              </Button>
-            </div>
+            <div className="flex gap-4"/>
 
             <div className="flex justify-between items-center p-2 w-full max-w-xs border-b border-gray-300 dark:border-gray-700">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">

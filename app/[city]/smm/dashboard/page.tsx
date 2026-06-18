@@ -1,22 +1,25 @@
 "use client";
-import AutoScrollMembers from "@/components/autoScroll";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { useSidebar } from "@/components/ui/sidebar";
 import Attendance from "@/components/users/attendance";
 import CustomerEmployee from "@/components/users/customer";
 import { CustomerExtraData } from "@/components/users/ExtraData";
+import OldRecordSheet from "@/components/users/old-record-sheet";
 import { ProfilePicture } from "@/components/users/ProfilePicture";
 import Reimbursement from "@/components/users/Reimbursement";
+import RenderFines from "@/components/users/render-fines";
 import SalaryRecord from "@/components/users/SalaryRecord";
+import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { UserAttendanceRecord, UserDashboard, UserExtraTypes, UserReimbursementType } from "@/lib/types";
+import { updateItemPurpose } from "@/lib/updatePurpose";
+import { BadgeAlert, CalendarCheck, ReceiptText, UserPlus, Wallet } from "lucide-react";
 import moment from "moment";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
-import RenderFines from "@/components/users/render-fines";
-import OldRecordSheet from "@/components/users/old-record-sheet";
-import { updateItemPurpose } from "@/lib/updatePurpose";
-import { UserAttendanceRecord, UserDashboard, UserExtraTypes, UserReimbursementType } from "@/lib/types";
 
 export default function Page() {
   const [data, setData] = useState<{ user: UserDashboard }>();
@@ -27,6 +30,11 @@ export default function Page() {
   const [attendanceData, setAttendanceData] = useState<UserAttendanceRecord[]>([]);
   const [activeTab, setActiveTab] = useState("newCustomers");
   const { userID } = useUserDetail();
+  const [allFines, setAllFines] = useState(0)
+
+  const { open } = useSidebar()
+  const searchParams = useSearchParams()
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     if (userID) {
@@ -38,6 +46,19 @@ export default function Page() {
       fetchAttendanceData(startDate, endDate);
     }
   }, [userID]);
+
+  useEffect(() => {
+    const paramTab = searchParams.get("p");
+    if (paramTab) {
+      setActiveTab(paramTab);
+    }
+
+  }, [searchParams]);
+
+
+  function routeTo(targetTab: string) {
+    window.history.pushState({}, "", `${window.location.pathname}?p=${targetTab}`)
+  }
 
   async function fetchReimbursementData(startDate: string, endDate: string) {
     return new Promise((resolve, reject) => {
@@ -111,79 +132,137 @@ export default function Page() {
 
   const RenderNewCustomer = useCallback(() => {
     return (
-      <Card className="flex flex-1">
-        <CardContent className="pt-5 flex flex-1">
-          <div className="flex flex-1 gap-5">
-            <CustomerExtraData
-              data={extraData || {}}
-              option={selectedOption}
-              onSelect={(val) => {
-                if (val === "record") {
-                  setOldRecordVisible(true);
-                } else {
-                  setSelectedOption(val);
-                }
-              }}
-            />
-            <CustomerEmployee
-              height="min-h-[calc(100dvh-470px)]"
-              totalCustomerText={"Total Customers"}
-              ownership={true}
-              customer_data={
-                extraData && selectedOption ? extraData[selectedOption as Exclude<keyof UserExtraTypes, "user">] : []
+
+      <div className="relative flex min-w-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-5">
+        <div className="w-full shrink-0 lg:sticky lg:top-4 lg:z-10 lg:h-fit lg:w-[280px] lg:self-start">
+          <CustomerExtraData
+            data={extraData || {}}
+            option={selectedOption}
+            onSelect={(val) => {
+              if (val === "record") {
+                setOldRecordVisible(true);
+              } else {
+                setSelectedOption(val);
               }
-              onRefresh={() => fetchExtraCustomerOptions()}
-            />
-          </div>
-        </CardContent>
-      </Card>
+            }}
+          />
+        </div>
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <CustomerEmployee
+            height="min-h-[calc(100dvh-470px)]"
+            totalCustomerText={"Total Customers"}
+            ownership={true}
+            customer_data={
+              extraData && selectedOption ? extraData[selectedOption as Exclude<keyof UserExtraTypes, "user">] : []
+            }
+            onRefresh={() => fetchExtraCustomerOptions()}
+          />
+        </div>
+      </div>
+
     );
   }, [userID, data, extraData, selectedOption]);
 
   const RenderReimbursement = useCallback(() => {
     return (
-      <Card className="flex flex-1">
-        <CardContent className="pt-0 flex flex-1">
-          <Reimbursement
-            id={userID}
-              height="min-h-[calc(100dvh-420px)]"
-            passingData={reimbursementData || []}
-            onAddRefresh={async () => {
-              const startDate = moment().startOf("month").toISOString();
-              const endDate = moment().endOf("month").toISOString();
-              await fetchReimbursementData(startDate, endDate);
-            }}
-            onFilterReturn={async (start, end) => {
-              await fetchReimbursementData(start, end)
-            }}
-            onReset={async (start, end) => {
-              await fetchReimbursementData(start, end);
-            }}
-            onUpdatePurpose={(val) => {
-              const newData = updateItemPurpose(reimbursementData, val);
-              setReimbursementData(newData);
-            }}
-          />
-        </CardContent>
-      </Card>
+
+      <Reimbursement
+        id={userID}
+
+        passingData={reimbursementData || []}
+        onAddRefresh={async () => {
+          const startDate = moment().startOf("month").toISOString();
+          const endDate = moment().endOf("month").toISOString();
+          await fetchReimbursementData(startDate, endDate);
+        }}
+        onFilterReturn={async (start, end) => {
+          await fetchReimbursementData(start, end)
+        }}
+        onReset={async (start, end) => {
+          await fetchReimbursementData(start, end);
+        }}
+        onUpdatePurpose={(val) => {
+          const newData = updateItemPurpose(reimbursementData, val);
+          setReimbursementData(newData);
+        }}
+      />
+
     );
   }, [reimbursementData]);
 
   const RenderAttendance = useCallback(() => {
     return (
-       <Card className="flex flex-1 p-0">
-               <CardContent className="pt-0 flex flex-1">
-                 <Attendance
-                   height="min-h-[calc(100dvh-360px)]"
-                   passingData={attendanceData}
-                   onFilterReturn={async (start, end) =>
-                     await fetchAttendanceData(start, end)
-                   }
-                 />
-               </CardContent>
-             </Card>
+
+      <Attendance
+
+        passingData={attendanceData}
+        onFilterReturn={async (start, end) =>
+          await fetchAttendanceData(start, end)
+        }
+      />
+
     );
   }, [attendanceData]);
+
+
+  const tabTriggerBase =
+    "h-8 gap-1.5 rounded-md px-3 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:text-white hover:shadow-md cursor-pointer"
+
+  const tabs = [
+    {
+      value: "newCustomers",
+      label: "New Customers",
+      icon: UserPlus,
+      count: null,
+      className: "bg-blue-600 hover:bg-blue-700 data-[state=active]:bg-blue-700 data-[state=active]:ring-blue-300",
+      badgeClassName: "text-blue-700",
+    },
+    {
+      value: "attendance",
+      label: "Attendance",
+      icon: CalendarCheck,
+      count: attendanceData?.filter((item) => item.status !== 'Absent').length || 0,
+      className: "bg-cyan-600 hover:bg-cyan-700 data-[state=active]:bg-cyan-700 data-[state=active]:ring-cyan-300",
+      badgeClassName: "text-cyan-700",
+    },
+
+
+    {
+      value: "reimbursement",
+      label: "Reimbursement",
+      icon: ReceiptText,
+      count: reimbursementData?.length || 0,
+      className: "bg-orange-500 hover:bg-orange-600 data-[state=active]:bg-orange-600 data-[state=active]:ring-orange-300",
+      badgeClassName: "text-orange-600",
+    },
+
+
+    {
+      value: "salary",
+      label: "Salary",
+      icon: Wallet,
+      count: null,
+      className: "bg-amber-500 hover:bg-amber-600 data-[state=active]:bg-amber-600 data-[state=active]:ring-amber-300",
+      badgeClassName: "text-amber-700",
+    },
+
+    {
+      value: "fines",
+      label: "Fines",
+      icon: BadgeAlert,
+      count: allFines,
+      className: "bg-red-600 hover:bg-red-700 data-[state=active]:bg-red-700 data-[state=active]:ring-red-300",
+      badgeClassName: "text-red-700",
+    },
+  ]
+
+  const tabsMaxWidth =
+    isMobile
+      ? "max-w-[calc(100dvw-35px)]"
+      :
+      open ? "max-w-[calc(100dvw-290px)]"
+        : "max-w-[calc(100dvw-80px)]"
+
 
   return (
     <div className="flex flex-1 gap-5">
@@ -198,33 +277,66 @@ export default function Page() {
           </div>
         </div>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="flex w-full flex-1 flex-col"
-        >
-          <TabsList className="justify-start">
-            <TabsTrigger value="newCustomers">New Customers</TabsTrigger>
-            <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>
-            <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="salary">Salary</TabsTrigger>
-            <TabsTrigger value="fines">Fines</TabsTrigger>
-          </TabsList>
+        <ScrollArea className={`${tabsMaxWidth}`}>
 
-          <div className="flex flex-1 w-full mt-2">
-            {activeTab === "newCustomers" && <RenderNewCustomer />}
-            {activeTab === "reimbursement" && <RenderReimbursement />}
-            {activeTab === "attendance" && <RenderAttendance />}
-            {activeTab === "salary" && (
-              <Card className="flex flex-1 p-0">
-                <CardContent className="pt-2 flex flex-1">
-                  <SalaryRecord id={userID} height="min-h-[calc(100dvh-320px)]"/>
-                </CardContent>
-              </Card>
-            )}
-              {activeTab === 'fines' && <RenderFines userID={userID} height="min-h-[calc(100dvh-370px)]"/>}
+
+          <div className="flex gap-2 pb-4 py-2">
+
+            {tabs.map((tab) => {
+              const Icon = tab.icon
+
+              return (
+                <div
+                  key={tab.value}
+                  onClick={() => routeTo(tab.value)}
+                  className={`${tabTriggerBase} ${tab.className} flex gap-1 items-center ${activeTab === tab.value && "-translate-y-1"}`}
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+
+                  <span className="whitespace-nowrap">{tab.label}</span>
+
+                  {tab.count !== null && tab.count !== undefined && (
+                    <Badge
+                      className={`ml-0.5 h-5 rounded-full bg-white px-1.5 text-[10px] font-bold hover:bg-white ${tab.badgeClassName}`}
+                    >
+                      {tab.count > 999 ? "999+" : tab.count}
+                    </Badge>
+                  )}
+                </div>
+              )
+            })}
           </div>
-        </Tabs>
+
+
+          <ScrollBar orientation="horizontal" />
+
+        </ScrollArea>
+
+
+        <div hidden={activeTab !== "newCustomers"} className={`${isMobile && "max-w-[calc(100vw-30px)]"}`}>
+          <RenderNewCustomer />
+        </div>
+
+        <div hidden={activeTab !== "reimbursement"} >
+          <RenderReimbursement />
+        </div>
+
+        <div hidden={activeTab !== "attendance"} >
+          <RenderAttendance />
+        </div>
+        <div hidden={activeTab !== "salary"} >
+
+
+          <SalaryRecord id={userID} />
+
+
+        </div>
+
+        <div hidden={activeTab !== "fines"} >
+          <RenderFines userID={userID} onUpdateTotal={(val) => setAllFines(val)} />
+        </div>
+
+
       </div>
 
       <OldRecordSheet

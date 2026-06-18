@@ -38,6 +38,7 @@ export type SalesCustomerMachines = {
     serial_no: string
     percentage_completion?: string | number
     price: number | string
+    speed_money_amount : string | number
 }
 
 export type SalesCustomer = {
@@ -394,7 +395,6 @@ export type AssignForm = {
     customer_id: null | number,
     charges: number,
     remarks: string,
-    managing_office: string
 }
 
 export type ComplaintPaymentDetail = {
@@ -563,6 +563,7 @@ export type MachineProps = {
     customer_id: number;
     type: string;
     speed_money_note: string;
+    note?: string | null;
     speed_money: boolean;
     sell_by: number;
     commission: boolean;
@@ -895,6 +896,7 @@ export type POSInvoiceReminder = {
 
     status: string;
     outward_gatepass?: POSInvoiceReminder
+    location ?: string
 };
 
 export type POSCustomer = {

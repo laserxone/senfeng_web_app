@@ -1,5 +1,5 @@
 "use client";
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import { RequiredStar } from "@/components/RequiredStar";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +26,8 @@ export default function RepairAndMaintenance({ data = [], onRefresh, height }: {
     const [selectedTask, setSelectedTask] = useState<UserRepairing | null>(null);
     const { userID } = useUserDetail()
     const [filter, setFilter] = useState("all")
+
+    console.log(data)
 
 
     const columns: ColumnDef<UserRepairing>[] = [
@@ -163,7 +165,6 @@ export default function RepairAndMaintenance({ data = [], onRefresh, height }: {
                 <PageTable
                     onRowClick={(val) => setSelectedTask(val)}
                     loading={false}
-                    height={height}
                     columns={columns}
                     data={filteredData}
                 >

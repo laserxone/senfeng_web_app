@@ -42,6 +42,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useId, useState, type ElementType } from "react";
 import "./styles.css";
+import { Progress } from "@/components/ui/progress";
 
 
 
@@ -112,6 +113,7 @@ export default function Page() {
   }
 
   async function fetchReimbursementData(startDate: string, endDate: string) {
+    
     return new Promise((resolve, reject) => {
       axios
         .get(
@@ -275,8 +277,7 @@ export default function Page() {
 
   const RenderMembers = useCallback(() => {
     return (
-      <Card className="flex flex-1 p-0">
-        <CardContent className="p-0 flex flex-1">
+    
           <CustomersTab
             height="h-[calc(100dvh-400px)]"
             data={
@@ -284,8 +285,7 @@ export default function Page() {
               []
             }
           />
-        </CardContent>
-      </Card>
+      
     );
   }, [userID, data]);
 
@@ -605,11 +605,9 @@ export default function Page() {
         </div>
         <div hidden={activeTab !== "salary"} >
 
-          <Card>
-            <CardContent>
+       
               <SalaryRecord id={userID} height="min-h-[calc(100dvh-420px)]" />
-            </CardContent>
-          </Card>
+            
 
         </div>
         <div hidden={activeTab !== "issued"} >
@@ -1055,6 +1053,7 @@ function CustomersTab({
   data: SalesCustomer[]
   height?: string
 }) {
+  console.log(data)
   const [localData, setLocalData] = useState<
     (SalesCustomer & { overall: string })[]
   >([])
@@ -1095,8 +1094,11 @@ function CustomersTab({
       0
     )
 
+    console.log(totalPayments)
+    console.log(machine.price)
+
     const isCompleted =
-      Number(machine.price) === totalPayments &&
+      (Number(machine.price) - Number(machine.speed_money_amount)) === totalPayments &&
       Number(machine?.percentage_completion) === 100
 
     return (
@@ -1143,8 +1145,8 @@ function CustomersTab({
 
 
   return (
-    <div className="w-full overflow-hidden rounded-xl border bg-white shadow-sm dark:bg-zinc-950">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-slate-50/80 px-4 py-3 dark:bg-zinc-900/70">
+    <div className="w-full overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-slate-50/80 px-4 py-3 dark:bg-zinc-900/70 rounded-xl border bg-white shadow-sm dark:bg-zinc-950">
         <div className="flex items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <Building2 className="h-4 w-4" />
@@ -1167,7 +1169,7 @@ function CustomersTab({
       </div>
 
 
-      <Accordion type="single" collapsible className="w-full space-y-2 p-3">
+      <Accordion type="single" collapsible className="w-full space-y-2 px-1 mt-2">
         {localData.length === 0 ? (
           <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed bg-slate-50 p-6 text-center dark:bg-zinc-900/50">
             <div>
@@ -1191,6 +1193,7 @@ function CustomersTab({
             >
               <Card className="overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 transition-shadow hover:shadow-md dark:bg-zinc-950 dark:ring-white/10 p-0">
                 <AccordionTrigger className="hover:no-underline sm:px-4">
+                  <div className="w-full">
                   <div className="flex w-full min-w-0 flex-col gap-3 pr-2 sm:flex-row sm:items-center sm:justify-between">
                     <div
 
@@ -1214,21 +1217,24 @@ function CustomersTab({
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                      <Badge variant="outline" className="h-6 rounded-full bg-background px-2 text-[10px]">
-                        <Gauge className="mr-1 h-3 w-3" />
-                        {customer.overall}% profile
-                      </Badge>
-
+                    <div className="flex flex-col flex-wrap items-center gap-2 sm:justify-end">
                       <Badge
-                        className="h-6 rounded-full px-2 text-[10px]"
+                        className="text-[10px]"
                         variant={
                           customer.sales.length === 0 ? "secondary" : "default"
                         }
                       >
                         {customer.sales.length === 0 ? "Assigned" : "Purchased"}
                       </Badge>
+                      <div className="flex text-[10px] font-light">
+                        <Gauge className="mr-1 h-3 w-3" />
+                        {customer.overall}% profile
+                      </div>
+
+                      
                     </div>
+                  </div>
+                  <Progress value={Number(customer.overall || 0)} className="mt-2"/>
                   </div>
                 </AccordionTrigger>
 

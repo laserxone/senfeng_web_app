@@ -1,3 +1,4 @@
+import { Calendar, Filter, Phone, TrendingUp, Users } from "lucide-react";
 import { Badge } from "../ui/badge";
 
 export const CustomerExtraData = ({
@@ -12,11 +13,16 @@ export const CustomerExtraData = ({
   showold?: boolean
 }) => {
   const menuItems = [
-    { key: "this", label: "This Month", dataKey: "thisMonth" },
-    { key: "without", label: "No Feedback", dataKey: "withoutFeedback" },
-    { key: "top", label: "Top Follow Up", dataKey: "topFollow" },
-    { key: "all", label: "All Customers", dataKey: "allCustomers" },
-    { key: "next", label: "Next Month", dataKey: "nextMonth" },
+    { key: "this", label: "This Month", dataKey: "thisMonth", 
+      icon : <TrendingUp  className="h-4 w-4"/> },
+    { key: "without", label: "No Feedback", dataKey: "withoutFeedback", 
+      
+      icon : <Phone className="h-4 w-4"/> },
+    { key: "top", label: "Top Follow Up", dataKey: "topFollow" , icon : <Filter className="h-4 w-4"/>},
+    { key: "all", label: "All Customers", dataKey: "allCustomers", 
+      icon : <Users className="h-4 w-4"/>},
+    { key: "next", label: "Next Month", dataKey: "nextMonth", 
+      icon : <Calendar className="h-4 w-4"/> },
   ]
 
 return (
@@ -31,7 +37,7 @@ return (
     </div>
 
     <div className="flex w-full gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
-      {menuItems.map(({ key, label, dataKey }) => {
+      {menuItems.map(({ key, label, dataKey, icon }) => {
         const count = data?.[dataKey as keyof typeof data]?.length ?? 0
         const isActive = option === dataKey
 
@@ -50,9 +56,12 @@ return (
               }
             `}
           >
+            <div className="flex gap-2 text-xs items-center">
+              {icon}
             <span className="truncate text-xs font-semibold sm:text-sm">
               {label}
             </span>
+            </div>
 
             {count > 0 && (
               <Badge

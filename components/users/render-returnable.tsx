@@ -1,4 +1,4 @@
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import useIssuedItem from "@/hooks/use-issued-items";
@@ -87,8 +87,7 @@ const RenderReturnable = ({ height, onUpdateTotal, userID }: { height?: string, 
   }, [issuedItems])
 
   return (
-    <Card className="flex flex-1 p-0">
-      <CardContent className="pt-0 flex flex-1">
+    
         <div className="flex flex-1 flex-col space-y-4">
           <div className="flex flex-1">
             <PageTable
@@ -99,8 +98,7 @@ const RenderReturnable = ({ height, onUpdateTotal, userID }: { height?: string, 
             />
           </div>
         </div>
-      </CardContent>
-    </Card>
+    
   );
 };
 

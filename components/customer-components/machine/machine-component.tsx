@@ -34,7 +34,7 @@ import { z } from "zod";
 
 import AddPayment from "@/components/addPayment";
 import ConfimationDialog from "@/components/alert-dialog";
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import CurrencyFormatter from "@/components/currency-formatter";
 import { downloadCustomerZip } from "@/components/downloadzip";
 import DropzoneMulti from "@/components/dropzone-multi";
@@ -486,30 +486,30 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
       }
 
       const infoItem = (label: string, value?: string | number | null) => (
-        <div className="rounded-md border bg-muted/30 px-3 py-2">
-          <p className="text-[11px] text-muted-foreground">{label}</p>
-          <p className="truncate text-sm font-medium">{value || "N/A"}</p>
+        <div className="min-w-0 rounded-md border bg-muted/20 px-2.5 py-2 ring-1 ring-transparent transition-colors hover:bg-muted/30">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+          <p className="mt-0.5 break-words text-sm font-semibold leading-5 text-foreground">{value || "N/A"}</p>
         </div>
       )
 
       return (
-        <Card className="w-full rounded-xl border bg-background shadow-sm">
-          <CardContent className="space-y-4 p-4">
-            <div className="flex flex-col gap-3 border-b pb-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="min-w-0">
+        <Card className="w-full overflow-hidden rounded-lg border bg-card shadow-sm ring-1 ring-border/40">
+          <CardContent className="space-y-3 p-3">
+            <div className="flex flex-col gap-3 rounded-md border bg-gradient-to-r from-muted/35 via-background to-muted/15 px-3 py-2.5 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="truncate text-lg font-semibold">
+                  <h2 className="min-w-0 break-words text-base font-bold leading-5 tracking-tight">
                     {data?.name || "Customer Name"}
                   </h2>
 
                   {data?.owner && (
-                    <Badge variant="secondary" className="h-5 text-[11px]">
+                    <Badge variant="secondary" className="h-5 rounded-md px-2 text-[10px] font-semibold">
                       {data.owner}
                     </Badge>
                   )}
 
                   {machine?.status && (
-                    <Badge variant="outline" className="h-5 text-[11px]">
+                    <Badge variant="outline" className="h-5 rounded-md px-2 text-[10px] font-semibold">
                       {machine.status}
                     </Badge>
                   )}
@@ -519,7 +519,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                       <TooltipTrigger asChild>
                         <Badge
                           variant="destructive"
-                          className="h-5 cursor-pointer text-[11px]"
+                          className="h-5 cursor-pointer rounded-md px-2 text-[10px] font-semibold"
                         >
                           Cancelled
                         </Badge>
@@ -535,7 +535,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                   {showAlert && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Badge variant="destructive" className="h-5 text-[11px]">
+                        <Badge variant="destructive" className="h-5 rounded-md px-2 text-[10px] font-semibold">
                           Duplicate TID
                         </Badge>
                       </TooltipTrigger>
@@ -548,7 +548,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                   {unmatched.length > 0 && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Badge variant="destructive" className="h-5 text-[11px] animate-pulse">
+                        <Badge variant="destructive" className="h-5 animate-pulse rounded-md px-2 text-[10px] font-semibold">
                           Missing Info
                         </Badge>
                       </TooltipTrigger>
@@ -563,19 +563,19 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                   )}
                 </div>
 
-                <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                  <span>Sell by: {machine?.sell_by_name || "NA"}</span>
-                  <span>Manager: {data?.ownership_name || "NA"}</span>
+                <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
+                  <span className="rounded-md border bg-background px-2 py-1">Sell by: {machine?.sell_by_name || "NA"}</span>
+                  <span className="rounded-md border bg-background px-2 py-1">Manager: {data?.ownership_name || "NA"}</span>
                 </div>
               </div>
 
-              <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <div className="flex shrink-0 flex-wrap items-center gap-1.5">
                 {children}
               </div>
             </div>
 
-            <div className="grid gap-3 xl:grid-cols-[1fr_340px]">
-              <Card className="relative border shadow-none">
+            <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
+              <Card className="relative overflow-hidden rounded-lg border bg-background shadow-none">
                 {machine?.cancelled_detail ? (
                   <div className="pointer-events-none absolute left-2 top-2 z-10 select-none">
                     <div className="relative flex h-14 w-28 -rotate-6 items-center justify-center overflow-hidden rounded-md border-2 border-red-600/75 bg-red-50/85 text-red-700 shadow-[0_8px_22px_rgba(220,38,38,0.18)] ring-1 ring-red-900/10 backdrop-blur-sm dark:bg-red-950/45 dark:text-red-300">
@@ -611,15 +611,15 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                     </div>
                   </div>
                 )}
-                <CardHeader className={`px-3 pb-2 pt-3 ${machine?.commission_issued || machine?.cancelled_detail ? "pl-32 sm:pl-36" : ""}`}>
-                  <CardTitle className="text-sm font-semibold">
+                <CardHeader className={`border-b bg-muted/10 px-3 py-2 ${machine?.commission_issued || machine?.cancelled_detail ? "pl-32 sm:pl-36" : ""}`}>
+                  <CardTitle className="text-sm font-bold tracking-tight">
                     {machine?.type === "Parts"
                       ? "Parts Information"
                       : "Machine Information"}
                   </CardTitle>
                 </CardHeader>
 
-                <CardContent className="px-3 pb-3">
+                <CardContent className="p-3">
                   {machine?.type === "Parts" ? (
                     machine ? (
                       <div className="space-y-3">
@@ -628,7 +628,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                             (item: any, i: number) => (
                               <div
                                 key={i}
-                                className="rounded-md border bg-muted/20 p-2.5"
+                                className="rounded-md border bg-muted/15 p-2.5"
                               >
                                 <h4 className="mb-2 text-xs font-semibold">
                                   Part {i + 1}
@@ -690,35 +690,45 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                           {infoItem(`Order ${index + 1}`, item)}
                         </Fragment>
                       ))}
+                      {machine.delivery_date && infoItem("Delivery Date", moment(machine.delivery_date).format("DD MMM YYYY"))}
+                      <div className="col-span-1 md:col-span-2 xl:col-span-3">
+                        {machine?.note && (
+                          <div className="rounded-md border bg-primary/5 px-2.5 py-2 ring-1 ring-primary/10">
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">Note</p>
+                            <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-5 text-foreground">{machine.note}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">
                       No data available
                     </p>
                   )}
+
                 </CardContent>
 
 
               </Card>
 
-              <Card className="border shadow-none">
-                <CardHeader className="px-3 pb-2 pt-3">
-                  <CardTitle className="text-sm font-semibold">
+              <Card className="overflow-hidden rounded-lg border bg-background shadow-none">
+                <CardHeader className="border-b bg-muted/10 px-3 py-2">
+                  <CardTitle className="text-sm font-bold tracking-tight">
                     Billing Summary
                   </CardTitle>
                 </CardHeader>
 
-                <CardContent className="space-y-2 px-3 pb-3">
+                <CardContent className="space-y-2 p-3">
                   <div className="grid grid-cols-3 gap-2 xl:grid-cols-1">
-                    <div className="rounded-md border bg-muted/20 px-3 py-2">
-                      <p className="text-[11px] text-muted-foreground">Bill</p>
+                    <div className="rounded-md border bg-muted/15 px-2.5 py-2">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Bill</p>
                       <p className="text-sm font-semibold">
                         <CurrencyFormatter amount={payment[0]} />
                       </p>
                     </div>
 
-                    <div className="rounded-md border bg-muted/20 px-3 py-2">
-                      <p className="text-[11px] text-muted-foreground">
+                    <div className="rounded-md border bg-emerald-50/70 px-2.5 py-2 dark:bg-emerald-950/20">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                         Received
                       </p>
                       <p className="text-sm font-semibold text-green-600">
@@ -726,8 +736,8 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                       </p>
                     </div>
 
-                    <div className="rounded-md border bg-muted/20 px-3 py-2">
-                      <p className="text-[11px] text-muted-foreground">
+                    <div className="rounded-md border bg-red-50/70 px-2.5 py-2 dark:bg-red-950/20">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                         Balance
                       </p>
                       <p className="text-sm font-semibold text-red-600">
@@ -739,7 +749,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                   </div>
 
                   {machine?.speed_money && (
-                    <div className="rounded-md border bg-orange-50 px-3 py-2 text-sm dark:bg-orange-950/20">
+                    <div className="rounded-md border bg-orange-50 px-2.5 py-2 text-sm dark:bg-orange-950/20">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs text-muted-foreground">
                           Speed Money
@@ -750,7 +760,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                       </div>
 
                       {machine.speed_money_note && (
-                        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                        <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-5 text-muted-foreground">
                           {machine.speed_money_note}
                         </p>
                       )}
@@ -772,7 +782,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
   }
 
   return (
-    <div className="flex flex-1 flex-col space-y-4">
+    <div className="flex flex-1 flex-col gap-3">
       <ClientCard
         data={data?.customer || null}
         machine={data?.machine || null}
@@ -780,10 +790,9 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
       >
         {data && (
           <>
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="outline" className="h-8 px-3 text-xs">
+                <Button size="sm" variant="outline" className="h-7 rounded-md px-2.5 text-xs">
                   <MoreHorizontal className="mr-1.5 h-3.5 w-3.5" />
                   Actions
                 </Button>
@@ -838,7 +847,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
 
                 <Button
                   size="sm"
-                  className="h-8 px-3 text-xs"
+                  className="h-7 rounded-md px-2.5 text-xs"
                   onClick={() => {
                     if (!data?.editAllowed) {
                       toast.info("You are not allowed to edit machine")
@@ -859,7 +868,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button size="sm" variant="outline" className="h-8 px-3 text-xs">
+                    <Button size="sm" variant="outline" className="h-7 rounded-md px-2.5 text-xs">
                       <MoreHorizontal className="mr-1.5 h-3.5 w-3.5" />
                       More
                     </Button>
@@ -946,11 +955,12 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                   <Button
                     size="sm"
                     className="
-    h-8
+    h-7
     border
     border-emerald-500/30
     bg-emerald-500
-    px-3
+    rounded-md
+    px-2.5
     text-xs
     font-medium
     text-white
@@ -994,7 +1004,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
         )}
       </ClientCard>
 
-      <div className={`flex flex-1 min-h-[500px]`}>
+      <div className="flex min-h-[420px] flex-1 rounded-lg border bg-card p-2 shadow-sm ring-1 ring-border/40">
         <PageTable
           columns={columns}
           data={payments}

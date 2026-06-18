@@ -40,7 +40,7 @@ export async function POST(req:NextRequest) {
   }
 }
 
-export async function GET(req:NextRequest) {
+export async function GET(req:NextRequest, { params }:{params:Promise<{}>}) {
 
   const searchParams = req.nextUrl.searchParams;
   const user = searchParams.get("user");
@@ -48,7 +48,7 @@ export async function GET(req:NextRequest) {
   let queryParams = []
   try {
     let query = `
-    SELECT
+   SELECT
     lt.*,
     u.name AS user_name,
     c.name AS customer_name,
@@ -61,9 +61,10 @@ WHERE lt.managing_office = 'karachi'
   `;
 
   if(user){
-    query += " AND WHERE u.id = $1"
+    query += " AND u.id = $1"
     queryParams.push(user)
   }
+  query += " ORDER BY lt.assign_date DESC"
 
     const result = await pool.query(query, queryParams);
 
@@ -76,5 +77,6 @@ WHERE lt.managing_office = 'karachi'
     );
   }
 }
+
 
 export const revalidate = 0;

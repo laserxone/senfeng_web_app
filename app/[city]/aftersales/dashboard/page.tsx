@@ -26,15 +26,18 @@ import SalaryRecord from "@/components/users/SalaryRecord";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { updateItemPurpose } from "@/lib/updatePurpose";
-import { ArrowUpDown, Filter } from "lucide-react";
+import { ArrowUpDown, BadgeAlert, CalendarCheck, Filter, ReceiptText, TrendingDown, TrendingUp, UserPlus, Users, Wallet } from "lucide-react";
 import moment from "moment";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Dispatch, SetStateAction, useCallback, useEffect, useState } from "react";
 import "./styles.css";
 import { MyCustomer, MyCustomerResolved, UserAttendanceRecord, UserDashboard, UserReimbursementType } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import AutoScrollMembers from "@/components/autoScroll";
+import { useSidebar } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 type WithFeedbackProps = MyCustomerResolved & {
   feedback_date: string
@@ -71,8 +74,16 @@ export default function Page() {
   });
   const [selectedOption, setSelectedOption] =
     useState<string>("withoutFeedback");
-  const [activeTab, setActiveTab] = useState<string>("newCustomers");
+ 
   const { userID } = useUserDetail();
+
+    const [activeTab, setActiveTab] = useState("newCustomers");
+  const [allFines, setAllFines] = useState(0)
+  const [allTeamTasks, setAllTeamTasks] = useState(0)
+
+  const { open } = useSidebar()
+  const searchParams = useSearchParams()
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     if (userID) {
@@ -83,6 +94,20 @@ export default function Page() {
       fetchAttendanceData(startDate, endDate);
     }
   }, [userID]);
+
+    useEffect(() => {
+      const paramTab = searchParams.get("p");
+      if (paramTab) {
+        setActiveTab(paramTab);
+      }
+  
+    }, [searchParams]);
+  
+  
+    function routeTo(targetTab: string) {
+      window.history.pushState({}, "", `${window.location.pathname}?p=${targetTab}`)
+    }
+  
 
   async function fetchReimbursementData(startDate: string, endDate: string) {
     return new Promise<boolean>((resolve, reject) => {
@@ -202,9 +227,7 @@ export default function Page() {
 
   const RenderNewCustomer = useCallback(() => {
     return (
-      <Card className="flex flex-1">
-        <CardContent className="pt-5 flex flex-1">
-          <div className="flex flex-1 gap-5">
+    
             <CustomerEmployeeAfterSales
              height="min-h-[calc(100dvh-400px)]"
               data={filterData ? filterData : data}
@@ -219,9 +242,7 @@ export default function Page() {
               selectedOption={selectedOption}
               setSelectedOption={setSelectedOption}
             />
-          </div>
-        </CardContent>
-      </Card>
+       
     );
   }, [data, filterData, selectedOption]);
 
@@ -269,6 +290,73 @@ export default function Page() {
     );
   }, [attendanceData]);
 
+
+  const tabTriggerBase =
+      "h-8 gap-1.5 rounded-md px-3 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:text-white hover:shadow-md cursor-pointer"
+  
+    const tabs = [
+      {
+        value: "newCustomers",
+        label: "Members",
+        icon: UserPlus,
+        count: null,
+        className: "bg-blue-600 hover:bg-blue-700 data-[state=active]:bg-blue-700 data-[state=active]:ring-blue-300",
+        badgeClassName: "text-blue-700",
+      },
+      {
+        value: "attendance",
+        label: "Attendance",
+        icon: CalendarCheck,
+        count: attendanceData?.filter((item) => item.status !== 'Absent').length || 0,
+        className: "bg-cyan-600 hover:bg-cyan-700 data-[state=active]:bg-cyan-700 data-[state=active]:ring-cyan-300",
+        badgeClassName: "text-cyan-700",
+      },
+  
+      {
+        value: "task",
+        label: "Team Task",
+        icon: Users,
+        count: allTeamTasks,
+        className: "bg-orange-500 hover:bg-orange-600 data-[state=active]:bg-orange-600 data-[state=active]:ring-orange-300",
+        badgeClassName: "text-orange-600",
+      },
+  
+      {
+        value: "reimbursement",
+        label: "Reimbursement",
+        icon: ReceiptText,
+        count: reimbursementData?.length || 0,
+        className: "bg-orange-500 hover:bg-orange-600 data-[state=active]:bg-orange-600 data-[state=active]:ring-orange-300",
+        badgeClassName: "text-orange-600",
+      },
+  
+  
+      {
+        value: "salary",
+        label: "Salary",
+        icon: Wallet,
+        count: null,
+        className: "bg-amber-500 hover:bg-amber-600 data-[state=active]:bg-amber-600 data-[state=active]:ring-amber-300",
+        badgeClassName: "text-amber-700",
+      },
+  
+      {
+        value: "fines",
+        label: "Fines",
+        icon: BadgeAlert,
+        count: allFines,
+        className: "bg-red-600 hover:bg-red-700 data-[state=active]:bg-red-700 data-[state=active]:ring-red-300",
+        badgeClassName: "text-red-700",
+      },
+    ]
+  
+    const tabsMaxWidth =
+      isMobile
+        ? "max-w-[calc(100dvw-35px)]"
+        :
+        open ? "max-w-[calc(100dvw-290px)]"
+          : "max-w-[calc(100dvw-80px)]"
+
   return (
     <div className="flex flex-1 gap-5">
       <div className="flex flex-1 flex-col gap-4">
@@ -282,41 +370,65 @@ export default function Page() {
           </div>
         </div>
 
-        <Tabs
-          className="relative flex w-full flex-1 flex-col"
-          value={activeTab}
-          onValueChange={setActiveTab}
-        >
-          <TabsList className="justify-start">
-            <TabsTrigger value="newCustomers">Members</TabsTrigger>
-            <TabsTrigger value="reimbursement">Reimbursement</TabsTrigger>
-            <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="task">Team Task</TabsTrigger>
-            <TabsTrigger value="salary">Salary</TabsTrigger>
-            <TabsTrigger value="fines">Fines</TabsTrigger>
-          </TabsList>
+        <ScrollArea className={`${tabsMaxWidth}`}>
 
-          <div className="flex flex-1 w-full mt-2">
-            {activeTab === "newCustomers" && <RenderNewCustomer />}
-            {activeTab === "reimbursement" && <RenderReimbursement />}
-            {activeTab === "attendance" && <RenderAttendance />}
-            {activeTab === "task" && (
-              <Card className="flex flex-1 p-0">
-                             <CardContent className="pt-2 flex flex-1">
-                               <TeamTask height="min-h-[calc(100dvh-360px)]" />
-                             </CardContent>
-                           </Card>
-            )}
-            {activeTab === "salary" && (
-               <Card className="flex flex-1 p-0">
-                <CardContent className="pt-2 flex flex-1">
-                  <SalaryRecord id={userID} height="min-h-[calc(100dvh-320px)]"/>
-                </CardContent>
-              </Card>
-            )}
-           {activeTab === 'fines' && <RenderFines height="min-h-[calc(100dvh-370px)]"/>}
+
+          <div className="flex gap-2 pb-4 py-2">
+
+            {tabs.map((tab) => {
+              const Icon = tab.icon
+
+              return (
+                <div
+                  key={tab.value}
+                  onClick={() => routeTo(tab.value)}
+                  className={`${tabTriggerBase} ${tab.className} flex gap-1 items-center ${activeTab === tab.value && "-translate-y-1"}`}
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+
+                  <span className="whitespace-nowrap">{tab.label}</span>
+
+                  {tab.count !== null && tab.count !== undefined && (
+                    <Badge
+                      className={`ml-0.5 h-5 rounded-full bg-white px-1.5 text-[10px] font-bold hover:bg-white ${tab.badgeClassName}`}
+                    >
+                      {tab.count > 999 ? "999+" : tab.count}
+                    </Badge>
+                  )}
+                </div>
+              )
+            })}
           </div>
-        </Tabs>
+
+
+          <ScrollBar orientation="horizontal" />
+
+        </ScrollArea>
+
+
+        <div hidden={activeTab !== "newCustomers"} className={`${isMobile && "max-w-[calc(100vw-30px)]"}`}>
+          <RenderNewCustomer />
+        </div>
+
+        <div hidden={activeTab !== "reimbursement"} >
+          <RenderReimbursement />
+        </div>
+
+        <div hidden={activeTab !== "attendance"} >
+          <RenderAttendance />
+        </div>
+        <div hidden={activeTab !== "salary"} >
+          <SalaryRecord id={userID} />
+        </div>
+
+        <div hidden={activeTab !== 'task'}>
+          <TeamTask onUpdateTotal={(val) => setAllTeamTasks(val)} />
+        </div>
+
+        <div hidden={activeTab !== "fines"} >
+          <RenderFines userID={userID} onUpdateTotal={(val) => setAllFines(val)} />
+        </div>
+
       </div>
 
       {/* <AutoScrollMembers /> */}
@@ -502,8 +614,9 @@ const CustomerEmployeeAfterSales = ({
   }
 
   return (
-    <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex flex-row flex-1 gap-2">
+    <div className="relative flex min-w-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-5">
+        <div className="w-full shrink-0 lg:sticky lg:top-4 lg:z-10 lg:h-fit lg:w-[280px] lg:self-start">
+     
         <CustomerExtraData
           data={{
             withFeedback: data?.withFeedback || [],
@@ -515,7 +628,8 @@ const CustomerEmployeeAfterSales = ({
           }}
         />
 
-        <div className="flex flex-1">
+        </div>
+        <div className="min-w-0 flex-1 overflow-hidden">
           <PageTable
           height={height}
             columns={columns}
@@ -640,7 +754,7 @@ const CustomerEmployeeAfterSales = ({
           </DialogContent>
         </Dialog>
       </div>
-    </div>
+   
   );
 };
 
@@ -654,43 +768,69 @@ const CustomerExtraData = ({
   onSelect: (a: string) => void
 }) => {
   const menuItems = [
-    { key: "pending", label: "Pending", dataKey: "withoutFeedback" },
-    { key: "completed", label: "Completed", dataKey: "withFeedback" },
+    { key: "pending", label: "Pending", dataKey: "withoutFeedback", icon : <TrendingDown className="h-4 w-4"/> },
+    { key: "completed", label: "Completed", dataKey: "withFeedback", icon : <TrendingUp className="h-4 w-4"/> },
   ];
 
   return (
-    <div className="flex flex-col gap-5 mt-5">
-      <div className="py-2 px-5 bg-gray-100 rounded-lg dark:bg-gray-800">
-        <h2 className="text-2xl font-bold tracking-tight">
-          {"Customer Group"}
-        </h2>
-      </div>
+    <div className="rounded-md border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+    <div className="mb-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-900">
+      <h2 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+        Customer Group
+      </h2>
+      <p className="mt-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+        Filter customer records
+      </p>
+    </div>
 
-      {menuItems.map(({ key, label, dataKey }) => {
-        const count = data?.[dataKey as keyof typeof data]?.length ?? 0;
+    <div className="flex w-full gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
+      {menuItems.map(({ key, label, dataKey, icon }) => {
+        const count = data?.[dataKey as keyof typeof data]?.length ?? 0
+        const isActive = option === dataKey
+
         return (
-          <div
-            onClick={() => {
-              onSelect(dataKey);
-            }}
+          <button
+            type="button"
+            onClick={() => onSelect(dataKey)}
             key={key}
-            className={`flex items-center justify-between py-2 px-5 cursor-pointer rounded-lg transition-all duration-300
-          ${option === dataKey
-                ? "bg-[hsl(180,85%,30%)] text-white"
-                : "hover:bg-[hsl(180,85%,90%)] hover:text-[hsl(180,85%,30%)]"
+            className={`
+              group flex min-w-[145px] shrink-0 items-center justify-between gap-2 rounded-md px-3 py-2.5 text-left transition-all duration-200
+              lg:min-w-0 lg:w-full
+              ${
+                isActive
+                  ? "border border-blue-200 bg-blue-50 text-blue-800 shadow-sm dark:border-blue-800/70 dark:bg-blue-950/50 dark:text-blue-100"
+                  : "border border-transparent bg-slate-50 text-slate-700 hover:border-slate-200 hover:bg-slate-100 hover:text-slate-950 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-700 dark:hover:bg-slate-800 dark:hover:text-white"
               }
-        `}
+            `}
           >
-            <h1 className="text-lg font-medium">{label}</h1>
-            {data?.[dataKey as keyof typeof data]?.length > 0 && (
-              <Badge variant={option === dataKey ? "secondary" : "default"}>
-                {count > 500 ? "500+" : count}
+            <div className="flex gap-2 text-xs items-center">
+              {icon}
+            <span className="truncate text-xs font-semibold sm:text-sm">
+              {label}
+            </span>
+            </div>
+
+            {count > 0 && (
+              <Badge
+                variant="secondary"
+                className={`
+                  h-5 rounded-full px-2 text-[10px] font-bold shadow-none
+                  ${
+                    isActive
+                      ? "bg-blue-600 text-white dark:bg-blue-500 dark:text-white"
+                      : "bg-white text-slate-700 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700"
+                  }
+                `}
+              >
+                {count > 999 ? "999+" : count}
               </Badge>
             )}
-          </div>
+          </button>
         )
       })}
 
+      
     </div>
+  </div>
   );
 };

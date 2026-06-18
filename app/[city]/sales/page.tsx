@@ -8,9 +8,9 @@ export default function Page() {
   const {userID, base_route}  = useUserDetail()
 
   useEffect(() => {
-    if (userID) {
+    if (userID && base_route) {
       redirect(`/${base_route}/dashboard`);
     }
-  }, [userID]);
+  }, [userID, base_route]);
 
 }

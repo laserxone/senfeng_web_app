@@ -109,6 +109,11 @@ WHERE
         u.name,
         ''
     ) AS manager,
+      COALESCE(
+        NULLIF(TRIM(c.location), ''),
+        si.address,
+        ''
+    ) AS customer_location,
     COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
 FROM savedinvoices_karachi si
 LEFT JOIN customer_parts_karachi cp

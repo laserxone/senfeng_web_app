@@ -1577,7 +1577,9 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
                     id: sale.id,
                     serial_no: sale.serial_no,
                     payments: payments.filter(p => p.machine_id === sale.id),
-                    percentage_completion: completion,
+                    percentage_completion: completion, 
+                    price : sale.price,
+                    speed_money_amount : sale.speed_money_amount
                 };
             });
 

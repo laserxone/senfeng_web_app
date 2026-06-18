@@ -110,6 +110,11 @@ WHERE
         u.name,
         ''
     ) AS manager,
+    COALESCE(
+        NULLIF(TRIM(c.location), ''),
+        si.address,
+        ''
+    ) AS customer_location,
     COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
 FROM savedinvoices si
 LEFT JOIN customer_parts cp
@@ -119,7 +124,7 @@ LEFT JOIN customer c
 LEFT JOIN users u
     ON u.id = c.ownership
 WHERE si.owner_paid IS FALSE
-GROUP BY si.id, u.name
+GROUP BY si.id, u.name, c.location
 ORDER BY created_at DESC
 `;
       const result = await pool.query(query);

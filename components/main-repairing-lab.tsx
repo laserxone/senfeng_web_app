@@ -293,8 +293,7 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }: { open: boolean
     user_id: null,
     customer_id: null,
     charges: 0,
-    remarks: "",
-    managing_office: ""
+    remarks: ""
   });
   const [loading, setLoading] = useState(false);
   const { state: OfficeState } = useContext(OfficeContext)!
@@ -311,7 +310,7 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }: { open: boolean
     setLoading(true);
 
     axios
-      .post(`/${userID}/lab`, form)
+      .post(`/${userID}/lab`, {...form,  managing_office: OfficeState.value.data || "lahore",})
       .then(() => {
         onRefresh();
         setForm({
@@ -320,8 +319,7 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }: { open: boolean
           user_id: null,
           customer_id: null,
           charges: 0,
-          remarks: "",
-          managing_office: OfficeState.value.data || "lahore",
+          remarks: ""
         });
         onChange(false);
       })

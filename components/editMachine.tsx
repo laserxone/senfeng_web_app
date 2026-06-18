@@ -26,6 +26,7 @@ const formSchema = z.object({
   isSpeedMoney: z.boolean(),
   speedMoney: z.coerce.number<number>().optional(),
   speedMoneyNote: z.string().optional(),
+  note: z.string().optional(),
   totalPrice: z.coerce.number<number>({ error: "Price is required" }),
   cnic: z.string().optional(),
 });
@@ -54,6 +55,7 @@ const EditMachine = (
       isSpeedMoney: false,
       speedMoney: 0,
       speedMoneyNote: "",
+      note: "",
       totalPrice: 0,
       cnic: "",
     },
@@ -69,6 +71,7 @@ const EditMachine = (
         isSpeedMoney: data?.speed_money,
         speedMoney: Number(data?.speed_money_amount ?? 0),
         speedMoneyNote: data?.speed_money_note || "",
+        note: data?.note || "",
         totalPrice: Number(data?.price || 0),
         cnic: data?.cnic || "",
       });
@@ -108,6 +111,7 @@ const EditMachine = (
         serial_no: values.machineModel,
         power: values.power,
         source: values.source,
+        note: values.note,
         order_no_arr: cleanedOrderNumbers,
         price: values.totalPrice,
         contract_date: values.contractDate,
@@ -151,7 +155,7 @@ const EditMachine = (
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="p-4">
+      <DialogContent className="p-4 w-full sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Edit Machine</DialogTitle>
         </DialogHeader>
@@ -196,6 +200,22 @@ const EditMachine = (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Source</FieldLabel>
                       <Input placeholder="RAYCUS / IPG" {...field} />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="note"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Machine Note</FieldLabel>
+                      <Textarea
+                        placeholder="Add any machine note, delivery instruction, or internal detail"
+                        className="min-h-24 resize-y"
+                        {...field}
+                      />
                       {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}

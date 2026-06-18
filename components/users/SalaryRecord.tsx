@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import SalaryPdf from "@/components/salaryPdf";
 import axios from "@/lib/axios";
 import moment from "moment";

@@ -64,6 +64,7 @@ WHERE lt.managing_office = 'lahore'
     query += " AND u.id = $1"
     queryParams.push(user)
   }
+  query += " ORDER BY lt.assign_date DESC"
 
     const result = await pool.query(query, queryParams);
 

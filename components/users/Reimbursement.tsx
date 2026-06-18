@@ -1,60 +1,43 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowUpDown, DownloadIcon, Edit, Filter, Plus, PlusCircle, RotateCcw } from "lucide-react";
+import { AlertCircle, Building2, Calendar, Download, Filter, MapPin, Plus, ReceiptText, RotateCcw, Search } from "lucide-react";
 import {
-  useCallback,
   useContext,
   useEffect,
   useMemo,
-  useRef,
-  useState,
+  useState
 } from "react";
 
-import PageTable from "@/components/app-table";
 import AppCalendar from "@/components/appCalendar";
 import Dropzone from "@/components/dropzone";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { storage } from "@/config/firebase";
-import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import exportToExcel from "@/lib/exportToExcel";
 import { MyCustomer, UserReimbursementType, UserReimbursementTypes } from "@/lib/types";
 import { UploadImage } from "@/lib/uploadFunction";
+import { cn } from "@/lib/utils";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ColumnDef } from "@tanstack/react-table";
-import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import { Controller, useForm } from "react-hook-form";
-import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
 import CurrencyFormatter from "../currency-formatter";
 import { CustomerSearchWithData } from "../customer-search-with-data";
+import { MyImgZooming } from "../img-zooming";
 import { RequiredStar } from "../RequiredStar";
+import { Badge } from "../ui/badge";
+import { Checkbox } from "../ui/checkbox";
+import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 import { Label } from "../ui/label";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import {
@@ -67,9 +50,6 @@ import {
 } from "../ui/select";
 import Spinner from "../ui/spinner";
 import FilterSheet from "./filterSheet";
-import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
-import { Checkbox } from "../ui/checkbox";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 export default function Reimbursement({
   id,
@@ -85,162 +65,16 @@ export default function Reimbursement({
   const [imageURL, setImageURL] = useState<{ submitted_by_name: string, description: string, image: string } | null>(null);
   const [visible, setVisible] = useState(false);
   const [reimbursementVisible, setReimbursementVisible] = useState(false);
-  const [total, setTotal] = useState(0);
+  // const [total, setTotal] = useState(0);
   const [resetLoading, setResetLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<UserReimbursementType | null>(null);
+
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     setData([...passingData]);
   }, [passingData]);
 
-  const columns: ColumnDef<UserReimbursementType>[] = [
-    {
-      accessorKey: "date",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-
-
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Date
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => (
-        <div className="flex gap-2 items-center">
-          {(row.original.title === 'Complaint' || row.original.title === 'Overhauling') &&
-             <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                   <div
-              className={`${!row.original?.resolved ? "bg-red-500" : "bg-green-500"
-                } border border-white h-3 w-3`}
-            />
-                </TooltipTrigger>
-                <TooltipContent className={!row.original?.resolved ? "bg-red-600 mr-2" : "bg-green-600 mr-2"} arrowColor={!row.original?.resolved ? "bg-red-600 fill-red-600" : "bg-green-600 fill-green-600"}>
-                  <p className="text-white">{!row.original?.resolved ? "Unresolved" : "Resolved"}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          
-          }
-          <div className="ml-2">
-            {row.getValue("date")
-              ? moment(new Date(row.getValue("date"))).format("YYYY-MM-DD")
-              : ""}
-          </div>
-        </div>
-
-      ),
-    },
-
-    {
-      accessorKey: "title",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Purpose
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        return <div className="ml-2">{row.getValue("title")}</div>;
-      },
-    },
-
-    {
-      accessorKey: "customer",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Customer
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div>{row.getValue("customer")}</div>,
-    },
-    {
-      accessorKey: "city",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            City
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div className="ml-2">{row.getValue("city")}</div>,
-    },
-    {
-      accessorKey: "amount",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Amount
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div>{row.getValue("amount")}</div>,
-    },
-
-    {
-      accessorKey: "description",
-      filterFn: "includesString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Description
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div>{row.getValue("description")}</div>,
-    },
-
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const currentItem = row.original;
-        if (currentItem?.customer_id && !currentItem?.purpose)
-          return (
-            <Edit
-              size={14}
-              className="hover:cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedItem(currentItem);
-              }}
-            />
-          );
-      },
-    },
-  ];
 
   function handleDownload() {
     const headers = [
@@ -270,77 +104,111 @@ export default function Reimbursement({
     );
   }
 
-  useEffect(() => {
-    let localTotal = 0;
-    data.forEach((item) => {
-      localTotal = localTotal + Number(item.amount);
-    });
-    setTotal(localTotal);
-  }, [data]);
+
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return data;
+    const q = search.toLowerCase();
+    return data.filter(
+      (r) =>
+        r.title?.toLowerCase().includes(q) ||
+        r.customer?.toLowerCase().includes(q) ||
+        r.city?.toLowerCase().includes(q) ||
+        r.description?.toLowerCase().includes(q)
+    );
+  }, [data, search]);
+
+  const total = filtered.reduce((s, r) => s + Number(r.amount || 0), 0);
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex flex-1">
-        <PageTable
-          height={height}
-          columns={columns}
-          data={data}
-          onRowClick={(val, e) => {
-            setImageURL(val);
-            setVisible(true);
-          }}
-        >
-          <Button
-            onClick={() => setFilterVisible(true)}
-            variant="ghost"
-            className="p-0 w-8"
-          >
-            <Filter />
-          </Button>
+      <div className="flex flex-1 flex-col">
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm ring-1 ring-border/40">
+            <div className="flex items-center gap-2">
+              <div className="grid size-9 place-items-center rounded-lg bg-orange-100 text-orange-700">
+                <ReceiptText className="size-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold">Reimbursements</h3>
+                <p className="text-xs text-muted-foreground">Travel & expense claims</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
 
-          <div className="flex flex-wrap gap-2">
-
-          <Button
-            variant="destructive"
-            onClick={async () => {
-              setResetLoading(true);
-              const startDate = moment().startOf("month").toISOString();
-              const endDate = moment().endOf("month").toISOString();
-              await onReset(startDate, endDate);
-              setResetLoading(false);
-            }}
-          >
-            {resetLoading && <Spinner />} <RotateCcw/> Reset
-          </Button>
-
-          <Button onClick={() => setReimbursementVisible(true)}>
-          <Plus/>  Add Reimbursement
-          </Button>
-
-          <Button variant={"outline"} onClick={handleDownload}><DownloadIcon /> Download</Button>
+              <div className="rounded-xl border bg-card px-3 py-1.5 shadow-sm ring-1 ring-border/30">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Total</p>
+                <p className="text-sm font-black text-foreground">PKR   <CurrencyFormatter amount={total} /></p>
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-1 justify-start sm:justify-end gap-2 flex-wrap items-center">
-            
-            <Card>
-
-              <CardContent>
-                <h1>Total Amount</h1>
-                <div className="text-2xl font-bold">
-                  <CurrencyFormatter amount={total} />
-                </div>
-              </CardContent>
-            </Card>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-[180px] max-w-sm">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search reimbursements..."
+                className="h-8 rounded-lg bg-background pl-9 text-xs"
+              />
+            </div>
+            <Button size="sm" variant="outline"
+              onClick={() => setFilterVisible(true)}>
+              <Filter />
+              Filter
+            </Button>
+            <Button size="sm" variant="outline"
+              onClick={handleDownload}>
+              <Download />
+              Export
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={resetLoading}
+              onClick={async () => {
+                setResetLoading(true);
+                const startDate = moment().startOf("month").toISOString();
+                const endDate = moment().endOf("month").toISOString();
+                await onReset(startDate, endDate);
+                setResetLoading(false);
+              }}
+            >
+              {resetLoading ? <Spinner /> : <RotateCcw />}
+              Reset
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setReimbursementVisible(true)}
+            >
+              <Plus />
+              Add
+            </Button>
           </div>
-        </PageTable>
+
+          {filtered.length === 0 ? (
+            <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-xl border border-dashed bg-muted/10">
+              <AlertCircle className="size-7 text-muted-foreground" />
+              <p className="text-sm font-medium text-muted-foreground">No reimbursements found</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filtered.map((item) => (
+                <ReimbursementCard key={item.id} item={item} />
+              ))}
+            </div>
+          )}
+
+        </div>
       </div>
 
-      <AddPurpose
+      {/* <AddPurpose
         item={selectedItem}
         onClose={() => setSelectedItem(null)}
         visible={!!selectedItem}
         onUpdate={onUpdatePurpose}
-      />
+      /> */}
 
       <FilterSheet
         visible={filterVisible}
@@ -348,13 +216,6 @@ export default function Reimbursement({
         onReturn={async (val) => {
           await onFilterReturn(val.start, val.end);
         }}
-      />
-      <ImageSheet
-        visible={visible}
-        onClose={() => setVisible(false)}
-        img={imageURL?.image || null}
-        description={imageURL?.description || null}
-        submittedBy={imageURL?.submitted_by_name || null}
       />
 
       <AddReimbursementDialog
@@ -370,93 +231,87 @@ export default function Reimbursement({
   );
 }
 
-const ImageSheet = ({ visible, onClose, img, submittedBy, description }: { visible: boolean, onClose: () => void, img: string | null, submittedBy: string | null, description: string | null }) => {
-  const [imageOpen, setImageOpen] = useState(false);
-  const [localImage, setLocalImage] = useState<string | null>(null);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const isMountedRef = useRef(true);
+const purposeColors: Record<string, string> = {
+  "Sales Meeting": "bg-blue-100 text-blue-700 border-blue-200",
+  "Complaint": "bg-rose-100 text-rose-700 border-rose-200",
+  "Overhauling": "bg-amber-100 text-amber-700 border-amber-200",
+  "New Installation": "bg-emerald-100 text-emerald-700 border-emerald-200",
+  "Final Hand Over": "bg-violet-100 text-violet-700 border-violet-200",
+};
 
-  const fetchImage = useCallback(async () => {
-    if (!img) return;
 
-    if (img.includes("http")) {
-      if (isMountedRef.current) setLocalImage(img);
-    } else {
-      try {
-        const storageRef = ref(storage, img);
-        const url = await getDownloadURL(storageRef);
-
-        if (isMountedRef.current) setLocalImage(url);
-      } catch (error) {
-        console.error("Error fetching image URL:", error);
-      }
-    }
-  }, [img]);
-
-  // Use Effect to fetch image on mount or when img changes
-  useEffect(() => {
-    isMountedRef.current = true;
-    fetchImage();
-
-    return () => {
-      isMountedRef.current = false;
-      setLocalImage(null);
-    };
-  }, [fetchImage]);
-
-  // Memoized function for closing modal
-  const handleClose = useCallback(() => {
-    if (!imageOpen) {
-      onClose();
-    }
-  }, [imageOpen, onClose]);
-
-  // Memoized function for zoom change
-  const handleZoomChange = useCallback((shouldZoom: boolean) => {
-    setIsZoomed(shouldZoom);
-    if (!shouldZoom) {
-      setImageOpen(false);
-    }
-  }, []);
-
-  // Memoized local image URL to prevent unnecessary re-renders
-  const memoizedImage = useMemo(() => localImage, [localImage]);
+function ReimbursementCard({ item }: { item: UserReimbursementType }) {
+  const purposeClass = purposeColors[item.title] ?? "bg-slate-100 text-slate-700 border-slate-200";
 
   return (
-    <Sheet open={visible} onOpenChange={handleClose}>
-      <SheetContent>
-        <SheetHeader className="mb-4">
-          <SheetTitle>Bill Detail</SheetTitle>
+    <Card className="group overflow-hidden rounded-lg border bg-card p-0 shadow-sm ring-1 ring-border/40 transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-primary/20">
+      <CardContent className="p-0">
+        <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-stretch">
+          <div className="flex shrink-0 flex-row items-center justify-between gap-3 rounded-md border bg-gradient-to-br from-muted/40 via-background to-muted/20 px-3 py-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center">
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Amount</p>
+              <p className="mt-0.5 break-words text-lg font-black leading-tight text-foreground">
+                PKR <CurrencyFormatter amount={item.amount} />
+              </p>
+            </div>
+            <Badge variant="outline" className={cn("max-w-full rounded-md border px-2 py-0.5 text-[10px] font-semibold", purposeClass)}>
+              {item.title}
+            </Badge>
+          </div>
 
-          <strong>Submitted by</strong>
-          <p>{submittedBy || "N/A"}</p>
+          <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-stretch sm:justify-between">
+            <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 py-0.5">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <p className="min-w-0 break-words text-sm font-bold leading-5 text-foreground">
+                    {item.customer || "General Expense"}
+                  </p>
+                  <div className="flex gap-2 flex-wrap">
+                  <Badge variant={"secondary"} className="text-[10px]">
+                    {moment(item.date).format("MMM DD YYYY")}
+                  </Badge>
+                  <Badge className="text-[10px]" variant={item.verified ? "default" : "destructive"}>{item.verified ? "Approved" : "Pending"}</Badge>
+                  </div>
+                </div>
+                {item.description && (
+                  <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-5 text-muted-foreground">
+                    {item.description}
+                  </p>
+                )}
+              </div>
 
-          <strong>Description</strong>
-          <p>{description || "No description available"}</p>
+              <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1 rounded-md border bg-background px-2 py-1">
+                  <Calendar className="size-3 shrink-0" />
+                  {moment(item.date).format("YYYY-MM-DD")}
+                </span>
+                {item.city && (
+                  <span className="inline-flex items-center gap-1 rounded-md border bg-background px-2 py-1">
+                    <MapPin className="size-3 shrink-0" />
+                    {item.city}
+                  </span>
+                )}
+                {item.customer && (
+                  <span className="inline-flex min-w-0 items-center gap-1 rounded-md border bg-background px-2 py-1">
+                    <Building2 className="size-3 shrink-0" />
+                    <span className="break-words">{item.customer}</span>
+                  </span>
+                )}
+              </div>
+            </div>
 
-          {memoizedImage ? (
-            <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
-              <img
-                onClick={() => setImageOpen(true)}
-                className="hover:cursor-pointer"
-                src={memoizedImage}
-                alt="reimbursement-img"
-                style={{
-                  flex: 1,
-                  maxWidth: "100%",
-                  maxHeight: "400px",
-                  objectFit: "contain",
-                }}
-              />
-            </ControlledZoom>
-          ) : (
-            <p>Loading image...</p>
-          )}
-        </SheetHeader>
-      </SheetContent>
-    </Sheet>
+            {item.image && (
+              <div className="shrink-0 overflow-hidden rounded-md border bg-muted/20 p-1 sm:w-24">
+                <MyImgZooming img={item.image} />
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
-};
+}
+
 
 const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, id: number | string }) => {
   const [selectedRadio, setSelectedRadio] = useState("customer");
@@ -541,7 +396,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: 
         onClose(false);
       }}
     >
-     <DialogContent className="max-w-[90vw] sm:max-w-2xl">
+      <DialogContent className="max-w-[90vw] sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl">Add New Reimbursement</DialogTitle>
         </DialogHeader>
@@ -563,7 +418,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: 
               </div>
             </RadioGroup>
 
-             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
 
                 {/* Trip Details */}
@@ -697,7 +552,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: 
                         <FieldLabel>
                           Date <RequiredStar />
                         </FieldLabel>
-                        <AppCalendar date={field.value} onChange={field.onChange}   min={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}/>
+                        <AppCalendar date={field.value} onChange={field.onChange} min={new Date(new Date().getFullYear(), new Date().getMonth(), 1)} />
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
@@ -758,70 +613,70 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh, id }: { visible: 
   );
 };
 
-const AddPurpose = ({ item, visible, onClose, onUpdate }: { item: UserReimbursementType | null, visible: boolean, onClose: () => void, onUpdate: (val: UserReimbursementType) => void }) => {
-  const [purpose, setPurpose] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { userID } = useUserDetail();
+// const AddPurpose = ({ item, visible, onClose, onUpdate }: { item: UserReimbursementType | null, visible: boolean, onClose: () => void, onUpdate: (val: UserReimbursementType) => void }) => {
+//   const [purpose, setPurpose] = useState("");
+//   const [loading, setLoading] = useState(false);
+//   const { userID } = useUserDetail();
 
-  function handleClose() {
-    setPurpose("");
-    setLoading(false);
-    onClose();
-  }
-  async function handleSubmit() {
-    if (!item?.id) return;
+//   function handleClose() {
+//     setPurpose("");
+//     setLoading(false);
+//     onClose();
+//   }
+//   async function handleSubmit() {
+//     if (!item?.id) return;
 
-    try {
-      setLoading(true);
-      await axios.put(`/${userID}/reimbursement/${item.id}`, { title: purpose, purpose: true });
-      let updatedItem = { ...item };
-      updatedItem.purpose = purpose;
-      onUpdate(updatedItem);
-      handleClose();
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  }
-  return (
-    <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add Missing Purpose</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 mt-2">
-          <div className="space-y-2">
-            <Label>Select Purpose</Label>
-            <Select onValueChange={setPurpose} value={purpose}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Purpose" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="New Installation">
-                    New Installation
-                  </SelectItem>
-                  <SelectItem value="Complaint">Complaint</SelectItem>
-                  <SelectItem value="Overhauling">Overhauling</SelectItem>
-                  <SelectItem value="Sales Meeting">Sales Meeting</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+//     try {
+//       setLoading(true);
+//       await axios.put(`/${userID}/reimbursement/${item.id}`, { title: purpose, purpose: true });
+//       let updatedItem = { ...item };
+//       updatedItem.purpose = purpose;
+//       onUpdate(updatedItem);
+//       handleClose();
+//     } catch (error) {
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+//   return (
+//     <Dialog open={visible} onOpenChange={handleClose}>
+//       <DialogContent>
+//         <DialogHeader>
+//           <DialogTitle>Add Missing Purpose</DialogTitle>
+//         </DialogHeader>
+//         <div className="space-y-4 mt-2">
+//           <div className="space-y-2">
+//             <Label>Select Purpose</Label>
+//             <Select onValueChange={setPurpose} value={purpose}>
+//               <SelectTrigger>
+//                 <SelectValue placeholder="Select Purpose" />
+//               </SelectTrigger>
+//               <SelectContent>
+//                 <SelectGroup>
+//                   <SelectItem value="New Installation">
+//                     New Installation
+//                   </SelectItem>
+//                   <SelectItem value="Complaint">Complaint</SelectItem>
+//                   <SelectItem value="Overhauling">Overhauling</SelectItem>
+//                   <SelectItem value="Sales Meeting">Sales Meeting</SelectItem>
+//                 </SelectGroup>
+//               </SelectContent>
+//             </Select>
+//           </div>
+//         </div>
 
-        {/* Actions */}
-        <div className="flex justify-end gap-3 mt-6">
-          <Button variant="outline" onClick={handleClose}>
-            Cancel
-          </Button>
+//         {/* Actions */}
+//         <div className="flex justify-end gap-3 mt-6">
+//           <Button variant="outline" onClick={handleClose}>
+//             Cancel
+//           </Button>
 
-          <Button disabled={loading || !purpose} onClick={handleSubmit}>
-            {loading && <Spinner />}
-            <span className="ml-1">Submit</span>
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
+//           <Button disabled={loading || !purpose} onClick={handleSubmit}>
+//             {loading && <Spinner />}
+//             <span className="ml-1">Submit</span>
+//           </Button>
+//         </div>
+//       </DialogContent>
+//     </Dialog>
+//   );
+// };
