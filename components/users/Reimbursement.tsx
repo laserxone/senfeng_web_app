@@ -302,7 +302,9 @@ function ReimbursementCard({ item }: { item: UserReimbursementType }) {
 
             {item.image && (
               <div className="shrink-0 overflow-hidden rounded-md border bg-muted/20 p-1 sm:w-24">
+                
                 <MyImgZooming img={item.image} />
+           
               </div>
             )}
           </div>

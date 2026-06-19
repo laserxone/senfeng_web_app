@@ -111,6 +111,7 @@ export default function POS() {
   const [discount, setDiscount] = useState<number | string>("");
   const [inwardModal, setInwardModal] = useState(false);
   const [outwardModal, setOutwardModal] = useState(false);
+  const [total, setTotal] = useState(0)
 
 
   useEffect(() => {
@@ -459,6 +460,10 @@ export default function POS() {
           });
           setSearchModal(true);
           setSearchItemsResult(resultWithTotal);
+             setTotal(resultWithTotal.reduce(
+            (sum : any, item : any) => sum + Number(item.total || 0),
+            0
+          ))
         } else {
           toast.info("No invoice found");
         }
@@ -490,6 +495,10 @@ export default function POS() {
           });
           setSearchModal(true);
           setSearchItemsResult(resultWithTotal);
+          setTotal(resultWithTotal.reduce(
+            (sum : any, item : any) => sum + Number(item.total || 0),
+            0
+          ))
         }
       })
       .catch((e) => {
@@ -527,6 +536,10 @@ export default function POS() {
             });
             setSearchModal(true);
             setSearchItemsResult(resultWithTotal);
+               setTotal(resultWithTotal.reduce(
+            (sum : any, item : any) => sum + Number(item.final_amount || 0),
+            0
+          ))
           }
         })
         .catch((e) => {
@@ -811,7 +824,7 @@ export default function POS() {
                 handlePendingPayments();
               }}
             >
-              
+
               <Label className="text-lg font-semibold text-gray-800 cursor-pointer">
                 Pending Payments
               </Label>
@@ -976,6 +989,7 @@ export default function POS() {
         />
 
         <SearchResultModal
+        total={total}
           visible={searchModal}
           onClose={setSearchModal}
           data={searchItemsResult}

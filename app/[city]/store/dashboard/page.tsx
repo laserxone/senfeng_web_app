@@ -2,9 +2,11 @@
 
 import PageTable from '@/components/app-table-without-pagination';
 import CurrencyFormatter from "@/components/currency-formatter";
+import { MyImgZooming } from '@/components/img-zooming';
 import EngineerModal from '@/components/pos/engineer-modal';
 import GatePassSlip from '@/components/pos/gatepass-slip';
 import NotificationBadge from "@/components/pos/NotificationBadge";
+import { OrderDonutChart } from '@/components/pos/order-donut-chart';
 import SearchResultModal from "@/components/pos/search-result-modal";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,7 +17,7 @@ import { AddTask } from "@/components/users/task";
 import TaskDetail from "@/components/users/taskDetail";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { StoreAvailableStock, StoreDashboardResponse, StoreStockGroup, StoreStockItem, TaskProps } from "@/lib/types";
+import { StoreAvailableStock, StoreDashboardResponse, StoreLowStockData, StorePosStatsEach, StoreStockGroup, StoreStockItem, TaskProps } from "@/lib/types";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { ColumnDef } from "@tanstack/react-table";
 import {
@@ -28,6 +30,8 @@ import {
   DollarSign,
   Eye,
   FileText,
+  Grid2X2,
+  List,
   ListCheck,
   Package,
   Plus,
@@ -57,6 +61,8 @@ export default function StoreManagerDashboard() {
   const [engineersModal, setEngineersModal] = useState(false);
   const [expense, setExpense] = useState(false)
   const [gatePass, setGatePass] = useState(false)
+  const [lowStock, setLowStock] = useState(false)
+  const [selectedData, setSelectedData] = useState<StorePosStatsEach | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -107,7 +113,7 @@ export default function StoreManagerDashboard() {
       title: "Pending Payments",
       icon: CreditCard,
       color: "text-red-600",
-      count: data?.pos_stats?.data?.length || 0,
+      count: data?.pos_stats?.pending?.length || 0,
       onClick: () => { setPending(true) },
     },
     {
@@ -159,51 +165,14 @@ export default function StoreManagerDashboard() {
       title: "Low Stock Items",
       icon: AlertTriangle,
       color: "text-orange-500",
-      onClick: () => { },
+      count: data?.low_stock?.total || 0,
+      onClick: () => { setLowStock(true) },
     },
     {
       title: "Purchase Order",
       icon: ShoppingCart,
       color: "text-green-600",
       onClick: () => { },
-    },
-  ];
-
-  const todayTasks = [
-    {
-      task: "Check stock levels",
-      priority: "High",
-      assignedTo: "Ali Raza",
-      dueTime: "10:00 AM",
-      status: "Pending",
-    },
-    {
-      task: "Pending deliveries follow-up",
-      priority: "Medium",
-      assignedTo: "Imran Khan",
-      dueTime: "12:00 PM",
-      status: "In Progress",
-    },
-    {
-      task: "Customer payment reminders",
-      priority: "High",
-      assignedTo: "Sara Khan",
-      dueTime: "02:00 PM",
-      status: "Pending",
-    },
-    {
-      task: "Machine installation site visit",
-      priority: "Medium",
-      assignedTo: "Usman Ahmad",
-      dueTime: "04:00 PM",
-      status: "Pending",
-    },
-    {
-      task: "Daily sales report",
-      priority: "Low",
-      assignedTo: "Muhammad Asim",
-      dueTime: "06:00 PM",
-      status: "Pending",
     },
   ];
 
@@ -220,23 +189,6 @@ export default function StoreManagerDashboard() {
           }`}
       >
         {status}
-      </span>
-    );
-  }
-
-  function PriorityBadge({ priority }: { priority: string }) {
-    const styles: Record<string, string> = {
-      High: "bg-red-100 text-red-600",
-      Medium: "bg-orange-100 text-orange-600",
-      Low: "bg-green-100 text-green-600",
-    };
-
-    return (
-      <span
-        className={`rounded-md px-2 py-1 text-xs font-medium ${styles[priority] || "bg-slate-100 text-slate-600"
-          }`}
-      >
-        {priority}
       </span>
     );
   }
@@ -420,6 +372,30 @@ export default function StoreManagerDashboard() {
     return availableStock.groups.flatMap((group) => group.data);
   }
 
+  const ordersOverview = [
+    {
+      label: "Completed",
+      count: data?.pos_stats?.completed?.length || 0,
+      onClick: () => setSelectedData(data?.pos_stats?.completed || null)
+    },
+    {
+      label: "Pending",
+      count: data?.pos_stats?.pending?.length || 0,
+      onClick: () => setSelectedData(data?.pos_stats?.pending || null)
+    },
+    {
+      label: "Partial",
+      count: data?.pos_stats?.partial?.length || 0,
+      onClick: () => setSelectedData(data?.pos_stats?.partial || null)
+    },
+    {
+      label: "Cancelled",
+      count: data?.pos_stats?.cancelled?.length || 0,
+      onClick: () => setSelectedData(data?.pos_stats?.cancelled || null)
+    },
+
+  ]
+
   return (
 
     <div className="flex flex-1 pb-2">
@@ -433,12 +409,13 @@ export default function StoreManagerDashboard() {
               <button
                 onClick={action.onClick}
                 key={action.title}
-                className={`relative rounded-lg border bg-card p-3 text-center shadow-sm ring-1 ring-border/30 transition hover:-translate-y-0.5 hover:shadow-md ${action.showExpenses ? "col-span-2 lg:col-span-2" : ""
+                className={`cursor-pointer
+                   relative rounded-lg border bg-card p-3 text-center shadow-sm ring-1 ring-border/30 transition hover:-translate-y-0.5 hover:shadow-md ${action.showExpenses ? "col-span-2 lg:col-span-2" : ""
                   }`}
               >
                 {Number(action.count || 0) > 0 && (
                   <div className="absolute right-1.5 top-1.5 z-10">
-                    <NotificationBadge count={action.count} />
+                    <NotificationBadge count={action.count || 0} />
                   </div>
                 )}
 
@@ -497,7 +474,7 @@ export default function StoreManagerDashboard() {
                 <p className="mt-1 text-xs text-muted-foreground">Revenue</p>
               </div>
               <span className="rounded-md bg-emerald-500/10 px-4 text-emerald-600 font-bold">
-               <CurrencyFormatter amount={data?.sales_stats?.today || 0} />
+                <CurrencyFormatter amount={data?.sales_stats?.today || 0} />
               </span>
             </div>
             <h3 className="mt-1 text-md font-bold leading-none"></h3>
@@ -525,31 +502,25 @@ export default function StoreManagerDashboard() {
 
           </div>
 
-
-
           <div className="rounded-md border bg-card p-3 ring-1 ring-border/30 lg:col-span-3">
             <p className="text-sm font-bold leading-none">Orders Overview</p>
 
             <div className="mt-3 grid grid-cols-[76px_1fr] items-center gap-3">
-              <div className="mx-auto h-16 w-16 rounded-full border-[11px] border-green-500 border-b-amber-400 border-l-blue-500 border-t-red-500" />
+              {/* <div className="mx-auto h-16 w-16 rounded-full border-[11px] border-green-500 border-b-amber-400 border-l-blue-500 border-t-red-500" /> */}
+              <div className="h-[82px] w-[82px] shrink-0">
+                <OrderDonutChart data={ordersOverview.map((item) => {
+                  return { status: item.label, total: item.count }
+                })} />
+              </div>
 
               <div className="space-y-1 text-xs">
-                <p className="flex justify-between">
-                  <span>Completed</span>
-                  <b>45</b>
-                </p>
-                <p className="flex justify-between">
-                  <span>Pending</span>
-                  <b>12</b>
-                </p>
-                <p className="flex justify-between">
-                  <span>Partial</span>
-                  <b>8</b>
-                </p>
-                <p className="flex justify-between">
-                  <span>Cancelled</span>
-                  <b>3</b>
-                </p>
+                {ordersOverview.map((item) => (
+                  <p key={item.label} className="flex justify-between">
+                    <span>{item.label}</span>
+
+                    <b className='hover:underline cursor-pointer' onClick={item.onClick}>{item.count}</b>
+                  </p>
+                ))}
               </div>
             </div>
           </div>
@@ -560,17 +531,15 @@ export default function StoreManagerDashboard() {
                 <p className="text-sm font-bold leading-none">Pending Payments</p>
                 <p className="mt-1 text-xs text-muted-foreground">Total Payables</p>
               </div>
-              <span className="rounded-md bg-red-500/10 p-1.5 text-red-600">
-                <CreditCard className="h-4 w-4" />
-              </span>
+               <Button onClick={() => setPending(true)} size="sm">
+             <Eye /> View All
+            </Button>
             </div>
             <h3 className="mt-3 text-xl font-bold leading-none text-red-600">
-              <CurrencyFormatter amount={data?.pos_stats?.pending || 0} />
+              <CurrencyFormatter amount={data?.pos_stats?.pending?.total || 0} />
             </h3>
 
-            <Button onClick={() => setPending(true)}  size="sm" className="mt-3 h-8">
-              View All
-            </Button>
+          
           </div>
         </section>
 
@@ -578,10 +547,7 @@ export default function StoreManagerDashboard() {
           <div className="rounded-md border bg-card p-2.5 ring-1 ring-border/30">
             <div className="mb-2 flex items-center justify-between">
               <div className='flex items-center gap-2'>  <Sun className='h-4 w-4 text-yellow-400' /> <h3 className="text-sm font-bold leading-none">Plan your day </h3></div>
-              {/* <button className="rounded-md border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted/40">
-                View All
-              </button> */}
-               <Button
+              <Button
                 onClick={() => {
                   setAddTaskVisible(true);
                 }}
@@ -592,7 +558,7 @@ export default function StoreManagerDashboard() {
             </div>
 
             <PageTable
-            disableInput={true}
+              disableInput={true}
               height="min-h-[190px]"
               columns={taskColumns}
               data={data?.today_tasks?.data || []}
@@ -600,17 +566,17 @@ export default function StoreManagerDashboard() {
                 setSelectedTask(val);
               }}
             />
-        
+
           </div>
 
           <div className="rounded-md border bg-card p-2.5 ring-1 ring-border/30">
             <div className="mb-2 flex items-center justify-between">
               <div className='flex gap-2 items-center'>
-                <ListCheck className='h-4 w-4 text-blue-500'/>
-              <h3 className="text-sm font-bold leading-none">Machines List</h3>
+                <ListCheck className='h-4 w-4 text-blue-500' />
+                <h3 className="text-sm font-bold leading-none">Machines List</h3>
               </div>
-              <Button size="sm"  onClick={() => setSelectedMachines(getAllStoreStockItems(data?.available_stock || null))}>
-              <Eye />  View All
+              <Button size="sm" onClick={() => setSelectedMachines(getAllStoreStockItems(data?.available_stock || null))}>
+                <Eye />  View All
               </Button>
             </div>
 
@@ -625,11 +591,12 @@ export default function StoreManagerDashboard() {
       </div>
 
       <SearchResultModal
+        total={selectedData?.total || 0}
         showSelect={false}
-        data={data?.pos_stats?.data || []}
-        onClose={() => setPending(false)}
+        data={selectedData?.data || []}
+        onClose={() => setSelectedData(null)}
         onselect={() => { }}
-        visible={pending} />
+        visible={!!selectedData} />
 
       <ShowMachines visible={selectedMachines.length > 0} onClose={() => setSelectedMachines([])} data={selectedMachines} />
 
@@ -672,6 +639,8 @@ export default function StoreManagerDashboard() {
         }
       />
 
+      <LowStockModal visible={lowStock} onClose={() => setLowStock(false)} data={data?.low_stock?.data} />
+
       <Dialog onOpenChange={setGatePass} open={gatePass}>
         <DialogContent className='w-full sm:max-w-4xl'>
           <VisuallyHidden>
@@ -691,6 +660,139 @@ export default function StoreManagerDashboard() {
 
 
   );
+}
+
+const LowStockModal = ({ visible, onClose, data }: { visible: boolean, onClose: () => void, data?: StoreLowStockData[] }) => {
+  const [view, setView] = useState<"list" | "cards">("list")
+  const items = data || []
+
+  return (
+    <Dialog onOpenChange={onClose} open={visible}>
+      <DialogContent className='max-h-[92vh] w-full overflow-hidden rounded-md p-0 sm:max-w-5xl'>
+        <DialogHeader className="border-b bg-muted/30 px-4 py-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <DialogTitle className="flex items-center gap-2 text-base font-bold">
+                <AlertTriangle className="h-4 w-4 text-orange-500" />
+                Low Stock Items
+              </DialogTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {items.length} item{items.length === 1 ? "" : "s"} below threshold
+              </p>
+            </div>
+
+            <div className="flex w-fit rounded-md border bg-background p-1">
+              <Button
+                type="button"
+                size="sm"
+                variant={view === "list" ? "default" : "ghost"}
+                className="h-7 rounded-md px-2 text-xs"
+                onClick={() => setView("list")}
+              >
+                <List className="h-3.5 w-3.5" />
+                List
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={view === "cards" ? "default" : "ghost"}
+                className="h-7 rounded-md px-2 text-xs"
+                onClick={() => setView("cards")}
+              >
+                <Grid2X2 className="h-3.5 w-3.5" />
+                Cards
+              </Button>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <ScrollArea className='h-[76vh]'>
+          <div className="p-3">
+            {items.length === 0 ? (
+              <div className="flex min-h-[260px] flex-col items-center justify-center rounded-md border border-dashed bg-muted/20 px-4 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-md bg-orange-500/10 text-orange-500">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <p className="mt-3 text-sm font-bold">No low stock items</p>
+                <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+                  Items below threshold will appear here when stock needs attention.
+                </p>
+              </div>
+            ) : view === "list" ? (
+              <div className="overflow-x-auto rounded-md border">
+                <table className="w-full min-w-[680px] text-xs">
+                  <thead className="bg-muted text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-bold">Name</th>
+                      <th className="px-3 py-2 text-right font-bold">In Stock Qty</th>
+                      <th className="px-3 py-2 text-right font-bold">Price</th>
+                      <th className="px-3 py-2 text-right font-bold">Threshold</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map((item) => (
+                      <tr key={item.id} className="border-b last:border-b-0 odd:bg-muted/20 hover:bg-muted/40">
+                        <td className="px-3 py-2">
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold">{item.name || "-"}</p>
+                            <p className="truncate text-[11px] text-muted-foreground">{item.category || item.type || "-"}</p>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 text-right font-bold text-orange-600">{item.qty}</td>
+                        <td className="px-3 py-2 text-right font-semibold">{item.price || "-"}</td>
+                        <td className="px-3 py-2 text-right font-semibold">{item.threshold ?? "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {items.map((item) => (
+                  <div key={item.id} className="overflow-hidden rounded-md border bg-card ring-1 ring-border/30">
+                    <div className="relative h-28 bg-muted">
+                      {item.img ? (
+                        <MyImgZooming img={`products/${item.img}`} fill={true} />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-muted-foreground">
+                          <Package className="h-8 w-8" />
+                        </div>
+                      )}
+                      <span className="absolute right-2 top-2 rounded-md bg-orange-500 px-2 py-1 text-[11px] font-bold text-white">
+                        Low stock
+                      </span>
+                    </div>
+
+                    <div className="p-3">
+                      <p className="line-clamp-1 text-sm font-bold">{item.name || "-"}</p>
+                      <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{item.category || item.type || "-"}</p>
+
+                      <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                        <LowStockMetric label="In Stock" value={String(item.qty)} tone="orange" />
+                        <LowStockMetric label="Price" value={String(item.price || "-")} />
+                        <LowStockMetric label="Threshold" value={String(item.threshold ?? "-")} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+const LowStockMetric = ({ label, value, tone = "default" }: { label: string, value: string, tone?: "default" | "orange" }) => {
+  return (
+    <div className="rounded-md border bg-muted/20 px-2 py-1.5">
+      <p className="text-[10px] uppercase leading-none text-muted-foreground">{label}</p>
+      <p className={`mt-1 truncate text-sm font-bold leading-none ${tone === "orange" ? "text-orange-600" : ""}`}>
+        {value}
+      </p>
+    </div>
+  )
 }
 
 const ShowMachines = ({ visible, data, onClose }: { visible: boolean, data: StoreStockItem[], onClose: () => void }) => {

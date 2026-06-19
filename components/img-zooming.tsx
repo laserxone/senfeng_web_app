@@ -12,11 +12,13 @@ import { cn } from "@/lib/utils"
 export const MyImgZooming = ({
   img,
   compact = false,
-  className = undefined
+  className = undefined,
+  fill = false
 }: {
   img: string
   compact?: boolean
   className ?: string
+  fill ?: boolean
 }) => {
   const [remoteImage, setRemoteImage] = useState<{
     key: string
@@ -64,6 +66,19 @@ export const MyImgZooming = ({
 
   return (
     <Zoom>
+      {fill ? 
+    <Image
+        alt="image"
+        src={localImage}
+       fill
+        unoptimized
+        className={cn(
+          "w-auto object-contain",
+          compact ? "h-12 max-w-full" : "h-[100px]",
+          className
+        )}
+      />
+    :
       <Image
         alt="image"
         src={localImage}
@@ -76,6 +91,7 @@ export const MyImgZooming = ({
           className
         )}
       />
+}
     </Zoom>
   )
 }

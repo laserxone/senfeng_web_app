@@ -67,10 +67,10 @@ import { Controller, useForm } from "react-hook-form";
 import "react-medium-image-zoom/dist/styles.css";
 import { toast } from "sonner";
 import { z } from "zod";
+import { MyImgZooming } from "../img-zooming";
 import { Card, CardContent, CardTitle } from "../ui/card";
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 import Spinner from "../ui/spinner";
-import { MyImgZooming } from "../img-zooming";
 
 const expensePdfStyles = StyleSheet.create({
   page: {
@@ -512,62 +512,62 @@ export default function EmployeeBranchExpenses() {
         >
           <div className="flex flex-1 flex-col gap-3 rounded-xl border bg-muted/15 p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={() => setFilterVisible(true)}
-              variant="outline"
-              className="gap-2"
-            >
-              <Filter className="h-4 w-4" />
-              Filter
-            </Button>
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={async () => {
-                setResetLoading(true);
-                const startDate = momentT
-                  .tz(TIMEZONE)
-                  .startOf("month")
-                  .startOf("day")
-                  .utc()
-                  .toISOString();
-                const endDate = momentT
-                  .tz(TIMEZONE)
-                  .endOf("month")
-                  .endOf("day")
-                  .utc()
-                  .toISOString();
-                await fetchData(startDate, endDate);
-                setResetLoading(false);
-              }}
-            >
-              {resetLoading ? <Spinner /> : <RotateCcw className="h-4 w-4" />}
-              Reset
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant={"outline"} disabled={!!exportLoading} className="gap-2">
-                  {exportLoading ? <Spinner /> : <FileDown className="h-4 w-4" />}
-                  Export
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-36">
-                <DropdownMenuItem
-                  disabled={!!exportLoading}
-                  onClick={handleExcelExport}
-                >
-                  {exportLoading === "excel" && <Spinner />} Excel
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  disabled={!!exportLoading}
-                  onClick={handlePdfExport}
-                >
-                  {exportLoading === "pdf" && <Spinner />} PDF
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+              <Button
+                onClick={() => setFilterVisible(true)}
+                variant="outline"
+                className="gap-2"
+              >
+                <Filter className="h-4 w-4" />
+                Filter
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={async () => {
+                  setResetLoading(true);
+                  const startDate = momentT
+                    .tz(TIMEZONE)
+                    .startOf("month")
+                    .startOf("day")
+                    .utc()
+                    .toISOString();
+                  const endDate = momentT
+                    .tz(TIMEZONE)
+                    .endOf("month")
+                    .endOf("day")
+                    .utc()
+                    .toISOString();
+                  await fetchData(startDate, endDate);
+                  setResetLoading(false);
+                }}
+              >
+                {resetLoading ? <Spinner /> : <RotateCcw className="h-4 w-4" />}
+                Reset
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant={"outline"} disabled={!!exportLoading} className="gap-2">
+                    {exportLoading ? <Spinner /> : <FileDown className="h-4 w-4" />}
+                    Export
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-36">
+                  <DropdownMenuItem
+                    disabled={!!exportLoading}
+                    onClick={handleExcelExport}
+                  >
+                    {exportLoading === "excel" && <Spinner />} Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={!!exportLoading}
+                    onClick={handlePdfExport}
+                  >
+                    {exportLoading === "pdf" && <Spinner />} PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <Card className="w-full border bg-background shadow-none sm:w-auto">
               <CardContent className="px-4 py-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -706,10 +706,12 @@ const ImageSheet = ({
 
           <div className="overflow-hidden rounded-2xl border bg-muted/15 p-3">
             {localImage ? (
-              <MyImgZooming
-                img={localImage}
-                className="h-[260px] w-full rounded-xl object-contain"
-              />
+             
+                <MyImgZooming
+                  img={localImage}
+                  className="rounded-xl object-contain"
+                />
+         
             ) : (
               <div className="grid h-[220px] place-items-center rounded-xl border border-dashed bg-background text-sm text-muted-foreground">
                 No receipt image available
@@ -898,7 +900,7 @@ export const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { vi
             </form>
           </div>
         </ScrollArea>
-      
+
       </DialogContent>
     </Dialog>
   );

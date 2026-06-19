@@ -31,17 +31,17 @@ const SearchResultModal = ({
   onClose,
   data,
   onselect,
-  showSelect = true
+  showSelect = true,
+  total = 0
 }: {
   visible: boolean,
   onClose: Dispatch<SetStateAction<boolean>>,
   data: SearchItem[],
   onselect?: (item: SearchItem) => void,
   showSelect?: boolean
+  total : number
 }) => {
 
-
-  const total = data.reduce((sum, item) => sum + (item.final_amount || 0), 0);
   const { base_route, } = useUserDetail();
 
   const columns: ColumnDef<SearchItem>[] = [

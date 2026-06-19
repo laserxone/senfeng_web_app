@@ -244,52 +244,155 @@ ORDER BY months.month;
 
     // Execute all queries in parallel
 
-    const teamProgressQuery = `
+ const teamProgressQuery = `
 WITH sales_users AS (
   SELECT id, name, email, monthly_target
   FROM users
   WHERE designation = 'Sales'
     AND office = $3
 ),
+
 assigned_customers AS (
   SELECT
     c.ownership AS user_id,
-    COUNT(*) AS customers_assigned
+    COUNT(*)::int AS customers_assigned,
+    JSON_AGG(
+      JSON_BUILD_OBJECT(
+        'id', c.id,
+        'name', c.name,
+        'owner', c.owner,
+        'phone', c.number,
+        'location', c.location,
+        'member', c.member,
+        'created_at', c.created_at
+      )
+      ORDER BY c.created_at DESC
+    ) AS customers_assigned_data
   FROM customer c
   WHERE c.ownership IS NOT NULL
     AND c.office = $3
     AND c.created_at BETWEEN $1 AND $2
   GROUP BY c.ownership
 ),
+
 sale_produced_customers AS (
   SELECT
-    c.ownership AS user_id,
-    COUNT(DISTINCT c.id) AS sale_produced_customers
-  FROM customer c
-  JOIN sale s ON s.customer_id = c.id
-  WHERE c.ownership IS NOT NULL
-    AND c.office = $3
-    AND c.created_at BETWEEN $1 AND $2
-    AND s.contract_date BETWEEN $1 AND $2
-  GROUP BY c.ownership
+    x.user_id,
+    COUNT(*)::int AS sale_produced_customers,
+    JSON_AGG(
+      JSON_BUILD_OBJECT(
+        'customer', JSON_BUILD_OBJECT(
+          'id', x.customer_id,
+          'name', x.customer_name,
+          'owner', x.customer_owner,
+          'phone', x.customer_phone,
+          'location', x.customer_location,
+          'member', x.customer_member
+        ),
+        'sales', x.sales
+      )
+      ORDER BY x.latest_contract_date DESC
+    ) AS sale_produced_data
+  FROM (
+    SELECT
+      c.ownership AS user_id,
+      c.id AS customer_id,
+      c.name AS customer_name,
+      c.owner AS customer_owner,
+      c.number AS customer_phone,
+      c.location AS customer_location,
+      c.member AS customer_member,
+      MAX(s.contract_date) AS latest_contract_date,
+      JSON_AGG(
+        JSON_BUILD_OBJECT(
+          'id', s.id,
+          'order_no_arr', s.order_no_arr,
+          'serial_no', s.serial_no,
+          'power', s.power,
+          'contract_date', s.contract_date
+        )
+        ORDER BY s.contract_date DESC
+      ) AS sales
+    FROM customer c
+    JOIN sale s 
+      ON s.customer_id = c.id
+    WHERE c.ownership IS NOT NULL
+      AND c.office = $3
+      AND s.contract_date BETWEEN $1 AND $2
+    GROUP BY 
+      c.ownership,
+      c.id,
+      c.name,
+      c.owner,
+      c.number,
+      c.location,
+      c.member
+  ) x
+  GROUP BY x.user_id
 ),
+
 repeated_customers AS (
   SELECT
-    c.ownership AS user_id,
-    COUNT(DISTINCT c.id) AS repeated_customers
-  FROM customer c
-  JOIN sale s_new ON s_new.customer_id = c.id
-  WHERE c.ownership IS NOT NULL
-    AND c.office = $3
-    AND s_new.contract_date BETWEEN $1 AND $2
-    AND EXISTS (
-      SELECT 1
-      FROM sale s_old
-      WHERE s_old.customer_id = c.id
-        AND s_old.contract_date < $1
-    )
-  GROUP BY c.ownership
+    x.user_id,
+    COUNT(*)::int AS repeated_customers,
+    JSON_AGG(
+      JSON_BUILD_OBJECT(
+        'customer', JSON_BUILD_OBJECT(
+          'id', x.customer_id,
+          'name', x.customer_name,
+          'owner', x.customer_owner,
+          'phone', x.customer_phone,
+          'location', x.customer_location,
+          'member', x.customer_member
+        ),
+        'sales', x.sales
+      )
+      ORDER BY x.latest_contract_date DESC
+    ) AS repeated_customers_data
+  FROM (
+    SELECT
+      c.ownership AS user_id,
+      c.id AS customer_id,
+      c.name AS customer_name,
+      c.owner AS customer_owner,
+      c.number AS customer_phone,
+      c.location AS customer_location,
+      c.member AS customer_member,
+      MAX(s_new.contract_date) AS latest_contract_date,
+      JSON_AGG(
+        JSON_BUILD_OBJECT(
+          'id', s_new.id,
+          'order_no_arr', s_new.order_no_arr,
+          'serial_no', s_new.serial_no,
+          'power', s_new.power,
+          'contract_date', s_new.contract_date
+        )
+        ORDER BY s_new.contract_date DESC
+      ) AS sales
+    FROM customer c
+    JOIN sale s_new 
+      ON s_new.customer_id = c.id
+    WHERE c.ownership IS NOT NULL
+      AND c.office = $3
+      AND s_new.contract_date BETWEEN $1 AND $2
+      AND EXISTS (
+        SELECT 1
+        FROM sale s_old
+        WHERE s_old.customer_id = c.id
+          AND s_old.contract_date < $1
+      )
+    GROUP BY 
+      c.ownership,
+      c.id,
+      c.name,
+      c.owner,
+      c.number,
+      c.location,
+      c.member
+  ) x
+  GROUP BY x.user_id
 )
+
 SELECT
   u.id,
   u.name,
@@ -297,8 +400,13 @@ SELECT
   u.monthly_target,
 
   COALESCE(ac.customers_assigned, 0) AS customers_assigned,
+  COALESCE(ac.customers_assigned_data, '[]'::json) AS customers_assigned_data,
+
   COALESCE(sp.sale_produced_customers, 0) AS sale_produced_customers,
+  COALESCE(sp.sale_produced_data, '[]'::json) AS sale_produced_data,
+
   COALESCE(rc.repeated_customers, 0) AS repeated_customers,
+  COALESCE(rc.repeated_customers_data, '[]'::json) AS repeated_customers_data,
 
   CASE
     WHEN COALESCE(ac.customers_assigned, 0) = 0 THEN 0
@@ -310,10 +418,14 @@ SELECT
       2
     )
   END AS customer_to_member_conversion
+
 FROM sales_users u
-LEFT JOIN assigned_customers ac ON ac.user_id = u.id
-LEFT JOIN sale_produced_customers sp ON sp.user_id = u.id
-LEFT JOIN repeated_customers rc ON rc.user_id = u.id
+LEFT JOIN assigned_customers ac 
+  ON ac.user_id = u.id
+LEFT JOIN sale_produced_customers sp 
+  ON sp.user_id = u.id
+LEFT JOIN repeated_customers rc 
+  ON rc.user_id = u.id
 ORDER BY u.name ASC;
 `;
 
@@ -356,13 +468,18 @@ ORDER BY u.name ASC;
   SELECT
     c.*,
     CASE WHEN COUNT(f.id) > 0 THEN TRUE ELSE FALSE END AS has_feedback_this_month,
-    COUNT(f.id) AS feedback_count_this_month
+    COUNT(f.id)::int AS feedback_count_this_month
   FROM customer c
   LEFT JOIN feedback f
     ON f.customer_id = c.id
     AND f.created_at BETWEEN $1 AND $2
+  WHERE c.created_at BETWEEN $1 AND $2
     AND c.office = $3
-    AND c.created_at BETWEEN $1 AND $2
+    AND NOT EXISTS (
+      SELECT 1
+      FROM sale s
+      WHERE s.customer_id = c.id
+    )
   GROUP BY c.id
   ORDER BY c.created_at DESC
 `;
@@ -388,6 +505,11 @@ ORDER BY u.name ASC;
   WHERE f.top_follow IS TRUE
     AND f.next_followup BETWEEN $1 AND $2
     AND c.office = $3
+    AND NOT EXISTS (
+      SELECT 1
+      FROM sale s
+      WHERE s.customer_id = c.id
+    )
   ORDER BY f.next_followup ASC
 `;
 
@@ -1922,12 +2044,22 @@ async function getStoreData(uid: string) {
     ORDER BY be.date DESC
   `;
 
+    const lowStockQuery = `
+  SELECT *
+  FROM inventory
+  WHERE threshold IS NOT NULL
+    AND qty IS NOT NULL
+    AND qty <= threshold
+  ORDER BY name ASC
+`;
+
     const [
         pendingInvoicesResult,
         availableOrderItemsResult,
         todayTasksResult,
         salesInvoicesResult,
         branchExpensesResult,
+        lowStockResult
     ] = await Promise.all([
         pool.query(pendingInvoicesQuery),
         pool.query(availableOrderItemsQuery),
@@ -1938,6 +2070,7 @@ async function getStoreData(uid: string) {
             currentMonthStart,
             currentMonthEnd,
         ]),
+        pool.query(lowStockQuery)
     ]);
 
 
@@ -1954,12 +2087,12 @@ async function getStoreData(uid: string) {
             return {
                 ...task,
                 task_name: updatedTitle,
-                
+
             };
         }
         return task;
-    }).map((item)=>{
-        return {...item, created_at_time: item.created_at}
+    }).map((item) => {
+        return { ...item, created_at_time: item.created_at }
     })
 
 
@@ -1979,7 +2112,9 @@ async function getStoreData(uid: string) {
         return Math.max(itemsTotal - discount, 0);
     };
 
-    const pendingInvoices = pendingInvoicesResult.rows
+
+
+    const statusInvoices = pendingInvoicesResult.rows
         .map((invoice) => {
             const itemsTotal = getInvoiceItemsTotal(invoice.fields);
             const discount = Number(invoice.discount ?? 0);
@@ -2003,17 +2138,20 @@ async function getStoreData(uid: string) {
                 status,
             };
         })
-        .filter(
-            (item) =>
-                moment(item.created_at).isSameOrAfter("2025-12-01") ||
-                item.payment === false
-        )
+
+
+    const pendingInvoices = statusInvoices.filter(
+        (item) =>
+            moment(item.created_at).isSameOrAfter("2025-12-01") ||
+            item.payment === false
+    )
         .filter((item) => item.status !== "Paid");
 
-    const totalPending = pendingInvoices.reduce(
-        (sum, item) => sum + Number(item.final_amount || 0),
-        0
-    );
+    const completedInvoices = statusInvoices.filter((item) => item.status === 'Paid')
+    const partialInvoices = statusInvoices.filter((item) => item.status === 'Partial')
+    const cancelledInvoices = statusInvoices.filter((item) => item.items_total === 0)
+
+
 
     const availableStock = availableOrderItemsResult.rows.map((group) => ({
         machine_model: group.machine_model,
@@ -2064,8 +2202,41 @@ async function getStoreData(uid: string) {
 
     const responseData = {
         pos_stats: {
-            pending: totalPending,
-            data: pendingInvoices,
+            pending: {
+                data: pendingInvoices,
+                length: pendingInvoices.length,
+                total: pendingInvoices.reduce(
+                    (sum, item) => sum + Number(item.final_amount || 0),
+                    0
+                )
+            },
+
+            completed: {
+                data: completedInvoices,
+                length: completedInvoices.length,
+                total: completedInvoices.reduce(
+                    (sum, item) => sum + Number(item.total_paid || 0),
+                    0
+                )
+            },
+
+             partial: {
+                data: partialInvoices,
+                length: partialInvoices.length,
+                total: partialInvoices.reduce(
+                    (sum, item) => sum + Number(item.final_amount || 0),
+                    0
+                )
+            },
+
+             cancelled: {
+                data: cancelledInvoices,
+                length: cancelledInvoices.length,
+                total: cancelledInvoices.reduce(
+                    (sum, item) => sum + Number(item.final_amount || 0),
+                    0
+                )
+            },
         },
 
         available_stock: {
@@ -2091,6 +2262,11 @@ async function getStoreData(uid: string) {
             this_month_total: branchExpenseTotalThisMonth,
             data: branchExpenses,
         },
+        low_stock: {
+            total: lowStockResult.rows.length,
+            data: lowStockResult.rows
+        }
+
     };
 
     return responseData;

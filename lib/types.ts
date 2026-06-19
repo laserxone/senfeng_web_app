@@ -38,7 +38,7 @@ export type SalesCustomerMachines = {
     serial_no: string
     percentage_completion?: string | number
     price: number | string
-    speed_money_amount : string | number
+    speed_money_amount: string | number
 }
 
 export type SalesCustomer = {
@@ -68,7 +68,7 @@ export type SalesDashboard = {
     totalCustomersWithSale: number
     totalVisits: number
     user: UserDashboard
-    new_entries : SalesNewEntries
+    new_entries: SalesNewEntries
 }
 
 export type SalesVisitTypes = {
@@ -414,8 +414,8 @@ export type ComplaintProps = {
     complaint_status: string;
     complaint_created_at: string;
     complaint_paid: boolean
-    complaint_installation : boolean,
-    complaint_charges : number,
+    complaint_installation: boolean,
+    complaint_charges: number,
     customer_id: number;
     complaint_id: number;
     customer_name: string;
@@ -778,8 +778,8 @@ export type PartsProps = {
     id: number
     invoicenumber: number | string
     payment: boolean
-    discount : string
-    fields: { name?: string,  description: string, qty: string, price: string, total: string }[]
+    discount: string
+    fields: { name?: string, description: string, qty: string, price: string, total: string }[]
     payments: { amount: string, mode: string, received_by: string, transaction_date: string, clearance_date: string, image: string }[]
 }
 export type SaleRecordIssuedCommissionsDetail = {
@@ -896,7 +896,7 @@ export type POSInvoiceReminder = {
 
     status: string;
     outward_gatepass?: POSInvoiceReminder
-    location ?: string
+    location?: string
 };
 
 export type POSCustomer = {
@@ -996,25 +996,25 @@ export type TeamTaskForAdmin = {
 }
 
 export type AdminDashboardRecentSales = {
-    
-        contract_date: string
-        customer_id: number
-        customer_name: string
-        customer_owner: string
-        price: string
-        seller_dp: string
-        seller_email: string
-        seller_name: string
-    
+
+    contract_date: string
+    customer_id: number
+    customer_name: string
+    customer_owner: string
+    price: string
+    seller_dp: string
+    seller_email: string
+    seller_name: string
+
 }
 
 export type AdminDashboard = {
-    pos_stats : {
-        pending : string
+    pos_stats: {
+        pending: string
     }
-    complaint_stats : {
-        total_paid : string
-        total_pending : string
+    complaint_stats: {
+        total_paid: string
+        total_pending: string
     }
     feedback_status_last_6_months: {
         month: string
@@ -1494,182 +1494,208 @@ export type PricesSearchProps = {
 
 
 export interface CRMDashboardData {
-  total_payment_this_month: string;
-  payment_change_percentage: string;
-  total_machines_sold_this_month: string;
-  machines_sold_change_percentage: string;
-  total_new_customers_this_month: string;
-  new_customer_change_percentage: string;
+    total_payment_this_month: string;
+    payment_change_percentage: string;
+    total_machines_sold_this_month: string;
+    machines_sold_change_percentage: string;
+    total_new_customers_this_month: string;
+    new_customer_change_percentage: string;
 
-  recent_sales: CRMRecentSale[];
-  industry_count: CRMIndustryCount[];
-  machines_sold_last_3_months: CRMMachinesSoldTrend[];
-  feedback_status_last_6_months: CRMFeedbackStatus[];
+    recent_sales: CRMRecentSale[];
+    industry_count: CRMIndustryCount[];
+    machines_sold_last_3_months: CRMMachinesSoldTrend[];
+    feedback_status_last_6_months: CRMFeedbackStatus[];
 
-  team_progress: CRMTeamProgress[];
-  team_task: CRMTeamTask[];
+    team_progress: CRMTeamProgress[];
+    team_task: CRMTeamTask[];
 
-  complaint_stats: CRMComplaintStats;
-  total_due_payment: number;
+    complaint_stats: CRMComplaintStats;
+    total_due_payment: number;
 
-  pos_stats: CRMPosStats;
-  unassigned_customers: CRMUnassignedCustomers;
-  top_followup: CRMTopFollowupData;
-  resumes: CRMResumeData;
-  loans: CRMLoan[];
-  total_unassigned : TotalUnassignedCustomers
+    pos_stats: CRMPosStats;
+    unassigned_customers: CRMUnassignedCustomers;
+    top_followup: CRMTopFollowupData;
+    resumes: CRMResumeData;
+    loans: CRMLoan[];
+    total_unassigned: TotalUnassignedCustomers
 }
 
 export interface TotalUnassignedCustomers {
-    length : number
-    data : CRMCustomer[]
+    length: number
+    data: CRMCustomer[]
 }
 
 export interface CRMRecentSale {
-  price: string;
-  contract_date: string;
-  seller_name: string;
-  seller_email: string;
-  seller_dp: string;
-  customer_id: number;
-  customer_name: string;
-  customer_owner: string;
+    price: string;
+    contract_date: string;
+    seller_name: string;
+    seller_email: string;
+    seller_dp: string;
+    customer_id: number;
+    customer_name: string;
+    customer_owner: string;
 }
 
 export interface CRMIndustryCount {
-  industry: string;
-  customer_count: string;
+    industry: string;
+    customer_count: string;
 }
 
 export interface CRMMachinesSoldTrend {
-  date: string;
-  total_machines_sold: number;
+    date: string;
+    total_machines_sold: number;
 }
 
 export interface CRMFeedbackStatus {
-  month: string;
-  satisfactory: number;
-  unsatisfactory: number;
+    month: string;
+    satisfactory: number;
+    unsatisfactory: number;
 }
 
+export interface CRMTeamProgressDataCustomer {
+    id: number
+    created_at: string
+    location: string
+    member: boolean
+    name: string
+    owner: string
+    phone: string[]
+}
+
+export interface CRMTeamProgressDataSale {
+    id: number
+    contract_date: string
+    order_no_arr: string[]
+    power: string
+    serial_no: string
+}
 export interface CRMTeamProgress {
-  id: number;
-  name: string;
-  email: string;
-  monthly_target: string;
-  customers_assigned: string;
-  sale_produced_customers: string;
-  repeated_customers: string;
-  customer_to_member_conversion: string;
+    id: number;
+    name: string;
+    email: string;
+    monthly_target: string;
+    customers_assigned: string;
+    customers_assigned_data: CRMTeamProgressDataCustomer[]
+    repeated_customers_data: {
+        customer: CRMTeamProgressDataCustomer
+        sales: CRMTeamProgressDataSale[]
+    }[]
+    sale_produced_data: {
+        customer: CRMTeamProgressDataCustomer
+        sales: CRMTeamProgressDataSale[]
+    }[]
+    sale_produced_customers: string;
+    repeated_customers: string;
+    customer_to_member_conversion: string;
 }
 
 export interface CRMTeamTask {
-  assigned_user_id: number;
-  assigned_user_name: string;
-  total_tasks: string;
-  tasks: CRMTask[];
+    assigned_user_id: number;
+    assigned_user_name: string;
+    total_tasks: string;
+    tasks: CRMTask[];
 }
 
 export interface CRMTask {
-  id: number;
-  title: string;
-  status: string;
-  created_at: string;
-  customer_id: number | null;
-  customer_name: string | null;
-  customer_owner: string | null;
+    id: number;
+    title: string;
+    status: string;
+    created_at: string;
+    customer_id: number | null;
+    customer_name: string | null;
+    customer_owner: string | null;
 }
 
 export interface CRMComplaintStats {
-  total_paid: string;
-  total_pending: string;
+    total_paid: string;
+    total_pending: string;
 }
 
 export interface CRMPosStats {
-  pending: number;
+    pending: number;
 }
 
 export interface CRMUnassignedCustomers {
-  total: number;
-  data: CRMCustomer[];
-  with_feedback: CRMCustomerGroup;
-  without_feedback: CRMCustomerGroup;
+    total: number;
+    data: CRMCustomer[];
+    with_feedback: CRMCustomerGroup;
+    without_feedback: CRMCustomerGroup;
 }
 
 export interface CRMCustomerGroup {
-  total: number;
-  data: CRMCustomer[];
+    total: number;
+    data: CRMCustomer[];
 }
 
 export interface CRMCustomer {
-  id: number;
-  name: string;
-  email: string;
-  customer_group: string;
-  industry: string;
-  location: string;
-  number: string[];
-  owner: string;
-  ownership: number | null;
-  old_ref: string | null;
-  created_at: string;
-  address: string;
-  remarks: string;
-  rating: number;
-  image: string | null;
-  member: boolean;
-  created_by: number;
-  lead: number;
-  platform: string;
-  other: string;
-  pin: string;
-  top_followup: boolean;
-  lead_commission: boolean;
-  office: string;
-  has_feedback_this_month: boolean;
-  feedback_count_this_month: string;
+    id: number;
+    name: string;
+    email: string;
+    customer_group: string;
+    industry: string;
+    location: string;
+    number: string[];
+    owner: string;
+    ownership: number | null;
+    old_ref: string | null;
+    created_at: string;
+    address: string;
+    remarks: string;
+    rating: number;
+    image: string | null;
+    member: boolean;
+    created_by: number;
+    lead: number;
+    platform: string;
+    other: string;
+    pin: string;
+    top_followup: boolean;
+    lead_commission: boolean;
+    office: string;
+    has_feedback_this_month: boolean;
+    feedback_count_this_month: string;
 }
 
 export interface CRMTopFollowupData {
-  total: number;
-  data: CRMTopFollowup[];
+    total: number;
+    data: CRMTopFollowup[];
 }
 
 export interface CRMTopFollowup {
-  id: number;
-  customer_id: number;
-  created_at: string;
-  next_followup: string;
-  feedback: string;
-  user_id: number;
-  top_follow: boolean;
-  status: "Satisfactory" | "Unsatisfactory";
-  type: string;
-  followup_type: string;
-  customer_name: string;
-  customer_owner: string;
-  customer_phone: string[];
+    id: number;
+    customer_id: number;
+    created_at: string;
+    next_followup: string;
+    feedback: string;
+    user_id: number;
+    top_follow: boolean;
+    status: "Satisfactory" | "Unsatisfactory";
+    type: string;
+    followup_type: string;
+    customer_name: string;
+    customer_owner: string;
+    customer_phone: string[];
 }
 
 export interface CRMResumeData {
-  total: number;
-  data: CRMResume[];
+    total: number;
+    data: CRMResume[];
 }
 
 export interface CRMResume {
-  id?: number;
+    id?: number;
 }
 
 export interface CRMLoan {
-  id: number;
-  user_id: number;
-  loan_amount: string;
-  issued_date: string;
-  remaining_amount: string;
-  status: "active" | "closed";
-  description: string;
-  loan_applications_id: number | null;
-  user_name: string;
+    id: number;
+    user_id: number;
+    loan_amount: string;
+    issued_date: string;
+    remaining_amount: string;
+    status: "active" | "closed";
+    description: string;
+    loan_applications_id: number | null;
+    user_name: string;
 }
 
 
@@ -1680,246 +1706,246 @@ export type DateValue = string | Date | null;
 export type AnyObject = Record<string, any>;
 
 export type ApiCollection<T> = {
-  total: number;
-  data: T[];
+    total: number;
+    data: T[];
 };
 
 export type ApiAmountCollection<T> = {
-  total: number;
-  total_amount: number;
-  data: T[];
+    total: number;
+    total_amount: number;
+    data: T[];
 };
 
 export type CustomerMini = {
-  id: ID | null;
-  name: string | null;
-  owner: string | null;
-  number: string[] | string | null;
-  location: string | null;
-  industry: string | null;
-  member: boolean | null;
-  created_at: DateValue;
+    id: ID | null;
+    name: string | null;
+    owner: string | null;
+    number: string[] | string | null;
+    location: string | null;
+    industry: string | null;
+    member: boolean | null;
+    created_at: DateValue;
 };
 
 
 export type DispatchInformation = {
-  checklist?: Record<string, string | number>;
-  other_information?: {
-    note?: string;
-    image?: string;
-    manager?: string;
-    orderNo?: string | string[];
-    issuedBy?: string;
-    vehicleNo?: string;
-    driverName?: string;
-    transporter?: string;
-    dispatchTime?: string;
-    driverNumber?: string;
-  };
+    checklist?: Record<string, string | number>;
+    other_information?: {
+        note?: string;
+        image?: string;
+        manager?: string;
+        orderNo?: string | string[];
+        issuedBy?: string;
+        vehicleNo?: string;
+        driverName?: string;
+        transporter?: string;
+        dispatchTime?: string;
+        driverNumber?: string;
+    };
 };
 
 export type PartInformation = {
-  name?: string;
-  model?: string;
-  power?: string;
-  serial_no?: string;
-  [key: string]: any;
+    name?: string;
+    model?: string;
+    power?: string;
+    serial_no?: string;
+    [key: string]: any;
 };
 
 export type PendingPayment = {
-  id: ID;
-  created_at: DateValue;
-  customer_id: ID;
-  type: "Machine" | "Parts" | string;
+    id: ID;
+    created_at: DateValue;
+    customer_id: ID;
+    type: "Machine" | "Parts" | string;
 
-  speed_money_note: string | null;
-  speed_money: boolean;
-  sell_by: ID;
-  commission: boolean;
-  order_no: string | null;
-  price: string | number;
-  qty: number | null;
-  serial_no: string | null;
+    speed_money_note: string | null;
+    speed_money: boolean;
+    sell_by: ID;
+    commission: boolean;
+    order_no: string | null;
+    price: string | number;
+    qty: number | null;
+    serial_no: string | null;
 
-  contract_images_png: string[];
-  contract_images_pdf: string[];
-  other_images_png: string[];
-  other_images_pdf: string[];
+    contract_images_png: string[];
+    contract_images_pdf: string[];
+    other_images_png: string[];
+    other_images_pdf: string[];
 
-  contract_date: DateValue;
-  usd_tt_rate: string | number | null;
-  speed_money_amount: string | number | null;
-  power: string | null;
-  source: string | null;
-  cnic: string | null;
+    contract_date: DateValue;
+    usd_tt_rate: string | number | null;
+    speed_money_amount: string | number | null;
+    power: string | null;
+    source: string | null;
+    cnic: string | null;
 
-  commission_issued: boolean;
-  payment_lock: boolean;
-  order_no_arr: string[];
+    commission_issued: boolean;
+    payment_lock: boolean;
+    order_no_arr: string[];
 
-  machine_nameplate_images: string[];
-  final_handover_images: string[];
-  handover_user_id: ID | null;
-  installation_report: string[];
-  handshake_images: string[];
+    machine_nameplate_images: string[];
+    final_handover_images: string[];
+    handover_user_id: ID | null;
+    installation_report: string[];
+    handshake_images: string[];
 
-  parts_information: PartInformation[] | null;
+    parts_information: PartInformation[] | null;
 
-  ready_for_delivery: boolean;
-  delivery_date: DateValue;
-  delivery_request_date: DateValue;
+    ready_for_delivery: boolean;
+    delivery_date: DateValue;
+    delivery_request_date: DateValue;
 
-  total_paid: number;
-  pending_amount: number;
+    total_paid: number;
+    pending_amount: number;
 
-  customer: CustomerMini;
+    customer: CustomerMini;
 };
 
 export type InvoiceField = {
-  id?: ID;
-  img?: string | null;
-  qty?: number;
-  gift?: number;
-  name?: string;
-  rack?: string | null;
-  type?: string;
-  unit?: string | null;
-  price?: string | number;
-  total?: string | number;
-  buying?: string | number;
-  remarks?: string;
-  category?: string | null;
-  new_order?: number;
-  threshold?: number;
-  description?: string;
-  chinese_name?: string;
-  [key: string]: any;
+    id?: ID;
+    img?: string | null;
+    qty?: number;
+    gift?: number;
+    name?: string;
+    rack?: string | null;
+    type?: string;
+    unit?: string | null;
+    price?: string | number;
+    total?: string | number;
+    buying?: string | number;
+    remarks?: string;
+    category?: string | null;
+    new_order?: number;
+    threshold?: number;
+    description?: string;
+    chinese_name?: string;
+    [key: string]: any;
 };
 
 export type PendingPartsPayment = {
-  id: ID;
-  name: string | null;
-  company: string | null;
-  phone: string | null;
-  address: string | null;
-  invoicenumber: string | null;
-  manager: string | null;
+    id: ID;
+    name: string | null;
+    company: string | null;
+    phone: string | null;
+    address: string | null;
+    invoicenumber: string | null;
+    manager: string | null;
 
-  fields: InvoiceField[];
+    fields: InvoiceField[];
 
-  created_at: DateValue;
-  payment: boolean;
-  customer_id: ID;
-  discount: number;
-  owner_paid: boolean;
+    created_at: DateValue;
+    payment: boolean;
+    customer_id: ID;
+    discount: number;
+    owner_paid: boolean;
 
-  total_paid: number;
-  items_total: number;
-  final_amount: number;
-  status: "Pending" | "Partial" | "Paid" | "NA" | string;
+    total_paid: number;
+    items_total: number;
+    final_amount: number;
+    status: "Pending" | "Partial" | "Paid" | "NA" | string;
 
-  customer: CustomerMini;
+    customer: CustomerMini;
 };
 
 export type PendingDelivery = PendingPayment;
 
 export type TopFollow = {
-  id: ID;
-  customer_id: ID;
-  created_at: DateValue;
-  next_followup: DateValue;
-  feedback: string | null;
-  user_id: ID;
-  top_follow: boolean;
-  status: string | null;
-  type: string | null;
-  followup_type: string | null;
-  customer: CustomerMini;
+    id: ID;
+    customer_id: ID;
+    created_at: DateValue;
+    next_followup: DateValue;
+    feedback: string | null;
+    user_id: ID;
+    top_follow: boolean;
+    status: string | null;
+    type: string | null;
+    followup_type: string | null;
+    customer: CustomerMini;
 };
 
 export type NewlyAssignedCustomer = {
-  id: ID;
-  name: string | null;
-  email?: string | null;
-  customer_group?: string | null;
-  industry: string | null;
-  location: string | null;
-  number: string[] | string | null;
-  owner: string | null;
-  ownership: ID | null;
-  old_ref?: string | null;
-  created_at: DateValue;
-  address?: string | null;
-  remarks?: string | null;
-  rating?: number | null;
-  image?: string | null;
-  member: boolean;
-  created_by?: ID | null;
-  lead?: ID | null;
-  platform?: string | null;
-  other?: string | null;
-  pin?: string | null;
-  top_followup?: boolean;
-  lead_commission?: boolean;
-  office?: string | null;
+    id: ID;
+    name: string | null;
+    email?: string | null;
+    customer_group?: string | null;
+    industry: string | null;
+    location: string | null;
+    number: string[] | string | null;
+    owner: string | null;
+    ownership: ID | null;
+    old_ref?: string | null;
+    created_at: DateValue;
+    address?: string | null;
+    remarks?: string | null;
+    rating?: number | null;
+    image?: string | null;
+    member: boolean;
+    created_by?: ID | null;
+    lead?: ID | null;
+    platform?: string | null;
+    other?: string | null;
+    pin?: string | null;
+    top_followup?: boolean;
+    lead_commission?: boolean;
+    office?: string | null;
 };
 
 export type TodayTask = {
-  id: ID;
-  created_at: DateValue;
-  assigned_to: ID;
-  status: "Pending" | "Completed" | string;
-  task_name: string | null;
-  type: string | null;
-  assigned_by: ID | null;
-  customer_id: ID | null;
-  problem: string | null;
-  solution: string | null;
-  remarks: string | null;
-  site_reached: boolean;
-  location: string | null;
-  customer: CustomerMini;
+    id: ID;
+    created_at: DateValue;
+    assigned_to: ID;
+    status: "Pending" | "Completed" | string;
+    task_name: string | null;
+    type: string | null;
+    assigned_by: ID | null;
+    customer_id: ID | null;
+    problem: string | null;
+    solution: string | null;
+    remarks: string | null;
+    site_reached: boolean;
+    location: string | null;
+    customer: CustomerMini;
 };
 
 export type SalePayment = {
-  id: ID;
-  amount: string | number;
-  machine_id: ID;
+    id: ID;
+    amount: string | number;
+    machine_id: ID;
 };
 
 export type CustomerSale = {
-  id: ID;
-  serial_no: string | null;
-  payments: SalePayment[];
-  percentage_completion: number;
+    id: ID;
+    serial_no: string | null;
+    payments: SalePayment[];
+    percentage_completion: number;
 };
 
 export type CustomerWithSaleOrMember = {
-  profile_completion: number;
-  sales: CustomerSale[];
-  id: ID;
-  name: string | null;
-  owner: string | null;
-  industry: string | null;
-  number: string;
-  location: string | null;
-  created_at: DateValue;
-  member: boolean;
+    profile_completion: number;
+    sales: CustomerSale[];
+    id: ID;
+    name: string | null;
+    owner: string | null;
+    industry: string | null;
+    number: string;
+    location: string | null;
+    created_at: DateValue;
+    member: boolean;
 };
 
 
 export type SalesNewEntries = {
-  pending_payments: ApiAmountCollection<PendingPayment>;
-  pending_parts_payments: ApiAmountCollection<PendingPartsPayment>;
-  pending_deliveries: ApiCollection<PendingDelivery>;
-  top_follow: ApiCollection<TopFollow>;
-  newly_assigned_customers: ApiCollection<NewlyAssignedCustomer>;
-  customers_with_sale_or_member: ApiCollection<CustomerWithSaleOrMember>;
+    pending_payments: ApiAmountCollection<PendingPayment>;
+    pending_parts_payments: ApiAmountCollection<PendingPartsPayment>;
+    pending_deliveries: ApiCollection<PendingDelivery>;
+    top_follow: ApiCollection<TopFollow>;
+    newly_assigned_customers: ApiCollection<NewlyAssignedCustomer>;
+    customers_with_sale_or_member: ApiCollection<CustomerWithSaleOrMember>;
 };
 
 export type SalesTodayTasks = {
-    total : number
-    data : TaskProps[] 
+    total: number
+    data: TaskProps[]
 }
 
 ////////////STORE///////////////
@@ -1931,157 +1957,187 @@ export type StoreInvoiceStatus = "Pending" | "Partial" | "Paid" | "NA";
 export type StoreNullable<T> = T | null;
 
 export interface StoreInvoiceField {
-  id?: number;
-  img?: StoreNullable<string>;
-  qty: number;
-  gift?: number;
-  name?: string;
-  rack?: StoreNullable<string>;
-  type: string;
-  unit?: StoreNullable<string>;
-  price: string | number;
-  total: string | number;
-  buying?: string;
-  remarks?: StoreNullable<string>;
-  category?: StoreNullable<string>;
-  new_order?: number;
-  threshold?: number;
-  description: string;
-  chinese_name?: StoreNullable<string>;
-  modified?: boolean;
+    id?: number;
+    img?: StoreNullable<string>;
+    qty: number;
+    gift?: number;
+    name?: string;
+    rack?: StoreNullable<string>;
+    type: string;
+    unit?: StoreNullable<string>;
+    price: string | number;
+    total: string | number;
+    buying?: string;
+    remarks?: StoreNullable<string>;
+    category?: StoreNullable<string>;
+    new_order?: number;
+    threshold?: number;
+    description: string;
+    chinese_name?: StoreNullable<string>;
+    modified?: boolean;
 }
 
 export interface StorePosInvoice {
-  id: number;
-  name: string;
-  company: string;
-  phone: string;
-  address: string;
-  invoicenumber: string;
-  manager: string;
-  fields: StoreInvoiceField[];
-  created_at: string;
-  payment: boolean;
-  customer_id: StoreNullable<number>;
-  discount: number;
-  owner_paid: boolean;
-  customer_location: string;
-  total_paid: number;
-  items_total: number;
-  final_amount: number;
-  status: StoreInvoiceStatus;
+    id: number;
+    name: string;
+    company: string;
+    phone: string;
+    address: string;
+    invoicenumber: string;
+    manager: string;
+    fields: StoreInvoiceField[];
+    created_at: string;
+    payment: boolean;
+    customer_id: StoreNullable<number>;
+    discount: number;
+    owner_paid: boolean;
+    customer_location: string;
+    total_paid: number;
+    items_total: number;
+    final_amount: number;
+    status: StoreInvoiceStatus;
 }
-
+export interface StorePosStatsEach {
+    length: number
+    total: number
+    data: SearchItem[]
+}
 export interface StorePosStats {
-  pending: number;
-  data: SearchItem[];
+
+    pending: StorePosStatsEach
+    completed: StorePosStatsEach
+    cancelled: StorePosStatsEach
+    partial: StorePosStatsEach
 }
 
 export interface StoreStockItem {
-  id: number;
-  machine_serial: string;
-  machine_model: string;
-  machine_power: string;
+    id: number;
+    machine_serial: string;
+    machine_model: string;
+    machine_power: string;
 }
 
 export interface StoreStockGroup {
-  machine_model: string;
-  machine_power: string;
-  quantity: number;
-  data: StoreStockItem[];
+    machine_model: string;
+    machine_power: string;
+    quantity: number;
+    data: StoreStockItem[];
 }
 
 export interface StoreAvailableStock {
-  total_quantity: number;
-  groups: StoreStockGroup[];
+    total_quantity: number;
+    groups: StoreStockGroup[];
 }
 
 export interface StoreTask {
-  id: number;
-  created_at: string;
-  assigned_to: number;
-  status: StoreNullable<string>;
-  task_name: string;
-  type: string;
-  assigned_by: StoreNullable<number>;
-  customer_id: StoreNullable<number>;
-  problem: StoreNullable<string>;
-  solution: StoreNullable<string>;
-  remarks: StoreNullable<string>;
-  site_reached: boolean;
-  location: StoreNullable<number[]>;
+    id: number;
+    created_at: string;
+    assigned_to: number;
+    status: StoreNullable<string>;
+    task_name: string;
+    type: string;
+    assigned_by: StoreNullable<number>;
+    customer_id: StoreNullable<number>;
+    problem: StoreNullable<string>;
+    solution: StoreNullable<string>;
+    remarks: StoreNullable<string>;
+    site_reached: boolean;
+    location: StoreNullable<number[]>;
 
-  customer_name?: StoreNullable<string>;
-  customer_number?: StoreNullable<string[]>;
-  customer_location?: StoreNullable<string>;
+    customer_name?: StoreNullable<string>;
+    customer_number?: StoreNullable<string[]>;
+    customer_location?: StoreNullable<string>;
 
-  [key: string]: unknown;
+    [key: string]: unknown;
 }
 
 export interface StoreTodayTasks {
-  total: number;
-  data: TaskProps[];
+    total: number;
+    data: TaskProps[];
 }
 
 export interface StoreSalesInvoice {
-  id: number;
-  fields: StoreInvoiceField[];
-  discount: string | number;
-  created_at: string;
-  payment: boolean;
-  owner_paid: boolean;
-  customer_id: StoreNullable<number>;
-  name: string;
-  company: string;
-  phone: string;
-  address: string;
-  items_total: number;
-  final_amount: number;
+    id: number;
+    fields: StoreInvoiceField[];
+    discount: string | number;
+    created_at: string;
+    payment: boolean;
+    owner_paid: boolean;
+    customer_id: StoreNullable<number>;
+    name: string;
+    company: string;
+    phone: string;
+    address: string;
+    items_total: number;
+    final_amount: number;
 }
 
 export interface StoreSalesStats {
-  today: number;
-  this_week: number;
-  this_month: number;
-  last_month: number;
-  data: StoreSalesInvoice[];
+    today: number;
+    this_week: number;
+    this_month: number;
+    last_month: number;
+    data: StoreSalesInvoice[];
 }
 
 export interface StoreBranchExpense {
-  id: number;
-  created_at?: string;
-  amount: number;
-  description?: StoreNullable<string>;
-  image?: StoreNullable<string>;
-  submitted_by: number;
-  title?: StoreNullable<string>;
-  date: string;
-  city?: StoreNullable<string>;
-  resolved?: boolean;
-  verified?: boolean;
+    id: number;
+    created_at?: string;
+    amount: number;
+    description?: StoreNullable<string>;
+    image?: StoreNullable<string>;
+    submitted_by: number;
+    title?: StoreNullable<string>;
+    date: string;
+    city?: StoreNullable<string>;
+    resolved?: boolean;
+    verified?: boolean;
 
-  [key: string]: unknown;
+    [key: string]: unknown;
 }
 
 export interface StoreBranchExpenses {
-  today_total: number;
-  this_month_total: number;
-  data: StoreBranchExpense[];
+    today_total: number;
+    this_month_total: number;
+    data: StoreBranchExpense[];
 }
 
 export interface StoreUser {
-  id: number;
-  dp: string;
-  name: string;
-  designation: string;
-  limited_access: boolean;
+    id: number;
+    dp: string;
+    name: string;
+    designation: string;
+    limited_access: boolean;
+}
+
+export interface StoreLowStockData {
+    id: number
+    category: string
+    gift: number
+    name: string | null
+    price: number | string
+    qty: number
+    type: string
+    rack: string
+    img: string
+    threshold: null | number
+    new_order: null | number
+    chinese_name: string
+    remarks: string
+    unit: string
+    buying: string | number
+}
+export interface StoreLowStock {
+    total: number
+    data: StoreLowStockData[]
 }
 
 export interface StoreDashboardResponse {
-  pos_stats: StorePosStats;
-  available_stock: StoreAvailableStock;
-  today_tasks: StoreTodayTasks;
-  sales_stats: StoreSalesStats;
-  branch_expenses: StoreBranchExpenses;
-  user: StoreUser;
+    pos_stats: StorePosStats;
+    available_stock: StoreAvailableStock;
+    today_tasks: StoreTodayTasks;
+    sales_stats: StoreSalesStats;
+    branch_expenses: StoreBranchExpenses;
+    user: StoreUser;
+    low_stock: StoreLowStock
 }

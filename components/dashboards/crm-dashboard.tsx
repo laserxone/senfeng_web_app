@@ -57,8 +57,6 @@ export default function CRMDashboard() {
     fetchDashboardData();
   }
 
-  console.log(data)
-
 
   async function fetchDashboardData() {
     axios
@@ -206,28 +204,42 @@ export default function CRMDashboard() {
       {loading ? (
         <Skeleton className="h-64" />
       ) : (
-        <Card>
-          <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
-            <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
-              <CardTitle>Task status</CardTitle>
-              <Separator className="my-2" />
+        <Card className="overflow-hidden">
+          <CardHeader className="border-b bg-muted/20 px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <CardTitle className="text-base font-bold">Task status</CardTitle>
+                <CardDescription className="text-xs">
+                  Yesterday and today task movement by team member
+                </CardDescription>
+              </div>
+              <div className="rounded-md border bg-background px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+                {userTaskData.length} users
+              </div>
+            </div>
+          </CardHeader>
 
-              <ScrollArea className="h-[500px] pr-3">
+          <CardContent className="p-3">
+              <ScrollArea className="h-[420px] pr-2">
                 {userTaskData.map((user) => (
-                  <div key={user.assigned_user_id} className="mb-10">
-                    <h2 className="mb-4 text-xl font-bold">
-                      {user.assigned_user_name}
-                    </h2>
+                  <div key={user.assigned_user_id} className="mb-3 rounded-md border bg-background p-2.5 last:mb-0">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <h2 className="truncate text-sm font-bold">
+                        {user.assigned_user_name}
+                      </h2>
+                      <span className="rounded-md bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground">
+                        {(user.yesterdayTasks?.length || 0) + (user.todayTasks?.length || 0)} tasks
+                      </span>
+                    </div>
 
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                      {renderTaskCard(user.yesterdayTasks, "🕒 Yesterday")}
-                      {renderTaskCard(user.todayTasks, "📅 Today")}
+                    <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                      {renderTaskCard(user.yesterdayTasks, "Yesterday")}
+                      {renderTaskCard(user.todayTasks, "Today")}
                     </div>
                   </div>
                 ))}
               </ScrollArea>
-            </div>
-          </CardHeader>
+          </CardContent>
         </Card>
       )}
 
@@ -636,69 +648,69 @@ const renderTaskCard = (tasks: TeamTaskForAdmin[], label: string) => {
   const pendingCount = tasks.length - completedCount;
 
   return (
-    <Card className="w-full overflow-hidden border-border/70 bg-card shadow-sm">
-      <CardHeader className="border-b bg-muted/20 p-4">
-        <div className="flex items-start justify-between gap-3">
+    <Card className="w-full overflow-hidden rounded-md border-border/70 bg-card shadow-none">
+      <CardHeader className="border-b bg-muted/25 px-3 py-2">
+        <div className="flex items-center justify-between gap-2">
           <div>
-            <p className="text-base font-semibold text-foreground">{label}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="text-sm font-semibold leading-none text-foreground">{label}</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">
               {tasks.length} total tasks
             </p>
           </div>
 
-          <div className="flex shrink-0 items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground shadow-sm">
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+          <div className="flex shrink-0 items-center gap-1 rounded-md border bg-background px-2 py-1 text-[11px] font-semibold text-muted-foreground">
+            <CheckCircle2 className="h-3 w-3 text-emerald-600" />
             {completedCount}
             <span className="text-border">/</span>
-            <CircleDashed className="h-3.5 w-3.5 text-rose-500" />
+            <CircleDashed className="h-3 w-3 text-rose-500" />
             {pendingCount}
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="p-3">
+      <CardContent className="p-2">
         {tasks.length === 0 ? (
-          <div className="flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed bg-muted/20 px-4 py-8 text-center">
-            <CircleDashed className="mb-2 h-6 w-6 text-muted-foreground" />
-            <p className="text-sm font-medium text-foreground">No tasks</p>
-            <p className="mt-1 text-xs text-muted-foreground">
+          <div className="flex min-h-20 flex-col items-center justify-center rounded-md border border-dashed bg-muted/20 px-3 py-4 text-center">
+            <CircleDashed className="mb-1.5 h-4 w-4 text-muted-foreground" />
+            <p className="text-xs font-semibold text-foreground">No tasks</p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
               Nothing assigned for this window.
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {tasks.map((task) => {
               const completed = task.status === "Completed";
 
               return (
                 <div
                   key={task.id}
-                  className={`group rounded-lg border p-3 text-sm shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${completed
-                    ? "border-emerald-200 bg-emerald-50/70"
-                    : "border-rose-200 bg-rose-50/70"
+                  className={`group rounded-md border px-2.5 py-2 text-xs transition hover:bg-muted/30 ${completed
+                    ? "border-emerald-200 bg-emerald-50/60 dark:border-emerald-900/60 dark:bg-emerald-950/20"
+                    : "border-rose-200 bg-rose-50/60 dark:border-rose-900/60 dark:bg-rose-950/20"
                     }`}
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-2">
                     <div
-                      className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full border bg-background ${completed
+                      className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md border bg-background ${completed
                         ? "border-emerald-200 text-emerald-700"
                         : "border-rose-200 text-rose-600"
                         }`}
                     >
                       {completed ? (
-                        <CheckCircle2 className="h-4 w-4" />
+                        <CheckCircle2 className="h-3.5 w-3.5" />
                       ) : (
-                        <CircleDashed className="h-4 w-4" />
+                        <CircleDashed className="h-3.5 w-3.5" />
                       )}
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <p className="font-semibold leading-snug text-foreground">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="line-clamp-1 font-semibold leading-snug text-foreground">
                           {task.title || `Task #${task.id}`}
                         </p>
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${completed
+                          className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${completed
                             ? "bg-emerald-100 text-emerald-700"
                             : "bg-rose-100 text-rose-700"
                             }`}
@@ -707,8 +719,8 @@ const renderTaskCard = (tasks: TeamTaskForAdmin[], label: string) => {
                         </span>
                       </div>
 
-                      <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Clock3 className="h-3.5 w-3.5" />
+                      <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <Clock3 className="h-3 w-3" />
                         {moment(task.created_at).format("YYYY-MM-DD hh:mm A")}
                       </div>
                     </div>
