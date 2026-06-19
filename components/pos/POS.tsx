@@ -40,7 +40,7 @@ import POSModal from "./pos-modal";
 import SearchResultModal from "./search-result-modal";
 import ViewableInvoice from "./viewable-invoice";
 
-import { InvoiceItem, MyCustomer, POSCustomer, POSInvoiceReminder, SearchItem, StockProps } from "@/lib/types";
+import { InvoiceItem, MyCustomer, POSInvoiceReminder, SearchItem, StockProps } from "@/lib/types";
 import Link from "next/link";
 import { toast } from "sonner";
 import OutwardModal from "./outward-modal";
@@ -77,13 +77,9 @@ export default function POS() {
   const [totalAmount, setTotalAmount] = useState(0);
 
   const [other, setOther] = useState("");
-  const [showOther, setShowOther] = useState(false);
-  const [customers, setCustomers] = useState<POSCustomer[]>([]);
+  const [showOther, setShowOther] = useState(false)
   const [manager, setManager] = useState("");
   const [nextInvoice, setNextInvoice] = useState(`xxxxxxxx-xxx`);
-  const [filteredCustomers, setFilteredCustomers] = useState<POSCustomer[]>([]);
-  const [showList, setShowList] = useState(false);
-  const [customerLoading, setCustomerLoading] = useState(false);
   const [addProductVisible, setAddProductVisible] = useState(false);
   const [searchInvocie, setSearchInvoice] = useState(false);
   const [itemSearch, setItemSearch] = useState("");
@@ -105,7 +101,6 @@ export default function POS() {
   const [engineersModal, setEngineersModal] = useState(false);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [orderStockVisible, setOrderStockVisible] = useState(false);
-  const [walkIn, setWalkIn] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<number | null>(null);
   const debouncedUserId = useDebounce(userID, 1000);
   const [discount, setDiscount] = useState<number | string>("");
@@ -117,12 +112,11 @@ export default function POS() {
   useEffect(() => {
     if (debouncedUserId) {
       fetchData();
-      fetchDataCustomer();
     }
   }, [debouncedUserId]);
 
   const handleUpdateInvoice = async () => {
-    handleInvoiceBackendData();
+    await handleInvoiceBackendData();
     const blob = await pdf(
       <InvoicePDF
         companyName={companyName}
@@ -145,37 +139,28 @@ export default function POS() {
   };
 
   const handleInvoiceBackendData = async () => {
-    axios
-      .put(`/${userID}/pos/customer`, {
-        name: name,
-        company: companyName,
-        phone: phoneNumber,
-        address: address,
-      })
-      .finally(async () => {
-        await fetchDataCustomer();
-      });
 
-    axios
-      .put(`/${userID}/pos/update/${selectedSearchItem?.id}`, {
-        olditems: selectedSearchItem,
-        newitems: {
-          name: name,
-          company: companyName,
-          phone: phoneNumber,
-          address: address,
-          manager: manager,
-          invoicenumber: nextInvoice,
-          fields: invoiceItems,
-          payment: selectedSearchItem?.payment || false,
-          discount: discount || 0,
-        },
-      })
-      .finally(() => {
-        fetchData();
-        setSelectedSearchItem(null);
-        setSearchItemsResult([]);
-      });
+    try {
+      await axios
+        .put(`/${userID}/pos/update/${selectedSearchItem?.id}`, {
+          olditems: selectedSearchItem,
+          newitems: {
+            name: name,
+            company: companyName,
+            phone: phoneNumber,
+            address: address,
+            manager: manager,
+            invoicenumber: nextInvoice,
+            fields: invoiceItems,
+            payment: selectedSearchItem?.payment || false,
+            discount: discount || 0,
+          },
+        })
+    } finally {
+      await fetchData();
+      setSelectedSearchItem(null);
+      setSearchItemsResult([]);
+    }
   };
 
   const generatePDF = async () => {
@@ -200,14 +185,15 @@ export default function POS() {
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank");
       await fetchData();
-      await fetchDataCustomer();
-      if (checked && selectedCustomer) {
+      if (checked) {
         setSelectedInvoice(invNumber?.returning_id);
+      } else {
+        setSelectedCustomer(null);
+        setChecked(false);
       }
       setTimeout(() => URL.revokeObjectURL(url), 600000);
     } catch (error) {
       console.log(error);
-      setCustomerLoading(false);
       setLoading(false);
     }
   };
@@ -224,10 +210,10 @@ export default function POS() {
         address: address,
         manager: manager,
         fields: invoiceItems,
-        payment: selectedCustomer ? false : checked,
         selecteduser: selectedUser,
         customer_id: selectedCustomer ? selectedCustomer?.id : null,
         discount: discount || 0,
+        payment: selectedCustomer?.id ? checked : false
       });
 
       return response.data;
@@ -238,54 +224,22 @@ export default function POS() {
 
   const fetchData = async () => {
     clearAll();
-    return new Promise<void>((resolve) => {
-      axios
-        .get(`/${userID}/pos`)
-        .then((response) => {
-          if (response.data.stock.length > 0) {
-            let resultedData = [...response.data.stock];
-            resultedData.push({
-              name: "Other",
-              id: resultedData[resultedData.length - 1].id + 1,
-            });
-            resultedData.push({
-              name: "Plus",
-              id: resultedData[resultedData.length - 1].id + 2,
-            });
-            setStock([...resultedData]);
-          } else {
-            let resultedData = [];
-            resultedData.push({ name: "Other", id: 1 });
-            resultedData.push({ name: "Plus", id: 2 });
-            setStock([...resultedData]);
-          }
-          if (response.data?.reminders) {
-            setReminder(response.data.reminders);
-          }
-        })
-        .catch((e) => {
-          console.log(e);
-        })
-        .finally(() => {
-          setLoading(false);
-          resolve();
-        });
-    });
-  };
-
-
-  const fetchDataCustomer = async () => {
     try {
-      const response = await axios.get(`/${userID}/pos/customer`);
-      if (response.data.customers.length > 0) {
-        setCustomers(response.data.customers);
+      const response = await axios.get(`/${userID}/pos`)
+      if (response.data.stock.length > 0) {
+
+        setStock([...response.data.stock]);
       }
-    } catch (error) {
-      console.log(error);
+      if (response.data?.reminders) {
+        setReminder(response.data.reminders);
+      }
     } finally {
-      setCustomerLoading(false);
+      setLoading(false);
     }
   };
+
+
+
 
   useEffect(() => {
     if (invoiceItems.length > 0) {
@@ -340,7 +294,7 @@ export default function POS() {
   }
 
   function handleIncrease(item: StockProps) {
-    if (!item.qty || item?.qty < 1) return alert("Select a valid item and quantity.");
+    if (!item.qty || item?.qty < 1) return toast.info("Select a valid item and quantity.");
 
     setStock((prevStock) =>
       prevStock.map((eachItem) =>
@@ -424,23 +378,6 @@ export default function POS() {
     setSelectedRadio("customer");
   }
 
-  const handlePhoneChange = (e: ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
-    const input = e.target.value;
-    setPhoneNumber(input);
-    const matches = customers.filter((customer) =>
-      customer.phone.includes(input),
-    );
-
-    setFilteredCustomers(matches);
-  };
-
-  const handleSelectCustomer = (customer: POSCustomer) => {
-    setPhoneNumber(customer.phone);
-    setName(customer.name);
-    setCompanyName(customer.customer);
-    setAddress(customer.address);
-  };
-
   async function handleItemSearch() {
     axios
       .get(`/${userID}/pos/search/${itemSearch}`)
@@ -448,20 +385,15 @@ export default function POS() {
         if (response.data.length > 0) {
           const resultWithTotal = response.data.map((item: POSInvoiceReminder) => {
             const discount = Number(item.discount || 0).toFixed(0);
-            const total = item.fields.reduce(
-              (acc, curr) => acc + Number(curr.total),
-              0,
-            );
             return {
               ...item,
-              total: total - Number(discount),
               discount,
             };
           });
           setSearchModal(true);
           setSearchItemsResult(resultWithTotal);
-             setTotal(resultWithTotal.reduce(
-            (sum : any, item : any) => sum + Number(item.total || 0),
+          setTotal(resultWithTotal.reduce(
+            (sum: any, item: any) => sum + Number(item.total || 0),
             0
           ))
         } else {
@@ -483,20 +415,16 @@ export default function POS() {
         if (response.data.length > 0) {
           const resultWithTotal = response.data.map((item: POSInvoiceReminder) => {
             const discount = Number(item.discount || 0).toFixed(0);
-            const total = item.fields.reduce(
-              (acc, curr) => acc + Number(curr.total),
-              0,
-            );
+
             return {
               ...item,
-              total: total - Number(discount),
               discount,
             };
           });
           setSearchModal(true);
           setSearchItemsResult(resultWithTotal);
           setTotal(resultWithTotal.reduce(
-            (sum : any, item : any) => sum + Number(item.total || 0),
+            (sum: any, item: any) => sum + Number(item.total || 0),
             0
           ))
         }
@@ -511,12 +439,10 @@ export default function POS() {
 
   async function handleReset() {
     setLoading(true);
-    setCustomerLoading(true);
     setSearchItemsResult([]);
     setSelectedSearchItem(null);
     setItemSearch("");
-    fetchData();
-    fetchDataCustomer();
+    await fetchData();
   }
 
   async function handlePendingPayments() {
@@ -528,18 +454,15 @@ export default function POS() {
             const resultWithTotal = response.data.map((item: POSInvoiceReminder) => {
               return {
                 ...item,
-                total: item.fields.reduce(
-                  (acc, curr) => acc + Number(curr.total),
-                  0,
-                ),
+
               };
             });
             setSearchModal(true);
             setSearchItemsResult(resultWithTotal);
-               setTotal(resultWithTotal.reduce(
-            (sum : any, item : any) => sum + Number(item.final_amount || 0),
-            0
-          ))
+            setTotal(resultWithTotal.reduce(
+              (sum: any, item: any) => sum + Number(item.final_amount || 0),
+              0
+            ))
           }
         })
         .catch((e) => {
@@ -582,140 +505,140 @@ export default function POS() {
     setOrderStockVisible(true);
   }
 
-  return loading || customerLoading ? (
-    <div className="flex flex-1 w-full items-center justify-center h-[80vh]">
-      <Spinner />
-    </div>
+  return loading ? (
+    
+      <div className="flex min-h-[320px] w-full items-center justify-center">
+        <div className="flex items-center gap-3 rounded-md border bg-card px-5 py-4 shadow-sm ring-1 ring-border/30">
+          <Spinner />
+          <div>
+            <p className="text-sm font-bold">Loading POS</p>
+            <p className="text-xs text-muted-foreground">Preparing stock and invoice workspace</p>
+          </div>
+        </div>
+      </div>
+  
   ) : (
-    <PageContainer scrollable={true}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-        <div className="flex flex-1 p-2 flex-col p-6 border rounded-lg shadow-lg gap-4 ">
-          <RadioGroup
-            defaultValue={selectedRadio}
-            onValueChange={setSelectedRadio}
-            className="flex"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="customer" id="r1" />
-              <Label htmlFor="r1">Customer</Label>
+   <>
+      <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-2">
+        <div className="flex min-w-0 flex-1 flex-col gap-3 rounded-md border bg-card p-3 shadow-sm ring-1 ring-border/30">
+          <div className="flex flex-col gap-2 border-b pb-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-base font-bold">POS Workspace</p>
+              <p className="text-xs text-muted-foreground">Create invoices, manage stock movement and customer billing.</p>
             </div>
-
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="engineer" id="r2" />
-              <Label htmlFor="r2">Engineer</Label>
+            <div className="rounded-md bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+              Invoice {nextInvoice}
             </div>
-          </RadioGroup>
-
-          {selectedRadio === "engineer" && (
-            <UserSearch
-              value={selectedUser.id}
-              onReturn={(val) => {
-                setSelectedUser((prevState) => ({ ...prevState, id: val }));
-              }}
-              onReturnName={(val) => {
-                setSelectedUser((prevState) => ({ ...prevState, label: val }));
-              }}
-              placeholder="Select user"
-            />
-          )}
-          {!walkIn && (
-            <CustomerSearchWithData
-              value={selectedCustomer}
-              onReturn={(val) => {
-                setSelectedCustomer(val);
-                if (val?.number && Array.isArray(val.number))
-                  setPhoneNumber(val.number.length > 0 ? val.number[0] : "");
-                setName(val?.owner || "");
-                setCompanyName(val?.name || "");
-                setManager(val?.ownership_name || "");
-                setAddress(val?.address || "");
-              }}
-            />
-          )}
-
-          <div className="w-full relative">
-            <div className="flex flex-row w-full gap-2 items-center">
-              <Label className="text-base font-semibold w-[100px]">
-                Number:
-              </Label>
-              <Input
-                disabled={!walkIn}
-                placeholder="Phone Number"
-                value={phoneNumber}
-                onFocus={() => setShowList(true)}
-                onBlur={() => setTimeout(() => setShowList(false), 500)}
-                onChange={(e) => {
-                  handlePhoneChange(e);
-                }}
-              />
-            </div>
-            {phoneNumber && showList && (
-              <div className="absolute z-10 max-h-[200px] overflow-auto bg-white border rounded-md shadow-md">
-                {filteredCustomers.length > 0 && (
-                  <ul className="p-2">
-                    {filteredCustomers.map((customer, index) => (
-                      <li
-                        key={index}
-                        className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                        onClick={() => handleSelectCustomer(customer)}
-                      >
-                        {customer.name} ({customer.phone})
-                      </li>
-                    ))}
-                  </ul>
-                )}
+          </div>
+          <section className="rounded-md border bg-muted/10 p-3">
+            <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-sm font-bold">Bill To</p>
+                <p className="text-xs text-muted-foreground">Select customer or engineer before creating invoice.</p>
               </div>
-            )}
-          </div>
-          <div className="flex flex-row w-full gap-2 items-center">
-            <Label className="text-base font-semibold w-[100px]">
-              Customer:
-            </Label>
-            <Input
-              disabled={!walkIn}
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-row w-full gap-2 items-center">
-            <Label className="text-base font-semibold w-[100px]">
-              Company:
-            </Label>
-            <Input
-              disabled={!walkIn}
-              placeholder="Company Name"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-row w-full gap-2 items-center">
-            <Label className="text-base font-semibold w-[100px]">
-              Address:
-            </Label>
-            <Textarea
-              placeholder="Enter Address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-row w-full gap-2 items-center">
-            <Label className="text-base font-semibold w-[100px]">
-              Manager:
-            </Label>
-            <Input
-              placeholder="Manager"
-              value={manager}
-              onChange={(e) => setManager(e.target.value)}
-            />
-          </div>
-          <Card className="p-5 bg-gray-100 dark:bg-gray-900 rounded-md shadow-sm">
-            <Table>
-              <TableHeader>
+              <RadioGroup
+                defaultValue={selectedRadio}
+                onValueChange={setSelectedRadio}
+                className="flex rounded-md border bg-background p-1"
+              >
+                <div className="flex items-center gap-2 rounded-md px-2 py-1">
+                  <RadioGroupItem value="customer" id="r1" />
+                  <Label className="text-xs font-semibold" htmlFor="r1">Customer</Label>
+                </div>
+
+                <div className="flex items-center gap-2 rounded-md px-2 py-1">
+                  <RadioGroupItem value="engineer" id="r2" />
+                  <Label className="text-xs font-semibold" htmlFor="r2">Engineer</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <div className="space-y-3 rounded-md border bg-background p-3">
+                {selectedRadio === "engineer" && (
+                  <div>
+                    <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Engineer</Label>
+                    <UserSearch
+                      value={selectedUser.id}
+                      onReturn={(val) => {
+                        setSelectedUser((prevState) => ({ ...prevState, id: val }));
+                      }}
+                      onReturnName={(val) => {
+                        setSelectedUser((prevState) => ({ ...prevState, label: val }));
+                      }}
+                      placeholder="Select user"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Customer Search</Label>
+                  <CustomerSearchWithData
+                    value={selectedCustomer}
+                    onReturn={(val) => {
+                      setSelectedCustomer(val);
+                      if (val?.number && Array.isArray(val.number))
+                        setPhoneNumber(val.number.length > 0 ? val.number[0] : "");
+                      setName(val?.owner || "");
+                      setCompanyName(val?.name || "");
+                      setManager(val?.ownership_name || "");
+                      setAddress(val?.address || "");
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-3 rounded-md border bg-background p-3 sm:grid-cols-2">
+                <div>
+                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Number</Label>
+                  <Input className="h-8 rounded-md text-sm" disabled={true} placeholder="Phone Number" value={phoneNumber} readOnly />
+                </div>
+                <div>
+                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Customer</Label>
+                  <Input className="h-8 rounded-md text-sm" disabled={true} placeholder="Name" value={name} readOnly />
+                </div>
+                <div>
+                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Company</Label>
+                  <Input className="h-8 rounded-md text-sm" disabled={true} placeholder="Company Name" value={companyName} readOnly />
+                </div>
+                <div>
+                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Manager</Label>
+                  <Input className="h-8 rounded-md text-sm" placeholder="Manager" value={manager} onChange={(e) => setManager(e.target.value)} />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Address</Label>
+                  <Textarea
+                    className="min-h-16 rounded-md text-sm"
+                    placeholder="Enter Address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+          <Card className="overflow-hidden rounded-md border bg-card shadow-none">
+            <div className="flex flex-col gap-2 border-b bg-muted/20 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-bold">Invoice Items</p>
+                <p className="text-xs text-muted-foreground">{invoiceItems.length} item{invoiceItems.length === 1 ? "" : "s"} selected</p>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                className="h-8 rounded-md text-xs"
+                onClick={() => setDialogVisible(true)}
+              >
+                <FaPlus className="mr-1 h-3 w-3" /> Add Item
+              </Button>
+            </div>
+            <div className="overflow-x-auto p-3">
+              <Table>
+                <TableHeader>
                 <TableRow>
                   {["Description", "Quantity", "Unit Price", "Amount"].map(
                     (header, index) => (
-                      <TableHead key={index} className="text-left">
+                      <TableHead key={index} className="whitespace-nowrap text-left text-xs">
                         {header}
                       </TableHead>
                     ),
@@ -764,13 +687,7 @@ export default function POS() {
                 ))}
               </TableBody>
             </Table>
-            <div className="flex justify-center mt-4">
-              <div
-                onClick={() => setDialogVisible(true)}
-                className="p-4 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-700 cursor-pointer"
-              >
-                <FaPlus />
-              </div>
+            </div>
 
               <OrderStockDialog
                 dialogVisible={orderStockVisible}
@@ -786,11 +703,10 @@ export default function POS() {
                   await fetchData();
                 }}
               />
-            </div>
           </Card>
-          <div className="w-full flex justify-between gap-2">
-            <div className="w-72 items-center flex border rounded-md overflow-hidden">
-              <div className="flex-1 bg-gray-200 dark:bg-gray-900 p-3 font-bold text-center">
+          <section className="grid gap-3 lg:grid-cols-[1fr_1fr_auto]">
+            <div className="items-center flex overflow-hidden rounded-md border bg-background">
+              <div className="flex-1 bg-muted p-2 text-center text-xs font-bold text-muted-foreground">
                 Discount
               </div>
 
@@ -802,43 +718,50 @@ export default function POS() {
                 }}
                 type="number"
                 placeholder="Enter discount"
-                className="border-0 shadow-none focus:border-0 focus:ring-0 focus:outline-none focus-visible:ring-0"
+                className="h-9 border-0 text-sm shadow-none focus:border-0 focus:outline-none focus:ring-0 focus-visible:ring-0"
               />
             </div>
 
-            <div className="w-72 flex border rounded-md overflow-hidden">
-              <div className="flex-1 bg-gray-200 dark:bg-gray-900 p-3 font-bold text-center">
+            <div className="flex overflow-hidden rounded-md border bg-background">
+              <div className="flex-1 bg-muted p-2 text-center text-xs font-bold text-muted-foreground">
                 Total Amount
               </div>
-              <div className="flex-1 bg-white dark:bg-gray-800 p-3 font-bold text-center">
+              <div className="flex-1 bg-background p-2 text-center text-sm font-bold">
                 {totalAmount ? `${totalAmount}` : "0"}
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="flex flex-row gap-4 items-center mt-2">
+          <section className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_minmax(260px,1fr)]">
             <div
-              className="flex items-center justify-between bg-white shadow-md rounded-lg px-4 py-2 w-fit gap-2 cursor-pointer"
+              className="flex cursor-pointer items-center justify-between gap-3 rounded-md border bg-background px-3 py-2 transition hover:bg-muted/40"
               onClick={() => {
                 setPendingLoading(true);
                 handlePendingPayments();
               }}
             >
 
-              <Label className="text-lg font-semibold text-gray-800 cursor-pointer">
-                Pending Payments
-              </Label>
-              {pendingLoading ? <Spinner /> : <NotificationBadge count={reminder.length} />}
+              <div>
+                <Label className="cursor-pointer text-sm font-bold">Pending Payments</Label>
+                <p className="text-xs text-muted-foreground">Open unpaid invoice records</p>
+              </div>
+              <div className="shrink-0">{pendingLoading ? <Spinner /> : <NotificationBadge count={reminder.length} />}</div>
             </div>
-            <div className="flex flex-row gap-2 items-center mr-2">
-              <Label className="text-lg">Include warranty</Label>
+            <div className="flex flex-col gap-2 rounded-md border bg-background px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
               <Checkbox
                 checked={warranty}
                 onCheckedChange={(checked) => setWarranty(!!checked)}
               />
-              {warranty && (
                 <div>
+                  <Label className="text-sm font-bold">Include warranty</Label>
+                  <p className="text-xs text-muted-foreground">Attach warranty duration to invoice</p>
+                </div>
+              </div>
+              {warranty && (
+                <div className="sm:w-28">
                   <Input
+                    className="h-8 rounded-md text-sm"
                     type="number"
                     value={warrantyYear}
                     onChange={(e) => setWarrantyYear(Number(e.target.value))}
@@ -846,18 +769,22 @@ export default function POS() {
                 </div>
               )}
             </div>
-          </div>
+          </section>
 
-          <div className="flex flex-row flex-wrap gap-2 w-full">
+          <section className="rounded-md border bg-muted/10 p-3">
+            <div className="mb-3 flex flex-col gap-1">
+              <p className="text-sm font-bold">POS Actions</p>
+              <p className="text-xs text-muted-foreground">Print, search and manage stock movement from one place.</p>
+            </div>
+          <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
             {selectedSearchItem ? (
               <Button
                 onClick={() => {
                   setLoading(true);
-                  setCustomerLoading(true);
                   handleUpdateInvoice();
                 }}
                 disabled={invoiceItems.length === 0}
-                className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
+                className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
               >
                 Update Invoice
               </Button>
@@ -866,14 +793,13 @@ export default function POS() {
                 onClick={() => {
                   if (selectedUser?.id) {
                     setLoading(true);
-                    setCustomerLoading(true);
                     generatePDF();
                   } else {
                     setModal(true);
                   }
                 }}
-                disabled={invoiceItems.length === 0}
-                className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
+                disabled={invoiceItems.length === 0 || !selectedCustomer?.id}
+                className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
               >
                 Print Invoice
               </Button>
@@ -883,7 +809,7 @@ export default function POS() {
               onClick={() => {
                 setSearchInvoice(!searchInvocie);
               }}
-              className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
+              className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
             >
               Search Invoice
             </Button>
@@ -891,14 +817,14 @@ export default function POS() {
             <Button
               variant="outline"
               onClick={handleEngineerItems}
-              className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
+              className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
             >
               {engineerLoading && <Spinner />}  <div className="break-words"> Engineer issued items</div>
             </Button>
 
             <Button
               onClick={handleInward}
-              className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
+              className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
             >
               <div className="break-words">
                 Inward Gatepass
@@ -907,14 +833,14 @@ export default function POS() {
 
             <Button
               onClick={handleOutward}
-              className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center"
+              className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
             >
               <div className="break-words">Outward Gatepass</div>
             </Button>
 
             {selectedSearchItem && selectedSearchItem?.id && (
               <Link href={`/${base_route}/pos/${selectedSearchItem?.id}`} target="_blank">
-                <Button className="h-[100px] w-[100px] whitespace-normal text-wrap text-center flex items-center justify-center">
+                <Button className="h-16 w-full rounded-md whitespace-normal text-wrap text-center text-xs font-semibold">
                   <div>Payment Record</div>
                 </Button>
               </Link>
@@ -926,11 +852,12 @@ export default function POS() {
             />
 
           </div>
+          </section>
 
           {searchInvocie && (
-            <div className="flex w-full items-center flex-wrap gap-4">
+            <div className="flex w-full flex-wrap items-center gap-2 rounded-md border bg-background p-3">
               <Input
-                className="w-full sm:w-[250px]"
+                className="h-9 w-full rounded-md text-sm sm:flex-1"
                 placeholder="Search by: invoice no, phone no, customer name, company name, part name"
                 value={itemSearch}
                 onChange={(e) => setItemSearch(e.target.value)}
@@ -941,6 +868,8 @@ export default function POS() {
                 <>
                   <Button
                     disabled={!itemSearch}
+                    size="sm"
+                    className="h-9 rounded-md"
                     onClick={() => {
                       setSearchLoading(true);
                       setSearchItemsResult([]);
@@ -951,6 +880,8 @@ export default function POS() {
                     Search
                   </Button>
                   <Button
+                    size="sm"
+                    className="h-9 rounded-md"
                     onClick={() => {
                       setSearchLoading(true);
                       setSearchItemsResult([]);
@@ -964,7 +895,7 @@ export default function POS() {
               )}
 
               {searchItemsResult.length > 0 && (
-                <Button variant="outline" onClick={() => handleReset()}>
+                <Button size="sm" className="h-9 rounded-md" variant="outline" onClick={() => handleReset()}>
                   Clear
                 </Button>
               )}
@@ -989,7 +920,7 @@ export default function POS() {
         />
 
         <SearchResultModal
-        total={total}
+          total={total}
           visible={searchModal}
           onClose={setSearchModal}
           data={searchItemsResult}
@@ -1017,7 +948,6 @@ export default function POS() {
         onClick={() => {
           setModal(false);
           setLoading(true);
-          setCustomerLoading(true);
           generatePDF();
         }}
         customer_id={selectedCustomer ? selectedCustomer?.id : null}
@@ -1030,9 +960,7 @@ export default function POS() {
         customer_id={selectedCustomer?.id}
         onRefresh={async () => {
           setLoading(true);
-          setCustomerLoading(true);
           await fetchData();
-          await fetchDataCustomer();
           setSelectedCustomer(null);
           setChecked(false);
         }}
@@ -1044,7 +972,7 @@ export default function POS() {
         setEngineersModal={setEngineersModal}
         onRefresh={async () => {
           await handleEngineerItems();
-          fetchData();
+          await fetchData();
         }}
       />
 
@@ -1066,10 +994,9 @@ export default function POS() {
         handleAddToInvoice={handleAddToInvoice}
         visible={addProductVisible}
         onClose={(val) => setAddProductVisible(val)}
-        onRefresh={() => {
+        onRefresh={async () => {
           setAddProductVisible(false);
-          setStock([]);
-          fetchData();
+          await fetchData();
         }}
         handleOrderStock={handleOrderStock}
         designation={designation}
@@ -1089,6 +1016,6 @@ export default function POS() {
         visible={outwardModal}
         onClose={setOutwardModal}
       />
-    </PageContainer>
+   </>
   );
 }

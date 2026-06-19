@@ -4,13 +4,11 @@ import axios from "@/lib/axios";
 import { InvoiceItem, StockProps } from "@/lib/types";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { Minus, PencilIcon, Plus } from "lucide-react";
-import Image from "next/image";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import Spinner from "../ui/spinner";
 import "./Button.css";
-import AddNewProduct from "./add-new-product";
 import Dropzone from "./dropzone";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 import "pdfjs-dist/build/pdf.worker.mjs";
@@ -208,25 +206,7 @@ const RenderStockItems = ({
     }
   }
 
-  return item.name === "Other" ? (
-    <div
-      key={index}
-      className={`flex min-h-[180px] cursor-pointer items-center justify-center rounded-md border border-dashed p-4 text-center transition hover:bg-muted/40 ${showOther
-        ? "border-primary bg-primary/10 text-primary"
-        : "bg-card"
-        }`}
-      onClick={() => {
-        setShowOther(!showOther);
-        setOther("");
-        setQty("");
-        setPrice("");
-      }}
-    >
-      <p className="text-sm font-bold">Other Item</p>
-    </div>
-  ) : item.name === "Plus" ? (
-    <AddNewProduct visible={visible} onClose={onClose} onRefresh={onRefresh} />
-  ) : (
+  return (
     <div
       className={`flex min-h-[180px] flex-col rounded-md border bg-card p-2.5 ring-1 ring-border/30 transition hover:border-primary/40 ${(invoiceItems?.find((eachItem) => eachItem.id === item.id)?.qty ?? 0) > 0
         ? "border-primary/40 bg-primary/10"
@@ -237,7 +217,7 @@ const RenderStockItems = ({
         <div className="flex flex-1 flex-col gap-2">
           <div className="relative flex h-24 items-center justify-center overflow-hidden rounded-md bg-muted/50">
             {itemImg ? (
-              <MyImgZooming img={itemImg} fill={true}/>
+              <MyImgZooming img={itemImg} fill={true} />
             ) : (
               <span className="text-xs font-medium text-muted-foreground">No image</span>
             )}
@@ -262,8 +242,9 @@ const RenderStockItems = ({
           </div>
         </div>
       ) : (
-        <div className="flex flex-1 flex-col gap-2">
+        <div className="flex min-w-0 flex-1 flex-col gap-2 overflow-hidden">
           <Dropzone
+
             value={localImage ? URL.createObjectURL(localImage) : null}
             onDrop={(file) => {
               setLocalImage(file);
@@ -274,88 +255,88 @@ const RenderStockItems = ({
             drag="Drop the files here..."
           />
 
-          <input
-            placeholder={item?.name || "Product name"}
-            className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
-            value={localName}
-            onChange={(e) => setLocalName(e.target.value)}
-          />
+          <div className="grid min-w-0 gap-2">
+            <label className="min-w-0">
+              <span className="mb-1 block text-[11px] font-semibold text-muted-foreground">Product name</span>
+              <input
+                placeholder={item?.name || "Product name"}
+                className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
+                value={localName}
+                onChange={(e) => setLocalName(e.target.value)}
+              />
+            </label>
 
-          <input
-            placeholder={item?.chinese_name || "Product chinese name"}
-            className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
-            value={localChineseName}
-            onChange={(e) => setLocalChineseName(e.target.value)}
-          />
+            <label className="min-w-0">
+              <span className="mb-1 block text-[11px] font-semibold text-muted-foreground">Chinese name</span>
+              <input
+                placeholder={item?.chinese_name || "Product chinese name"}
+                className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
+                value={localChineseName}
+                onChange={(e) => setLocalChineseName(e.target.value)}
+              />
+            </label>
 
-          <div className="grid grid-cols-3 items-center gap-2">
-            <div className="text-xs font-semibold text-muted-foreground">Price</div>
-           <div className="col-span-2">
-            <input
-              placeholder={item?.price || "Enter price"}
-              value={localPrice}
-              className="h-8 rounded-md border bg-background pl-2 text-xs outline-none focus:border-primary"
-              onChange={(e) => {
-                setLocalPrice(e.target.value);
-              }}
-            />
-            </div>
-          </div>
-         <div className="grid grid-cols-3 items-center gap-2">
-            <div className="text-xs font-semibold text-muted-foreground">Threshold</div>
-              <div className="col-span-2">
-            <input
-              placeholder={item?.threshold?.toString() || "Enter threshold"}
-              className="h-8 rounded-md border bg-background pl-2 text-xs outline-none focus:border-primary"
-              value={threshold}
-              onChange={(e) => {
-                setThreshold(e.target.value);
-              }}
-            />
-            </div>
-          </div>
-         <div className="grid grid-cols-3 items-center gap-2">
-            <div className="text-xs font-semibold text-muted-foreground">New order</div>
-              <div className="col-span-2">
-            <input
-              placeholder={item?.threshold?.toString() || "Enter new order"}
-              className="h-8 rounded-md border bg-background pl-2 text-xs outline-none focus:border-primary"
-              value={newOrder}
-              onChange={(e) => {
-                setNewOrder(e.target.value);
-              }}
-            />
-            </div>
+            <label className="min-w-0">
+              <span className="mb-1 block text-[11px] font-semibold text-muted-foreground">Price</span>
+              <input
+                placeholder={item?.price || "Enter price"}
+                value={localPrice}
+                className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
+                onChange={(e) => {
+                  setLocalPrice(e.target.value);
+                }}
+              />
+            </label>
+            <label className="min-w-0">
+              <span className="mb-1 block text-[11px] font-semibold text-muted-foreground">Threshold</span>
+              <input
+                placeholder={item?.threshold?.toString() || "Enter threshold"}
+                className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
+                value={threshold}
+                onChange={(e) => {
+                  setThreshold(e.target.value);
+                }}
+              />
+            </label>
+            <label className="min-w-0">
+              <span className="mb-1 block text-[11px] font-semibold text-muted-foreground">New order</span>
+              <input
+                placeholder={item?.threshold?.toString() || "Enter new order"}
+                className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
+                value={newOrder}
+                onChange={(e) => {
+                  setNewOrder(e.target.value);
+                }}
+              />
+            </label>
           </div>
 
           {designation === "Owner" && (
-            <div className="grid grid-cols-3 items-center gap-2">
-              <div className="text-xs font-semibold text-muted-foreground">Buying</div>
-                <div className="col-span-2">
+            <label className="min-w-0">
+              <span className="mb-1 block text-[11px] font-semibold text-muted-foreground">Buying</span>
               <input
                 placeholder={item?.buying || "Enter buying price"}
-                className="h-8 rounded-md border bg-background pl-2 text-xs outline-none focus:border-primary"
+                className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
                 value={buying}
                 onChange={(e) => {
                   setBuying(e.target.value);
                 }}
               />
-              </div>
-            </div>
+            </label>
           )}
 
           {designation === "Owner" && (
-            <div className="grid grid-cols-[84px_1fr] items-center gap-2">
-              <div className="text-xs font-semibold text-muted-foreground">Remarks</div>
+            <label className="min-w-0">
+              <span className="mb-1 block text-[11px] font-semibold text-muted-foreground">Remarks</span>
               <input
                 placeholder={item?.remarks || "Enter Remarks"}
-                className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
+                className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
                 value={remarks}
                 onChange={(e) => {
                   setRemarks(e.target.value);
                 }}
               />
-            </div>
+            </label>
           )}
 
           <Button size="sm" className="h-8 rounded-md text-xs" onClick={() => handleSave(item.id, item.img)}>

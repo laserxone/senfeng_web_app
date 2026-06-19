@@ -67,6 +67,7 @@ const AddPOSPayment = ({
   part_id: number | null | undefined,
   customer_id?: number | undefined | null
 }) => {
+  
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const { state: OfficeState } = useContext(OfficeContext)!

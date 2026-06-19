@@ -2,6 +2,8 @@ import { storage } from "@/config/firebase";
 import axios from "@/lib/axios";
 import { ref, uploadBytesResumable } from "firebase/storage";
 import {
+  ImagePlus,
+  PackagePlus,
   Plus
 } from "lucide-react";
 import { useState } from "react";
@@ -112,9 +114,9 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
   return (
     <Dialog open={visible} onOpenChange={onClose}>
       <DialogTrigger asChild>
-        <div
-          className="w-[300px] border border-gray-300 rounded-lg shadow-md p-10 flex items-center justify-center"
-          style={{ backgroundColor: "white", cursor: "pointer" }}
+        <button
+          type="button"
+          className="group flex min-h-14 w-full cursor-pointer items-center gap-3 rounded-md border border-dashed bg-card px-3 py-3 text-left transition hover:border-primary/60 hover:bg-primary/5"
           onClick={() => {
             setName("");
             setPrice("");
@@ -122,65 +124,114 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
             setImage(null);
           }}
         >
-          <Plus size={"80px"} />
-        </div>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
+            <PackagePlus className="h-4 w-4" />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-sm font-bold leading-tight">Add New Product</span>
+            <span className="block text-xs text-muted-foreground">Create stock item</span>
+          </span>
+          <Plus className="ml-auto h-4 w-4 text-muted-foreground transition group-hover:text-primary" />
+        </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add new stock item</DialogTitle>
+      <DialogContent className="max-h-[92vh] w-[96vw] overflow-hidden rounded-md p-0 sm:max-w-2xl">
+        <DialogHeader className="border-b bg-muted/30 px-4 py-3">
+          <DialogTitle className="text-base font-bold">Add new stock item</DialogTitle>
+          <p className="text-xs text-muted-foreground">Add product details and upload a product image.</p>
         </DialogHeader>
-        <div>
-          <ScrollArea className="h-[80vh] px-2">
-            <div className="px-2">
-              <div className="text-md">Name</div>
+        <div className="p-3">
+          <ScrollArea className="max-h-[72vh] pr-3">
+            <div className="space-y-3">
+              <div className="rounded-md border bg-card p-3">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+                    <PackagePlus className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-bold">Product information</p>
+                    <p className="text-xs text-muted-foreground">Name, quantity, pricing and reorder levels</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-muted-foreground">Name</label>
               <Input
+                      className="h-8 rounded-md text-sm"
                 placeholder="Enter product name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
-              <div className="text-md">Chinese name</div>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-muted-foreground">Chinese name</label>
               <Input
+                      className="h-8 rounded-md text-sm"
                 placeholder="Enter product chinese name"
                 value={chineseName}
                 onChange={(e) => setChineseName(e.target.value)}
               />
-              <div className="text-md mt-2">Quantity</div>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-muted-foreground">Quantity</label>
               <Input
+                      className="h-8 rounded-md text-sm"
                 placeholder="Enter quantity"
                 value={qty}
                 onChange={(e) => {
                   setQty(e.target.value);
                 }}
               />
+                  </div>
 
-              <div className="text-md mt-2">Price</div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-muted-foreground">Price</label>
               <Input
+                      className="h-8 rounded-md text-sm"
                 placeholder="Enter price"
                 value={price}
                 onChange={(e) => {
                   setPrice(e.target.value);
                 }}
               />
+                  </div>
 
-              <div className="text-md mt-2">Threshold</div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-muted-foreground">Threshold</label>
               <Input
+                      className="h-8 rounded-md text-sm"
                 placeholder="Enter threshold"
                 value={threshold}
                 onChange={(e) => {
                   setThreshold(e.target.value);
                 }}
               />
+                  </div>
 
-              <div className="text-md mt-2">New Order</div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-muted-foreground">New Order</label>
               <Input
+                      className="h-8 rounded-md text-sm"
                 placeholder="Enter new order"
                 value={newOrder}
                 onChange={(e) => {
                   setNewOrder(e.target.value);
                 }}
               />
+                  </div>
+                </div>
+              </div>
 
-              <div className="text-md mt-2">Image URL</div>
+              <div className="rounded-md border bg-card p-3">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                    <ImagePlus className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-bold">Product image</p>
+                    <p className="text-xs text-muted-foreground">Upload PNG or JPG product photo</p>
+                  </div>
+                </div>
 
               <Dropzone
                 value={image ? URL.createObjectURL(image) : null}
@@ -192,10 +243,11 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
                 description="PNG or JPG"
                 drag="Drop the files here..."
               />
+              </div>
 
               <Button
                 disabled={!image || !name || !price || !qty}
-                className="w-full mt-2"
+                className="h-9 w-full rounded-md text-sm"
                 onClick={handleSaveProduct}
               >
                 {loading && <Spinner />}

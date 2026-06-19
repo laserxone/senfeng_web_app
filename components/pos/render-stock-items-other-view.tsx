@@ -181,25 +181,7 @@ const RenderStockItemsOtherView = ({
     }
   }
 
-  return item.name === "Other" ? (
-    <div
-      key={index}
-      className={`flex min-h-14 cursor-pointer items-center justify-center rounded-md border border-dashed px-4 py-3 text-center transition hover:bg-muted/40 ${showOther
-        ? "border-primary bg-primary/10 text-primary"
-        : "bg-card"
-        }`}
-      onClick={() => {
-        setShowOther(!showOther);
-        setOther("");
-        setQty("");
-        setPrice("");
-      }}
-    >
-      <p className="text-sm font-bold">Other Item</p>
-    </div>
-  ) : item.name === "Plus" ? (
-    <AddNewProduct visible={visible} onClose={onClose} onRefresh={onRefresh} />
-  ) : (
+  return (
     <div
       className={`flex w-full flex-col rounded-md border bg-card p-2.5 ring-1 ring-border/30 transition hover:border-primary/40 ${(invoiceItems.find((eachItem) => eachItem.id === item.id)?.qty ?? 0) > 0
         ? "border-primary/40 bg-primary/10"
@@ -236,66 +218,87 @@ const RenderStockItemsOtherView = ({
             drag="Drop the files here..."
           />
 
-          <div className="grid gap-2 sm:grid-cols-2">
-            <input
-              placeholder={item?.name || "Product name"}
-              className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
-              value={localName}
-              onChange={(e) => setLocalName(e.target.value)}
-            />
-
-            <input
-              placeholder={item?.chinese_name || "Product chinese name"}
-              className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
-              value={localChineseName}
-              onChange={(e) => setLocalChineseName(e.target.value)}
-            />
-
-            <input
-              placeholder={item?.price || "Enter price"}
-              value={localPrice}
-              className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
-              onChange={(e) => {
-                setLocalPrice(e.target.value);
-              }}
-            />
-            <input
-              placeholder={item?.threshold?.toString() || "Enter threshold"}
-              className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
-              value={threshold}
-              onChange={(e) => {
-                setThreshold(e.target.value);
-              }}
-            />
-            <input
-              placeholder={item?.threshold?.toString() || "Enter new order"}
-              className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
-              value={newOrder}
-              onChange={(e) => {
-                setNewOrder(e.target.value);
-              }}
-            />
-
-            {designation === "Owner" && (
+          <div className="grid min-w-0 gap-2 sm:grid-cols-2">
+            <label className="min-w-0">
+              <span className="mb-1 block text-[11px] font-semibold text-muted-foreground">Product name</span>
               <input
-                placeholder={item?.buying || "Enter buying price"}
-                className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
-                value={buying}
+                placeholder={item?.name || "Product name"}
+                className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
+                value={localName}
+                onChange={(e) => setLocalName(e.target.value)}
+              />
+            </label>
+
+            <label className="min-w-0">
+              <span className="mb-1 block text-[11px] font-semibold text-muted-foreground">Chinese name</span>
+              <input
+                placeholder={item?.chinese_name || "Product chinese name"}
+                className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
+                value={localChineseName}
+                onChange={(e) => setLocalChineseName(e.target.value)}
+              />
+            </label>
+
+            <label className="min-w-0">
+              <span className="mb-1 block text-[11px] font-semibold text-muted-foreground">Price</span>
+              <input
+                placeholder={item?.price || "Enter price"}
+                value={localPrice}
+                className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
                 onChange={(e) => {
-                  setBuying(e.target.value);
+                  setLocalPrice(e.target.value);
                 }}
               />
+            </label>
+            <label className="min-w-0">
+              <span className="mb-1 block text-[11px] font-semibold text-muted-foreground">Threshold</span>
+              <input
+                placeholder={item?.threshold?.toString() || "Enter threshold"}
+                className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
+                value={threshold}
+                onChange={(e) => {
+                  setThreshold(e.target.value);
+                }}
+              />
+            </label>
+            <label className="min-w-0">
+              <span className="mb-1 block text-[11px] font-semibold text-muted-foreground">New order</span>
+              <input
+                placeholder={item?.threshold?.toString() || "Enter new order"}
+                className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
+                value={newOrder}
+                onChange={(e) => {
+                  setNewOrder(e.target.value);
+                }}
+              />
+            </label>
+
+            {designation === "Owner" && (
+              <label className="min-w-0">
+                <span className="mb-1 block text-[11px] font-semibold text-muted-foreground">Buying</span>
+                <input
+                  placeholder={item?.buying || "Enter buying price"}
+                  className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
+                  value={buying}
+                  onChange={(e) => {
+                    setBuying(e.target.value);
+                  }}
+                />
+              </label>
             )}
 
             {designation === "Owner" && (
-              <input
-                placeholder={item?.remarks || "Enter remarks"}
-                className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary sm:col-span-2"
-                value={remarks}
-                onChange={(e) => {
-                  setRemarks(e.target.value);
-                }}
-              />
+              <label className="min-w-0 sm:col-span-2">
+                <span className="mb-1 block text-[11px] font-semibold text-muted-foreground">Remarks</span>
+                <input
+                  placeholder={item?.remarks || "Enter remarks"}
+                  className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
+                  value={remarks}
+                  onChange={(e) => {
+                    setRemarks(e.target.value);
+                  }}
+                />
+              </label>
             )}
 
             <Button size="sm" className="h-8 rounded-md text-xs sm:col-span-2" onClick={() => handleSave(item.id, item.img)}>

@@ -11,6 +11,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{}> })
         u.name,
         ''
     ) AS manager,
+      COALESCE(
+        NULLIF(TRIM(c.location), ''),
+        si.address,
+        ''
+    ) AS customer_location,
     COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
   FROM savedinvoices si
   LEFT JOIN customer_parts cp ON cp.part_id = si.id
@@ -18,7 +23,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{}> })
     ON c.id = si.customer_id
 LEFT JOIN users u
     ON u.id = c.ownership
-  GROUP BY si.id, u.name
+  GROUP BY si.id, u.name, c.location
 ORDER BY created_at DESC
 `;
     const result = await pool.query(query);
@@ -42,6 +47,7 @@ ORDER BY created_at DESC
       return {
         ...invoice,
         items_total: itemsTotal,
+        total : finalAmount,
         discount,
         final_amount: finalAmount,
         status,

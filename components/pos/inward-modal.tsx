@@ -12,6 +12,7 @@ import axios from "@/lib/axios";
 import {
     pdf
 } from "@react-pdf/renderer";
+import { FileText, PackageCheck, Plus, Trash2, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Label } from "../ui/label";
 import Spinner from "../ui/spinner";
@@ -119,51 +120,107 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }: {
 
     return (
         <Dialog open={visible} onOpenChange={onClose}>
-            <DialogContent className="p-4 w-full sm:max-w-4xl">
-                <DialogHeader>
-                    <DialogTitle>Inward Gatepass</DialogTitle>
+            <DialogContent className="w-full sm:max-w-2xl">
+                <DialogHeader className="border-b bg-muted/30 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                            <Truck className="h-5 w-5" />
+                        </span>
+                        <div>
+                            <DialogTitle className="text-base font-bold">Inward Gatepass</DialogTitle>
+                            <p className="text-xs text-muted-foreground">Record received items and generate inward gate pass PDF.</p>
+                        </div>
+                    </div>
                 </DialogHeader>
-                <ScrollArea className="h-[80vh] w-full pr-2">
-                    <form onSubmit={handleSubmit} className="space-y-4 ">
-                        <div className="grid grid-cols-2 gap-4 px-2">
+                <ScrollArea className="h-[calc(100dvh-200px)] w-full">
+                    <form onSubmit={handleSubmit} className="space-y-3 p-3">
+                        <section className="rounded-md border bg-card p-3">
+                            <div className="mb-3 flex items-center gap-2">
+                                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                                    <FileText className="h-4 w-4" />
+                                </span>
+                                <div>
+                                    <p className="text-sm font-bold">Gatepass details</p>
+                                    <p className="text-xs text-muted-foreground">Sender, vehicle and receiving information</p>
+                                </div>
+                            </div>
+
+                            <div className="grid gap-3 md:grid-cols-2">
                             <div>
-                                <label className="text-sm font-medium">From</label>
-                                <Input name="from" placeholder="Enter From" required />
+                                <label className="mb-1 block text-xs font-semibold text-muted-foreground">From</label>
+                                <Input className="h-8 rounded-md text-sm" name="from" placeholder="Enter From" required />
                             </div>
                             <div>
-                                <label className="text-sm font-medium">Vehicle No</label>
-                                <Input name="vehicle_no" placeholder="Enter Vehicle No" required />
+                                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Vehicle No</label>
+                                <Input className="h-8 rounded-md text-sm" name="vehicle_no" placeholder="Enter Vehicle No" required />
                             </div>
                             <div>
-                                <label className="text-sm font-medium">Driver Name</label>
-                                <Input name="driver_name" placeholder="Enter Driver Name" required />
+                                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Driver Name</label>
+                                <Input className="h-8 rounded-md text-sm" name="driver_name" placeholder="Enter Driver Name" required />
                             </div>
                             <div>
-                                <label className="text-sm font-medium">Manager</label>
-                                <Input name="manager" placeholder="Enter Manager" required />
+                                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Manager</label>
+                                <Input className="h-8 rounded-md text-sm" name="manager" placeholder="Enter Manager" required />
                             </div>
-                            <div className="col-span-2">
-                                <label className="text-sm font-medium">Received By</label>
-                                <Input name="received_by" placeholder="Enter Receiver Name" required />
+                            <div className="md:col-span-2">
+                                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Received By</label>
+                                <Input className="h-8 rounded-md text-sm" name="received_by" placeholder="Enter Receiver Name" required />
                             </div>
                         </div>
+                        </section>
 
-                        <div className="space-y-6">
+                        <section className="rounded-md border bg-card p-3">
+                            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex items-center gap-2">
+                                    <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+                                        <PackageCheck className="h-4 w-4" />
+                                    </span>
+                                    <div>
+                                        <p className="text-sm font-bold">Received items</p>
+                                        <p className="text-xs text-muted-foreground">{items.length} row{items.length === 1 ? "" : "s"} added</p>
+                                    </div>
+                                </div>
+                                <Button type="button" size="sm" variant="outline" className="h-8 rounded-md text-xs" onClick={addItem}>
+                                    <Plus className="mr-1 h-3.5 w-3.5" /> Add Row
+                                </Button>
+                            </div>
+
+                            <div className="space-y-2">
                             {items.map((item, index) => (
-                                <div key={index} className="border rounded-md p-4 space-y-4">
-                                    <div className="flex justify-between items-center">
-                                        <Label>Item #{index + 1}</Label>
+                                <div key={index} className="rounded-md border bg-muted/10 p-3">
+                                    <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-background text-xs font-bold ring-1 ring-border">
+                                                {index + 1}
+                                            </span>
+                                            <div>
+                                                <Label className="text-sm font-bold">Item #{index + 1}</Label>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {item.isExisting ? "Select from stock inventory" : "Enter a new item manually"}
+                                                </p>
+                                            </div>
+                                        </div>
                                         <Button
+                                            type="button"
                                             size="sm"
-                                            variant="destructive"
+                                            variant="outline"
+                                            className="h-8 rounded-md text-xs text-destructive hover:text-destructive"
                                             disabled={items.length === 1}
                                             onClick={() => removeItem(index)}
                                         >
-                                            Remove
+                                            <Trash2 className="mr-1 h-3.5 w-3.5" /> Remove
                                         </Button>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
+                                    <div className="mb-3 flex items-center justify-between rounded-md border bg-background px-3 py-2">
+                                        <div>
+                                            <Label className="text-xs font-bold">
+                                                {item.isExisting ? "Existing Item" : "New Item"}
+                                            </Label>
+                                            <p className="text-[11px] text-muted-foreground">
+                                                Toggle source for this item row
+                                            </p>
+                                        </div>
                                         <Switch
                                             checked={item.isExisting}
                                             onCheckedChange={(val) => {
@@ -171,16 +228,13 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }: {
                                             }
                                             }
                                         />
-                                        <Label>
-                                            {item.isExisting ? "Existing Item" : "New Item"}
-                                        </Label>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
 
                                         {item.isExisting ?
-                                            <div>
-                                                <Label>Inventory</Label>
+                                            <div className="xl:col-span-2">
+                                                <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Inventory</Label>
                                                 <StockSearch
                                                     value={item.inventory_id}
                                                     passingData={stock}
@@ -197,9 +251,10 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }: {
                                                 />
                                             </div>
                                             :
-                                            <div>
-                                                <Label>Name</Label>
+                                            <div className="xl:col-span-2">
+                                                <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Name</Label>
                                                 <Input
+                                                    className="h-8 rounded-md text-sm"
                                                     value={item.name}
                                                     onChange={(e) =>
                                                         handleItemChange(index, "name", e.target.value)
@@ -208,9 +263,10 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }: {
                                             </div>
                                         }
 
-                                        <div>
-                                            <Label>Quantity</Label>
+                                    <div>
+                                            <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Quantity</Label>
                                             <Input
+                                                className="h-8 rounded-md text-sm"
                                                 type="number"
                                                 value={item.qty ? item.qty : ""}
                                                 onChange={(e) => {
@@ -224,17 +280,19 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }: {
                                             />
                                         </div>
                                         <div>
-                                            <Label>Unit</Label>
+                                            <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Unit</Label>
                                             <Input
+                                                className="h-8 rounded-md text-sm"
                                                 value={item.unit}
                                                 onChange={(e) =>
                                                     handleItemChange(index, "unit", e.target.value)
                                                 }
                                             />
                                         </div>
-                                        <div>
-                                            <Label>Remarks</Label>
+                                        <div className="md:col-span-2 xl:col-span-4">
+                                            <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Remarks</Label>
                                             <Input
+                                                className="h-8 rounded-md text-sm"
                                                 value={item.remarks}
                                                 onChange={(e) =>
                                                     handleItemChange(index, "remarks", e.target.value)
@@ -246,14 +304,13 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }: {
                                 </div>
                             ))}
                         </div>
+                        </section>
 
-                        <Button type="button" variant="outline" onClick={addItem}>
-                            + Add Row
-                        </Button>
-
-                        <Button disabled={loading} type="submit" className="w-full">
-                            {loading && <Spinner />} Submit
-                        </Button>
+                       
+                            <Button disabled={loading} type="submit" className="h-9 w-full rounded-md text-sm">
+                                {loading && <Spinner />} Submit Inward Gatepass
+                            </Button>
+                       
                     </form>
                 </ScrollArea>
             </DialogContent>
