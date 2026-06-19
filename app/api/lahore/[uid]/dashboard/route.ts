@@ -2132,6 +2132,7 @@ async function getStoreData(uid: string) {
             return {
                 ...invoice,
                 items_total: itemsTotal,
+                total : finalAmount,
                 discount,
                 total_paid: totalPaid,
                 final_amount: pendingAmount,

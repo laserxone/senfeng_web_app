@@ -1,5 +1,7 @@
 import { storage } from "@/config/firebase";
+import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { InvoiceItem, StockProps } from "@/lib/types";
 import { ref, uploadBytesResumable } from "firebase/storage";
 import {
   Minus,
@@ -7,18 +9,15 @@ import {
   Plus
 } from "lucide-react";
 import { Dispatch, SetStateAction, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "../ui/button";
+import Spinner from "../ui/spinner";
 import "./Button.css";
+import AddNewProduct from "./add-new-product";
 import Dropzone from "./dropzone";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
-
-import useUserDetail from "@/hooks/use-user-detail";
-import { InvoiceItem, StockProps } from "@/lib/types";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
-import { toast } from "sonner";
-import Spinner from "../ui/spinner";
-import AddNewProduct from "./add-new-product";
 
 type RenderStockItemsProps = {
   designation: string,
@@ -185,11 +184,10 @@ const RenderStockItemsOtherView = ({
   return item.name === "Other" ? (
     <div
       key={index}
-      className="w-[300px] border border-gray-300 rounded-lg shadow-md p-10 flex items-center justify-center"
-      style={{
-        backgroundColor: showOther ? "rgba(0, 114, 188, 0.1)" : "white",
-        cursor: "pointer",
-      }}
+      className={`flex min-h-14 cursor-pointer items-center justify-center rounded-md border border-dashed px-4 py-3 text-center transition hover:bg-muted/40 ${showOther
+        ? "border-primary bg-primary/10 text-primary"
+        : "bg-card"
+        }`}
       onClick={() => {
         setShowOther(!showOther);
         setOther("");
@@ -197,24 +195,36 @@ const RenderStockItemsOtherView = ({
         setPrice("");
       }}
     >
-      <p className="font-bold text-xl">Other</p>
+      <p className="text-sm font-bold">Other Item</p>
     </div>
   ) : item.name === "Plus" ? (
     <AddNewProduct visible={visible} onClose={onClose} onRefresh={onRefresh} />
   ) : (
     <div
-      className={`w-full border border-gray-300 rounded-lg shadow-md p-5 flex flex-col ${(invoiceItems.find((eachItem) => eachItem.id === item.id)?.qty ?? 0) > 0 &&
-        "bg-blue-100"
+      className={`flex w-full flex-col rounded-md border bg-card p-2.5 ring-1 ring-border/30 transition hover:border-primary/40 ${(invoiceItems.find((eachItem) => eachItem.id === item.id)?.qty ?? 0) > 0
+        ? "border-primary/40 bg-primary/10"
+        : "border-border"
         }`}
     >
       {!editable ? (
-        <div className="flex flex-1 flex-row justify-between">
-          <p className="w-1/3">{item.name}</p>
-          <p className="w-1/3">In stock: {item.qty}</p>
-          <p className="w-1/3">Price: {item.price}</p>
+        <div className="grid gap-2 md:grid-cols-[minmax(180px,1fr)_120px_120px_auto] md:items-center">
+          <div className="min-w-0">
+            <p className="text-sm font-bold leading-tight">{item.name}</p>
+            {item.chinese_name && (
+              <p className="mt-0.5 text-xs text-muted-foreground">{item.chinese_name}</p>
+            )}
+          </div>
+          <div className="rounded-md bg-muted/50 px-2 py-1 text-xs">
+            <p className="text-[10px] uppercase text-muted-foreground">Stock</p>
+            <p className="font-bold">{item.qty ?? 0}</p>
+          </div>
+          <div className="rounded-md bg-muted/50 px-2 py-1 text-xs">
+            <p className="text-[10px] uppercase text-muted-foreground">Price</p>
+            <p className="font-bold">{item.price || "-"}</p>
+          </div>
         </div>
       ) : (
-        <div className="space-y-2 flex flex-1 flex-col">
+        <div className="grid gap-2 lg:grid-cols-[180px_1fr]">
           <Dropzone
             value={localImage ? URL.createObjectURL(localImage) : null}
             onDrop={(file) => {
@@ -226,144 +236,80 @@ const RenderStockItemsOtherView = ({
             drag="Drop the files here..."
           />
 
-          <input
-            placeholder={item?.name || "Product name"}
-            style={{ borderWidth: 1, borderColor: "#cccccc", fontSize: "14px" }}
-            className="px-2"
-            value={localName}
-            onChange={(e) => setLocalName(e.target.value)}
-          />
-
-          <input
-            placeholder={item?.chinese_name || "Product chinese name"}
-            style={{ borderWidth: 1, borderColor: "#cccccc", fontSize: "14px" }}
-            className="px-2"
-            value={localChineseName}
-            onChange={(e) => setLocalChineseName(e.target.value)}
-          />
-
-          {/* <div className="flex justify-between">
-            <div className="text-[14px]">Quantity</div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <input
+              placeholder={item?.name || "Product name"}
+              className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
+              value={localName}
+              onChange={(e) => setLocalName(e.target.value)}
+            />
 
             <input
-              placeholder={item?.qty || "Enter qty"}
-              style={{
-                borderWidth: 1,
-                borderColor: "#cccccc",
-                fontSize: "14px",
-                width: "50%",
-              }}
-              value={localQty}
-              className="px-2 "
-              onChange={(e) => {
-                setLocalQty(e.target.value);
-              }}
+              placeholder={item?.chinese_name || "Product chinese name"}
+              className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
+              value={localChineseName}
+              onChange={(e) => setLocalChineseName(e.target.value)}
             />
-          </div> */}
 
-          <div className="flex justify-between">
-            <div className="text-[14px]">Price</div>
             <input
               placeholder={item?.price || "Enter price"}
-              style={{
-                borderWidth: 1,
-                borderColor: "#cccccc",
-                fontSize: "14px",
-                width: "50%",
-              }}
               value={localPrice}
-              className="px-2 "
+              className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
               onChange={(e) => {
                 setLocalPrice(e.target.value);
               }}
             />
-          </div>
-          <div className="flex justify-between">
-            <div className="text-[14px]">Threshold</div>
             <input
               placeholder={item?.threshold?.toString() || "Enter threshold"}
-              style={{
-                borderWidth: 1,
-                borderColor: "#cccccc",
-                fontSize: "14px",
-                width: "50%",
-              }}
-              className="px-2 "
+              className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
               value={threshold}
               onChange={(e) => {
                 setThreshold(e.target.value);
               }}
             />
-          </div>
-          <div className="flex justify-between">
-            <div className="text-[14px]">New order</div>
             <input
               placeholder={item?.threshold?.toString() || "Enter new order"}
-              style={{
-                borderWidth: 1,
-                borderColor: "#cccccc",
-                fontSize: "14px",
-                width: "50%",
-              }}
-              className="px-2 "
+              className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
               value={newOrder}
               onChange={(e) => {
                 setNewOrder(e.target.value);
               }}
             />
-          </div>
 
-          {designation === "Owner" && (
-            <div className="flex justify-between">
-              <div className="text-[14px]">Buying ¥</div>
+            {designation === "Owner" && (
               <input
                 placeholder={item?.buying || "Enter buying price"}
-                style={{
-                  borderWidth: 1,
-                  borderColor: "#cccccc",
-                  fontSize: "14px",
-                  width: "50%",
-                }}
-                className="px-2 "
+                className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
                 value={buying}
                 onChange={(e) => {
                   setBuying(e.target.value);
                 }}
               />
-            </div>
-          )}
+            )}
 
-          {designation === "Owner" && (
-            <div className="flex justify-between">
-              <div className="text-[14px]">Remarks</div>
+            {designation === "Owner" && (
               <input
                 placeholder={item?.remarks || "Enter remarks"}
-                style={{
-                  borderWidth: 1,
-                  borderColor: "#cccccc",
-                  fontSize: "14px",
-                  width: "50%",
-                }}
-                className="px-2 "
+                className="h-8 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary sm:col-span-2"
                 value={remarks}
                 onChange={(e) => {
                   setRemarks(e.target.value);
                 }}
               />
-            </div>
-          )}
+            )}
 
-          <Button onClick={() => handleSave(item.id, item.img)}>
-            {loading && <Spinner />}
-            Save
-          </Button>
+            <Button size="sm" className="h-8 rounded-md text-xs sm:col-span-2" onClick={() => handleSave(item.id, item.img)}>
+              {loading && <Spinner />}
+              Save
+            </Button>
+          </div>
         </div>
       )}
 
-      <div className="flex w-full justify-between items-center">
-        <div className="flex gap-2 mt-2">
+      <div className="mt-2 flex w-full items-center justify-between border-t pt-2">
+        <div className="flex items-center gap-1 rounded-md border bg-background p-1">
           <div
-            className="hover:cursor-pointer"
+            className="flex h-7 w-7 items-center justify-center rounded-md hover:cursor-pointer hover:bg-red-50 dark:hover:bg-red-950/30"
             style={{ opacity: editable ? 0.5 : 1 }}
             onClick={() => {
               if (!editable) {
@@ -371,12 +317,12 @@ const RenderStockItemsOtherView = ({
               }
             }}
           >
-            <Minus color="red" />
+            <Minus className="h-3.5 w-3.5 text-red-600" />
           </div>
 
-          <p>{invoiceItems.find((eachItem) => eachItem.id === item.id)?.qty}</p>
+          <p className="min-w-7 text-center text-xs font-bold">{invoiceItems.find((eachItem) => eachItem.id === item.id)?.qty ?? 0}</p>
           <div
-            className="hover:cursor-pointer"
+            className="flex h-7 w-7 items-center justify-center rounded-md hover:cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
             style={{ opacity: editable ? 0.5 : 1 }}
             onClick={() => {
               if (!editable) {
@@ -384,11 +330,11 @@ const RenderStockItemsOtherView = ({
               }
             }}
           >
-            <Plus color="green" />
+            <Plus className="h-3.5 w-3.5 text-emerald-600" />
           </div>
         </div>
         <div
-          className="hover:cursor-pointer"
+          className="flex h-8 w-8 items-center justify-center rounded-md border bg-background hover:cursor-pointer hover:bg-muted"
           onClick={() => {
             setLocalName(item.name || "");
             setLocalChineseName(item.chinese_name || "");
@@ -400,7 +346,7 @@ const RenderStockItemsOtherView = ({
             setEditable(!editable);
           }}
         >
-          <PencilIcon className="h-4" />
+          <PencilIcon className="h-3.5 w-3.5" />
         </div>
       </div>
     </div>

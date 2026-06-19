@@ -31,10 +31,9 @@ export async function PUT(req:NextRequest, { params }:{params:Promise<{id:string
                 manager = $5,
                 invoicenumber = $6,
                 fields = $7,
-                created_at = $8,
-                payment = $9,
-                discount= $10
-             WHERE id = $11`,
+                payment = $8,
+                discount= $9
+             WHERE id = $10`,
             [
                 newitems.name,
                 newitems.company,
@@ -43,7 +42,6 @@ export async function PUT(req:NextRequest, { params }:{params:Promise<{id:string
                 newitems.manager,
                 newitems.invoicenumber,
                 JSON.stringify(newitems.fields),
-                new Date(),
                 newitems.payment,
                 newitems.discount,
                 id

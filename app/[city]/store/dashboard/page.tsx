@@ -15,6 +15,7 @@ import Spinner from '@/components/ui/spinner';
 import { AddExpensesDialog } from '@/components/users/employee-expense';
 import { AddTask } from "@/components/users/task";
 import TaskDetail from "@/components/users/taskDetail";
+import { useMachineDelivery } from '@/hooks/use-machine-delivery';
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { StoreAvailableStock, StoreDashboardResponse, StoreLowStockData, StorePosStatsEach, StoreStockGroup, StoreStockItem, TaskProps } from "@/lib/types";
@@ -64,6 +65,7 @@ export default function StoreManagerDashboard() {
   const [lowStock, setLowStock] = useState(false)
   const [selectedData, setSelectedData] = useState<StorePosStatsEach | null>(null)
   const router = useRouter()
+  const { pendingDelivery } = useMachineDelivery()
 
   useEffect(() => {
     if (userID) {
@@ -96,6 +98,7 @@ export default function StoreManagerDashboard() {
       icon: Truck,
       color: "text-blue-600",
       onClick: () => { router.push(`/${base_route}/delivery/machinedelivery`) },
+      count: pendingDelivery
     },
     {
       title: "Parts Delivery",
@@ -114,7 +117,7 @@ export default function StoreManagerDashboard() {
       icon: CreditCard,
       color: "text-red-600",
       count: data?.pos_stats?.pending?.length || 0,
-      onClick: () => { setPending(true) },
+      onClick: () => { setSelectedData(data?.pos_stats?.pending || null) },
     },
     {
       title: "Issued Items to Engineer",
@@ -138,7 +141,7 @@ export default function StoreManagerDashboard() {
       onClick: () => { },
     },
     {
-      title: "Generate Gatepass",
+      title: "Returnable Gatepass",
       icon: FileText,
       color: "text-cyan-600",
       onClick: () => { setGatePass(true) },
@@ -531,15 +534,15 @@ export default function StoreManagerDashboard() {
                 <p className="text-sm font-bold leading-none">Pending Payments</p>
                 <p className="mt-1 text-xs text-muted-foreground">Total Payables</p>
               </div>
-               <Button onClick={() => setPending(true)} size="sm">
-             <Eye /> View All
-            </Button>
+              <Button onClick={() => setPending(true)} size="sm">
+                <Eye /> View All
+              </Button>
             </div>
             <h3 className="mt-3 text-xl font-bold leading-none text-red-600">
               <CurrencyFormatter amount={data?.pos_stats?.pending?.total || 0} />
             </h3>
 
-          
+
           </div>
         </section>
 

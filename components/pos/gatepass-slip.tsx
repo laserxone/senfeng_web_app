@@ -137,20 +137,20 @@ export default function GatePassSlip() {
   }, [selectedCustomer?.id]);
 
   return (
-    <div className="min-h-screen bg-slate-100 p-3 print:bg-white">
-      <div className="mx-auto w-full max-w-[820px] rounded-lg bg-white p-4 shadow-lg ring-1 ring-slate-200 print:shadow-none print:ring-0">
+    <div className="min-h-screen bg-slate-100 p-2 print:bg-white sm:p-3">
+      <div className="mx-auto w-full max-w-[820px] overflow-hidden rounded-md bg-white p-3 shadow-lg ring-1 ring-slate-200 print:shadow-none print:ring-0 sm:rounded-lg sm:p-4">
         {/* Header */}
-        <header className="relative mb-4 border-b border-blue-700/70 pb-4">
-          <div className="grid gap-4 md:grid-cols-[1fr_auto_180px] md:items-start">
-            <div>
-              <h1 className="text-3xl font-black tracking-[0.18em] text-blue-700">
+        <header className="relative mb-3 border-b border-blue-700/70 pb-3 sm:mb-4 sm:pb-4">
+          <div className="grid gap-3 md:grid-cols-[1fr_auto_180px] md:items-start">
+            <div className="min-w-0">
+              <h1 className="text-2xl font-black tracking-[0.14em] text-blue-700 sm:text-3xl sm:tracking-[0.18em]">
                 SENFENG
               </h1>
 
-              <div className="mt-3 space-y-2 text-xs text-slate-700">
+              <div className="mt-2 space-y-2 text-xs text-slate-700 sm:mt-3">
                 <div className="flex gap-2">
-                  <MapPin className="mt-0.5 h-4 w-4 text-blue-700" />
-                  <div>
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
+                  <div className="min-w-0">
                     <h3 className="font-bold text-blue-700">
                       SENFENG PAKISTAN
                     </h3>
@@ -160,21 +160,21 @@ export default function GatePassSlip() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-blue-700" />
-                  <p>senfenglaserpakistan@gmail.com</p>
+                  <Mail className="h-4 w-4 shrink-0 text-blue-700" />
+                  <p className="break-all">senfenglaserpakistan@gmail.com</p>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-center">
-              <div className="w-fit rounded-md bg-blue-700 px-5 py-2 text-center shadow-sm">
-                <h2 className="text-base font-bold uppercase tracking-wide text-white">
+            <div className="flex justify-start md:justify-center">
+              <div className="w-full rounded-md bg-blue-700 px-3 py-2 text-center shadow-sm sm:w-fit sm:px-5">
+                <h2 className="text-sm font-bold uppercase tracking-wide text-white sm:text-base">
                   Gate Pass / Parts Issuance Slip
                 </h2>
               </div>
             </div>
 
-            <div className="space-y-2 rounded-md border bg-slate-50 p-2 text-xs">
+            <div className="space-y-2 rounded-md border bg-slate-50 p-2 text-xs md:w-[180px]">
               <div className="flex items-center justify-between gap-3">
                 <span className="font-semibold text-slate-800">Doc No.:</span>
                 <span className="h-5 flex-1 border-b border-slate-400" />
@@ -202,22 +202,22 @@ export default function GatePassSlip() {
               />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2.5">
-              <InputLine label="Customer Name" value={ selectedCustomer?.owner || selectedCustomer?.name || ""} />
-              <InputLine label="Company Name" value={selectedCustomer?.company || selectedCustomer?.name || ""} />
-              <InputLine label="Contact Number" value={customerNumber} />
-            </div>
+            <div className="grid gap-3 md:grid-cols-2 md:gap-4">
+              <div className="space-y-2.5">
+                <InputLine label="Customer Name" value={ selectedCustomer?.owner || selectedCustomer?.name || ""} />
+                <InputLine label="Company Name" value={selectedCustomer?.company || selectedCustomer?.name || ""} />
+                <InputLine label="Contact Number" value={customerNumber} />
+              </div>
 
-            <div className="space-y-2.5 border-t border-dashed border-slate-300 pt-3 md:border-l md:border-t-0 md:pl-4 md:pt-0">
-              <InputLine label="City" value={selectedCustomer?.location || ""} />
-              <InputLine label="Machine Model" value={selectedMachine?.serial || selectedMachine?.power || ""} />
-              <MachineOrderSelect
-                customerId={selectedCustomer?.id}
-                value={selectedMachine}
-                onReturn={setSelectedMachine}
-              />
-            </div>
+              <div className="space-y-2.5 border-t border-dashed border-slate-300 pt-3 md:border-l md:border-t-0 md:pl-4 md:pt-0">
+                <InputLine label="City" value={selectedCustomer?.location || ""} />
+                <InputLine label="Machine Model" value={selectedMachine?.serial || selectedMachine?.power || ""} />
+                <MachineOrderSelect
+                  customerId={selectedCustomer?.id}
+                  value={selectedMachine}
+                  onReturn={setSelectedMachine}
+                />
+              </div>
             </div>
           </div>
         </Section>
@@ -229,8 +229,8 @@ export default function GatePassSlip() {
           icon={<Box className="h-5 w-5" />}
           color="teal"
         >
-          <div className="grid gap-4 md:grid-cols-[190px_1fr]">
-            <label className="group flex min-h-[178px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-md border border-dashed border-slate-300 bg-slate-50 text-center text-slate-400 transition hover:border-teal-400 hover:bg-teal-50/60">
+          <div className="grid gap-3 md:grid-cols-[190px_1fr] md:gap-4">
+            <label className="group flex min-h-[150px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-md border border-dashed border-slate-300 bg-slate-50 text-center text-slate-400 transition hover:border-teal-400 hover:bg-teal-50/60 sm:min-h-[178px]">
               <input
                 type="file"
                 accept="image/*"
@@ -244,11 +244,11 @@ export default function GatePassSlip() {
                   width={190}
                   height={178}
                   unoptimized
-                  className="h-full max-h-[178px] w-full object-cover"
+                  className="h-full max-h-[178px] min-h-[150px] w-full object-cover sm:min-h-[178px]"
                 />
               ) : (
                 <>
-                  <Camera className="mb-2 h-10 w-10 transition group-hover:text-teal-600" />
+                  <Camera className="mb-2 h-8 w-8 transition group-hover:text-teal-600 sm:h-10 sm:w-10" />
                   <p className="font-bold text-teal-700">PART PHOTO</p>
                   <p className="mt-1 text-xs">Attach photo here</p>
                 </>
@@ -318,7 +318,7 @@ export default function GatePassSlip() {
           icon={<Truck className="h-5 w-5" />}
           color="purple"
         >
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2 md:gap-4">
             <div>
               <p className="mb-3 text-sm font-semibold text-slate-700">
                 Mode of Delivery
@@ -365,30 +365,30 @@ export default function GatePassSlip() {
           icon={<ShieldCheck className="h-5 w-5" />}
           color="orange"
         >
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-3 sm:gap-3">
             <SignatureCard title="Issued By" />
             <SignatureCard title="Authorized By" />
             <SignatureCard title="Approved By" />
           </div>
         </Section>
 
-        <div className="mt-4 flex justify-end print:hidden">
+        <div className="mt-4 flex justify-stretch print:hidden sm:justify-end">
           <button
             type="button"
             onClick={handleCreatePdf}
             disabled={pdfLoading}
-            className="rounded-md bg-blue-700 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="w-full rounded-md bg-blue-700 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-auto"
           >
             {pdfLoading ? "Creating PDF..." : "Create PDF"}
           </button>
         </div>
 
         {/* Footer */}
-        <footer className="mt-4 flex items-center justify-center gap-3 border-t border-slate-200 pt-3 text-xs font-semibold text-blue-700">
-          <span className="h-px w-14 bg-blue-700" />
-          <PackageCheck className="h-4 w-4" />
+        <footer className="mt-4 flex items-center justify-center gap-2 border-t border-slate-200 pt-3 text-center text-xs font-semibold text-blue-700 sm:gap-3">
+          <span className="hidden h-px w-14 bg-blue-700 sm:block" />
+          <PackageCheck className="h-4 w-4 shrink-0" />
           <span>Thank you for your business!</span>
-          <span className="h-px w-14 bg-blue-700" />
+          <span className="hidden h-px w-14 bg-blue-700 sm:block" />
         </footer>
       </div>
     </div>
@@ -1002,30 +1002,30 @@ function Section({
   };
 
   return (
-    <section className={`mb-3 overflow-hidden rounded-lg border ${colors[color].split(" ")[2]} bg-white`}>
+    <section className={`mb-3 overflow-hidden rounded-md border ${colors[color].split(" ")[2]} bg-white sm:rounded-lg`}>
       <div
-        className={`flex w-fit items-center gap-2 rounded-br-xl bg-gradient-to-r px-3 py-2 text-white ${colors[color]}`}
+        className={`flex w-full items-center gap-2 rounded-br-xl bg-gradient-to-r px-3 py-2 text-white sm:w-fit ${colors[color]}`}
       >
-        <span className="flex h-6 w-6 items-center justify-center rounded-md bg-white text-sm font-bold text-slate-800">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white text-sm font-bold text-slate-800">
           {number}
         </span>
-        {icon}
-        <h3 className="text-sm font-bold uppercase tracking-wide">{title}</h3>
+        <span className="shrink-0">{icon}</span>
+        <h3 className="min-w-0 text-xs font-bold uppercase tracking-wide sm:text-sm">{title}</h3>
       </div>
 
-      <div className="p-3">{children}</div>
+      <div className="p-2.5 sm:p-3">{children}</div>
     </section>
   );
 }
 
 function InputLine({ label, value }: { label: string; value?: string }) {
   return (
-    <div className="grid grid-cols-[118px_1fr] items-center gap-2">
+    <div className="grid gap-1 sm:grid-cols-[118px_1fr] sm:items-center sm:gap-2">
       <label className="text-xs font-semibold text-slate-800">{label}</label>
       <input
         value={value}
         readOnly={value !== undefined}
-        className="h-8 rounded-md border border-blue-300 px-2 text-sm outline-none read-only:bg-blue-50/50"
+        className="h-8 min-w-0 rounded-md border border-blue-300 px-2 text-sm outline-none read-only:bg-blue-50/50"
       />
     </div>
   );
@@ -1074,7 +1074,7 @@ function MachineOrderSelect({
       : "Select order / serial";
 
   return (
-    <div className="grid grid-cols-[118px_1fr] items-center gap-2">
+    <div className="grid gap-1 sm:grid-cols-[118px_1fr] sm:items-center sm:gap-2">
       <label className="text-xs font-semibold text-slate-800">Machine Serial Number</label>
       <Select
         value={value ? String(value.id) : ""}
@@ -1086,7 +1086,7 @@ function MachineOrderSelect({
       >
         <SelectTrigger
           size="sm"
-          className="h-8 w-full rounded-md border-blue-300 bg-white px-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 truncate"
+          className="h-8 min-w-0 w-full rounded-md border-blue-300 bg-white px-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 [&>span]:truncate"
         >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
@@ -1122,12 +1122,12 @@ function InputBox({
   tall?: boolean;
 }) {
   return (
-    <div className={tall ? "row-span-2" : ""}>
+    <div className={tall ? "sm:row-span-2" : ""}>
       <label className="mb-1.5 block text-xs font-semibold text-slate-800">{label}</label>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className={`w-full rounded-md border border-teal-300 px-2 text-sm outline-none ${
+        className={`w-full min-w-0 rounded-md border border-teal-300 px-2 text-sm outline-none ${
           tall ? "h-[70px]" : "h-8"
         }`}
       />
@@ -1153,14 +1153,14 @@ function StatusToggle({
 
   return (
     <label
-      className={`flex min-w-[180px] cursor-pointer items-center justify-between rounded-md border px-3 py-2 text-xs font-bold uppercase ${style}`}
+      className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-md border px-3 py-2 text-xs font-bold uppercase sm:min-w-[180px] ${style}`}
     >
-      <span>{label}</span>
+      <span className="min-w-0">{label}</span>
       <input
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="h-5 w-5 cursor-pointer rounded-md border-2 border-current bg-white accent-current"
+        className="h-5 w-5 shrink-0 cursor-pointer rounded-md border-2 border-current bg-white accent-current"
       />
     </label>
   );
@@ -1176,23 +1176,23 @@ function CheckOption({
   onChange: (value: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 font-medium text-slate-700">
+    <label className="flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-2 font-medium text-slate-700 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
       <input
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="h-4 w-4 cursor-pointer rounded-sm border border-slate-400 accent-blue-700"
+        className="h-4 w-4 shrink-0 cursor-pointer rounded-sm border border-slate-400 accent-blue-700"
       />
-      {label}
+      <span className="min-w-0">{label}</span>
     </label>
   );
 }
 
 function SignatureCard({ title }: { title: string }) {
   return (
-    <div className="rounded-lg border border-orange-200 bg-orange-50/20 p-3">
+    <div className="rounded-md border border-orange-200 bg-orange-50/20 p-3">
       <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-orange-600">
-        <User className="h-4 w-4" />
+        <User className="h-4 w-4 shrink-0" />
         {title}
       </h4>
 
@@ -1207,7 +1207,7 @@ function SignatureCard({ title }: { title: string }) {
 
 function SignatureLine({ label }: { label: string }) {
   return (
-    <div className="grid grid-cols-[64px_1fr] items-center gap-2">
+    <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-2">
       <span className="font-medium text-slate-700">{label}</span>
       <span className="border-b border-slate-500" />
     </div>
