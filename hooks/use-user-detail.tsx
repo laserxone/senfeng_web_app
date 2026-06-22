@@ -35,7 +35,6 @@ const useUserDetail = () => {
   const reimbursement_approval = data?.reimbursement_approval ?? false
   const team_attendance_marking = data?.team_attendance_marking ?? false
 
-
   return {
     isAdmin,
     userID,

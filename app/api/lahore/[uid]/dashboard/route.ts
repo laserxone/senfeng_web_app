@@ -36,7 +36,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ uid:
             const lastMonthEnd = now.clone().subtract(1, "month").endOf("month").toISOString();
 
             const [userResult] = await Promise.all([
-                pool.query("SELECT id, dp, name, designation, limited_access FROM users WHERE id = $1", [uid])
+                pool.query("SELECT id, dp, name, designation, limited_access, reimbursement_approval FROM users WHERE id = $1", [uid])
             ]);
 
             if (userResult.rows.length === 0) {
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ uid:
 
             } else if (user?.designation === 'Customer Relationship Manager (After Sales)') {
 
-                const responseData = await getCRMAfterSalesData(currentMonthStart, currentMonthEnd, uid)
+                const responseData = await getCRMAfterSalesData(currentMonthStart, currentMonthEnd, uid, user?.reimbursement_approval)
 
                 return NextResponse.json({ ...responseData, user }, { status: 200 });
 
@@ -1838,21 +1838,29 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
     }
 }
 
-async function getCRMAfterSalesData(currentMonthStart: string, currentMonthEnd: string, uid: string) {
+async function getCRMAfterSalesData(currentMonthStart: string, currentMonthEnd: string, uid: string, approval : boolean) {
 
 
     const customersResult = await pool.query(`
-    SELECT
-        id,
-        name,
-        location,
-        number,
-        owner,
-        member,
-        created_at
-    FROM customer
-    WHERE member IS TRUE
-      AND office = 'lahore'
+  SELECT
+    c.id,
+    c.name,
+    c.location,
+    c.number,
+    c.owner,
+    c.member,
+    c.created_at
+  FROM customer c
+  WHERE c.office = 'lahore'
+    AND (
+      c.member IS TRUE
+      OR EXISTS (
+        SELECT 1
+        FROM sale s
+        WHERE s.customer_id = c.id
+      )
+    )
+  ORDER BY c.created_at DESC
 `);
 
     const customers = customersResult.rows;
@@ -1862,6 +1870,7 @@ async function getCRMAfterSalesData(currentMonthStart: string, currentMonthEnd: 
     SELECT DISTINCT ON (f.customer_id)
         f.customer_id,
         f.created_at,
+        f.status,
          u.name AS user_name
     FROM feedback f
     INNER JOIN users u ON u.id = f.user_id
@@ -1879,6 +1888,7 @@ async function getCRMAfterSalesData(currentMonthStart: string, currentMonthEnd: 
             {
                 feedback_date: row.created_at,
                 user_name: row.user_name,
+                feedback_status : row.status
             },
         ])
     );
@@ -1894,6 +1904,7 @@ async function getCRMAfterSalesData(currentMonthStart: string, currentMonthEnd: 
                 ...customer,
                 feedback_date: feedbackInfo.feedback_date,
                 user_name: feedbackInfo.user_name,
+                feedback_status : feedbackInfo.feedback_status
             });
         } else {
             customersWithoutFeedback.push(customer);
