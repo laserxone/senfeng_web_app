@@ -20,11 +20,14 @@ export async function GET() {
     c.name AS customer_name, 
     c.owner AS customer_owner,
 
+    pr.slip AS payment_slip,
+
     COALESCE(s.sell_by, c.ownership) AS ownership_id,
     COALESCE(sell_user.name, owner_user.name) AS ownership_name
 
   FROM sale s
   LEFT JOIN customer c ON s.customer_id = c.id
+  LEFT JOIN payment_requests pr ON pr.sale_id = s.id
 
   LEFT JOIN users sell_user 
     ON sell_user.id = s.sell_by

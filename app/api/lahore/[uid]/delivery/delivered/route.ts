@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req:NextRequest, { params }:{params:Promise<{}>}) {
   try {
-    const queryResult = await pool.query(`
+   const queryResult = await pool.query(`
   SELECT 
     s.id,
     s.order_no_arr,
@@ -15,15 +15,21 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{}>}) {
     s.dispatch_information, 
     c.name AS customer_name, 
     c.owner AS customer_owner,
-    u.name AS ownership_name
+    u.name AS ownership_name,
+    pr.slip AS payment_slip,
+    CASE 
+      WHEN pr.id IS NULL THEN true 
+      ELSE false 
+    END AS no_request
   FROM sale s
   JOIN customer c ON s.customer_id = c.id
-  JOIN users u ON c.ownership = u.id
-  WHERE s.ready_for_delivery IS TRUE AND delivery_date IS NOT NULL
-  AND c.office = 'lahore'
+  LEFT JOIN users u ON c.ownership = u.id
+  LEFT JOIN payment_requests pr ON pr.sale_id = s.id
+  WHERE s.ready_for_delivery IS TRUE 
+    AND s.delivery_date IS NOT NULL
+    AND c.office = 'lahore'
   ORDER BY s.delivery_date DESC
 `);
-
     return NextResponse.json(queryResult.rows, { status: 200 });
   } catch (error:any) {
     return NextResponse.json(

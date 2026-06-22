@@ -5,14 +5,15 @@ import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { ArrowUpDown, Edit } from "lucide-react";
-import { useEffect, useState } from "react";
+import { DeliveryType } from "@/lib/types";
 import { pdf } from "@react-pdf/renderer";
+import { ColumnDef } from "@tanstack/react-table";
+import { AlertCircle, ArrowUpDown, Clock3, Edit } from "lucide-react";
 import moment from "moment";
+import { useEffect, useMemo, useState } from "react";
+import { MyImgZooming } from "../img-zooming";
 import { DispatchOrderEditDialog } from "./dispatch-dialoges";
 import DOPDFGatepass from "./do-pdf-gatepass";
-import { DeliveryType, DispatchPdf } from "@/lib/types";
-import { ColumnDef } from "@tanstack/react-table";
 
 export default function MachineDelivered() {
   const { userID } = useUserDetail();
@@ -40,7 +41,7 @@ export default function MachineDelivered() {
 
 
 
-  const columns: ColumnDef<DeliveryType>[] = [
+  const columns: ColumnDef<DeliveryType>[] = useMemo(() => [
     {
       accessorKey: "do",
       filterFn: "includesString",
@@ -166,6 +167,52 @@ export default function MachineDelivered() {
     },
 
     {
+      accessorKey: "slip",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Payment
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const { no_request, payment_slip } = row.original;
+
+        if (no_request) {
+          return (
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1">
+              <AlertCircle className="size-3.5 text-slate-500" />
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                No Request
+              </span>
+            </div>
+          );
+        }
+
+        if (!payment_slip) {
+          return (
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1">
+              <Clock3 className="size-3.5 text-amber-500" />
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+                Pending
+              </span>
+            </div>
+          );
+        }
+
+        return (
+          <div className="inline-flex rounded-lg border border-emerald-100 bg-emerald-50 p-1">
+            <MyImgZooming img={payment_slip} compact />
+          </div>
+        );
+      },
+    },
+    {
       id: "actions",
       header: "Action",
       cell: ({ row }) => {
@@ -183,7 +230,8 @@ export default function MachineDelivered() {
             </Button>
             <Button
               size="icon"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setSelectedForEdit(row.original);
               }}
             >
@@ -193,7 +241,7 @@ export default function MachineDelivered() {
         );
       },
     },
-  ];
+  ], [data]);
 
 
   const generatePDF = async (item: DeliveryType) => {

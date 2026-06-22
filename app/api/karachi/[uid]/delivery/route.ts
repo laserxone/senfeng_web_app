@@ -3,44 +3,47 @@ import { storage } from "@/config/firebase";
 import { deleteObject, ref } from "firebase/storage";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req:NextRequest, { params }:{params:Promise<{id:string}>}) {
+export async function GET() {
   try {
-    const queryResult = await pool.query(`
-      SELECT 
-        s.id,
-        s.order_no_arr,
-        s.delivery_date,
-        s.power,
-        s.source,
-        s.delivery_information,
-        s.serial_no,
-        s.dispatch_information, 
-        s.customer_id,
-    
-        c.name AS customer_name, 
-        c.owner AS customer_owner,
-    
-        COALESCE(s.sell_by, c.ownership) AS ownership_id,
-        COALESCE(sell_user.name, owner_user.name) AS ownership_name
-    
-      FROM sale s
-      LEFT JOIN customer c ON s.customer_id = c.id
-    
-      LEFT JOIN users sell_user 
-        ON sell_user.id = s.sell_by
-    
-      LEFT JOIN users owner_user 
-        ON owner_user.id = c.ownership
-    
-      WHERE s.ready_for_delivery IS TRUE
-        AND s.delivery_date IS NULL
-        AND LOWER(c.office) = 'karachi'
-    
-      ORDER BY s.delivery_request_date ASC
-    `);
+  const queryResult = await pool.query(`
+  SELECT 
+    s.id,
+    s.order_no_arr,
+    s.delivery_date,
+    s.power,
+    s.source,
+    s.delivery_information,
+    s.serial_no,
+    s.dispatch_information, 
+    s.customer_id,
+
+    c.name AS customer_name, 
+    c.owner AS customer_owner,
+
+    pr.slip AS payment_slip,
+
+    COALESCE(s.sell_by, c.ownership) AS ownership_id,
+    COALESCE(sell_user.name, owner_user.name) AS ownership_name
+
+  FROM sale s
+  LEFT JOIN customer c ON s.customer_id = c.id
+  LEFT JOIN payment_requests pr ON pr.sale_id = s.id
+
+  LEFT JOIN users sell_user 
+    ON sell_user.id = s.sell_by
+
+  LEFT JOIN users owner_user 
+    ON owner_user.id = c.ownership
+
+  WHERE s.ready_for_delivery IS TRUE
+    AND s.delivery_date IS NULL
+    AND LOWER(c.office) = 'karachi'
+
+  ORDER BY s.delivery_request_date ASC
+`);
 
     return NextResponse.json(queryResult.rows, { status: 200 });
-  } catch (error:any) {
+  } catch (error: any) {
     return NextResponse.json(
       { message: error?.message || "Server error" },
       { status: 500 },

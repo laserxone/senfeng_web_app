@@ -1148,6 +1148,8 @@ export type DeliveryType = {
     delivery_information: DeliveryInformation;
     dispatch_information: Record<string, any>;
     do?: string
+    payment_slip ?: string
+    no_request : boolean
 }
 
 export type DispatchPdf = {
