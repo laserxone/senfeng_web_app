@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
   try {
-  const queryResult = await pool.query(`
+    const queryResult = await pool.query(`
   SELECT 
     s.id,
     s.order_no_arr,
@@ -85,8 +85,9 @@ export async function POST(req: NextRequest) {
       ["Dispatched", data.machine_id],
     );
 
-    await client.query(
-      ` INSERT INTO payment_requests (
+    if (data.transportation && Number(data.transportation) > 0) {
+      await client.query(
+        ` INSERT INTO payment_requests (
         request_type,
         amount,
         sale_id,
@@ -95,8 +96,9 @@ export async function POST(req: NextRequest) {
       VALUES (
         $1,$2,$3, $4
       )`,
-      [true, data.transportation, data.machine_id, "karachi"],
-    );
+        [true, data.transportation, data.machine_id, "karachi"],
+      );
+    }
     await client.query("COMMIT");
 
     return NextResponse.json({ message: "Done" }, { status: 200 });
@@ -113,7 +115,7 @@ export async function POST(req: NextRequest) {
 
 }
 
-export async function PUT(req:NextRequest) {
+export async function PUT(req: NextRequest) {
   const data = await req.json();
 
   try {
@@ -137,10 +139,10 @@ export async function PUT(req:NextRequest) {
       ],
     );
 
-   
+
 
     return NextResponse.json({ message: "Done" }, { status: 200 });
-  } catch (error:any) {
+  } catch (error: any) {
     console.log(error);
     return NextResponse.json(
       { message: error?.message || "Server error" },
@@ -149,7 +151,7 @@ export async function PUT(req:NextRequest) {
   }
 }
 
-export async function DELETE(req:NextRequest) {
+export async function DELETE(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const id = searchParams.get("id");
 
@@ -179,11 +181,11 @@ export async function DELETE(req:NextRequest) {
     if (img) {
       try {
         await deleteObject(ref(storage, img));
-      } catch (err : any) {
+      } catch (err: any) {
         console.warn("Image delete failed:", err?.message);
         throw err;
       }
-      newNamePlate = namePlate?.filter((item:any) => item !== img);
+      newNamePlate = namePlate?.filter((item: any) => item !== img);
     }
 
     await pool.query(
@@ -197,13 +199,13 @@ export async function DELETE(req:NextRequest) {
 
     await pool.query("COMMIT");
 
-   
+
 
     return NextResponse.json(
       { message: "Deleted successfully" },
       { status: 200 },
     );
-  } catch (error:any) {
+  } catch (error: any) {
     await pool.query("ROLLBACK");
     console.log(error);
 

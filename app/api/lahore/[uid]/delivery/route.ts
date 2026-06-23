@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
   try {
-  const queryResult = await pool.query(`
+    const queryResult = await pool.query(`
   SELECT 
     s.id,
     s.order_no_arr,
@@ -85,8 +85,9 @@ export async function POST(req: NextRequest) {
       ["Dispatched", data.machine_id],
     );
 
-    await client.query(
-      ` INSERT INTO payment_requests (
+    if (data.transportation && Number(data.transportation) > 0) {
+      await client.query(
+        ` INSERT INTO payment_requests (
         request_type,
         amount,
         sale_id,
@@ -95,8 +96,11 @@ export async function POST(req: NextRequest) {
       VALUES (
         $1,$2,$3, $4
       )`,
-      [true, data.transportation, data.machine_id, "lahore"],
-    );
+        [true, data.transportation, data.machine_id, "lahore"],
+      );
+    }
+
+
     await client.query("COMMIT");
 
     return NextResponse.json({ message: "Done" }, { status: 200 });

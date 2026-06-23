@@ -19,8 +19,10 @@ import { MapProvider } from "@/providers/map-provider";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { Banknote, CheckCircle2, CircleDashed, ClipboardList, Clock3, MonitorCheck, UsersRound } from "lucide-react";
 import moment from "moment";
+import Link from "next/link";
 import { useContext, useEffect, useState } from "react";
 import { FaCashRegister } from "react-icons/fa";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 
 export default function SuperadminDashboard() {
     const [customers, setCustomers] = useState<AdminDashboardCustomers[]>([]);
@@ -30,6 +32,8 @@ export default function SuperadminDashboard() {
     const { userID } = useUserDetail()
     const debouncedUserId = useDebounce(userID, 1000);
     const { state: OfficeState } = useContext(OfficeContext)!
+    const [showMachinesSold, setShowMachinesSold] = useState(false)
+    const { base_route } = useUserDetail()
 
     useEffect(() => {
         if (debouncedUserId && OfficeState.value.data) {
@@ -137,6 +141,7 @@ export default function SuperadminDashboard() {
                 />
 
                 <MiniStatsCard
+                    onClick={() => setShowMachinesSold(true)}
                     title="Machines Sold"
                     value={formatCurrency(data?.total_machines_sold_this_month ?? 0)}
                     subtitle={`${data?.machines_sold_change_percentage}% from last month`}
@@ -244,7 +249,7 @@ export default function SuperadminDashboard() {
             ) : (
                 <SalesTeamProgressChart passingData={data?.team_progress || []} />
             )}
-             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <div className="col-span-4">
                     {loading ? (
                         <Skeleton className="h-64" />
@@ -274,7 +279,7 @@ export default function SuperadminDashboard() {
                     )}
                 </div>
             </div>
-           {loading ?
+            {loading ?
                 <Skeleton className="h-64" />
                 :
 
@@ -301,7 +306,7 @@ export default function SuperadminDashboard() {
                 </Card>
             }
 
-             <div className="mb-5">
+            <div className="mb-5">
                 {loading ? (
                     <Skeleton className="h-96" />
                 ) : (
@@ -312,6 +317,105 @@ export default function SuperadminDashboard() {
                     )
                 )}
             </div>
+
+            <Dialog open={showMachinesSold} onOpenChange={setShowMachinesSold}>
+                <DialogContent className="overflow-hidden p-0 sm:max-w-xl">
+                    <DialogHeader className="border-b bg-gradient-to-r from-slate-50 to-blue-50/60 px-5 py-4 dark:from-slate-950 dark:to-blue-950/20">
+                        <div className="flex items-center gap-3">
+                            <div className="grid h-9 w-9 place-items-center rounded-xl bg-blue-600 text-white shadow-sm">
+                                <MonitorCheck className="h-4.5 w-4.5" />
+                            </div>
+
+                            <div className="min-w-0">
+                                <DialogTitle className="text-base font-bold tracking-tight">
+                                    Machines Sold
+                                </DialogTitle>
+                                <p className="mt-0.5 text-xs text-muted-foreground">
+                                    {data?.total_machines_sold_this_month_data?.length ?? 0} machines sold this month
+                                </p>
+                            </div>
+                        </div>
+                    </DialogHeader>
+
+                    <ScrollArea className="max-h-[calc(100dvh-145px)]">
+                        <div className="p-3">
+                            {!data?.total_machines_sold_this_month_data?.length ? (
+                                <div className="grid min-h-36 place-items-center rounded-2xl border border-dashed bg-muted/20 px-4 py-8 text-center">
+                                    <div>
+                                        <div className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+                                            <MonitorCheck className="h-5 w-5" />
+                                        </div>
+                                        <p className="mt-3 text-sm font-semibold">No machines sold yet</p>
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            Sold machines for this month will appear here.
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="grid gap-2">
+                                    {data.total_machines_sold_this_month_data.map((item) => (
+                                        <Link
+                                            key={item.id}
+                                            target="_blank"
+                                            href={`/${base_route}/member/${item.customer_id}/${item.id}`}
+                                            className="group block rounded-2xl border bg-card p-3 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-md dark:hover:border-blue-500/30 dark:hover:bg-blue-950/10"
+                                        >
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex min-w-0 items-center gap-2">
+                                                        <p className="truncate text-sm font-bold tracking-tight group-hover:text-blue-700 dark:group-hover:text-blue-300">
+                                                            {item.model || "Unknown model"}
+                                                        </p>
+
+                                                        {item.power ? (
+                                                            <span className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20">
+                                                                {item.power}
+                                                            </span>
+                                                        ) : null}
+                                                    </div>
+
+                                                    <p className="mt-1 truncate text-xs font-medium text-foreground/80">
+                                                        {item.customer_name || "Unknown customer"}
+                                                    </p>
+
+                                                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                                                        <span>Owner: {item.customer_owner || "N/A"}</span>
+                                                        <span>Customer #{item.customer_id}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="shrink-0 rounded-lg bg-muted/50 px-2.5 py-1.5 text-right">
+                                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                                        Sale ID
+                                                    </p>
+                                                    <p className="text-xs font-bold">#{item.id}</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-2 flex flex-wrap gap-1.5 border-t pt-2">
+                                                {item.order_no_arr?.length ? (
+                                                    item.order_no_arr.map((orderNo) => (
+                                                        <span
+                                                            key={`${item.id}-${orderNo}`}
+                                                            className="rounded-md border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+                                                        >
+                                                            {orderNo}
+                                                        </span>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-[11px] text-muted-foreground">
+                                                        No order numbers available
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </ScrollArea>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
@@ -462,6 +566,7 @@ function MiniStatsCard({
     loading,
     icon: Icon,
     className,
+    onClick
 }: {
     title: string;
     value: React.ReactNode;
@@ -469,14 +574,23 @@ function MiniStatsCard({
     loading: boolean;
     icon: React.ElementType;
     className: string;
+    onClick?: () => void
 }) {
     return (
-        <Card className="shadow-sm">
+        <Card className="shadow-sm" onClick={() => onClick?.()}>
             <CardContent className="items-center gap-3">
                 <div className="flex justify-between">
-                    <p className="truncate text-lg font-bold">
-                        {title}
-                    </p>
+                    {!onClick ?
+                        <p className="truncate text-lg font-bold">
+                            {title}
+                        </p>
+                        :
+                        <div onClick={onClick}>
+                            <p className="cursor-pointer hover:underline truncate text-lg font-bold">
+                                {title}
+                            </p>
+                        </div>
+                    }
                     <div className={`rounded-lg p-2 ${className}`}>
                         <Icon className="h-4 w-4" />
                     </div>

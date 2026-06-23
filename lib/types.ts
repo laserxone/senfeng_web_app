@@ -1009,6 +1009,16 @@ export type AdminDashboardRecentSales = {
 
 }
 
+export type MachinesSoldThisMonthData = {
+     id: number;
+  customer_id: number;
+  order_no_arr: string[];
+  model: string;
+  power: string;
+  customer_name: string;
+  customer_owner: string;
+}
+
 export type AdminDashboard = {
     pos_stats: {
         pending: string
@@ -1027,6 +1037,7 @@ export type AdminDashboard = {
         industry: string
     }[]
     machines_sold_change_percentage: string
+    total_machines_sold_this_month_data : MachinesSoldThisMonthData[]
     machines_sold_last_3_months: {
         date: string
         total_machines_sold: number

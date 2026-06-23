@@ -7,6 +7,7 @@ import {
     Clock3,
     Edit,
     Loader2,
+    Trash2,
     Wallet
 } from "lucide-react";
 import moment from "moment";
@@ -24,10 +25,13 @@ import {
 
 import PageTable from "@/components/app-table";
 import Dropzone from "@/components/dropzone";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { TriggerFirebaseForPendingPayments } from "@/lib/triggerFirebase";
 import { UploadImage } from "@/lib/uploadFunction";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
+import { toast } from "sonner";
+import ConfimationDialog from "../alert-dialog";
 import AppCalendar from "../appCalendar";
 import { MyImgZooming } from "../img-zooming";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
@@ -54,13 +58,14 @@ type PaymentRequest = {
 
 export default function PaymentRequestsPage() {
     const { userID } = useUserDetail();
-
+    const [deleteLoading, setDeleteLoading] = useState(false)
     const [requests, setRequests] = useState<PaymentRequest[]>([]);
     const [loading, setLoading] = useState(false);
 
     const [selected, setSelected] = useState<PaymentRequest | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [selectedForDelete, setSelectedForDelete] = useState<PaymentRequest | null>(null)
 
     const [form, setForm] = useState({
         date: new Date(),
@@ -257,7 +262,7 @@ export default function PaymentRequestsPage() {
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
-                    Owner
+                    Location
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
@@ -365,22 +370,44 @@ export default function PaymentRequestsPage() {
             id: "actions",
             header: "Actions",
             cell: ({ row }) => {
-                const item = row.original;
-
-                if (!item.request_type) {
-                    return <Button size="icon" variant={"outline"} onClick={() => handleEditDialog(item)}>
-                        <Edit />
-                    </Button>;
-                }
+                const item = row.original
 
                 return (
-                    <Button size="sm" onClick={() => handleOpenDialog(item)}>
-                        Record Payment
-                    </Button>
+                    <div className="flex gap-2">
+                        {!item.request_type ?
+                            <Button size={"icon-sm"} variant={"outline"} onClick={() => handleEditDialog(item)}>
+                                <Edit className="size-3.5" />
+                            </Button>
+                            :
+                            <Button size="sm" variant={"outline"} onClick={() => handleOpenDialog(item)}>
+                                Record
+                            </Button>
+                        }
+                        <Button onClick={() => setSelectedForDelete(item)} size={"icon-sm"} variant={"destructive"}>
+                            <Trash2 className="size-3.5" />
+                        </Button>
+                    </div>
                 );
             },
         },
     ], [requests]);
+
+    async function handleDelete() {
+
+        if (!selectedForDelete) return
+        setDeleteLoading(true)
+        try {
+            if (selectedForDelete?.slip) {
+                await DeleteFromStorage(selectedForDelete?.slip)
+            }
+            await axios.delete(`/${userID}/payment-requests/${selectedForDelete?.id}`)
+            toast.success("Entry deleted successfully")
+            setSelectedForDelete(null)
+            await fetchPaymentRequests()
+        } finally {
+            setDeleteLoading(false)
+        }
+    }
 
     return (
         <div className="flex flex-1 flex-col space-y-6">
@@ -528,6 +555,15 @@ export default function PaymentRequestsPage() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <ConfimationDialog
+                loading={deleteLoading}
+                open={!!selectedForDelete}
+                title="Are you sure you want to delete?"
+                description="Your action will remove payment request from the system"
+                onPressYes={() => handleDelete()}
+                onPressCancel={() => setSelectedForDelete(null)}
+            />
         </div>
     );
 }
