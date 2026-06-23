@@ -3,6 +3,6 @@ import EmployeeBranchExpenses from '@/components/users/employee-expense'
 
 export default function page() {
   return (
-   <EmployeeBranchExpenses base="team/user"/>
+   BranchExpenses base="team/user"/>
   )
 }

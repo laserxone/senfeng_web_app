@@ -4,14 +4,12 @@ import Dropzone from "@/components/dropzone";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
-import { storage } from "@/config/firebase";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { ComplaintPaymentDetail, ComplaintProps } from "@/lib/types";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { getDownloadURL, ref } from "firebase/storage";
 import {
   ChevronDown,
   Filter,
@@ -22,9 +20,8 @@ import {
 } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -64,9 +61,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 import Spinner from "./ui/spinner";
 import { UserSearch } from "./user-search";
 
-import FilterSheet from "./users/filterSheet";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { MyImgZooming } from "./img-zooming";
+import FilterSheet from "./users/filterSheet";
 
 const formSchema = z
   .object({
@@ -1330,114 +1326,12 @@ const RenderPaymentViewButton = ({
 
           <div className="space-y-4">
             {payments.map((item) => (
-              <RenderEachImage key={item.slip} img={item.slip} />
+              <MyImgZooming key={item.slip} img={item.slip} />
             ))}
           </div>
         </SheetContent>
       </Sheet>
     </>
-  );
-};
-
-const RenderEachImage = ({ img }: { img: string }) => {
-  const [isZoomed, setIsZoomed] = useState(false);
-  const [rotation, setRotation] = useState(0);
-  const [localImage, setLocalImage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (img) {
-      if (img.includes("http")) {
-        setLocalImage(img);
-      } else {
-        getDownloadURL(ref(storage, img)).then((url) => {
-          setLocalImage(url);
-        });
-      }
-    } else {
-      setLocalImage(null);
-    }
-  }, [img]);
-
-  const handleZoomChange = useCallback((shouldZoom: boolean) => {
-    setIsZoomed(shouldZoom);
-  }, []);
-
-  const rotateImageRight = () => {
-    setRotation((prev) => (prev + 90) % 360);
-  };
-
-  const rotateImageLeft = () => {
-    setRotation((prev) => (prev - 90 + 360) % 360);
-  };
-
-  const onPressClose = () => {
-    setIsZoomed(false);
-  };
-
-  if (!localImage) return null;
-
-  return (
-    <ControlledZoom
-      isZoomed={isZoomed}
-      onZoomChange={handleZoomChange}
-      ZoomContent={({ img }) =>
-        isZoomed ? (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "column",
-              width: "100vw",
-              height: "100vh",
-              overflow: "hidden",
-              zIndex: 9999,
-              pointerEvents: "auto",
-            }}
-          >
-            <img
-              src={localImage}
-              alt="payment-img"
-              style={{
-                transform: `rotate(${rotation}deg)`,
-                maxWidth: "90vw",
-                maxHeight: "90vh",
-                objectFit: "contain",
-                pointerEvents: "auto",
-              }}
-            />
-
-            <div
-              className="mt-2 flex gap-3"
-              style={{
-                pointerEvents: "auto",
-                zIndex: 10000,
-              }}
-            >
-              <Button variant="outline" size="sm" onClick={rotateImageLeft}>
-                Rotate Left
-              </Button>
-
-              <Button variant="outline" size="sm" onClick={rotateImageRight}>
-                Rotate Right
-              </Button>
-
-              <Button variant="outline" size="sm" onClick={onPressClose}>
-                Close
-              </Button>
-            </div>
-          </div>
-        ) : (
-          img ?? <></>
-        )
-      }
-    >
-      <img
-        src={localImage}
-        alt="payment-img"
-        className="max-h-[400px] w-full cursor-zoom-in rounded-lg border object-contain"
-      />
-    </ControlledZoom>
   );
 };
 

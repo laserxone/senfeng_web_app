@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { useContext, useEffect, useState } from "react";
 
 import ConfimationDialog from "@/components/alert-dialog";
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import AppCalendar from "@/components/appCalendar";
 import Dropzone from "@/components/dropzone";
 import {
@@ -498,89 +498,89 @@ export default function EmployeeBranchExpenses() {
         onPressCancel={() => setShowConfirmation(false)}
         loading={deleteLoading}
       />
-      <section className="overflow-hidden rounded-2xl border bg-background shadow-sm">
-        <PageTable
-          loading={loading}
-          columns={columns}
-          data={data}
-          onRowClick={(val, e) => {
-            setImageURL(val);
-            setVisible(true);
-          }}
-        // filter={true}
-        // onFilterClick={() => setFilterVisible(true)}
-        >
-          <div className="flex flex-1 flex-col gap-3 rounded-xl border bg-muted/15 p-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={() => setFilterVisible(true)}
-                variant="outline"
-                className="gap-2"
-              >
-                <Filter className="h-4 w-4" />
-                Filter
-              </Button>
-              <Button
-                variant="outline"
-                className="gap-2"
-                onClick={async () => {
-                  setResetLoading(true);
-                  const startDate = momentT
-                    .tz(TIMEZONE)
-                    .startOf("month")
-                    .startOf("day")
-                    .utc()
-                    .toISOString();
-                  const endDate = momentT
-                    .tz(TIMEZONE)
-                    .endOf("month")
-                    .endOf("day")
-                    .utc()
-                    .toISOString();
-                  await fetchData(startDate, endDate);
-                  setResetLoading(false);
-                }}
-              >
-                {resetLoading ? <Spinner /> : <RotateCcw className="h-4 w-4" />}
-                Reset
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant={"outline"} disabled={!!exportLoading} className="gap-2">
-                    {exportLoading ? <Spinner /> : <FileDown className="h-4 w-4" />}
-                    Export
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-36">
-                  <DropdownMenuItem
-                    disabled={!!exportLoading}
-                    onClick={handleExcelExport}
-                  >
-                    {exportLoading === "excel" && <Spinner />} Excel
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    disabled={!!exportLoading}
-                    onClick={handlePdfExport}
-                  >
-                    {exportLoading === "pdf" && <Spinner />} PDF
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <Card className="w-full border bg-background shadow-none sm:w-auto">
-              <CardContent className="px-4 py-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total PKR:{" "}
-                  <span className="text-base font-bold text-foreground">
-                    {formatCurrency(total)}
-                  </span>
-                </CardTitle>
-              </CardContent>
-            </Card>
+      <div>
+      <PageTable
+        loading={loading}
+        columns={columns}
+        data={data}
+        onRowClick={(val, e) => {
+          setImageURL(val);
+          setVisible(true);
+        }}
+      // filter={true}
+      // onFilterClick={() => setFilterVisible(true)}
+      >
+        <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => setFilterVisible(true)}
+              variant="outline"
+              className="gap-2"
+            >
+              <Filter className="h-4 w-4" />
+              Filter
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={async () => {
+                setResetLoading(true);
+                const startDate = momentT
+                  .tz(TIMEZONE)
+                  .startOf("month")
+                  .startOf("day")
+                  .utc()
+                  .toISOString();
+                const endDate = momentT
+                  .tz(TIMEZONE)
+                  .endOf("month")
+                  .endOf("day")
+                  .utc()
+                  .toISOString();
+                await fetchData(startDate, endDate);
+                setResetLoading(false);
+              }}
+            >
+              {resetLoading ? <Spinner /> : <RotateCcw className="h-4 w-4" />}
+              Reset
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant={"outline"} disabled={!!exportLoading} className="gap-2">
+                  {exportLoading ? <Spinner /> : <FileDown className="h-4 w-4" />}
+                  Export
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-36">
+                <DropdownMenuItem
+                  disabled={!!exportLoading}
+                  onClick={handleExcelExport}
+                >
+                  {exportLoading === "excel" && <Spinner />} Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!!exportLoading}
+                  onClick={handlePdfExport}
+                >
+                  {exportLoading === "pdf" && <Spinner />} PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-        </PageTable>
-      </section>
+          <Card className="w-full border bg-background shadow-none sm:w-auto">
+            <CardContent className="px-4 py-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total PKR:{" "}
+                <span className="text-base font-bold text-foreground">
+                  {formatCurrency(total)}
+                </span>
+              </CardTitle>
+            </CardContent>
+          </Card>
+        </div>
+      </PageTable>
+</div>
 
       <FilterSheet
         visible={filterVisible}
@@ -642,7 +642,7 @@ const ImageSheet = ({
   loading,
   date,
 }: ImageSheetProps) => {
-  const [localImage, setLocalImage] = useState<null | string>(null);
+ 
   const { isAdmin, branch_expenses_delete_access } = useUserDetail();
 
   const hasPermission = isAdmin || branch_expenses_delete_access;
@@ -651,18 +651,6 @@ const ImageSheet = ({
     date && !moment(date).startOf("day").isBefore(moment().startOf("month"));
 
   const isAllowed = hasPermission && isCurrentOrFutureMonth;
-
-  useEffect(() => {
-    if (img) {
-      if (img.includes("http")) {
-        setLocalImage(img);
-      } else {
-        getDownloadURL(ref(storage, img)).then((url) => {
-          setLocalImage(url);
-        });
-      }
-    }
-  }, [img]);
 
   function handleClose() {
     onClose();
@@ -705,13 +693,13 @@ const ImageSheet = ({
           </div>
 
           <div className="overflow-hidden rounded-2xl border bg-muted/15 p-3">
-            {localImage ? (
-             
-                <MyImgZooming
-                  img={localImage}
-                  className="rounded-xl object-contain"
-                />
-         
+            {img ? (
+
+              <MyImgZooming
+                img={img}
+                className="rounded-xl object-contain"
+              />
+
             ) : (
               <div className="grid h-[220px] place-items-center rounded-xl border border-dashed bg-background text-sm text-muted-foreground">
                 No receipt image available

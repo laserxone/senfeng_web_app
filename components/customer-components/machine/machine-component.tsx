@@ -3,10 +3,9 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogTrigger
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -65,7 +64,7 @@ import { UserSearch } from "@/components/user-search";
 import { storage } from "@/config/firebase";
 import { Colors } from "@/constants/data";
 
-import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
@@ -97,11 +96,11 @@ import moment from "moment";
 import Image from "next/image";
 import * as pdfjsLib from "pdfjs-dist";
 import "pdfjs-dist/build/pdf.worker.mjs";
-import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { toast } from "sonner";
 import AddCheque from "./add-cheque";
 
+import { MyImgZooming } from "@/components/img-zooming";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1035,8 +1034,8 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
         editAllowed={data?.editAllowed || false}
         visible={visible}
         onClose={() => {
-          setVisible(false);
           setImageURL(null);
+          setVisible(false);
         }}
         img={imageURL?.image || null}
         note={imageURL?.note || null}
@@ -1375,19 +1374,19 @@ const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }: { open: boole
               delivery request.
             </div>
 
-              <div className="mt-2 flex flex-1 gap-2">
-            <Button type="button" variant="outline" className="flex flex-1" onClick={onClose}>
-              Cancel
-            </Button>
+            <div className="mt-2 flex flex-1 gap-2">
+              <Button type="button" variant="outline" className="flex flex-1" onClick={onClose}>
+                Cancel
+              </Button>
 
-            <Button type="submit" disabled={loading} className="flex flex-1">
-              {loading && <Spinner />}
-              Yes
-            </Button>
-          </div>
+              <Button type="submit" disabled={loading} className="flex flex-1">
+                {loading && <Spinner />}
+                Yes
+              </Button>
+            </div>
           </ScrollArea>
 
-        
+
         </form>
       </DialogContent>
     </Dialog>
@@ -1513,73 +1512,26 @@ const ImageSheet = ({
   cheque_id,
   override
 }: ImageSheetProps) => {
-  const [imageOpen, setImageOpen] = useState(false);
-  const [localImage, setLocalImage] = useState<string | null>(null);
+
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const [rotation, setRotation] = useState(0);
   const { userID } = useUserDetail();
-
-
-  useEffect(() => {
-    if (img) {
-      if (img.includes("http")) {
-        setLocalImage(img);
-      } else {
-        getDownloadURL(ref(storage, img)).then((url) => {
-          setLocalImage(url);
-        });
-      }
-    } else {
-      setLocalImage(null);
-    }
-  }, [img]);
-
-  function handleClose() {
-    if (!imageOpen) {
-      onClose();
-      setLocalImage(null);
-    }
-  }
-
-  const handleZoomChange = useCallback((shouldZoom: boolean) => {
-    setIsZoomed(shouldZoom);
-    if (!shouldZoom) {
-      setImageOpen(false);
-    }
-  }, []);
 
   async function handleDelete(id: string | number) {
     try {
       if (img && !img.includes("https")) {
         await DeleteFromStorage(img);
       }
-
       await axios.delete(`/${userID}/payment/${id}`);
       await onRefresh();
-      handleClose();
       toast.success("Payment Deleted");
+      onClose()
     } finally {
       setDeleteLoading(false);
     }
   }
 
-  const rotateImageRight = () => {
-    setRotation((prev) => (prev + 90) % 360);
-  };
-
-  const rotateImageLeft = () => {
-    setRotation((prev) => (prev - 90 + 360) % 360);
-  };
-
-  const onPressClose = () => {
-    setIsZoomed(false);
-    setImageOpen(false);
-  };
-
-  if (!localImage) return null
   return (
-    <Sheet open={visible} onOpenChange={handleClose}>
+    <Sheet open={visible} onOpenChange={onClose}>
       <SheetContent>
         <SheetHeader className="mb-4">
           <SheetTitle>Payment Image</SheetTitle>
@@ -1589,7 +1541,6 @@ const ImageSheet = ({
               variant="destructive"
               size="icon"
               onClick={(e) => {
-                // e.stopPropagation()
                 // setSelectedCustomerId(currentItem?.id);
                 // setShowConfirmation(true);
                 if (!id) return;
@@ -1600,87 +1551,8 @@ const ImageSheet = ({
               {deleteLoading ? <Spinner /> : <Trash size={16} />}
             </Button>
           )}
-          {localImage ? (
-            <ControlledZoom
-              isZoomed={isZoomed}
-              onZoomChange={handleZoomChange}
-              ZoomContent={({ img }) =>
-                isZoomed ? (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexDirection: "column",
-                      width: "100vw",
-                      height: "100vh",
-                      overflow: "hidden",
-                      zIndex: 9999,
-                      pointerEvents: "auto",
-                    }}
-                  >
-                    <img
-                      src={localImage}
-                      alt="payment-img"
-                      style={{
-                        transform: `rotate(${rotation}deg)`,
-                        maxWidth: "90vw",
-                        maxHeight: "90vh",
-                        objectFit: "contain",
-                        pointerEvents: "auto",
-                      }}
-                    />
-                    <div
-                      className="mt-2 flex gap-5"
-                      style={{
-                        pointerEvents: "auto",
-                        zIndex: 10000,
-                      }}
-                    >
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={rotateImageLeft}
-                      >
-                        Rotate Left
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={rotateImageRight}
-                      >
-                        Rotate Right
-                      </Button>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={onPressClose}
-                      >
-                        Close
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  img ?? <></>
-                )
-              }
-            >
-              <img
-                onClick={() => setImageOpen(true)}
-                src={localImage}
-                alt="payment-img"
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "400px",
-                  objectFit: "contain",
-                  cursor: "zoom-in",
-                }}
-              />
-            </ControlledZoom>
-          ) : (
-            <Label>No Image found</Label>
-          )}
+          <MyImgZooming img={img} />
 
           <strong>TID</strong>
           <Label>{note}</Label>
@@ -1787,10 +1659,7 @@ const InstallmentSheet = ({
           {/* Image */}
           <div className="flex flex-col gap-1">
             <Label className="text-xs text-muted-foreground">Image</Label>
-            <RenderInstallmentImage
-              img={item.image}
-              setImageOpen={setImageOpen}
-            />
+            <MyImgZooming img={item.image} />
           </div>
 
           {/* Action */}
@@ -1853,61 +1722,7 @@ const InstallmentSheet = ({
     </Sheet>
   );
 };
-type RenderInstallmentImageProps = {
-  img: string;
-  type?: boolean;
-  setImageOpen: (open: boolean) => void;
-};
-const RenderInstallmentImage = memo(({ img, type, setImageOpen }: RenderInstallmentImageProps) => {
-  const [localImage, setLocalImage] = useState<string | null>(null);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const [loading, setLoading] = useState(false);
 
-  const handleZoomChange = useCallback((shouldZoom: boolean) => {
-    setIsZoomed(shouldZoom);
-    setImageOpen(shouldZoom);
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-    if (type) {
-      setLocalImage(img);
-    } else if (img) {
-      if (img.includes("http")) {
-        setLocalImage(img);
-      } else {
-        setLoading(true);
-        getDownloadURL(ref(storage, img))
-          .then((url) => {
-            if (isMounted) setLocalImage(url);
-          })
-          .finally(() => {
-            setLoading(false);
-          });
-      }
-    }
-    return () => {
-      isMounted = false;
-    };
-  }, [img, type]);
-
-  return (
-    <div className="space-y-2">
-      {loading ? (
-        <Spinner />
-      ) : (
-        !localImage ? null :
-          <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
-            <img
-              src={localImage}
-              alt="payment-img"
-              className="h-[150px] w-auto object-contain"
-            />
-          </ControlledZoom>
-      )}
-    </div>
-  );
-});
 
 const ViewImagesSheet = ({
   editAllowed,
@@ -1926,7 +1741,7 @@ const ViewImagesSheet = ({
 }) => {
 
   if (!data) return null
-  const [imageOpen, setImageOpen] = useState(false);
+ 
   const [contractPdfImages, setContractPdfImages] = useState<string[]>([]);
   const [otherPdfImages, setOtherPdfImages] = useState<string[]>([]);
   const [addImageVisible, setAddImageVisible] = useState(false);
@@ -1998,10 +1813,10 @@ const ViewImagesSheet = ({
   }, [visible, data?.contract_images_pdf, data?.other_images_pdf, prepareData]);
 
   const handleClose = useCallback(() => {
-    if (!imageOpen) {
+   
       onClose();
-    }
-  }, [imageOpen, onClose]);
+    
+  }, [onClose]);
 
   const handleDeleteImage = async (imgUrl: string, typeKey: string) => {
     try {
@@ -2133,7 +1948,6 @@ const ViewImagesSheet = ({
                 <RenderImage
                   key={`${group.imageType}-${item}-${ind}`}
                   img={item}
-                  setImageOpen={setImageOpen}
                   onDelete={(a, b) => {
                     if (editAllowed) handleDeleteImage(a, b);
                   }}
@@ -2145,7 +1959,6 @@ const ViewImagesSheet = ({
                   key={`${group.imageType}-pdf-${ind}`}
                   img={item}
                   type="pdf"
-                  setImageOpen={setImageOpen}
                 />
               ))}
             </div>
@@ -2228,51 +2041,18 @@ type RenderImageProps = {
 
   img: string;
   type?: string;
-  setImageOpen: (val: boolean) => void;
   onDelete?: (img: string, imageType: string) => void;
   imageType?: string;
 };
-const RenderImage = memo(({ img, type, setImageOpen, onDelete, imageType }: RenderImageProps) => {
-  const [localImage, setLocalImage] = useState<string | null>(null);
-  const [isZoomed, setIsZoomed] = useState(false);
+const RenderImage = memo(({ img, type, onDelete, imageType }: RenderImageProps) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const handleZoomChange = useCallback((shouldZoom: boolean) => {
-    setIsZoomed(shouldZoom);
-    setImageOpen(shouldZoom);
-  }, []);
 
-  useEffect(() => {
-    let isMounted = true;
-    if (type) {
-      setLocalImage(img);
-    } else if (img) {
-      if (img.includes("http")) {
-        setLocalImage(img);
-      } else {
-        getDownloadURL(ref(storage, img)).then((url) => {
-          if (isMounted) setLocalImage(url);
-        });
-      }
-    }
-    return () => {
-      isMounted = false;
-      setDeleteLoading(false)
-    };
-  }, [img, type]);
-
-  if (!localImage) return null
 
   return (
     <div className="group relative overflow-hidden rounded-lg border bg-slate-50 shadow-sm transition-shadow hover:shadow-md dark:bg-zinc-900/70">
       <div className="flex aspect-[4/3] items-center justify-center p-2">
-        <ControlledZoom isZoomed={isZoomed} onZoomChange={handleZoomChange}>
-          <img
-            src={localImage || ""}
-            alt="payment-img"
-            className="max-h-32 w-auto object-contain"
-          />
-        </ControlledZoom>
+        <MyImgZooming img={img} />
       </div>
       {type && (
         <Badge className="absolute left-2 top-2 h-5 rounded-full bg-slate-900/80 px-2 text-[10px] text-white">

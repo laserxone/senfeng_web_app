@@ -6,21 +6,19 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { storage } from "@/config/firebase";
 
 import Heading from "@/components/ui/heading";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { CommissionCRMProps, CommissionMachineItemProps, CommissionOwnerProps } from "@/lib/types";
-import { getDownloadURL, ref } from "firebase/storage";
 import { ChevronRight } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
-import { memo, useCallback, useEffect, useState } from "react";
-import { Controlled as ControlledZoom } from "react-medium-image-zoom";
+import { memo, useEffect, useState } from "react";
 import "react-medium-image-zoom/dist/styles.css";
 import { toast } from "sonner";
+import { MyImgZooming } from "../img-zooming";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
@@ -906,139 +904,6 @@ const CrmView = () => {
 };
 
 
-type MyImgProps = {
-  img: string | null;
-  setImageOpen: (value: boolean) => void;
-};
-const MyImg = memo(({ img, setImageOpen }: MyImgProps) => {
-  const [localImage, setLocalImage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const [rotation, setRotation] = useState(0);
-
-  useEffect(() => {
-    if (!img) {
-      setLocalImage(null);
-      setError(false);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(false);
-
-    if (img.includes("http")) {
-      setLocalImage(img);
-      setLoading(false);
-    } else {
-      getDownloadURL(ref(storage, img))
-        .then((url) => {
-          setLocalImage(url);
-        })
-        .catch(() => {
-          setError(true);
-          setLocalImage(null);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-  }, [img]);
-
-  const handleZoomChange = useCallback((shouldZoom: boolean) => {
-    setIsZoomed(shouldZoom);
-    if (!shouldZoom) {
-      setImageOpen(false);
-    }
-  }, []);
-
-  const rotateImageRight = () => {
-    setRotation((prev) => (prev + 90) % 360);
-  };
-
-  const rotateImageLeft = () => {
-    setRotation((prev) => (prev - 90 + 360) % 360);
-  };
-
-  const onPressClose = () => {
-    setIsZoomed(false);
-    setImageOpen(false);
-  };
-
-  if (loading) return <Spinner />;
-  if (!img || error || !localImage) return <p>No image</p>;
-
-  return (
-    <ControlledZoom
-      isZoomed={isZoomed}
-      onZoomChange={handleZoomChange}
-      ZoomContent={({ img }) =>
-        isZoomed ? (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "column",
-              width: "100vw",
-              height: "100vh",
-              overflow: "hidden",
-              zIndex: 9999,
-              pointerEvents: "auto",
-            }}
-          >
-            <img
-              src={localImage}
-              alt="payment-img"
-              style={{
-                transform: `rotate(${rotation}deg)`,
-                maxWidth: "90vw",
-                maxHeight: "90vh",
-                objectFit: "contain",
-                pointerEvents: "auto",
-              }}
-            />
-            <div
-              className="mt-2 flex gap-5"
-              style={{
-                pointerEvents: "auto",
-                zIndex: 10000,
-              }}
-            >
-              <Button variant="outline" size="sm" onClick={rotateImageLeft}>
-                Rotate Left
-              </Button>
-              <Button variant="outline" size="sm" onClick={rotateImageRight}>
-                Rotate Right
-              </Button>
-
-              <Button variant="outline" size="sm" onClick={onPressClose}>
-                Close
-              </Button>
-            </div>
-          </div>
-        ) : (
-          img ?? <></>
-        )
-      }
-    >
-      <img
-        onClick={() => setImageOpen(true)}
-        src={localImage}
-        alt="payment-img"
-        style={{
-          maxWidth: "100%",
-          maxHeight: "400px",
-          objectFit: "contain",
-          cursor: "zoom-in",
-        }}
-      />
-    </ControlledZoom>
-  );
-});
-
-
 const ImageSheet = memo(({
   data,
   visible,
@@ -1049,13 +914,12 @@ const ImageSheet = memo(({
   visible: boolean;
   onClose: () => void;
 }) => {
-  const [imageOpen, setImageOpen] = useState(false);
 
 
   function handleClose() {
-    if (!imageOpen) {
-      onClose();
-    }
+
+    onClose();
+
   }
 
   return (
@@ -1069,14 +933,14 @@ const ImageSheet = memo(({
             {data?.contract_images_png &&
               data?.contract_images_png?.map((item) => (
                 <div key={item}>
-                  <MyImg img={item} setImageOpen={setImageOpen} />
+                  <MyImgZooming img={item} />
                 </div>
               ))}
 
             {data?.machine_nameplate_images &&
               data?.machine_nameplate_images?.map((item) => (
                 <div key={item}>
-                  <MyImg img={item} setImageOpen={setImageOpen} />
+                  <MyImgZooming img={item} />
                 </div>
               ))}
           </ScrollArea>

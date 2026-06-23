@@ -9,8 +9,6 @@ import {
 import {
     useCallback,
     useEffect,
-    useMemo,
-    useRef,
     useState
 } from "react";
 
@@ -25,19 +23,17 @@ import {
 } from "@/components/ui/sheet";
 import Spinner from "@/components/ui/spinner";
 import FilterSheet from "@/components/users/filterSheet";
-import { storage } from "@/config/firebase";
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { UserReimbursementType } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
-import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import momentT from "moment-timezone";
 import Link from "next/link";
-import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
+import { MyImgZooming } from "../img-zooming";
 
 export default function ReimbursementApproval() {
     const [filterVisible, setFilterVisible] = useState(false);
@@ -262,34 +258,34 @@ export default function ReimbursementApproval() {
 
                 return (
                     <div>
-                    <Button
-                        disabled={selectedItem === currentItem?.id}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleVerify(currentItem?.id);
-                        }}
-                    >
-                        {selectedItem === currentItem?.id ? (
-                            <Spinner />
-                        ) : (
-                            "Verify"
-                        )}
-                    </Button>
+                        <Button
+                            disabled={selectedItem === currentItem?.id}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleVerify(currentItem?.id);
+                            }}
+                        >
+                            {selectedItem === currentItem?.id ? (
+                                <Spinner />
+                            ) : (
+                                "Verify"
+                            )}
+                        </Button>
 
-                    <Button
-                    variant={"destructive"}
-                        disabled={deleteItem === currentItem?.id}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(currentItem?.id);
-                        }}
-                    >
-                        {deleteItem === currentItem?.id ? (
-                            <Spinner />
-                        ) : (
-                            "Delete"
-                        )}
-                    </Button>
+                        <Button
+                            variant={"destructive"}
+                            disabled={deleteItem === currentItem?.id}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(currentItem?.id);
+                            }}
+                        >
+                            {deleteItem === currentItem?.id ? (
+                                <Spinner />
+                            ) : (
+                                "Delete"
+                            )}
+                        </Button>
                     </div>
                 );
             },
@@ -299,7 +295,7 @@ export default function ReimbursementApproval() {
 
     async function handleVerify(id: number) {
         if (!id) return
-        
+
         setSelectedItem(id)
         try {
             await axios.put(`/${userID}/reimbursement/${id}`, {
@@ -325,7 +321,7 @@ export default function ReimbursementApproval() {
 
     async function handleDelete(id: number) {
         if (!id) return
-       
+
         setDeleteItem(id)
         try {
             await axios.delete(`/${userID}/reimbursement/${id}`)
@@ -442,53 +438,18 @@ const ImageSheet = ({
     id: number | null
     onRefresh: (id: number) => void
 }) => {
-    const [imageOpen, setImageOpen] = useState(false);
-    const [localImage, setLocalImage] = useState<string | null>(null);
-    const [isZoomed, setIsZoomed] = useState(false);
-    const isMountedRef = useRef(true);
+
     const [deleteLoading, setDeleteLoading] = useState(false);
     const { userID } = useUserDetail();
 
-    const fetchImage = useCallback(async () => {
-        if (!img) return;
-
-        if (img.includes("http")) {
-            if (isMountedRef.current) setLocalImage(img);
-        } else {
-            try {
-                const storageRef = ref(storage, img);
-                const url = await getDownloadURL(storageRef);
-                if (isMountedRef.current) setLocalImage(url);
-            } catch (error) {
-                console.error("Error fetching image URL:", error);
-            }
-        }
-    }, [img]);
-
-    useEffect(() => {
-        isMountedRef.current = true;
-        fetchImage();
-
-        return () => {
-            isMountedRef.current = false;
-            setLocalImage(null);
-        };
-    }, [fetchImage]);
 
     const handleClose = useCallback(() => {
-        if (!imageOpen) {
-            onClose();
-        }
-    }, [imageOpen, onClose]);
 
-    const handleZoomChange = useCallback((shouldZoom: boolean) => {
-        setIsZoomed(shouldZoom);
-        if (!shouldZoom) {
-            setImageOpen(false);
-        }
-    }, []);
+        onClose();
 
-    const memoizedImage = useMemo(() => localImage, [localImage]);
+    }, [onClose]);
+
+
 
     async function handleDelete() {
         if (img) {
@@ -539,27 +500,7 @@ const ImageSheet = ({
                         <strong>Description</strong>
                         <p>{description || "No description available"}</p>
 
-                        {memoizedImage ? (
-                            <ControlledZoom
-                                isZoomed={isZoomed}
-                                onZoomChange={handleZoomChange}
-                            >
-                                <img
-                                    onClick={() => setImageOpen(true)}
-                                    className="hover:cursor-pointer"
-                                    src={memoizedImage}
-                                    alt="reimbursement-img"
-                                    style={{
-                                        flex: 1,
-                                        maxWidth: "100%",
-                                        maxHeight: "400px",
-                                        objectFit: "contain",
-                                    }}
-                                />
-                            </ControlledZoom>
-                        ) : (
-                            <p>Loading image...</p>
-                        )}
+                        <MyImgZooming img={img} />
                     </div>
                 </ScrollArea>
             </SheetContent>

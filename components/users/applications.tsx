@@ -14,12 +14,10 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { storage } from "@/config/firebase";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { UploadImage } from "@/lib/uploadFunction";
 import { cn } from "@/lib/utils";
-import { getDownloadURL, ref } from "firebase/storage";
 import {
     AlertCircle,
     Banknote,
@@ -44,18 +42,18 @@ import {
     X,
     XCircle
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { Controlled as ControlledZoom } from "react-medium-image-zoom";
+import { useEffect, useState } from "react";
 import "react-medium-image-zoom/dist/styles.css";
 import { toast } from "sonner";
+import ConfimationDialog from "../alert-dialog";
 import AppCalendar from "../appCalendar";
+import { MyImgZooming } from "../img-zooming";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import Heading from "../ui/heading";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
 import { Textarea } from "../ui/textarea";
-import ConfimationDialog from "../alert-dialog";
 
 interface LoanFormData {
     employeeId: string
@@ -1210,13 +1208,13 @@ export default function Applications() {
                                 <Label className="text-xl font-semibold pb-2">Cheque Images</Label>
                                 <div className="flex flex-wrap gap-2">
                                     {detailApplication?.cheque_images?.map((item) => (
-                                        <RenderEachImage img={item} key={item} />
+                                        <MyImgZooming img={item} key={item} />
                                     ))}
                                 </div>
                                 <Label className="text-xl font-semibold pb-2">Supporting Documents</Label>
                                 <div className="flex flex-wrap gap-2">
                                     {detailApplication?.supporting_documents?.map((item) => (
-                                        <RenderEachImage img={item} key={item} />
+                                        <MyImgZooming img={item} key={item} />
                                     ))}
                                 </div>
                             </div>
@@ -1729,13 +1727,13 @@ const RenderMyApprovals = () => {
                                 <Label className="text-xl font-semibold pb-2">Cheque Images</Label>
                                 <div className="flex flex-wrap gap-2">
                                     {selectedApplication?.cheque_images?.map((item) => (
-                                        <RenderEachImage img={item} key={item} />
+                                        <MyImgZooming img={item} key={item} />
                                     ))}
                                 </div>
                                 <Label className="text-xl font-semibold pb-2">Supporting Documents</Label>
                                 <div className="flex flex-wrap gap-2">
                                     {selectedApplication?.supporting_documents?.map((item) => (
-                                        <RenderEachImage img={item} key={item} />
+                                        <MyImgZooming img={item} key={item} />
                                     ))}
                                 </div>
 
@@ -1982,129 +1980,3 @@ function ApplicationCard({
         </Card>
     )
 }
-
-const RenderEachImage = ({
-    img,
-}: { img: string }) => {
-    const [localImage, setLocalImage] = useState<string | null>(null);
-    const [isZoomed, setIsZoomed] = useState(false);
-    const [rotation, setRotation] = useState(0);
-
-    useEffect(() => {
-        if (img) {
-            if (img.includes("http")) {
-                setLocalImage(img);
-            } else {
-                getDownloadURL(ref(storage, img)).then((url) => {
-                    setLocalImage(url);
-                });
-            }
-        } else {
-            setLocalImage(null);
-        }
-    }, [img]);
-
-
-    const handleZoomChange = useCallback((shouldZoom: boolean) => {
-        setIsZoomed(shouldZoom);
-
-    }, []);
-
-
-
-    const rotateImageRight = useCallback(() => {
-        setRotation((prev) => (prev + 90) % 360);
-    }, []);
-
-    const rotateImageLeft = useCallback(() => {
-        setRotation((prev) => (prev - 90 + 360) % 360);
-    }, []);
-
-    const onPressClose = useCallback(() => {
-        setIsZoomed(false);
-
-    }, []);
-
-    return (
-        localImage ? (
-            <ControlledZoom
-                isZoomed={isZoomed}
-                onZoomChange={handleZoomChange}
-                ZoomContent={({ img }) =>
-                    isZoomed ? (
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexDirection: "column",
-                                width: "100vw",
-                                height: "100vh",
-                                overflow: "hidden",
-                                zIndex: 9999,
-                                pointerEvents: "auto",
-                            }}
-                        >
-                            <img
-                                src={localImage}
-                                alt="payment-img"
-                                style={{
-                                    transform: `rotate(${rotation}deg)`,
-                                    maxWidth: "90vw",
-                                    maxHeight: "90vh",
-                                    objectFit: "contain",
-                                    pointerEvents: "auto",
-                                }}
-                            />
-                            <div
-                                className="mt-2 flex gap-5"
-                                style={{
-                                    pointerEvents: "auto",
-                                    zIndex: 10000,
-                                }}
-                            >
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={rotateImageLeft}
-                                >
-                                    Rotate Left
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={rotateImageRight}
-                                >
-                                    Rotate Right
-                                </Button>
-
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={onPressClose}
-                                >
-                                    Close
-                                </Button>
-                            </div>
-                        </div>
-                    ) : (
-                        img ?? <></>
-                    )
-                }
-            >
-                <img
-                    src={localImage}
-                    alt="payment-img"
-                    style={{
-                        maxWidth: "100px",
-                        maxHeight: "100px",
-                        objectFit: "contain",
-                        cursor: "zoom-in",
-                    }}
-                />
-            </ControlledZoom>
-        ) : (
-            <Label>No Image found</Label>
-        )
-    );
-};

@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import moment from "moment";
 import { useEffect, useMemo, useState } from "react";
-import Zoom from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 
 import { Badge } from "@/components/ui/badge";
@@ -25,16 +24,14 @@ import {
 
 import PageTable from "@/components/app-table";
 import Dropzone from "@/components/dropzone";
-import { storage } from "@/config/firebase";
 import { TriggerFirebaseForPendingPayments } from "@/lib/triggerFirebase";
 import { UploadImage } from "@/lib/uploadFunction";
 import { ColumnDef } from "@tanstack/react-table";
-import { getDownloadURL, ref } from "firebase/storage";
 import { ArrowUpDown } from "lucide-react";
 import AppCalendar from "../appCalendar";
+import { MyImgZooming } from "../img-zooming";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
-import Spinner from "../ui/spinner";
 
 type PaymentRequest = {
     id: number;
@@ -50,7 +47,7 @@ type PaymentRequest = {
     customer_name: string;
     customer_owner: string;
     ownership_name: string;
-    customer_location : string;
+    customer_location: string;
     dispatch_information: { other_information?: { transporter?: string } }
     note: string
 };
@@ -252,7 +249,7 @@ export default function PaymentRequestsPage() {
             cell: ({ row }) => <div>{row.original.customer_owner || "-"}</div>,
         },
 
-         {
+        {
             accessorKey: "customer_location",
             filterFn: "includesString",
             header: ({ column }) => (
@@ -362,7 +359,7 @@ export default function PaymentRequestsPage() {
             id: "slip",
             header: "Slip",
             cell: ({ row }) =>
-                row.original.slip ? <RenderPaymentSlip img={row.original.slip} /> : "-",
+                row.original.slip ? <MyImgZooming img={row.original.slip} /> : "-",
         },
         {
             id: "actions",
@@ -534,53 +531,3 @@ export default function PaymentRequestsPage() {
         </div>
     );
 }
-
-
-const RenderPaymentSlip = ({ img }: { img: string }) => {
-    const [localImage, setLocalImage] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(false);
-
-    useEffect(() => {
-        if (!img) {
-            setLocalImage(null);
-            setError(false);
-            setLoading(false);
-            return;
-        }
-
-        setLoading(true);
-        setError(false);
-
-        if (img.includes("http")) {
-            setLocalImage(img);
-            setLoading(false);
-        } else {
-            getDownloadURL(ref(storage, img))
-                .then((url) => {
-                    setLocalImage(url);
-                })
-                .catch(() => {
-                    setError(true);
-                    setLocalImage(null);
-                })
-                .finally(() => {
-                    setLoading(false);
-                });
-        }
-    }, [img]);
-
-    if (loading) return <Spinner />;
-    if (!img || error || !localImage) return <p>No image</p>;
-
-    return (
-        <Zoom>
-            <img
-                alt="visit image"
-                className="dark:invert"
-                src={localImage}
-                width="100"
-            />
-        </Zoom>
-    );
-};

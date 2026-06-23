@@ -243,7 +243,7 @@ const PageTable = <T extends Record<string, any>>({
 
       <div className="flex flex-col items-center justify-end gap-2 space-x-2  sm:flex-row">
         <div className="flex w-full items-center justify-between">
-          <div className="flex-1 text-sm text-muted-foreground">
+          <div className="flex-1 text-sm text-muted-foreground pl-2">
             {filteredData.length > 0 ? (
               <>Showing {filteredData.length} entries</>
             ) : (

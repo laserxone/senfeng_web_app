@@ -22,9 +22,7 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
-  useRef,
-  useState,
+  useState
 } from "react";
 
 import PageTable from "@/components/app-table-without-pagination";
@@ -32,6 +30,7 @@ import AppCalendar from "@/components/appCalendar";
 import CurrencyFormatter from "@/components/currency-formatter";
 import { CustomerSearchWithData } from "@/components/customer-search-with-data";
 import Dropzone from "@/components/dropzone";
+import { MyImgZooming } from "@/components/img-zooming";
 import { RequiredStar } from "@/components/RequiredStar";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -61,9 +60,9 @@ import {
 } from "@/components/ui/sheet";
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { UserSearch } from "@/components/user-search";
 import FilterSheet from "@/components/users/filterSheet";
-import { storage } from "@/config/firebase";
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
@@ -74,16 +73,12 @@ import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ColumnDef } from "@tanstack/react-table";
-import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import momentT from "moment-timezone";
 import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
-import { Controlled as ControlledZoom } from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { MyImgZooming } from "@/components/img-zooming";
 
 export default function Page() {
   const [filterVisible, setFilterVisible] = useState(false);
@@ -577,53 +572,13 @@ const ImageSheet = ({
   id: number | null
   onRefresh: (id: number) => void
 }) => {
-  const [imageOpen, setImageOpen] = useState(false);
-  const [localImage, setLocalImage] = useState<string | null>(null);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const isMountedRef = useRef(true);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const { userID } = useUserDetail();
 
-  const fetchImage = useCallback(async () => {
-    if (!img) return;
-
-    if (img.includes("http")) {
-      if (isMountedRef.current) setLocalImage(img);
-    } else {
-      try {
-        const storageRef = ref(storage, img);
-        const url = await getDownloadURL(storageRef);
-        if (isMountedRef.current) setLocalImage(url);
-      } catch (error) {
-        console.error("Error fetching image URL:", error);
-      }
-    }
-  }, [img]);
-
-  useEffect(() => {
-    isMountedRef.current = true;
-    fetchImage();
-
-    return () => {
-      isMountedRef.current = false;
-      setLocalImage(null);
-    };
-  }, [fetchImage]);
-
   const handleClose = useCallback(() => {
-    if (!imageOpen) {
-      onClose();
-    }
-  }, [imageOpen, onClose]);
+    onClose();
+  }, [onClose]);
 
-  const handleZoomChange = useCallback((shouldZoom: boolean) => {
-    setIsZoomed(shouldZoom);
-    if (!shouldZoom) {
-      setImageOpen(false);
-    }
-  }, []);
-
-  const memoizedImage = useMemo(() => localImage, [localImage]);
 
   async function handleDelete() {
     if (img) {
@@ -689,13 +644,9 @@ const ImageSheet = ({
             </div>
 
             <div className="overflow-hidden rounded-2xl border bg-muted/15 p-3">
-              {memoizedImage ? (
-               <MyImgZooming img={memoizedImage}/>
-              ) : (
-                <div className="grid h-[240px] place-items-center rounded-xl border border-dashed bg-background text-sm text-muted-foreground">
-                  Loading image...
-                </div>
-              )}
+
+              <MyImgZooming img={img} />
+
             </div>
 
             <Button
@@ -976,7 +927,7 @@ const AddReimbursementDialog = ({ visible, onClose, onRefresh }: { visible: bool
                         <FieldLabel>
                           Date <RequiredStar />
                         </FieldLabel>
-                        <AppCalendar date={field.value} onChange={field.onChange}  min={new Date(new Date().getFullYear(), new Date().getMonth(), 1)} />
+                        <AppCalendar date={field.value} onChange={field.onChange} min={new Date(new Date().getFullYear(), new Date().getMonth(), 1)} />
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}

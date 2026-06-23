@@ -3,6 +3,7 @@
 import { RequiredStar } from "@/components/RequiredStar";
 import AppCalendar from "@/components/appCalendar";
 import Dropzone from "@/components/dropzone";
+import { MyImgZooming } from "@/components/img-zooming";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -25,7 +26,6 @@ import {
 } from "@/components/ui/field";
 import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import Spinner from "@/components/ui/spinner";
 import {
   Table,
@@ -37,25 +37,21 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { UserSearch } from "@/components/user-search";
-import { storage } from "@/config/firebase";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { Loan, LoanPayment } from "@/lib/types";
 import { UploadImage } from "@/lib/uploadFunction";
-import { getDownloadURL, ref } from "firebase/storage";
 import {
   ChevronRight,
   CreditCard,
   Edit,
   FileText,
-  ImageIcon,
   Pencil,
   Plus,
-  Wallet,
+  Wallet
 } from "lucide-react";
 import moment from "moment";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Controlled as ControlledZoom } from "react-medium-image-zoom";
+import { useEffect, useMemo, useState } from "react";
 import "react-medium-image-zoom/dist/styles.css";
 import { toast } from "sonner";
 
@@ -533,7 +529,7 @@ function PaymentHistory({
                       {moment(p.payment_date).format("YYYY-MM-DD")}
                     </TableCell>
                     <TableCell>
-                      <ImageView img={p?.slip} />
+                      <MyImgZooming img={p?.slip} />
                     </TableCell>
                     <TableCell className="text-right">
                       <EditPaymentLoan
@@ -673,103 +669,6 @@ const EditPaymentLoan = ({
         </DialogContent>
       </Dialog>
     </>
-  );
-};
-
-const ImageView = ({ img }: { img: string }) => {
-  const [localImage, setLocalImage] = useState<string | null>(null);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const [rotation, setRotation] = useState(0);
-
-  useEffect(() => {
-    if (img) {
-      if (img.includes("http")) {
-        setLocalImage(img);
-      } else {
-        getDownloadURL(ref(storage, img)).then((url) => {
-          setLocalImage(url);
-        });
-      }
-    } else {
-      setLocalImage(null);
-    }
-  }, [img]);
-
-  const handleZoomChange = useCallback((shouldZoom: boolean) => {
-    setIsZoomed(shouldZoom);
-  }, []);
-
-  const rotateImageRight = () => {
-    setRotation((prev) => (prev + 90) % 360);
-  };
-
-  const rotateImageLeft = () => {
-    setRotation((prev) => (prev - 90 + 360) % 360);
-  };
-
-  const onPressClose = () => {
-    setIsZoomed(false);
-  };
-
-  return localImage ? (
-    <ControlledZoom
-      isZoomed={isZoomed}
-      onZoomChange={handleZoomChange}
-      ZoomContent={({ img }) =>
-        isZoomed ? (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "column",
-              width: "100vw",
-              height: "100vh",
-              overflow: "hidden",
-              zIndex: 9999,
-              pointerEvents: "auto",
-            }}
-          >
-            <img
-              src={localImage}
-              alt="payment-img"
-              style={{
-                transform: `rotate(${rotation}deg)`,
-                maxWidth: "90vw",
-                maxHeight: "90vh",
-                objectFit: "contain",
-                pointerEvents: "auto",
-              }}
-            />
-
-            <div className="mt-3 flex gap-3" style={{ pointerEvents: "auto" }}>
-              <Button variant="outline" size="sm" onClick={rotateImageLeft}>
-                Rotate Left
-              </Button>
-              <Button variant="outline" size="sm" onClick={rotateImageRight}>
-                Rotate Right
-              </Button>
-              <Button variant="outline" size="sm" onClick={onPressClose}>
-                Close
-              </Button>
-            </div>
-          </div>
-        ) : (
-          img ?? <></>
-        )
-      }
-    >
-      <img
-        src={localImage}
-        alt="payment-img"
-        className="h-14 w-14 rounded-md border object-cover"
-        style={{ cursor: "zoom-in" }}
-      />
-    </ControlledZoom>
-  ) : (
-    <div className="flex h-14 w-14 items-center justify-center rounded-md border bg-muted text-muted-foreground">
-      <ImageIcon className="h-4 w-4" />
-    </div>
   );
 };
 

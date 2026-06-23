@@ -11,18 +11,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Spinner from "@/components/ui/spinner";
-import { storage } from "@/config/firebase";
 
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { Payment } from "@/lib/types";
-import { getDownloadURL, ref } from "firebase/storage";
-import moment from "moment";
-import { useEffect, useRef, useState, type ElementType } from "react";
-import Zoom from "react-medium-image-zoom";
-import "react-medium-image-zoom/dist/styles.css";
-import { toast } from "sonner";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import {
   Banknote,
   CalendarDays,
@@ -38,7 +30,12 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
+import moment from "moment";
+import { useEffect, useRef, useState, type ElementType } from "react";
+import "react-medium-image-zoom/dist/styles.css";
+import { toast } from "sonner";
 import { MyImgZooming } from "./img-zooming";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 
 
 type Machine = {
@@ -438,7 +435,7 @@ export default function PaymentVerification() {
                                           <p className="mb-2 text-xs font-medium text-muted-foreground">
                                             Receipt proof
                                           </p>
-                                         <MyImgZooming img={payment.image} className="h-[200px]"/>
+                                          <MyImgZooming img={payment.image} className="h-[200px]" />
                                         </div>
                                       )}
                                     </div>
@@ -599,51 +596,4 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
-const RenderImage = ({ img }: { img: string }) => {
-  const [localImage, setLocalImage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    if (!img) {
-      setLocalImage(null);
-      setError(false);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(false);
-
-    if (img.includes("http")) {
-      setLocalImage(img);
-      setLoading(false);
-    } else {
-      getDownloadURL(ref(storage, img))
-        .then((url) => {
-          setLocalImage(url);
-        })
-        .catch(() => {
-          setError(true);
-          setLocalImage(null);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-  }, [img]);
-
-  if (loading) return <Spinner />;
-  if (!img || error || !localImage) return <p>No image</p>;
-
-  return (
-    <Zoom>
-      <img
-        alt="visit image"
-        className="dark:invert"
-        src={localImage}
-        width="100"
-      />
-    </Zoom>
-  );
-};
