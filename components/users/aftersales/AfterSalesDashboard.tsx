@@ -1,83 +1,32 @@
 "use client";
-import AddCustomerDialog from "@/components/addCustomer";
-import PageTable from "@/components/app-table-without-pagination";
-import AppCalendar from "@/components/appCalendar";
-import { RequiredStar } from "@/components/RequiredStar";
 import TeamTask from "@/components/teamTask";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import Spinner from "@/components/ui/spinner";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { useSidebar } from "@/components/ui/sidebar";
 import Attendance from "@/components/users/attendance";
-import FilterSheet from "@/components/users/filterSheet";
-import OldRecordSheet from "@/components/users/old-record-sheet";
-import { ProfilePicture } from "@/components/users/ProfilePicture";
 import Reimbursement from "@/components/users/Reimbursement";
 import RenderFines from "@/components/users/render-fines";
 import SalaryRecord from "@/components/users/SalaryRecord";
+import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { UserAttendanceRecord, UserReimbursementType } from "@/lib/types";
 import { updateItemPurpose } from "@/lib/updatePurpose";
-import { ArrowUpDown, BadgeAlert, CalendarCheck, Filter, ReceiptText, TrendingDown, TrendingUp, UserPlus, Users, Wallet } from "lucide-react";
+import { BadgeAlert, CalendarCheck, ReceiptText, UserPlus, Users, Wallet } from "lucide-react";
 import moment from "moment";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Dispatch, SetStateAction, useCallback, useEffect, useState } from "react";
-// import "./styles.css";
-import { MyCustomer, MyCustomerResolved, UserAttendanceRecord, UserDashboard, UserReimbursementType } from "@/lib/types";
-import { ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
-import AutoScrollMembers from "@/components/autoScroll";
-import { useSidebar } from "@/components/ui/sidebar";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import UserTabs from "../user-tabs";
+import PendingFeedbackData from "./aftersales-pending-feedback";
+import { DashboardData } from "./aftersales-types";
 
-type WithFeedbackProps = MyCustomerResolved & {
-  feedback_date: string
-  user_name ?: string
-}
-
-type DashboardData = {
-  user: UserDashboard
-  withFeedback: WithFeedbackProps[]
-  withoutFeedback: MyCustomerResolved[]
-}
-
-type CustomerEmployeeAfterSalesProps = {
-  onRefresh: () => Promise<void>,
-  user_id: number,
-  data: DashboardData | null,
-  onFilterData: (a: string, b: string) => void,
-  handleClear: () => void,
-  selectedOption: string,
-  setSelectedOption: Dispatch<SetStateAction<string>>,
-  height ?:string
-}
-
-type DataKeys = Exclude<keyof DashboardData, "user">;
-
-export default function AfterSalesDashboard() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [filterData, setFilterData] = useState<DashboardData | null>(null);
+export default function AfterSalesDashboard({ data, onRefresh }: { data: DashboardData, onRefresh: () => Promise<void> }) {
   const [reimbursementData, setReimbursementData] = useState<UserReimbursementType[]>([]);
   const [attendanceData, setAttendanceData] = useState<UserAttendanceRecord[]>([]);
-  const [filter, setFilter] = useState<{ start: any; end: any }>({
-    start: null,
-    end: null,
-  });
-  const [selectedOption, setSelectedOption] =
-    useState<string>("withoutFeedback");
- 
+
   const { userID } = useUserDetail();
 
-    const [activeTab, setActiveTab] = useState("newCustomers");
+  const [activeTab, setActiveTab] = useState("feedback");
   const [allFines, setAllFines] = useState(0)
   const [allTeamTasks, setAllTeamTasks] = useState(0)
 
@@ -94,19 +43,19 @@ export default function AfterSalesDashboard() {
     }
   }, [userID]);
 
-    useEffect(() => {
-      const paramTab = searchParams.get("p");
-      if (paramTab) {
-        setActiveTab(paramTab);
-      }
-  
-    }, [searchParams]);
-  
-  
-    function routeTo(targetTab: string) {
-      window.history.pushState({}, "", `${window.location.pathname}?p=${targetTab}`)
+  useEffect(() => {
+    const paramTab = searchParams.get("p");
+    if (paramTab) {
+      setActiveTab(paramTab);
     }
-  
+
+  }, [searchParams]);
+
+
+  function routeTo(targetTab: string) {
+    window.history.pushState({}, "", `${window.location.pathname}?p=${targetTab}`)
+  }
+
 
   async function fetchReimbursementData(startDate: string, endDate: string) {
     return new Promise<boolean>((resolve, reject) => {
@@ -166,173 +115,112 @@ export default function AfterSalesDashboard() {
     });
   }
 
-  
-
-  useEffect(() => {
-    if (filter.start) {
-      const temp: any = {};
-      const startDate = moment(new Date(filter.start));
-      const endDate = moment(new Date(filter.end));
-
-      temp.user = data?.user;
-      temp.withoutFeedback = [...(data?.withoutFeedback || [])];
-      temp.withFeedback = [...(data?.withFeedback || [])].filter(
-        (item: WithFeedbackProps) => {
-          const feedbackDate = moment(new Date(item.feedback_date));
-          return (
-            feedbackDate.isSameOrAfter(startDate) &&
-            feedbackDate.isSameOrBefore(endDate)
-          );
-        },
-      );
-
-      setFilterData(temp);
-    } else {
-      setFilterData(data);
-    }
-  }, [filter, data]);
-
   const RenderReimbursement = useCallback(() => {
     return (
-    <Card className="flex flex-1">
+      <Card className="flex flex-1">
         <CardContent className="pt-0 flex flex-1">
           <ScrollArea className="max-h-[500px] w-full pr-2">
-          <Reimbursement
-            id={userID}
+            <Reimbursement
+              id={userID}
               height="min-h-[calc(100dvh-420px)]"
-            passingData={reimbursementData || []}
-            onAddRefresh={async () => {
-              const startDate = moment().startOf("month").toISOString();
-              const endDate = moment().endOf("month").toISOString();
-              await fetchReimbursementData(startDate, endDate);
-            }}
-            onReset={async (start, end) => {
-              await fetchReimbursementData(start, end);
-            }}
-            onFilterReturn={async (start, end) => { await fetchReimbursementData(start, end) }
-            }
-            onUpdatePurpose={(val: any) => {
-              const newData = updateItemPurpose(reimbursementData, val);
-              setReimbursementData(newData);
-            }}
-          />
+              passingData={reimbursementData || []}
+              onAddRefresh={async () => {
+                const startDate = moment().startOf("month").toISOString();
+                const endDate = moment().endOf("month").toISOString();
+                await fetchReimbursementData(startDate, endDate);
+              }}
+              onReset={async (start, end) => {
+                await fetchReimbursementData(start, end);
+              }}
+              onFilterReturn={async (start, end) => { await fetchReimbursementData(start, end) }
+              }
+              onUpdatePurpose={(val: any) => {
+                const newData = updateItemPurpose(reimbursementData, val);
+                setReimbursementData(newData);
+              }}
+            />
           </ScrollArea>
         </CardContent>
       </Card>
     );
   }, [reimbursementData]);
 
+  const RenderFeedback = useCallback(() => {
+    return (
+      <PendingFeedbackData data={data} onRefresh={onRefresh} user_id={userID} />
+    );
+  }, [data]);
+
   const RenderAttendance = useCallback(() => {
     return (
-       <Card className="flex flex-1 p-0">
-        <CardContent className="pt-0 flex flex-1">
           <Attendance
-          height="min-h-[calc(100dvh-360px)]"
+
             passingData={attendanceData}
             onFilterReturn={async (start, end) => {
               await fetchAttendanceData(start, end);
             }}
           />
-        </CardContent>
-      </Card>
     );
   }, [attendanceData]);
 
 
-  const tabTriggerBase =
-      "h-8 gap-1.5 rounded-md px-3 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:text-white hover:shadow-md cursor-pointer"
-  
-    const tabs = [
-     
-      {
-        value: "attendance",
-        label: "Attendance",
-        icon: CalendarCheck,
-        count: attendanceData?.filter((item) => item.status !== 'Absent').length || 0,
-        className: "bg-cyan-600 hover:bg-cyan-700 data-[state=active]:bg-cyan-700 data-[state=active]:ring-cyan-300",
-        badgeClassName: "text-cyan-700",
-      },
-  
-      {
-        value: "task",
-        label: "Team Task",
-        icon: Users,
-        count: allTeamTasks,
-        className: "bg-orange-500 hover:bg-orange-600 data-[state=active]:bg-orange-600 data-[state=active]:ring-orange-300",
-        badgeClassName: "text-orange-600",
-      },
-  
-      {
-        value: "reimbursement",
-        label: "Reimbursement",
-        icon: ReceiptText,
-        count: reimbursementData?.length || 0,
-        className: "bg-orange-500 hover:bg-orange-600 data-[state=active]:bg-orange-600 data-[state=active]:ring-orange-300",
-        badgeClassName: "text-orange-600",
-      },
-  
-  
-      {
-        value: "salary",
-        label: "Salary",
-        icon: Wallet,
-        count: null,
-        className: "bg-amber-500 hover:bg-amber-600 data-[state=active]:bg-amber-600 data-[state=active]:ring-amber-300",
-        badgeClassName: "text-amber-700",
-      },
-  
-      {
-        value: "fines",
-        label: "Fines",
-        icon: BadgeAlert,
-        count: allFines,
-        className: "bg-red-600 hover:bg-red-700 data-[state=active]:bg-red-700 data-[state=active]:ring-red-300",
-        badgeClassName: "text-red-700",
-      },
-    ]
-  
-    const tabsMaxWidth =
-      isMobile
-        ? "max-w-[calc(100dvw-35px)]"
-        :
-        open ? "max-w-[calc(100dvw-290px)]"
-          : "max-w-[calc(100dvw-80px)]"
+  const tabs = [
+    {
+      value: "feedback",
+      label: "Feedback",
+      icon: UserPlus,
+      count: data?.withoutFeedback?.length ?? 0,
+    },
+    {
+      value: "attendance",
+      label: "Attendance",
+      icon: CalendarCheck,
+      count: attendanceData?.filter((item) => item.status !== "Absent").length || 0,
+    },
+    {
+      value: "task",
+      label: "Team Task",
+      icon: Users,
+      count: allTeamTasks,
+    },
+    {
+      value: "reimbursement",
+      label: "Reimbursement",
+      icon: ReceiptText,
+      count: reimbursementData?.length || 0,
+    },
+    {
+      value: "salary",
+      label: "Salary",
+      icon: Wallet,
+      count: null,
+    },
+    {
+      value: "fines",
+      label: "Fines",
+      icon: BadgeAlert,
+      count: allFines,
+    },
+  ];
+
+  const tabsMaxWidth =
+    isMobile
+      ? "max-w-[calc(100dvw-35px)]"
+      :
+      open ? "max-w-[calc(100dvw-290px)]"
+        : "max-w-[calc(100dvw-80px)]"
 
   return (
     <div className="flex flex-1 gap-5">
       <div className="flex flex-1 flex-col gap-4">
         <ScrollArea className={`${tabsMaxWidth}`}>
-          <div className="flex gap-2 pt-2">
-
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-
-              return (
-                <div
-                  key={tab.value}
-                  onClick={() => routeTo(tab.value)}
-                  className={`${tabTriggerBase} ${tab.className} flex gap-1 items-center ${activeTab === tab.value && "-translate-y-1"}`}
-                >
-                  <Icon className="h-3.5 w-3.5 shrink-0" />
-
-                  <span className="whitespace-nowrap">{tab.label}</span>
-
-                  {tab.count !== null && tab.count !== undefined && (
-                    <Badge
-                      className={`ml-0.5 h-5 rounded-full bg-white px-1.5 text-[10px] font-bold hover:bg-white ${tab.badgeClassName}`}
-                    >
-                      {tab.count > 999 ? "999+" : tab.count}
-                    </Badge>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-
-
+          <UserTabs tabs={tabs} routeTo={routeTo} activeTab={activeTab} />
           <ScrollBar orientation="horizontal" />
-
         </ScrollArea>
+
+        <div hidden={activeTab !== "feedback"} >
+          <RenderFeedback />
+        </div>
 
         <div hidden={activeTab !== "reimbursement"} >
           <RenderReimbursement />

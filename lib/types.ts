@@ -225,6 +225,7 @@ export type MyCustomerResolved = {
     order_nums?: string
     machine_order_numbers?: string[]
     member?: boolean
+    rating ?: number
 
 };
 

@@ -66,6 +66,7 @@ export default function AfterSalesDashboardNew() {
     const { userID, reimbursement_approval } = useUserDetail();
 
     const [data, setData] = useState<AfterSalesReimbursement[]>([]);
+    const [feedbacks, setFeedbacks] = useState<AfterSalesFeedbackResponse | null>(null)
 
     const start = momentT
         .tz(TIMEZONE)
@@ -81,7 +82,11 @@ export default function AfterSalesDashboardNew() {
         .toISOString();
 
     useEffect(() => {
-        if (userID) fetchData();
+        if (userID) {
+
+            fetchData()
+            fetchFeedbackData()
+        }
 
     }, [userID, reimbursement_approval]);
 
@@ -96,6 +101,16 @@ export default function AfterSalesDashboardNew() {
         }
     }
 
+    async function fetchFeedbackData() {
+        try {
+            const feedback = await axios.get(
+                `/${userID}/dashboard/aftersales/memberfeedback?start=${start}&end=${end}`,
+            );
+            setFeedbacks(feedback.data);
+        } finally {
+        }
+    }
+
 
     return (
         <div className="flex flex-1 gap-5">
@@ -103,41 +118,28 @@ export default function AfterSalesDashboardNew() {
                 <div className="flex w-full flex-col gap-3">
                     <div className="flex gap-3 w-full">
                         <div className="grid gap-3 xl:grid-cols-2 w-full">
-                            <Feedback start={start} end={end} />
-                            <Complaint start={start} end={end} />
-                            <POSAfterSales />
-                            <TeamAttendanceAfterSales start={start} end={end} />
-                            <ReimbursementAfterSalesMetrics data={data} />
+                            <Feedback data={feedbacks} iconSize="size-3.5"/>
+                            <Complaint start={start} end={end} iconSize="size-3.5"/>
+                            <POSAfterSales iconSize="size-3.5"/>
+                            <TeamAttendanceAfterSales start={start} end={end} iconSize="size-3.5"/>
+                            <ReimbursementAfterSalesMetrics data={data} iconSize="size-3.5"/>
                         </div>
                         {data.length > 0 && <ReimbursementAfterSales data={data} onRefresh={fetchData} />}
 
                     </div>
-                    <AfterSalesDashboard />
+                    <AfterSalesDashboard onRefresh={fetchFeedbackData} data={{
+                        withFeedback: feedbacks?.withFeedback.data.map((item) => ({ ...item, number: item.number.join(", ") })) ?? [],
+                        withoutFeedback: feedbacks?.withoutFeedback.data.map((item) => ({ ...item, number: item.number.join(", ") })) ?? []
+                    }} />
                 </div>
             </div>
         </div>
     );
 }
 
-const Feedback = ({ start, end }: { start: string, end: string }) => {
-    const { userID } = useUserDetail();
-    const [open, setOpen] = useState(false);
+const Feedback = ({ data, iconSize="" }: { data: AfterSalesFeedbackResponse | null, iconSize ?: string }) => {
 
-    const [data, setData] = useState<AfterSalesFeedbackResponse | null>(null);
-
-    useEffect(() => {
-        if (userID) fetchData();
-    }, [userID]);
-
-    async function fetchData() {
-        try {
-            const feedback = await axios.get(
-                `/${userID}/dashboard/aftersales/memberfeedback?start=${start}&end=${end}`,
-            );
-            setData(feedback.data);
-        } finally {
-        }
-    }
+    const [open, setOpen] = useState(false)
 
     const analytics = useMemo(() => {
         const completed = data?.withFeedback.total ?? 0
@@ -166,27 +168,22 @@ const Feedback = ({ start, end }: { start: string, end: string }) => {
 
                 metrics={[
                     { label: "Total", value: analytics.total, icon: <Users />, tone: "blue" },
-                    { label: "Completed", value: analytics.completed, icon: <CheckCircle2 />, tone: "green" },
-                    { label: "Satisfied", value: analytics.satisfied, icon: <ThumbsUp />, tone: "green" },
-                    { label: "Unsatisfied", value: analytics.unsatisfied, icon: <ThumbsDown />, tone: "red" },
-                    { label: "Rate", value: `${analytics.satisfactionRate}%`, icon: <Gauge />, tone: "violet" },
+                    { label: "Completed", value: analytics.completed, icon: <CheckCircle2 className={iconSize}/>, tone: "green" },
+                    { label: "Satisfied", value: analytics.satisfied, icon: <ThumbsUp className={iconSize}/>, tone: "green" },
+                    { label: "Unsatisfied", value: analytics.unsatisfied, icon: <ThumbsDown className={iconSize}/>, tone: "red" },
+                    { label: "Rate", value: `${analytics.satisfactionRate}%`, icon: <Gauge className={iconSize}/>, tone: "violet" },
                 ]}
             />
-            {data &&
-                <FeedbackDialog
-                    onRefresh={fetchData}
-                    data={{ withFeedback: data.withFeedback.data.map((item) => ({ ...item, number: item.number.join(", ") })), withoutFeedback: data.withoutFeedback.data.map((item) => ({ ...item, number: item.number.join(", ") })) }}
-                    open={open}
-                    onOpenChange={setOpen}
-                    title="Member Feedback Analytics"
-                    description="Placeholder for your feedback detail component."
-                />
-            }
+
+            <FeedbackDialog data={{
+                withFeedback: data?.withFeedback.data.map((item) => ({ ...item, number: item.number.join(", ") })) ?? [],
+                withoutFeedback: data?.withoutFeedback.data.map((item) => ({ ...item, number: item.number.join(", ") })) ?? []
+            }} onRefresh={async () => { }} description="" title="" onOpenChange={setOpen} open={open} />
         </>
     );
 };
 
-const Complaint = ({ start, end }: { start: string, end: string }) => {
+const Complaint = ({ start, end, iconSize = "" }: { start: string, end: string, iconSize ?: string }) => {
     const { userID, base_route } = useUserDetail();
     const [data, setData] = useState<ComplaintAssignment[]>([]);
     const router = useRouter()
@@ -226,11 +223,11 @@ const Complaint = ({ start, end }: { start: string, end: string }) => {
                 button={true}
                 onClick={() => router.push(`/${base_route}/complaint`)}
                 metrics={[
-                    { label: "New", value: analytics.newComplaints, icon: <CircleAlert />, tone: "blue" },
-                    { label: "Pending", value: analytics.pending, icon: <Clock3 />, tone: "amber" },
-                    { label: "Resolved", value: analytics.resolved, icon: <BadgeCheck />, tone: "green" },
-                    { label: "Installations", value: analytics.installations, icon: <Wrench />, tone: "violet" },
-                    { label: "Completed", value: analytics.completed, icon: <ClipboardCheck />, tone: "green" },
+                    { label: "New", value: analytics.newComplaints, icon: <CircleAlert className={iconSize}/>, tone: "blue" },
+                    { label: "Pending", value: analytics.pending, icon: <Clock3 className={iconSize}/>, tone: "amber" },
+                    { label: "Resolved", value: analytics.resolved, icon: <BadgeCheck className={iconSize}/>, tone: "green" },
+                    { label: "Installations", value: analytics.installations, icon: <Wrench className={iconSize}/>, tone: "violet" },
+                    { label: "Completed", value: analytics.completed, icon: <ClipboardCheck className={iconSize}/>, tone: "green" },
                 ]}
             />
 
@@ -238,7 +235,7 @@ const Complaint = ({ start, end }: { start: string, end: string }) => {
     );
 };
 
-const POSAfterSales = () => {
+const POSAfterSales = ({iconSize=""} : {iconSize ?: string}) => {
     const { userID } = useUserDetail();
     const [data, setData] = useState<null | AfterSalesPOSResponse>(null);
 
@@ -267,16 +264,16 @@ const POSAfterSales = () => {
             icon={<ReceiptText className="size-4" />}
             option={4}
             metrics={[
-                { label: "Total Sales", value: <CurrencyFormatter amount={totalSales} showPKR={false} />, icon: <Banknote />, tone: "blue" },
-                { label: "Pending", value: <CurrencyFormatter amount={pending} showPKR={false} />, icon: <Clock3 />, tone: "amber" },
-                { label: "Completed", value: <CurrencyFormatter amount={completed} showPKR={false} />, icon: <CheckCircle2 />, tone: "green" },
-                { label: "Collection", value: `${collectionRate}%`, icon: <CircleDollarSign />, tone: "violet" },
+                { label: "Total Sales", value: <CurrencyFormatter amount={totalSales} showPKR={false} />, icon: <Banknote className={iconSize}/>, tone: "blue" },
+                { label: "Pending", value: <CurrencyFormatter amount={pending} showPKR={false} />, icon: <Clock3 className={iconSize}/>, tone: "amber" },
+                { label: "Completed", value: <CurrencyFormatter amount={completed} showPKR={false} />, icon: <CheckCircle2 className={iconSize}/>, tone: "green" },
+                { label: "Collection", value: `${collectionRate}%`, icon: <CircleDollarSign className={iconSize}/>, tone: "violet" },
             ]}
         />
     );
 };
 
-const TeamAttendanceAfterSales = ({ start, end }: { start: string, end: string }) => {
+const TeamAttendanceAfterSales = ({ start, end, iconSize="" }: { start: string, end: string, iconSize ?: string }) => {
     const { userID } = useUserDetail();
     const [open, setOpen] = useState(false);
 
@@ -347,10 +344,10 @@ const TeamAttendanceAfterSales = ({ start, end }: { start: string, end: string }
                 button={true}
                 onClick={() => setOpen(true)}
                 metrics={[
-                    { label: "Present", value: `${analytics.presentPercentage}%`, icon: <UserCheck />, tone: "green" },
-                    { label: "Absent", value: `${analytics.absentPercentage}%`, icon: <UserMinus />, tone: "red" },
-                    { label: "Late", value: `${analytics.latePercentage}%`, icon: <Clock3 />, tone: "amber" },
-                    { label: "Working Days", value: analytics.workingDays, icon: <CalendarDays />, tone: "blue" },
+                    { label: "Present", value: `${analytics.presentPercentage}%`, icon: <UserCheck className={iconSize}/>, tone: "green" },
+                    { label: "Absent", value: `${analytics.absentPercentage}%`, icon: <UserMinus className={iconSize}/>, tone: "red" },
+                    { label: "Late", value: `${analytics.latePercentage}%`, icon: <Clock3 className={iconSize}/>, tone: "amber" },
+                    { label: "Working Days", value: analytics.workingDays, icon: <CalendarDays className={iconSize}/>, tone: "blue" },
                 ]}
             />
             <Dialog open={open} onOpenChange={setOpen}>
@@ -366,7 +363,7 @@ const TeamAttendanceAfterSales = ({ start, end }: { start: string, end: string }
     );
 };
 
-const ReimbursementAfterSalesMetrics = ({ data }: { data: AfterSalesReimbursement[] }) => {
+const ReimbursementAfterSalesMetrics = ({ data, iconSize="" }: { data: AfterSalesReimbursement[], iconSize ?: string }) => {
 
     const pending = data.filter((item) => !item.verified).length;
     const approved = data.filter((item) => item.verified).length;
@@ -386,9 +383,9 @@ const ReimbursementAfterSalesMetrics = ({ data }: { data: AfterSalesReimbursemen
             </div>
 
             <div className="grid grid-cols-3 gap-2">
-                <MiniMetric label="Requests" value={data.length} icon={<ReceiptText />} tone="blue" />
-                <MiniMetric label="Pending" value={pending} icon={<Clock3 />} tone="amber" />
-                <MiniMetric label="Approved" value={approved} icon={<BadgeCheck />} tone="green" />
+                <MiniMetric label="Requests" value={data.length} icon={<ReceiptText className={iconSize}/>} tone="blue" />
+                <MiniMetric label="Pending" value={pending} icon={<Clock3 className={iconSize}/>} tone="amber" />
+                <MiniMetric label="Approved" value={approved} icon={<BadgeCheck className={iconSize}/>} tone="green" />
             </div>
         </section>
     );
@@ -444,7 +441,7 @@ const ReimbursementAfterSales = ({ data, onRefresh }: { data: AfterSalesReimburs
     const canNext = page < sortedData.length - 1;
 
     return (
-        <section className="rounded-2xl border border-border bg-card p-3 text-card-foreground shadow-sm justify-between gap-2 flex flex-col">
+        <section className="w-[320px] rounded-2xl border border-border bg-card p-3 text-card-foreground shadow-sm justify-between gap-2 flex flex-col">
 
             <div className="mb-3 flex items-center gap-3">
                 <SectionTitle

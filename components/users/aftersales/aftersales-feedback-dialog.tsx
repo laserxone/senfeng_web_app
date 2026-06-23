@@ -35,6 +35,7 @@ import { useEffect, useState } from "react";
 import FilterSheet from "../filterSheet";
 import OldRecordSheet from "../old-record-sheet";
 import { CustomerEmployeeAfterSalesProps, DashboardData, DataKeys, WithFeedbackProps } from "./aftersales-types";
+import AddFeedbackDialog from "../add-feedback";
 
 
 
@@ -379,56 +380,14 @@ const CustomerEmployeeAfterSales = ({
                 user_id={user_id}
             />
 
-            <Dialog open={showFeedback} onOpenChange={setShowFeedback}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Add Feedback</DialogTitle>
-                        <div className="flex flex-1 flex-col gap-2">
-                            <h1>
-                                Enter Feedback <RequiredStar />
-                            </h1>
-                            <Input
-                                placeholder="feedback"
-                                value={feedback}
-                                onChange={(e) => setFeedback(e.target.value)}
-                            />
 
-                            <h1>
-                                Next Follow Up <RequiredStar />
-                            </h1>
-                            <AppCalendar date={next} onChange={setNext} min={new Date()} max={""} />
-
-                            <div className="flex flex-row items-center gap-2">
-                                <h1>Top Follow up</h1>
-                                <Checkbox
-                                    checked={top}
-                                    onCheckedChange={(checked: boolean) => {
-                                        setTop(checked);
-                                    }}
-                                />
-                            </div>
-
-                            <div className="flex flex-row items-center gap-2">
-                                <h1>Satisfactory?</h1>
-                                <Checkbox
-                                    checked={satisfactory}
-                                    onCheckedChange={(checked: boolean) => {
-                                        setSatisfactory(checked);
-                                    }}
-                                />
-                            </div>
-                            <Button
-                                disabled={!next || !feedback}
-                                onClick={() => {
-                                    handleSaveFeedback();
-                                }}
-                            >
-                                {loading && <Spinner />} Save
-                            </Button>
-                        </div>
-                    </DialogHeader>
-                </DialogContent>
-            </Dialog>
+           <AddFeedbackDialog customer_id={selectedCustomer?.id} onClose={()=> {
+            setSelectedCustomer(null)
+            setShowFeedback(false)
+           }}
+           onRefresh={onRefresh}
+           open={showFeedback}
+           user_id={user_id}/>
 
             <FeedbackDetailDialog
                 item={selectedDetail}

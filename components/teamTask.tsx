@@ -213,7 +213,7 @@ onUpdateTotal?.(data.length)
   }
 
   return (
-    <div className="flex flex-1 flex-col pt-2">
+    <div className="flex flex-1 flex-col">
       <div className="flex flex-1">
         <PageTable
         height={height}

@@ -688,7 +688,7 @@ const EditCustomerDialog = ({
                   </FieldLegend>
 
                   <div className="flex gap-6 flex-wrap items-end">
-                    <Controller
+                    {/* <Controller
                       name="rating"
                       control={control}
                       render={({ field }) => (
@@ -697,7 +697,7 @@ const EditCustomerDialog = ({
                           <StarRating value={field.value} onChange={field.onChange} />
                         </Field>
                       )}
-                    />
+                    /> */}
 
                     {(isAdmin || designation === "Customer Relationship Manager") && (
                       <Controller

@@ -27,12 +27,13 @@ import { Progress } from "../ui/progress";
 import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
 import { AddTask } from "./task";
+import AddFeedbackDialog from "./add-feedback";
 
 
 type CustomerEmployeeProps = {
 
   customer_data: ExtraCustomer[];
-  onRefresh: () => void | Promise<void>;
+  onRefresh: () => Promise<void>;
   ownership: boolean;
   totalCustomerText?: string;
   height?: string
@@ -255,61 +256,16 @@ export default function CustomerEmployee({
         onClose={setAddCustomer}
         onRefresh={async () => {
           setData([]);
-
           await onRefresh();
         }}
       />
 
-      <Dialog open={showFeedback} onOpenChange={setShowFeedback}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Feedback</DialogTitle>
-            <div className="flex flex-1 flex-col gap-2">
-              <h1>
-                Enter Feedback <RequiredStar />
-              </h1>
-              <Input
-                placeholder="feedback"
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-              />
-
-              <h1>
-                Next Follow Up <RequiredStar />
-              </h1>
-              <AppCalendar date={next} onChange={setNext} min={new Date()} max={""} />
-
-              <div className="flex flex-row items-center gap-2">
-                <h1>Top Follow up</h1>
-                <Checkbox
-                  checked={top}
-                  onCheckedChange={(checked) => {
-                    setTop(checked === true);
-                  }}
-                />
-              </div>
-
-              <div className="flex flex-row items-center gap-2">
-                <h1>Satisfactory?</h1>
-                <Checkbox
-                  checked={satisfactory}
-                  onCheckedChange={(checked) => {
-                    setSatisfactory(checked === true);
-                  }}
-                />
-              </div>
-              <Button
-                disabled={!next || !feedback}
-                onClick={() => {
-                  handleSaveFeedback();
-                }}
-              >
-                {loading && <Spinner />} Save
-              </Button>
-            </div>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
+     <AddFeedbackDialog open={showFeedback} customer_id={selectedCustomer?.id} onClose={()=>{
+      setSelectedCustomer(null)
+      setShowFeedback(false)
+     }}
+     onRefresh={onRefresh}
+     user_id={userID}/>
 
       <ConfimationDialog
         open={showConfirmation}

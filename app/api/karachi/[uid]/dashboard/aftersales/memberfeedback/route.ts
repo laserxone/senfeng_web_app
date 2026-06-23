@@ -15,7 +15,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ uid:
     c.number,
     c.owner,
     c.member,
-    c.created_at
+    c.created_at,
+    c.rating
   FROM customer c
   WHERE c.office = 'karachi'
     AND (
@@ -56,29 +57,64 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ uid:
                     feedback_date: row.created_at,
                     user_name: row.user_name,
                     feedback_status: row.status,
-                    feedback : row.feedback
+                    feedback: row.feedback
                 },
             ])
         );
 
+      const previousFeedbackResult = await pool.query(
+  `
+  SELECT DISTINCT ON (f.customer_id)
+    f.customer_id,
+    f.feedback,
+    f.created_at,
+    f.status
+  FROM feedback f
+  WHERE f.created_at < $1
+  ORDER BY f.customer_id, f.created_at DESC
+  `,
+  [start]
+);
+
+const previousFeedbackMap = new Map(
+  previousFeedbackResult.rows.map(row => [
+    row.customer_id,
+    {
+      previous_feedback: row.feedback || "",
+      previous_feedback_date: row.created_at || null,
+      previous_feedback_status : row.status || ""
+    }
+  ])
+);
+
         const customersWithFeedback = [];
         const customersWithoutFeedback = [];
 
-        for (const customer of customers) {
-            const feedbackInfo = feedbackMap.get(customer.id);
+       for (const customer of customers) {
+  const feedbackInfo = feedbackMap.get(customer.id);
 
-            if (feedbackInfo) {
-                customersWithFeedback.push({
-                    ...customer,
-                    feedback_date: feedbackInfo.feedback_date,
-                    user_name: feedbackInfo.user_name,
-                    feedback_status: feedbackInfo.feedback_status,
-                    feedback : feedbackInfo.feedback
-                });
-            } else {
-                customersWithoutFeedback.push(customer);
-            }
-        }
+  const previousInfo = previousFeedbackMap.get(customer.id) || {
+    previous_feedback: "",
+    previous_feedback_date: null,
+    previous_feedback_status : ""
+  };
+
+  if (feedbackInfo) {
+    customersWithFeedback.push({
+      ...customer,
+      ...previousInfo,
+      feedback_date: feedbackInfo.feedback_date,
+      user_name: feedbackInfo.user_name,
+      feedback_status: feedbackInfo.feedback_status,
+      feedback: feedbackInfo.feedback
+    });
+  } else {
+    customersWithoutFeedback.push({
+      ...customer,
+      ...previousInfo
+    });
+  }
+}
 
         const responseData = {
             withFeedback: {

@@ -641,7 +641,7 @@ function AddCustomerDialog({
                   </FieldLegend>
 
                   <div className="space-y-3">
-                    <Controller
+                    {/* <Controller
                       name="rating"
                       control={control}
                       render={({ field }) => (
@@ -650,7 +650,7 @@ function AddCustomerDialog({
                           <StarRating value={field.value} onChange={field.onChange} />
                         </Field>
                       )}
-                    />
+                    /> */}
 
                     {(isAdmin || designation === "Customer Relationship Manager") && (
                       <Controller

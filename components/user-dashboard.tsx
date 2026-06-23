@@ -14,19 +14,14 @@ import Attendance from "@/components/users/attendance";
 import CustomerEmployee from "@/components/users/customer";
 import Reimbursement from "@/components/users/Reimbursement";
 
-import AppCalendar from "@/components/appCalendar";
-import { RequiredStar } from "@/components/RequiredStar";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { useSidebar } from "@/components/ui/sidebar";
-import Spinner from "@/components/ui/spinner";
 import { CustomerExtraData } from "@/components/users/ExtraData";
 import RenderFines from "@/components/users/render-fines";
 import RenderReturnable from "@/components/users/render-returnable";
@@ -36,12 +31,15 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { PendingDelivery, PendingPartsPayment, PendingPayment, SalesCustomer, SalesCustomerMachines, SalesDashboard, SalesMachine, SalesTodayTasks, SalesVisitTypes, TopFollow, UserAttendanceRecord, UserCallData, UserExtraTypes, UserReimbursementType } from "@/lib/types";
 import { updateItemPurpose } from "@/lib/updatePurpose";
-import { AlertCircle, BadgeAlert, Banknote, Building2, CalendarCheck, CheckCircle, Clock, Cpu, Gauge, Hash, MapPinned, MessageSquareText, MessageSquareWarning, PackageCheck, PhoneCall, ReceiptText, RotateCcw, Star, Truck, UserPlus, UserRound, Users, Wallet, WalletCards } from "lucide-react";
+import { AlertCircle, BadgeAlert, Banknote, Building2, CalendarCheck, CheckCircle, Clock, Cpu, Gauge, Hash, MapPinned, MessageSquareText, MessageSquareWarning, PackageCheck, PhoneCall, ReceiptText, RotateCcw, Truck, UserPlus, UserRound, Users, Wallet, WalletCards } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useId, useState, type ElementType } from "react";
 import "./styles.css";
+import { Progress } from "./ui/progress";
+import AddFeedbackDialog from "./users/add-feedback";
+import UserTabs from "./users/user-tabs";
 
 
 export default function UserDashboard({ id: userID, }: { id: string | null }) {
@@ -108,6 +106,7 @@ export default function UserDashboard({ id: userID, }: { id: string | null }) {
   }
 
   async function fetchReimbursementData(startDate: string, endDate: string) {
+
     return new Promise((resolve, reject) => {
       axios
         .get(
@@ -259,9 +258,9 @@ export default function UserDashboard({ id: userID, }: { id: string | null }) {
             }
             task_data={todayTasks}
             newly_assigned={data?.new_entries?.newly_assigned_customers || null}
-            onRefresh={() => {
-              fetchData()
-              fetchExtraCustomerOptions()
+            onRefresh={async () => {
+              await fetchData()
+              await fetchExtraCustomerOptions()
             }}
           />
         </div>
@@ -271,17 +270,15 @@ export default function UserDashboard({ id: userID, }: { id: string | null }) {
 
   const RenderMembers = useCallback(() => {
     return (
-      <Card className="flex flex-1 p-0">
-        <CardContent className="p-0 flex flex-1">
-          <CustomersTab
-            height="h-[calc(100dvh-400px)]"
-            data={
-              data?.customers.filter((customer) => customer.sales.length > 0) ||
-              []
-            }
-          />
-        </CardContent>
-      </Card>
+
+      <CustomersTab
+        height="h-[calc(100dvh-400px)]"
+        data={
+          data?.customers.filter((customer) => customer.sales.length > 0) ||
+          []
+        }
+      />
+
     );
   }, [userID, data]);
 
@@ -314,7 +311,7 @@ export default function UserDashboard({ id: userID, }: { id: string | null }) {
     return (
 
       <Attendance
-
+        // height="min-h-[calc(100dvh-350px)]"
         passingData={attendanceData}
         onFilterReturn={async (start, end) => {
           await fetchAttendanceData(start, end)
@@ -342,81 +339,70 @@ export default function UserDashboard({ id: userID, }: { id: string | null }) {
     );
   }, [callData]);
 
-  const tabTriggerBase =
-    "h-8 gap-1.5 rounded-md px-3 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:text-white hover:shadow-md cursor-pointer"
-
+ 
   const tabs = [
     {
       value: "newCustomers",
       label: "New Customers",
       icon: UserPlus,
       count: data?.new_entries?.newly_assigned_customers?.total || 0,
-      className: "bg-blue-600 hover:bg-blue-700 data-[state=active]:bg-blue-700 data-[state=active]:ring-blue-300",
-      badgeClassName: "text-blue-700",
+     
     },
     {
       value: "members",
       label: "Members",
       icon: Users,
       count: data?.customers?.filter((customer) => customer.sales.length > 0).length || 0,
-      className: "bg-emerald-600 hover:bg-emerald-700 data-[state=active]:bg-emerald-700 data-[state=active]:ring-emerald-300",
-      badgeClassName: "text-emerald-700",
+     
     },
     {
       value: "reimbursement",
       label: "Reimbursement",
       icon: ReceiptText,
       count: reimbursementData?.length || 0,
-      className: "bg-orange-500 hover:bg-orange-600 data-[state=active]:bg-orange-600 data-[state=active]:ring-orange-300",
-      badgeClassName: "text-orange-600",
+    
     },
     {
       value: "visit",
       label: "Visit",
       icon: MapPinned,
       count: visitData?.length || 0,
-      className: "bg-sky-600 hover:bg-sky-700 data-[state=active]:bg-sky-700 data-[state=active]:ring-sky-300",
-      badgeClassName: "text-sky-700",
+     
     },
     {
       value: "calls",
       label: "Calls",
       icon: PhoneCall,
       count: callData?.length || 0,
-      className: "bg-violet-600 hover:bg-violet-700 data-[state=active]:bg-violet-700 data-[state=active]:ring-violet-300",
-      badgeClassName: "text-violet-700",
+     
     },
     {
       value: "attendance",
       label: "Attendance",
       icon: CalendarCheck,
       count: attendanceData?.filter((item) => item.status !== 'Absent').length || 0,
-      className: "bg-cyan-600 hover:bg-cyan-700 data-[state=active]:bg-cyan-700 data-[state=active]:ring-cyan-300",
-      badgeClassName: "text-cyan-700",
+     
     },
     {
       value: "salary",
       label: "Salary",
       icon: Wallet,
       count: null,
-      className: "bg-amber-500 hover:bg-amber-600 data-[state=active]:bg-amber-600 data-[state=active]:ring-amber-300",
-      badgeClassName: "text-amber-700",
+    
     },
     {
       value: "issued",
       label: "Returnable",
       icon: RotateCcw,
       count: allReturnables,
-      className: "bg-indigo-600 hover:bg-indigo-700 data-[state=active]:bg-indigo-700 data-[state=active]:ring-indigo-300",
-      badgeClassName: "text-indigo-700",
+      
     },
     {
       value: "fines",
       label: "Fines",
       icon: BadgeAlert,
       count: allFines,
-      className: "bg-red-600 hover:bg-red-700 data-[state=active]:bg-red-700 data-[state=active]:ring-red-300",
-      badgeClassName: "text-red-700",
+     
     },
   ]
 
@@ -433,7 +419,15 @@ export default function UserDashboard({ id: userID, }: { id: string | null }) {
   return (
     <div className="flex flex-1 gap-4 bg-background  py-2">
       <div className="flex flex-1 flex-col gap-4">
-
+        {/* <div className="flex items-center">
+          <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
+          <div>
+            <h1 className="text-3xl font-bold">{data?.user?.name}</h1>
+            <p className="text-muted-foreground">
+              {data?.user?.designation}
+            </p>
+          </div>
+        </div> */}
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
           <SalesMetricCard
             title="Pending Payments"
@@ -524,37 +518,23 @@ export default function UserDashboard({ id: userID, }: { id: string | null }) {
           />
         </div>
 
+        {/* <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <MachinesSoldCard
+            value={data?.machinesSoldThisMonth || 0}
+            percentage={Number(data?.percentageChange || "0")}
+            onClick={() => {
+              setMachineData(data?.machinesSoldThisMonthDetail || []);
+              setVisible(true);
+            }}
+          />
 
+         
+        </div> */}
 
         <ScrollArea className={`${tabsMaxWidth}`}>
 
 
-          <div className="flex gap-2 pb-4 py-2">
-
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-
-              return (
-                <div
-                  key={tab.value}
-                  onClick={() => routeTo(tab.value)}
-                  className={`${tabTriggerBase} ${tab.className} flex gap-1 items-center ${activeTab === tab.value && "-translate-y-1"}`}
-                >
-                  <Icon className="h-3.5 w-3.5 shrink-0" />
-
-                  <span className="whitespace-nowrap">{tab.label}</span>
-
-                  {tab.count !== null && tab.count !== undefined && (
-                    <Badge
-                      className={`ml-0.5 h-5 rounded-full bg-white px-1.5 text-[10px] font-bold hover:bg-white ${tab.badgeClassName}`}
-                    >
-                      {tab.count > 999 ? "999+" : tab.count}
-                    </Badge>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+          <UserTabs tabs={tabs} routeTo={routeTo} activeTab={activeTab}/>
 
 
           <ScrollBar orientation="horizontal" />
@@ -582,11 +562,9 @@ export default function UserDashboard({ id: userID, }: { id: string | null }) {
         </div>
         <div hidden={activeTab !== "salary"} >
 
-          <Card>
-            <CardContent>
-              <SalaryRecord id={userID} height="min-h-[calc(100dvh-420px)]" />
-            </CardContent>
-          </Card>
+
+          <SalaryRecord id={userID} height="min-h-[calc(100dvh-420px)]" />
+
 
         </div>
         <div hidden={activeTab !== "issued"} >
@@ -600,7 +578,7 @@ export default function UserDashboard({ id: userID, }: { id: string | null }) {
       </div>
 
       {/* <AutoScrollMembers onUpdate={setShowingAutoScroll} /> */}
-
+      {/* <MachinesSold visible={visible} setVisible={setVisible} machineData={machineData} base_route={base_route} /> */}
       <SalesMetricDetailsDialog
         metric={selectedMetric}
         onClose={() => setSelectedMetric(null)}
@@ -1032,6 +1010,7 @@ function CustomersTab({
   data: SalesCustomer[]
   height?: string
 }) {
+  console.log(data)
   const [localData, setLocalData] = useState<
     (SalesCustomer & { overall: string })[]
   >([])
@@ -1072,8 +1051,11 @@ function CustomersTab({
       0
     )
 
+    console.log(totalPayments)
+    console.log(machine.price)
+
     const isCompleted =
-      Number(machine.price) === totalPayments &&
+      (Number(machine.price) - Number(machine.speed_money_amount)) === totalPayments &&
       Number(machine?.percentage_completion) === 100
 
     return (
@@ -1120,8 +1102,8 @@ function CustomersTab({
 
 
   return (
-    <div className="w-full overflow-hidden rounded-xl border bg-white shadow-sm dark:bg-zinc-950">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-slate-50/80 px-4 py-3 dark:bg-zinc-900/70">
+    <div className="w-full overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-slate-50/80 px-4 py-3 dark:bg-zinc-900/70 rounded-xl border bg-white shadow-sm dark:bg-zinc-950">
         <div className="flex items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <Building2 className="h-4 w-4" />
@@ -1144,7 +1126,7 @@ function CustomersTab({
       </div>
 
 
-      <Accordion type="single" collapsible className="w-full space-y-2 p-3">
+      <Accordion type="single" collapsible className="w-full space-y-2 px-1 mt-2">
         {localData.length === 0 ? (
           <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed bg-slate-50 p-6 text-center dark:bg-zinc-900/50">
             <div>
@@ -1168,44 +1150,48 @@ function CustomersTab({
             >
               <Card className="overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 transition-shadow hover:shadow-md dark:bg-zinc-950 dark:ring-white/10 p-0">
                 <AccordionTrigger className="hover:no-underline sm:px-4">
-                  <div className="flex w-full min-w-0 flex-col gap-3 pr-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div
+                  <div className="w-full">
+                    <div className="flex w-full min-w-0 flex-col gap-3 pr-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div
 
-                      className="flex min-w-0 items-center gap-3"
-                    >
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <UserRound className="h-4 w-4" />
-                      </span>
-                      <span className="min-w-0 text-left">
-                        <Link href={`/${base_route}/${customer.member ? "member" : "customer"
-                          }/${customer.id}`}>
-                          <span className="block truncate text-sm font-semibold hover:underline sm:text-base">
-                            {customer.name}
-                          </span>
-                        </Link>
-                        <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                          <span>{customer.member ? "Member" : "Customer"}</span>
-                          <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
-                          <span>{customer.sales.length} machines</span>
-                        </span>
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                      <Badge variant="outline" className="h-6 rounded-full bg-background px-2 text-[10px]">
-                        <Gauge className="mr-1 h-3 w-3" />
-                        {customer.overall}% profile
-                      </Badge>
-
-                      <Badge
-                        className="h-6 rounded-full px-2 text-[10px]"
-                        variant={
-                          customer.sales.length === 0 ? "secondary" : "default"
-                        }
+                        className="flex min-w-0 items-center gap-3"
                       >
-                        {customer.sales.length === 0 ? "Assigned" : "Purchased"}
-                      </Badge>
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                          <UserRound className="h-4 w-4" />
+                        </span>
+                        <span className="min-w-0 text-left">
+                          <Link href={`/${base_route}/${customer.member ? "member" : "customer"
+                            }/${customer.id}`}>
+                            <span className="block truncate text-sm font-semibold hover:underline sm:text-base">
+                              {customer.name}
+                            </span>
+                          </Link>
+                          <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                            <span>{customer.member ? "Member" : "Customer"}</span>
+                            <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
+                            <span>{customer.sales.length} machines</span>
+                          </span>
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col flex-wrap items-center gap-2 sm:justify-end">
+                        <Badge
+                          className="text-[10px]"
+                          variant={
+                            customer.sales.length === 0 ? "secondary" : "default"
+                          }
+                        >
+                          {customer.sales.length === 0 ? "Assigned" : "Purchased"}
+                        </Badge>
+                        <div className="flex text-[10px] font-light">
+                          <Gauge className="mr-1 h-3 w-3" />
+                          {customer.overall}% profile
+                        </div>
+
+
+                      </div>
                     </div>
+                    <Progress value={Number(customer.overall || 0)} className="mt-2" />
                   </div>
                 </AccordionTrigger>
 
@@ -1242,34 +1228,7 @@ function CustomersTab({
 function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Promise<void> }) {
   const [visible, setVisible] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<UserCallData | null>(null);
-  const [feedback, setFeedback] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const [satisfactory, setSatisfactory] = useState(false);
-  const [next, setNext] = useState<Date | undefined>(undefined);
-  const [top, setTop] = useState(false);
   const { userID } = useUserDetail();
-
-
-  async function handleSaveFeedback() {
-    setLoading(true);
-    axios
-      .post(`/${userID}/feedback`, {
-        feedback: feedback,
-        type: "feedback",
-        customer_id: selectedCustomer?.id,
-        user_id: userID,
-        status: satisfactory ? "Satisfactory" : "Unsatisfactory",
-        next_followup: next,
-        top_follow: top,
-      })
-      .then(async () => {
-        await onRefresh();
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }
 
   const RenderEachCall = ({ call }: { call: UserCallData }) => {
     return (
@@ -1359,91 +1318,13 @@ function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Pro
       )}
 
 
-      <Dialog open={visible} onOpenChange={setVisible}>
-        <DialogContent className="max-w-[94vw] overflow-hidden p-0 sm:max-w-[520px]">
-          <DialogHeader className="border-b bg-slate-50/90 px-4 py-3 dark:bg-zinc-950">
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <MessageSquareText className="h-4 w-4" />
-              </span>
-              <div className="min-w-0">
-                <DialogTitle className="text-base font-semibold">
-                  Add Feedback
-                </DialogTitle>
-                <p className="mt-1 truncate text-xs text-muted-foreground">
-                  {selectedCustomer?.name || selectedCustomer?.owner || "Customer"}
-                </p>
-              </div>
-            </div>
-          </DialogHeader>
-
-          <div className="max-h-[calc(100dvh-120px)] space-y-3 overflow-y-auto p-4">
-            <div className="rounded-lg border bg-slate-50/70 px-3 py-2 dark:bg-zinc-900/70">
-              <div className="flex min-w-0 items-start gap-2 text-xs text-muted-foreground">
-                <PhoneCall className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                <span className="break-all">{selectedCustomer?.number?.join(", ") || "No number"}</span>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Enter Feedback <RequiredStar />
-              </Label>
-              <Input
-                placeholder="Write call feedback..."
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                className="h-10 rounded-lg bg-slate-50/70 dark:bg-zinc-900/70"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Next Follow Up <RequiredStar />
-              </Label>
-              <AppCalendar date={next} onChange={setNext} min={new Date()} max={""} />
-            </div>
-
-            <div className="grid gap-2 sm:grid-cols-2">
-              <label className="flex min-h-10 items-center justify-between gap-3 rounded-lg border bg-slate-50/70 px-3 py-2 text-sm dark:bg-zinc-900/70">
-                <span className="inline-flex items-center gap-2">
-                  <Star className="h-3.5 w-3.5 text-amber-500" />
-                  Top Follow Up
-                </span>
-                <Checkbox
-                  checked={top}
-                  onCheckedChange={(checked) => {
-                    setTop(checked === true);
-                  }}
-                />
-              </label>
-
-              <label className="flex min-h-10 items-center justify-between gap-3 rounded-lg border bg-slate-50/70 px-3 py-2 text-sm dark:bg-zinc-900/70">
-                <span className="inline-flex items-center gap-2">
-                  <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
-                  Satisfactory
-                </span>
-                <Checkbox
-                  checked={satisfactory}
-                  onCheckedChange={(checked) => {
-                    setSatisfactory(checked === true);
-                  }}
-                />
-              </label>
-            </div>
-
-            <Button
-              className="h-9 w-full rounded-lg"
-              disabled={!next || !feedback}
-              onClick={() => {
-                handleSaveFeedback();
-              }}
-            >
-              {loading && <Spinner />} Save Feedback
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AddFeedbackDialog customer_id={selectedCustomer?.id} onClose={() => {
+        setSelectedCustomer(null)
+        setVisible(false)
+      }}
+        onRefresh={onRefresh}
+        open={visible}
+        user_id={userID} />
     </div>
   );
 }

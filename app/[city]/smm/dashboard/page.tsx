@@ -20,6 +20,7 @@ import moment from "moment";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
+import UserTabs from "@/components/users/user-tabs";
 
 export default function Page() {
   const [data, setData] = useState<{ user: UserDashboard }>();
@@ -205,25 +206,21 @@ export default function Page() {
   }, [attendanceData]);
 
 
-  const tabTriggerBase =
-    "h-8 gap-1.5 rounded-md px-3 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:text-white hover:shadow-md cursor-pointer"
-
+ 
   const tabs = [
     {
       value: "newCustomers",
       label: "New Customers",
       icon: UserPlus,
       count: null,
-      className: "bg-blue-600 hover:bg-blue-700 data-[state=active]:bg-blue-700 data-[state=active]:ring-blue-300",
-      badgeClassName: "text-blue-700",
+     
     },
     {
       value: "attendance",
       label: "Attendance",
       icon: CalendarCheck,
       count: attendanceData?.filter((item) => item.status !== 'Absent').length || 0,
-      className: "bg-cyan-600 hover:bg-cyan-700 data-[state=active]:bg-cyan-700 data-[state=active]:ring-cyan-300",
-      badgeClassName: "text-cyan-700",
+     
     },
 
 
@@ -232,8 +229,7 @@ export default function Page() {
       label: "Reimbursement",
       icon: ReceiptText,
       count: reimbursementData?.length || 0,
-      className: "bg-orange-500 hover:bg-orange-600 data-[state=active]:bg-orange-600 data-[state=active]:ring-orange-300",
-      badgeClassName: "text-orange-600",
+      
     },
 
 
@@ -242,8 +238,7 @@ export default function Page() {
       label: "Salary",
       icon: Wallet,
       count: null,
-      className: "bg-amber-500 hover:bg-amber-600 data-[state=active]:bg-amber-600 data-[state=active]:ring-amber-300",
-      badgeClassName: "text-amber-700",
+     
     },
 
     {
@@ -251,8 +246,7 @@ export default function Page() {
       label: "Fines",
       icon: BadgeAlert,
       count: allFines,
-      className: "bg-red-600 hover:bg-red-700 data-[state=active]:bg-red-700 data-[state=active]:ring-red-300",
-      badgeClassName: "text-red-700",
+      
     },
   ]
 
@@ -280,33 +274,7 @@ export default function Page() {
         <ScrollArea className={`${tabsMaxWidth}`}>
 
 
-          <div className="flex gap-2 pb-4 py-2">
-
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-
-              return (
-                <div
-                  key={tab.value}
-                  onClick={() => routeTo(tab.value)}
-                  className={`${tabTriggerBase} ${tab.className} flex gap-1 items-center ${activeTab === tab.value && "-translate-y-1"}`}
-                >
-                  <Icon className="h-3.5 w-3.5 shrink-0" />
-
-                  <span className="whitespace-nowrap">{tab.label}</span>
-
-                  {tab.count !== null && tab.count !== undefined && (
-                    <Badge
-                      className={`ml-0.5 h-5 rounded-full bg-white px-1.5 text-[10px] font-bold hover:bg-white ${tab.badgeClassName}`}
-                    >
-                      {tab.count > 999 ? "999+" : tab.count}
-                    </Badge>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-
+          <UserTabs tabs={tabs} routeTo={routeTo} activeTab={activeTab}/>
 
           <ScrollBar orientation="horizontal" />
 

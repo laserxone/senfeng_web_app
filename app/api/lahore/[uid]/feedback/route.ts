@@ -1,10 +1,10 @@
 import pool from "@/config/db";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import moment from "moment";
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server";
 
 
-export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ uid: string }> }) {
 
     const { uid } = await params;
     const searchParams = req.nextUrl.searchParams;
@@ -96,16 +96,16 @@ ORDER BY created_at DESC;
 
         }
 
-    } catch (error:any) {
+    } catch (error: any) {
         console.error('Error ', error);
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }
 }
 
-export async function POST(req:NextRequest) {
+export async function POST(req: NextRequest) {
 
     try {
-        const data = await req.json();
+        const { rating = 0, ...data } = await req.json();
 
         if (!data || Object.keys(data).length === 0) {
             return NextResponse.json({ message: "No data provided for insertion" }, { status: 400 });
@@ -140,6 +140,23 @@ export async function POST(req:NextRequest) {
             `;
 
         await pool.query(query, values);
+
+        if (rating > 0) {
+            await pool.query(
+                `
+    UPDATE customer
+    SET
+      rating = ROUND(
+        ((COALESCE(rating, 0) * COALESCE(rating_count, 0)) + $1)::numeric
+        / (COALESCE(rating_count, 0) + 1),
+        1
+      ),
+      rating_count = COALESCE(rating_count, 0) + 1
+    WHERE id = $2
+    `,
+                [Number(rating), data.customer_id]
+            );
+        }
 
         console.log("Data inserted successfully");
         return NextResponse.json({ message: "Inserted successfully" }, { status: 200 });

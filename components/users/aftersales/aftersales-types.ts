@@ -140,14 +140,20 @@ export type WithFeedbackProps = MyCustomerResolved & {
     user_name?: string
     feedback: string
     feedback_status?: string
+    previous_feedback ?: string
+    previous_feedback_date ?: string
+    previous_feedback_status ?: string
 }
 
 
 export type DashboardData = {
-
-    withFeedback: WithFeedbackProps[]
-    withoutFeedback: MyCustomerResolved[]
-}
+  withFeedback: WithFeedbackProps[];
+  withoutFeedback: (MyCustomerResolved & {
+    previous_feedback?: string;
+    previous_feedback_date ?: string
+    previous_feedback_status ?: string
+  })[];
+};
 
 
 export type DataKeys = keyof DashboardData
