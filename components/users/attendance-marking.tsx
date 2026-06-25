@@ -144,6 +144,7 @@ export default function RenderMarkAttendance({
 
     const clearForm = useCallback(() => {
         setNote("");
+        setMapsUrl("")
         setTask("");
         setReason("Office");
         setLatitude("");
@@ -210,17 +211,20 @@ export default function RenderMarkAttendance({
 
     const notAllowed = office ? reason !== "Office" : reason === "Office";
 
-    console.log(imageFile)
-
+   console.log(office)
+function handleClose(){
+    clearForm()
+    onClose()
+}
     return (
 
-        <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
-            <DialogContent className="sm:max-w-xl p-0">
+        <Dialog open={open} onOpenChange={handleClose}>
+            <DialogContent className="w-full sm:max-w-lg p-0">
                 <DialogHeader className="px-6 pt-6 pb-3">
                     <DialogTitle>Mark Attendance</DialogTitle>
                 </DialogHeader>
 
-                <ScrollArea className="h-[80vh] px-6 pb-6">
+                <ScrollArea className="max-h-[calc(100dvh-200px)] px-6 pb-6">
                     <div className="space-y-5">
                         {/* 1. Location */}
                         <FieldSet className="rounded-lg border p-4">
@@ -331,7 +335,9 @@ export default function RenderMarkAttendance({
                             </RadioGroup>
                         </FieldSet>
 
-                        {notAllowed ? (
+                        {!longitude ? null :
+
+                        notAllowed ? (
                             <div className="rounded-lg border border-dashed p-4">
                                 <p className="text-sm italic text-muted-foreground">
                                     Attendance is not allowed outside office area
@@ -399,7 +405,7 @@ export default function RenderMarkAttendance({
                                         Image Upload
                                     </FieldLegend>
 
-                                    <div className="mt-3 space-y-3">
+                                    <div className="mt-3 space-y-3 flex justify-center">
                                         <Dropzone
                                             value={imagePreview}
                                             onDrop={(file) => setImagePreview(file)}

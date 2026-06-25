@@ -105,16 +105,30 @@ export async function GET(req : NextRequest, { params } : {params : Promise<{ ui
         query = `
         SELECT 
           ca.*,
+           c.id AS complaint_id,
           c.title AS complaint_title,
           c.problem AS complaint_problem,
           c.solution AS complaint_solution,
           c.status AS complaint_status,
+          c.paid AS complaint_paid,
+          c.category AS complaint_category,
+          c.installation AS complaint_installation,
+          c.charges AS complaint_charges,
           c.created_at AS complaint_created_at,
-          c.id AS complaint_id,
+          cu.name AS customer_name,
+          cu.address AS customer_address,
+          cu.location AS customer_location,
+          cu.owner AS customer_owner,
+          cu.number AS customer_number,
+          cu.pin AS customer_pin,
+          cu.ownership AS customer_ownership_id,
+          owner_user.name AS customer_ownership_name,
           au.name AS assigned_by_name
         FROM complaint_assignments ca
         JOIN complaints c ON ca.complaint_id = c.id
         LEFT JOIN users au ON ca.assigned_by = au.id
+        LEFT JOIN customer cu ON c.customer_id = cu.id
+        LEFT JOIN users owner_user ON cu.ownership = owner_user.id
         WHERE ca.engineer_id = $1 AND c.status != 'completed'
       `;
         queryParams.push(uid);

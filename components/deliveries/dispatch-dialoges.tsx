@@ -21,10 +21,12 @@ import { TriggerFirebaseForMachine, TriggerFirebaseForPendingPayments } from "@/
 import { DeliveryInformation, DeliveryType, DispatchPdf } from "@/lib/types";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
-import { Plus, Trash2 } from "lucide-react";
+import { MapPinCheck, Plus, Trash2 } from "lucide-react";
 import moment from "moment";
+import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 import { RequiredStar } from "../RequiredStar";
+import { SelectOrderNo } from "../select-orderno";
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
@@ -75,7 +77,7 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
       image: "",
       note: "",
       transportation: 0,
-      transporter : ""
+      transporter: ""
     },
   });
 
@@ -98,7 +100,7 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
         manager: dispatchInformation?.other_information?.manager,
         note: dispatchInformation?.other_information?.note,
         image: dispatchInformation?.other_information?.image,
-        transporter : dispatchInformation?.other_information?.transporter ?? ""
+        transporter: dispatchInformation?.other_information?.transporter ?? ""
       });
       setOriginalImage(dispatchInformation?.other_information?.image);
       setChecklist(dispatchInformation?.checklist);
@@ -144,7 +146,7 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
             manager: values.manager,
             note: values.note,
             image: name,
-            transporter : values.transporter
+            transporter: values.transporter
           },
         },
       };
@@ -185,7 +187,7 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
       image: "",
       note: "",
       transportation: 0,
-      transporter : ""
+      transporter: ""
     })
   }
 
@@ -312,7 +314,7 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
                           )}
                         />
 
-                         <Controller
+                        <Controller
                           name="transporter"
                           control={form.control}
                           render={({ field, fieldState }) => (
@@ -327,7 +329,7 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
                         />
                       </div>
 
-                      
+
                     </FieldSet>
 
                     <FieldSet className="border rounded-md p-3">
@@ -552,6 +554,13 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
   );
 }
 
+type OrderNoTypes = {
+  id: number
+  machine_serial: string
+  search: string
+  label: string
+}
+
 export function DispatchOrderDialog({
   open,
   onClose,
@@ -572,6 +581,7 @@ export function DispatchOrderDialog({
   const { state: OfficeState } = useContext(OfficeContext)!
   const [progress, setProgress] = useState(0);
   const { userID, name: userName } = useUserDetail();
+  const [selectedOrderNo, setSelectedOrderNo] = useState<OrderNoTypes | null>(null)
 
   useEffect(() => {
     if (userID && open) {
@@ -591,7 +601,7 @@ export function DispatchOrderDialog({
       image: "",
       note: "",
       transportation: 0,
-      transporter : ""
+      transporter: ""
     },
   });
 
@@ -649,9 +659,10 @@ export function DispatchOrderDialog({
             note: values.note,
             image: name,
             issuedBy: userName,
-            transporter : values.transporter
+            transporter: values.transporter
           },
         },
+        order_no_data : selectedOrderNo
       };
 
       await axios.post(`/${userID}/delivery`, apiData);
@@ -705,7 +716,7 @@ export function DispatchOrderDialog({
       image: "",
       note: "",
       transportation: 0,
-      transporter : ""
+      transporter: ""
     })
   }
 
@@ -742,17 +753,16 @@ export function DispatchOrderDialog({
                             <div className="space-y-2">
                               {(field.value || []).map((order: string, index: number) => (
                                 <div key={index} className="flex items-center gap-2">
-                                  <Input
-                                    placeholder="Enter order number"
-                                    value={order}
-                                    onChange={(e) => {
+                                  <div className="flex flex-1">
+                                    <SelectOrderNo value={order} onReturnData={(e) => {
+                                      console.log(e)
                                       const updated = [...(field.value || [])]
-                                      updated[index] = e.target.value
+                                      updated[index] = e.machine_serial
                                       field.onChange(updated)
-                                    }}
-                                  />
-
-                                  <Button
+                                      setSelectedOrderNo(e)
+                                    }} />
+                                  </div>
+                                  {/* <Button
                                     type="button"
                                     variant="destructive"
                                     size="icon"
@@ -767,12 +777,12 @@ export function DispatchOrderDialog({
                                     }}
                                   >
                                     <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                  </Button> */}
                                 </div>
                               ))}
                             </div>
 
-                            <Button
+                            {/* <Button
                               type="button"
                               size="sm"
                               variant="outline"
@@ -781,7 +791,7 @@ export function DispatchOrderDialog({
                             >
                               <Plus className="h-4 w-4 mr-1" />
                               Add Order No
-                            </Button>
+                            </Button> */}
 
                             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                           </Field>
@@ -823,7 +833,7 @@ export function DispatchOrderDialog({
                           )}
                         />
 
-                          <Controller
+                        <Controller
                           name="transporter"
                           control={form.control}
                           render={({ field, fieldState }) => (
@@ -1021,11 +1031,15 @@ export function DispatchOrderDialog({
                             : key.replaceAll("_", " ")}
                       </p>
                       <p className="font-medium break-words">
-                        {key === "tod"
-                          ? moment(
-                            new Date(data?.delivery_information[key]),
-                          ).format("YYYY-MM-DD hh:mm A")
-                          : String(data?.delivery_information[key as keyof DeliveryInformation])}
+                        {
+                          key === 'pin'
+                            ? <Link target="_blank" href={data?.delivery_information[key] ?? "#"}><MapPinCheck className="text-primary size-5" /></Link> :
+                            key === "tod"
+
+                              ? moment(
+                                new Date(data?.delivery_information[key]),
+                              ).format("YYYY-MM-DD hh:mm A")
+                              : String(data?.delivery_information[key as keyof DeliveryInformation])}
                       </p>
                     </div>
                   ))}

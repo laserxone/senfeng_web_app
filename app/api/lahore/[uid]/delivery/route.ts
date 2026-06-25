@@ -101,6 +101,169 @@ export async function POST(req: NextRequest) {
     }
 
 
+
+    // ////////////////////////////
+
+    // const { order_no_data } = data;
+
+    // const newSerial = order_no_data?.machine_serial;
+
+    // if (data.machine_id && newSerial) {
+    //   await client.query("BEGIN");
+
+    //   try {
+    //     const oldItemRes = await client.query(
+    //       `
+    //   SELECT 
+    //     id,
+    //     machine_serial,
+    //     booked,
+    //     booking_date,
+    //     status,
+    //     booked_by,
+    //     machine_id,
+    //     customer_id
+    //   FROM order_items
+    //   WHERE machine_id = $1
+    //     AND booked = true
+    //   LIMIT 1
+    //   FOR UPDATE
+    //   `,
+    //       [data.machine_id]
+    //     );
+
+    //     if (!oldItemRes.rows.length) {
+    //       throw new Error("Previously booked machine not found");
+    //     }
+
+    //     const oldItem = oldItemRes.rows[0];
+
+    //     if (String(oldItem.machine_serial) !== String(newSerial)) {
+    //       const newItemRes = await client.query(
+    //         `
+    //     SELECT 
+    //       id,
+    //       machine_serial,
+    //       booked,
+    //       booking_date,
+    //       status,
+    //       booked_by,
+    //       machine_id,
+    //       customer_id
+    //     FROM order_items
+    //     WHERE machine_serial = $1
+    //     LIMIT 1
+    //     FOR UPDATE
+    //     `,
+    //         [newSerial]
+    //       );
+
+    //       if (!newItemRes.rows.length) {
+    //         throw new Error("Selected delivery machine serial not found");
+    //       }
+
+    //       const newItem = newItemRes.rows[0];
+
+    //       if (newItem.booked) {
+    //         await client.query(
+    //           `
+    //       UPDATE order_items
+    //       SET 
+    //         booked = $1,
+    //         booking_date = $2,
+    //         status = $3,
+    //         booked_by = $4,
+    //         machine_id = $5,
+    //         customer_id = $6
+    //       WHERE id = $7
+    //       `,
+    //           [
+    //             oldItem.booked,
+    //             oldItem.booking_date,
+    //             oldItem.status,
+    //             oldItem.booked_by,
+    //             oldItem.machine_id,
+    //             oldItem.customer_id,
+    //             newItem.id,
+    //           ]
+    //         );
+
+    //         await client.query(
+    //           `
+    //       UPDATE order_items
+    //       SET 
+    //         booked = $1,
+    //         booking_date = $2,
+    //         status = $3,
+    //         booked_by = $4,
+    //         machine_id = $5,
+    //         customer_id = $6
+    //       WHERE id = $7
+    //       `,
+    //           [
+    //             newItem.booked,
+    //             newItem.booking_date,
+    //             newItem.status,
+    //             newItem.booked_by,
+    //             newItem.machine_id,
+    //             newItem.customer_id,
+    //             oldItem.id,
+    //           ]
+    //         );
+    //       } else {
+    //         // Case 2: New selected serial is free.
+    //         // Move booking information to new machine and clear old machine.
+    //         await client.query(
+    //           `
+    //       UPDATE order_items
+    //       SET 
+    //         booked = $1,
+    //         booking_date = $2,
+    //         status = $3,
+    //         booked_by = $4,
+    //         machine_id = $5,
+    //         customer_id = $6
+    //       WHERE id = $7
+    //       `,
+    //           [
+    //             oldItem.booked,
+    //             oldItem.booking_date,
+    //             oldItem.status,
+    //             oldItem.booked_by,
+    //             oldItem.machine_id,
+    //             oldItem.customer_id,
+    //             newItem.id,
+    //           ]
+    //         );
+
+    //         await client.query(
+    //           `
+    //       UPDATE order_items
+    //       SET 
+    //         booked = false,
+    //         booking_date = NULL,
+    //         status = 'Order Placed',
+    //         booked_by = NULL,
+    //         machine_id = NULL,
+    //         customer_id = NULL
+    //       WHERE id = $1
+    //       `,
+    //           [oldItem.id]
+    //         );
+    //       }
+    //     }
+
+    //     await client.query("COMMIT");
+    //   } catch (error) {
+    //     await client.query("ROLLBACK");
+    //     throw error;
+    //   }
+    // }
+
+
+    // /////////////////////////////
+
+
     await client.query("COMMIT");
 
     return NextResponse.json({ message: "Done" }, { status: 200 });

@@ -411,6 +411,7 @@ export type ComplaintPaymentDetail = {
 export type ComplaintProps = {
     complaint_title: string;
     complaint_problem: string;
+    complaint_category : string
     complaint_solution: string;
     complaint_status: string;
     complaint_created_at: string;

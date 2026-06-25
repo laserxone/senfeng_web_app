@@ -13,10 +13,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ChevronDown,
   Filter,
+  ArrowUpCircle,
+  Factory,
   MapPin,
   MapPinOff,
+  Presentation,
   Search,
+  Settings2,
+  ShieldCheck,
   Trash,
+  Truck,
+  Wrench,
+  type LucideIcon,
+  Headphones,
 } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
@@ -63,6 +72,7 @@ import { UserSearch } from "./user-search";
 
 import { MyImgZooming } from "./img-zooming";
 import FilterSheet from "./users/filterSheet";
+import { Badge } from "./ui/badge";
 
 const formSchema = z
   .object({
@@ -70,6 +80,7 @@ const formSchema = z
     customer_id: z.number({ message: "Required" }),
     problem: z.string().optional(),
     solution: z.string().optional(),
+    category: z.string().min(1, "Required"),
     installation: z.boolean(),
     paid: z.boolean(),
     charges: z.coerce.number<number>().optional(),
@@ -103,6 +114,21 @@ const formSchemaPayment = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 type FormValuesPayment = z.infer<typeof formSchemaPayment>;
+
+const taskCategories: Array<{
+  label: string;
+  value: string;
+  icon: LucideIcon;
+}> = [
+  { label: "Installation", value: "Installation", icon: ShieldCheck },
+  { label: "Complaint", value: "Complaint", icon: Wrench },
+  { label: "Overhauling", value: "Overhauling", icon: Settings2 },
+  { label: "Machine Shifting", value: "Machine Shifting", icon: Truck },
+  { label: "Machine Preparation", value: "Machine Preparation", icon: Factory },
+  { label: "Demonstration", value: "Demonstration", icon: Presentation },
+  { label: "Machine Upgradation", value: "Machine Upgradation", icon: ArrowUpCircle },
+  { label: "Online Support", value: "Online Support", icon: Headphones },
+];
 
 export default function ComplaintSystem() {
   const [loading, setLoading] = useState(false);
@@ -423,11 +449,13 @@ function StatusBadge({ status }: { status?: string }) {
 
   return (
     <span
-      className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusColor[status?.toLowerCase() as keyof typeof statusColor] ||
+      className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${statusColor[status?.toLowerCase() as keyof typeof statusColor] ||
         "bg-gray-100 text-gray-800"
         }`}
     >
-      {status || "N/A"}
+   {status
+  ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
+  : "N/A"}
     </span>
   );
 }
@@ -443,8 +471,8 @@ function InfoItem({
 }) {
   return (
     <div className={className}>
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <div className="mt-0.5 text-sm font-medium">{value || "N/A"}</div>
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <div className="mt-0.5 break-words text-xs font-semibold leading-5 text-foreground">{value || "N/A"}</div>
     </div>
   );
 }
@@ -457,8 +485,8 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border bg-background p-3">
-      <p className="mb-3 text-sm font-semibold">{title}</p>
+    <div className="rounded-xl border bg-background/70 p-3 shadow-sm">
+      <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">{title}</p>
       {children}
     </div>
   );
@@ -488,34 +516,46 @@ function ComplaintCard({
     <Collapsible
       open={isOpen}
       onOpenChange={onOpenChange}
-      className={`overflow-hidden rounded-xl border bg-card shadow-sm w-[calc(100vw-44px)] sm:w-full`}
+      className="w-[calc(100vw-44px)] overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:border-primary/20 hover:shadow-md sm:w-full"
     >
       <CollapsibleTrigger asChild>
-        <button className="w-full px-3 py-3 text-left transition hover:bg-muted/50 sm:px-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <button className="w-full px-3 py-2.5 text-left transition hover:bg-muted/40 sm:px-4">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <p className="min-w-0 max-w-full truncate text-sm font-semibold sm:text-base">
+                <p className="min-w-0 max-w-full truncate text-sm font-bold leading-5">
                   {complaint.complaint_title}
                 </p>
+                <Badge>{complaint.complaint_category}</Badge>
                 <StatusBadge status={complaint.complaint_status} />
+               
               </div>
 
-              <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+              <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                <span className="truncate font-medium text-foreground/80">{complaint.customer_name}</span>
+                <span className="hidden text-border sm:inline">|</span>
+                <span className="truncate">{complaint.customer_owner || "No owner"}</span>
+                <span className="hidden text-border sm:inline">|</span>
+                <span className="truncate">ID #{complaint.complaint_id}</span>
+              </div>
+
+              <p className="hidden">
                 {complaint.customer_name} • {complaint.customer_owner}
               </p>
             </div>
 
-            <div className="flex w-full items-center justify-between gap-3 lg:w-auto lg:justify-end">
-              <div className="min-w-0 text-left lg:text-right">
-                <p className="text-xs text-muted-foreground">Manager</p>
-                <p className="truncate text-sm font-medium">
+            <div className="flex w-full items-center justify-between gap-2 lg:w-auto lg:justify-end">
+             
+              <div className="min-w-0 rounded-xl border bg-muted/25 px-3 py-1.5 text-left lg:min-w-36 lg:text-right">
+                
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Manager</p>
+                <p className="truncate text-xs font-bold">
                   {complaint.customer_ownership_name || "N/A"}
                 </p>
               </div>
 
               <ChevronDown
-                className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""
+                className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""
                   }`}
               />
             </div>
@@ -524,29 +564,29 @@ function ComplaintCard({
       </CollapsibleTrigger>
 
       <CollapsibleContent>
-        <div className="space-y-4 border-t p-3 sm:p-4">
-          <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
+        <div className="space-y-3 border-t bg-muted/10 p-3">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             {complaint.complaint_status !== "completed" && (
               <Button
                 size="sm"
-                className="w-full sm:w-auto"
+                className="h-8 w-full rounded-lg text-xs sm:w-auto"
                 onClick={() => onCloseComplaint(complaint.complaint_id)}
               >
-                Close Complaint
+                Close
               </Button>
             )}
 
             <Button
               size="sm"
               variant="outline"
-              className="w-full sm:w-auto"
+              className="h-8 w-full rounded-lg text-xs sm:w-auto"
               onClick={() => onEditComplaint(complaint)}
             >
-              Edit Complaint
+              Edit
             </Button>
 
             {complaint.payment_details?.length > 0 ? (
-              <div className="w-full sm:w-auto">
+              <div className="col-span-2 w-full sm:w-auto">
                 <RenderPaymentViewButton
                   onRefresh={onRefresh}
                   id={complaint.complaint_id}
@@ -557,7 +597,7 @@ function ComplaintCard({
               complaint.complaint_paid && (
                 <Button
                   size="sm"
-                  className="w-full bg-green-600 hover:bg-green-700 sm:w-auto"
+                  className="col-span-2 h-8 w-full rounded-lg bg-green-600 text-xs hover:bg-green-700 sm:w-auto"
                   onClick={() => onAddPayment(complaint.complaint_id)}
                 >
                   Add Payment
@@ -568,7 +608,7 @@ function ComplaintCard({
 
           {(complaint.complaint_problem || complaint.complaint_solution) && (
             <SectionCard title="Complaint Details">
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-2 md:grid-cols-2">
                 <InfoItem label="Problem" value={complaint.complaint_problem} />
                 <InfoItem label="Solution" value={complaint.complaint_solution} />
               </div>
@@ -576,7 +616,7 @@ function ComplaintCard({
           )}
 
           <SectionCard title="Customer Info">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               <InfoItem label="Name" value={complaint.customer_name} />
               <InfoItem label="Owner" value={complaint.customer_owner} />
               <InfoItem label="Manager" value={complaint.customer_ownership_name} />
@@ -587,7 +627,7 @@ function ComplaintCard({
               {complaint?.customer_pin?.includes("http") && (
                 <div className="sm:col-span-2 lg:col-span-3">
                   <Link target="_blank" href={complaint.customer_pin}>
-                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                    <Button variant="outline" size="sm" className="h-8 w-full rounded-lg text-xs sm:w-auto">
                       Open Google Location
                     </Button>
                   </Link>
@@ -598,14 +638,14 @@ function ComplaintCard({
 
           <SectionCard title="Engineer Info">
             {complaint.engineer_id ? (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-2 sm:grid-cols-2">
                 <InfoItem label="Engineer" value={complaint.engineer_name} />
                 <InfoItem label="Assigned By" value={complaint.assigned_by_name} />
               </div>
             ) : (
               <Button
                 size="sm"
-                className="w-full sm:w-auto"
+                className="h-8 w-full rounded-lg text-xs sm:w-auto"
                 onClick={() => onAssignEngineer(complaint.complaint_id)}
               >
                 Assign Engineer
@@ -617,28 +657,28 @@ function ComplaintCard({
             <SectionCard title="Complaint Updates">
               <div className="grid gap-2">
                 {complaint.logs.map((item, index) => (
-                  <div key={index} className="rounded-lg border bg-muted/30 p-3">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div key={index} className="rounded-xl border bg-card p-2.5 shadow-sm">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0 flex-1">
-                        <p className="break-words text-sm font-medium">
+                        <p className="break-words text-xs font-semibold leading-5">
                           {item?.remark || "No remarks"}
                         </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
+                        <p className="mt-1 text-[11px] text-muted-foreground">
                           {moment(item.created_at).format("YYYY-MM-DD HH:mm A")}
                         </p>
                       </div>
 
-                      <div className="flex shrink-0 flex-wrap items-center gap-3 sm:justify-end">
+                      <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
                         {item.location && item.location.length > 0 ? (
                           <MapPin
                             onClick={() => {
                               const mapUrl = `https://www.google.com/maps?q=${item.location[0]},${item.location[1]}`
                               window.open(mapUrl, "_blank")
                             }}
-                            className="h-5 w-5 cursor-pointer text-red-500 hover:opacity-70"
+                            className="h-4 w-4 cursor-pointer text-red-500 hover:opacity-70"
                           />
                         ) : (
-                          <MapPinOff className="h-5 w-5 text-red-500 opacity-50" />
+                          <MapPinOff className="h-4 w-4 text-red-500 opacity-50" />
                         )}
 
                         {item.signature && <MyImgZooming img={item.signature} />}
@@ -676,6 +716,7 @@ const AddNewComplaint = ({
       customer_id: undefined,
       problem: "",
       solution: "",
+      category: "Complaint",
       installation: false,
       paid: false,
       charges: 0,
@@ -706,6 +747,7 @@ const AddNewComplaint = ({
       customer_id: undefined,
       problem: "",
       solution: "",
+      category: "Complaint",
       installation: false,
       paid: false,
     });
@@ -744,6 +786,54 @@ function ComplaintFormContent({
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Controller
+            name="category"
+            control={form.control}
+            render={({ field, fieldState }) => {
+              return (
+                <Field data-invalid={fieldState.invalid} className="sm:col-span-2">
+                  <FieldLabel>
+                    Select Task Category <RequiredStar />
+                  </FieldLabel>
+                  <Select value={field.value} onValueChange={(e)=>{
+                    field.onChange(e)
+                    if(e === "Installation"){
+                      form.setValue("installation", true)
+                    } else {
+                       form.setValue("installation", false)
+                    }
+                  }}>
+                    <SelectTrigger
+                      className="h-11 w-full rounded-lg border bg-background px-3 shadow-sm"
+                      aria-invalid={fieldState.invalid}
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <SelectValue placeholder="Select task category" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="min-w-[260px]">
+                      {taskCategories.map((category) => {
+                        const Icon = category.icon;
+
+                        return (
+                          <SelectItem key={category.value} value={category.value}>
+                            <span className="flex items-center gap-2">
+                              <Icon className="h-4 w-4" />
+                              {category.label}
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              );
+            }}
+          />
+
+          <Controller
             name="installation"
             control={form.control}
             render={({ field, fieldState }) => (
@@ -751,6 +841,7 @@ function ComplaintFormContent({
                 <div className="flex items-center justify-between rounded-lg border p-3">
                   <FieldLabel>Machine Installation?</FieldLabel>
                   <Checkbox
+                  disabled
                     checked={field.value}
                     onCheckedChange={(checked) => field.onChange(checked)}
                   />
@@ -841,7 +932,7 @@ function ComplaintFormContent({
         )}
       </FieldSet>
 
-      {!form.watch("installation") && (
+      {form.watch("category") === 'Complaint' && (
         <FieldSet className="rounded-lg border p-4">
           <FieldLegend className="px-1 text-sm font-medium">
             Problem & Solution
@@ -1358,6 +1449,7 @@ const EditComplaint = ({
       customer_id: undefined,
       problem: "",
       solution: "",
+      category: "Complaint",
       installation: false,
       paid: false,
       charges: 0,
@@ -1371,6 +1463,7 @@ const EditComplaint = ({
         customer_id: data.customer_id,
         problem: data.complaint_problem,
         solution: data.complaint_solution,
+        category: data.complaint_category,
         installation: data.complaint_installation,
         paid: data.complaint_paid,
         charges: data.complaint_charges || 0,
@@ -1403,6 +1496,7 @@ const EditComplaint = ({
       customer_id: undefined,
       problem: "",
       solution: "",
+      category: "Complaint",
       installation: false,
       paid: false,
     });
