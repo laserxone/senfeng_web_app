@@ -214,9 +214,11 @@ function AddCustomerDialog({
             ? user_id
             : designation == "Dealer"
               ? user_id
-              : ownership
-                ? values.ownership
-                : undefined,
+              : designation === "Manager"
+                ? user_id
+                : ownership
+                  ? values.ownership
+                  : undefined,
         created_by: user_id,
         created_at: values.created_at || undefined,
         office: values.office,

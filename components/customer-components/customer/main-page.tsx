@@ -25,7 +25,7 @@ import moment from "moment";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-export default function CustomerMainPage({ onReturn } : {onReturn : (val : number)=> void}) {
+export default function CustomerMainPage({ onReturn }: { onReturn: (val: number) => void }) {
   const [additionalFilter, setAdditionalFilter] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState<MyCustomer[]>([]);
@@ -34,7 +34,7 @@ export default function CustomerMainPage({ onReturn } : {onReturn : (val : numbe
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [quickAction, setQuickAction] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<number | null>(null);
   const [numCount, setNumCount] = useState<any>({});
   const [myLoading, setMyLoading] = useState(false)
 
@@ -310,6 +310,17 @@ export default function CustomerMainPage({ onReturn } : {onReturn : (val : numbe
 
   }
 
+  const filterItems = isAdmin ? [
+    { value: "unassigned", label: "Unassigned" },
+    { value: "unsold", label: "Unsold Customers" },
+    { value: "duplicate", label: "Duplicate", },
+
+  ] : [
+    { value: "unassigned", label: "Unassigned" },
+    { value: "unsold", label: "Unsold Customers" },
+
+  ]
+
   return (
     <>
       <div className="flex flex-1 flex-col space-y-4">
@@ -356,7 +367,7 @@ export default function CustomerMainPage({ onReturn } : {onReturn : (val : numbe
               setData((prev) => {
                 const updatedData = prev.map((item) => {
                   if (item.id === id) {
-                    return { ...item, ownership: ownership ? ownership : undefined, ownership_name : ownership ? ownership_name : "" };
+                    return { ...item, ownership: ownership ? ownership : undefined, ownership_name: ownership ? ownership_name : "" };
                   }
                   return item;
                 });
@@ -379,7 +390,7 @@ export default function CustomerMainPage({ onReturn } : {onReturn : (val : numbe
               )
               : filteredData
           }
-          onRowClick={(val, ) => {
+          onRowClick={(val,) => {
             if (val.id) {
               onReturn(val.id);
             }
@@ -406,15 +417,8 @@ export default function CustomerMainPage({ onReturn } : {onReturn : (val : numbe
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {[
-                      { value: "unassigned", label: "Unassigned" },
-                      { value: "unsold", label: "Unsold Customers" },
-                      isAdmin && {
-                        value: "duplicate",
-                        label: "Duplicate",
-                      },
-                    ]
-                      .filter(Boolean)
+                    {filterItems
+
                       .map((framework) => (
                         <SelectItem
                           key={framework.value}

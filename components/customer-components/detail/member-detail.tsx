@@ -190,20 +190,24 @@ export default function MemberDetail({
 
   const RenderVisitTab = useCallback(() => {
     return (
-    
-       
-            <VisitTab
-              customer_data={customer_id || null}
-              disable={true}
-              id={userID}
-              data={visitData}
-              height={height}
-              onRefresh={async () => {
-                await fetchCustomerDashboard();
-              }}
-            />
-         
-      
+
+
+      <VisitTab
+        customer_data={data ?
+          {
+            id: data?.id,
+            location: data?.location,
+            owner: data?.owner,
+            number: data?.number,
+            name: data?.name
+          } : null}
+        id={userID}
+        data={visitData}
+        height={height}
+        onRefresh={fetchCustomerVisit}
+      />
+
+
     );
   }, [visitData, customer_id, height]);
 
@@ -342,9 +346,9 @@ export default function MemberDetail({
           )}
 
           {activeTab === "feedback" && (
-            
-              <RenderFeedbackTabs />
-           
+
+            <RenderFeedbackTabs />
+
           )}
 
           {activeTab === "machines" && (
@@ -638,8 +642,8 @@ function CustomersTab({
                   value={
                     machine?.contract_date
                       ? new Date(machine.contract_date).toLocaleDateString(
-                      "en-GB",
-                    )
+                        "en-GB",
+                      )
                       : "N/A"
                   }
                 />
@@ -672,7 +676,7 @@ function CustomersTab({
     return (
       <AccordionItem key={machine.id} value={`customer-${machine.id}`} className="border-none">
         <Card className="overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 transition-shadow hover:shadow-md dark:bg-zinc-950 dark:ring-white/10">
-           <AccordionTrigger className=" p-0 px-3 hover:no-underline">
+          <AccordionTrigger className=" p-0 px-3 hover:no-underline">
             <div className="flex w-full flex-wrap items-center justify-between gap-2 text-left">
               <Link
                 className="flex items-center gap-2"
@@ -728,8 +732,8 @@ function CustomersTab({
                   value={
                     machine?.contract_date
                       ? new Date(machine.contract_date).toLocaleDateString(
-                      "en-GB",
-                    )
+                        "en-GB",
+                      )
                       : "N/A"
                   }
                 />
@@ -1230,40 +1234,40 @@ const RenderTimeline = ({
 
   return (
     <Card className="flex flex-1 shadow-lg rounded-2xl p-4 self-center">
-     
-        <Timeline className="mt-4">
-          {timelineData.map((item) => (
-            <TimelineItem key={item.id}>
-              <TimelineHeader>
-                <TimelineTime>
-                  {moment(item.time).format("YYYY-MM-DD")}
-                </TimelineTime>
-                <TimelineTitle
-                  className={`${item.title.toLowerCase().includes("feedback")
-                    ? "text-orange-500"
-                    : item.title.toLowerCase().includes("customer")
-                      ? "text-blue-500"
-                      : item.title.toLowerCase().includes("payment")
-                        ? "text-green-500"
-                        : item.title.toLowerCase().includes("machine")
-                          ? "text-purple-500"
-                          : item.title.toLowerCase().includes("visit")
-                            ? "text-red-500"
-                            : item.title.toLowerCase().includes("task")
-                              ? "text-yellow-500"
-                              : "text-black"
-                    }`}
-                >
-                  {item.title}
-                </TimelineTitle>
-              </TimelineHeader>
-              {item.description && (
-                <TimelineDescription>{item.description}</TimelineDescription>
-              )}
-            </TimelineItem>
-          ))}
-        </Timeline>
-     
+
+      <Timeline className="mt-4">
+        {timelineData.map((item) => (
+          <TimelineItem key={item.id}>
+            <TimelineHeader>
+              <TimelineTime>
+                {moment(item.time).format("YYYY-MM-DD")}
+              </TimelineTime>
+              <TimelineTitle
+                className={`${item.title.toLowerCase().includes("feedback")
+                  ? "text-orange-500"
+                  : item.title.toLowerCase().includes("customer")
+                    ? "text-blue-500"
+                    : item.title.toLowerCase().includes("payment")
+                      ? "text-green-500"
+                      : item.title.toLowerCase().includes("machine")
+                        ? "text-purple-500"
+                        : item.title.toLowerCase().includes("visit")
+                          ? "text-red-500"
+                          : item.title.toLowerCase().includes("task")
+                            ? "text-yellow-500"
+                            : "text-black"
+                  }`}
+              >
+                {item.title}
+              </TimelineTitle>
+            </TimelineHeader>
+            {item.description && (
+              <TimelineDescription>{item.description}</TimelineDescription>
+            )}
+          </TimelineItem>
+        ))}
+      </Timeline>
+
     </Card>
   );
 };
@@ -1278,13 +1282,13 @@ const PartsTab = ({ data, height }: { data?: PartsProps[], height?: string }) =>
         </CardContent>
       ) : (
         <CardContent className="flex flex-1 p-3">
-       
-            <div className="w-full space-y-2 pr-2">
-              {data?.map((item, index) => (
-                <InvoiceDetails key={item.id || index} invoice={item} />
-              ))}
-            </div>
-   
+
+          <div className="w-full space-y-2 pr-2">
+            {data?.map((item, index) => (
+              <InvoiceDetails key={item.id || index} invoice={item} />
+            ))}
+          </div>
+
         </CardContent>
       )}
     </Card>

@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import useUserDetail from "@/hooks/use-user-detail"
 import axios from "@/lib/axios"
 import { DeleteFromStorage } from "@/lib/deleteFunction"
-import { MyCustomer, SalesVisitTypes } from "@/lib/types"
+import { MachineProps, MyCustomer, PartsProps, SalesVisitTypes } from "@/lib/types"
 import { UploadImage } from "@/lib/uploadFunction"
 import { OfficeContext } from "@/store/context/OfficeContext"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -53,12 +53,27 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
+type LocalCustomerDetailProps = Omit<MyCustomer, "machines"> & {
+  bill_received: number;
+  bill_total: number;
+  profile_completion: number;
+  lead_name?: string
+  parts: PartsProps[];
+  machines: MachineProps[]
+}
+
+
 type VisitTabProps = {
   id: number | null | string
   data: SalesVisitTypes[]
   onRefresh: () => Promise<void>
-  disable?: boolean
-  customer_data?: number | null
+  customer_data?: {
+    id?: number
+    location?: string,
+    owner?: string,
+    number?: string[],
+    name?: string
+  } | null
   height?: string
   onFetchData?: (a: string, b: string, c?: number) => Promise<void>
 }
@@ -66,7 +81,6 @@ export default function VisitTab({
   id,
   data,
   onRefresh,
-  disable = false,
   customer_data,
   onFetchData,
 }: VisitTabProps) {
@@ -102,10 +116,15 @@ export default function VisitTab({
   })
 
   useEffect(() => {
-    if (customer_data) {
-      queueMicrotask(() => {
-        setSelectedCustomer({ id: customer_data })
-      })
+    if (customer_data?.id) {
+      setSelectedCustomer({ id: customer_data.id })
+      form.setValue("city", customer_data?.location || "")
+      form.setValue("name", customer_data?.owner || "")
+      form.setValue(
+        "phone",
+        customer_data.number ? customer_data?.number?.join(", ") : ""
+      )
+      form.setValue("company", customer_data?.name || "")
     }
   }, [customer_data])
 
@@ -125,7 +144,7 @@ export default function VisitTab({
         })
         await onRefresh()
         form.reset()
-        setSelectedCustomer(customer_data ? { id: customer_data } : null)
+        setSelectedCustomer(customer_data?.id ? { id: customer_data?.id } : null)
         setLoading(false)
       } else {
         await axios.post(`/${id}/visit`, {
@@ -135,7 +154,7 @@ export default function VisitTab({
         })
         await onRefresh()
         form.reset()
-        setSelectedCustomer(customer_data ? { id: customer_data } : null)
+        setSelectedCustomer(customer_data?.id ? { id: customer_data?.id } : null)
         setLoading(false)
       }
     } catch (error) {
@@ -190,7 +209,7 @@ export default function VisitTab({
               })}
               className="space-y-2.5 p-3"
             >
-              {!disable && (
+              {!customer_data?.id && (
                 <div className="flex flex-wrap items-end gap-2 rounded-lg bg-muted/25 p-2 ring-1 ring-border/50">
                   <div className="min-w-[260px] flex-1 space-y-1">
                     <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">

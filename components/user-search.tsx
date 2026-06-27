@@ -28,7 +28,8 @@ import { UserDashboard } from "@/lib/types";
 
 type UserSearchProps = {
   value?: number | null | string;
-  onReturn?: (val: number) => void;
+
+  onReturn?: React.Dispatch<React.SetStateAction<number | null>>;
   onReturnName?: (val: string) => void;
   onReturnData?: (val: UserDashboard) => void;
   placeholder?: string;
