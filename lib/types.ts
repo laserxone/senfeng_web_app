@@ -203,6 +203,7 @@ export type MyCustomer = {
     pin?: string
     platform?: string
     created_at?: string
+    sell_by ?: number[]
 
 };
 
@@ -226,6 +227,7 @@ export type MyCustomerResolved = {
     machine_order_numbers?: string[]
     member?: boolean
     rating ?: number
+    sell_by ?: number[]
 
 };
 

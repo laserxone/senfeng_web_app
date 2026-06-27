@@ -5,10 +5,10 @@ import { generateLog } from "@/lib/generateLog";
 import { sendNotification } from "@/lib/sendNotification";
 import { sendNotificationToCRM, sendNotificationToCRMWithoutLead } from "@/lib/sendNotificationToCRM";
 import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server";
 
 
-export async function POST(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ uid: string }> }) {
 
     const { uid } = await params
 
@@ -69,7 +69,7 @@ export async function POST(req:NextRequest, { params }:{params:Promise<{uid:stri
 }
 
 
-export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ uid: string }> }) {
 
     const { uid } = await params
 
@@ -82,7 +82,6 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
     const user = searchParams.get("user")
     const member = searchParams.get("member")
     const office = searchParams.get("office")
-    const mycustomer = searchParams.get('mycustomer')
 
     try {
         const isAdmin = await checkSuperadmin(uid)
@@ -207,10 +206,19 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
                 );
                 const sales = salesQuery.rows;
 
-                const customersWithSales = customers.map((customer) => ({
-                    ...customer,
-                    sales: sales.filter((sale) => sale.customer_id === customer.id),
-                }));
+                const customersWithSales = customers.map((customer) => {
+                    const customerSales = sales.filter((sale) => sale.customer_id === customer.id);
+
+                    const my_customer =
+                        Number(customer.ownership) === Number(uid) ||
+                        customerSales.some((sale) => Number(sale.sell_by) === Number(uid));
+
+                    return {
+                        ...customer,
+                        sales: customerSales,
+                        my_customer,
+                    };
+                });
 
                 return NextResponse.json(customersWithSales, { status: 200 });
             }
@@ -242,7 +250,8 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
       c.member,
       COALESCE(u.name, '') AS ownership_name
       ${machinesQuery ? `,
-      COALESCE(json_agg(s.serial_no) FILTER (WHERE s.serial_no IS NOT NULL), '[]') AS machines` : ''}
+      COALESCE(json_agg(s.serial_no) FILTER (WHERE s.serial_no IS NOT NULL), '[]') AS machines,
+       COALESCE(json_agg(s.sell_by) FILTER (WHERE s.sell_by IS NOT NULL), '[]') AS sell_by` : ''}
     FROM customer c
     LEFT JOIN users u ON c.ownership = u.id
     ${machinesQuery ? 'LEFT JOIN sale s ON c.id = s.customer_id' : ''}
@@ -261,9 +270,6 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
                     whereClauses.push(`c.ownership = $${queryParams.length + 1}`);
                     queryParams.push(uid);
                 }
-            } else if (mycustomer) {
-                whereClauses.push(`c.lead = $${queryParams.length + 1}`);
-                queryParams.push(uid);
             }
             if (user.designation === 'Dealer') {
                 whereClauses.push(`c.ownership = $${queryParams.length + 1}`);
@@ -298,7 +304,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
 
 
 
-    } catch (error:any) {
+    } catch (error: any) {
         console.log(error)
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }

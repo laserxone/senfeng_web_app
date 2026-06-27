@@ -16,7 +16,8 @@ import {
   Info,
   ShieldCheck,
   Trash,
-  TriangleAlert
+  TriangleAlert,
+  User
 } from "lucide-react";
 import {
   Fragment,
@@ -64,7 +65,7 @@ import { UserSearch } from "@/components/user-search";
 import { storage } from "@/config/firebase";
 import { Colors } from "@/constants/data";
 
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
@@ -133,6 +134,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
   const [credit, setCredit] = useState(false);
   const [readyForDelivery, setReadyForDelivery] = useState<MachineResponse | null>(null);
   const [openDelete, setOpenDelete] = useState(false);
+  const [openChange, setOpenChange] = useState(false)
   const [revokeDelivery, setRevokeDelivery] = useState<MachineResponse | null>(null)
 
   useEffect(() => {
@@ -492,8 +494,8 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
       )
 
       return (
-        <Card className="w-full overflow-hidden rounded-lg border bg-card shadow-sm ring-1 ring-border/40">
-          <CardContent className="space-y-3 p-3">
+        <div className="space-y-3">
+      
             <div className="flex flex-col gap-3 rounded-md border bg-gradient-to-r from-muted/35 via-background to-muted/15 px-3 py-2.5 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -562,10 +564,17 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                   )}
                 </div>
 
-                <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
-                  <span className="rounded-md border bg-background px-2 py-1">Sell by: {machine?.sell_by_name || "NA"}</span>
-                  <span className="rounded-md border bg-background px-2 py-1">Manager: {data?.ownership_name || "NA"}</span>
-                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+  <span className="inline-flex items-center gap-1 rounded-full border bg-blue-50/70 px-2.5 py-1 text-[11px] font-medium text-blue-700">
+    <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+    Sold by: {machine?.sell_by_name || "NA"}
+  </span>
+
+  <span className="inline-flex items-center gap-1 rounded-full border bg-emerald-50/70 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
+    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+    Manager: {data?.ownership_name || "NA"}
+  </span>
+</div>
               </div>
 
               <div className="flex shrink-0 flex-wrap items-center gap-1.5">
@@ -768,8 +777,8 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                 </CardContent>
               </Card>
             </div>
-          </CardContent>
-        </Card>
+         
+        </div>
       )
     }
   )
@@ -987,8 +996,17 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                     {override ? "Disable Override" : "Enable Override"}
                   </DropdownMenuItem>
 
+                  {!data?.machine?.commission_issued &&
+                    <DropdownMenuItem
+                      className="text-xs"
+                      onClick={() => setOpenChange(true)}
+                    >
+                      <User /> Change Sales Person
+                    </DropdownMenuItem>
+                  }
+
                   <DropdownMenuItem
-                    className="text-xs text-red-600 focus:text-red-600"
+                    className="text-xs text-red-600 focus:text-red-600 "
                     onClick={() => setOpenDelete(true)}
                   >
                     <Trash2 className="mr-2 h-3.5 w-3.5" />
@@ -1003,14 +1021,14 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
         )}
       </ClientCard>
 
-      <div className="flex min-h-[420px] flex-1 rounded-lg border bg-card p-2 shadow-sm ring-1 ring-border/40">
+    
         <PageTable
           columns={columns}
           data={payments}
           disableInput={true}
           onRowClick={(val, e) => { }}
         />
-      </div>
+   
       <EditMachine
         visible={editMachine}
         onClose={setEditMachine}
@@ -1121,6 +1139,13 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
         onPressCancel={() => setOpenDelete(false)}
       />
 
+      <ChangeSalesPersonDialog
+        open={openChange}
+        onRefresh={onRefresh}
+        machine_id={data?.machine?.id}
+        onClose={() => setOpenChange(false)}
+        existing={data?.machine?.sell_by_name} />
+
       {override && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
           <div
@@ -1151,6 +1176,116 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
     </div>
   );
 }
+
+const ChangeSalesPersonDialog = ({
+  open,
+  onClose,
+  machine_id,
+  onRefresh,
+  existing,
+}: {
+  open: boolean;
+  onClose: () => void;
+  machine_id: number | undefined;
+  onRefresh: () => Promise<void>;
+  existing: string | undefined;
+}) => {
+  const [selectedUser, setSelectedUser] = useState<null | number>(null);
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
+
+  async function handleSubmit() {
+    if (!selectedUser || !machine_id) return;
+
+    setLoading(true);
+
+    try {
+      await axios.put(`/${userID}/machine/${machine_id}`, {
+        sell_by: selectedUser,
+      });
+
+      await onRefresh();
+      handleClose();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleClose() {
+    setSelectedUser(null);
+    onClose();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="overflow-hidden p-0 sm:max-w-[430px]">
+        <DialogHeader className="border-b bg-gradient-to-r from-slate-50 via-white to-slate-50 px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-white text-slate-700 shadow-sm">
+              <User className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="text-base font-semibold leading-tight text-slate-950">
+                Change Sales Person
+              </DialogTitle>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Reassign this machine without changing other details.
+              </p>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-3 px-4 py-4">
+          <FieldSet className="gap-2 rounded-lg border bg-slate-50/70 p-3">
+            <FieldLegend className="mb-0 text-xs font-semibold uppercase text-slate-500">
+              Current Assignment
+            </FieldLegend>
+
+            <div className="flex items-center justify-between gap-3 rounded-md border bg-white px-3 py-2">
+              <Label className="text-xs font-medium text-muted-foreground">
+                Existing
+              </Label>
+              <p className="truncate text-sm font-semibold text-slate-900">
+                {existing || "Not assigned"}
+              </p>
+            </div>
+          </FieldSet>
+
+          <FieldSet className="gap-2 rounded-lg border bg-white p-3 shadow-sm">
+            <FieldLegend className="mb-0 text-xs font-semibold uppercase text-slate-500">
+              New Assignment
+            </FieldLegend>
+
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">Select Sales Person</Label>
+              <UserSearch value={selectedUser} onReturn={setSelectedUser} />
+            </div>
+          </FieldSet>
+
+          <div className="flex items-center justify-end gap-2 border-t pt-3">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={loading}
+              onClick={handleClose}
+              className="h-9 px-3"
+            >
+              Cancel
+            </Button>
+
+            <Button
+              disabled={!selectedUser || loading}
+              onClick={handleSubmit}
+              className="h-9 px-4"
+            >
+              {loading ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }: { open: boolean, onClose: () => void, onRefresh: () => Promise<void>, data: MachineResponse | null }) => {
   const { userID } = useUserDetail();
@@ -1741,7 +1876,7 @@ const ViewImagesSheet = ({
 }) => {
 
   if (!data) return null
- 
+
   const [contractPdfImages, setContractPdfImages] = useState<string[]>([]);
   const [otherPdfImages, setOtherPdfImages] = useState<string[]>([]);
   const [addImageVisible, setAddImageVisible] = useState(false);
@@ -1813,9 +1948,9 @@ const ViewImagesSheet = ({
   }, [visible, data?.contract_images_pdf, data?.other_images_pdf, prepareData]);
 
   const handleClose = useCallback(() => {
-   
-      onClose();
-    
+
+    onClose();
+
   }, [onClose]);
 
   const handleDeleteImage = async (imgUrl: string, typeKey: string) => {

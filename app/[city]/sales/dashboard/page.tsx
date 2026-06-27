@@ -13,7 +13,6 @@ import VisitTab from "@/components/users/addVisit";
 import Attendance from "@/components/users/attendance";
 import CustomerEmployee from "@/components/users/customer";
 import Reimbursement from "@/components/users/Reimbursement";
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -41,9 +40,6 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useId, useState, type ElementType } from "react";
 import "./styles.css";
 
-
-
-
 export default function Page() {
   const [data, setData] = useState<SalesDashboard>();
   const { userID, base_route } = useUserDetail();
@@ -53,8 +49,6 @@ export default function Page() {
   const [reimbursementData, setReimbursementData] = useState<UserReimbursementType[]>([]);
   const [attendanceData, setAttendanceData] = useState<UserAttendanceRecord[]>([]);
   const [callData, setCallData] = useState<UserCallData[]>([]);
-  const [machineData, setMachineData] = useState<SalesMachine[]>([]);
-  const [visible, setVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("newCustomers");
   const isMobile = useIsMobile()
   const [allFines, setAllFines] = useState(0)

@@ -17,6 +17,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         try {
             await client.query("BEGIN");
 
+             const prQuery = await client.query(`SELECT id FROM payment_requests WHERE sale_id = $1`, [id])
+            if (prQuery.rows.length > 0) {
+                return NextResponse.json({ message: "An active payment request already exists. Please remove the existing request before revoking." })
+            }
+
             await client.query(
                 `
       UPDATE order_items

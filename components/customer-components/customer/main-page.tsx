@@ -258,11 +258,13 @@ export default function CustomerMainPage({ onReturn }: { onReturn: (val: number)
   const filteredData = data
     .filter((item) =>
       additionalFilter == "unassigned"
-        ? !item.ownership === true
+        ? !item.ownership
         : additionalFilter == "unsold"
           ? !item.machines
           : additionalFilter == "duplicate"
             ? item.orignalNumber?.some((num) => numCount[num] > 1)
+            : additionalFilter == "mycustomers"
+            ? item.ownership === userID
             : true
     )
     .filter((item) => (selectedUser ? item?.ownership === selectedUser : true));
@@ -313,11 +315,13 @@ export default function CustomerMainPage({ onReturn }: { onReturn: (val: number)
   const filterItems = isAdmin ? [
     { value: "unassigned", label: "Unassigned" },
     { value: "unsold", label: "Unsold Customers" },
+    {value : "mycustomers", label : "My Customers"},
     { value: "duplicate", label: "Duplicate", },
 
   ] : [
     { value: "unassigned", label: "Unassigned" },
     { value: "unsold", label: "Unsold Customers" },
+     {value : "mycustomers", label : "My Customers"},
 
   ]
 

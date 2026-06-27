@@ -3,7 +3,7 @@ import { partFields, profileFields, saleFields } from "@/constants/data";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req:NextRequest, { params }:{params:Promise<{id:string,uid:string}>}) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string, uid: string }> }) {
     const { id, uid } = await params;
 
 
@@ -30,6 +30,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
 
 
             let filledCount = 0;
+            let missingFields: string[] = []
             profileFields.forEach(field => {
                 const value = customer[field];
                 const isFilled =
@@ -43,6 +44,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
                                     ? value.trim() !== '' && value !== 'null'
                                     : value !== null && value !== undefined;
                 if (isFilled) filledCount++;
+                else missingFields.push(field)
             });
 
             const machinesQuery = `SELECT * FROM sale WHERE customer_id = $1 ORDER BY contract_date ASC`;
@@ -82,32 +84,32 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
                 if (hasContractImages) machineFilled++;
 
                 let checkingFields = []
-              
-                              if (machine.type === 'machine') {
-                                  checkingFields = [...saleFields]
-                              } else {
-                                  checkingFields = [...partFields]
-                              }
-              
-                              // Handle other saleFields
-                              checkingFields.forEach(field => {
-                                  const value = machine[field];
-                                  const isFilled =
-                                      Array.isArray(value)
-                                          ? value.length > 0
-                                          : typeof value === 'number'
-                                              ? ['price'].includes(field)
-                                                  ? value !== null && !isNaN(value)
-                                                  : true
-                                              : typeof value === 'string'
-                                                  ? value.trim() !== '' && value !== 'null'
-                                                  : value !== null && value !== undefined;
-              
-                                  if (isFilled) machineFilled++;
-                              });
-              
-                              const totalFields = checkingFields.length + 1;
-              
+
+                if (machine.type === 'machine') {
+                    checkingFields = [...saleFields]
+                } else {
+                    checkingFields = [...partFields]
+                }
+
+                // Handle other saleFields
+                checkingFields.forEach(field => {
+                    const value = machine[field];
+                    const isFilled =
+                        Array.isArray(value)
+                            ? value.length > 0
+                            : typeof value === 'number'
+                                ? ['price'].includes(field)
+                                    ? value !== null && !isNaN(value)
+                                    : true
+                                : typeof value === 'string'
+                                    ? value.trim() !== '' && value !== 'null'
+                                    : value !== null && value !== undefined;
+
+                    if (isFilled) machineFilled++;
+                });
+
+                const totalFields = checkingFields.length + 1;
+
                 saleFilledCount += machineFilled;
 
                 return {
@@ -120,7 +122,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
             const overallCompletion = Math.round((filledCount / customerTotalFields) * 100);
 
             let billReceived = 0;
-            let payments:any[] = [];
+            let payments: any[] = [];
 
             if (machineIds.length > 0) {
                 const paymentsQuery = `SELECT id, machine_id, note, amount, mode, received_by, clearance_date, transaction_date FROM payment WHERE machine_id = ANY($1)`;
@@ -155,6 +157,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
             customer.bill_received = parseFloat(`${billReceived}`);
             customer.bill_total = parseFloat(billTotal);
             customer.profile_completion = overallCompletion;
+            customer.missing_fields = missingFields
             customer.parts = parts
 
 
@@ -210,6 +213,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
             }
 
             let filledCount = 0;
+            let missingFields: string[] = []
             profileFields.forEach(field => {
                 const value = customer[field];
                 const isFilled =
@@ -223,6 +227,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
                                     ? value.trim() !== '' && value !== 'null'
                                     : value !== null && value !== undefined;
                 if (isFilled) filledCount++;
+                else missingFields.push(field)
             });
 
             const machinesQuery = `SELECT * FROM sale WHERE customer_id = $1 ORDER BY contract_date ASC`;
@@ -261,7 +266,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
 
                 if (hasContractImages) machineFilled++;
 
-             let checkingFields = []
+                let checkingFields = []
 
                 if (machine.type === 'machine') {
                     checkingFields = [...saleFields]
@@ -300,7 +305,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
             const overallCompletion = Math.round((filledCount / customerTotalFields) * 100);
 
             let billReceived = 0;
-            let payments:any[] = [];
+            let payments: any[] = [];
 
             if (machineIds.length > 0) {
                 const paymentsQuery = `SELECT id, machine_id, note, amount, mode, received_by, clearance_date, transaction_date FROM payment WHERE machine_id = ANY($1)`;
@@ -334,6 +339,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
             customer.bill_received = parseFloat(`${billReceived}`);
             customer.bill_total = parseFloat(billTotal);
             customer.profile_completion = overallCompletion;
+            customer.missing_fields = missingFields
             customer.parts = parts
 
 
@@ -346,7 +352,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
 
 
 
-    } catch (error:any) {
+    } catch (error: any) {
         console.error('Error fetching data: ', error);
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 });
     }

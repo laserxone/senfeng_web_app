@@ -30,7 +30,7 @@ export default function AddFeedbackDialog({ open, onClose, user_id, customer_id,
                 type: "aftersales",
                 customer_id,
                 user_id,
-                status: "Satisfactory",
+                 status: satisfactory ? "Satisfactory" : "Unsatisfactory",
                 next_followup: undefined,
                 top_follow: false,
                 rating
@@ -89,7 +89,7 @@ export default function AddFeedbackDialog({ open, onClose, user_id, customer_id,
                             placeholder="Write call feedback..."
                             value={feedback}
                             onChange={(e) => setFeedback(e.target.value)}
-                            className="h-9 rounded-lg bg-muted/40"
+                            className="h-9 rounded-lg"
                         />
                     </div>
 
@@ -122,7 +122,7 @@ export default function AddFeedbackDialog({ open, onClose, user_id, customer_id,
                             <Checkbox
                                 checked={satisfactory}
                                 onCheckedChange={(checked) => {
-                                    setSatisfactory(checked === true);
+                                    setSatisfactory(checked as boolean);
                                 }}
                             />
                         </label>
@@ -139,7 +139,7 @@ export default function AddFeedbackDialog({ open, onClose, user_id, customer_id,
 
                     <Button
                         className="h-9 w-full rounded-lg"
-                        disabled={!next || !feedback}
+                        disabled={!next || !feedback || rating === 0}
                         onClick={() => {
                             handleSaveFeedback();
                         }}

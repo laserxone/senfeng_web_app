@@ -12,7 +12,7 @@ const UserTabs = ({ tabs, routeTo, activeTab }: { tabs: TabsProps, routeTo: (val
 
 
     return (
-        <div className="flex flex-wrap gap-1.5 pt-2">
+        <div className="flex flex-1 gap-1.5 pt-2">
             {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.value;

@@ -161,7 +161,7 @@ const FeedbackForm = ({
                 type: "aftersales",
                 customer_id,
                 user_id,
-                status: "Satisfactory",
+                status: satisfactory ? "Satisfactory" : "Unsatisfactory",
                 next_followup: undefined,
                 top_follow: false,
                 rating
@@ -201,7 +201,7 @@ const FeedbackForm = ({
                 <div className="space-y-1.5">
                     <div className="flex gap-2">
                         <Label className="text-xs font-semibold text-muted-foreground">
-                            Rating
+                            Rating <RequiredStar />
                         </Label>
                         <StarRating size={16} value={rating} onChange={(e) => setRating(e)} />
                     </div>
@@ -226,7 +226,7 @@ const FeedbackForm = ({
                 </div>
 
                 <Button
-                    disabled={!feedback || loading || !next}
+                    disabled={!feedback || loading || !next || rating === 0}
                     size="sm"
                     className="h-9 shrink-0 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                     onClick={handleSaveFeedback}

@@ -1,7 +1,5 @@
 "use client";
-import AppCalendar from "@/components/appCalendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 import axios from "@/lib/axios";
@@ -15,6 +13,7 @@ import {
   MessageSquareText,
   Package,
   Phone,
+  PhoneCall,
   Plus,
   Trash2,
   UserRound,
@@ -27,7 +26,6 @@ import { FaWhatsapp } from "react-icons/fa";
 import AddMachine from "@/components/addMachine";
 import ConfimationDialog from "@/components/alert-dialog";
 import EditCustomerDialog from "@/components/editCustomer";
-import { RequiredStar } from "@/components/RequiredStar";
 import {
   Timeline,
   TimelineDescription,
@@ -48,7 +46,6 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import VisitTab from "@/components/users/addVisit";
 import CustomerTask from "@/components/users/customerTask";
 import useUserDetail from "@/hooks/use-user-detail";
@@ -58,6 +55,8 @@ import { GetProfileImage } from "@/lib/getProfileImage";
 
 import AddParts from "@/components/add-parts";
 import CurrencyFormatter from "@/components/currency-formatter";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import AddFeedbackDialog from "@/components/users/add-feedback";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CustomerFeedbackProps, CustomerTaskProps, CustomerVisitProps, MachineProps, MyCustomer, PartsProps } from "@/lib/types";
 import { Scrollbar } from "@radix-ui/react-scroll-area";
@@ -87,6 +86,7 @@ type LocalCustomerDetailProps = Omit<MyCustomer, "machines"> & {
   lead_name?: string
   parts: PartsProps[];
   machines: MachineProps[]
+  missing_fields: string[]
 }
 
 export default function MemberDetail({
@@ -170,6 +170,8 @@ export default function MemberDetail({
 
   }
 
+  console.log(data)
+
   async function handleDelete(id: number | undefined) {
     if (!id) return;
     setDeleteLoading(true);
@@ -241,6 +243,8 @@ export default function MemberDetail({
   }, [data, feedback]);
 
 
+  const hasMissingFields = !!data?.missing_fields?.length;
+  const isProfileIncomplete = profileCompletion < 100;
 
   return (
     <div className="flex w-full flex-col pb-2">
@@ -283,16 +287,50 @@ export default function MemberDetail({
             Overall Profile Completion
           </Label>
           <div className="h-[70px] w-[70px] ">
-            <CircularProgressbar
-              value={profileCompletion}
-              text={`${profileCompletion}%`}
-              styles={buildStyles({
-                pathColor: "#4ade80",
-                textColor: "#1f2937",
-                trailColor: "#e5e7eb",
-                textSize: "28px",
-              })}
-            />
+            <Tooltip>
+              <TooltipTrigger>
+                <CircularProgressbar
+                  value={profileCompletion}
+                  text={`${profileCompletion}%`}
+                  styles={buildStyles({
+                    pathColor: (hasMissingFields || isProfileIncomplete) ? "#f87171" : "#4ade80",
+                    textColor: "#1f2937",
+                    trailColor: "#e5e7eb",
+                    textSize: "28px",
+                  })}
+                />
+              </TooltipTrigger>
+
+              {data && (
+                <TooltipContent
+                  className={
+                    hasMissingFields || isProfileIncomplete
+                      ? "bg-red-600 flex flex-col"
+                      : "bg-green-600 flex flex-col"
+                  }
+                  arrowColor={
+                    hasMissingFields || isProfileIncomplete
+                      ? "bg-red-600 fill-red-600"
+                      : "bg-green-600 fill-green-600"
+                  }
+                >
+                  {hasMissingFields ? (
+                    data.missing_fields.map((item, i) => (
+                      <p key={i} className="text-white">
+                        {item === "rating"
+                          ? "Customer feedback and rating are required"
+                          : item.replace(/_/g, " ").toUpperCase()}
+                      </p>
+                    ))
+                  ) : isProfileIncomplete ? (
+                    <p className="text-white">Machine details require completion</p>
+                  ) : (
+                    <p className="text-white">Profile is complete</p>
+                  )}
+                </TooltipContent>
+              )}
+            </Tooltip>
+
           </div>
         </div>
 
@@ -844,11 +882,9 @@ function CompactDetail({ label, value }: { label: string, value: ReactNode }) {
 }
 
 function FeedbackTab({ userID, customerID, data, onRefresh, type }: { userID: number | string, customerID: number, data: CustomerFeedbackProps[], onRefresh: () => Promise<void>, type: string }) {
-  const [writeFeedback, setWriteFeedback] = useState("");
-  const [date, setDate] = useState<Date | undefined>(undefined);
-  const [loading, setLoading] = useState(false);
   const [selectedDelete, setSelectedDelete] = useState<number | null>(null);
-  const [satisfactory, setSatisfactory] = useState(false);
+  const [open, setOpen] = useState(false)
+
   const [localData] = useState(
     data
       .filter((item) => item?.type === type)
@@ -870,106 +906,18 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }: { userID: nu
       });
   }
 
-  async function handleSavePost() {
-    setLoading(true);
-    axios
-      .post(`/${userID}/feedback`, {
-        feedback: writeFeedback,
-        next_followup: date,
-        top_follow: topFollow,
-        type: type,
-        customer_id: customerID,
-        user_id: userID,
-        status: satisfactory ? "Satisfactory" : "Unsatisfactory",
-      })
-      .then(async () => {
-        await onRefresh();
-      })
-      .catch((e) => {
-        console.log(e);
-      })
-      .finally(() => {
-        setLoading(false);
-        handleClearAll();
-      });
-  }
 
-  const [topFollow, setTopFollow] = useState(false);
-
-  function handleClearAll() {
-    setWriteFeedback("");
-    setDate(undefined);
-    setTopFollow(false);
-  }
 
   return (
     <div className="w-full space-y-2.5 p-1">
-      <Card className="overflow-hidden border-0">
-        <CardContent className="grid gap-2.5 p-3 xl:grid-cols-[1fr_260px]">
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {type === "aftersales" ? "After Sales Note" : "Feedback"}{" "}
-                <RequiredStar />
-              </Label>
-              <Badge variant="secondary" className="h-5 rounded-full px-2 text-[11px]">
-                {localData.length} records
-              </Badge>
-            </div>
-            <Textarea
-              value={writeFeedback}
-              onChange={(e) => setWriteFeedback(e.target.value)}
-              className="min-h-16 resize-none rounded-lg border-0 bg-muted/30 px-3 py-2 text-sm shadow-inner focus-visible:ring-2"
-              rows={2}
-              placeholder="Write something..."
-            />
-          </div>
-
-          <div className="grid gap-2 sm:grid-cols-[minmax(190px,1fr)_auto] xl:grid-cols-1">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Next Follow Up <RequiredStar />
-              </Label>
-              <AppCalendar date={date} onChange={setDate} min={new Date()} max={""} />
-            </div>
-
-            <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto] xl:grid-cols-2">
-              <label className="flex h-8 items-center justify-between gap-2 rounded-lg bg-muted/35 px-2.5">
-                <span className="text-xs font-medium">Top</span>
-                <Checkbox
-                  checked={topFollow}
-                  onCheckedChange={(checked) => {
-                    setTopFollow(checked === true);
-                  }}
-                />
-              </label>
-              <label className="flex h-8 items-center justify-between gap-2 rounded-lg bg-muted/35 px-2.5">
-                <span className="text-xs font-medium">Satisfactory</span>
-                <Checkbox
-                  checked={satisfactory}
-                  onCheckedChange={(checked) => {
-                    setSatisfactory(checked === true);
-                  }}
-                />
-              </label>
-              <Button
-                className="h-8 rounded-lg px-5 xl:col-span-2"
-                disabled={!writeFeedback || !date}
-                onClick={() => {
-                  handleSavePost();
-                }}
-              >
-                {loading && <Spinner />} Post
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       <div className="space-y-1.5">
         <div className="flex items-center justify-between px-1">
           <h3 className="text-sm font-semibold">History</h3>
-          <span className="text-xs text-muted-foreground">Latest first</span>
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs text-muted-foreground">Latest first</span>
+
+            <Button onClick={() => setOpen(!open)}><PhoneCall /> Add Feedback</Button>
+          </div>
         </div>
 
         {localData.length === 0 ? (
@@ -1062,6 +1010,8 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }: { userID: nu
           ))
         )}
       </div>
+
+      <AddFeedbackDialog onClose={() => setOpen(false)} open={open} onRefresh={onRefresh} user_id={userID} customer_id={customerID} />
     </div>
   );
 }

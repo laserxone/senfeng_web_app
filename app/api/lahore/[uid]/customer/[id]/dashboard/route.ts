@@ -27,7 +27,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
       }
 
       const customer = customerResult.rows[0];
-
+      let missingFields : string[] = []
       let filledCount = 0;
       profileFields.forEach((field) => {
         const value = customer[field];
@@ -42,6 +42,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
                   ? value.trim() !== "" && value !== "null"
                   : value !== null && value !== undefined;
         if (isFilled) filledCount++;
+        else missingFields.push(field)
       });
 
       const machinesQuery = `
@@ -178,6 +179,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
       customer.bill_received = parseFloat(`${billReceived}`);
       customer.bill_total = parseFloat(billTotal);
       customer.profile_completion = overallCompletion;
+      customer.missing_fields=missingFields
       customer.parts = parts;
 
       return NextResponse.json(
@@ -252,6 +254,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
       }
 
       let filledCount = 0;
+      let missingFields : string[] = []
       profileFields.forEach((field) => {
         const value = customer[field];
         const isFilled =
@@ -265,6 +268,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
                   ? value.trim() !== "" && value !== "null"
                   : value !== null && value !== undefined;
         if (isFilled) filledCount++;
+         else missingFields.push(field)
       });
 
       const machinesQuery = `SELECT * FROM sale WHERE customer_id = $1 ORDER BY contract_date ASC`;
@@ -388,6 +392,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
       customer.bill_received = parseFloat(`${billReceived}`);
       customer.bill_total = parseFloat(billTotal);
       customer.profile_completion = overallCompletion;
+      customer.missing_fields = missingFields
       customer.parts = parts;
 
       return NextResponse.json(

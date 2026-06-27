@@ -203,10 +203,19 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
                 );
                 const sales = salesQuery.rows;
 
-                const customersWithSales = customers.map((customer) => ({
-                    ...customer,
-                    sales: sales.filter((sale) => sale.customer_id === customer.id),
-                }));
+               const customersWithSales = customers.map((customer) => {
+                    const customerSales = sales.filter((sale) => sale.customer_id === customer.id);
+
+                    const my_customer =
+                        Number(customer.ownership) === Number(uid) ||
+                        customerSales.some((sale) => Number(sale.sell_by) === Number(uid));
+
+                    return {
+                        ...customer,
+                        sales: customerSales,
+                        my_customer,
+                    };
+                });
 
                 return NextResponse.json(customersWithSales, { status: 200 });
             }
@@ -238,7 +247,8 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
       c.member,
       COALESCE(u.name, '') AS ownership_name
       ${machinesQuery ? `,
-      COALESCE(json_agg(s.serial_no) FILTER (WHERE s.serial_no IS NOT NULL), '[]') AS machines` : ''}
+      COALESCE(json_agg(s.serial_no) FILTER (WHERE s.serial_no IS NOT NULL), '[]') AS machines,
+       COALESCE(json_agg(s.sell_by) FILTER (WHERE s.sell_by IS NOT NULL), '[]') AS sell_by` : ''}
     FROM customer c
     LEFT JOIN users u ON c.ownership = u.id
     ${machinesQuery ? 'LEFT JOIN sale s ON c.id = s.customer_id' : ''}

@@ -29,15 +29,14 @@ export default function MemberMainPage({ onReturn }: { onReturn: (val: number) =
   const [additionalFilter, setAdditionalFilter] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState<MyCustomerResolved[]>([]);
-  const { userID, isAdmin, designation, customer_delete_access, } = useUserDetail()
+  const { userID, isAdmin, customer_delete_access, } = useUserDetail()
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<number | null>(null);
   const [numCount, setNumCount] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [resetLoading, setResetLoading] = useState(false);
-  const [filterVisible, setFilterVisible] = useState(false);
-  const [myLoading, setMyLoading] = useState(false)
+  const [filterVisible, setFilterVisible] = useState(false)
 
   useEffect(() => {
     if (userID)
@@ -271,7 +270,7 @@ export default function MemberMainPage({ onReturn }: { onReturn: (val: number) =
     if (!id) return;
     setDeleteLoading(true);
     try {
-      const response = await axios.delete(
+      await axios.delete(
         `/${userID}/customer/${id}`
       );
       toast.success("Customer Deleted");
@@ -283,11 +282,14 @@ export default function MemberMainPage({ onReturn }: { onReturn: (val: number) =
     }
   }
 
+
   const filteredData = data
     .filter((item) =>
       additionalFilter == "duplicate"
         ? item.orignalNumber?.some((num) => numCount[num] > 1)
-        : true
+        : additionalFilter === 'mycustomers'
+          ? (item.ownership === userID || item.sell_by?.includes(Number(userID)))
+          : true
     )
     .filter((item) =>
       selectedUser
@@ -310,35 +312,17 @@ export default function MemberMainPage({ onReturn }: { onReturn: (val: number) =
     }
   }, [data]);
 
-  async function handleMyCustomers() {
-    setMyLoading(true)
 
-    axios
-      .get(
-        `/${userID
-        }/customer?machines=true&member=true&mycustomer=true`
-      )
-      .then((response) => {
-        const apiData: MyCustomer[] = response.data;
-        const temp = apiData
-          .map((item) => {
-            return {
-              ...item,
-              machines: item?.machines?.join(", "),
-              orignalNumber: item.number,
-              number: item?.number?.join(", "),
-              sorting: item.owner || item.name,
-              order_nums: item?.machine_order_numbers?.join(", "),
-            };
-          })
-          .filter((item) => item.member);
-        setData([...temp]);
-      })
-      .finally(() => {
-        setMyLoading(false);
-      });
+  const filterItems = isAdmin ? [
 
-  }
+    { value: "mycustomers", label: "My Customers" },
+    { value: "duplicate", label: "Duplicate", },
+
+  ] : [
+
+    { value: "mycustomers", label: "My Customers" },
+
+  ]
 
   return (
     <>
@@ -370,59 +354,56 @@ export default function MemberMainPage({ onReturn }: { onReturn: (val: number) =
         >
           <div className=" flex justify-between flex-wrap">
             <div className="flex gap-4 flex-wrap">
-              {isAdmin && (
-                <>
-                  <div className="w-[300px]">
-                    <UserSearch
-                      placeholder="Filter user..."
-                      value={selectedUser}
-                      onReturn={setSelectedUser}
-                    />
-                  </div>
-                  {isAdmin && (
-                    <Select
-                      onValueChange={setAdditionalFilter}
-                      value={additionalFilter}
-                    >
-                      <SelectTrigger className="w-[200px]">
-                        <SelectValue placeholder="Additional filter..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {[
-                            {
-                              value: "duplicate",
-                              label: "Duplicate",
-                            },
-                          ].map((framework) => (
-                            <SelectItem
-                              key={framework.value}
-                              value={framework.value}
-                              onClick={() => {
-                                if (framework.value === additionalFilter) {
-                                  setAdditionalFilter("");
-                                } else {
-                                  setAdditionalFilter(framework.value);
-                                }
-                              }}
-                            >
-                              {framework.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                  <Button
-                    onClick={() => {
-                      handleClear();
-                    }}
-                  >
-                    Clear
-                  </Button>
 
-                </>
-              )}
+
+              {isAdmin &&
+                <div className="w-[300px]">
+                  <UserSearch
+                    placeholder="Filter user..."
+                    value={selectedUser}
+                    onReturn={setSelectedUser}
+                  />
+                </div>
+              }
+
+              <Select
+                onValueChange={setAdditionalFilter}
+                value={additionalFilter}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Additional filter..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {filterItems
+
+                      .map((framework) => (
+                        <SelectItem
+                          key={framework.value}
+                          value={framework.value}
+                          onClick={() => {
+                            if (framework.value === additionalFilter) {
+                              setAdditionalFilter("");
+                            } else {
+                              setAdditionalFilter(framework.value);
+                            }
+                          }}
+                        >
+                          {framework.label}
+                        </SelectItem>
+                      ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+
+              <Button
+                onClick={() => {
+                  handleClear();
+                }}
+              >
+                Clear
+              </Button>
+
 
               <div className="flex gap-4">
                 <Button
@@ -433,24 +414,18 @@ export default function MemberMainPage({ onReturn }: { onReturn: (val: number) =
                   <Filter />
                 </Button>
                 <Button
+                  disabled={resetLoading}
                   variant="destructive"
                   onClick={async () => {
                     setResetLoading(true);
-                    await fetchData();
-                    setResetLoading(false);
+                    fetchData().then(() => {
+                      setResetLoading(false)
+                    })
                   }}
                 >
                   {resetLoading && <Spinner />} Reset
                 </Button>
-                {designation === 'Customer Relationship Manager' &&
-                  <Button disabled={myLoading} variant="outline"
-                    onClick={() => {
-                      handleMyCustomers()
-                    }}
-                  >
-                    {myLoading && <Spinner />}  Show My Customers
-                  </Button>
-                }
+
               </div>
             </div>
           </div>
