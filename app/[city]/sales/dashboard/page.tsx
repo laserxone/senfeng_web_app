@@ -270,7 +270,6 @@ export default function Page() {
     return (
 
       <CustomersTab
-        height="h-[calc(100dvh-400px)]"
         data={
           data?.customers.filter((customer) => customer.sales.length > 0) ||
           []
@@ -997,13 +996,10 @@ function SalesMetricCard({
 }
 
 function CustomersTab({
-  data,
-  height = "h-[calc(100dvh-250px)]",
+  data
 }: {
   data: SalesCustomer[]
-  height?: string
 }) {
-  console.log(data)
   const [localData, setLocalData] = useState<
     (SalesCustomer & { overall: string })[]
   >([])

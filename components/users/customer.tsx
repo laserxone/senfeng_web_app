@@ -9,25 +9,21 @@ import PageTable from "@/components/app-table";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 
-import { ExtraCustomer, NewlyAssignedCustomer, TaskProps, TodayTask } from "@/lib/types";
+import { ExtraCustomer, NewlyAssignedCustomer, TaskProps } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import moment from "moment";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { RequiredStar } from "../RequiredStar";
 import AddCustomerDialog from "../addCustomer";
-import AppCalendar from "../appCalendar";
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Checkbox } from "../ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import { Input } from "../ui/input";
 import { Progress } from "../ui/progress";
 import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
-import { AddTask } from "./task";
 import AddFeedbackDialog from "./add-feedback";
+import { AddTask } from "./task";
 
 
 type CustomerEmployeeProps = {
@@ -260,12 +256,12 @@ export default function CustomerEmployee({
         }}
       />
 
-     <AddFeedbackDialog open={showFeedback} customer_id={selectedCustomer?.id} onClose={()=>{
-      setSelectedCustomer(null)
-      setShowFeedback(false)
-     }}
-     onRefresh={onRefresh}
-     user_id={userID}/>
+      <AddFeedbackDialog open={showFeedback} customer_id={selectedCustomer?.id} onClose={() => {
+        setSelectedCustomer(null)
+        setShowFeedback(false)
+      }}
+        onRefresh={onRefresh}
+        user_id={userID} />
 
       <ConfimationDialog
         open={showConfirmation}

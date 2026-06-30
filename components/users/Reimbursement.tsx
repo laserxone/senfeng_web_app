@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, Building2, Calendar, Download, Filter, MapPin, Plus, ReceiptText, RotateCcw, Search } from "lucide-react";
+import { AlertCircle, Building2, Calendar, Download, Filter, MapPin, Plus, ReceiptText, RotateCcw, Search, Trash2 } from "lucide-react";
 import {
   useContext,
   useEffect,
@@ -21,6 +21,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import axios from "@/lib/axios";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
 import exportToExcel from "@/lib/exportToExcel";
 import { MyCustomer, UserReimbursementType, UserReimbursementTypes } from "@/lib/types";
 import { UploadImage } from "@/lib/uploadFunction";
@@ -31,6 +32,7 @@ import moment from "moment";
 import { Controller, useForm } from "react-hook-form";
 import "react-medium-image-zoom/dist/styles.css";
 import { z } from "zod";
+import ConfimationDialog from "../alert-dialog";
 import CurrencyFormatter from "../currency-formatter";
 import { CustomerSearchWithData } from "../customer-search-with-data";
 import { MyImgZooming } from "../img-zooming";
@@ -68,8 +70,9 @@ export default function Reimbursement({
   // const [total, setTotal] = useState(0);
   const [resetLoading, setResetLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<UserReimbursementType | null>(null);
-
+  const [selectedForDelete, setSelectedForDelete] = useState<UserReimbursementType | null>(null)
   const [search, setSearch] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   useEffect(() => {
     setData([...passingData]);
@@ -102,6 +105,24 @@ export default function Reimbursement({
       "",
       false,
     );
+  }
+
+
+  async function handleDelete() {
+    if (!selectedForDelete?.id) return
+    setDeleteLoading(true)
+    try {
+      if (selectedForDelete.image) {
+        if (selectedForDelete.image.includes("https")) {
+        } else {
+          DeleteFromStorage(selectedForDelete.image);
+        }
+      }
+      await axios.delete(`/${id}/reimbursement/${selectedForDelete.id}`)
+      await onAddRefresh()
+    } finally {
+      setDeleteLoading(false)
+    }
   }
 
 
@@ -195,7 +216,7 @@ export default function Reimbursement({
           ) : (
             <div className="space-y-2">
               {filtered.map((item) => (
-                <ReimbursementCard key={item.id} item={item} />
+                <ReimbursementCard key={item.id} item={item} onClickDelete={(val) => setSelectedForDelete(val)} />
               ))}
             </div>
           )}
@@ -227,6 +248,15 @@ export default function Reimbursement({
           setReimbursementVisible(false);
         }}
       />
+
+      <ConfimationDialog
+        loading={deleteLoading}
+        open={!!selectedForDelete}
+        title="Are you sure you want to delete?"
+        description="Your action will remove attachment from the system"
+        onPressYes={() => handleDelete()}
+        onPressCancel={() => setSelectedForDelete(null)}
+      />
     </div>
   );
 }
@@ -240,7 +270,7 @@ const purposeColors: Record<string, string> = {
 };
 
 
-function ReimbursementCard({ item }: { item: UserReimbursementType }) {
+function ReimbursementCard({ item, onClickDelete }: { item: UserReimbursementType, onClickDelete: (item: UserReimbursementType) => void }) {
   const purposeClass = purposeColors[item.title] ?? "bg-slate-100 text-slate-700 border-slate-200";
 
   return (
@@ -267,10 +297,10 @@ function ReimbursementCard({ item }: { item: UserReimbursementType }) {
                     {item.customer || "General Expense"}
                   </p>
                   <div className="flex gap-2 flex-wrap">
-                  <Badge variant={"secondary"} className="text-[10px]">
-                    {moment(item.date).format("MMM DD YYYY")}
-                  </Badge>
-                  <Badge className="text-[10px]" variant={item.verified ? "default" : "destructive"}>{item.verified ? "Approved" : "Pending"}</Badge>
+                    <Badge variant={"secondary"} className="text-[10px]">
+                      {moment(item.date).format("MMM DD YYYY")}
+                    </Badge>
+                    <Badge className="text-[10px]" variant={item.verified ? "default" : "destructive"}>{item.verified ? "Approved" : "Pending"}</Badge>
                   </div>
                 </div>
                 {item.description && (
@@ -297,14 +327,17 @@ function ReimbursementCard({ item }: { item: UserReimbursementType }) {
                     <span className="break-words">{item.customer}</span>
                   </span>
                 )}
+                <Button onClick={() => onClickDelete(item)} variant={"destructive"} size={"icon-sm"}>
+                  <Trash2 className="size-3.5" />
+                </Button>
               </div>
             </div>
 
             {item.image && (
               <div className="shrink-0 overflow-hidden rounded-md border bg-muted/20 p-1 sm:w-24">
-                
+
                 <MyImgZooming img={item.image} />
-           
+
               </div>
             )}
           </div>
