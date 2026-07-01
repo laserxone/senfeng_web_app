@@ -139,7 +139,7 @@ export default function UserDashboard({ id: userID, }: { id: string | null }) {
               if (item?.time_in) {
                 const checkInTime = new Date(item.time_in);
                 const threshold = new Date(item.time_in);
-                threshold.setHours(10, 10, 0, 0);
+                threshold.setHours(10, 11, 0, 0);
 
                 if (checkInTime > threshold) {
                   status = "Late";

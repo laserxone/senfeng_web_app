@@ -111,7 +111,7 @@ export type UserExtraTypes = {
     nextMonth: ExtraCustomer[]
     thisMonth: ExtraCustomer[]
     topFollow: ExtraCustomer[]
-    userwithoutFeedback: ExtraCustomer[]
+    withoutFeedback: ExtraCustomer[]
     user: {
         designation: string
         dp: string
@@ -1051,7 +1051,16 @@ export type AdminDashboard = {
     total_new_customers_this_month: string
     total_payment_this_month: string
     recent_sales: AdminDashboardRecentSales[]
-    team_progress: {
+    team_progress: AdminTeamProgress[]
+    team_task: {
+        assigned_user_id: number;
+        assigned_user_name: string;
+        total_tasks: string;
+        tasks: TeamTaskForAdmin[];
+    }
+}
+
+export type AdminTeamProgress = {
         id: number;
         name: string;
         email: string;
@@ -1060,14 +1069,7 @@ export type AdminDashboard = {
         total_members: string;
         total_feedbacks: string;
         total_visits: string;
-    }[]
-    team_task: {
-        assigned_user_id: number;
-        assigned_user_name: string;
-        total_tasks: string;
-        tasks: TeamTaskForAdmin[];
     }
-}
 
 
 

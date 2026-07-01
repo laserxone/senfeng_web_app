@@ -41,7 +41,7 @@ export default function MainRepairingLab() {
   const [data, setData] = useState<RepairingProps[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const { userID } = useUserDetail();
+  const { userID, designation } = useUserDetail();
   const debouncedUserId = useDebounce(userID, 1000);
   const [assignTask, setAssignTask] = useState(false);
   const [selectedTask, setSelectedTask] = useState<RepairingProps | null>(null);
@@ -192,6 +192,7 @@ export default function MainRepairingLab() {
         const currentItem = row.original;
 
         return (
+          designation !== 'Engineer' &&
           <Button
             size="icon"
             variant="destructive"

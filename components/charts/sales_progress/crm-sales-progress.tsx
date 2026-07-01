@@ -77,6 +77,8 @@ const metricLabels: Record<ProgressMetric, string> = {
   repeated_customers: "Repeated Customers",
 };
 
+
+
 export default function SalesTeamProgressChartCRM({ passingData }: { passingData: CRMTeamProgress[] }) {
   const [data, setData] = useState<ChartRow[]>([]);
   const [selectedDetail, setSelectedDetail] = useState<SelectedProgressDetail | null>(null);

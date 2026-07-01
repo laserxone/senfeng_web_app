@@ -90,7 +90,6 @@ export default function VisitTab({
     null
   )
   const { userID, designation, base_route, route_branch } = useUserDetail()
-  const { state: OfficeState } = useContext(OfficeContext)!
   const [filterVisible, setFilterVisible] = useState(false)
   const [selectedDelete, setSelectedDelete] = useState<number | null>(null)
   const feedbacks = useMemo(
@@ -132,7 +131,7 @@ export default function VisitTab({
     setLoading(true)
     try {
       if (values.image) {
-        const name = `${OfficeState.value.data}/customer/${selectedCustomer?.id}/visit/${moment()
+        const name = `${route_branch}/customer/${selectedCustomer?.id}/visit/${moment()
           .valueOf()
           .toString()}.png`
         await UploadImage(values.image, name)

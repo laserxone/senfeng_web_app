@@ -179,22 +179,7 @@ export default function StoreManagerDashboard() {
     },
   ];
 
-  function StatusBadge({ status }: { status: string }) {
-    const styles: Record<string, string> = {
-      Pending: "bg-amber-100 text-amber-700",
-      "In Progress": "bg-blue-100 text-blue-700",
-      Completed: "bg-green-100 text-green-700",
-    };
 
-    return (
-      <span
-        className={`rounded-md px-2 py-1 text-xs font-medium ${styles[status] || "bg-slate-100 text-slate-600"
-          }`}
-      >
-        {status}
-      </span>
-    );
-  }
 
   const machineColumns: ColumnDef<StoreStockGroup>[] = [
     {
@@ -534,7 +519,7 @@ export default function StoreManagerDashboard() {
                 <p className="text-sm font-bold leading-none">Pending Payments</p>
                 <p className="mt-1 text-xs text-muted-foreground">Total Payables</p>
               </div>
-              <Button onClick={() => setPending(true)} size="sm">
+              <Button onClick={() => setSelectedData(data?.pos_stats?.pending || null)} size="sm">
                 <Eye /> View All
               </Button>
             </div>
@@ -870,19 +855,4 @@ const ShowMachines = ({ visible, data, onClose }: { visible: boolean, data: Stor
   )
 }
 
-function SummaryCard({
-  title,
-  value,
 
-}: {
-  title: string;
-  value: string;
-
-}) {
-  return (
-    <div className="rounded-lg border bg-card p-3 shadow-sm ring-1 ring-border/30">
-      <p className="text-xs text-muted-foreground">{title}</p>
-      <h3 className="mt-2 text-lg font-bold">{value}</h3>
-    </div>
-  );
-}

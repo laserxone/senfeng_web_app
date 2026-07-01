@@ -18,6 +18,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import React, { useEffect, useState } from "react";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
+import { AdminTeamProgress } from "@/lib/types";
 
 const chartConfig = {
   completed_feedback: {
@@ -34,8 +35,14 @@ const chartConfig = {
   },
 };
 
-export default function SalesTeamProgressChart({ passingData } ) {
-  const [data, setData] = useState([]);
+type LocalData = AdminTeamProgress & {
+completed_feedback : string
+completed_monthly_target : string
+completed_visit : string
+}
+
+export default function SalesTeamProgressChart({ passingData } :{passingData : AdminTeamProgress[]} ) {
+  const [data, setData] = useState<LocalData[]>([]);
   const [usd, setUsd] = React.useState("0");
   const debouncedUsd = useDebounce(usd, 1000);
   const { userID } = useUserDetail();
@@ -112,7 +119,7 @@ export default function SalesTeamProgressChart({ passingData } ) {
   );
 }
 
-const RenderBarChart = ({ data }) => {
+const RenderBarChart = ({ data } : {data : LocalData[]}) => {
   return (
     <ChartContainer
       config={chartConfig}
@@ -129,7 +136,7 @@ const RenderBarChart = ({ data }) => {
           content={
             <ChartTooltipContent
               className="w-[200px]"
-              valueFormatter={(value) => `${value}%`}
+              valueFormatter={(value : string) => `${value}%`}
             />
           }
         />
