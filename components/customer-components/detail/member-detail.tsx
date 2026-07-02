@@ -170,8 +170,6 @@ export default function MemberDetail({
 
   }
 
-  console.log(data)
-
   async function handleDelete(id: number | undefined) {
     if (!id) return;
     setDeleteLoading(true);
@@ -222,7 +220,7 @@ export default function MemberDetail({
             id={userID}
             customer_id={customer_id}
             data={taskData}
-            onFetchData={async () => await fetchCustomerDashboard()}
+            onFetchData={async () => await fetchCustomerTask()}
             height={height}
           />
         </CardContent>
