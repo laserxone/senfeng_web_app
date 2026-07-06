@@ -6,9 +6,9 @@ import { getDownloadURL, ref } from "firebase/storage";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { Controlled as ControlledZoom } from "react-medium-image-zoom";
-import "react-medium-image-zoom/dist/styles.css";
 import { Button } from "./ui/button";
 import Spinner from "./ui/spinner";
+import "react-medium-image-zoom/dist/styles.css";
 
 export const MyImgZooming = ({
   img,

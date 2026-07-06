@@ -1,6 +1,6 @@
 "use client";
 import PageTable from "@/components/app-table-without-pagination";
-import AppCalendar from "@/components/appCalendar";
+import AppCalendar from "@/components/app-calendar";
 import { RequiredStar } from "@/components/RequiredStar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

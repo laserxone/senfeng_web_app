@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import FilterSheet from "@/components/users/filterSheet";
+import FilterSheet from "@/components/users/filter-sheet";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { UserMap } from "@/lib/types";

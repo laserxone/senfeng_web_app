@@ -9,10 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import VisitTab from "@/components/users/addVisit";
+import VisitTab from "@/components/users/add-visit";
 import Attendance from "@/components/users/attendance";
 import CustomerEmployee from "@/components/users/customer";
-import Reimbursement from "@/components/users/Reimbursement";
+import Reimbursement from "@/components/users/reimbursement/Reimbursement";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,10 +23,10 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { useSidebar } from "@/components/ui/sidebar";
 import AddFeedbackDialog from "@/components/users/add-feedback";
-import { CustomerExtraData } from "@/components/users/ExtraData";
+import { CustomerExtraData } from "@/components/users/extra-data";
 import RenderFines from "@/components/users/render-fines";
 import RenderReturnable from "@/components/users/render-returnable";
-import SalaryRecord from "@/components/users/SalaryRecord";
+import SalaryRecord from "@/components/users/salary-record";
 import UserTabs from "@/components/users/user-tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
@@ -294,10 +294,6 @@ export default function Page() {
         }
         onReset={async (start: string, end: string) => {
           await fetchReimbursementData(start, end);
-        }}
-        onUpdatePurpose={(val) => {
-          const newData = updateItemPurpose(reimbursementData, val);
-          setReimbursementData(newData);
         }}
       />
 

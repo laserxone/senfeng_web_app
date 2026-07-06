@@ -1,4 +1,4 @@
-import SuperadminDocumentManagement from "@/components/superadmin-document-management";
+import SuperadminDocumentManagement from "@/components/pages/superadmin-document-management";
 
 
 export default function Page () {

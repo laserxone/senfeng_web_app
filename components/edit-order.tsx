@@ -24,9 +24,8 @@ import { Switch } from "@/components/ui/switch";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { InventoryItem, OrderItem, StockProps } from "@/lib/types";
-import "react-medium-image-zoom/dist/styles.css";
 import { InventorySearch } from "./inventory-select";
-import MachineModels from "./machine-models";
+import MachineModels from "./machine-components/machine-models";
 
 type InventoryErrors = Partial<Record<keyof InventoryItem, string>>
 

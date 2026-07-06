@@ -20,7 +20,7 @@ type ConfirmationDialogProps = {
   children?: ReactNode | null;
   valid?: boolean;
 };
-const ConfimationDialog = ({ title, description, onPressYes,onPressCancel, open, loading, children = null, valid = true }: ConfirmationDialogProps) => {
+const ConfirmationDialog = ({ title, description, onPressYes,onPressCancel, open, loading, children = null, valid = true }: ConfirmationDialogProps) => {
   return (
     <AlertDialog open={open}>
      
@@ -43,4 +43,4 @@ const ConfimationDialog = ({ title, description, onPressYes,onPressCancel, open,
   );
 };
 
-export default ConfimationDialog
+export default ConfirmationDialog

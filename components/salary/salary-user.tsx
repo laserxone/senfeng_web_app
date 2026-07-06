@@ -28,10 +28,9 @@ import { UserSearch } from "@/components/user-search";
 import axios from "@/lib/axios";
 import { format, setMonth } from "date-fns";
 import moment from "moment";
-import "react-medium-image-zoom/dist/styles.css";
 
 import AccountsPdf from "@/components/accountsPdf";
-import CommissionRecord from "@/components/commission-salary";
+import CommissionRecord from "@/components/salary/commission-salary";
 import {
   Accordion,
   AccordionContent,

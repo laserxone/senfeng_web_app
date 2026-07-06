@@ -170,7 +170,7 @@ export default function MachineDelivery() {
 
             }}
           >
-            Create Delivery
+            Create DO
           </Button>
         );
 

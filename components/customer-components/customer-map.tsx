@@ -1,0 +1,104 @@
+"use client";
+
+import { AdminDashboardCustomers } from "@/lib/types";
+import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
+import { useTheme } from "next-themes";
+import { useCallback, useEffect, useState } from "react";
+
+const CustomerMap = ({ data } : {data : AdminDashboardCustomers[]}) => {
+  const { theme } = useTheme();
+
+  const defaultMapContainerStyle = {
+    width: "100%",
+    height: "80vh",
+    borderRadius: "15px 0px 0px 15px",
+  };
+
+  const defaultMapCenter = {
+    lat: 30.3016096,
+    lng: 66.2531961,
+  };
+  const defaultMapZoom = 5.8;
+
+  const [defaultMapOptions, setDefaultMapOptions] = useState({
+    zoomControl: true,
+    tilt: 0,
+    gestureHandling: "auto",
+    mapTypeId: "roadmap",
+    colorScheme: "DARK",
+  });
+
+  useEffect(() => {
+    if (theme === "dark") {
+      setDefaultMapOptions((prevState) => ({
+        ...prevState,
+        colorScheme: "DARK",
+      }));
+    } else {
+      setDefaultMapOptions((prevState) => ({
+        ...prevState,
+        colorScheme: "LIGHT",
+      }));
+    }
+  }, [theme]);
+
+  const RenderMap = useCallback(
+    ({ list } : {list : AdminDashboardCustomers[]}) => {
+      const [selectedMarker, setSelectedMarker] = useState<AdminDashboardCustomers | null>(null);
+      return (
+        <GoogleMap
+          mapContainerStyle={defaultMapContainerStyle}
+          center={defaultMapCenter}
+          zoom={defaultMapZoom}
+          options={defaultMapOptions}
+        >
+          {list?.map((item, index) => {
+            return (
+              <Marker
+                key={index}
+                onClick={() => setSelectedMarker(item?.id == selectedMarker?.id ? null : item)}
+                position={{
+                  lat: parseFloat(item.latitude),
+                  lng: parseFloat(item.longitude),
+                }}
+              >
+                {selectedMarker && selectedMarker.id === item.id && (
+                  <InfoWindow
+                  
+                    options={{
+                      headerDisabled : true
+                    }}
+                    position={{
+                      lat: parseFloat(selectedMarker.latitude),
+                      lng: parseFloat(selectedMarker.longitude),
+                    }}
+                  >
+                    <div
+                      style={{
+                        backgroundColor: `white`,
+                        padding: `5px`,
+                        borderRadius: 5,
+                      }}
+                    >
+                      <div>{selectedMarker?.name || selectedMarker?.owner}</div>
+                      <div>{selectedMarker?.location}</div>
+                    </div>
+                  </InfoWindow>
+                )}
+              </Marker>
+            );
+          })}
+        </GoogleMap>
+      );
+    },
+    [defaultMapOptions]
+  );
+
+  return (
+    <div className="w-full">
+      <RenderMap list={data} />
+    </div>
+  );
+};
+
+export default CustomerMap ;

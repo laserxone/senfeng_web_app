@@ -19,6 +19,7 @@ export async function GET() {
 
     c.name AS customer_name, 
     c.owner AS customer_owner,
+    c.number AS customer_number,
 
     pr.slip AS payment_slip,
 

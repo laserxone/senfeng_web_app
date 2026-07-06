@@ -1,4 +1,4 @@
-import Machine from "@/components/customer-components/machine/machine-component";
+import Machine from "@/components/machine-components/machine-component";
 
 export default async function Page({ params }: {
   params: Promise<{ mid: string }>;

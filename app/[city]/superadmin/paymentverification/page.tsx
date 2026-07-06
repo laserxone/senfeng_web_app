@@ -1,4 +1,4 @@
-import PaymentVerification from "@/components/payment-verification"
+import PaymentVerification from "@/components/pages/payment-verification"
 
 
 export default function Page(){

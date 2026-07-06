@@ -1,5 +1,6 @@
 "use client";
 
+import AddTaskDialog from '@/components/add-task-dialog';
 import PageTable from '@/components/app-table-without-pagination';
 import CurrencyFormatter from "@/components/currency-formatter";
 import { MyImgZooming } from '@/components/img-zooming';
@@ -13,8 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Spinner from '@/components/ui/spinner';
 import { AddExpensesDialog } from '@/components/users/employee-expense';
-import { AddTask } from "@/components/users/task";
-import TaskDetail from "@/components/users/taskDetail";
+import TaskDetail from "@/components/users/task-detail";
 import { useMachineDelivery } from '@/hooks/use-machine-delivery';
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
@@ -35,7 +35,6 @@ import {
   List,
   ListCheck,
   Package,
-  Plus,
   ShoppingCart,
   Sun,
   Truck,
@@ -51,12 +50,9 @@ import { useEffect, useState } from "react";
 export default function StoreManagerDashboard() {
 
   const { userID, base_route } = useUserDetail()
-
   const [data, setData] = useState<StoreDashboardResponse | null>(null)
-  const [pending, setPending] = useState(false)
   const [selectedMachines, setSelectedMachines] = useState<StoreStockItem[]>([])
   const [selectedTask, setSelectedTask] = useState<TaskProps | null>(null);
-  const [addTaskVisible, setAddTaskVisible] = useState(false);
   const [engineerLoading, setEngineerLoading] = useState(false);
   const [allEngineersData, setAllEngineersData] = useState([]);
   const [engineersModal, setEngineersModal] = useState(false);
@@ -535,14 +531,11 @@ export default function StoreManagerDashboard() {
           <div className="rounded-md border bg-card p-2.5 ring-1 ring-border/30">
             <div className="mb-2 flex items-center justify-between">
               <div className='flex items-center gap-2'>  <Sun className='h-4 w-4 text-yellow-400' /> <h3 className="text-sm font-bold leading-none">Plan your day </h3></div>
-              <Button
-                onClick={() => {
-                  setAddTaskVisible(true);
-                }}
-                size="sm"
-              >
-                <Plus className="h-4 w-4" />  Add Plan
-              </Button>
+              <AddTaskDialog
+                onRefresh={fetchData}
+                user_id={userID}
+                placeholder="Add Plan"
+              />
             </div>
 
             <PageTable
@@ -596,16 +589,7 @@ export default function StoreManagerDashboard() {
         onMark={async () => await fetchData()}
       />
 
-      <AddTask
-        onRefresh={async () => {
 
-
-          fetchData();
-        }}
-        user_id={userID}
-        visible={addTaskVisible}
-        onClose={setAddTaskVisible}
-      />
 
       <EngineerModal
         allEngineersData={allEngineersData}

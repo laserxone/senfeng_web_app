@@ -4,24 +4,21 @@ import { ArrowUpDown, BadgeCheck, CircleDashed, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
-import { Label } from "@/components/ui/label";
-import { z } from "zod";
 
 import PageTable from "@/components/app-table-without-pagination";
 import Heading from "@/components/ui/heading";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import FilterSheet from "@/components/users/filterSheet";
+import FilterSheet from "@/components/users/filter-sheet";
 import { TIMEZONE } from "@/constants/data";
 
 
-import TaskDetail from "@/components/users/taskDetail";
+import AddTaskDialog from "@/components/add-task-dialog";
+import TaskDetail from "@/components/users/task-detail";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { TaskProps } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 import moment from "moment";
 import momentT from "moment-timezone";
-import { AddTaskTeam } from "@/components/users/addTaskTeam";
-import { ColumnDef } from "@tanstack/react-table";
 
 const columns: ColumnDef<TaskProps>[] = [
   {
@@ -205,15 +202,8 @@ export default function Page() {
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <Heading title="Task Management" description="Manage team tasks" />
 
-        <Button
-          onClick={() => {
-            setAddTaskVisible(true);
-          }}
-        >
-          Add Task
-        </Button>
-
-        <AddTaskTeam
+        <AddTaskDialog
+          mode="team"
           onRefresh={async () => {
             const startDate = momentT
               .tz(TIMEZONE)
@@ -231,14 +221,12 @@ export default function Page() {
 
             fetchData("", startDate, endDate);
           }}
-          visible={addTaskVisible}
-          onClose={setAddTaskVisible}
-          assigned_by={userID}
+          user_id={userID}
         />
       </div>
 
       <PageTable
-      tableWidth="w-[calc(100dvw-30px)]"
+        tableWidth="w-[calc(100dvw-30px)]"
         loading={dataLoading}
         columns={columns}
         data={data}

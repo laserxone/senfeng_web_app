@@ -14,8 +14,7 @@ import Spinner from "@/components/ui/spinner";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { MyCustomer, OrderItem } from "@/lib/types";
-import "react-medium-image-zoom/dist/styles.css";
-import { CustomerSearchWithData } from "./customer-search-with-data";
+import { CustomerSearchWithData } from "./customer-components/customer-search-with-data";
 
 const BookOrderDialog = ({
   visible,

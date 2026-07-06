@@ -15,6 +15,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{}>}) {
     s.dispatch_information, 
     c.name AS customer_name, 
     c.owner AS customer_owner,
+    c.number AS customer_number,
     u.name AS ownership_name,
     pr.slip AS payment_slip,
     CASE 

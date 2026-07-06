@@ -19,7 +19,7 @@ export async function GET() {
 
     c.name AS customer_name, 
     c.owner AS customer_owner,
-
+    c.number AS customer_number,
     pr.slip AS payment_slip,
 
     COALESCE(s.sell_by, c.ownership) AS ownership_id,
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     if (data.transportation && Number(data.transportation) > 0) {
       await client.query(
-        ` INSERT INTO payment_requests (
+        `INSERT INTO payment_requests (
         request_type,
         amount,
         sale_id,

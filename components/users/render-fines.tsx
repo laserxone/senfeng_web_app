@@ -8,7 +8,7 @@ import { ArrowUpDown, Filter } from "lucide-react";
 import moment from "moment";
 import momentT from "moment-timezone";
 import { useEffect, useState } from "react";
-import FilterSheet from "./filterSheet";
+import FilterSheet from "./filter-sheet";
 
 
 const columns: ColumnDef<UserFines>[] = [

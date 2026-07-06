@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Heading from "@/components/ui/heading";
 import { Skeleton } from "@/components/ui/skeleton";
-import FilterSheet from "@/components/users/filterSheet";
+import FilterSheet from "@/components/users/filter-sheet";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { FinanceProps } from "@/lib/types";

@@ -1,7 +1,7 @@
 "use client";
 
 import PageTable from "@/components/app-table-without-pagination";
-import { CustomerSearch } from "@/components/customer-search";
+import { CustomerSearch } from "@/components/customer-components/customer-search";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,7 +15,7 @@ import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import Spinner from "@/components/ui/spinner";
 import { UserSearch } from "@/components/user-search";
-import FilterSheet from "@/components/users/filterSheet";
+import FilterSheet from "@/components/users/filter-sheet";
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";

@@ -3,7 +3,7 @@ import { BarStats } from "@/components/charts/bar_stats/page";
 import { Stats } from "@/components/charts/pie_stats/page";
 import { Sale } from "@/components/charts/sales/page";
 import CurrencyFormatter from "@/components/currency-formatter";
-import { CustomerMapComponent } from "@/components/customerMapComponent";
+import CustomerMap from "@/components/customer-components/customer-map";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PakCities } from "@/constants/data";
@@ -28,7 +28,7 @@ type DashboardData = {
 };
 export default function Page() {
   
-  const [customers, setCustomers] = useState([]);
+  const [customers, setCustomers] = useState<any[]>([]);
   const [data, setData] = useState<DashboardData>();
   const [loading, setLoading] = useState(true);
   const {userID} = useUserDetail()
@@ -75,7 +75,7 @@ export default function Page() {
     }
   }
 
-  function mergeArrays(array1, array2) {
+  function mergeArrays(array1 : any[], array2 : any[]) {
     return array1
       .map((obj1) => {
         const matchingCity = array2.find((obj2) => obj2?.name === obj1?.location);
@@ -124,7 +124,7 @@ export default function Page() {
               <Skeleton className="h-6 w-32" />
             ) : (
               <div className="text-2xl font-bold">
-                 <CurrencyFormatter amount={data?.total_payment_this_month} />
+                 <CurrencyFormatter amount={data?.total_payment_this_month ?? 0} />
               </div>
             )}
             {loading ? (
@@ -245,7 +245,7 @@ export default function Page() {
         ) : (
           customers.length > 0 && (
             <MapProvider>
-              <CustomerMapComponent data={customers} />
+              <CustomerMap data={customers} />
             </MapProvider>
           )
         )}

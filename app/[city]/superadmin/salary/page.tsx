@@ -4,7 +4,6 @@ import {
 } from "react";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import "react-medium-image-zoom/dist/styles.css";
 
 import RecordComponent from "@/components/salary/salary-record";
 import SalaryComponent from "@/components/salary/salary-user";

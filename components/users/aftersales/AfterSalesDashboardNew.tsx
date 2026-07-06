@@ -392,7 +392,7 @@ const ReimbursementAfterSalesMetrics = ({ data, iconSize="" }: { data: AfterSale
 };
 
 
-const ReimbursementAfterSales = ({ data, onRefresh }: { data: AfterSalesReimbursement[], onRefresh: () => Promise<void> }) => {
+export const ReimbursementAfterSales = ({ data, onRefresh }: { data: AfterSalesReimbursement[], onRefresh: () => Promise<void> }) => {
     const { userID } = useUserDetail();
     const [page, setPage] = useState(0);
     const [selectedItem, setSelectedItem] = useState<number | null>(null)

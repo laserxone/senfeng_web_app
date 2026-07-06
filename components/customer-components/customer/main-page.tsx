@@ -1,7 +1,6 @@
 "use client";
-import AddCustomerDialog from "@/components/addCustomer";
-import AddQuickAction from "@/components/addQuickAction";
-import ConfimationDialog from "@/components/alert-dialog";
+import AddQuickAction from "@/components/add-quick-action";
+import ConfirmationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
@@ -15,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
 import { UserSearch } from "@/components/user-search";
-
+import AddCustomerDialog from "@/components/customer-components/add-customer";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { MyCustomer } from "@/lib/types";
@@ -464,7 +463,7 @@ export default function CustomerMainPage({ onReturn }: { onReturn: (val: number)
         </PageTable>
       </div>
 
-      <ConfimationDialog
+      <ConfirmationDialog
         loading={deleteLoading}
         open={showConfirmation}
         title={"Are you sure you want to delete?"}

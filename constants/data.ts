@@ -693,14 +693,14 @@ export const employeeNavItems = [
     items: [],
   },
 
-  // {
-  //   title: "Applications",
-  //   url: "/applications",
-  //   icon: "applications",
-  //   shortcut: ["a", "p", "p"],
+  {
+    title: "Applications",
+    url: "/applications",
+    icon: "applications",
+    shortcut: ["a", "p", "p"],
 
-  //   items: [],
-  // },
+    items: [],
+  },
 
 ];
 

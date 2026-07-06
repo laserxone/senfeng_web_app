@@ -14,18 +14,17 @@ import {
   Package,
   Phone,
   PhoneCall,
-  Plus,
   Trash2,
   UserRound,
-  Wrench,
+  Wrench
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { FaWhatsapp } from "react-icons/fa";
 
-import AddMachine from "@/components/addMachine";
-import ConfimationDialog from "@/components/alert-dialog";
-import EditCustomerDialog from "@/components/editCustomer";
+import AddMachine from "@/components/machine-components/add-machine";
+import ConfirmationDialog from "@/components/alert-dialog";
+import EditCustomerDialog from "@/components/customer-components/edit customer";
 import {
   Timeline,
   TimelineDescription,
@@ -33,7 +32,7 @@ import {
   TimelineItem,
   TimelineTime,
   TimelineTitle,
-} from "@/components/timeline";
+} from "@/components/ui/timeline";
 import {
   Accordion,
   AccordionContent,
@@ -46,14 +45,14 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import VisitTab from "@/components/users/addVisit";
-import CustomerTask from "@/components/users/customerTask";
+import VisitTab from "@/components/users/add-visit";
+import CustomerTask from "@/components/users/customer-task";
 import useUserDetail from "@/hooks/use-user-detail";
 import { debounce } from "@/lib/debounce";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { GetProfileImage } from "@/lib/getProfileImage";
 
-import AddParts from "@/components/add-parts";
+import AddParts from "@/components/machine-components/add-parts";
 import CurrencyFormatter from "@/components/currency-formatter";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import AddFeedbackDialog from "@/components/users/add-feedback";
@@ -421,7 +420,7 @@ export default function MemberDetail({
         />
       )}
 
-      <ConfimationDialog
+      <ConfirmationDialog
         loading={deleteLoading}
         open={showConfirmation}
         title={"Are you sure you want to delete?"}
@@ -813,32 +812,23 @@ function CustomersTab({
           </div>
           {user_id && customer_id && (
             <div className="flex flex-wrap gap-2">
-              <Button className="h-8 rounded-lg px-3" variant="outline" onClick={() => setVisibleParts(true)}>
-                <Package className="h-3.5 w-3.5" />
-                Sell Parts
-              </Button>
-              <Button className="h-8 rounded-lg px-3" onClick={() => setVisible(true)}>
-                <Plus className="h-3.5 w-3.5" />
-                Add Machine
-              </Button>
+              <AddParts
+                onRefresh={onRefresh}
+                customer_id={customer_id}
+                user_id={user_id}
+              />
+              <AddMachine
+                onRefresh={onRefresh}
+                customer_id={customer_id}
+                user_id={user_id}
+              />
+
             </div>
           )}
         </div>
         <div className="p-3">
-          <AddParts
-            visible={visibleParts}
-            onClose={setVisibleParts}
-            onRefresh={onRefresh}
-            customer_id={customer_id}
-            user_id={user_id}
-          />
-          <AddMachine
-            visible={visible}
-            onClose={setVisible}
-            onRefresh={onRefresh}
-            customer_id={customer_id}
-            user_id={user_id}
-          />
+
+
           {data?.length === 0 ? (
             <div className="flex min-h-28 items-center justify-center rounded-xl border border-dashed bg-slate-50 text-sm text-muted-foreground dark:bg-zinc-900/50">
               No machines or POS records found

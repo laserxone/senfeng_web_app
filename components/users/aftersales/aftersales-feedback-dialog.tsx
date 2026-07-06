@@ -1,10 +1,7 @@
-import AddCustomerDialog from "@/components/addCustomer";
 import PageTable from "@/components/app-table";
-import AppCalendar from "@/components/appCalendar";
-import { RequiredStar } from "@/components/RequiredStar";
+import AddCustomerDialog from "@/components/customer-components/add-customer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
     Dialog,
     DialogContent,
@@ -12,9 +9,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Spinner from "@/components/ui/spinner";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { MyCustomerResolved } from "@/lib/types";
@@ -32,10 +27,10 @@ import moment from "moment";
 import Link from "next/link";
 import { useRouter } from "nextjs-toploader/app";
 import { useEffect, useState } from "react";
-import FilterSheet from "../filterSheet";
+import AddFeedbackDialog from "../add-feedback";
+import FilterSheet from "../filter-sheet";
 import OldRecordSheet from "../old-record-sheet";
 import { CustomerEmployeeAfterSalesProps, DashboardData, DataKeys, WithFeedbackProps } from "./aftersales-types";
-import AddFeedbackDialog from "../add-feedback";
 
 
 
@@ -381,13 +376,13 @@ const CustomerEmployeeAfterSales = ({
             />
 
 
-           <AddFeedbackDialog customer_id={selectedCustomer?.id} onClose={()=> {
-            setSelectedCustomer(null)
-            setShowFeedback(false)
-           }}
-           onRefresh={onRefresh}
-           open={showFeedback}
-           user_id={user_id}/>
+            <AddFeedbackDialog customer_id={selectedCustomer?.id} onClose={() => {
+                setSelectedCustomer(null)
+                setShowFeedback(false)
+            }}
+                onRefresh={onRefresh}
+                open={showFeedback}
+                user_id={user_id} />
 
             <FeedbackDetailDialog
                 item={selectedDetail}

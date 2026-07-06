@@ -1,4 +1,4 @@
-import AppCalendar from "@/components/appCalendar";
+import AppCalendar from "@/components/app-calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -32,7 +32,7 @@ import { DateRange } from "react-day-picker";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import AppCalendarRange from "../appCalendarRange";
+import AppCalendarRange from "../app-calendar-range";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 
 

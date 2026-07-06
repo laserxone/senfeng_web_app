@@ -1,5 +1,5 @@
 "use client";
-import AppCalendar from "@/components/appCalendar";
+import AppCalendar from "@/components/app-calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Heading from "@/components/ui/heading";

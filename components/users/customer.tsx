@@ -4,18 +4,19 @@ import { ArrowUpDown, Building2, CalendarDays, CheckCircle2, ClipboardList, Cloc
 import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useState } from "react";
 
-import ConfimationDialog from "@/components/alert-dialog";
+import ConfirmationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 
+import AddCustomerDialog from "@/components/customer-components/add-customer";
 import { ExtraCustomer, NewlyAssignedCustomer, TaskProps } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import moment from "moment";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import AddCustomerDialog from "../addCustomer";
+import AddTaskDialog from "../add-task-dialog";
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
@@ -23,7 +24,6 @@ import { Progress } from "../ui/progress";
 import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
 import AddFeedbackDialog from "./add-feedback";
-import { AddTask } from "./task";
 
 
 type CustomerEmployeeProps = {
@@ -263,7 +263,7 @@ export default function CustomerEmployee({
         onRefresh={onRefresh}
         user_id={userID} />
 
-      <ConfimationDialog
+      <ConfirmationDialog
         open={showConfirmation}
         title={"Are you sure you want to delete?"}
         description={"Your action will remove branch expense from the system"}
@@ -334,10 +334,22 @@ const RenderTodayTasks = ({ data, onRefresh }: {
             <Badge variant="outline" className="w-fit rounded-full bg-background px-2.5 py-1 text-xs">
               {totalTasks} tasks today
             </Badge>
-            <Button onClick={() => setAddTaskVisible(true)} type="button" variant="outline" size="sm" className="h-8 gap-2 rounded-md bg-background">
-              <CalendarDays className="h-3.5 w-3.5" />
-              Plan your day
-            </Button>
+
+            <AddTaskDialog
+              icon
+              size="sm"
+              btnClassname="h-8 gap-2 rounded-md bg-background"
+              variant="outline"
+              placeholder="Plan your day"
+              onRefresh={async () => {
+                const startDate = moment().startOf("day").toISOString();
+                const endDate = moment().endOf("day").toISOString();
+                await onRefresh?.(startDate, endDate)
+              }}
+              user_id={userID}
+            />
+
+
           </div>
         </div>
       </CardHeader>
@@ -448,16 +460,9 @@ const RenderTodayTasks = ({ data, onRefresh }: {
         </div>
       </CardContent>
 
-      <AddTask
-        onRefresh={async () => {
-          const startDate = moment().startOf("day").toISOString();
-          const endDate = moment().endOf("day").toISOString();
-          await onRefresh?.(startDate, endDate)
-        }}
-        user_id={userID}
-        visible={addTaskVisible}
-        onClose={setAddTaskVisible}
-      />
+
+
+
     </Card>
   )
 }

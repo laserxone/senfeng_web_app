@@ -19,9 +19,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useContext, useEffect, useState } from "react";
 
-import ConfimationDialog from "@/components/alert-dialog";
+import ConfirmationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
-import AppCalendar from "@/components/appCalendar";
+import AppCalendar from "@/components/app-calendar";
 import Dropzone from "@/components/dropzone";
 import {
   Dialog,
@@ -43,7 +43,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import FilterSheet from "@/components/users/filterSheet";
+import FilterSheet from "@/components/users/filter-sheet";
 import { storage } from "@/config/firebase";
 import { TIMEZONE } from "@/constants/data";
 
@@ -64,7 +64,6 @@ import moment from "moment";
 import momentT from "moment-timezone";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
-import "react-medium-image-zoom/dist/styles.css";
 import { toast } from "sonner";
 import { z } from "zod";
 import { MyImgZooming } from "../img-zooming";
@@ -490,7 +489,7 @@ export default function EmployeeBranchExpenses() {
         </div>
       </section>
 
-      <ConfimationDialog
+      <ConfirmationDialog
         open={showConfirmation}
         title={"Are you sure you want to delete?"}
         description={"Your action will remove branch expense from the system"}

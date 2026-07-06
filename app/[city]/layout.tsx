@@ -1,5 +1,5 @@
 import FloatingChat from "@/components/chat/floating-chat";
-import CommonLayout from "@/components/CommonLayout";
+import CommonLayout from "@/components/common-layout";
 import EdgePanel from "@/components/edge-panel";
 import FinePopup from "@/components/fine-popup";
 import FloatingInformation from "@/components/floating-information";

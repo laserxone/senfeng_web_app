@@ -1,5 +1,5 @@
 "use client";
-import ConfimationDialog from "@/components/alert-dialog";
+import ConfirmationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table-without-pagination";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
 import { UserSearch } from "@/components/user-search";
-import FilterSheet from "@/components/users/filterSheet";
+import FilterSheet from "@/components/users/filter-sheet";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { MyCustomer, MyCustomerResolved } from "@/lib/types";
@@ -432,7 +432,7 @@ export default function MemberMainPage({ onReturn }: { onReturn: (val: number) =
         </PageTable>
       </div>
 
-      <ConfimationDialog
+      <ConfirmationDialog
         loading={deleteLoading}
         open={showConfirmation}
         title={"Are you sure you want to delete?"}

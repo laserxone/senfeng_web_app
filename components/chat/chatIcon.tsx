@@ -8,7 +8,7 @@ import moment from "moment";
 import { useEffect, useState } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import { Separator } from "../ui/separator";
-import { ProfilePicture } from "../users/ProfilePicture";
+import { ProfilePicture } from "../users/profile-picture";
 
 export default function UserChatIcon({ myId, onChatSelected, className, active = null }: { myId: number | string, onChatSelected: (val: UserConversation) => void, className?: string, active?: number | null }) {
   const [conversations, setConversations] = useState<UserConversation[]>([]);

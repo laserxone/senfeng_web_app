@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CustomerSearch } from "../customer-search";
+import { CustomerSearch } from "../customer-components/customer-search";
 import { FieldLegend, FieldSet } from "../ui/field";
 import { ScrollArea } from "../ui/scroll-area";
 import { UserSearch } from "../user-search";

@@ -1,15 +1,15 @@
 "use client";
-import TeamTask from "@/components/teamTask";
+import TeamTask from "@/components/users/team-task";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useSidebar } from "@/components/ui/sidebar";
 import Attendance from "@/components/users/attendance";
 import CustomerEmployee from "@/components/users/customer";
-import { CustomerExtraData } from "@/components/users/ExtraData";
+import { CustomerExtraData } from "@/components/users/extra-data";
 import OldRecordSheet from "@/components/users/old-record-sheet";
-import { ProfilePicture } from "@/components/users/ProfilePicture";
-import Reimbursement from "@/components/users/Reimbursement";
+import { ProfilePicture } from "@/components/users/profile-picture";
+import Reimbursement from "@/components/users/reimbursement/Reimbursement";
 import RenderFines from "@/components/users/render-fines";
-import SalaryRecord from "@/components/users/SalaryRecord";
+import SalaryRecord from "@/components/users/salary-record";
 import UserTabs from "@/components/users/user-tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
@@ -187,10 +187,6 @@ export default function Page() {
         }}
         onFilterReturn={async (start, end) => {
           await fetchReimbursementData(start, end)
-        }}
-        onUpdatePurpose={(val) => {
-          const newData = updateItemPurpose(reimbursementData, val);
-          setReimbursementData(newData);
         }}
       />
 

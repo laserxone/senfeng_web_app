@@ -1,5 +1,5 @@
 "use client";
-import AppCalendar from "@/components/appCalendar";
+import AppCalendar from "@/components/app-calendar";
 import ProfilePictureTeam from "@/components/ProfilePicture";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,7 +34,6 @@ import {
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ChangeEvent, Dispatch, SetStateAction, useCallback, useContext, useEffect, useRef, useState } from "react";
-import "react-medium-image-zoom/dist/styles.css";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";

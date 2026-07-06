@@ -1,6 +1,6 @@
 "use client";
 
-import { CustomerSearchWithData } from "@/components/customer-search-with-data";
+import { CustomerSearchWithData } from "@/components/customer-components/customer-search-with-data";
 import {
   Select,
   SelectContent,

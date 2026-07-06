@@ -23,9 +23,8 @@ import Spinner from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import axios from "@/lib/axios";
 import { InventoryItem, StockProps } from "@/lib/types";
-import "react-medium-image-zoom/dist/styles.css";
 import { InventorySearch } from "./inventory-select";
-import MachineModels from "./machine-models";
+import MachineModels from "./machine-components/machine-models";
 
 type InventoryErrors = Partial<Record<keyof InventoryItem, string>>[];
 

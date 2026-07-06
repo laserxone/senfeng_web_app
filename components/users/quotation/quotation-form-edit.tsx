@@ -1,7 +1,7 @@
 "use client"
 
-import AppCalendar from "@/components/appCalendar"
-import { CustomerSearchWithData } from "@/components/customer-search-with-data"
+import AppCalendar from "@/components/app-calendar"
+import { CustomerSearchWithData } from "@/components/customer-components/customer-search-with-data"
 import { PricesSearch } from "@/components/prices-search"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"

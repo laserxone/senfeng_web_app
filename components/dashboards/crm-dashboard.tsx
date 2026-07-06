@@ -33,6 +33,8 @@ import SalesTeamProgressChartCRM from "../charts/sales_progress/crm-sales-progre
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
+import { ReimbursementAfterSales } from "../users/aftersales/AfterSalesDashboardNew";
+import { AfterSalesReimbursement } from "../users/aftersales/aftersales-types";
 
 export default function CRMDashboard() {
   const [data, setData] = useState<CRMDashboardData>();
@@ -44,6 +46,7 @@ export default function CRMDashboard() {
   const [feedbackOpen, setFeedbackOpen] = useState(false)
    const [unassigned, setUnassigned] = useState(false)
   const [topOpen, setTopOpen] = useState(false)
+  const [reimbursementApprovals, setReimbursementApprovals] = useState<AfterSalesReimbursement[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -55,7 +58,30 @@ export default function CRMDashboard() {
   function fetchData() {
     setLoading(true)
     fetchDashboardData();
+    fetchReimbursementApprovals()
   }
+
+  async function fetchReimbursementApprovals() {
+
+     const start = moment()
+            .startOf("month")
+            .startOf("day")
+            .utc()
+            .toISOString();
+        const end = moment()
+            .endOf("month")
+            .endOf("day")
+            .utc()
+            .toISOString();
+          try {
+  
+             
+                  const res = await axios.get(`/${userID}/reimbursementapproval?start_date=${start}&end_date=${end}`);
+                  setReimbursementApprovals(res.data);
+              
+          } finally {
+          }
+      }
 
 
   async function fetchDashboardData() {
@@ -242,6 +268,9 @@ export default function CRMDashboard() {
           </CardContent>
         </Card>
       )}
+
+
+        {reimbursementApprovals.length > 0 && <ReimbursementAfterSales data={reimbursementApprovals} onRefresh={fetchReimbursementApprovals} />}
 
       <FeedbackDialog
         open={feedbackOpen}

@@ -1,6 +1,6 @@
 "use client";
 import PageTable from "@/components/app-table-without-pagination";
-import { MyImg } from "@/components/customer-components/machine/machine-component";
+import { MyImg } from "@/components/machine-components/machine-component";
 import AddPOSPayment from "@/components/pos/add-pos-payment";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -22,7 +22,6 @@ import { ArrowUpDown, Info, ShieldCheck, Trash, TriangleAlert } from "lucide-rea
 import moment from "moment";
 import { Params } from "next/dist/server/request/params";
 import { useEffect, useMemo, useState } from "react";
-import "react-medium-image-zoom/dist/styles.css";
 import { toast } from "sonner";
 import { MyImgZooming } from "../img-zooming";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";

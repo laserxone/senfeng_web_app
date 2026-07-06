@@ -1,12 +1,12 @@
 "use client";
-import TeamTask from "@/components/teamTask";
+import TeamTask from "@/components/users/team-task";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useSidebar } from "@/components/ui/sidebar";
 import Attendance from "@/components/users/attendance";
-import Reimbursement from "@/components/users/Reimbursement";
+import Reimbursement from "@/components/users/reimbursement/Reimbursement";
 import RenderFines from "@/components/users/render-fines";
-import SalaryRecord from "@/components/users/SalaryRecord";
+import SalaryRecord from "@/components/users/salary-record";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
@@ -122,7 +122,6 @@ export default function AfterSalesDashboard({ data, onRefresh }: { data: Dashboa
           <ScrollArea className="max-h-[500px] w-full pr-2">
             <Reimbursement
               id={userID}
-              height="min-h-[calc(100dvh-420px)]"
               passingData={reimbursementData || []}
               onAddRefresh={async () => {
                 const startDate = moment().startOf("month").toISOString();
@@ -134,10 +133,6 @@ export default function AfterSalesDashboard({ data, onRefresh }: { data: Dashboa
               }}
               onFilterReturn={async (start, end) => { await fetchReimbursementData(start, end) }
               }
-              onUpdatePurpose={(val: any) => {
-                const newData = updateItemPurpose(reimbursementData, val);
-                setReimbursementData(newData);
-              }}
             />
           </ScrollArea>
         </CardContent>

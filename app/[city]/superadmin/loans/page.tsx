@@ -1,7 +1,7 @@
 "use client";
 
 import { RequiredStar } from "@/components/RequiredStar";
-import AppCalendar from "@/components/appCalendar";
+import AppCalendar from "@/components/app-calendar";
 import Dropzone from "@/components/dropzone";
 import { MyImgZooming } from "@/components/img-zooming";
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,6 @@ import {
 } from "lucide-react";
 import moment from "moment";
 import { useEffect, useMemo, useState } from "react";
-import "react-medium-image-zoom/dist/styles.css";
 import { toast } from "sonner";
 
 type LoansByUser = {

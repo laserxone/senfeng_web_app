@@ -1,7 +1,7 @@
 "use client";
 import PageTable from "@/components/app-table-without-pagination";
-import AppCalendar from "@/components/appCalendar";
-import { CustomerSearch } from "@/components/customer-search";
+import AppCalendar from "@/components/app-calendar";
+import { CustomerSearch } from "@/components/customer-components/customer-search";
 import { RequiredStar } from "@/components/RequiredStar";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +25,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, Trash2 } from "lucide-react";
 import moment from "moment";
 import { useContext, useEffect, useState } from "react";
-import ConfimationDialog from "./alert-dialog";
+import ConfirmationDialog from "./alert-dialog";
 import { Field, FieldLabel, FieldLegend, FieldSet } from "./ui/field";
 import {
   Select,
@@ -275,7 +275,7 @@ export default function MainRepairingLab() {
         onRefresh={fetchData}
       />
 
-      <ConfimationDialog
+      <ConfirmationDialog
         loading={deleteLoading}
         open={!!selectedTaskDelete}
         title={"Are you sure you want to delete?"}

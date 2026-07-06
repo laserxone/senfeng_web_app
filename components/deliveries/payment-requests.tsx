@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import moment from "moment";
 import { useEffect, useMemo, useState } from "react";
-import "react-medium-image-zoom/dist/styles.css";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,8 +30,8 @@ import { UploadImage } from "@/lib/uploadFunction";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
-import ConfimationDialog from "../alert-dialog";
-import AppCalendar from "../appCalendar";
+import ConfirmationDialog from "../alert-dialog";
+import AppCalendar from "../app-calendar";
 import { MyImgZooming } from "../img-zooming";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
@@ -556,7 +555,7 @@ export default function PaymentRequestsPage() {
                 </DialogContent>
             </Dialog>
 
-            <ConfimationDialog
+            <ConfirmationDialog
                 loading={deleteLoading}
                 open={!!selectedForDelete}
                 title="Are you sure you want to delete?"

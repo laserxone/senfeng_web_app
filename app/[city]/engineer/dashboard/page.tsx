@@ -1,31 +1,25 @@
 "use client";
-import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useSidebar } from "@/components/ui/sidebar";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Attendance from "@/components/users/attendance";
-import { ProfilePicture } from "@/components/users/ProfilePicture";
-import Reimbursement from "@/components/users/Reimbursement";
+import RepairAndMaintenance from "@/components/users/engineers/repair-and-maintenance";
+import Reimbursement from "@/components/users/reimbursement/Reimbursement";
 import RenderFines from "@/components/users/render-fines";
 import RenderReturnable from "@/components/users/render-returnable";
-import RepairAndMaintenance from "@/components/users/repair-and-maintenance";
-import SalaryRecord from "@/components/users/SalaryRecord";
+import SalaryRecord from "@/components/users/salary-record";
+import UserTabs from "@/components/users/user-tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { UserAttendanceRecord, UserDashboard, UserReimbursementType, UserRepairing } from "@/lib/types";
-import { updateItemPurpose } from "@/lib/updatePurpose";
-import { BadgeAlert, CalendarCheck, ReceiptText, RotateCcw, UserPlus, Users, Wallet } from "lucide-react";
+import { UserAttendanceRecord, UserReimbursementType, UserRepairing } from "@/lib/types";
+import { BadgeAlert, CalendarCheck, ReceiptText, RotateCcw, Users, Wallet } from "lucide-react";
 import moment from "moment";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import UserTabs from "@/components/users/user-tabs";
 
 export default function Page() {
-  const [data, setData] = useState<{ user: UserDashboard }>();
-  const { userID } = useUserDetail();
+  const { userID, reimbursement_approval } = useUserDetail();
   const [reimbursementData, setReimbursementData] = useState<UserReimbursementType[]>([]);
   const [attendanceData, setAttendanceData] = useState<UserAttendanceRecord[]>([]);
   const [activeTab, setActiveTab] = useState("attendance");
@@ -40,7 +34,7 @@ export default function Page() {
     if (userID) {
       const startDate = moment().startOf("month").toISOString();
       const endDate = moment().endOf("month").toISOString();
-      fetchData();
+
       fetchReimbursementData(startDate, endDate);
       fetchAttendanceData(startDate, endDate);
       fetchRepairingData();
@@ -136,36 +130,25 @@ export default function Page() {
     });
   }
 
-  async function fetchData() {
-    axios.get(`/${userID}/dashboard`).then((response) => {
-      setData(response.data);
-    });
-  }
-
   const RenderReimbursement = useCallback(() => {
     return (
-    
-          <Reimbursement
-            id={userID}
-          
-            passingData={reimbursementData || []}
-            onAddRefresh={async () => {
-              const startDate = moment().startOf("month").toISOString();
-              const endDate = moment().endOf("month").toISOString();
-              await fetchReimbursementData(startDate, endDate);
-            }}
-            onFilterReturn={async (start, end) => {
-              await fetchReimbursementData(start, end)
-            }}
-            onReset={async (start, end) => {
-              await fetchReimbursementData(start, end);
-            }}
-            onUpdatePurpose={(val) => {
-              const newData = updateItemPurpose(reimbursementData, val);
-              setReimbursementData(newData);
-            }}
-          />
-      
+
+      <Reimbursement
+        id={userID}
+        passingData={reimbursementData || []}
+        onAddRefresh={async () => {
+          const startDate = moment().startOf("month").toISOString();
+          const endDate = moment().endOf("month").toISOString();
+          await fetchReimbursementData(startDate, endDate);
+        }}
+        onFilterReturn={async (start, end) => {
+          await fetchReimbursementData(start, end)
+        }}
+        onReset={async (start, end) => {
+          await fetchReimbursementData(start, end);
+        }}
+      />
+
     );
   }, [reimbursementData]);
 
@@ -200,29 +183,29 @@ export default function Page() {
   );
 
 
- 
+
   const tabs = [
     {
       value: "attendance",
       label: "Attendance",
       icon: CalendarCheck,
       count: attendanceData?.filter((item) => item.status !== 'Absent').length || 0,
-     
+
     },
-   
+
     {
       value: "repair",
       label: "Repairing & Maintenance",
       icon: Users,
       count: repairData.length || 0,
-     
+
     },
     {
       value: "reimbursement",
       label: "Reimbursement",
       icon: ReceiptText,
       count: reimbursementData?.length || 0,
-     
+
     },
 
 
@@ -231,21 +214,21 @@ export default function Page() {
       label: "Salary",
       icon: Wallet,
       count: null,
-    
+
     },
     {
       value: "issued",
       label: "Returnable",
       icon: RotateCcw,
       count: allReturnables,
-    
+
     },
     {
       value: "fines",
       label: "Fines",
       icon: BadgeAlert,
       count: allFines,
-    
+
     },
   ]
 
@@ -259,20 +242,11 @@ export default function Page() {
   return (
     <div className="flex flex-1 gap-5">
       <div className="flex flex-1 flex-col gap-4">
-        <div className="flex justify-between flex-wrap">
-          <div className="flex items-center ">
-            <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
-            <div>
-              <h1 className="text-3xl font-bold">{data?.user?.name}</h1>
-              <p className="text-muted-foreground">{data?.user?.designation}</p>
-            </div>
-          </div>
-        </div>
 
-         <ScrollArea className={`${tabsMaxWidth}`}>
+        <ScrollArea className={`${tabsMaxWidth}`}>
 
 
-         <UserTabs tabs={tabs} routeTo={routeTo} activeTab={activeTab}/>
+          <UserTabs tabs={tabs} routeTo={routeTo} activeTab={activeTab} />
 
 
           <ScrollBar orientation="horizontal" />
@@ -280,16 +254,16 @@ export default function Page() {
         </ScrollArea>
 
 
-        
+
         <div hidden={activeTab !== "reimbursement"} >
           <RenderReimbursement />
         </div>
-    
+
         <div hidden={activeTab !== "attendance"} >
           <RenderAttendance />
         </div>
         <div hidden={activeTab !== "salary"} >
-              <SalaryRecord id={userID} />
+          <SalaryRecord id={userID} />
         </div>
         <div hidden={activeTab !== "issued"} >
           <RenderReturnable userID={userID} onUpdateTotal={(val) => setAllReturnables(val)} />
@@ -299,7 +273,7 @@ export default function Page() {
         </div>
 
         <div hidden={activeTab !== "repair"} >
-       <RenderRepair />
+          <RenderRepair />
         </div>
 
 

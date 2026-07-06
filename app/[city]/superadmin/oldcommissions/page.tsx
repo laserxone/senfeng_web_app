@@ -23,7 +23,6 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import moment from "moment";
 import { useEffect, useRef, useState } from "react";
-import "react-medium-image-zoom/dist/styles.css";
 
 
 type CustomerMachinesResponse = {

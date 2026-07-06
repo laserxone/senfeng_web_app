@@ -1,4 +1,4 @@
-import AppCalendar from "@/components/appCalendar";
+import AppCalendar from "@/components/app-calendar";
 import Dropzone from "@/components/dropzone";
 import { RequiredStar } from "@/components/RequiredStar";
 import { Button } from "@/components/ui/button";

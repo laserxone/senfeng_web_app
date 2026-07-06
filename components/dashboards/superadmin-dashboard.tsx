@@ -4,7 +4,7 @@ import { BarStats } from "@/components/charts/bar_stats/page";
 import { Stats } from "@/components/charts/pie_stats/page";
 import { Sale } from "@/components/charts/sales/page";
 import SalesTeamProgressChart from "@/components/charts/sales_progress/page";
-import { CustomerMapComponent } from "@/components/customerMapComponent";
+import CustomerMap from "@/components/customer-components/customer-map";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -312,7 +312,7 @@ export default function SuperadminDashboard() {
                 ) : (
                     customers.length > 0 && (
                         <MapProvider>
-                            <CustomerMapComponent data={customers} />
+                            <CustomerMap data={customers} />
                         </MapProvider>
                     )
                 )}

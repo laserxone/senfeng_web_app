@@ -1,4 +1,4 @@
-import DocumentManagement from "@/components/document-management";
+import DocumentManagement from "@/components/pages/document-management";
 
 
 export default function Page () {

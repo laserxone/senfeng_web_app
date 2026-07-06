@@ -1,4 +1,4 @@
-import AppCalendar from "@/components/appCalendar";
+import AppCalendar from "@/components/app-calendar";
 import { RequiredStar } from "@/components/RequiredStar";
 import StarRating from "@/components/startRating";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";

@@ -7,8 +7,6 @@ export type UserReimbursementTypes = {
     onAddRefresh: () => Promise<void>
     onFilterReturn: (start: string, end: string) => Promise<void>
     onReset: (start: string, end: string) => Promise<void>
-    onUpdatePurpose: (val: UserReimbursementType) => void
-    height?: string
 }
 
 export type SalesMachine = {
@@ -1155,6 +1153,7 @@ export type DeliveryType = {
     id: number;
     order_no_arr: string[];
     delivery_date: string | null;
+    customer_number : string[]
     power: string | null;
     source: string | null;
     serial_no: string;

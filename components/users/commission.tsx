@@ -16,7 +16,6 @@ import { ChevronRight } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { memo, useEffect, useState } from "react";
-import "react-medium-image-zoom/dist/styles.css";
 import { toast } from "sonner";
 import { MyImgZooming } from "../img-zooming";
 import { Button } from "../ui/button";

@@ -9,12 +9,11 @@ import {
 } from "react";
 
 import PageTable from "@/components/app-table-without-pagination";
-import SalaryPdf from "@/components/salaryPdf";
+import SalaryPdf from "@/components/salary/salaryPdf";
 import  Heading  from "@/components/ui/heading";
 import axios from "@/lib/axios";
 import moment from "moment";
 import { FaRegFilePdf } from "react-icons/fa";
-import "react-medium-image-zoom/dist/styles.css";
 
 import useUserDetail from "@/hooks/use-user-detail";
 import { pdf } from "@react-pdf/renderer";

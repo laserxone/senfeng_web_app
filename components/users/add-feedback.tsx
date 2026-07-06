@@ -1,7 +1,7 @@
 import axios from "@/lib/axios";
 import { CheckCircle, MessageSquareText, Star } from "lucide-react";
 import { useState } from "react";
-import AppCalendar from "../appCalendar";
+import AppCalendar from "../app-calendar";
 import { RequiredStar } from "../RequiredStar";
 import StarRating from "../startRating";
 import { Button } from "../ui/button";

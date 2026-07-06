@@ -14,8 +14,8 @@ import {
 import Heading from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
-import FilterSheet from "@/components/users/filterSheet";
-import LeaveApproval from "@/components/users/leaveApproval";
+import FilterSheet from "@/components/users/filter-sheet";
+import LeaveApproval from "@/components/users/leave-approval";
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";

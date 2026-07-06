@@ -249,7 +249,7 @@ export default function MachineDelivered() {
       order_no: `${item?.order_no_arr?.join(" ")} - ${item.serial_no} - ${item?.power} - ${item?.source}`,
       gate_pass: item?.do || item?.id,
       delivery_date: item?.delivery_date,
-      to: item?.customer_name || item?.customer_owner,
+      to: `${item?.customer_name || item?.customer_owner} ${item?.customer_number?.length ? `(${item?.customer_number?.[0]})` : ""}`,
       tod: moment(item?.delivery_date).format("YYYY-MM-DD hh:mm A"),
       driver_number:
         item?.dispatch_information?.other_information?.driverNumber,

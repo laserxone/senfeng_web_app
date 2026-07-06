@@ -28,7 +28,7 @@ import {
 import { useEffect, useState } from "react";
 
 import AddOrderDialog from "@/components/add-order";
-import ConfimationDialog from "@/components/alert-dialog";
+import ConfirmationDialog from "@/components/alert-dialog";
 import BookOrderDialog from "@/components/book-order";
 import EditOrderDialog from "@/components/edit-order";
 import CreateOrderDialog from "@/components/new-order";
@@ -42,13 +42,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import Heading from "@/components/ui/heading";
-import FilterSheet from "@/components/users/filterSheet";
+import FilterSheet from "@/components/users/filter-sheet";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { Order, OrderItem } from "@/lib/types";
 import moment from "moment";
 import Image from "next/image";
-import "react-medium-image-zoom/dist/styles.css";
 
 const colorClasses = [
   { bg: "bg-red-100", text: "text-red-800" },
@@ -613,7 +612,7 @@ export default function Page() {
         item={selectedItemForBook}
       />
 
-      <ConfimationDialog
+      <ConfirmationDialog
         loading={deleteLoading}
         open={!!selectedShipment}
         title={"Are you sure you want to delete?"}

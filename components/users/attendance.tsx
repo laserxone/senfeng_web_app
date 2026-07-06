@@ -11,7 +11,7 @@ import { UserAttendanceRecord } from "@/lib/types";
 import moment from "moment";
 import Spinner from "../ui/spinner";
 import { columns } from "./AttendanceColumns";
-import FilterSheet from "./filterSheet";
+import FilterSheet from "./filter-sheet";
 import { AttendanceDetail } from "./teamAttendance";
 
 type AttendanceProps = {

@@ -24,7 +24,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import useUserDetail from "@/hooks/use-user-detail";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
-import { CustomerSearchWithData } from "../customer-search-with-data";
+import { CustomerSearchWithData } from "../customer-components/customer-search-with-data";
 import { Checkbox } from "../ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import Spinner from "../ui/spinner";
