@@ -15,7 +15,7 @@ export async function POST(req:NextRequest) {
     }
 
     if (image_base64) {
-      UploadImageForMobile(image_base64, data.image);
+     await UploadImageForMobile(image_base64, data.image);
     }
 
     const fields = Object.keys(data);

@@ -19,7 +19,7 @@ import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
 
 export default function Page() {
-  const { userID, reimbursement_approval } = useUserDetail();
+  const { userID } = useUserDetail();
   const [reimbursementData, setReimbursementData] = useState<UserReimbursementType[]>([]);
   const [attendanceData, setAttendanceData] = useState<UserAttendanceRecord[]>([]);
   const [activeTab, setActiveTab] = useState("attendance");

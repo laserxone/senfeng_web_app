@@ -2,6 +2,7 @@ import pool from "@/config/db";
 import { partFields, profileFields, saleFields } from "@/constants/data";
 import { addLog } from "@/lib/addLog";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
+import DeleteStorageBackend from "@/lib/delete-storage-backend";
 import admin from "@/lib/firebaseAdmin";
 import { generateLog } from "@/lib/generateLog";
 import { sendNotification } from "@/lib/sendNotification";
@@ -9,7 +10,7 @@ import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
 import { sendNotificationToSMM } from "@/lib/sendNotificationToSMM";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req:NextRequest, { params }:{params:Promise<{id:string,uid:string}>}) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string, uid: string }> }) {
   const { id } = await params;
   const { uid } = await params
 
@@ -210,13 +211,13 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
     }
 
 
-  } catch (error:any) {
+  } catch (error: any) {
     console.error('Error fetching data: ', error);
     return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 });
   }
 }
 
-export async function PUT(req:NextRequest, { params }:{params:Promise<{uid:string,id:string}>}) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ uid: string, id: string }> }) {
 
 
 
@@ -236,7 +237,7 @@ export async function PUT(req:NextRequest, { params }:{params:Promise<{uid:strin
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
-    const fields:string[] = [];
+    const fields: string[] = [];
     const values = [];
 
     Object.entries(updates).forEach(([key, value], index) => {
@@ -287,7 +288,7 @@ export async function PUT(req:NextRequest, { params }:{params:Promise<{uid:strin
   }
 }
 
-export async function DELETE(req:NextRequest, { params }:{params:Promise<{uid:string,id:string}>}) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ uid: string, id: string }> }) {
 
 
   try {
@@ -306,6 +307,12 @@ export async function DELETE(req:NextRequest, { params }:{params:Promise<{uid:st
     if (!id) {
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
+
+    const bucket = admin.storage().bucket()
+
+    const imgQuery = await pool.query(`SELECT image FROM customer WHERE id = $1`, [id])
+    const img = imgQuery.rows?.[0]?.image ?? null
+    await DeleteStorageBackend(img)
     await pool.query(`DELETE FROM feedback WHERE customer_id = $1`, [id]);
 
     const visitResult = await pool.query(`SELECT * FROM visit WHERE customer_id = $1`, [id]);
@@ -313,10 +320,7 @@ export async function DELETE(req:NextRequest, { params }:{params:Promise<{uid:st
     if (visitResult.rows.length > 0) {
       for (const item of visitResult.rows) {
         const image = item.image
-        if (image && !image.includes("http")) {
-          const bucket = admin.storage().bucket()
-          await bucket.file(image).delete()
-        }
+        await DeleteStorageBackend(image)
       }
       await pool.query(`DELETE FROM visit WHERE customer_id = $1`, [id]);
     }
@@ -334,11 +338,7 @@ export async function DELETE(req:NextRequest, { params }:{params:Promise<{uid:st
 
         for (const payment of paymentResult.rows) {
           const image = payment.image;
-          if (image && !image.includes('http')) {
-            const bucket = admin.storage().bucket()
-            await bucket.file(image).delete()
-            console.log("image deleted")
-          }
+          await DeleteStorageBackend(image)
         }
 
         await pool.query(`DELETE FROM payment WHERE machine_id = $1`, [machineId]);
@@ -360,7 +360,7 @@ export async function DELETE(req:NextRequest, { params }:{params:Promise<{uid:st
 
 
 
-async function checkDeleteUser(id:string) {
+async function checkDeleteUser(id: string) {
 
   if (!id) throw new Error("User ID is missing");
 

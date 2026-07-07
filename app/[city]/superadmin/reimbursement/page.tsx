@@ -40,7 +40,6 @@ import AddReimbursementDialog from "@/components/users/reimbursement/add-reimbur
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
 import exportToExcel from "@/lib/exportToExcel";
 import { UserReimbursementType } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
@@ -542,18 +541,15 @@ const ImageSheet = ({
 
 
   async function handleDelete() {
-    if (img) {
-      if (img.includes("https")) {
-      } else {
-        DeleteFromStorage(img);
-      }
-    }
-    axios.delete(`/${userID}/reimbursement/${id}`).then(async () => {
-      if (id)
-        onRefresh(id);
-      setDeleteLoading(false);
+    if(!id) return
+
+    try {
+      await  axios.delete(`/${userID}/reimbursement/${id}`)
+      onRefresh(id)
+    } finally {
+       setDeleteLoading(false);
       handleClose();
-    });
+    }
   }
 
   return (

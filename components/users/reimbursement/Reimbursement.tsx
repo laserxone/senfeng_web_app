@@ -11,7 +11,6 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
 import exportToExcel from "@/lib/exportToExcel";
 import { UserReimbursementType, UserReimbursementTypes } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -78,12 +77,6 @@ export default function Reimbursement({
     if (!selectedForDelete?.id) return
     setDeleteLoading(true)
     try {
-      if (selectedForDelete.image) {
-        if (selectedForDelete.image.includes("https")) {
-        } else {
-          DeleteFromStorage(selectedForDelete.image);
-        }
-      }
       await axios.delete(`/${id}/reimbursement/${selectedForDelete.id}`)
       await onAddRefresh()
     } finally {
@@ -190,7 +183,7 @@ export default function Reimbursement({
 
         </div>
       </div>
-      
+
       <FilterSheet
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}

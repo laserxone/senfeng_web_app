@@ -20,8 +20,8 @@ import { Label } from "@/components/ui/label";
 import { useContext, useEffect, useState } from "react";
 
 import ConfirmationDialog from "@/components/alert-dialog";
-import PageTable from "@/components/app-table";
 import AppCalendar from "@/components/app-calendar";
+import PageTable from "@/components/app-table";
 import Dropzone from "@/components/dropzone";
 import {
   Dialog,
@@ -44,12 +44,10 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import FilterSheet from "@/components/users/filter-sheet";
-import { storage } from "@/config/firebase";
 import { TIMEZONE } from "@/constants/data";
 
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
 import exportToExcel from "@/lib/exportToExcel";
 import formatCurrency from "@/lib/formatCurrency";
 import { OfficeExpenseProps } from "@/lib/types";
@@ -59,7 +57,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Document, Page, pdf, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { ColumnDef } from "@tanstack/react-table";
 import { saveAs } from "file-saver";
-import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
 import momentT from "moment-timezone";
 import { useRouter } from "next/navigation";
@@ -386,19 +383,14 @@ export default function EmployeeBranchExpenses() {
     if (!id) return;
     setDeleteLoading(true);
     try {
-      if (imageURL && imageURL?.image && !imageURL.image.includes("http")) {
-        DeleteFromStorage(imageURL.image);
-      }
-      const response = await axios.delete(`/${userID}/expenses/${id}`);
+      await axios.delete(`/${userID}/expenses/${id}`);
       toast.success("Branch Expense Deleted")
-      const startDate = momentT
-        .tz(TIMEZONE)
+      const startDate = moment()
         .startOf("month")
         .startOf("day")
         .utc()
         .toISOString();
-      const endDate = momentT
-        .tz(TIMEZONE)
+      const endDate = moment()
         .endOf("month")
         .endOf("day")
         .utc()
@@ -498,88 +490,88 @@ export default function EmployeeBranchExpenses() {
         loading={deleteLoading}
       />
       <div>
-      <PageTable
-        loading={loading}
-        columns={columns}
-        data={data}
-        onRowClick={(val, e) => {
-          setImageURL(val);
-          setVisible(true);
-        }}
-      // filter={true}
-      // onFilterClick={() => setFilterVisible(true)}
-      >
-        <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={() => setFilterVisible(true)}
-              variant="outline"
-              className="gap-2"
-            >
-              <Filter className="h-4 w-4" />
-              Filter
-            </Button>
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={async () => {
-                setResetLoading(true);
-                const startDate = momentT
-                  .tz(TIMEZONE)
-                  .startOf("month")
-                  .startOf("day")
-                  .utc()
-                  .toISOString();
-                const endDate = momentT
-                  .tz(TIMEZONE)
-                  .endOf("month")
-                  .endOf("day")
-                  .utc()
-                  .toISOString();
-                await fetchData(startDate, endDate);
-                setResetLoading(false);
-              }}
-            >
-              {resetLoading ? <Spinner /> : <RotateCcw className="h-4 w-4" />}
-              Reset
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant={"outline"} disabled={!!exportLoading} className="gap-2">
-                  {exportLoading ? <Spinner /> : <FileDown className="h-4 w-4" />}
-                  Export
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-36">
-                <DropdownMenuItem
-                  disabled={!!exportLoading}
-                  onClick={handleExcelExport}
-                >
-                  {exportLoading === "excel" && <Spinner />} Excel
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  disabled={!!exportLoading}
-                  onClick={handlePdfExport}
-                >
-                  {exportLoading === "pdf" && <Spinner />} PDF
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+        <PageTable
+          loading={loading}
+          columns={columns}
+          data={data}
+          onRowClick={(val, e) => {
+            setImageURL(val);
+            setVisible(true);
+          }}
+        // filter={true}
+        // onFilterClick={() => setFilterVisible(true)}
+        >
+          <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={() => setFilterVisible(true)}
+                variant="outline"
+                className="gap-2"
+              >
+                <Filter className="h-4 w-4" />
+                Filter
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={async () => {
+                  setResetLoading(true);
+                  const startDate = momentT
+                    .tz(TIMEZONE)
+                    .startOf("month")
+                    .startOf("day")
+                    .utc()
+                    .toISOString();
+                  const endDate = momentT
+                    .tz(TIMEZONE)
+                    .endOf("month")
+                    .endOf("day")
+                    .utc()
+                    .toISOString();
+                  await fetchData(startDate, endDate);
+                  setResetLoading(false);
+                }}
+              >
+                {resetLoading ? <Spinner /> : <RotateCcw className="h-4 w-4" />}
+                Reset
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant={"outline"} disabled={!!exportLoading} className="gap-2">
+                    {exportLoading ? <Spinner /> : <FileDown className="h-4 w-4" />}
+                    Export
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-36">
+                  <DropdownMenuItem
+                    disabled={!!exportLoading}
+                    onClick={handleExcelExport}
+                  >
+                    {exportLoading === "excel" && <Spinner />} Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={!!exportLoading}
+                    onClick={handlePdfExport}
+                  >
+                    {exportLoading === "pdf" && <Spinner />} PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <Card className="w-full border bg-background shadow-none sm:w-auto">
+              <CardContent className="px-4 py-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total PKR:{" "}
+                  <span className="text-base font-bold text-foreground">
+                    {formatCurrency(total)}
+                  </span>
+                </CardTitle>
+              </CardContent>
+            </Card>
           </div>
-          <Card className="w-full border bg-background shadow-none sm:w-auto">
-            <CardContent className="px-4 py-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total PKR:{" "}
-                <span className="text-base font-bold text-foreground">
-                  {formatCurrency(total)}
-                </span>
-              </CardTitle>
-            </CardContent>
-          </Card>
-        </div>
-      </PageTable>
-</div>
+        </PageTable>
+      </div>
 
       <FilterSheet
         visible={filterVisible}
@@ -641,7 +633,7 @@ const ImageSheet = ({
   loading,
   date,
 }: ImageSheetProps) => {
- 
+
   const { isAdmin, branch_expenses_delete_access } = useUserDetail();
 
   const hasPermission = isAdmin || branch_expenses_delete_access;

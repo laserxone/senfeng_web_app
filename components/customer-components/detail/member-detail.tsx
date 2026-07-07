@@ -22,17 +22,9 @@ import { useRouter } from "next/navigation";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { FaWhatsapp } from "react-icons/fa";
 
-import AddMachine from "@/components/machine-components/add-machine";
 import ConfirmationDialog from "@/components/alert-dialog";
 import EditCustomerDialog from "@/components/customer-components/edit customer";
-import {
-  Timeline,
-  TimelineDescription,
-  TimelineHeader,
-  TimelineItem,
-  TimelineTime,
-  TimelineTitle,
-} from "@/components/ui/timeline";
+import AddMachine from "@/components/machine-components/add-machine";
 import {
   Accordion,
   AccordionContent,
@@ -45,15 +37,22 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Timeline,
+  TimelineDescription,
+  TimelineHeader,
+  TimelineItem,
+  TimelineTime,
+  TimelineTitle,
+} from "@/components/ui/timeline";
 import VisitTab from "@/components/users/add-visit";
 import CustomerTask from "@/components/users/customer-task";
 import useUserDetail from "@/hooks/use-user-detail";
 import { debounce } from "@/lib/debounce";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { GetProfileImage } from "@/lib/getProfileImage";
 
-import AddParts from "@/components/machine-components/add-parts";
 import CurrencyFormatter from "@/components/currency-formatter";
+import AddParts from "@/components/machine-components/add-parts";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import AddFeedbackDialog from "@/components/users/add-feedback";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -173,10 +172,7 @@ export default function MemberDetail({
     if (!id) return;
     setDeleteLoading(true);
     try {
-      if (data?.image) {
-        if (!data?.image?.includes("https")) DeleteFromStorage(data.image);
-      }
-      const response = await axios.delete(`/${userID}/customer/${id}`);
+    await axios.delete(`/${userID}/customer/${id}`);
       toast.success("Customer Deleted");
 
       router.push(`/${base_route}/${from}`);

@@ -26,7 +26,6 @@ import FilterSheet from "@/components/users/filter-sheet";
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { UserReimbursementType } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import moment from "moment";
@@ -451,12 +450,6 @@ const ImageSheet = ({
 
 
     async function handleDelete() {
-        if (img) {
-            if (img.includes("https")) {
-            } else {
-                DeleteFromStorage(img);
-            }
-        }
         axios.delete(`/${userID}/reimbursement/${id}`).then(async () => {
             if (id)
                 onRefresh(id);

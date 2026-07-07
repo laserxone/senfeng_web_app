@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import useUserDetail from "@/hooks/use-user-detail"
 import axios from "@/lib/axios"
-import { DeleteFromStorage } from "@/lib/deleteFunction"
 import { MachineProps, MyCustomer, PartsProps, SalesVisitTypes } from "@/lib/types"
 import { UploadImage } from "@/lib/uploadFunction"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -163,7 +162,6 @@ export default function VisitTab({
   async function handleDelete(item: SalesVisitTypes) {
     try {
       setSelectedDelete(item.id)
-      DeleteFromStorage(item.image)
       axios
         .delete(`/${userID}/visit/${item.id}`)
         .then(async () => {
