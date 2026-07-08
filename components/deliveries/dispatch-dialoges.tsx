@@ -770,7 +770,11 @@ export function DispatchOrderDialog({
                                 {(field.value || []).map((order: string, index: number) => (
                                   <div key={index} className="flex items-center gap-2">
                                     <div className="flex flex-1">
-                                      <Input value={order} onChange={() => { }} readOnly />
+                                      <Input value={order} onChange={(e) => {
+                                       const updated = [...(field.value || [])]
+                                       updated[index] = e.target.value
+                                        field.onChange(updated)
+                                       }} />
                                     </div>
 
                                   </div>
