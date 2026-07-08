@@ -605,6 +605,20 @@ export function DispatchOrderDialog({
     },
   });
 
+  function getSerialNumbers(items: any[] = []) {
+    return items.map((item) => item.serial_no);
+  }
+
+  useEffect(() => {
+    if (data && data.type === 'Parts') {
+      const partsInfo = data?.parts_information
+      if (partsInfo && Array.isArray(partsInfo)) {
+        const serialNumbers = getSerialNumbers(partsInfo);
+        form.setValue("orderNo", serialNumbers)
+      }
+    }
+  }, [data, open])
+
   async function fetchData() {
     if (!userID) return;
     setChecklistLoading(true);
@@ -662,7 +676,7 @@ export function DispatchOrderDialog({
             transporter: values.transporter
           },
         },
-        order_no_data : selectedOrderNo
+        order_no_data: selectedOrderNo
       };
 
       await axios.post(`/${userID}/delivery`, apiData);
@@ -750,19 +764,34 @@ export function DispatchOrderDialog({
                               Order No <RequiredStar />
                             </FieldLabel>
 
-                            <div className="space-y-2">
-                              {(field.value || []).map((order: string, index: number) => (
-                                <div key={index} className="flex items-center gap-2">
-                                  <div className="flex flex-1">
-                                    <SelectOrderNo value={order} onReturnData={(e) => {
-                                      console.log(e)
-                                      const updated = [...(field.value || [])]
-                                      updated[index] = e.machine_serial
-                                      field.onChange(updated)
-                                      setSelectedOrderNo(e)
-                                    }} />
+                            {data?.type === "Parts" ?
+
+                              <div className="space-y-2">
+                                {(field.value || []).map((order: string, index: number) => (
+                                  <div key={index} className="flex items-center gap-2">
+                                    <div className="flex flex-1">
+                                      <Input value={order} onChange={() => { }} readOnly />
+                                    </div>
+
                                   </div>
-                                  {/* <Button
+                                ))}
+                              </div>
+                              :
+
+
+                              <div className="space-y-2">
+                                {(field.value || []).map((order: string, index: number) => (
+                                  <div key={index} className="flex items-center gap-2">
+                                    <div className="flex flex-1">
+                                      <SelectOrderNo value={order} onReturnData={(e) => {
+                                        console.log(e)
+                                        const updated = [...(field.value || [])]
+                                        updated[index] = e.machine_serial
+                                        field.onChange(updated)
+                                        setSelectedOrderNo(e)
+                                      }} />
+                                    </div>
+                                    {/* <Button
                                     type="button"
                                     variant="destructive"
                                     size="icon"
@@ -778,9 +807,10 @@ export function DispatchOrderDialog({
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button> */}
-                                </div>
-                              ))}
-                            </div>
+                                  </div>
+                                ))}
+                              </div>
+                            }
 
                             {/* <Button
                               type="button"

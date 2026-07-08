@@ -16,6 +16,8 @@ export async function GET() {
     s.serial_no,
     s.dispatch_information, 
     s.customer_id,
+    s.type,
+    s.parts_information,
 
     c.name AS customer_name, 
     c.owner AS customer_owner,

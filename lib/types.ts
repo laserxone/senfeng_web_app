@@ -1166,6 +1166,8 @@ export type DeliveryType = {
     do?: string
     payment_slip ?: string
     no_request : boolean
+    type : string
+    parts_information : Record<string, any> | null
 }
 
 export type DispatchPdf = {
