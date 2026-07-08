@@ -127,6 +127,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
   const { userID, isAdmin } =
     useUserDetail();
   const [zipDownloading, setZipDwonloading] = useState(false);
+  const [ledgerDownloading, setLedgerDownloading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [unmatched, setUnmatched] = useState<string[]>([]);
   const [installmentVisible, setInstallmentVisible] = useState(false);
@@ -162,7 +163,7 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
         setTotal(Number(machine.price || 0));
 
         const payments =
-          machine?.payments?.filter((p) => p.clearance_date !== null) || [];
+          machine?.payments || [];
         setPayments(machine?.payments);
         setReceived(
           payments?.reduce((sum, p) => sum + Number(p.amount || 0), 0),
@@ -412,29 +413,42 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
   );
 
   async function handleDownloadLedger() {
-    let runningBalance = total;
+    if (ledgerDownloading) return;
 
-    const convertedPayment = payments.map((payment) => {
-      runningBalance -= Number(payment.amount);
-      return { ...payment, balance: runningBalance };
-    });
+    setLedgerDownloading(true);
+    try {
+      const response = await axios.post(
+        `/${userID}/ledger-pdf`,
+        {
+          data,
+          payments,
+          received,
+          total,
+        },
+        {
+          responseType: "blob",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-    const finalData = {
-      customer: data?.customer?.name,
-      name: data?.customer?.owner,
-      contact: data?.customer?.number?.join(", "),
-      model: data?.machine?.serial_no,
-      serial: data?.machine?.order_no_arr?.join(", "),
-      manager: data?.machine?.sell_by_name || "NA",
-      payments: convertedPayment,
-      received: received || 0,
-      total: total || 0,
-    };
+      const blob = new Blob([response.data], {
+        type: "application/pdf",
+      });
 
-    const blob = await pdf(<InvoicePDF data={finalData} />).toBlob();
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
-    setTimeout(() => URL.revokeObjectURL(url), 600000);
+      const url = URL.createObjectURL(blob);
+
+      window.open(url, "_blank");
+
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 600000);
+    } catch (error) {
+      console.log("Ledger PDF error:", error);
+    } finally {
+      setLedgerDownloading(false);
+    }
   }
 
   async function deleteMachine() {
@@ -819,10 +833,15 @@ export default function Machine({ id, onLoading }: { id: string | number, onLoad
                 {payments.length > 0 && (
                   <DropdownMenuItem
                     className="text-xs"
+                    disabled={ledgerDownloading}
                     onClick={handleDownloadLedger}
                   >
-                    <Download className="mr-1.5 h-3.5 w-3.5" />
-                    Ledger
+                    {ledgerDownloading ? (
+                      <Spinner className="mr-1.5 h-3.5 w-3.5" />
+                    ) : (
+                      <Download className="mr-1.5 h-3.5 w-3.5" />
+                    )}
+                    {ledgerDownloading ? "Downloading..." : "Ledger"}
                   </DropdownMenuItem>
                 )}
 

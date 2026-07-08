@@ -1,4 +1,5 @@
 import { Document, Image, Page, Path, StyleSheet, Svg, Text, View } from '@react-pdf/renderer';
+import type { SourceObject } from '@react-pdf/types';
 import moment from 'moment';
 
 const styles = StyleSheet.create({
@@ -176,7 +177,7 @@ type LocalData = {
     total: number;
 }
 
-const InvoicePDF = ({ data } : {data : LocalData}) => {
+const InvoicePDF = ({ data, logoSrc = "/logo.png" } : {data : LocalData, logoSrc?: SourceObject}) => {
 
     return (
         <Document>
@@ -185,7 +186,7 @@ const InvoicePDF = ({ data } : {data : LocalData}) => {
                 width: '100%',
             }}>
                 {/* Header */}
-                <Header />
+                <Header logoSrc={logoSrc}/>
                 <View style={{ padding: '5px', borderWidth: 2, borderColor: '#0072BC', borderRadius: 20, paddingTop: 20 }}>
                     <View style={{ flexDirection: 'row', width: '100%' }}>
 
@@ -311,16 +312,16 @@ const CompanyDetails = () => {
     )
 }
 
-const Header = () => {
+const Header = ({ logoSrc }: { logoSrc: SourceObject }) => {
     return (
         <View style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexDirection: 'row' }}>
             {/* <Text fontSize={60} color={'#0072BC'} fontWeight={'800'}>SENFENG</Text> */}
-            <Image src={"/logo.png"} style={{ height: '40px', width: '200px' }} />
-            <div style={{ backgroundColor: '#0072BC', borderTopLeftRadius: 20, borderTopRightRadius: 20, marginRight: 70, width: '150px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} >
+            <Image src={logoSrc} style={{ height: 40, width: 200, objectFit: 'contain' }} />
+            <View  style={{ backgroundColor: '#0072BC', borderTopLeftRadius: 20, borderTopRightRadius: 20, marginRight: 70, width: '150px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} >
                 <Text style={{ fontSize: '12px', fontFamily: 'Helvetica-Bold', color: 'white', }}>
                     ACCOUNT STATEMENT
                 </Text>
-            </div>
+            </View >
         </View>
     )
 }

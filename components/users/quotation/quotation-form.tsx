@@ -10,13 +10,10 @@ import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/componen
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { QuotationPDF } from "@/components/users/quotation/quotation-pdf"
 import useUserDetail from "@/hooks/use-user-detail"
 import axios from "@/lib/axios"
-import { formatPrice } from "@/lib/formatPrice"
 import { MyCustomer, PricesSearchProps, QuotationData } from "@/lib/types"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { pdf } from "@react-pdf/renderer"
 import {
   Building2,
   Clock,
@@ -31,7 +28,6 @@ import {
   Users,
   Zap,
 } from "lucide-react"
-import { PDFDocument } from "pdf-lib"
 import { useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
@@ -132,76 +128,43 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
       const resID = res.data?.id || ""
       const finalData = { ...data, id: resID }
 
-      const generatedPdfBlob = await pdf(<QuotationPDF data={finalData} />).toBlob()
-      const generatedPdfBytes = await generatedPdfBlob.arrayBuffer()
-      const firebasePdfUrl = data?.original_pdf
-      if (firebasePdfUrl) {
-        const firebasePdfResponse = await fetch(firebasePdfUrl)
-        const firebasePdfBytes = await firebasePdfResponse.arrayBuffer()
-
-        const mergedPdf = await PDFDocument.create()
-
-        const generatedPdfDoc = await PDFDocument.load(generatedPdfBytes)
-        const firebasePdfDoc = await PDFDocument.load(firebasePdfBytes)
-
-        const generatedPages = await mergedPdf.copyPages(
-          generatedPdfDoc,
-          generatedPdfDoc.getPageIndices()
-        )
-
-        generatedPages.forEach((page) => mergedPdf.addPage(page))
-
-        const firebasePages = await mergedPdf.copyPages(
-          firebasePdfDoc,
-          firebasePdfDoc.getPageIndices()
-        )
-
-        firebasePages.forEach((page) => mergedPdf.addPage(page))
-
-        // 5. Download final merged PDF
-        const mergedPdfBytes = await mergedPdf.save()
-
-        const blob = new Blob([mergedPdfBytes.buffer as ArrayBuffer], {
-          type: "application/pdf",
-        })
-
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement("a")
-
-
-        let normalName = data.customer_name;
-
-        const nameParts = normalName.trim().split(/\s+/);
-
-        if (nameParts.length > 2) {
-          normalName = nameParts.slice(0, 2).join(" ");
-        }
-
-
-        let downloadName = `${normalName} ${data.contact_person || ""}-${data.machine_model}-${data.machine_power}-${data.payment_terms || ""}${formatPrice(data.price)}.pdf`
-
-        link.href = url
-        link.download = downloadName
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-
-        URL.revokeObjectURL(url)
+      const pdfRes = await axios.post(
+      `/${userID}/quotation/pdf`,
+      {
+        data: finalData,
+      },
+      {
+        responseType: "blob",
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
-      else {
-        const url = URL.createObjectURL(generatedPdfBlob)
+    );
 
-        const link = document.createElement("a")
-        link.href = url
-        link.download = `Quotation-${finalData.id}.pdf`
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+    const blob = new Blob([pdfRes.data], {
+      type: "application/pdf",
+    });
 
-        URL.revokeObjectURL(url)
-      }
-      await onRefresh()
-      handleOpenChange(false)
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+
+    const fileName =
+      pdfRes.headers["content-disposition"]
+        ?.split("filename=")?.[1]
+        ?.replaceAll('"', "") || `Quotation-${finalData.id}.pdf`;
+
+    link.download = fileName;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+
+    await onRefresh();
+    handleOpenChange(false);
     } catch (error) {
     } finally {
       setIsGenerating(false)

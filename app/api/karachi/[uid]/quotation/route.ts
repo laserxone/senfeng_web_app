@@ -9,7 +9,8 @@ export async function GET(){
             q.*,
             u.name AS user_name
         FROM quotation q
-        LEFT JOIN users u ON q.user_id = u.id`)
+        LEFT JOIN users u ON q.user_id = u.id
+        ORDER BY q.created_at DESC`)
         return NextResponse.json(res?.rows)
     } catch (error : any) {
         return NextResponse.json({message : error?.message || "Server error"}, {status: 500})

@@ -6,17 +6,13 @@ import { QuotationForm } from "@/components/users/quotation/quotation-form";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { QuotationData } from "@/lib/types";
-import { pdf } from "@react-pdf/renderer";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, Download, Trash2 } from "lucide-react";
 import moment from "moment";
-import { PDFDocument } from "pdf-lib";
 import { useEffect, useState } from "react";
-import Heading from "../../ui/heading";
-import { QuotationPDF } from "./quotation-pdf";
-import { QuotationFormEdit } from "./quotation-form-edit";
 import { toast } from "sonner";
-import { formatPrice } from "@/lib/formatPrice";
+import Heading from "../../ui/heading";
+import { QuotationFormEdit } from "./quotation-form-edit";
 
 export default function QuotationPage() {
   const [data, setData] = useState<QuotationData[]>([])
@@ -249,83 +245,47 @@ export default function QuotationPage() {
     },
   ]
 
-  
+
 
   async function handleDownloadQuotation(quotation: QuotationData) {
     if (!quotation?.id) return
     setDownloadItem(quotation.id)
 
     try {
-      const generatedPdfBlob = await pdf(<QuotationPDF data={quotation} />).toBlob()
-      const generatedPdfBytes = await generatedPdfBlob.arrayBuffer()
-
-
-      const firebasePdfUrl = quotation?.original_pdf
-
-      if (firebasePdfUrl) {
-        const firebasePdfResponse = await fetch(firebasePdfUrl)
-        const firebasePdfBytes = await firebasePdfResponse.arrayBuffer()
-
-        const mergedPdf = await PDFDocument.create()
-
-        const generatedPdfDoc = await PDFDocument.load(generatedPdfBytes)
-        const firebasePdfDoc = await PDFDocument.load(firebasePdfBytes)
-
-        const generatedPages = await mergedPdf.copyPages(
-          generatedPdfDoc,
-          generatedPdfDoc.getPageIndices()
-        )
-
-        generatedPages.forEach((page) => mergedPdf.addPage(page))
-
-        const firebasePages = await mergedPdf.copyPages(
-          firebasePdfDoc,
-          firebasePdfDoc.getPageIndices()
-        )
-
-        firebasePages.forEach((page) => mergedPdf.addPage(page))
-
-        // 5. Download final merged PDF
-        const mergedPdfBytes = await mergedPdf.save()
-
-        const blob = new Blob([mergedPdfBytes.buffer as ArrayBuffer], {
-          type: "application/pdf",
-        })
-
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement("a")
-
-        let normalName = quotation.customer_name;
-
-        const nameParts = normalName.trim().split(/\s+/);
-
-        if (nameParts.length > 2) {
-          normalName = nameParts.slice(0, 2).join(" ");
+      const pdfRes = await axios.post(
+        `/${userID}/quotation/pdf`,
+        {
+          data: quotation,
+        },
+        {
+          responseType: "blob",
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
+      );
 
+      const blob = new Blob([pdfRes.data], {
+        type: "application/pdf",
+      });
 
-        let downloadName = `${normalName} ${quotation.contact_person || ""}-${quotation.machine_model}-${quotation.machine_power}-${quotation.payment_terms || ""}${formatPrice(quotation.price)}.pdf`
+      const url = URL.createObjectURL(blob);
 
-        link.href = url
-        link.download = downloadName
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+      const link = document.createElement("a");
+      link.href = url;
 
-        URL.revokeObjectURL(url)
-      }
-      else {
-        const url = URL.createObjectURL(generatedPdfBlob)
+      const fileName =
+        pdfRes.headers["content-disposition"]
+          ?.split("filename=")?.[1]
+          ?.replaceAll('"', "") || `Quotation-${quotation.id}.pdf`;
 
-        const link = document.createElement("a")
-        link.href = url
-        link.download = `Quotation-${quotation.id}.pdf`
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+      link.download = fileName;
 
-        URL.revokeObjectURL(url)
-      }
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(url);
 
 
     } catch (error: any) {

@@ -1,7 +1,5 @@
-"use client"
-
-import { Colors } from "@/constants/data"
-import { QuotationData } from "@/lib/types"
+import { Colors } from "@/constants/data";
+import { QuotationData } from "@/lib/types";
 import {
     Document,
     Image,
@@ -9,11 +7,19 @@ import {
     StyleSheet,
     Text,
     View,
-} from "@react-pdf/renderer"
-import moment from "moment"
+} from "@react-pdf/renderer";
+import { readFileSync } from "fs";
+import moment from "moment";
+import path from "path";
 
+const publicFile = (src: string) => {
 
-const MainColor = '#1e3a8a'
+    const cleanSrc = src.split("?")[0].replace(/^\//, "");
+    return {
+        data: readFileSync(path.join(process.cwd(), "public", cleanSrc)),
+        format: "png" as const,
+    }
+};
 
 const styles = StyleSheet.create({
     bannerLeft: {
@@ -48,8 +54,8 @@ const styles = StyleSheet.create({
 
     headerLink: {
         marginBottom: 2,
-        flexDirection:'row',
-        alignItems:'center'
+        flexDirection: 'row',
+        alignItems: 'center'
     },
 
     banner: {
@@ -368,7 +374,8 @@ interface QuotationPDFProps {
 }
 
 export function QuotationPDF({ data }: QuotationPDFProps) {
-   
+
+    console.log(publicFile("/png/globe.png"))
 
     return (
         <Document>
@@ -376,16 +383,16 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
                 {/* Header */}
                 <View style={styles.header}>
                     <View>
-                        <Image src="/logo.png" style={{ width: 200, objectFit: 'contain' }} />
+                        <Image src={publicFile("/logo.png")} style={{ width: 200, objectFit: 'contain' }} />
                         <Text style={styles.tagline}>PIONEERING INTELLIGENT MANUFACTURING</Text>
                     </View>
                     <View style={styles.headerRight}>
                         <View style={styles.headerLink}>
-                            <Image src={"/png/globe.png"} style={{width:10, height:10, marginRight:4}}/>
+                            <Image src={publicFile("/png/globe.png")} style={{ width: 10, height: 10, marginRight: 4 }} />
                             <Text>https://senfenglaserpk.com/</Text>
                         </View>
                         <View style={styles.headerLink}>
-  <Image src={"/png/mail.png"} style={{width:10, height:10, marginRight:4}}/>
+                            <Image src={publicFile("/png/mail.png")} style={{ width: 10, height: 10, marginRight: 4 }} />
                             <Text>info@senfenglaserpk.com</Text>
                         </View>
                     </View>
@@ -400,7 +407,7 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
                     <View style={styles.bannerRight}>
                         <View style={styles.bannerField}>
                             <Image
-                                src="/png/file-text.png"
+                                src={publicFile("/png/file-text.png")}
                                 style={{ width: 13, height: 13 }}
                             />
                             <View>
@@ -410,12 +417,12 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
                         </View>
                         <View style={styles.bannerFieldLast}>
                             <Image
-                                src="/png/calendar-days.png"
+                                src={publicFile("/png/calendar-days.png")}
                                 style={{ width: 13, height: 13 }}
                             />
                             <View>
                                 <Text style={styles.bannerFieldLabel}>Date</Text>
-                                <Text style={styles.bannerFieldValue}>{moment(data.date).format("YYYY-MM-DD") }</Text>
+                                <Text style={styles.bannerFieldValue}>{moment(data.date).format("YYYY-MM-DD")}</Text>
                             </View>
                         </View>
                     </View>
@@ -424,15 +431,15 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
                 {/* Machine Images - Top Row */}
                 <View style={styles.machineSection}>
                     <View style={styles.machineRow}>
-                        <Image src="/machines/1.png?height=55&width=90" style={styles.machineImage} />
-                        <Image src="/machines/2.png?height=55&width=90" style={styles.machineImage} />
-                        <Image src="/machines/3.png?height=55&width=90" style={styles.machineImage} />
-                        <Image src="/machines/4.png?height=55&width=90" style={styles.machineImage} />
+                        <Image src={publicFile("/machines/1.png?height=55&width=90")} style={styles.machineImage} />
+                        <Image src={publicFile("/machines/2.png?height=55&width=90")} style={styles.machineImage} />
+                        <Image src={publicFile("/machines/3.png?height=55&width=90")} style={styles.machineImage} />
+                        <Image src={publicFile("/machines/4.png?height=55&width=90")} style={styles.machineImage} />
                     </View>
                     <View style={styles.machineRow}>
-                        <Image src="/machines/5.png?height=50&width=80" style={styles.machineImageSmall} />
+                        <Image src={publicFile("/machines/5.png?height=50&width=80")} style={styles.machineImageSmall} />
                         <View style={styles.centerBrand}>
-                            <Image src="/logo.png" style={{ width: 250, objectFit: 'contain' }} />
+                            <Image src={publicFile("/logo.png")} style={{ width: 250, objectFit: 'contain' }} />
                             <View style={styles.centerCategories}>
                                 <Text style={styles.categoryText}>LASER</Text>
                                 <Text style={styles.categorySeparator}>|</Text>
@@ -447,14 +454,14 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
                                 <Text style={styles.categoryText}>AUTOMATION</Text>
                             </View>
                         </View>
-                        <Image src="/machines/6.png?height=50&width=80" style={styles.machineImageSmall} />
+                        <Image src={publicFile("/machines/6.png?height=50&width=80")} style={styles.machineImageSmall} />
                     </View>
                     <View style={styles.machineRow}>
-                        <Image src="/machines/7.png?height=50&width=80" style={styles.machineImage} />
-                        <Image src="/machines/8.png?height=50&width=80" style={styles.machineImage} />
-                        <Image src="/machines/9.png?height=50&width=80" style={styles.machineImage} />
-                        <Image src="/machines/10.png?height=50&width=80" style={styles.machineImage} />
-                        <Image src="/machines/11.png?height=50&width=80" style={styles.machineImage} />
+                        <Image src={publicFile("/machines/7.png?height=50&width=80")} style={styles.machineImage} />
+                        <Image src={publicFile("/machines/8.png?height=50&width=80")} style={styles.machineImage} />
+                        <Image src={publicFile("/machines/9.png?height=50&width=80")} style={styles.machineImage} />
+                        <Image src={publicFile("/machines/10.png?height=50&width=80")} style={styles.machineImage} />
+                        <Image src={publicFile("/machines/11.png?height=50&width=80")} style={styles.machineImage} />
                     </View>
                 </View>
 
@@ -463,7 +470,7 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
                     <View style={styles.sectionHeader}>
                         <View style={[styles.sectionIcon, { justifyContent: "center", alignItems: "center" }]}>
                             <Image
-                                src="/png/user.png"
+                                src={publicFile("/png/user.png")}
                                 style={{ width: 13, height: 13, }}
                             />
                         </View>
@@ -497,7 +504,7 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
                                 index === 3 ? { borderBottomWidth: 0 } : {},
                             ]}>
                                 <View style={styles.iconCell}>
-                                    <Image src={item.icon} style={styles.infoIcon} />
+                                    <Image src={publicFile(item.icon)} style={styles.infoIcon} />
                                 </View>
 
                                 <View style={styles.labelCell}>
@@ -518,7 +525,7 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
                     <View style={styles.sectionHeader}>
                         <View style={[styles.sectionIcon, { justifyContent: "center", alignItems: "center" }]}>
                             <Image
-                                src="/png/file-spreadsheet.png"
+                                src={publicFile("/png/file-spreadsheet.png")}
                                 style={{ width: 13, height: 13 }}
                             />
                         </View>
@@ -558,7 +565,7 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
 
                     <View style={styles.footerContent}>
                         <View style={styles.footerLeft}>
-                            <Image src="/png/qr.jpeg" style={styles.qrCode} />
+                            <Image src={publicFile("/png/qr.jpeg")} style={styles.qrCode} />
 
                             <View style={styles.footerCompanyInfo}>
                                 <Text style={styles.footerCompanyName}>
@@ -566,7 +573,7 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
                                 </Text>
 
                                 <View style={styles.footerInfoRow}>
-                                    <Image src="/png/map-pin.png" style={styles.footerIcon} />
+                                    <Image src={publicFile("/png/map-pin.png")} style={styles.footerIcon} />
                                     <Text style={styles.footerText}>
                                         No. 6666, East Industrial Zone, Jinan,{"\n"}
                                         Shandong, China
@@ -574,7 +581,7 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
                                 </View>
 
                                 <View style={styles.footerInfoRow}>
-                                    <Image src="/png/phone.png" style={styles.footerIcon} />
+                                    <Image src={publicFile("/png/phone.png")} style={styles.footerIcon} />
                                     <Text style={styles.footerText}>+86 531 8877 6878</Text>
                                 </View>
                             </View>
@@ -584,7 +591,7 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
 
                         <View style={styles.footerRight}>
                             <View style={styles.noteHeader}>
-                                <Image src="/png/info.png" style={styles.noteIcon} />
+                                <Image src={publicFile("/png/info.png")} style={styles.noteIcon} />
                                 <Text style={styles.noteTitle}>NOTE</Text>
                             </View>
 
