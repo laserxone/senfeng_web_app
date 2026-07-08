@@ -2,6 +2,7 @@ import pool from "@/config/db";
 import { partFields, profileFields, saleFields } from "@/constants/data";
 import { addLog } from "@/lib/addLog";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
+import DeleteStorageBackend from "@/lib/delete-storage-backend";
 import admin from "@/lib/firebaseAdmin";
 import { generateLog } from "@/lib/generateLog";
 import { sendNotification } from "@/lib/sendNotification";
@@ -287,7 +288,7 @@ export async function PUT(req:NextRequest, { params }:{params:Promise<{uid:strin
   }
 }
 
-export async function DELETE(req:NextRequest, { params }:{params:Promise<{uid:string,id:string}>}) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ uid: string, id: string }> }) {
 
 
   try {
@@ -306,6 +307,10 @@ export async function DELETE(req:NextRequest, { params }:{params:Promise<{uid:st
     if (!id) {
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
+
+    const imgQuery = await pool.query(`SELECT image FROM customer WHERE id = $1`, [id])
+    const img = imgQuery.rows?.[0]?.image ?? null
+    await DeleteStorageBackend(img)
     await pool.query(`DELETE FROM feedback WHERE customer_id = $1`, [id]);
 
     const visitResult = await pool.query(`SELECT * FROM visit WHERE customer_id = $1`, [id]);
@@ -313,10 +318,7 @@ export async function DELETE(req:NextRequest, { params }:{params:Promise<{uid:st
     if (visitResult.rows.length > 0) {
       for (const item of visitResult.rows) {
         const image = item.image
-        if (image && !image.includes("http")) {
-          const bucket = admin.storage().bucket()
-          await bucket.file(image).delete()
-        }
+        await DeleteStorageBackend(image)
       }
       await pool.query(`DELETE FROM visit WHERE customer_id = $1`, [id]);
     }
@@ -334,11 +336,7 @@ export async function DELETE(req:NextRequest, { params }:{params:Promise<{uid:st
 
         for (const payment of paymentResult.rows) {
           const image = payment.image;
-          if (image && !image.includes('http')) {
-            const bucket = admin.storage().bucket()
-            await bucket.file(image).delete()
-            console.log("image deleted")
-          }
+          await DeleteStorageBackend(image)
         }
 
         await pool.query(`DELETE FROM payment WHERE machine_id = $1`, [machineId]);
@@ -360,21 +358,21 @@ export async function DELETE(req:NextRequest, { params }:{params:Promise<{uid:st
 
 
 
-async function checkDeleteUser(id:string) {
+async function checkDeleteUser(id: string) {
 
-    if (!id) throw new Error("User ID is missing");
+  if (!id) throw new Error("User ID is missing");
 
-    const userQuery = await pool.query(
-        `SELECT id, designation, full_access, customer_delete_access FROM users WHERE id = $1`,
-        [id]
-    );
+  const userQuery = await pool.query(
+    `SELECT id, designation, full_access, customer_delete_access FROM users WHERE id = $1`,
+    [id]
+  );
 
 
-    let user = userQuery.rows[0];
-   
-    if (!user) throw new Error("User not found");
+  let user = userQuery.rows[0];
 
-    return user.designation === "Owner" || user.full_access === true || user.customer_delete_access === true;
+  if (!user) throw new Error("User not found");
+
+  return user.designation === "Owner" || user.full_access === true || user.customer_delete_access === true;
 }
 
 

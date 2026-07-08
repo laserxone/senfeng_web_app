@@ -308,8 +308,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ u
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
-    const bucket = admin.storage().bucket()
-
     const imgQuery = await pool.query(`SELECT image FROM customer WHERE id = $1`, [id])
     const img = imgQuery.rows?.[0]?.image ?? null
     await DeleteStorageBackend(img)
