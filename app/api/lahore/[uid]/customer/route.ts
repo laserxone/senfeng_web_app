@@ -123,59 +123,85 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ uid:
                 return NextResponse.json(result.rows, { status: 200 });
             }
             else if (machinesQuery) {
-                const queryParams = []
-                let query = `
-                SELECT 
-                c.id,
-                c.name,
-                c.owner,
-                c.ownership,
-                c.number,
-                c.industry,
-                c.location,
-                c.customer_group,
-                c.created_at, 
-                c.member,
-                COALESCE(u.name, '') AS ownership_name,
-                COALESCE(json_agg(s.serial_no) FILTER (WHERE s.serial_no IS NOT NULL), '[]') AS machines,
-                COALESCE(
-    json_agg(order_nums) 
-    FILTER (WHERE order_nums IS NOT NULL),
-    '[]'
-  ) AS machine_order_numbers
-                FROM customer c
-                LEFT JOIN sale s ON c.id = s.customer_id
-                LEFT JOIN LATERAL unnest(s.order_no_arr) AS order_nums ON TRUE
-                LEFT JOIN users u ON c.ownership = u.id
-      `;
-                if (member) {
-                    query += ` WHERE c.member IS TRUE`
-                } else {
-                    query += ` WHERE c.member IS FALSE`
-                }
+  const queryParams = [];
 
+  let query = `
+    SELECT 
+      c.id,
+      c.name,
+      c.owner,
+      c.ownership,
+      c.number,
+      c.industry,
+      c.location,
+      c.customer_group,
+      c.created_at, 
+      c.member,
 
-                if (start_date && end_date) {
-                    query += ` AND s.contract_date BETWEEN $1 AND $2`
-                    queryParams.push(start_date, end_date)
-                }
+      COALESCE(u.name, '') AS ownership_name,
+      COALESCE(u.dp, '') AS ownership_name_dp,
 
-                if (user) {
-                    query += ` AND c.ownership = $3`
-                    queryParams.push(user)
-                }
+      COALESCE(
+        json_agg(DISTINCT s.serial_no)
+        FILTER (WHERE s.serial_no IS NOT NULL),
+        '[]'
+      ) AS machines,
 
-                query += ` GROUP BY c.id, u.name`
+      COALESCE(
+        json_agg(DISTINCT handshake_image)
+        FILTER (WHERE handshake_image IS NOT NULL),
+        '[]'
+      ) AS handshake_images,
 
-                let result
-                if (queryParams.length > 0) {
-                    result = await pool.query(query, queryParams);
-                } else {
-                    result = await pool.query(query)
-                }
+      COALESCE(
+        json_agg(DISTINCT order_num)
+        FILTER (WHERE order_num IS NOT NULL),
+        '[]'
+      ) AS machine_order_numbers
 
-                return NextResponse.json(result.rows, { status: 200 })
-            }
+    FROM customer c
+
+    LEFT JOIN sale s 
+      ON c.id = s.customer_id
+
+    LEFT JOIN LATERAL unnest(s.order_no_arr) AS order_num 
+      ON TRUE
+
+    LEFT JOIN LATERAL unnest(s.handshake_images) AS handshake_image 
+      ON TRUE
+
+    LEFT JOIN users u 
+      ON c.ownership = u.id
+  `;
+
+  if (member) {
+    query += ` WHERE c.member IS TRUE`;
+  } else {
+    query += ` WHERE c.member IS FALSE`;
+  }
+
+  if (start_date && end_date) {
+    queryParams.push(start_date, end_date);
+
+    query += `
+      AND s.contract_date BETWEEN $${queryParams.length - 1} AND $${queryParams.length}
+    `;
+  }
+
+  if (user) {
+    queryParams.push(user);
+
+    query += ` AND c.ownership = $${queryParams.length}`;
+  }
+
+  query += `
+    GROUP BY c.id, u.name, u.dp
+  `;
+
+  const result = await pool.query(query, queryParams);
+
+  return NextResponse.json(result.rows, { status: 200 });
+}
             else {
                 let query = `
                 SELECT 

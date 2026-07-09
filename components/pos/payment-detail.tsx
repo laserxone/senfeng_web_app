@@ -288,6 +288,11 @@ export default function PaymentDetail({ params }: { params: Params }) {
               <span className="font-medium">{paid}</span>
             </div>
 
+             <div className="flex justify-between text-sm">
+              <span>Pending</span>
+              <span className="font-medium">{Number(totalAmount)-Number(paid)}</span>
+            </div>
+
             <div className="flex justify-between text-sm">
               <span>Discount</span>
               <span className="font-medium">

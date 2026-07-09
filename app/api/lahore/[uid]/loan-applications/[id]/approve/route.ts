@@ -248,14 +248,14 @@ export async function POST(
 
 async function notify(action: string, applicantID: string, approverID: string) {
   if (action === 'rejected') {
-    await sendNotification(`Your loan application is rejected`, 'applications', applicantID)
+    await sendNotification(`Your loan application is rejected`, 'applications/loan', applicantID)
   }
   if (action === 'approved' && approverID) {
     const nameQuery = await pool.query(`SELECT name FROM users WHERE id = $1`, [applicantID])
     const name = nameQuery.rows?.[0]?.name ?? ""
-    sendNotification(`${name} submitted loan application requesting your approval`, "applications", approverID)
+    sendNotification(`${name} submitted loan application requesting your approval`, "applications/loan", approverID)
   }
   if (action === 'approved' && !approverID) {
-    sendNotification(`Your loan application has been approved`, "applications", applicantID)
+    sendNotification(`Your loan application has been approved`, "applications/loan", applicantID)
   }
 }

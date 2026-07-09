@@ -2601,10 +2601,17 @@ export const MyImg = ({ img }: { img: string | null }) => {
     }
   }, [img]);
 
-  if (loading) return <Spinner />;
+  if (loading) return <div className="w-[50px] h-[50px] flex items-center justify-center"><Spinner /></div>;
   if (!img || error || !localImage) return <p>No image</p>;
 
-  return <Image alt="payment image" src={localImage} width={50} height={50} />;
+  return<div className="relative w-[50px] h-[50px]">
+  <Image
+    src={localImage}
+    alt="payment image"
+    fill
+    className="object-contain"
+  />
+</div>;
 };
 
 const RenderVerifyButton = ({ item, onRefresh }: { item: MachinePayment, onRefresh: () => Promise<void> }) => {

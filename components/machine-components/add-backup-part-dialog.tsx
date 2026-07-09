@@ -1,0 +1,228 @@
+"use client";
+
+import { Plus } from "lucide-react";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import { RequiredStar } from "../RequiredStar";
+
+export const backupPartSchema = z.object({
+  name: z.string().min(1, { message: "Name is required." }),
+  power: z.string().min(1, { message: "Power is required." }),
+  size: z.string().min(1, { message: "Size is required." }),
+  serial_no: z.string().min(1, { message: "Serial number is required." }),
+  remarks: z.string().optional(),
+});
+
+export type BackupPartFormValues = z.infer<typeof backupPartSchema>;
+
+export type CreatedBackupPart = BackupPartFormValues & {
+  id?: number;
+  status?: string;
+};
+
+type AddBackupPartDialogProps = {
+  visible: boolean;
+  onClose: (value: boolean) => void;
+  onRefresh?: () => Promise<void>;
+};
+
+export default function AddBackupPartDialog({
+  visible,
+  onClose,
+  onRefresh,
+}: AddBackupPartDialogProps) {
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
+
+  const form = useForm<BackupPartFormValues>({
+    resolver: zodResolver(backupPartSchema),
+    defaultValues: {
+      name: "",
+      power: "",
+      size: "",
+      serial_no: "",
+      remarks: "",
+    },
+  });
+
+  async function onSubmit(values: BackupPartFormValues) {
+    if (!userID) {
+      toast.error("User is missing.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        name: values.name.trim(),
+        power: values.power?.trim() || "",
+        size: values.size?.trim() || "",
+        serial_no: values.serial_no.trim(),
+        remarks: values.remarks?.trim() || "",
+      };
+
+      await axios.post(`/${userID}/backup-parts`, payload);
+      await onRefresh?.();
+      toast.success("Backup part added successfully.");
+      handleClose(false);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to add backup part.");
+      setLoading(false);
+    }
+  }
+
+  function handleClose(value: boolean) {
+    form.reset();
+    setLoading(false);
+    onClose(value);
+  }
+
+  return (
+    <Dialog open={visible} onOpenChange={handleClose}>
+      <DialogContent className="overflow-hidden p-0 sm:max-w-xl">
+        <DialogHeader className="border-b bg-muted/20 px-5 py-5 text-left">
+          <div className="flex items-start gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+              <Plus className="h-5 w-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-bold tracking-tight">
+                Add Backup Part
+              </DialogTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Add a backup part with serial, power, size, and remarks.
+              </p>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <ScrollArea className="max-h-[calc(100dvh-140px)]">
+          <div className="p-5">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FieldSet className="gap-4 rounded-2xl border bg-background p-4 shadow-sm">
+                <FieldLegend className="px-1 text-sm font-semibold text-foreground">
+                  Part Details
+                </FieldLegend>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Controller
+                    name="name"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>Name <RequiredStar /></FieldLabel>
+                        <Input placeholder="Enter part name" {...field} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="serial_no"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>Serial No <RequiredStar /></FieldLabel>
+                        <Input placeholder="Enter serial no" {...field} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="power"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>Power <RequiredStar /></FieldLabel>
+                        <Input placeholder="Enter power" {...field} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="size"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>Size <RequiredStar /></FieldLabel>
+                        <Input placeholder="Enter size" {...field} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                </div>
+
+                <Controller
+                  name="remarks"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Remarks</FieldLabel>
+                      <Textarea
+                        rows={4}
+                        placeholder="Add remarks or condition details"
+                        {...field}
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </FieldSet>
+
+              <div className="flex items-center justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={loading}
+                  onClick={() => handleClose(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading && <Spinner />}
+                  Save Part
+                </Button>
+              </div>
+            </form>
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}

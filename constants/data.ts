@@ -31,7 +31,7 @@ export const OwnerSidebarItems = [
       "member",
       "feedback",
       "transfer-customers",
-       "quotation"
+      "quotation"
     ],
     items: [
       {
@@ -44,7 +44,7 @@ export const OwnerSidebarItems = [
         url: "/member",
         shortcut: ["m", "e", "m"],
       },
-       {
+      {
         title: "Quotation",
         url: "/quotation",
         shortcut: ["q", "u", "o"],
@@ -92,7 +92,7 @@ export const OwnerSidebarItems = [
   },
 
 
- 
+
   {
     title: "Sales",
     icon: "sales",
@@ -102,10 +102,10 @@ export const OwnerSidebarItems = [
       "prices",
       "oldcommissions",
       "analytics",
-     
+
     ],
     items: [
-       {
+      {
         title: "Sales Overview",
         url: "/finance",
         shortcut: ["f", "i", "n"],
@@ -131,7 +131,7 @@ export const OwnerSidebarItems = [
         shortcut: ["a", "n", "a"],
       },
 
-      
+
 
     ]
 
@@ -196,7 +196,7 @@ export const OwnerSidebarItems = [
     title: "Finance",
     icon: "finance",
     isActive: [
-     
+
       "expense",
       "paymentverification",
       "reimbursement",
@@ -204,7 +204,7 @@ export const OwnerSidebarItems = [
       "loans"
     ],
     items: [
-     
+
       {
         title: "Office Expenses",
         url: "/expense",
@@ -256,15 +256,20 @@ export const OwnerSidebarItems = [
         shortcut: ["o", "r", "d"],
       },
 
-        {
+      {
         title: "Orders List",
         url: "/orderlist",
         shortcut: ["o", "r", "l"],
       },
+      {
+        title: "Backup Parts",
+        url: "/backupparts",
+        shortcut: ["b", "a", "c"],
+      },
     ],
   },
 
-   {
+  {
     title: "Delivery & Logistics",
     icon: "truck",
     isActive: [
@@ -274,7 +279,7 @@ export const OwnerSidebarItems = [
       "delivery/due-payments"
     ],
     items: [
-       {
+      {
         title: "Due Payment",
         url: "/delivery/due-payments",
         shortcut: ["d", "u", "e"],
@@ -350,14 +355,14 @@ export const OwnerSidebarItems = [
   },
 
   {
-  title: "KHATA",
-  url: "/khata",
-  icon: "khata",
-  shortcut: ["k", "h", "a", "t"],
+    title: "KHATA",
+    url: "/khata",
+    icon: "khata",
+    shortcut: ["k", "h", "a", "t"],
 
-  items: [],
-  group : "engineer"
-}
+    items: [],
+    group: "engineer"
+  }
 ]
 
 // export const ownerNavItems = [
@@ -574,7 +579,7 @@ export const Careers = {
   icon: "careers",
   shortcut: ["a", "p", "p"],
   items: [],
-  group : "hr"
+  group: "hr"
 }
 
 export const FinanceItem = {
@@ -584,7 +589,7 @@ export const FinanceItem = {
   shortcut: ["f", "i", "n", "a"],
 
   items: [],
-  group : "sales"
+  group: "sales"
 };
 
 export const EngineersPerformance = {
@@ -594,7 +599,7 @@ export const EngineersPerformance = {
   shortcut: ["e", "n", "g", "i"],
 
   items: [],
-  group : "engineer"
+  group: "engineer"
 };
 
 export const complaintItem = {
@@ -604,7 +609,7 @@ export const complaintItem = {
 
   shortcut: ["c", "o", "m", "p"],
   items: [],
-   group : "engineer"
+  group: "engineer"
 };
 
 export const myCloud = {
@@ -614,7 +619,7 @@ export const myCloud = {
   shortcut: ["c", "l", "o"],
 
   items: [],
-  group : "dms"
+  group: "dms"
 };
 
 export const teamAttendance = {
@@ -624,7 +629,7 @@ export const teamAttendance = {
   shortcut: ["t", "a", "t"],
 
   items: [],
-  group : "hr"
+  group: "hr"
 };
 
 export const ReimbursementApproval = {
@@ -634,7 +639,7 @@ export const ReimbursementApproval = {
   shortcut: ["r", "i", "a"],
 
   items: [],
-  group : "finance"
+  group: "finance"
 };
 
 export const employeeNavItems = [
@@ -655,7 +660,7 @@ export const employeeNavItems = [
     items: [],
   },
 
-   {
+  {
     title: "Customers",
     icon: "customer",
     isActive: [
@@ -676,7 +681,7 @@ export const employeeNavItems = [
         url: "/member",
         shortcut: ["m", "e", "m"],
       },
-       {
+      {
         title: "Quotation",
         url: "/quotation",
         shortcut: ["q", "u", "o"],
@@ -710,7 +715,7 @@ export const Commission = {
   icon: "commission",
   shortcut: ["c", "o", "m"],
   items: [],
-  group : "sales"
+  group: "sales"
 }
 
 export const dealerNavItems = [
@@ -754,7 +759,7 @@ export const branchNavItem = {
   shortcut: ["o", "f", "f"],
 
   items: [],
-  group : "finance"
+  group: "finance"
 };
 
 
@@ -810,7 +815,7 @@ export const StoreNavItem = [
       },
     ],
   },
-   {
+  {
     title: "Applications",
     url: "/applications",
     icon: "applications",
@@ -851,7 +856,16 @@ export const POSNavItem = {
   icon: "pos",
   shortcut: ["p", "o", "s"],
   items: [],
-  group : "pos"
+  group: "pos"
+};
+
+export const BackupNavItem = {
+  title: "Backup Parts",
+  url: "/backupparts",
+  icon: "pos",
+  shortcut: ["b", "a", "c"],
+  items: [],
+  group: "pos"
 };
 
 
@@ -924,7 +938,7 @@ export const Prices = {
   shortcut: ["p", "r", "i"],
 
   items: [],
-  group : "sales"
+  group: "sales"
 };
 
 export const RepairAndMaintenance = {
@@ -934,7 +948,7 @@ export const RepairAndMaintenance = {
   shortcut: ["r", "a", "m"],
 
   items: [],
-   group : "engineer"
+  group: "engineer"
 };
 
 export const PakCities = [

@@ -116,7 +116,7 @@ export function CustomerSearch({ value, onReturn }: { value: number | string | n
         variant="outline"
         role="combobox"
         aria-expanded={open}
-        className="w-full justify-between"
+        className="w-full justify-between truncate"
         onClick={(e) => {
           e.preventDefault()
           setOpen(!open)

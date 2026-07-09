@@ -1742,7 +1742,7 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
             number: customer.number.join(", "),
             location: customer.location,
             created_at: customer.created_at,
-            member: customer.member
+            member: customer.member,
         };
     });
 

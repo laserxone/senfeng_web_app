@@ -102,7 +102,8 @@ export default function HierarchyPage() {
     }
 
 
-    const handleAddApprover = (userId: string) => {
+    const handleAddApprover = (userId: string | null) => {
+        if(!userId) return
         const id = parseInt(userId)
         if (!selectedApprovers.includes(id)) {
             setSelectedApprovers([...selectedApprovers, id])
@@ -274,10 +275,8 @@ export default function HierarchyPage() {
             )}
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-
-                </DialogTrigger>
-                <ScrollArea className="w-full h-[60vh]">
+              
+              
                     <DialogContent className="w-full sm:max-w-xl">
                         <DialogHeader>
                             <DialogTitle>Create Approval Hierarchy</DialogTitle>
@@ -285,6 +284,7 @@ export default function HierarchyPage() {
                                 Set up a new approval workflow. The order of approvers determines the approval sequence.
                             </DialogDescription>
                         </DialogHeader>
+                           <ScrollArea className="max-h-[calc(100dvh-200px)]">
 
                         <div className="space-y-6 py-4">
                             <Field>
@@ -328,7 +328,7 @@ export default function HierarchyPage() {
 
                             <Field>
                                 <FieldLabel>Add Approvers</FieldLabel>
-                                <UserSearch onReturn={(val) => handleAddApprover(val.toString())} />
+                                <UserSearch onReturn={(val) => handleAddApprover(val?.toString() ?? null)} />
                             </Field>
 
                             {selectedApprovers.length > 0 && (
@@ -382,6 +382,7 @@ export default function HierarchyPage() {
                                 </div>
                             )}
                         </div>
+                        </ScrollArea>
 
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
@@ -396,7 +397,7 @@ export default function HierarchyPage() {
                             </Button>
                         </DialogFooter>
                     </DialogContent>
-                </ScrollArea>
+               
             </Dialog>
         </div>
     )
