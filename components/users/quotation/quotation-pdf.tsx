@@ -12,7 +12,7 @@ import { readFileSync } from "fs";
 import moment from "moment";
 import path from "path";
 
-const publicFile = (src: string) => {
+export const publicFile = (src: string) => {
 
     const cleanSrc = src.split("?")[0].replace(/^\//, "");
     return {
@@ -375,7 +375,6 @@ interface QuotationPDFProps {
 
 export function QuotationPDF({ data }: QuotationPDFProps) {
 
-    console.log(publicFile("/png/globe.png"))
 
     return (
         <Document>

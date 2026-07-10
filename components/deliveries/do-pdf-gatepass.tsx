@@ -1,4 +1,5 @@
 import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
+import { publicFile } from "../users/quotation/quotation-pdf";
 
 type DOPDFGatePassType = {
   delivery_date ?: string | Date | null,
@@ -358,9 +359,8 @@ const Header = ({ gatepassType } : {gatepassType : string}) => (
       flexDirection: "row",
     }}
   >
-    {/* <Text fontSize={60} color={'#0072BC'} fontWeight={'800'}>SENFENG</Text> */}
     <Image
-      src={"/logo.png"}
+      src={publicFile("/logo.png")}
       style={{ height: "40px", width: "200px" }}
     />
     <View

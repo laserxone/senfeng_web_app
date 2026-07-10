@@ -20,14 +20,12 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { DeliveryType, DispatchPdf } from "@/lib/types";
-import { pdf } from "@react-pdf/renderer";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
 import { DispatchOrderDialog } from "./dispatch-dialoges";
-import DOPDFGatepass from "./do-pdf-gatepass";
 
 export default function MachineDelivery() {
   const { userID, base_route } = useUserDetail();
@@ -184,21 +182,23 @@ export default function MachineDelivery() {
     const PDFData = { ...item };
 
     try {
-      const blob = await pdf(
-        <DOPDFGatepass
-          from={PDFData.delivery_issued_by}
-          vehicle_no={PDFData.vehicle_no}
-          driver_no={PDFData.driver_number}
-          driver_name={PDFData.driver_name}
-          received_by={PDFData.to}
-          order_no={PDFData.order_no}
-          manager={PDFData.manager}
-          gatepass={PDFData.gate_pass}
-          gatepassType={"Outward Gate Pass"}
-          time={PDFData.tod}
-          items={PDFData.checklist}
-        />,
-      ).toBlob();
+      const pdfRes = await axios.post(
+        `/${userID}/delivery/pdf`,
+        {
+          data: PDFData,
+        },
+        {
+          responseType: "blob",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const blob = new Blob([pdfRes.data], {
+        type: "application/pdf",
+      });
+
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank");
       setTimeout(() => URL.revokeObjectURL(url), 600000);
@@ -370,5 +370,4 @@ const MachineChecklist = () => {
     </>
   );
 };
-
 

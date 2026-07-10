@@ -66,7 +66,13 @@ export default function PaymentRequestsPage() {
     const [submitting, setSubmitting] = useState(false);
     const [selectedForDelete, setSelectedForDelete] = useState<PaymentRequest | null>(null)
 
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<{
+         date: Date,
+        tid: string,
+        amount: string,
+        slip: string | null,
+        note: string
+    }>({
         date: new Date(),
         tid: "",
         amount: "",
