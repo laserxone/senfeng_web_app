@@ -1,45 +1,45 @@
 "use client";
-import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useDropzone } from "react-dropzone";
-import { Label } from "./ui/label";
-import { Input } from "./ui/input";
 import { GetProfileImage } from "@/lib/getProfileImage";
+import Image from "next/image";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDropzone } from "react-dropzone";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import Spinner from "./ui/spinner";
 
 type DropzoneProps = {
-  onDrop: (file: string) => void;
-  onDropFile ?: (file : File | Blob) => void
-  title: string;
-  subheading: string;
-  description: string;
-  drag: string;
+  onDrop?: (file: string | null) => void;
+  onDropFile?: (file: File | Blob | null) => void
+  title?: string;
+  subheading?: string;
+  description?: string;
+  drag?: string;
   borderColor?: string;
   noImage?: boolean;
-  value: any;
+  value: File | string | null;
   className?: string;
   dbImage?: any;
 };
 const Dropzone = ({
   onDrop,
   onDropFile,
-  title,
-  subheading,
-  description,
-  drag,
+  title = "Click to upload",
+  subheading = "or drag and drop",
+  description = "PNG or JPG",
+  drag = "Drop the files here...",
   borderColor,
   noImage = false,
   value,
   className = "",
   dbImage = null,
-}:DropzoneProps) => {
+}: DropzoneProps) => {
 
 
 
   const onDropAccepted = useCallback(
     (acceptedFiles: File[]) => {
       const file = acceptedFiles[0];
-      onDrop(URL.createObjectURL(file));
+      onDrop?.(URL.createObjectURL(file));
       onDropFile?.(file)
     },
     [onDrop, onDropFile],
@@ -47,21 +47,21 @@ const Dropzone = ({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDropAccepted,
-   accept: {
+    accept: {
       "image/*": [],
     },
   });
 
   useEffect(() => {
-    const handlePaste = (event : ClipboardEvent) => {
-    const items = event?.clipboardData?.items;
-    if(!items) return
+    const handlePaste = (event: ClipboardEvent) => {
+      const items = event?.clipboardData?.items;
+      if (!items) return
       for (let item of items) {
         if (item.type.startsWith("image/")) {
           const file = item.getAsFile();
           const imageUrl = URL.createObjectURL(file as Blob);
 
-          onDrop(imageUrl);
+          onDrop?.(imageUrl);
           onDropFile?.(file as Blob)
         }
       }
@@ -72,8 +72,25 @@ const Dropzone = ({
   }, []);
 
   async function handleDelete() {
-    onDrop("");
+    onDrop?.(null);
+    onDropFile?.(null)
   }
+
+  const previewUrl = useMemo(() => {
+  if (value instanceof File) {
+    return URL.createObjectURL(value)
+  }
+
+  return null
+}, [value])
+
+useEffect(() => {
+  return () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+    }
+  }
+}, [previewUrl])
 
   return (
     <div
@@ -93,16 +110,26 @@ const Dropzone = ({
         {isDragActive ? (
           <Label>{drag}</Label>
         ) : value ? (
+          
           <>
-            {!noImage && !value?.includes?.("http") ? (
-              <RenderImage img={value} />
-            ) : (
-              <img
-                src={value}
-                alt="Selected"
-                className="cursor-pointer w-20 h-20 object-cover"
-              />
-            )}
+        
+           {!noImage && value && (
+  previewUrl ? (
+    <img
+      src={previewUrl}
+      alt="Selected"
+      className="h-20 w-20 cursor-pointer object-cover"
+    />
+  ) : typeof value === "string" && value.startsWith("http") ? (
+    <img
+      src={value}
+      alt="Selected"
+      className="h-20 w-20 cursor-pointer object-cover"
+    />
+  ) : (
+    <RenderImage img={String(value)} />
+  )
+)}
             <div className="mt-2 flex space-x-2 ml-2">
               <button
                 onClick={() => {
@@ -147,7 +174,7 @@ const Dropzone = ({
   );
 };
 
-const RenderImage = ({ img } : {img : string}) => {
+const RenderImage = ({ img }: { img: string }) => {
   const [localImage, setLocalImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -175,7 +202,7 @@ const RenderImage = ({ img } : {img : string}) => {
       </div>
     );
   }
-if(!localImage) return null
+  if (!localImage) return null
   return (
     <img
       src={localImage}

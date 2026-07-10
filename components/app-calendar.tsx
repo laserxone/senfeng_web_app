@@ -10,12 +10,14 @@ interface AppCalendarProps {
   onChange: (date: Date) => void;
   min?: Date;
   max?: Date | "";
+  required ?: boolean
 }
 const AppCalendar = ({
   date,
   onChange,
   min = new Date("1900-01-01"),
   max = new Date(),
+  required = false
 }:AppCalendarProps) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
    const startMonth = min || new Date("1900-01-01")
@@ -36,13 +38,14 @@ const AppCalendar = ({
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
+        required={required}
           mode="single"
             captionLayout="dropdown"
           // startMonth={startMonth}
           // endMonth={endMonth}
           //   defaultMonth={date ?? undefined}
           selected={date ?? undefined}
-          onSelect={(e) => {
+          onSelect={(e : any) => {
             if (!e) return;
             const now = new Date();
             const updatedDate = new Date(e);

@@ -180,6 +180,7 @@ export async function POST(request: NextRequest) {
       user_id,
       hierarchy_id,
        sale_id,
+       backup_inventory_id
     } = body;
 
     const applicationResult = await client.query(
@@ -194,12 +195,14 @@ export async function POST(request: NextRequest) {
         user_id,
         hierarchy_id,
          sale_id,
+         backup_inventory_id,
         status,
         issued,
         current_approver_order
+        
       )
       VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,'pending',false,1
+        $1,$2,$3,$4,$5,$6,$7,$8,$9, $10,'pending',false,1
       )
       RETURNING *
       `,
@@ -213,6 +216,7 @@ export async function POST(request: NextRequest) {
         user_id,
         hierarchy_id || null,
         sale_id || null,
+        backup_inventory_id || null
       ]
     );
 

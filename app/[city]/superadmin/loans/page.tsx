@@ -628,13 +628,10 @@ const EditPaymentLoan = ({
                 onDrop={(file) => {
                   setSelectedPayment((prev) => {
                     if (!prev) return prev;
-                    return { ...prev, slip: file };
+                    return { ...prev, slip: file ?? "" };
                   });
                 }}
-                title="Click to upload"
-                subheading="or drag and drop"
-                description="PNG or JPG"
-                drag="Drop the files here..."
+               
               />
             </Field>
 

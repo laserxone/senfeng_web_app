@@ -1,4 +1,4 @@
-import BackupApplications from "@/components/pages/backup-applications";
+import BackupApplications from "@/components/backup-component/backup-applications";
 
 export default function Page(){
     return <BackupApplications />
