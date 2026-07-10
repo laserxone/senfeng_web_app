@@ -624,7 +624,7 @@ const EditPaymentLoan = ({
             <Field>
               <FieldLabel>Payment Slip</FieldLabel>
               <Dropzone
-                value={selectedPayment?.slip}
+                value={selectedPayment?.slip ?? null}
                 onDrop={(file) => {
                   setSelectedPayment((prev) => {
                     if (!prev) return prev;

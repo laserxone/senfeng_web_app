@@ -1,6 +1,7 @@
 "use client";
 
 import PageTable from "@/components/app-table";
+import { MyImgZooming } from "@/components/img-zooming";
 import AddBackupPartDialog from "@/components/machine-components/add-backup-part-dialog";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
@@ -28,9 +29,63 @@ import {
 import moment from "moment";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { BackupPart, BackupPartStatus, BackupPartTableRow } from "./backup-types";
 
+type BackupPartStatus = "in_stock" | "given_to_customer";
 
+export type BackupApplicationStatus =
+    | "pending"
+    | "approved"
+    | "rejected"
+    | "issued"
+    | "returned";
+
+type BackupDetail = {
+    id: number;
+    name: string;
+    date_of_delivery: string | null;
+    amount: number | null;
+    shipment_name: string | null;
+    image: string | null;
+    expected_return_date: string | null;
+    user_id: number;
+    status: BackupApplicationStatus | string;
+    issued: boolean;
+    issue_date: string | null;
+    actual_return_date: string | null;
+    hierarchy_id: number | null;
+    current_approver_order: number;
+    created_at: string;
+    updated_at: string;
+    sale_id: number | null;
+    backup_inventory_id: number | null;
+    customer_name: string;
+    user_name: string;
+};
+
+interface BackupPart {
+    id: number;
+    name: string;
+    power: string;
+    serial_no: string;
+    size: string;
+    created_at: string | Date;
+    backup_application_detail: null | BackupDetail;
+    status: BackupPartStatus;
+    image: string | null;
+}
+
+type BackupPartTableRow = BackupPart & {
+    part_name_display: string;
+    serial_display: string;
+    image_display: string;
+    power_display: string;
+    size_display: string;
+    status_label: string;
+    customer_machine: string;
+    issue_date_display: string;
+    expected_return_display: string;
+    actual_return_display: string;
+};
 
 function getColumns({
     actionLoadingId,
@@ -59,6 +114,31 @@ function getColumns({
                     {row.original.part_name_display}
                 </div>
             ),
+        },
+        {
+            accessorKey: "image_display",
+            filterFn: "includesString",
+            header: () => <div className="px-2">Image</div>,
+            cell: ({ row }) => {
+                const image = row.original.image;
+
+                if (!image) {
+                    return <span className="text-muted-foreground">-</span>;
+                }
+
+                return (
+                    <div
+                        className="flex h-12 w-20 items-center"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <MyImgZooming
+                            img={image}
+                            compact
+                            className="max-h-12 rounded-md object-contain"
+                        />
+                    </div>
+                );
+            },
         },
         {
             accessorKey: "serial_display",
@@ -358,10 +438,6 @@ export default function BackupPartsPage() {
     function handleIssueItem(part: BackupPartTableRow) {
         const detailId = part.backup_application_detail?.id;
         if (!detailId) return;
-        if (part?.backup_application_detail?.status !== 'approved') {
-            toast.error("Application is not approved yet")
-            return
-        }
 
         updateBackupApplication(
             detailId,
@@ -384,7 +460,7 @@ export default function BackupPartsPage() {
                 return_date: new Date().toISOString(),
                 actual_return_date: new Date().toISOString(),
                 issued: false,
-                backup_inventory_id: null
+                backup_inventory_id : null
             },
             "Backup item received back.",
         );
@@ -436,6 +512,7 @@ export default function BackupPartsPage() {
                 ...part,
                 part_name_display: getPartName(part),
                 serial_display: getPartSerial(part),
+                image_display: part.image || "",
                 power_display: getPartPower(part),
                 size_display: getPartSize(part),
                 status_label: getStatusLabel(part),

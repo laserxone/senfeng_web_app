@@ -1,14 +1,12 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { z } from "zod";
 
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,13 +25,19 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { UploadImage } from "@/lib/uploadFunction";
+import moment from "moment";
 import { RequiredStar } from "../RequiredStar";
+import Dropzone from "../dropzone";
 
 export const backupPartSchema = z.object({
   name: z.string().min(1, { message: "Name is required." }),
   power: z.string().min(1, { message: "Power is required." }),
   size: z.string().min(1, { message: "Size is required." }),
   serial_no: z.string().min(1, { message: "Serial number is required." }),
+  image: z.string().min(1, { message: "Image is required" }),
   remarks: z.string().optional(),
 });
 
@@ -77,12 +81,17 @@ export default function AddBackupPartDialog({
 
     setLoading(true);
     try {
+      const name = `Backup-Inventory/${moment().valueOf().toString()}.png`
+
+     await UploadImage(values.image, name, "image/png");
+
       const payload = {
         name: values.name.trim(),
         power: values.power?.trim() || "",
         size: values.size?.trim() || "",
         serial_no: values.serial_no.trim(),
         remarks: values.remarks?.trim() || "",
+        image: name
       };
 
       await axios.post(`/${userID}/backup-parts`, payload);
@@ -186,6 +195,21 @@ export default function AddBackupPartDialog({
                   />
                 </div>
 
+
+                <Controller
+                  name="image"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Nameplate / Parts Image <RequiredStar /></FieldLabel>
+                      <Dropzone value={field.value} onDrop={field.onChange} />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+
                 <Controller
                   name="remarks"
                   control={form.control}
@@ -203,6 +227,7 @@ export default function AddBackupPartDialog({
                     </Field>
                   )}
                 />
+
               </FieldSet>
 
               <div className="flex items-center justify-end gap-3">
