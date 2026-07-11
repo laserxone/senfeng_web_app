@@ -62,7 +62,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ emai
                 base_route = `${branchOffice}/dealer`
             } else {
                 nav_items = [...employeeNavItems]
-                if (user.designation === 'Engineer' || user.designation === 'Social Media Manager') {
+                if (user.designation === 'Engineer' ) {
+                    nav_items = nav_items.filter(item => item.title !== "Customers");
+                }
+                else if (user.designation === 'Social Media Manager') {
                     nav_items = nav_items.map(item => {
                         if (item.title !== "Customers") return item;
 

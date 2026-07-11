@@ -329,6 +329,7 @@ export default function DetailComponent({ id }: { id: string | null }) {
         </FieldLegend>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {Object.keys(checks).map((key) => (
+            (fixedData?.designation === 'Engineer' && key === "complaint_assigned") ? null :
             <div key={key} className="flex min-h-11 items-center gap-3 rounded-xl border bg-muted/15 px-3 py-2">
               <Checkbox
                 checked={checks[key as keyof typeof checks]}
