@@ -3,7 +3,7 @@ import { ReactNode, useEffect, useState } from 'react';
 
 export default function MaintenanceWrapper({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
-  const [isMaintenance, setIsMaintenance] = useState(false);
+  const [isMaintenance, setIsMaintenance] = useState(true);
 
 
   useEffect(() => {
