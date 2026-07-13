@@ -93,6 +93,7 @@ const setUser = (data: (AppUser & Partial<User>) | null) => {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
       const email = fbUser?.email ?? null;
+      // const email = "aqib.mahmoodlums@gmail.com"
       setLoading(true);
       try {
         if (email) {

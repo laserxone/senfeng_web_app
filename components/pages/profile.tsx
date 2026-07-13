@@ -114,31 +114,33 @@ export default function ProfilePage() {
     }
   }, [UserState.value.data]);
 
-
-
   const RenderProfilePicture = useCallback(() => {
     const [localImage, setLocalImage] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-      if (dp) {
+      if (dp?.trim()) {
         setLoading(true);
-        try {
-          if (dp?.includes("http")) {
-            setLocalImage(dp);
-          } else {
-            const storageRef = ref(storage, dp);
-            getDownloadURL(storageRef).then((url) => {
-              setLocalImage(url);
-            });
-          }
-        } catch (error) {
-          console.log(error);
-        } finally {
-          setLoading(false);
-        }
+        getDp()
       }
     }, []);
+
+    async function getDp() {
+      try {
+        if (dp?.includes("http")) {
+          setLocalImage(dp);
+        } else {
+          const storageRef = ref(storage, dp);
+          const url = await getDownloadURL(storageRef)
+          setLocalImage(url);
+
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
+    }
 
     const handleImage = async (event: ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
       if (!event.target.files) return
@@ -148,11 +150,7 @@ export default function ProfilePage() {
         const name = `${OfficeState.value.data}/${userID}/profile/${UserState.value.data?.email}-dp.png`;
         const img = await UploadImage(URL.createObjectURL(fileList[0]), name);
         const response = await axios.put(`/${userID}`, {
-          ...formData,
           dp: name,
-          password: undefined,
-          confirmPassword: undefined,
-          currentPassword: undefined,
         });
         if (UserState.value.data?.id) {
           setUser({
@@ -183,7 +181,7 @@ export default function ProfilePage() {
                 if (inputRef.current) inputRef.current.click();
               }}
             >
-              <AvatarImage src={localImage || ""} />
+              {localImage && <AvatarImage src={localImage} />}
               <AvatarFallback>{UserState.value.data?.name.substring(0, 2)}</AvatarFallback>
             </Avatar>
           )}
@@ -207,18 +205,16 @@ export default function ProfilePage() {
 
   async function handleSave() {
     setFormLoading(true);
+    const {password, confirmPassword, currentPassword, ...rest} = formData
 
     try {
       const response = await axios.put(`/${userID}`, {
-        ...formData,
-        password: undefined,
-        confirmPassword: undefined,
-        currentPassword: undefined,
+        ...rest,
       });
       if (UserState.value.data?.id) {
         setUser({
           ...UserState.value.data,
-          ...formData,
+          ...rest,
 
         });
       }
@@ -444,7 +440,7 @@ export default function ProfilePage() {
                 onChange={handleChange}
               />
 
-              <Button onClick={handleSave}>
+              <Button disabled={formLoading} onClick={handleSave}>
                 {formLoading && <Spinner />}Save
               </Button>
             </div>
@@ -532,9 +528,6 @@ const DocumentCard =
 
         const updatedData = {
           ...docsData,
-          password: undefined,
-          confirmPassword: undefined,
-          currentPassword: undefined,
           [type]: newFilePath,
         };
         await axios.put(`/${userId}`, updatedData);
@@ -696,9 +689,6 @@ const DocumentCardOther = ({ userID, otherDocs }: { userID: number | string, oth
       ];
 
       const updatedData = {
-        password: undefined,
-        confirmPassword: undefined,
-        currentPassword: undefined,
         other_docs: [...updatedOtherDocs],
       };
 
