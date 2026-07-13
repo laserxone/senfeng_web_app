@@ -1,5 +1,8 @@
 import ThemeToggle from "./ThemeToggle/theme-toggle";
 import { Breadcrumbs } from "./breadcrumbs";
+import FloatingChat from "./chat/floating-chat";
+import FloatingInformation from "./floating-information";
+import FloatingTodo from "./floating-todo";
 import NewsTicker from "./newsTicker";
 import NotificationDropdown from "./notification-dropdown";
 import SearchInput from "./search-input";
@@ -26,6 +29,11 @@ export default function Header() {
         <ThemeToggle />
         <NotificationDropdown
         />
+
+        <FloatingInformation />
+        <FloatingTodo />
+        <FloatingChat />
+
         <UserNav />
       </div>
     </header>

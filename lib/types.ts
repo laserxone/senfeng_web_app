@@ -54,8 +54,13 @@ export type SalesCustomer = {
 
 }
 
+export type SalesTarget = {
+    target_achieved : number
+    remaining_target : number
+}
+
 export type SalesDashboard = {
-    allTasks: number
+    allTasks: {task_name : string, created_at : string}[]
     customers: SalesCustomer[]
     feedbacksTakenThisMonth: number
     machinesSoldLastMonth: number
@@ -67,6 +72,8 @@ export type SalesDashboard = {
     totalVisits: number
     user: UserDashboard
     new_entries: SalesNewEntries
+    target : SalesTarget
+    recentQuotations : QuotationData[]
 }
 
 export type SalesVisitTypes = {

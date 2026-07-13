@@ -20,6 +20,7 @@ export default function QuotationPage() {
   const { userID } = useUserDetail()
   const [deleteItem, setDeleteItem] = useState<number | string | null | undefined>(null)
   const [downloadItem, setDownloadItem] = useState<number | string | null | undefined>(null)
+   const [open, setOpen] = useState(false)
 
   useEffect(() => {
     if (userID) {
@@ -314,13 +315,17 @@ export default function QuotationPage() {
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-start justify-between gap-4 mt-2">
         <Heading title="Quotation" description="Create sales quotation" />
-        <QuotationForm
-          onRefresh={fetchData}
-        />
+       <Button onClick={() => setOpen(true)}>Create Quotation</Button>
       </div>
 
       <AppTable data={data}
         columns={columns} />
+
+         <QuotationForm
+         open={open}
+         onClose={()=> setOpen(false)}
+          onRefresh={fetchData}
+        />
 
     </div>
   )

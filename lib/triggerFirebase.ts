@@ -3,7 +3,7 @@
 import { db } from "@/config/firebase";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 
-export async function TriggerFirebase(id : string, sender : undefined | string ) {
+export async function TriggerFirebase(id: string, sender: undefined | string) {
   if (id) {
     await setDoc(doc(db, "messages_meta", id), {
       updated: serverTimestamp(),
@@ -25,6 +25,12 @@ export async function TriggerFirebaseForMachine() {
 
 export async function TriggerFirebaseForPendingPayments() {
   await setDoc(doc(db, "payment-requests", "requests"), {
+    updated: serverTimestamp(),
+  });
+}
+
+export async function TriggerFirebaseForChequeAlerts() {
+  await setDoc(doc(db, "cheque-alerts", "cheques"), {
     updated: serverTimestamp(),
   });
 }

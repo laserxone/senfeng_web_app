@@ -1,5 +1,5 @@
-import { Bell } from "lucide-react";
-import { ReactNode } from "react";
+import { Bell, LucideProps } from "lucide-react";
+import { ForwardRefExoticComponent, ReactNode, RefAttributes } from "react";
 
 export default function NotificationBadge({ count, max = 99 }: { count: number, max?: number }) {
   const display = count > max ? `${max}+` : count;
@@ -22,11 +22,11 @@ export default function NotificationBadge({ count, max = 99 }: { count: number, 
   );
 }
 
-export function BellNotification({ count = 0 }) {
+export function BellNotification({ count = 0, Icon = Bell } : {count : number, Icon ?: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>}) {
   return (
     <BadgeCount count={count} max={99} offset={{ right: -8, top: -6 }}>
       <div className="relative h-8 w-4 flex items-center justify-center">
-        <Bell />
+       <Icon />
       </div>
     </BadgeCount>
   );

@@ -47,7 +47,7 @@ import { UserSearch } from "../user-search";
 
 type AddCustomerDialogProps = {
 
-  onRefresh: (val: MyCustomer) => Promise<void>;
+  onRefresh?: (val: MyCustomer) => Promise<void>;
   visible: boolean;
   onClose: (val: boolean) => void;
   user_id: number | string;
@@ -227,7 +227,7 @@ function AddCustomerDialog({
 
       toast.success("Customer Addedd successfully");
 
-      await onRefresh(response);
+      await onRefresh?.(response);
       handleClose(false);
     } finally {
       setLoading(false);

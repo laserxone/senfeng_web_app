@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
 import {
-    useContext,
-    useEffect,
-    useState
+  useContext,
+  useEffect,
+  useState
 } from "react";
 
 import AppCalendar from "@/components/app-calendar";
@@ -14,22 +14,22 @@ import Dropzone from "@/components/dropzone";
 import { RequiredStar } from "@/components/RequiredStar";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,8 +43,8 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { UserSearch } from "@/components/user-search";
 
-const AddReimbursementDialog = ({ onRefresh, id, placeholder = "Add Reimbursement" }: { onRefresh: () => Promise<void>, id?: number | string | null, placeholder?: string }) => {
-  const [open, setOpen] = useState(false)
+const AddReimbursementDialog = ({ onRefresh, id, open, onClose }: { onRefresh?: () => Promise<void>, id?: number | string | null, open: boolean, onClose: () => void }) => {
+
   const [selectedRadio, setSelectedRadio] = useState("customer");
   const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(null);
   const { state: OfficeState } = useContext(OfficeContext)!
@@ -57,7 +57,7 @@ const AddReimbursementDialog = ({ onRefresh, id, placeholder = "Add Reimbursemen
     amount: z.coerce.number<number>().min(1, "Amount is required"),
     date: z.date({ error: "Date is required." }),
     image: z.string().min(1, { message: "Image is required." }),
-     submitted_by: z.number().min(1, { message: "User is required" }),
+    submitted_by: z.number().min(1, { message: "User is required" }),
     city: z.string().min(1, { message: "City is required." }),
     resolved: z.boolean().optional()
   })
@@ -78,7 +78,7 @@ const AddReimbursementDialog = ({ onRefresh, id, placeholder = "Add Reimbursemen
       description: "",
       amount: 0,
       date: undefined,
-       submitted_by: undefined,
+      submitted_by: undefined,
       image: "",
       city: "",
       customer: null,
@@ -86,11 +86,11 @@ const AddReimbursementDialog = ({ onRefresh, id, placeholder = "Add Reimbursemen
     },
   });
 
-  useEffect(()=>{
-    if(id){
-        form.setValue("submitted_by", Number(id))
+  useEffect(() => {
+    if (id) {
+      form.setValue("submitted_by", Number(id))
     }
-  },[id])
+  }, [id])
 
   async function onSubmit(values: FormValues) {
 
@@ -110,7 +110,7 @@ const AddReimbursementDialog = ({ onRefresh, id, placeholder = "Add Reimbursemen
         purpose: true,
         resolved: values.resolved,
       });
-      onRefresh();
+      onRefresh?.();
       form.reset();
       setSelectedCustomer(null);
       setSelectedRadio("customer");
@@ -122,25 +122,19 @@ const AddReimbursementDialog = ({ onRefresh, id, placeholder = "Add Reimbursemen
   }
 
   return (
-    <>
-      <Button
-        size="sm"
-        onClick={() => setOpen(true)}
-      >
-        <Plus />
-        {placeholder}
-      </Button>
-      <Dialog
-        open={open}
-        onOpenChange={(val) => {
-          form.reset();
-          setSelectedCustomer(null);
-          setSelectedRadio("customer");
-          setLoading(false);
-          setOpen(false);
-        }}
-      >
-          <DialogContent className="max-w-[94vw] overflow-hidden p-0 sm:max-w-2xl">
+
+
+    <Dialog
+      open={open}
+      onOpenChange={(val) => {
+        form.reset();
+        setSelectedCustomer(null);
+        setSelectedRadio("customer");
+        setLoading(false);
+        onClose()
+      }}
+    >
+      <DialogContent className="max-w-[94vw] overflow-hidden p-0 sm:max-w-2xl">
         <DialogHeader className="border-b bg-slate-50/80 px-4 py-3 text-left">
           <div className="flex items-center gap-3">
             <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
@@ -173,7 +167,7 @@ const AddReimbursementDialog = ({ onRefresh, id, placeholder = "Add Reimbursemen
                 <Label className="text-sm font-medium" htmlFor="r2">Other</Label>
               </div>
             </RadioGroup>
-            <form onSubmit={form.handleSubmit(onSubmit, (er)=>{
+            <form onSubmit={form.handleSubmit(onSubmit, (er) => {
               console.log(er)
             })} className="space-y-3">
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -318,20 +312,20 @@ const AddReimbursementDialog = ({ onRefresh, id, placeholder = "Add Reimbursemen
 
                   {/* Submitted By */}
                   {!id &&
-                  <Controller
-                    name="submitted_by"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field>
-                        <FieldLabel className="text-xs font-medium">
-                          Select User <RequiredStar />
-                        </FieldLabel>
-                        <UserSearch value={field.value} onReturn={field.onChange} />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
-                  />
-                }
+                    <Controller
+                      name="submitted_by"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field>
+                          <FieldLabel className="text-xs font-medium">
+                            Select User <RequiredStar />
+                          </FieldLabel>
+                          <UserSearch value={field.value} onReturn={field.onChange} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+                  }
                 </FieldSet>
 
                 {/* Description */}
@@ -383,8 +377,8 @@ const AddReimbursementDialog = ({ onRefresh, id, placeholder = "Add Reimbursemen
           </div>
         </ScrollArea>
       </DialogContent>
-      </Dialog>
-    </>
+    </Dialog>
+
   );
 };
 

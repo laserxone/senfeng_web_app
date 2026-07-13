@@ -105,8 +105,7 @@ const defaultValues: QuotationData = {
   original_pdf: ""
 }
 
-export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> }) {
-  const [open, setOpen] = useState(false)
+export function QuotationForm({ onRefresh, open, onClose }: { onRefresh?: () => Promise<void>, open: boolean, onClose: () => void }) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(null)
   const [selectedMachine, setSelectedMachine] = useState<PricesSearchProps | null>(null)
@@ -129,42 +128,42 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
       const finalData = { ...data, id: resID }
 
       const pdfRes = await axios.post(
-      `/${userID}/quotation/pdf`,
-      {
-        data: finalData,
-      },
-      {
-        responseType: "blob",
-        headers: {
-          "Content-Type": "application/json",
+        `/${userID}/quotation/pdf`,
+        {
+          data: finalData,
         },
-      }
-    );
+        {
+          responseType: "blob",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-    const blob = new Blob([pdfRes.data], {
-      type: "application/pdf",
-    });
+      const blob = new Blob([pdfRes.data], {
+        type: "application/pdf",
+      });
 
-    const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(blob);
 
-    const link = document.createElement("a");
-    link.href = url;
+      const link = document.createElement("a");
+      link.href = url;
 
-    const fileName =
-      pdfRes.headers["content-disposition"]
-        ?.split("filename=")?.[1]
-        ?.replaceAll('"', "") || `Quotation-${finalData.id}.pdf`;
+      const fileName =
+        pdfRes.headers["content-disposition"]
+          ?.split("filename=")?.[1]
+          ?.replaceAll('"', "") || `Quotation-${finalData.id}.pdf`;
 
-    link.download = fileName;
+      link.download = fileName;
 
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-    URL.revokeObjectURL(url);
+      URL.revokeObjectURL(url);
 
-    await onRefresh();
-    handleOpenChange(false);
+      await onRefresh?.();
+      handleOpenChange(false);
     } catch (error) {
     } finally {
       setIsGenerating(false)
@@ -172,12 +171,13 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
   }
 
   const handleOpenChange = (value: boolean) => {
-    setOpen(value)
+
 
     if (!value) {
       form.reset(defaultValues)
       setSelectedCustomer(null)
       setSelectedMachine(null)
+      onClose()
     }
   }
 
@@ -229,407 +229,407 @@ export function QuotationForm({ onRefresh }: { onRefresh: () => Promise<void> })
   }, [selectedMachine, paymentTerms])
 
   return (
-    <>
-      <Button onClick={() => setOpen(true)}>Create Quotation</Button>
-
-      <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="w-full sm:max-w-4xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-blue-600" />
-              Quotation Details
-            </DialogTitle>
-          </DialogHeader>
 
 
 
-          <form
-            onSubmit={form.handleSubmit(handleGeneratePDF)}
-            className="space-y-5"
-          >
-            <ScrollArea className="h-[calc(100dvh-200px)] pr-4">
-              <FieldSet className="rounded-xl border bg-muted/20 p-4">
-                <FieldLegend className="px-2 text-sm font-medium">
-                  Basic Information
-                </FieldLegend>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="w-full sm:max-w-4xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-blue-600" />
+            Quotation Details
+          </DialogTitle>
+        </DialogHeader>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field>
-                    <FieldLabel>Quotation No.</FieldLabel>
-                    <Input placeholder="Auto generated" disabled />
-                  </Field>
 
-                  <Controller
-                    name="date"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Date</FieldLabel>
 
-                        <AppCalendar
-                          date={field.value}
-                          onChange={field.onChange}
-                        />
+        <form
+          onSubmit={form.handleSubmit(handleGeneratePDF)}
+          className="space-y-5"
+        >
+          <ScrollArea className="h-[calc(100dvh-200px)] pr-4">
+            <FieldSet className="rounded-xl border bg-muted/20 p-4">
+              <FieldLegend className="px-2 text-sm font-medium">
+                Basic Information
+              </FieldLegend>
 
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-                </div>
-              </FieldSet>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel>Quotation No.</FieldLabel>
+                  <Input placeholder="Auto generated" disabled />
+                </Field>
 
-              <FieldSet className="rounded-xl border bg-muted/20 p-4 mt-2">
-                <FieldLegend className="flex items-center gap-2 px-2 text-sm font-medium">
-                  <Building2 className="h-4 w-4 text-blue-600" />
-                  Customer Information
-                </FieldLegend>
+                <Controller
+                  name="date"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Date</FieldLabel>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field
-                    className="sm:col-span-2"
-                    data-invalid={!!form.formState.errors.customer_id}
-                  >
-                    <FieldLabel className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      Select Customer
-                    </FieldLabel>
-
-                    <CustomerSearchWithData
-                      value={selectedCustomer}
-                      onReturn={(val) => {
-                        setSelectedCustomer(val)
-
-                        form.setValue("customer_id", val.id, {
-                          shouldValidate: true,
-                        })
-
-                        form.setValue(
-                          "customer_name",
-                          val.name || val.owner || "",
-                          { shouldValidate: true }
-                        )
-
-                        form.setValue(
-                          "contact_person",
-                          val.owner || "",
-                          { shouldValidate: true }
-                        )
-
-                        form.setValue(
-                          "contact_number",
-                          val?.number ? val.number.join(", ") : "",
-                          { shouldValidate: true }
-                        )
-
-                        form.setValue("email", val?.email || "", {
-                          shouldValidate: true,
-                        })
-                      }}
-                    />
-
-                    {form.formState.errors.customer_id && (
-                      <FieldError
-                        errors={[form.formState.errors.customer_id]}
+                      <AppCalendar
+                        date={field.value}
+                        onChange={field.onChange}
                       />
-                    )}
-                  </Field>
 
-                  <Controller
-                    name="customer_name"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-muted-foreground" />
-                          Customer / Company Name
-                        </FieldLabel>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </div>
+            </FieldSet>
 
-                        <Input
-                          placeholder="Enter customer or company name"
-                          {...field}
-                        />
+            <FieldSet className="rounded-xl border bg-muted/20 p-4 mt-2">
+              <FieldLegend className="flex items-center gap-2 px-2 text-sm font-medium">
+                <Building2 className="h-4 w-4 text-blue-600" />
+                Customer Information
+              </FieldLegend>
 
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field
+                  className="sm:col-span-2"
+                  data-invalid={!!form.formState.errors.customer_id}
+                >
+                  <FieldLabel className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    Select Customer
+                  </FieldLabel>
+
+                  <CustomerSearchWithData
+                    value={selectedCustomer}
+                    onReturn={(val) => {
+                      setSelectedCustomer(val)
+
+                      form.setValue("customer_id", val.id, {
+                        shouldValidate: true,
+                      })
+
+                      form.setValue(
+                        "customer_name",
+                        val.name || val.owner || "",
+                        { shouldValidate: true }
+                      )
+
+                      form.setValue(
+                        "contact_person",
+                        val.owner || "",
+                        { shouldValidate: true }
+                      )
+
+                      form.setValue(
+                        "contact_number",
+                        val?.number ? val.number.join(", ") : "",
+                        { shouldValidate: true }
+                      )
+
+                      form.setValue("email", val?.email || "", {
+                        shouldValidate: true,
+                      })
+                    }}
                   />
 
-                  <Controller
-                    name="contact_person"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          Contact Person
-                        </FieldLabel>
-
-                        <Input
-                          placeholder="Enter contact person name"
-                          {...field}
-                        />
-
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-
-                  <Controller
-                    name="contact_number"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          Contact Number
-                        </FieldLabel>
-
-                        <Input
-                          placeholder="Enter contact number"
-                          {...field}
-                        />
-
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-
-                  <Controller
-                    name="email"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          Email Address
-                        </FieldLabel>
-
-                        <Input
-                          type="email"
-                          placeholder="Enter email address"
-                          {...field}
-                        />
-
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-                </div>
-              </FieldSet>
-
-              <FieldSet className="rounded-xl border bg-muted/20 p-4 mt-2">
-                <FieldLegend className="flex items-center gap-2 px-2 text-sm font-medium">
-                  <Settings className="h-4 w-4 text-blue-600" />
-                  Machine Details
-                </FieldLegend>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field className="sm:col-span-2">
-                    <FieldLabel className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      Select Machine
-                    </FieldLabel>
-
-                    <PricesSearch
-                      value={selectedMachine}
-                      onReturn={(val) => {
-                        setSelectedMachine(val)
-
-                        form.setValue(
-                          "machine_model",
-                          val.data?.model || "",
-                          { shouldValidate: true }
-                        )
-
-                        form.setValue(
-                          "machine_power",
-                          val.data?.power || "",
-                          { shouldValidate: true }
-                        )
-
-                        form.setValue("original_pdf", val.data?.attachment_url || "", {
-                          shouldValidate: true,
-                        })
-
-
-                      }}
+                  {form.formState.errors.customer_id && (
+                    <FieldError
+                      errors={[form.formState.errors.customer_id]}
                     />
-                  </Field>
+                  )}
+                </Field>
 
-                  <Controller
-                    name="machine_model"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel className="flex items-center gap-2">
-                          <Settings className="h-4 w-4 text-muted-foreground" />
-                          Machine Type
-                        </FieldLabel>
+                <Controller
+                  name="customer_name"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                        Customer / Company Name
+                      </FieldLabel>
 
-                        <Input
-                          placeholder="e.g., Fiber Laser Cutting Machine"
-                          {...field}
-                        />
+                      <Input
+                        placeholder="Enter customer or company name"
+                        {...field}
+                      />
 
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="contact_person"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        Contact Person
+                      </FieldLabel>
+
+                      <Input
+                        placeholder="Enter contact person name"
+                        {...field}
+                      />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="contact_number"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        Contact Number
+                      </FieldLabel>
+
+                      <Input
+                        placeholder="Enter contact number"
+                        {...field}
+                      />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="email"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        Email Address
+                      </FieldLabel>
+
+                      <Input
+                        type="email"
+                        placeholder="Enter email address"
+                        {...field}
+                      />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </div>
+            </FieldSet>
+
+            <FieldSet className="rounded-xl border bg-muted/20 p-4 mt-2">
+              <FieldLegend className="flex items-center gap-2 px-2 text-sm font-medium">
+                <Settings className="h-4 w-4 text-blue-600" />
+                Machine Details
+              </FieldLegend>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field className="sm:col-span-2">
+                  <FieldLabel className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    Select Machine
+                  </FieldLabel>
+
+                  <PricesSearch
+                    value={selectedMachine}
+                    onReturn={(val) => {
+                      setSelectedMachine(val)
+
+                      form.setValue(
+                        "machine_model",
+                        val.data?.model || "",
+                        { shouldValidate: true }
+                      )
+
+                      form.setValue(
+                        "machine_power",
+                        val.data?.power || "",
+                        { shouldValidate: true }
+                      )
+
+                      form.setValue("original_pdf", val.data?.attachment_url || "", {
+                        shouldValidate: true,
+                      })
+
+
+                    }}
                   />
+                </Field>
 
-                  <Controller
-                    name="machine_power"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel className="flex items-center gap-2">
-                          <Zap className="h-4 w-4 text-muted-foreground" />
-                          Machine Power
-                        </FieldLabel>
+                <Controller
+                  name="machine_model"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel className="flex items-center gap-2">
+                        <Settings className="h-4 w-4 text-muted-foreground" />
+                        Machine Type
+                      </FieldLabel>
 
-                        <Input placeholder="e.g., 3000W" {...field} />
+                      <Input
+                        placeholder="e.g., Fiber Laser Cutting Machine"
+                        {...field}
+                      />
 
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
 
-                  <Controller
-                    name="payment_terms"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel className="flex items-center gap-2">
-                          <CreditCard className="h-4 w-4 text-muted-foreground" />
-                          Trade Terms
-                        </FieldLabel>
+                <Controller
+                  name="machine_power"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel className="flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-muted-foreground" />
+                        Machine Power
+                      </FieldLabel>
 
-                        <Select
-                          disabled={!selectedMachine}
-                          onValueChange={(val) => {
-                            field.onChange(val)
-                          }}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select option" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value={"EXW"}>EXW</SelectItem>
-                            <SelectItem value={"FOB"}>FOB</SelectItem>
-                            <SelectItem value={"CFR"}>CFR</SelectItem>
-                            <SelectItem value={"DDP"}>DDP</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <Input placeholder="e.g., 3000W" {...field} />
 
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
 
+                <Controller
+                  name="payment_terms"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel className="flex items-center gap-2">
+                        <CreditCard className="h-4 w-4 text-muted-foreground" />
+                        Trade Terms
+                      </FieldLabel>
 
+                      <Select
+                        disabled={!selectedMachine}
+                        onValueChange={(val) => {
+                          field.onChange(val)
+                        }}
+                        value={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select option" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={"EXW"}>EXW</SelectItem>
+                          <SelectItem value={"FOB"}>FOB</SelectItem>
+                          <SelectItem value={"CFR"}>CFR</SelectItem>
+                          <SelectItem value={"DDP"}>DDP</SelectItem>
+                        </SelectContent>
+                      </Select>
 
-                  <Controller
-                    name="validity"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          Validity (No of days)
-                        </FieldLabel>
-
-                        <Input placeholder="e.g., 30" {...field} />
-
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-
-                  <Controller
-                    name="price"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
-                          Price of Machine
-                        </FieldLabel>
-
-                        <Input disabled={disable} placeholder="e.g., $50,000"
-                          // disabled={form.watch("payment_terms") !== 'CFR'}
-                          {...field} />
-
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-
-                  <Controller
-                    name="delivery_time"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel className="flex items-center gap-2">
-                          <Truck className="h-4 w-4 text-muted-foreground" />
-                          Delivery Time (No of days)
-                        </FieldLabel>
-
-                        <Input
-                          placeholder="e.g., 45"
-                          {...field}
-                        />
-
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-                </div>
-              </FieldSet>
-
-            </ScrollArea>
-
-            <Button
-              type="submit"
-              className="w-full"
-              size="lg"
-              disabled={isGenerating}
-            >
-              {isGenerating ? (
-                "Generating PDF..."
-              ) : (
-                <>
-                  <FileText className="mr-2 h-5 w-5" />
-                  Generate & Download PDF
-                </>
-              )}
-            </Button>
-          </form>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
 
 
-        </DialogContent>
-      </Dialog>
-    </>
+
+                <Controller
+                  name="validity"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        Validity (No of days)
+                      </FieldLabel>
+
+                      <Input placeholder="e.g., 30" {...field} />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="price"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        Price of Machine
+                      </FieldLabel>
+
+                      <Input disabled={disable} placeholder="e.g., $50,000"
+                        // disabled={form.watch("payment_terms") !== 'CFR'}
+                        {...field} />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="delivery_time"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel className="flex items-center gap-2">
+                        <Truck className="h-4 w-4 text-muted-foreground" />
+                        Delivery Time (No of days)
+                      </FieldLabel>
+
+                      <Input
+                        placeholder="e.g., 45"
+                        {...field}
+                      />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </div>
+            </FieldSet>
+
+          </ScrollArea>
+
+          <Button
+            type="submit"
+            className="w-full"
+            size="lg"
+            disabled={isGenerating}
+          >
+            {isGenerating ? (
+              "Generating PDF..."
+            ) : (
+              <>
+                <FileText className="mr-2 h-5 w-5" />
+                Generate & Download PDF
+              </>
+            )}
+          </Button>
+        </form>
+
+
+      </DialogContent>
+    </Dialog>
+
   )
 }

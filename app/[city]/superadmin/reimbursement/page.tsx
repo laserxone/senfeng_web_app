@@ -9,6 +9,7 @@ import {
   Filter,
   Info,
   Loader2,
+  Plus,
   ReceiptText,
   RotateCcw,
   ShieldCheck,
@@ -351,25 +352,13 @@ export default function Page() {
             </div>
           </div>
 
-          <AddReimbursementDialog 
-        onRefresh={async () => {
-          const startDate = momentT
-            .tz(TIMEZONE)
-            .startOf("month")
-            .startOf("day")
-            .utc()
-            .toISOString();
-          const endDate = momentT
-            .tz(TIMEZONE)
-            .endOf("month")
-            .endOf("day")
-            .utc()
-            .toISOString();
-          await fetchData(startDate, endDate);
-          setReimbursementVisible(false);
-        }}
-        
-      />
+          <Button
+            size="sm"
+            onClick={() => setReimbursementVisible(true)}
+          >
+            <Plus />
+            Add Remibursement
+          </Button>
         </div>
 
         <div className="grid gap-3 p-4 sm:grid-cols-3">
@@ -489,6 +478,29 @@ export default function Page() {
           </div>
         </PageTable>
       </section>
+
+      <AddReimbursementDialog
+        open={reimbursementVisible}
+        onClose={() => setReimbursementVisible(false)}
+        onRefresh={async () => {
+          const startDate = momentT
+            .tz(TIMEZONE)
+            .startOf("month")
+            .startOf("day")
+            .utc()
+            .toISOString();
+          const endDate = momentT
+            .tz(TIMEZONE)
+            .endOf("month")
+            .endOf("day")
+            .utc()
+            .toISOString();
+          await fetchData(startDate, endDate);
+          setReimbursementVisible(false);
+        }}
+
+      />
+
       <FilterSheet
         user_disable={false}
         visible={filterVisible}
@@ -511,7 +523,7 @@ export default function Page() {
         }}
       />
 
-     
+
     </div>
   );
 }
@@ -541,13 +553,13 @@ const ImageSheet = ({
 
 
   async function handleDelete() {
-    if(!id) return
+    if (!id) return
 
     try {
-      await  axios.delete(`/${userID}/reimbursement/${id}`)
+      await axios.delete(`/${userID}/reimbursement/${id}`)
       onRefresh(id)
     } finally {
-       setDeleteLoading(false);
+      setDeleteLoading(false);
       handleClose();
     }
   }

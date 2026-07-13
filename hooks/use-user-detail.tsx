@@ -10,8 +10,8 @@ const useUserDetail = () => {
 
   const data = UserState.value.data
   const isAdmin = (data?.designation === "Owner" || data?.full_access) ?? false;
-  const userID = data?.id ?? "";
-  // const userID = 12;
+  // const userID = data?.id ?? "";
+  const userID = 36;
   const base_route = data?.base_route ?? "";
   const designation = data?.designation ?? "";
   const limited_access = data?.limited_access ?? false;

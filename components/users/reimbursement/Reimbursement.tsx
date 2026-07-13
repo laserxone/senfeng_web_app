@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, Building2, Calendar, CircleCheck, Download, Filter, MapPin, ReceiptText, RotateCcw, Search, Trash2 } from "lucide-react";
+import { AlertCircle, Building2, Calendar, CircleCheck, Download, Filter, MapPin, Plus, ReceiptText, RotateCcw, Search, Trash2 } from "lucide-react";
 import {
   useEffect,
   useMemo,
@@ -38,6 +38,7 @@ export default function Reimbursement({
 
   const [search, setSearch] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     setData([...passingData]);
@@ -160,11 +161,10 @@ export default function Reimbursement({
               {resetLoading ? <Spinner /> : <RotateCcw />}
               Reset
             </Button>
-            <AddReimbursementDialog
-              id={id}
-              onRefresh={onAddRefresh}
-              placeholder={"Add"}
-            />
+            <Button onClick={() => setOpen(!open)}>
+              <Plus />
+              Add
+            </Button>
           </div>
 
           {filtered.length === 0 ? (
@@ -183,6 +183,13 @@ export default function Reimbursement({
 
         </div>
       </div>
+
+      <AddReimbursementDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        id={id}
+        onRefresh={onAddRefresh}
+      />
 
       <FilterSheet
         visible={filterVisible}

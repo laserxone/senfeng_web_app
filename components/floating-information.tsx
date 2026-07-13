@@ -1,59 +1,37 @@
 "use client";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { X } from "lucide-react";
+import { AlarmClock, X } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { BadgeCount } from "./NotificationBadge";
+import { MouseEventHandler, useEffect, useState } from "react";
+import { BellNotification } from "./NotificationBadge";
+import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
+import { useChequeAlerts } from "@/hooks/use-cheque-alerts";
 
-type InfoProps = {
-  id: number
-  link: string
-  title: string
-  date: string
-}
+
 
 const FloatingInformation = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [info, setInfo] = useState<InfoProps[]>([]);
-  const { base_route, userID } = useUserDetail();
-  useEffect(() => {
-    if (userID) {
-      fetchData();
-    }
-  }, [userID]);
-
-  async function fetchData() {
-    axios.get(`/${userID}/reminders`).then((response) => {
-      setInfo(response.data);
-    });
-  }
-
-  const today = moment().startOf("day");
-
-  const grouped = {
-    today: info.filter((t) => moment(t.date).isSame(today, "day")),
-    passed: info.filter((t) => moment(t.date).isBefore(today, "day")),
-    upcoming: info.filter((t) => moment(t.date).isAfter(today, "day")),
-  };
+ const {count, grouped} = useChequeAlerts()
+  const { base_route } = useUserDetail();
+  
 
   return (
     <>
       <FloatingInfoButton
         onClick={() => setIsOpen(!isOpen)}
-        pending={info.length}
-        visible={info.length > 0}
+        pending={count}
       />
 
       <div
         className={`absolute bottom-0 right-0  w-[calc(100vw-30px)] sm:w-96 h-[600px]
     bg-white dark:bg-neutral-900 rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col
-    overflow-hidden border transition-all duration-200 z-10 sm:mx-0 ${isOpen ? "block" : "hidden"
+    overflow-hidden border transition-all z-99 duration-200 z-10 sm:mx-0 ${isOpen ? "block" : "hidden"
           }`}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-slate-200">
           <div className="flex items-center gap-2">
             <p className="font-semibold text-sm">Reminders</p>
           </div>
@@ -141,24 +119,12 @@ const FloatingInformation = () => {
   );
 };
 
-const FloatingInfoButton = ({ pending, onClick, visible }: { pending: number, visible: boolean, onClick: () => void }) => {
-  if (visible)
-    return (
-      <div>
-        <BadgeCount count={pending} offset={{ top: 0, right: 0 }}>
-          <div
-            onClick={onClick}
-            className="cursor-pointer
-    bg-gradient-to-br from-orange-500 via-pink-500 to-red-500
-    text-white h-[50px] w-[50px] shadow-2xl flex items-center justify-center
-    hover:scale-90 active:scale-95 transition-transform duration-200 ease-in-out
-    rounded-full rounded-bl-2xl relative"
-          >
-            <span className="relative drop-shadow-lg text-xl">⏰</span>
-          </div>
-        </BadgeCount>
-      </div>
-    );
+export const FloatingInfoButton = ({ pending, onClick }: { pending: number, onClick: MouseEventHandler<HTMLButtonElement> }) => {
+  return (
+    <Button size="icon" variant="outline" onClick={onClick}>
+      <BellNotification Icon={AlarmClock} count={pending} />
+    </Button>
+  )
 };
 
 export default FloatingInformation;

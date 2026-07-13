@@ -45,7 +45,7 @@ import {
   TimelineTime,
   TimelineTitle,
 } from "@/components/ui/timeline";
-import VisitTab from "@/components/users/add-visit";
+import VisitTab from "@/components/users/visit-tab";
 import CustomerTask from "@/components/users/customer-task";
 import useUserDetail from "@/hooks/use-user-detail";
 import { debounce } from "@/lib/debounce";

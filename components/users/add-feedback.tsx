@@ -1,6 +1,6 @@
 import axios from "@/lib/axios";
 import { CheckCircle, MessageSquareText, Star } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppCalendar from "../app-calendar";
 import { RequiredStar } from "../RequiredStar";
 import StarRating from "../startRating";
@@ -10,9 +10,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import Spinner from "../ui/spinner";
+import { CustomerSearch } from "../customer-components/customer-search";
 
 
-export default function AddFeedbackDialog({ open, onClose, user_id, customer_id, onRefresh }: { open: boolean, onClose: () => void, user_id: number | string, customer_id: number | undefined, onRefresh: () => Promise<void> }) {
+export default function AddFeedbackDialog({ open, onClose, user_id, customer_id, onRefresh }: { open: boolean, onClose: () => void, user_id: number | string, customer_id?: number | undefined, onRefresh?: () => Promise<void> }) {
 
     const [feedback, setFeedback] = useState("");
     const [loading, setLoading] = useState(false);
@@ -20,6 +21,7 @@ export default function AddFeedbackDialog({ open, onClose, user_id, customer_id,
     const [top, setTop] = useState(false);
     const [satisfactory, setSatisfactory] = useState(false);
     const [rating, setRating] = useState(0)
+    const [customer, setCustomer] = useState<number | string | undefined>()
 
     async function handleSaveFeedback() {
 
@@ -30,13 +32,13 @@ export default function AddFeedbackDialog({ open, onClose, user_id, customer_id,
                 type: "aftersales",
                 customer_id,
                 user_id,
-                 status: satisfactory ? "Satisfactory" : "Unsatisfactory",
+                status: satisfactory ? "Satisfactory" : "Unsatisfactory",
                 next_followup: undefined,
                 top_follow: false,
                 rating
             })
             .then(async () => {
-                await onRefresh();
+                await onRefresh?.();
                 handleClose()
                 resetForm()
             })
@@ -57,7 +59,11 @@ export default function AddFeedbackDialog({ open, onClose, user_id, customer_id,
         setSatisfactory(false);
         setRating(0)
     }
-    if (!customer_id) return null
+
+    useEffect(() => {
+        if (customer_id) setCustomer(customer_id)
+    }, [customer_id])
+
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
@@ -80,6 +86,14 @@ export default function AddFeedbackDialog({ open, onClose, user_id, customer_id,
 
                 <div className="max-h-[calc(100dvh-120px)] space-y-3 overflow-y-auto p-3.5">
 
+                    {!customer_id &&
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                Customer <RequiredStar />
+                            </Label>
+                            <CustomerSearch value={customer} onReturn={(val) => setCustomer(val)} />
+                        </div>
+                    }
 
                     <div className="space-y-1.5">
                         <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">

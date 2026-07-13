@@ -29,6 +29,7 @@ JOIN customer c ON s.customer_id = c.id
 JOIN users u ON s.sell_by = u.id
 WHERE 
   mi.pending = true
+  AND LOWER(u.office) = 'karachi'
   AND (
     mi.date < NOW() 
     OR (mi.date >= NOW() AND mi.date <= NOW() + INTERVAL '3 days')
@@ -56,11 +57,15 @@ ORDER BY mi.date ASC;
     JOIN users u ON s.sell_by = u.id
     WHERE 
       mi.pending = true
+      AND LOWER(u.office) = 'karachi'
       AND (
         mi.date < NOW() 
         OR (mi.date >= NOW() AND mi.date <= NOW() + INTERVAL '3 days')
       )
-      AND c.ownership = $1
+       AND (
+        c.ownership = $1
+        OR s.sell_by = $1
+      )
     ORDER BY mi.date ASC;
   `, [uid])
 

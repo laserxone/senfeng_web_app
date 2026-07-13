@@ -3,33 +3,22 @@ import { Button } from "@/components/ui/button";
 import { useTodos } from "@/hooks/use-todos";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { X } from "lucide-react";
-import { useEffect, useState } from "react";
-import { BadgeCount } from "./NotificationBadge";
+import { ListCheck, X } from "lucide-react";
+import moment from "moment";
+import { MouseEventHandler, useEffect, useState } from "react";
+import { BellNotification } from "./NotificationBadge";
 import { Checkbox } from "./ui/checkbox";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
-import moment from "moment";
 import Spinner from "./ui/spinner";
 
-function FloatingTodoButton({ onClick, pending }: { onClick: (e: React.MouseEvent<HTMLDivElement, MouseEvent> | undefined) => void, pending: number }) {
+function FloatingTodoButton({ onClick, pending }: { onClick: MouseEventHandler<HTMLButtonElement>, pending: number }) {
   return (
-    <div>
-      <BadgeCount count={pending} offset={{ top: 0, right: 0 }}>
-        <div
-          onClick={onClick}
-          className="cursor-pointer
-          bg-gradient-to-br from-blue-500 via-cyan-500 to-teal-500
-          text-white h-[50px] w-[50px] shadow-2xl flex items-center justify-center
-          hover:scale-90 active:scale-95 transition-transform duration-200 ease-in-out
-          rounded-full rounded-bl-2xl relative"
-        >
-          <span className="relative drop-shadow-lg text-xl">📝</span>
-        </div>
-      </BadgeCount>
-    </div>
-  );
+    <Button size="icon" variant="outline" onClick={onClick}>
+      <BellNotification Icon={ListCheck} count={pending} />
+    </Button>
+  )
 }
 
 
@@ -105,7 +94,7 @@ export default function FloatingTodo() {
       <div
         className={`absolute bottom-0 right-0  w-[calc(100vw-30px)] sm:w-96 h-[600px]
     bg-white dark:bg-neutral-900 rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col
-    overflow-hidden border transition-all duration-200 z-10 sm:mx-0 ${isOpen ? "block" : "hidden"
+    overflow-hidden border transition-all z-99 duration-200 z-10 sm:mx-0 ${isOpen ? "block" : "hidden"
           }`}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b bg-background">

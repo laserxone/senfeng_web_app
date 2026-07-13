@@ -1,4 +1,11 @@
 "use client";
+import ChequeClearanceAlert from "@/components/sales/cheque-alert";
+import { CustomerInsights } from "@/components/sales/customer-insights";
+import SalesQuickActions from "@/components/sales/quick-actions";
+import RecentQuotations from "@/components/sales/recent-quotations";
+import { MetricDialogState, SalesMetricCard, SalesMetricDetailsDialog } from "@/components/sales/sales-metric";
+import TargetOverview from "@/components/sales/target-overview";
+import RenderTodayTasks from "@/components/sales/today-task";
 import {
   Accordion,
   AccordionContent,
@@ -6,39 +13,40 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import VisitTab from "@/components/users/add-visit";
-import Attendance from "@/components/users/attendance";
-import CustomerEmployee from "@/components/users/customer";
-import Reimbursement from "@/components/users/reimbursement/Reimbursement";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useSidebar } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import AddFeedbackDialog from "@/components/users/add-feedback";
+import Attendance from "@/components/users/attendance";
+import CustomerEmployee from "@/components/users/customer";
 import { CustomerExtraData } from "@/components/users/extra-data";
+import MyTasks from "@/components/users/my-tasks";
+import Reimbursement from "@/components/users/reimbursement/Reimbursement";
+import VisitTab from "@/components/users/visit-tab";
+import { useIsMobile } from "@/hooks/use-mobile";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { SalesCustomer, SalesCustomerMachines, SalesDashboard, SalesMachine, SalesTodayTasks, SalesVisitTypes, UserAttendanceRecord, UserCallData, UserExtraTypes, UserReimbursementType } from "@/lib/types";
+import { AlertCircle, BadgeAlert, Building2, CalendarCheck, CheckCircle, Clock, Cpu, Gauge, MapPinned, MessageSquareWarning, PhoneCall, ReceiptText, RotateCcw, Truck, UserPlus, UserRound, Users, Wallet, WalletCards } from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import "./styles.css";
 import RenderFines from "@/components/users/render-fines";
 import RenderReturnable from "@/components/users/render-returnable";
 import SalaryRecord from "@/components/users/salary-record";
 import UserTabs from "@/components/users/user-tabs";
-import { useIsMobile } from "@/hooks/use-mobile";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { PendingDelivery, PendingPartsPayment, PendingPayment, SalesCustomer, SalesCustomerMachines, SalesDashboard, SalesMachine, SalesTodayTasks, SalesVisitTypes, TopFollow, UserAttendanceRecord, UserCallData, UserExtraTypes, UserReimbursementType } from "@/lib/types";
-import { updateItemPurpose } from "@/lib/updatePurpose";
-import { AlertCircle, BadgeAlert, Banknote, Building2, CalendarCheck, CheckCircle, Clock, Cpu, Gauge, Hash, MapPinned, MessageSquareText, MessageSquareWarning, PackageCheck, PhoneCall, ReceiptText, RotateCcw, Truck, UserPlus, UserRound, Users, Wallet, WalletCards } from "lucide-react";
-import moment from "moment";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useId, useState, type ElementType } from "react";
-import "./styles.css";
 
 export default function Page() {
   const [data, setData] = useState<SalesDashboard>();
@@ -57,23 +65,39 @@ export default function Page() {
   const [todayTasks, setTodayTasks] = useState<SalesTodayTasks | null>(null)
   const [showingAutoScroll, setShowingAutoScroll] = useState(false)
   const searchParams = useSearchParams()
+  const [loading, setLoading] = useState(false)
+  const [dashboardSkeletonLoading, setDashboardSkeletonLoading] = useState(true)
+  const pendingRequests = useRef(0)
 
   const { open } = useSidebar()
 
   useEffect(() => {
     if (userID) {
+      let cancelled = false;
       const startDate = moment().startOf("month").toISOString();
       const endDate = moment().endOf("month").toISOString();
-      fetchData();
-      fetchVisitData(startDate, endDate);
-      fetchExtraCustomerOptions();
-      fetchReimbursementData(startDate, endDate);
-      fetchAttendanceData(startDate, endDate);
-      fetchCallData(startDate, endDate);
-      // fetchScrollData()
       const start = moment().startOf("day").toISOString();
       const end = moment().endOf("day").toISOString();
-      fetchTasks(start, end)
+
+      setDashboardSkeletonLoading(true);
+
+      Promise.allSettled([
+        fetchData(),
+        fetchVisitData(startDate, endDate),
+        fetchExtraCustomerOptions(),
+        fetchReimbursementData(startDate, endDate),
+        fetchAttendanceData(startDate, endDate),
+        fetchCallData(startDate, endDate),
+        fetchTasks(start, end),
+      ]).finally(() => {
+        if (!cancelled) {
+          setDashboardSkeletonLoading(false);
+        }
+      });
+
+      return () => {
+        cancelled = true;
+      };
     }
   }, [userID]);
 
@@ -90,123 +114,114 @@ export default function Page() {
     window.history.pushState({}, "", `${window.location.pathname}?p=${targetTab}`)
   }
 
+  function startDashboardLoading() {
+    pendingRequests.current += 1;
+    setLoading(true);
+  }
+
+  function stopDashboardLoading() {
+    pendingRequests.current = Math.max(0, pendingRequests.current - 1);
+
+    if (pendingRequests.current === 0) {
+      setLoading(false);
+    }
+  }
+
+  async function withDashboardLoading<T>(request: () => Promise<T>) {
+    startDashboardLoading();
+
+    try {
+      return await request();
+    } catch (error) {
+      console.error("Dashboard request failed:", error);
+      return undefined as T;
+    } finally {
+      stopDashboardLoading();
+    }
+  }
+
   async function fetchCallData(startDate: string, endDate: string) {
-    return new Promise<void>((resolve) => {
-      axios
-        .get(`/${userID}/call?start_date=${startDate}&end_date=${endDate}`)
-        .then((response) => {
-          setCallData(response.data);
-        })
-        .finally(() => {
-          resolve();
-        });
+    return withDashboardLoading(async () => {
+      const response = await axios.get(
+        `/${userID}/call?start_date=${startDate}&end_date=${endDate}`
+      );
+
+      setCallData(response.data);
     });
   }
 
   async function fetchReimbursementData(startDate: string, endDate: string) {
+    return withDashboardLoading(async () => {
+      const response = await axios.get(
+        `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+      );
 
-    return new Promise((resolve, reject) => {
-      axios
-        .get(
-          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`
-        )
-        .then((response) => {
-          setReimbursementData(response.data);
-          resolve(true);
-        })
-        .catch((e) => {
-          console.log(e);
-          reject(null);
-        });
+      setReimbursementData(response.data);
     });
   }
 
   async function fetchAttendanceData(startDate: string, endDate: string) {
-    return new Promise<void | any>((res, rej) => {
-      axios
-        .get(
-          `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
-        )
-        .then((response) => {
-          if (response.data.length > 0) {
-            const apiData = response.data.map((item: UserAttendanceRecord) => {
-              let status = item?.leave_status
-                ? `Leave ${item?.leave_status}`
-                : "Absent";
+    return withDashboardLoading(async () => {
+      const response = await axios.get(
+        `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
+      );
 
-              if (item?.time_in) {
-                const checkInTime = new Date(item.time_in);
-                const threshold = new Date(item.time_in);
-                threshold.setHours(10, 10, 0, 0);
+      const apiData = response.data.map((item: UserAttendanceRecord) => {
+        let status = item?.leave_status
+          ? `Leave ${item?.leave_status}`
+          : "Absent";
 
-                if (checkInTime > threshold) {
-                  status = "Late";
-                } else {
-                  status = "Present";
-                }
-              }
-              return {
-                ...item,
-                date: item?.time_in || item?.leave_date,
-                status,
-              };
-            });
-            setAttendanceData(apiData);
+        if (item?.time_in) {
+          const checkInTime = new Date(item.time_in);
+          const threshold = new Date(item.time_in);
+          threshold.setHours(10, 10, 0, 0);
+
+          if (checkInTime > threshold) {
+            status = "Late";
+          } else {
+            status = "Present";
           }
-          res(true);
-        })
-        .catch((e) => {
-          console.log(e);
-          rej(null);
-        });
+        }
+
+        return {
+          ...item,
+          date: item?.time_in || item?.leave_date,
+          status,
+        };
+      });
+
+      setAttendanceData(apiData);
     });
   }
 
   async function fetchTasks(start: string, end: string) {
-
-    return new Promise<void>((resolve) => {
-      axios
-        .get(`/${userID}/task?start_date=${start}&end_date=${end}`)
-        .then((response) => {
-          setTodayTasks({ total: response.data.length, data: response.data });
-        })
-        .finally(() => {
-          resolve();
-        });
+    return withDashboardLoading(async () => {
+      const response = await axios.get(`/${userID}/task?start_date=${start}&end_date=${end}`);
+      setTodayTasks({ total: response.data.length, data: response.data });
     });
   }
 
   async function fetchData() {
-    return new Promise<void>((resolve) => {
-      axios
-        .get(`/${userID}/dashboard`)
-        .then((response) => {
-          setData(response.data);
-        })
-        .finally(() => {
-          resolve();
-        });
+    return withDashboardLoading(async () => {
+      const response = await axios.get(`/${userID}/dashboard`);
+      setData(response.data);
     });
   }
 
   async function fetchVisitData(start: string, end: string) {
-    return new Promise((res, rej) => {
-      axios
-        .get(`/${userID}/visit?start_date=${start}&end_date=${end}`)
-        .then((response) => {
-          setVisitData(response.data);
-        })
-        .finally(() => {
-          res(true);
-        });
+    return withDashboardLoading(async () => {
+      const response = await axios.get(`/${userID}/visit?start_date=${start}&end_date=${end}`);
+      setVisitData(response.data);
     });
   }
 
   async function fetchExtraCustomerOptions() {
-    axios.get(`/${userID}/dashboard/group`).then((response) => {
+    return withDashboardLoading(async () => {
+      const response = await axios.get(`/${userID}/dashboard/group`);
       setExtraData(response.data);
     });
   }
+
 
   const RenderVisitTab = useCallback(() => {
     return (
@@ -246,7 +261,7 @@ export default function Page() {
 
         <div className="min-w-0 flex-1 overflow-hidden">
           <CustomerEmployee
-            onRefreshTask={fetchTasks}
+
             height="min-h-[calc(100dvh-420px)]"
             ownership={false}
             customer_data={
@@ -254,7 +269,7 @@ export default function Page() {
                 ? extraData[selectedOption as Exclude<keyof UserExtraTypes, "user">]
                 : []
             }
-            task_data={todayTasks}
+
             newly_assigned={data?.new_entries?.newly_assigned_customers || null}
             onRefresh={async () => {
               await fetchData()
@@ -398,6 +413,16 @@ export default function Page() {
     },
   ]
 
+  const cityInsightItems = useMemo(
+    () => buildCustomerInsightItems(data?.customers, "location", "Unknown City"),
+    [data?.customers]
+  );
+
+  const industryInsightItems = useMemo(
+    () => buildCustomerInsightItems(data?.customers, "industry", "Unspecified Industry"),
+    [data?.customers]
+  );
+
   const tabsMaxWidth =
     isMobile
       ? "max-w-[calc(100dvw-35px)]"
@@ -408,18 +433,26 @@ export default function Page() {
         :
         open ? "max-w-[calc(100dvw-290px)]"
           : "max-w-[calc(100dvw-80px)]"
+
+  if (dashboardSkeletonLoading) {
+    return (
+      <div className="flex flex-1 gap-4 bg-background py-2">
+        <div className="flex flex-1 flex-col gap-4">
+          <SalesDashboardSkeleton />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-1 gap-4 bg-background  py-2">
       <div className="flex flex-1 flex-col gap-4">
-        {/* <div className="flex items-center">
-          <ProfilePicture img={data?.user?.dp} name={data?.user?.name} />
-          <div>
-            <h1 className="text-3xl font-bold">{data?.user?.name}</h1>
-            <p className="text-muted-foreground">
-              {data?.user?.designation}
-            </p>
+        {loading && (
+          <div className="sticky top-0 z-20 h-1 overflow-hidden rounded-full bg-muted">
+            <div className="h-full w-1/3 animate-pulse rounded-full bg-primary" />
           </div>
-        </div> */}
+        )}
+
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
           <SalesMetricCard
             title="Pending Payments"
@@ -509,19 +542,67 @@ export default function Page() {
             description="of 15"
           />
         </div>
+        <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:col-span-2 xl:auto-rows-[300px]">
 
-        {/* <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <MachinesSoldCard
-            value={data?.machinesSoldThisMonth || 0}
-            percentage={Number(data?.percentageChange || "0")}
-            onClick={() => {
-              setMachineData(data?.machinesSoldThisMonthDetail || []);
-              setVisible(true);
+            <CustomerInsights
+              cities={cityInsightItems}
+              industries={industryInsightItems}
+            />
+
+            <TargetOverview data={data?.target} />
+
+            <SalesQuickActions onRefreshVisit={async () => {
+              const startDate = moment().startOf("month").toISOString();
+              const endDate = moment().endOf("month").toISOString();
+              await fetchVisitData(startDate, endDate);
+              await fetchData();
             }}
-          />
+              onRefreshReimbursement={async () => {
+                const startDate = moment().startOf("month").toISOString();
+                const endDate = moment().endOf("month").toISOString();
+                await fetchReimbursementData(startDate, endDate);
 
-         
-        </div> */}
+              }}
+              onRefreshCustomer={async () => {
+                await fetchData()
+                await fetchExtraCustomerOptions()
+              }}
+              onRefreshFeedback={async () => {
+                await fetchData()
+                await fetchExtraCustomerOptions()
+              }}
+              onRefreshQuotation={async () => {
+                await fetchData()
+              }}
+              onRefreshTask={async () => {
+
+                await fetchData()
+                const start = moment().startOf("day").toISOString();
+                const end = moment().endOf("day").toISOString();
+                await fetchTasks(start, end)
+              }} />
+            <MyTasks data={data?.allTasks} />
+
+          </div>
+          <div className="min-h-0 xl:col-span-1 xl:h-[616px]">
+            <RecentQuotations data={data?.recentQuotations} />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-3">
+          <div className="min-h-0 xl:col-span-2">
+            <RenderTodayTasks data={todayTasks} onRefresh={async () => {
+              await fetchData()
+              const start = moment().startOf("day").toISOString();
+              const end = moment().endOf("day").toISOString();
+              await fetchTasks(start, end)
+            }} />
+          </div>
+          <div className="min-h-0 xl:col-span-1 xl:h-[600px]">
+            <ChequeClearanceAlert />
+          </div>
+        </div>
+
 
         <ScrollArea className={`${tabsMaxWidth}`}>
           <UserTabs tabs={tabs} routeTo={routeTo} activeTab={activeTab} />
@@ -576,420 +657,170 @@ export default function Page() {
   );
 }
 
-type MetricDialogState =
-  | {
-    kind: "pending_payments";
-    title: string;
-    total: number;
-    totalAmount?: number;
-    data: PendingPayment[];
-  }
-  | {
-    kind: "pending_parts_payments";
-    title: string;
-    total: number;
-    totalAmount?: number;
-    data: PendingPartsPayment[];
-  }
-  | {
-    kind: "pending_deliveries";
-    title: string;
-    total: number;
-    data: PendingDelivery[];
-  }
-  | {
-    kind: "top_follow";
-    title: string;
-    total: number;
-    data: TopFollow[];
-  };
-
-function SalesMetricDetailsDialog({
-  metric,
-  onClose,
-  baseRoute,
-}: {
-  metric: MetricDialogState | null;
-  onClose: () => void;
-  baseRoute: string;
-}) {
-  const amountText =
-    metric && "totalAmount" in metric && typeof metric.totalAmount === "number"
-      ? formatMetricAmount(metric.totalAmount)
-      : null;
-
+function SalesDashboardSkeleton() {
   return (
-    <Dialog open={!!metric} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-[94vw] overflow-hidden p-0 sm:max-w-4xl">
-        <DialogHeader className="border-b bg-muted/20 px-5 py-5 text-left">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex min-w-0 items-start gap-3">
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-                <Banknote className="h-5 w-5" />
-              </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-xl font-bold tracking-tight">
-                  {metric?.title || "Details"}
-                </DialogTitle>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {metric?.total || 0} records found
-                  {amountText ? ` - ${amountText}` : ""}
-                </p>
-              </div>
-            </div>
-            <Badge variant="outline" className="w-fit rounded-full bg-background px-3 py-1">
-              Total: {metric?.total || 0}
-            </Badge>
-          </div>
-        </DialogHeader>
-
-        <ScrollArea className="max-h-[calc(100dvh-150px)]">
-          <div className="space-y-3 p-5">
-            {!metric || metric.data.length === 0 ? (
-              <div className="grid min-h-40 place-items-center rounded-2xl border border-dashed bg-muted/15 p-6 text-center">
-                <div>
-                  <AlertCircle className="mx-auto h-9 w-9 text-muted-foreground" />
-                  <p className="mt-3 text-sm font-semibold">No records found</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Records will appear here when available.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              metric.data.map((item) => (
-                <MetricDetailCard
-                  key={`${metric.kind}-${item.id}`}
-                  item={item}
-                  kind={metric.kind}
-                  baseRoute={baseRoute}
-                />
-              ))
-            )}
-          </div>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function MetricDetailCard({
-  item,
-  kind,
-  baseRoute,
-}: {
-  item: PendingPayment | PendingPartsPayment | PendingDelivery | TopFollow;
-  kind: MetricDialogState["kind"];
-  baseRoute: string;
-}) {
-  const customer = item.customer;
-  const customerUrl = `/${baseRoute}/${customer?.member ? "member" : "customer"}/${customer?.id || item.customer_id}`;
-
-  if (kind === "pending_parts_payments") {
-    const parts = item as PendingPartsPayment;
-    return (
-      <MetricCardShell
-        href={customerUrl}
-        icon={ReceiptText}
-        title={parts.customer?.name || parts.company || "Parts invoice"}
-        subtitle={parts.customer?.owner || parts.name || "No owner"}
-        badge={parts.status || "Pending"}
-        details={[
-          { icon: Hash, label: "Invoice", value: parts.invoicenumber || "N/A" },
-          { icon: Building2, label: "Company", value: parts.company || "N/A" },
-          { icon: Banknote, label: "Balance", value: formatMetricAmount(Number(parts.final_amount || 0) - Number(parts.total_paid || 0)) },
-          { icon: UserRound, label: "Manager", value: parts.manager || "N/A" },
-        ]}
-      />
-    );
-  }
-
-  if (kind === "top_follow") {
-    const follow = item as TopFollow;
-    return (
-      <MetricCardShell
-        href={customerUrl}
-        icon={MessageSquareText}
-        title={follow.customer?.name || "Follow up"}
-        subtitle={follow.customer?.owner || "No owner"}
-        badge={follow.status || "Follow up"}
-        details={[
-          { icon: CalendarCheck, label: "Next follow up", value: formatMetricDate(follow.next_followup) },
-          { icon: ReceiptText, label: "Type", value: follow.followup_type || follow.type || "N/A" },
-          { icon: MessageSquareText, label: "Feedback", value: follow.feedback || "N/A" },
-        ]}
-      />
-    );
-  }
-
-  const payment = item as PendingPayment;
-  const isDelivery = kind === "pending_deliveries";
-
-  return (
-    <MetricCardShell
-      href={`/${baseRoute}/member/${payment.customer_id}/${payment.id}`}
-      icon={isDelivery ? Truck : Wallet}
-      title={payment.customer?.name || "No customer"}
-      subtitle={payment.customer?.owner || payment.serial_no || "No owner"}
-      badge={isDelivery ? "Delivery" : payment.type || "Machine"}
-      details={[
-        { icon: Cpu, label: "Serial No", value: payment.serial_no || "N/A" },
-        { icon: Hash, label: "Order No", value: payment.order_no_arr?.join(", ") || payment.order_no || "N/A" },
-        { icon: Banknote, label: isDelivery ? "Price" : "Pending", value: formatMetricAmount(isDelivery ? Number(payment.price || 0) : Number(payment.pending_amount || 0)) },
-        { icon: isDelivery ? PackageCheck : Cpu, label: isDelivery ? "Delivery Date" : "Power", value: isDelivery ? formatMetricDate(payment.delivery_date || payment.delivery_request_date) : payment.power || "N/A" },
-      ]}
-    />
-  );
-}
-
-function MetricCardShell({
-  href,
-  icon: Icon,
-  title,
-  subtitle,
-  badge,
-  details,
-}: {
-  href: string;
-  icon: ElementType;
-  title: string;
-  subtitle: string;
-  badge: string;
-  details: { icon: ElementType; label: string; value: string }[];
-}) {
-  return (
-    <div className="rounded-2xl border bg-background p-4 shadow-sm transition hover:bg-muted/15">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <Link href={href} target="_blank" className="flex min-w-0 items-start gap-3">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-            <Icon className="h-5 w-5" />
-          </span>
-          <span className="min-w-0">
-            <span className="block break-words text-base font-bold hover:underline">
-              {title}
-            </span>
-            <span className="mt-1 block break-words text-sm text-muted-foreground">
-              {subtitle}
-            </span>
-          </span>
-        </Link>
-
-        <Badge variant="outline" className="w-fit rounded-full bg-muted/20 px-2.5 py-1">
-          {badge}
-        </Badge>
-      </div>
-
-      <div className="mt-4 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2 xl:grid-cols-3">
-        {details.map((detail) => {
-          const DetailIcon = detail.icon;
-
-          return (
-            <span
-              key={`${detail.label}-${detail.value}`}
-              className="inline-flex min-w-0 items-start gap-2 rounded-xl border bg-muted/10 px-3 py-2"
-            >
-              <DetailIcon className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
-              <span className="min-w-0">
-                <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  {detail.label}
-                </span>
-                <span className="block whitespace-pre-wrap break-words font-semibold text-foreground">
-                  {detail.value}
-                </span>
-              </span>
-            </span>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function formatMetricAmount(value: number) {
-  return new Intl.NumberFormat("en-PK", {
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
-}
-
-function formatMetricDate(value: string | Date | null) {
-  return value ? moment(new Date(value)).format("YYYY-MM-DD") : "N/A";
-}
-
-function SalesMetricCard({
-  title,
-  value,
-  icon: Icon,
-  accent,
-  iconClassName,
-  onClick,
-  description = "Current Total",
-}: {
-  title: string;
-  value: number;
-  icon: ElementType;
-  accent: string;
-  iconClassName: string;
-  onClick?: () => void;
-  description?: string;
-}) {
-
-  const getChartColor = (className: string) => {
-    if (className.includes("rose")) return "#e11d48"
-    if (className.includes("blue")) return "#2563eb"
-    if (className.includes("emerald")) return "#059669"
-    if (className.includes("amber")) return "#d97706"
-    if (className.includes("violet")) return "#7c3aed"
-    if (className.includes("indigo")) return "#4f46e5"
-    if (className.includes("cyan")) return "#0891b2"
-    if (className.includes("orange")) return "#ea580c"
-    if (className.includes("red")) return "#dc2626"
-
-    return "#334155"
-  }
-
-  const chartColor = getChartColor(iconClassName)
-
-  const chartId = useId()
-
-  return (
-    <div
-
-      className={`
-      group relative flex h-full min-h-[118px] w-full overflow-hidden
-      rounded-lg border border-white/60 bg-gradient-to-br ${accent}
-      p-4 ring-1 ring-black/5
-      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400
-    `}
-    >
-      {/* soft background glow only */}
-      <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/40 blur-2xl" />
-      <div className="pointer-events-none absolute -bottom-12 left-8 h-28 w-28 rounded-full bg-white/20 blur-2xl" />
-
-      {/* glass shine */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent" />
-
-      <div className="relative z-10 flex w-full flex-col justify-between gap-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="line-clamp-2 text-[13px] font-semibold leading-snug tracking-tight text-slate-800">
-              {title}
-            </p>
-
-            <p className="mt-1 text-[11px] font-medium text-slate-600">
-              {description}
-            </p>
-          </div>
-
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
+        {Array.from({ length: 6 }).map((_, index) => (
           <div
-            className={`
-            grid size-11 shrink-0 place-items-center rounded-lg text-white
-            ring-1 ring-white/40 ${iconClassName}
-          `}
+            key={index}
+            className="overflow-hidden rounded-xl border bg-card p-4 shadow-sm"
           >
-            <Icon className="h-5 w-5" />
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-3">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-8 w-14" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+              <Skeleton className="h-10 w-10 rounded-lg" />
+            </div>
           </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:col-span-2 xl:auto-rows-[300px]">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <DashboardPanelSkeleton key={index} />
+          ))}
         </div>
 
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                onClick?.()
-              }}
-              disabled={!onClick}
-              className={`
-              text-left text-3xl font-black leading-none tracking-tight text-slate-950
-              ${onClick ? "cursor-pointer transition hover:text-blue-700 hover:underline" : "cursor-default"}
-            `}
-            >
-              {value?.toLocaleString?.() ?? value}
-            </button>
-          </div>
-
-          <div className="flex h-11 w-28 items-center justify-center">
-            <svg
-              viewBox="0 0 60 44"
-              fill="none"
-              className="h-10 w-full overflow-visible"
-              aria-hidden="true"
-            >
-              <defs>
-                <linearGradient
-                  id={`${chartId}-line`}
-                  x1="6"
-                  y1="26"
-                  x2="90"
-                  y2="6"
-                  gradientUnits="userSpaceOnUse"
+        <div className="min-h-0 xl:col-span-1 xl:h-[616px]">
+          <div className="flex h-full flex-col overflow-hidden rounded-xl border bg-card shadow-sm">
+            <div className="flex items-center justify-between border-b px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-8 w-8 rounded-lg" />
+                <Skeleton className="h-4 w-36" />
+              </div>
+              <Skeleton className="h-5 w-8 rounded-full" />
+            </div>
+            <div className="flex-1 space-y-0 overflow-hidden">
+              {Array.from({ length: 9 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-[52px_1fr_96px_74px] items-center gap-3 border-b px-4 py-3"
                 >
-                  <stop stopColor={chartColor} stopOpacity="0.35" />
-                  <stop offset="0.45" stopColor={chartColor} stopOpacity="0.9" />
-                  <stop offset="1" stopColor={chartColor} stopOpacity="1" />
-                </linearGradient>
-
-                <linearGradient
-                  id={`${chartId}-area`}
-                  x1="48"
-                  y1="8"
-                  x2="48"
-                  y2="38"
-                  gradientUnits="userSpaceOnUse"
-                >
-                  <stop stopColor={chartColor} stopOpacity="0.16" />
-                  <stop offset="1" stopColor={chartColor} stopOpacity="0" />
-                </linearGradient>
-
-                <filter id={`${chartId}-glow`} x="-20%" y="-40%" width="140%" height="180%">
-                  <feGaussianBlur stdDeviation="2.5" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-              {/* area */}
-              <path
-                d="M6 26 L14 18 L22 24 L30 16 L38 22 L48 13 L58 19 L68 10 L78 25 L86 6 L86 38 L6 38 Z"
-                fill={`url(#${chartId}-area)`}
-              />
-
-              {/* glow line */}
-              <path
-                d="M6 26 L14 18 L22 24 L30 16 L38 22 L48 13 L58 19 L68 10 L78 25 L86 6"
-                stroke={chartColor}
-                strokeOpacity="0.1"
-                strokeWidth="5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                filter={`url(#${chartId}-glow)`}
-              />
-
-              {/* main line */}
-              <path
-                d="M6 26 L14 18 L22 24 L30 16 L38 22 L48 13 L58 19 L68 10 L78 25 L86 6"
-                stroke={`url(#${chartId}-line)`}
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-
-              {/* end point */}
-              <circle
-                cx="86"
-                cy="6"
-                r="3"
-                fill="white"
-                stroke={chartColor}
-                strokeWidth="2"
-              />
-            </svg>
+                  <Skeleton className="h-4 w-8" />
+                  <div className="min-w-0 space-y-2">
+                    <Skeleton className="h-4 w-full max-w-40" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
+
+      <div className="rounded-xl border bg-card p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Skeleton className="h-5 w-36" />
+          <Skeleton className="h-8 w-24 rounded-md" />
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="rounded-lg border p-3">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="mt-3 h-3 w-20" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex gap-2 overflow-hidden">
+        {Array.from({ length: 7 }).map((_, index) => (
+          <Skeleton key={index} className="h-10 w-32 shrink-0 rounded-lg" />
+        ))}
+      </div>
+
+      <div className="rounded-xl border bg-card p-4 shadow-sm">
+        <div className="flex items-center justify-between gap-3 border-b pb-3">
+          <Skeleton className="h-5 w-44" />
+          <Skeleton className="h-8 w-28 rounded-md" />
+        </div>
+        <div className="mt-4 space-y-3">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between gap-4 rounded-lg border p-3"
+            >
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-4 w-full max-w-sm" />
+                <Skeleton className="h-3 w-36" />
+              </div>
+              <Skeleton className="h-7 w-20 rounded-full" />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
-  )
+  );
 }
+
+function DashboardPanelSkeleton() {
+  return (
+    <div className="flex h-full flex-col rounded-xl border bg-card p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-8 w-28 rounded-md" />
+      </div>
+
+      <div className="mt-5 flex flex-1 flex-col justify-between gap-4">
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="flex items-center gap-3">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-2 flex-1 rounded-full" />
+              <Skeleton className="h-4 w-10" />
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-end justify-between gap-3 border-t pt-3">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-7 w-16" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function buildCustomerInsightItems(
+  customers: SalesCustomer[] | undefined,
+  key: "location" | "industry",
+  fallback: string
+) {
+  const counts = new Map<string, number>();
+
+  (customers || []).forEach((customer) => {
+    const label = normalizeInsightLabel(customer[key], fallback);
+    counts.set(label, (counts.get(label) || 0) + 1);
+  });
+
+  return Array.from(counts.entries())
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
+
+function normalizeInsightLabel(value: string | null | undefined, fallback: string) {
+  const trimmed = value?.trim();
+  if (!trimmed) return fallback;
+
+  const normalized = trimmed.toLowerCase();
+  if (["n/a", "na", "nil", "nill", "null", "none", "undefined"].includes(normalized)) {
+    return fallback;
+  }
+
+  return trimmed;
+}
+
+
+
+
 
 function CustomersTab({
   data

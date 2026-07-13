@@ -35,7 +35,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ uid:
             const lastMonthEnd = now.clone().subtract(1, "month").endOf("month").toISOString();
 
             const [userResult] = await Promise.all([
-                pool.query("SELECT id, dp, name, designation, limited_access, reimbursement_approval FROM users WHERE id = $1", [uid])
+                pool.query("SELECT id, dp, name, designation, limited_access, monthly_target, reimbursement_approval FROM users WHERE id = $1", [uid])
             ]);
 
             if (userResult.rows.length === 0) {
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ uid:
             }
             else if (user?.designation === 'Sales') {
 
-                const responseData = await getSalesData(currentMonthStart, currentMonthEnd, lastMonthStart, lastMonthEnd, uid)
+                const responseData = await getSalesData(currentMonthStart, currentMonthEnd, lastMonthStart, lastMonthEnd, uid, Number(user?.monthly_target ?? 0))
 
                 return NextResponse.json({ ...responseData, user }, { status: 200 });
 
@@ -1430,10 +1430,12 @@ GROUP BY
     return responseData
 }
 
-async function getSalesData(currentMonthStart: string, currentMonthEnd: string, lastMonthStart: string, lastMonthEnd: string, uid: string) {
+async function getSalesData(currentMonthStart: string, currentMonthEnd: string, lastMonthStart: string, lastMonthEnd: string, uid: string, target: Number) {
 
-    const [customersQuery] = await Promise.all([
-        pool.query(`SELECT DISTINCT c.*
+
+
+  const [customersQuery] = await Promise.all([
+    pool.query(`SELECT DISTINCT c.*
     FROM customer c
     LEFT JOIN sale s ON s.customer_id = c.id
     WHERE c.ownership = $1
@@ -1443,37 +1445,37 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
       )
     ORDER BY c.created_at DESC`, [uid]),
 
-    ]);
+  ]);
 
-    const customersWithSale = customersQuery.rows;
-    const totalCustomersWithSale = customersWithSale.length;
+  const customersWithSale = customersQuery.rows;
+  const totalCustomersWithSale = customersWithSale.length;
 
 
-    const saleCustomerIds = customersWithSale.map(c => c.id);
+  const saleCustomerIds = customersWithSale.map(c => c.id);
 
-    let sales = [];
-    let payments = [];
+  let sales = [];
+  let payments = [];
 
-    if (saleCustomerIds.length > 0) {
-        const salesQuery = await pool.query(`SELECT * FROM sale WHERE customer_id = ANY($1)`, [saleCustomerIds]);
-        sales = salesQuery.rows;
+  if (saleCustomerIds.length > 0) {
+    const salesQuery = await pool.query(`SELECT * FROM sale WHERE customer_id = ANY($1)`, [saleCustomerIds]);
+    sales = salesQuery.rows;
 
-        if (sales.length > 0) {
-            const machineIds = sales.map(s => s.id);
-            const paymentsQuery = await pool.query(`SELECT id, amount, machine_id FROM payment WHERE machine_id = ANY($1)`, [machineIds]);
-            payments = paymentsQuery.rows;
-        }
+    if (sales.length > 0) {
+      const machineIds = sales.map(s => s.id);
+      const paymentsQuery = await pool.query(`SELECT id, amount, machine_id FROM payment WHERE machine_id = ANY($1)`, [machineIds]);
+      payments = paymentsQuery.rows;
     }
+  }
 
 
 
-    const machinesSoldQuery = `
+  const machinesSoldQuery = `
       SELECT COUNT(*) AS total 
       FROM sale 
       WHERE contract_date BETWEEN $1 AND $2 AND sell_by = $3
     `;
 
-    const pendingPaymentsQuery = `
+  const pendingPaymentsQuery = `
   WITH payment_totals AS (
     SELECT
       machine_id,
@@ -1508,7 +1510,7 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
   ORDER BY s.contract_date DESC
 `;
 
-    const pendingPartsPaymentQuery = `
+  const pendingPartsPaymentQuery = `
   SELECT
     si.*,
     COALESCE(
@@ -1527,8 +1529,8 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
       'member', c.member,
       'created_at', c.created_at
     ) AS customer
-  FROM savedinvoices_karachi si
-  LEFT JOIN customer_parts_karachi cp ON cp.part_id = si.id
+  FROM savedinvoices si
+  LEFT JOIN customer_parts cp ON cp.part_id = si.id
   LEFT JOIN customer c ON c.id = si.customer_id
   LEFT JOIN users u ON u.id = c.ownership
   WHERE si.owner_paid IS FALSE
@@ -1537,7 +1539,7 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
   ORDER BY si.created_at DESC
 `;
 
-    const pendingDeliveriesQuery = `
+  const pendingDeliveriesQuery = `
   SELECT
     s.*,
     JSON_BUILD_OBJECT(
@@ -1562,7 +1564,7 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
   ORDER BY s.contract_date DESC
 `;
 
-    const topFollowQuery = `
+  const topFollowQuery = `
   WITH latest_feedback AS (
     SELECT DISTINCT ON (f.customer_id)
       f.*
@@ -1590,7 +1592,7 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
   ORDER BY lf.next_followup ASC
 `;
 
-    const newlyAssignedCustomersQuery = `
+  const newlyAssignedCustomersQuery = `
   SELECT *
   FROM customer
   WHERE ownership = $1
@@ -1600,23 +1602,23 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
 
 
 
-    const [
-        currentMonthSalesResult,
-        lastMonthSalesResult,
-        saleDetailsQueryResult,
-        feedbackQueryResult,
-        visitQueryResult,
-        allTasksQueryResult,
-        pendingPaymentsResult,
-        pendingPartsPaymentResult,
-        pendingDeliveriesResult,
-        topFollowResult,
-        newlyAssignedCustomersResult,
+  const [
+    currentMonthSalesResult,
+    lastMonthSalesResult,
+    saleDetailsQueryResult,
+    feedbackQueryResult,
+    visitQueryResult,
+    allTasksQueryResult,
+    pendingPaymentsResult,
+    pendingPartsPaymentResult,
+    pendingDeliveriesResult,
+    topFollowResult,
+    newlyAssignedCustomersResult,
 
-    ] = await Promise.all([
-        pool.query(machinesSoldQuery, [currentMonthStart, currentMonthEnd, uid]),
-        pool.query(machinesSoldQuery, [lastMonthStart, lastMonthEnd, uid]),
-        pool.query(`
+  ] = await Promise.all([
+    pool.query(machinesSoldQuery, [currentMonthStart, currentMonthEnd, uid]),
+    pool.query(machinesSoldQuery, [lastMonthStart, lastMonthEnd, uid]),
+    pool.query(`
         SELECT 
           s.id, s.customer_id, s.contract_date, s.serial_no, s.price, 
           c.name AS customer_name, c.owner AS customer_owner 
@@ -1624,231 +1626,253 @@ async function getSalesData(currentMonthStart: string, currentMonthEnd: string, 
         LEFT JOIN customer c ON s.customer_id = c.id 
         WHERE s.contract_date BETWEEN $1 AND $2 
         AND s.sell_by = $3`, [currentMonthStart, currentMonthEnd, uid]),
-        saleCustomerIds.length > 0
-            ? pool.query(`
+    saleCustomerIds.length > 0
+      ? pool.query(`
             SELECT COUNT(DISTINCT customer_id) AS feedbacks_taken 
             FROM feedback 
             WHERE created_at BETWEEN $1 AND $2 
             AND user_id = $3 
             AND customer_id = ANY($4)`, [currentMonthStart, currentMonthEnd, uid, saleCustomerIds])
-            : { rows: [{ feedbacks_taken: 0 }] },
-        pool.query(`
+      : { rows: [{ feedbacks_taken: 0 }] },
+    pool.query(`
         SELECT COUNT(*) AS total_visits 
         FROM visit 
         WHERE created_at BETWEEN $1 AND $2 
         AND user_id = $3`, [currentMonthStart, currentMonthEnd, uid]),
-        pool.query(`SELECT * FROM task WHERE assigned_to = $1 AND status = 'Pending'`, [uid]),
-        pool.query(pendingPaymentsQuery, [uid]),
+    pool.query(`SELECT * FROM task WHERE assigned_to = $1 AND status = 'Pending' ORDER BY id DESC LIMIT 5`, [uid]),
+    pool.query(pendingPaymentsQuery, [uid]),
 
-        pool.query(pendingPartsPaymentQuery, [uid]),
+    pool.query(pendingPartsPaymentQuery, [uid]),
 
-        pool.query(pendingDeliveriesQuery, [uid]),
+    pool.query(pendingDeliveriesQuery, [uid]),
 
-        pool.query(topFollowQuery, [currentMonthStart, currentMonthEnd, uid]),
+    pool.query(topFollowQuery, [currentMonthStart, currentMonthEnd, uid]),
 
-        pool.query(newlyAssignedCustomersQuery, [
-            uid,
-            currentMonthStart,
-            currentMonthEnd,
-        ]),
-
-
-    ]);
-
-    const machinesSoldThisMonth = parseInt(currentMonthSalesResult.rows[0].total, 10) || 0;
-    const machinesSoldLastMonth = parseInt(lastMonthSalesResult.rows[0].total, 10) || 0;
-    const feedbacksTakenThisMonth = parseInt(feedbackQueryResult.rows[0].feedbacks_taken, 10) || 0;
-    const totalVisits = parseInt(visitQueryResult.rows[0].total_visits, 10) || 0;
-    const percentageChange =
-        machinesSoldLastMonth === 0
-            ? machinesSoldThisMonth > 0 ? 100 : 0
-            : ((machinesSoldThisMonth - machinesSoldLastMonth) / machinesSoldLastMonth) * 100;
-    const remainingFeedbacks = totalCustomersWithSale - feedbacksTakenThisMonth;
-
-    const enrichedCustomers = customersWithSale.map((customer) => {
-        const filledCount = profileFields.reduce((count, field) => {
-            const value = customer[field];
-            const filled =
-                field === "rating"
-                    ? typeof value === "number" && value > 0
-                    : Array.isArray(value)
-                        ? value.length > 0
-                        : typeof value === "string"
-                            ? value.trim() !== "" && value !== "null"
-                            : value !== null && value !== undefined;
-            return filled ? count + 1 : count;
-        }, 0);
-
-        const customerSales = sales
-            .filter(s => s.customer_id === customer.id)
-            .map(sale => {
-                let machineFilled = 0;
-
-                const hasContractImages =
-                    (Array.isArray(sale.contract_images_pdf) && sale.contract_images_pdf.length > 0) ||
-                    (Array.isArray(sale.contract_images_png) && sale.contract_images_png.length > 0);
-
-                if (hasContractImages) machineFilled++;
-
-                let checkingFields = []
-
-                if (sale.type === 'machine') {
-                    checkingFields = [...saleFields]
-                } else {
-                    checkingFields = [...partFields]
-                }
+    pool.query(newlyAssignedCustomersQuery, [
+      uid,
+      currentMonthStart,
+      currentMonthEnd,
+    ]),
 
 
-                checkingFields.forEach(field => {
-                    const value = sale[field];
-                    const filled =
-                        Array.isArray(value)
-                            ? value.length > 0
-                            : typeof value === "string"
-                                ? value.trim() !== "" && value !== "null"
-                                : typeof value === "number"
-                                    ? !isNaN(value)
-                                    : value !== null && value !== undefined;
+  ]);
 
-                    if (filled) machineFilled++;
-                });
+  const machinesSoldThisMonth = parseInt(currentMonthSalesResult.rows[0].total, 10) || 0;
+  const machinesSoldLastMonth = parseInt(lastMonthSalesResult.rows[0].total, 10) || 0;
+  const feedbacksTakenThisMonth = parseInt(feedbackQueryResult.rows[0].feedbacks_taken, 10) || 0;
+  const totalVisits = parseInt(visitQueryResult.rows[0].total_visits, 10) || 0;
+  const percentageChange =
+    machinesSoldLastMonth === 0
+      ? machinesSoldThisMonth > 0 ? 100 : 0
+      : ((machinesSoldThisMonth - machinesSoldLastMonth) / machinesSoldLastMonth) * 100;
+  const remainingFeedbacks = totalCustomersWithSale - feedbacksTakenThisMonth;
 
-                const totalFields = checkingFields.length + 1;
-                const completion = Math.round((machineFilled / totalFields) * 100);
+  const enrichedCustomers = customersWithSale.map((customer) => {
+    const filledCount = profileFields.reduce((count, field) => {
+      const value = customer[field];
+      const filled =
+        field === "rating"
+          ? typeof value === "number" && value > 0
+          : Array.isArray(value)
+            ? value.length > 0
+            : typeof value === "string"
+              ? value.trim() !== "" && value !== "null"
+              : value !== null && value !== undefined;
+      return filled ? count + 1 : count;
+    }, 0);
 
-                return {
-                    id: sale.id,
-                    serial_no: sale.serial_no,
-                    payments: payments.filter(p => p.machine_id === sale.id),
-                    percentage_completion: completion,
-                    price: sale.price,
-                    speed_money_amount: sale.speed_money_amount
-                };
-            });
+    const customerSales = sales
+      .filter(s => s.customer_id === customer.id)
+      .map(sale => {
+        let machineFilled = 0;
+
+        const hasContractImages =
+          (Array.isArray(sale.contract_images_pdf) && sale.contract_images_pdf.length > 0) ||
+          (Array.isArray(sale.contract_images_png) && sale.contract_images_png.length > 0);
+
+        if (hasContractImages) machineFilled++;
+
+        let checkingFields = []
+
+        if (sale.type === 'machine') {
+          checkingFields = [...saleFields]
+        } else {
+          checkingFields = [...partFields]
+        }
+
+
+        checkingFields.forEach(field => {
+          const value = sale[field];
+          const filled =
+            Array.isArray(value)
+              ? value.length > 0
+              : typeof value === "string"
+                ? value.trim() !== "" && value !== "null"
+                : typeof value === "number"
+                  ? !isNaN(value)
+                  : value !== null && value !== undefined;
+
+          if (filled) machineFilled++;
+        });
+
+        const totalFields = checkingFields.length + 1;
+        const completion = Math.round((machineFilled / totalFields) * 100);
 
         return {
-
-            profile_completion: Math.round((filledCount / profileFields.length) * 100),
-            sales: customerSales,
-            id: customer.id,
-            name: customer.name,
-            owner: customer.owner,
-            industry: customer.industry,
-            number: customer.number.join(", "),
-            location: customer.location,
-            created_at: customer.created_at,
-            member: customer.member
+          id: sale.id,
+          serial_no: sale.serial_no,
+          payments: payments.filter(p => p.machine_id === sale.id),
+          percentage_completion: completion,
+          price: sale.price,
+          speed_money_amount: sale.speed_money_amount
         };
-    });
-
-
-    const pendingPayments = pendingPaymentsResult.rows.map((item: any) => ({
-        ...item,
-        total_paid: Number(item.total_paid || 0),
-        pending_amount: Number(item.pending_amount || 0),
-    }));
-
-    const totalPendingPaymentAmount = pendingPayments.reduce(
-        (sum: number, item: any) => sum + Number(item.pending_amount || 0),
-        0
-    );
-
-    const pendingPartsPayments = pendingPartsPaymentResult.rows
-        .map((invoice: any) => {
-            const itemsTotal = Array.isArray(invoice.fields)
-                ? invoice.fields.reduce((sum: number, item: any) => {
-                    const val = Number(item?.total ?? 0);
-                    return sum + (isNaN(val) ? 0 : val);
-                }, 0)
-                : 0;
-
-            const discount = Number(invoice.discount ?? 0);
-            const finalAmount = itemsTotal - discount;
-            const totalPaid = Number(invoice.total_paid ?? 0);
-            const pendingAmount = Math.max(finalAmount - totalPaid, 0);
-
-            let status = "NA";
-
-            if (itemsTotal === 0) status = "Paid";
-            else if (totalPaid === 0) status = "Pending";
-            else if (pendingAmount > 0) status = "Partial";
-            else status = "Paid";
-
-            return {
-                ...invoice,
-                items_total: itemsTotal,
-                discount,
-                total_paid: totalPaid,
-                final_amount: pendingAmount,
-                status,
-            };
-        })
-        .filter(
-            (item: any) =>
-                moment(item.created_at).isSameOrAfter("2025-12-01") ||
-                item.payment === false
-        )
-        .filter((item: any) => item.status !== "Paid");
-
-    const totalPendingPartsPaymentAmount = pendingPartsPayments.reduce(
-        (sum: number, item: any) => sum + Number(item.final_amount || 0),
-        0
-    );
-
-    const customersWithSaleOrMember = enrichedCustomers.filter(
-        (customer: any) => customer.member === true || customer.sales.length > 0
-    );
-
-
+      });
 
     return {
 
-        totalCustomersWithSale,
-        machinesSoldThisMonth,
-        machinesSoldLastMonth,
-        machinesSoldThisMonthDetail: saleDetailsQueryResult.rows,
-        feedbacksTakenThisMonth,
-        remainingFeedbacks,
-        totalVisits,
-        allTasks: allTasksQueryResult.rows.length,
-        percentageChange: percentageChange.toFixed(2),
-        customers: enrichedCustomers,
-        new_entries: {
-            pending_payments: {
-                total: pendingPayments.length,
-                total_amount: totalPendingPaymentAmount,
-                data: pendingPayments,
-            },
-
-            pending_parts_payments: {
-                total: pendingPartsPayments.length,
-                total_amount: totalPendingPartsPaymentAmount,
-                data: pendingPartsPayments,
-            },
-
-            pending_deliveries: {
-                total: pendingDeliveriesResult.rows.length,
-                data: pendingDeliveriesResult.rows,
-            },
-
-            top_follow: {
-                total: topFollowResult.rows.length,
-                data: topFollowResult.rows,
-            },
-
-            newly_assigned_customers: {
-                total: newlyAssignedCustomersResult.rows.length,
-                data: newlyAssignedCustomersResult.rows,
-            },
+      profile_completion: Math.round((filledCount / profileFields.length) * 100),
+      sales: customerSales,
+      id: customer.id,
+      name: customer.name,
+      owner: customer.owner,
+      industry: customer.industry,
+      number: customer.number.join(", "),
+      location: customer.location,
+      created_at: customer.created_at,
+      member: customer.member,
+    };
+  });
 
 
+  const pendingPayments = pendingPaymentsResult.rows.map((item: any) => ({
+    ...item,
+    total_paid: Number(item.total_paid || 0),
+    pending_amount: Number(item.pending_amount || 0),
+  }));
 
-            customers_with_sale_or_member: {
-                total: customersWithSaleOrMember.length,
-                data: customersWithSaleOrMember,
-            },
-        },
-    }
+  const totalPendingPaymentAmount = pendingPayments.reduce(
+    (sum: number, item: any) => sum + Number(item.pending_amount || 0),
+    0
+  );
+
+  const pendingPartsPayments = pendingPartsPaymentResult.rows
+    .map((invoice: any) => {
+      const itemsTotal = Array.isArray(invoice.fields)
+        ? invoice.fields.reduce((sum: number, item: any) => {
+          const val = Number(item?.total ?? 0);
+          return sum + (isNaN(val) ? 0 : val);
+        }, 0)
+        : 0;
+
+      const discount = Number(invoice.discount ?? 0);
+      const finalAmount = itemsTotal - discount;
+      const totalPaid = Number(invoice.total_paid ?? 0);
+      const pendingAmount = Math.max(finalAmount - totalPaid, 0);
+
+      let status = "NA";
+
+      if (itemsTotal === 0) status = "Paid";
+      else if (totalPaid === 0) status = "Pending";
+      else if (pendingAmount > 0) status = "Partial";
+      else status = "Paid";
+
+      return {
+        ...invoice,
+        items_total: itemsTotal,
+        discount,
+        total_paid: totalPaid,
+        final_amount: pendingAmount,
+        status,
+      };
+    })
+    .filter(
+      (item: any) =>
+        moment(item.created_at).isSameOrAfter("2025-12-01") ||
+        item.payment === false
+    )
+    .filter((item: any) => item.status !== "Paid");
+
+  const totalPendingPartsPaymentAmount = pendingPartsPayments.reduce(
+    (sum: number, item: any) => sum + Number(item.final_amount || 0),
+    0
+  );
+
+  const customersWithSaleOrMember = enrichedCustomers.filter(
+    (customer: any) => customer.member === true || customer.sales.length > 0
+  );
+
+  const usdRateQuery = await pool.query(`SELECT usd_rate FROM settings LIMIT 1`)
+  const usdRate = usdRateQuery.rows?.[0]?.usd_rate ?? 0
+
+  
+
+  const total = saleDetailsQueryResult.rows.reduce(
+    (sum, item) => sum + Number(item.price || 0),
+    0,
+  );
+  const finalTotal = total / Number(usdRate);
+
+  const target_achieved = finalTotal
+  const remaining_target =Number(target) - Number(target_achieved)
+
+
+
+  const recentQuotations = await pool.query(`SELECT * FROM quotation WHERE user_id = $1 ORDER BY id DESC LIMIT 10`, [uid])
+
+
+  return {
+
+    totalCustomersWithSale,
+    machinesSoldThisMonth,
+    machinesSoldLastMonth,
+    machinesSoldThisMonthDetail: saleDetailsQueryResult.rows,
+    feedbacksTakenThisMonth,
+    remainingFeedbacks,
+    totalVisits,
+    recentQuotations: recentQuotations.rows,
+    target: {
+      target_achieved,
+      remaining_target
+    },
+    allTasks: allTasksQueryResult.rows,
+    percentageChange: percentageChange.toFixed(2),
+    customers: enrichedCustomers,
+    new_entries: {
+      pending_payments: {
+        total: pendingPayments.length,
+        total_amount: totalPendingPaymentAmount,
+        data: pendingPayments,
+      },
+
+      pending_parts_payments: {
+        total: pendingPartsPayments.length,
+        total_amount: totalPendingPartsPaymentAmount,
+        data: pendingPartsPayments,
+      },
+
+      pending_deliveries: {
+        total: pendingDeliveriesResult.rows.length,
+        data: pendingDeliveriesResult.rows,
+      },
+
+      top_follow: {
+        total: topFollowResult.rows.length,
+        data: topFollowResult.rows,
+      },
+
+      newly_assigned_customers: {
+        total: newlyAssignedCustomersResult.rows.length,
+        data: newlyAssignedCustomersResult.rows,
+      },
+
+
+
+      customers_with_sale_or_member: {
+        total: customersWithSaleOrMember.length,
+        data: customersWithSaleOrMember,
+      },
+    },
+  }
 }
 
 async function getCRMAfterSalesData(currentMonthStart: string, currentMonthEnd: string, uid: string, approval : boolean) {

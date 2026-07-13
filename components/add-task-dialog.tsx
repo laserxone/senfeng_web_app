@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -19,7 +20,7 @@ import { UserSearch } from "@/components/user-search";
 import axios from "@/lib/axios";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDays } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -38,6 +39,7 @@ type AddTaskDialogProps = {
 variant ?: "default" | "link" | "outline" | "secondary" | "ghost" | "destructive"
 size ?: "default" | "icon" | "xs" | "sm" | "lg" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined
 btnClassname ?: string
+children?: ReactNode
 };
 
 const defaultValues = {
@@ -75,6 +77,7 @@ icon = false,
 variant="default",
 size="default",
 btnClassname = "",
+children,
   onRefresh,
   mode = "self",
   user_id,
@@ -180,20 +183,24 @@ btnClassname = "",
   };
 
   function handleClose(val: boolean) {
-    reset(defaultValues);
-    setOpen(false);
+    setOpen(val);
+
+    if (!val) {
+      reset(defaultValues);
+    }
   }
 
   return (
-    <>
-      <Button variant={variant} size={size} className={btnClassname}
-        onClick={() => {
-          setOpen(true);
-        }}
-      >
-     {icon && <CalendarDays className="h-3.5 w-3.5" />}   {placeholder}
-      </Button>
-      <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleClose}>
+      {children ? (
+        <DialogTrigger asChild>{children}</DialogTrigger>
+      ) : (
+        <DialogTrigger asChild>
+          <Button variant={variant} size={size} className={btnClassname}>
+            {icon && <CalendarDays className="h-3.5 w-3.5" />} {placeholder}
+          </Button>
+        </DialogTrigger>
+      )}
         <DialogContent className="w-full sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
@@ -332,7 +339,6 @@ btnClassname = "",
           </ScrollArea>
         </DialogContent>
       </Dialog>
-    </>
   );
 }
 
