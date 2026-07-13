@@ -25,8 +25,8 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
     c.member AS customer_member,
     c.id AS customer_id
 FROM visit r
-INNER JOIN users u ON r.user_id = u.id
-INNER JOIN customer c ON r.customer_id = c.id
+LEFT JOIN users u ON r.user_id = u.id
+LEFT JOIN customer c ON r.customer_id = c.id
 WHERE u.id = $1
     `;
 
