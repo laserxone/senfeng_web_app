@@ -50,7 +50,7 @@ import "./styles.css";
 
 
 
-export default function UserDashboard({ id: userID, }: { id: string | null }) {
+export default function UserDashboard({ id: userID, }: { id: string}) {
 
 
   const { userID: ownerId, base_route } = useUserDetail();
@@ -74,21 +74,35 @@ export default function UserDashboard({ id: userID, }: { id: string | null }) {
   const pendingRequests = useRef(0)
 
   const { open } = useSidebar()
-  useEffect(() => {
-    if (ownerId && userID) {
-      const startDate = moment().startOf("month").toISOString();
-      const endDate = moment().endOf("month").toISOString();
-      fetchData();
-      fetchVisitData(startDate, endDate);
-      fetchExtraCustomerOptions();
-      fetchReimbursementData(startDate, endDate);
-      fetchAttendanceData(startDate, endDate);
-      fetchCallData(startDate, endDate);
-      const start = moment().startOf("day").toISOString();
-      const end = moment().endOf("day").toISOString();
-      fetchTasks(start, end)
-    }
-  }, [userID]);
+   useEffect(() => {
+      if (userID && ownerId) {
+        let cancelled = false;
+        const startDate = moment().startOf("month").toISOString();
+        const endDate = moment().endOf("month").toISOString();
+        const start = moment().startOf("day").toISOString();
+        const end = moment().endOf("day").toISOString();
+  
+        setDashboardSkeletonLoading(true);
+  
+        Promise.allSettled([
+          fetchData(),
+          fetchVisitData(startDate, endDate),
+          fetchExtraCustomerOptions(),
+          fetchReimbursementData(startDate, endDate),
+          fetchAttendanceData(startDate, endDate),
+          fetchCallData(startDate, endDate),
+          fetchTasks(start, end),
+        ]).finally(() => {
+          if (!cancelled) {
+            setDashboardSkeletonLoading(false);
+          }
+        });
+  
+        return () => {
+          cancelled = true;
+        };
+      }
+    }, [userID, ownerId]);
 
   useEffect(() => {
     const paramTab = searchParams.get("p");
@@ -286,7 +300,6 @@ export default function UserDashboard({ id: userID, }: { id: string | null }) {
   const RenderReimbursement = useCallback(() => {
 
     return (
-      userID &&
       <Reimbursement
         id={userID}
         passingData={reimbursementData || []}
@@ -433,8 +446,6 @@ export default function UserDashboard({ id: userID, }: { id: string | null }) {
       </div>
     );
   }
-
-  if (!userID) return null
 
    return (
       <div className="flex flex-1 gap-4 bg-background  py-2">
