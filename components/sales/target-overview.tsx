@@ -19,7 +19,7 @@ export default function TargetOverview({ data }: { data?: SalesTarget }) {
   const progressAchievement = Math.min(100, Math.max(0, achievement));
 
   return (
-    <Card className="h-full w-full overflow-hidden border border-slate-200/80 bg-gradient-to-br from-background via-indigo-50/25 to-amber-50/25 shadow-sm ring-1 ring-black/5 xl:h-[300px] p-0">
+    <Card className="h-full w-full overflow-hidden border border-slate-200/80  shadow-sm ring-1 ring-black/5 xl:h-[300px] p-0">
       <CardContent className="grid h-full gap-4 p-4 sm:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-5">
           <div className="border-b border-slate-200/80 pb-3">
@@ -100,7 +100,7 @@ function BreakdownRow({
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "PKR",
+    currency: "USD",
     maximumFractionDigits: 0,
   }).format(value);
 }

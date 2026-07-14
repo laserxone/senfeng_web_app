@@ -52,7 +52,7 @@ const RenderTodayTasks = ({ data, onRefresh }: {
   }
 
   return (
-    <Card className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border bg-background shadow-sm xl:h-[600px]">
+    <Card className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border shadow-sm xl:h-[600px] p-0">
       <CardHeader className="shrink-0 border-b bg-slate-50/80 p-4 dark:bg-zinc-900/70">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">

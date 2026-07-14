@@ -1,28 +1,19 @@
 "use client";
-import { ArrowUpDown, Building2, CalendarDays, CheckCircle2, ClipboardList, Clock, DownloadIcon, MapPin, Phone, Plus, UserRound, Users } from "lucide-react";
-
+import { ArrowUpDown, Building2, DownloadIcon, MapPin, Phone, Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useState } from "react";
-
 import ConfirmationDialog from "@/components/alert-dialog";
 import PageTable from "@/components/app-table";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-
 import AddCustomerDialog from "@/components/customer-components/add-customer";
-import { ExtraCustomer, NewlyAssignedCustomer, TaskProps } from "@/lib/types";
+import useUserDetail from "@/hooks/use-user-detail";
+import { ExtraCustomer, NewlyAssignedCustomer } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import moment from "moment";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import AddTaskDialog from "../add-task-dialog";
 import { Badge } from "../ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import { Progress } from "../ui/progress";
 import { ScrollArea } from "../ui/scroll-area";
-import Spinner from "../ui/spinner";
 import AddFeedbackDialog from "./add-feedback";
 
 
@@ -33,9 +24,9 @@ type CustomerEmployeeProps = {
   ownership: boolean;
   totalCustomerText?: string;
   height?: string
- 
+
   newly_assigned?: null | { total: number, data: NewlyAssignedCustomer[] }
- 
+
 };
 
 export default function CustomerEmployee({
@@ -43,9 +34,9 @@ export default function CustomerEmployee({
   onRefresh,
   ownership,
   height,
- 
+
   newly_assigned,
- 
+
 }: CustomerEmployeeProps) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [data, setData] = useState<ExtraCustomer[]>([]);
@@ -54,11 +45,7 @@ export default function CustomerEmployee({
     useUserDetail();
   const [selectedCustomer, setSelectedCustomer] = useState<ExtraCustomer | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
-  const [feedback, setFeedback] = useState("");
-  const [next, setNext] = useState<Date | null>(null);
-  const [top, setTop] = useState(false);
-  const [satisfactory, setSatisfactory] = useState(false);
-  const [loading, setLoading] = useState(false);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -186,26 +173,7 @@ export default function CustomerEmployee({
     return baseColumns;
   }, [userID]);
 
-  async function handleSaveFeedback() {
-    setLoading(true);
-    axios
-      .post(`/${userID}/feedback`, {
-        feedback: feedback,
-        type: "feedback",
-        customer_id: selectedCustomer?.id,
-        user_id: userID,
-        status: satisfactory ? "Satisfactory" : "Unsatisfactory",
-        next_followup: next,
-        top_follow: top,
-      })
-      .then(async () => {
-        await onRefresh();
-      })
-      .finally(() => {
-        setLoading(false);
-        setShowFeedback(false);
-      });
-  }
+
 
   return (
     <div className="flex flex-1 flex-col space-y-4">

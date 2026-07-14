@@ -1,7 +1,7 @@
 "use client";
 
 import AddTaskDialog from '@/components/add-task-dialog';
-import PageTable from '@/components/app-table-without-pagination';
+import PageTable from '@/components/app-table';
 import CurrencyFormatter from "@/components/currency-formatter";
 import { MyImgZooming } from '@/components/img-zooming';
 import EngineerModal from '@/components/pos/engineer-modal';

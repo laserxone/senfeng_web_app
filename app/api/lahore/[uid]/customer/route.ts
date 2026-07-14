@@ -277,10 +277,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ uid:
       COALESCE(u.name, '') AS ownership_name
       ${machinesQuery ? `,
       COALESCE(json_agg(s.serial_no) FILTER (WHERE s.serial_no IS NOT NULL), '[]') AS machines,
-       COALESCE(json_agg(s.sell_by) FILTER (WHERE s.sell_by IS NOT NULL), '[]') AS sell_by` : ''}
+       COALESCE(json_agg(s.sell_by) FILTER (WHERE s.sell_by IS NOT NULL), '[]') AS sell_by,
+        COALESCE(
+        json_agg(DISTINCT handshake_image)
+        FILTER (WHERE handshake_image IS NOT NULL),
+        '[]'
+      ) AS handshake_images` : ''}
     FROM customer c
     LEFT JOIN users u ON c.ownership = u.id
-    ${machinesQuery ? 'LEFT JOIN sale s ON c.id = s.customer_id' : ''}
+    ${machinesQuery ? 
+        `LEFT JOIN sale s ON c.id = s.customer_id
+        LEFT JOIN LATERAL unnest(s.handshake_images) AS handshake_image 
+      ON TRUE` : ''}
   `;
 
             let whereClauses = [];

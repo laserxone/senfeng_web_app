@@ -11,7 +11,7 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { z } from "zod";
 
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import {
   Sheet,
   SheetContent,

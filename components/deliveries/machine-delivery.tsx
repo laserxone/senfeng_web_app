@@ -1,6 +1,6 @@
 "use client";
 
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import useUserDetail from "@/hooks/use-user-detail";

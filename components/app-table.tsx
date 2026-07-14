@@ -65,6 +65,7 @@ type PageTableProps<T extends Record<string, any>> = {
   download?: boolean;
   tableWidth?: string
   height?: string
+  hideFooter ?: boolean
 };
 
 const PageTable = <T extends Record<string, any>>({
@@ -79,7 +80,9 @@ const PageTable = <T extends Record<string, any>>({
   defaultPageSize = 100,
   download = false,
   tableWidth = "",
-  height = "min-h-[calc(100dvh-280px)]"
+  height = "min-h-[calc(100dvh-280px)]",
+  hideFooter = false
+  
 
 }: PageTableProps<T>) => {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -310,7 +313,7 @@ const PageTable = <T extends Record<string, any>>({
         </div>
       </div>
 
-      <div className="flex flex-col items-center justify-end gap-2 rounded-lg border bg-background/95 p-2 shadow-sm sm:flex-row">
+   {!hideFooter &&   <div className="flex flex-col items-center justify-end gap-2 rounded-lg border bg-background/95 p-2 shadow-sm sm:flex-row">
         <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex-1 text-xs font-medium text-muted-foreground">
             {filteredData.length > 0 ? (
@@ -399,6 +402,7 @@ const PageTable = <T extends Record<string, any>>({
           </div>
         </div>
       </div>
+}
     </div>
   );
 };

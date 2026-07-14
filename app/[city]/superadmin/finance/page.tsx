@@ -1,6 +1,6 @@
 "use client";
 
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import CurrencyFormatter from "@/components/currency-formatter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

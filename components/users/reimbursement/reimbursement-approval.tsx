@@ -12,7 +12,7 @@ import {
     useState
 } from "react";
 
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import Heading from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {

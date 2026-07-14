@@ -1,5 +1,5 @@
 "use client";
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import AppCalendar from "@/components/app-calendar";
 import { CustomerSearch } from "@/components/customer-components/customer-search";
 import { RequiredStar } from "@/components/RequiredStar";

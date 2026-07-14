@@ -1,6 +1,6 @@
 "use client";
 import ConfirmationDialog from "@/components/alert-dialog";
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import {

@@ -22,12 +22,8 @@ import { cn } from "@/lib/utils";
 export function PricesSearch({ value, onReturn }: { value: PricesSearchProps | null, onReturn: (val: PricesSearchProps) => void }) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState<PricesSearchProps[]>([]);
-  const { userID, designation, office } = useUserDetail();
-  const [city, setCity] = React.useState("lahore");
-  const [search, setSearch] = React.useState("");
-  const [page, setPage] = React.useState(1);
-
-  const PAGE_SIZE = 20;
+  const { userID,} = useUserDetail();
+  
 
   React.useEffect(() => {
     async function fetchData() {

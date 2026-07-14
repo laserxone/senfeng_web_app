@@ -1,6 +1,6 @@
 "use client";
 
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import { CustomerSearch } from "@/components/customer-components/customer-search";
 import { Button } from "@/components/ui/button";
 import {

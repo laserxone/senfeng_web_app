@@ -13,7 +13,7 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { ArrowUpDown, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import PageTable from "../app-table-without-pagination";
+import PageTable from "../app-table";
 import Heading from "../ui/heading";
 import { Label } from "../ui/label";
 import Spinner from "../ui/spinner";

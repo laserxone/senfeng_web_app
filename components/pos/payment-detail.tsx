@@ -1,5 +1,5 @@
 "use client";
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import { MyImg } from "@/components/machine-components/machine-component";
 import AddPOSPayment from "@/components/pos/add-pos-payment";
 import { Button } from "@/components/ui/button";

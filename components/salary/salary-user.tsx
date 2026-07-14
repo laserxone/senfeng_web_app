@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowUpDown } from "lucide-react";
 import { Dispatch, SetStateAction, useCallback, useEffect, useState } from "react";
 
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import Heading from "@/components/ui/heading";

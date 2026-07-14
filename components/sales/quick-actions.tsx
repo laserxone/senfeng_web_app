@@ -79,7 +79,7 @@ export default function SalesQuickActions({ onRefreshCustomer, onRefreshFeedback
     }
     return (
         <>
-            <Card className="h-full w-full overflow-hidden border border-slate-200/80 bg-gradient-to-br from-background via-slate-50 to-emerald-50/20 shadow-sm ring-1 ring-black/5 xl:h-[300px] p-0">
+            <Card className="h-full w-full overflow-hidden border border-slate-200/80  shadow-sm ring-1 ring-black/5 xl:h-[300px] p-0">
                 <CardContent className="flex h-full flex-col gap-3 p-4">
                     <div className="border-b border-slate-200/80 pb-3">
                         <p className="text-sm font-semibold sm:text-base">

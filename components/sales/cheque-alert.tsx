@@ -1,10 +1,10 @@
 "use client";
 
-import { AlertTriangle, ArrowUpRight, CalendarClock } from "lucide-react";
+import { AlertTriangle, ArrowUpDown, ArrowUpRight, CalendarClock } from "lucide-react";
 import moment from "moment";
-import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
+import PageTable from '@/components/app-table';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,16 +15,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useChequeAlerts } from "@/hooks/use-cheque-alerts";
 import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase";
+import { ColumnDef } from "@tanstack/react-table";
+import Link from "next/link";
+import { toast } from "sonner";
+import ConfirmationDialog from "../alert-dialog";
 
 type ChequeAlertItem = {
   id: number;
@@ -52,7 +50,7 @@ export default function ChequeClearanceAlert() {
   const previewAlerts = alerts.slice(0, 10);
 
   return (
-    <Card className="h-full w-full overflow-hidden border border-slate-200/80 bg-gradient-to-br from-background via-slate-50 to-red-50/25 p-0 shadow-sm ring-1 ring-black/5 xl:h-[600px]">
+    <Card className="h-full w-full overflow-hidden border border-slate-200/80 shadow-sm ring-1 ring-black/5 xl:h-[600px] p-0">
       <CardContent className="flex h-full min-h-0 flex-col p-4">
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
           <div className="flex min-w-0 items-center gap-2">
@@ -102,7 +100,7 @@ export default function ChequeClearanceAlert() {
         </div>
 
         {alerts.length ? (
-          <div className="mt-3 min-h-0 flex-1 overflow-auto rounded-md border border-slate-200/80 bg-background/85">
+          <div className="mt-3 min-h-0 flex-1 overflow-hidden rounded-md border border-slate-200/80 bg-background/85">
             <ChequeAlertsTable alerts={previewAlerts} baseRoute={base_route} />
           </div>
         ) : (
@@ -128,69 +126,175 @@ function ChequeAlertsTable({
   alerts: ChequeAlertItem[];
   baseRoute: string;
 }) {
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow className="bg-slate-100 hover:bg-slate-100">
-          <TableHead className="h-9 min-w-[180px] px-4 text-xs">
+
+  const [selected, setSelected] = useState<null | ChequeAlertItem>(null)
+  const [loading, setLoading] = useState(false)
+  const { userID } = useUserDetail()
+
+
+  const columns: ColumnDef<ChequeAlertItem>[] = [
+
+
+    {
+      accessorKey: "customer_name",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
             Customer
-          </TableHead>
-          <TableHead className="h-9 min-w-[110px] text-xs">
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <Link target="_blank" href={`/${baseRoute}${row.original.link}`} className="hover:underline">
+          <div className="min-w-0">
+            <p className="max-w-[220px] truncate text-sm font-medium">
+              {row.original.customer_name || "-"}
+            </p>
+            <p className="max-w-[220px] truncate text-xs text-muted-foreground">
+              {row.original.customer_owner || "-"}
+            </p>
+          </div>
+        </Link>
+      ),
+    },
+    {
+      accessorKey: "serial_no",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
             Serial No
-          </TableHead>
-          <TableHead className="h-9 min-w-[110px] text-xs">
-            Amount
-          </TableHead>
-          <TableHead className="h-9 min-w-[105px] text-xs">
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <Link target="_blank" href={`/${baseRoute}${row.original.link}`} className="hover:underline">
+          <div>{row.getValue("serial_no")}</div>
+        </Link>
+
+      ),
+    },
+    {
+      accessorKey: "amount",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            amount
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{formatAmount(row.original.amount)}</div>,
+    },
+
+    {
+      accessorKey: "date",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
             Date
-          </TableHead>
-          <TableHead className="h-9 min-w-[110px] text-xs">
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{formatDate(row.original.date)}</div>,
+    },
+
+    {
+      accessorKey: "status",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
             Status
-          </TableHead>
-        </TableRow>
-      </TableHeader>
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const status = getChequeStatus(row.original.date);
+        return (<Badge
+          variant={status.variant}
+          className="whitespace-nowrap rounded-md"
+        >
+          {status.label}
+        </Badge>)
+      },
+    },
 
-      <TableBody>
-        {alerts.map((item) => {
-          const status = getChequeStatus(item.date);
+    {
+      id: "actions",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+          >
+            Action
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
 
-          return (
-            <TableRow key={item.id} className="hover:bg-muted/30">
-              <TableCell className="px-4 py-2.5">
-                <Link
-                  href={`/${baseRoute}${item.link}`}
-                  className="block min-w-0 hover:underline"
-                >
-                  <p className="max-w-[190px] truncate text-sm font-medium">
-                    {item.customer_name || "-"}
-                  </p>
-                  <p className="max-w-[190px] truncate text-xs text-muted-foreground">
-                    {item.customer_owner || "-"}
-                  </p>
-                </Link>
-              </TableCell>
-              <TableCell className="py-2.5 text-sm font-medium">
-                {item.serial_no || "-"}
-              </TableCell>
-              <TableCell className="py-2.5 text-sm font-semibold tabular-nums">
-                {formatAmount(item.amount)}
-              </TableCell>
-              <TableCell className="py-2.5 text-sm text-muted-foreground">
-                {formatDate(item.date)}
-              </TableCell>
-              <TableCell className="py-2.5">
-                <Badge
-                  variant={status.variant}
-                  className="whitespace-nowrap rounded-md"
-                >
-                  {status.label}
-                </Badge>
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+        const currentItem = row.original;
+
+        return (
+          <Button size={"sm"} onClick={() => setSelected(currentItem)}>Paid</Button>
+        );
+      },
+    },
+
+  ];
+
+  async function handleSubmit(item: ChequeAlertItem | null) {
+    if (!item?.id) return
+    setLoading(true)
+    try {
+      await axios.put(`/${userID}/reminders/${item.id}`, { pending: false })
+      toast.success("Cheque status updated")
+      TriggerFirebaseForChequeAlerts()
+      setSelected(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+  return (
+    <>
+      <PageTable
+        columns={columns}
+        data={alerts}
+        disableInput
+        hideFooter 
+        height="min-h-[calc(100dvh-310px)]"/>
+      <ConfirmationDialog
+        description="Make sure this cheque is submitted"
+        onPressCancel={() => setSelected(null)}
+        onPressYes={() => handleSubmit(selected)
+        }
+        open={!!selected}
+        title="Mark this cheque paid?"
+        loading={loading}
+      />
+    </>
   );
 }
 

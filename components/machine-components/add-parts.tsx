@@ -18,6 +18,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
 import { Textarea } from "../ui/textarea";
 import { ChequeProp } from "@/lib/types";
+import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase";
 
 const formSchema = z
   .object({
@@ -128,6 +129,7 @@ const AddParts = ({ customer_id, user_id,  onRefresh }: { customer_id?: number, 
             );
 
             console.log("All installments saved:", res);
+             TriggerFirebaseForChequeAlerts()
           }
 
         }
@@ -216,7 +218,7 @@ setOpen(false)
                             <span className="text-sm font-medium">
                               Part {index + 1}
                             </span>
-                            <Button
+                            {/* <Button
                               variant="destructive"
                               size="icon"
                               onClick={(e) => {
@@ -227,7 +229,7 @@ setOpen(false)
                               }}
                             >
                               <Trash2 />
-                            </Button>
+                            </Button> */}
                           </div>
 
                           {Object.entries(item).map(([key, val]) => (
@@ -262,7 +264,7 @@ setOpen(false)
                       ))}
                     </div>
 
-                    <Button
+                    {/* <Button
                       onClick={(e) => {
                         e.preventDefault();
                         setNewParts([
@@ -273,7 +275,7 @@ setOpen(false)
                       type="button"
                     >
                       Add new part
-                    </Button>
+                    </Button> */}
 
                     <Controller
                       name="contractDate"

@@ -20,6 +20,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
 import { Textarea } from "../ui/textarea";
 import { Plus } from "lucide-react";
+import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase";
 
 
 
@@ -129,6 +130,7 @@ const AddMachine = ({ customer_id, user_id,  onRefresh }: { customer_id?: number
             );
 
             console.log("All installments saved:", res);
+            TriggerFirebaseForChequeAlerts()
           }
         }
         onRefresh();

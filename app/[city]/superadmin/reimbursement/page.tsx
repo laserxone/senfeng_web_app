@@ -23,7 +23,7 @@ import {
   useState
 } from "react";
 
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import CurrencyFormatter from "@/components/currency-formatter";
 import { MyImgZooming } from "@/components/img-zooming";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";

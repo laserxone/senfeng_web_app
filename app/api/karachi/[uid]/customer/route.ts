@@ -128,48 +128,78 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
             else if (machinesQuery) {
                 const queryParams = []
                 let query = `
-                SELECT 
-                c.id,
-                c.name,
-                c.owner,
-                c.ownership,
-                c.number,
-                c.industry,
-                c.location,
-                c.customer_group,
-                c.created_at, 
-                c.member,
-                COALESCE(u.name, '') AS ownership_name,
-                COALESCE(json_agg(s.serial_no) FILTER (WHERE s.serial_no IS NOT NULL), '[]') AS machines
-                FROM customer c
-                LEFT JOIN sale s ON c.id = s.customer_id
-                LEFT JOIN users u ON c.ownership = u.id
-      `;
-                if (member) {
-                    query += ` WHERE c.member IS TRUE`
-                } else {
-                    query += ` WHERE c.member IS FALSE`
-                }
+    SELECT 
+      c.id,
+      c.name,
+      c.owner,
+      c.ownership,
+      c.number,
+      c.industry,
+      c.location,
+      c.customer_group,
+      c.created_at, 
+      c.member,
 
+      COALESCE(u.name, '') AS ownership_name,
+      COALESCE(u.dp, '') AS ownership_name_dp,
 
-                if (start_date && end_date) {
-                    query += ` AND s.contract_date BETWEEN $1 AND $2`
-                    queryParams.push(start_date, end_date)
-                }
+      COALESCE(
+        json_agg(DISTINCT s.serial_no)
+        FILTER (WHERE s.serial_no IS NOT NULL),
+        '[]'
+      ) AS machines,
 
-                if (user) {
-                    query += ` AND c.ownership = $3`
-                    queryParams.push(user)
-                }
+      COALESCE(
+        json_agg(DISTINCT handshake_image)
+        FILTER (WHERE handshake_image IS NOT NULL),
+        '[]'
+      ) AS handshake_images,
 
-                query += ` GROUP BY c.id, u.name`
+      COALESCE(
+        json_agg(DISTINCT order_num)
+        FILTER (WHERE order_num IS NOT NULL),
+        '[]'
+      ) AS machine_order_numbers
 
-                let result
-                if (queryParams.length > 0) {
-                    result = await pool.query(query, queryParams);
-                } else {
-                    result = await pool.query(query)
-                }
+    FROM customer c
+
+    LEFT JOIN sale s 
+      ON c.id = s.customer_id
+
+    LEFT JOIN LATERAL unnest(s.order_no_arr) AS order_num 
+      ON TRUE
+
+    LEFT JOIN LATERAL unnest(s.handshake_images) AS handshake_image 
+      ON TRUE
+
+    LEFT JOIN users u 
+      ON c.ownership = u.id
+  `;
+ if (member) {
+    query += ` WHERE c.member IS TRUE`;
+  } else {
+    query += ` WHERE c.member IS FALSE`;
+  }
+
+  if (start_date && end_date) {
+    queryParams.push(start_date, end_date);
+
+    query += `
+      AND s.contract_date BETWEEN $${queryParams.length - 1} AND $${queryParams.length}
+    `;
+  }
+
+  if (user) {
+    queryParams.push(user);
+
+    query += ` AND c.ownership = $${queryParams.length}`;
+  }
+
+  query += `
+    GROUP BY c.id, u.name, u.dp
+  `;
+
+  const result = await pool.query(query, queryParams);
 
                 return NextResponse.json(result.rows, { status: 200 })
             }
@@ -248,10 +278,18 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
       COALESCE(u.name, '') AS ownership_name
       ${machinesQuery ? `,
       COALESCE(json_agg(s.serial_no) FILTER (WHERE s.serial_no IS NOT NULL), '[]') AS machines,
-       COALESCE(json_agg(s.sell_by) FILTER (WHERE s.sell_by IS NOT NULL), '[]') AS sell_by` : ''}
+       COALESCE(json_agg(s.sell_by) FILTER (WHERE s.sell_by IS NOT NULL), '[]') AS sell_by,
+        COALESCE(
+        json_agg(DISTINCT handshake_image)
+        FILTER (WHERE handshake_image IS NOT NULL),
+        '[]'
+      ) AS handshake_images` : ''}
     FROM customer c
     LEFT JOIN users u ON c.ownership = u.id
-    ${machinesQuery ? 'LEFT JOIN sale s ON c.id = s.customer_id' : ''}
+    ${machinesQuery ? 
+        `LEFT JOIN sale s ON c.id = s.customer_id
+        LEFT JOIN LATERAL unnest(s.handshake_images) AS handshake_image 
+      ON TRUE` : ''}
   `;
 
             let whereClauses = [];

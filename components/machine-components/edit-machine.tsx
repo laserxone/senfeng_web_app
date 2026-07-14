@@ -78,28 +78,28 @@ const EditMachine = (
       if (data?.speed_money) {
         setIsSpeedMoney(true);
       }
-      if (data?.order_no_arr && data?.order_no_arr.length > 0) {
-        setOrderNumbers([...data.order_no_arr]);
-      }
+      // if (data?.order_no_arr && data?.order_no_arr.length > 0) {
+      //   setOrderNumbers([...data.order_no_arr]);
+      // }
     }
   }, [data, form, visible]);
 
   function onSubmit(values: FormValues) {
-    const cleanedOrderNumbers = orderNumbers.filter(
-      (num) => num?.trim() !== ""
-    );
+    // const cleanedOrderNumbers = orderNumbers.filter(
+    //   (num) => num?.trim() !== ""
+    // );
 
-    if (cleanedOrderNumbers.length === 0) {
-      setOrderNumberError("At least one order number is required.");
-      return;
-    } else if (cleanedOrderNumbers.some((num) => num.length !== 9)) {
-      setOrderNumberError(
-        "Order number wrong format. Each must be 9 characters."
-      );
-      return;
-    } else {
-      setOrderNumberError("");
-    }
+    // if (cleanedOrderNumbers.length === 0) {
+    //   setOrderNumberError("At least one order number is required.");
+    //   return;
+    // } else if (cleanedOrderNumbers.some((num) => num.length !== 9)) {
+    //   setOrderNumberError(
+    //     "Order number wrong format. Each must be 9 characters."
+    //   );
+    //   return;
+    // } else {
+    //   setOrderNumberError("");
+    // }
 
     setLoading(true);
     axios
@@ -112,7 +112,7 @@ const EditMachine = (
         power: values.power,
         source: values.source,
         note: values.note,
-        order_no_arr: cleanedOrderNumbers,
+        // order_no_arr: cleanedOrderNumbers,
         price: values.totalPrice,
         contract_date: values.contractDate,
         cnic: values.cnic,
@@ -134,24 +134,24 @@ const EditMachine = (
     onClose(val);
   }
 
-  const addNumberField = () => {
-    setOrderNumbers((prevState) => [...prevState, ""]);
-  };
+  // const addNumberField = () => {
+  //   setOrderNumbers((prevState) => [...prevState, ""]);
+  // };
 
-  const removeNumberField = (index: number) => {
-    setOrderNumbers((prevState) => prevState.filter((_, ind) => ind !== index));
-  };
+  // const removeNumberField = (index: number) => {
+  //   setOrderNumbers((prevState) => prevState.filter((_, ind) => ind !== index));
+  // };
 
-  const handleNumberChange = (index: number, value: string) => {
-    if (orderNumberError) {
-      setOrderNumberError("");
-    }
-    setOrderNumbers((prevState) => {
-      const newState = [...prevState];
-      newState[index] = value;
-      return newState;
-    });
-  };
+  // const handleNumberChange = (index: number, value: string) => {
+  //   if (orderNumberError) {
+  //     setOrderNumberError("");
+  //   }
+  //   setOrderNumbers((prevState) => {
+  //     const newState = [...prevState];
+  //     newState[index] = value;
+  //     return newState;
+  //   });
+  // };
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -222,7 +222,7 @@ const EditMachine = (
                 />
 
 
-                <Field>
+                {/* <Field>
                   <FieldLabel>Order No</FieldLabel>
                   {orderNumbers.map((num, index) => (
                     <div key={index} className="flex items-center gap-2">
@@ -253,7 +253,7 @@ const EditMachine = (
                       {orderNumberError}
                     </Label>
                   )}
-                </Field>
+                </Field> */}
               </FieldSet>
 
               {/* Contract Details */}

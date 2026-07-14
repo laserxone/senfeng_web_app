@@ -8,7 +8,7 @@ import {
     useState
 } from "react";
 
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import SalaryPdf from "@/components/salary/salaryPdf";
 import  Heading  from "@/components/ui/heading";
 import axios from "@/lib/axios";

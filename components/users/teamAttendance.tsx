@@ -4,7 +4,7 @@ import { Clock3, Filter, ImageIcon, LogIn, LogOut, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ElementType, useEffect, useMemo, useState } from "react";
 
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import {
   Dialog,
   DialogContent,

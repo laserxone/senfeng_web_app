@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import ChequeCredit from "./cheque-credit";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,8 @@ import axios from "@/lib/axios";
 import useUserDetail from "@/hooks/use-user-detail";
 import Spinner from "@/components/ui/spinner";
 import { ChequeProp } from "@/lib/types";
+import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase";
+import { AlertCircle, CreditCard, ShieldCheck } from "lucide-react";
 
 
 export default function AddCheque({
@@ -74,6 +76,7 @@ export default function AddCheque({
         })
       );
       onRefresh();
+      TriggerFirebaseForChequeAlerts()
     } catch (error) {
       console.log(error);
       setErrors("Something went wrong while saving installments.");
@@ -84,28 +87,53 @@ export default function AddCheque({
 
   return (
     <Dialog open={visible} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-2xl lg:max-w-6xl">
-        <DialogHeader>
-          <DialogTitle>Credit Cheque</DialogTitle>
+      <DialogContent className="flex max-h-[94dvh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border-slate-200 bg-white p-0 shadow-2xl sm:rounded-2xl md:max-w-3xl lg:max-w-6xl">
+        <DialogHeader className="border-b border-slate-200 bg-slate-50/90 px-4 py-4 sm:px-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-sm">
+                <CreditCard className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg font-semibold tracking-normal text-slate-950 sm:text-xl">
+                  Credit Cheque
+                </DialogTitle>
+                <p className="mt-1 text-xs font-medium text-slate-500 sm:text-sm">
+                  Add installment dates, amounts, and cheque images.
+                </p>
+              </div>
+            </div>
+            <div className="flex w-fit items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Upload required
+            </div>
+          </div>
         </DialogHeader>
 
-        <ScrollArea className="px-2 h-[calc(100dvh-160px)]">
-          <ChequeCredit
-            setTotal={setTotal}
-            setValue={setValue}
-            total={total}
-            value={value}
-          />
+        <ScrollArea className="h-[calc(100dvh-300px)] bg-slate-50/40">
+          <div className="px-3 py-1 sm:px-6">
+            <ChequeCredit
+              setTotal={setTotal}
+              setValue={setValue}
+              total={total}
+              value={value}
+            />
 
-          {errors && (
-            <Label className="text-sm md:text-base font-medium text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mt-2 inline-block shadow-sm">
-              {errors}
-            </Label>
-          )}
+            {errors && (
+              <Label className="mt-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-semibold text-red-600 shadow-sm">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {errors}
+              </Label>
+            )}
+          </div>
         </ScrollArea>
 
-        <DialogFooter>
-          <Button disabled={loading} onClick={handleSubmit}>
+        <DialogFooter className="px-6 pb-6">
+          <Button
+            disabled={loading}
+            onClick={handleSubmit}
+            className=""
+          >
             {loading && <Spinner />} Submit
           </Button>
         </DialogFooter>

@@ -1,6 +1,6 @@
 "use client";
 
-import PageTablePagination from "@/components/app-table-without-pagination";
+import PageTablePagination from "@/components/app-table";
 import CurrencyFormatter from "@/components/currency-formatter";
 import { MyImgZooming } from "@/components/img-zooming";
 import { Button } from "@/components/ui/button";

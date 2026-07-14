@@ -48,7 +48,7 @@ return (
             key={key}
             className={`
               group flex min-w-[145px] shrink-0 items-center justify-between gap-2 rounded-md px-3 py-2.5 text-left transition-all duration-200
-              lg:min-w-0 lg:w-full
+              lg:min-w-0 lg:w-full cursor-pointer
               ${
                 isActive
                   ? "border border-blue-200 bg-blue-50 text-blue-800 shadow-sm dark:border-blue-800/70 dark:bg-blue-950/50 dark:text-blue-100"

@@ -25,7 +25,7 @@ export default function MyTasks({ data = [] }: { data?: MyTask[] }) {
     .slice(0, 5);
 
   return (
-    <Card className="h-full w-full overflow-hidden border border-slate-200/80 bg-gradient-to-br from-background via-slate-50 to-blue-50/25 shadow-sm ring-1 ring-black/5 xl:h-[300px] p-0">
+    <Card className="h-full w-full overflow-hidden border border-slate-200/80 shadow-sm ring-1 ring-black/5 xl:h-[300px] p-0">
       <CardContent className="flex h-full flex-col p-4">
         <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
           <div className="flex min-w-0 items-center gap-2">

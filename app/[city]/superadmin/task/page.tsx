@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
 
-import PageTable from "@/components/app-table-without-pagination";
+import PageTable from "@/components/app-table";
 import Heading from "@/components/ui/heading";
 import FilterSheet from "@/components/users/filter-sheet";
 import { TIMEZONE } from "@/constants/data";

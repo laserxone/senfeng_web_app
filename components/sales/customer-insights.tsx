@@ -53,7 +53,7 @@ export function CustomerInsights({
   const topItems = normalizedItems.slice(0, 5);
 
   return (
-    <Card className="h-full w-full overflow-hidden border border-slate-200/80 bg-gradient-to-br from-background via-emerald-50/30 to-sky-50/30 shadow-sm ring-1 ring-black/5 xl:h-[300px] p-0">
+    <Card className="h-full w-full overflow-hidden border border-slate-200/80 shadow-sm ring-1 ring-black/5 xl:h-[300px] p-0">
       <CardContent className="flex h-full flex-col gap-3 p-4">
         <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
           <div>
