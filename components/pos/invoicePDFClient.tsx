@@ -9,7 +9,6 @@ import {
 } from "@react-pdf/renderer";
 import CurrencyFormatter from "../currency-formatter";
 import moment from "moment";
-import { publicFile } from "@/lib/publicFile";
 type InvoicePDFProps = {
   companyName: string;
   name: string;
@@ -25,7 +24,7 @@ type InvoicePDFProps = {
   selectedUser?: any;
   createdAt?: Date | string; 
 };
-const InvoicePDF = ({
+const InvoicePDFClient = ({
   companyName,
   name,
   phoneNumber,
@@ -686,7 +685,7 @@ const Header = () => {
     >
       {/* <Text fontSize={60} color={'#0072BC'} fontWeight={'800'}>SENFENG</Text> */}
       <Image
-        src={publicFile("/logo.png")}
+        src={"/logo.png"}
         style={{ height: "40px", width: "200px" }}
       />
       <View
@@ -789,4 +788,4 @@ const Footer = () => {
   );
 };
 
-export default InvoicePDF;
+export default InvoicePDFClient;

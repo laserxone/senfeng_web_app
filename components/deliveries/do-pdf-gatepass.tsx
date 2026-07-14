@@ -1,5 +1,5 @@
+import { publicFile } from "@/lib/publicFile";
 import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
-import { publicFile } from "../users/quotation/quotation-pdf";
 
 type DOPDFGatePassType = {
   delivery_date ?: string | Date | null,

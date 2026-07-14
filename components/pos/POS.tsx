@@ -1,6 +1,5 @@
 "use client";
 import axios from "@/lib/axios";
-import { pdf } from "@react-pdf/renderer";
 import { ChangeEvent, useEffect, useState } from "react";
 import { FaMinusCircle, FaPlus } from "react-icons/fa";
 import { Button } from "../ui/button";
@@ -17,8 +16,6 @@ import {
 } from "../ui/table";
 import { Textarea } from "../ui/textarea";
 import "./Button.css";
-import InvoicePDF from "./invoicePDF";
-import PageContainer from "./page-container";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 import { useDebounce } from "@/hooks/use-debounce";
 import useUserDetail from "@/hooks/use-user-detail";
@@ -117,25 +114,41 @@ export default function POS() {
 
   const handleUpdateInvoice = async () => {
     await handleInvoiceBackendData();
-    const blob = await pdf(
-      <InvoicePDF
-        companyName={companyName}
-        name={name}
-        phoneNumber={phoneNumber}
-        address={address}
-        manager={manager}
-        nextInvoice={nextInvoice}
-        invoiceItems={invoiceItems}
-        totalAmount={totalAmount}
-        warranty={warranty}
-        warrantyYear={warrantyYear}
-        discount={`${discount}`}
-        createdAt={createdAt}
-      />,
-    ).toBlob();
+    const PDFData = {
+      companyName: companyName,
+      name: name,
+      phoneNumber: phoneNumber,
+      address: address,
+      manager: manager,
+      nextInvoice: nextInvoice,
+      invoiceItems: invoiceItems,
+      totalAmount: totalAmount,
+      warranty: warranty,
+      warrantyYear: warrantyYear,
+      discount: `${discount}`,
+      createdAt: createdAt,
+    }
+    const pdfRes = await axios.post(
+      `/${userID}/pos/pdf`,
+      {
+        data: PDFData,
+      },
+      {
+        responseType: "blob",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    const blob = new Blob([pdfRes.data], {
+      type: "application/pdf",
+    });
+
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
     setTimeout(() => URL.revokeObjectURL(url), 600000);
+
   };
 
   const handleInvoiceBackendData = async () => {
@@ -166,24 +179,40 @@ export default function POS() {
   const generatePDF = async () => {
     try {
       const invNumber = await handleUpdateStock();
-      const blob = await pdf(
-        <InvoicePDF
-          companyName={companyName}
-          name={name}
-          phoneNumber={phoneNumber}
-          address={address}
-          manager={manager}
-          nextInvoice={invNumber.nextinvoice}
-          selectedUser={selectedUser}
-          invoiceItems={invoiceItems}
-          totalAmount={totalAmount}
-          warranty={warranty}
-          warrantyYear={warrantyYear}
-          discount={`${discount}`}
-        />,
-      ).toBlob();
+      const PDFData = {
+        companyName: companyName,
+        name: name,
+        phoneNumber: phoneNumber,
+        address: address,
+        manager: manager,
+        nextInvoice: invNumber.nextinvoice,
+        selectedUser: selectedUser,
+        invoiceItems: invoiceItems,
+        totalAmount: totalAmount,
+        warranty: warranty,
+        warrantyYear: warrantyYear,
+        discount: `${discount}`
+      }
+      const pdfRes = await axios.post(
+        `/${userID}/pos/pdf`,
+        {
+          data: PDFData,
+        },
+        {
+          responseType: "blob",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const blob = new Blob([pdfRes.data], {
+        type: "application/pdf",
+      });
+
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 600000);
       await fetchData();
       if (checked) {
         setSelectedInvoice(invNumber?.returning_id);
@@ -506,19 +535,19 @@ export default function POS() {
   }
 
   return loading ? (
-    
-      <div className="flex min-h-[320px] w-full items-center justify-center">
-        <div className="flex items-center gap-3 rounded-md border bg-card px-5 py-4 shadow-sm ring-1 ring-border/30">
-          <Spinner />
-          <div>
-            <p className="text-sm font-bold">Loading POS</p>
-            <p className="text-xs text-muted-foreground">Preparing stock and invoice workspace</p>
-          </div>
+
+    <div className="flex min-h-[320px] w-full items-center justify-center">
+      <div className="flex items-center gap-3 rounded-md border bg-card px-5 py-4 shadow-sm ring-1 ring-border/30">
+        <Spinner />
+        <div>
+          <p className="text-sm font-bold">Loading POS</p>
+          <p className="text-xs text-muted-foreground">Preparing stock and invoice workspace</p>
         </div>
       </div>
-  
+    </div>
+
   ) : (
-   <>
+    <>
       <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-2">
         <div className="flex min-w-0 flex-1 flex-col gap-3 rounded-md border bg-card p-3 shadow-sm ring-1 ring-border/30">
           <div className="flex flex-col gap-2 border-b pb-3 sm:flex-row sm:items-center sm:justify-between">
@@ -635,74 +664,74 @@ export default function POS() {
             <div className="overflow-x-auto p-3">
               <Table>
                 <TableHeader>
-                <TableRow>
-                  {["Description", "Quantity", "Unit Price", "Amount"].map(
-                    (header, index) => (
-                      <TableHead key={index} className="whitespace-nowrap text-left text-xs">
-                        {header}
-                      </TableHead>
-                    ),
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {invoiceItems.map((item, i) => (
-                  <TableRow key={i}>
-                    <TableCell>
-                      <Input
-                        name="description"
-                        value={item?.description}
-                        onChange={(e) => {
-                          handleChange(e, i);
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input readOnly value={item?.qty} />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        name="price"
-                        value={item?.price ? Number(item?.price) : ""}
-                        onChange={(e) => {
-                          if (!isNaN(Number(e.target.value))) {
-                            handleChange(e, i);
-                          }
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2 items-center">
-                        <Input readOnly name="total" value={item?.total} />
-                        {item?.type === "other" && (
-                          <FaMinusCircle
-                            onClick={() => handleRemove(i)}
-                            className="text-red-500 cursor-pointer"
-                          />
-                        )}
-                      </div>
-                    </TableCell>
+                  <TableRow>
+                    {["Description", "Quantity", "Unit Price", "Amount"].map(
+                      (header, index) => (
+                        <TableHead key={index} className="whitespace-nowrap text-left text-xs">
+                          {header}
+                        </TableHead>
+                      ),
+                    )}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {invoiceItems.map((item, i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <Input
+                          name="description"
+                          value={item?.description}
+                          onChange={(e) => {
+                            handleChange(e, i);
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input readOnly value={item?.qty} />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          name="price"
+                          value={item?.price ? Number(item?.price) : ""}
+                          onChange={(e) => {
+                            if (!isNaN(Number(e.target.value))) {
+                              handleChange(e, i);
+                            }
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2 items-center">
+                          <Input readOnly name="total" value={item?.total} />
+                          {item?.type === "other" && (
+                            <FaMinusCircle
+                              onClick={() => handleRemove(i)}
+                              className="text-red-500 cursor-pointer"
+                            />
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
 
-              <OrderStockDialog
-                dialogVisible={orderStockVisible}
-                onCloseDialog={setOrderStockVisible}
-                stock={stock.filter(
-                  (item) =>
-                    item.threshold != null &&
-                    item.threshold !== undefined &&
-                    (item?.qty || 0) <= item.threshold,
-                )}
-                onRefresh={async () => {
-                  setStock([]);
-                  await fetchData();
-                }}
-              />
+            <OrderStockDialog
+              dialogVisible={orderStockVisible}
+              onCloseDialog={setOrderStockVisible}
+              stock={stock.filter(
+                (item) =>
+                  item.threshold != null &&
+                  item.threshold !== undefined &&
+                  (item?.qty || 0) <= item.threshold,
+              )}
+              onRefresh={async () => {
+                setStock([]);
+                await fetchData();
+              }}
+            />
           </Card>
           <section className="grid gap-3 lg:grid-cols-[1fr_1fr_auto]">
             <div className="items-center flex overflow-hidden rounded-md border bg-background">
@@ -749,10 +778,10 @@ export default function POS() {
             </div>
             <div className="flex flex-col gap-2 rounded-md border bg-background px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
-              <Checkbox
-                checked={warranty}
-                onCheckedChange={(checked) => setWarranty(!!checked)}
-              />
+                <Checkbox
+                  checked={warranty}
+                  onCheckedChange={(checked) => setWarranty(!!checked)}
+                />
                 <div>
                   <Label className="text-sm font-bold">Include warranty</Label>
                   <p className="text-xs text-muted-foreground">Attach warranty duration to invoice</p>
@@ -776,82 +805,82 @@ export default function POS() {
               <p className="text-sm font-bold">POS Actions</p>
               <p className="text-xs text-muted-foreground">Print, search and manage stock movement from one place.</p>
             </div>
-          <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-            {selectedSearchItem ? (
-              <Button
-                onClick={() => {
-                  setLoading(true);
-                  handleUpdateInvoice();
-                }}
-                disabled={invoiceItems.length === 0}
-                className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
-              >
-                Update Invoice
-              </Button>
-            ) : (
-              <Button
-                onClick={() => {
-                  if (selectedUser?.id) {
+            <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+              {selectedSearchItem ? (
+                <Button
+                  onClick={() => {
                     setLoading(true);
-                    generatePDF();
-                  } else {
-                    setModal(true);
-                  }
+                    handleUpdateInvoice();
+                  }}
+                  disabled={invoiceItems.length === 0}
+                  className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
+                >
+                  Update Invoice
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => {
+                    if (selectedUser?.id) {
+                      setLoading(true);
+                      generatePDF();
+                    } else {
+                      setModal(true);
+                    }
+                  }}
+                  disabled={invoiceItems.length === 0 || !selectedCustomer?.id}
+                  className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
+                >
+                  Print Invoice
+                </Button>
+              )}
+
+              <Button
+                onClick={() => {
+                  setSearchInvoice(!searchInvocie);
                 }}
-                disabled={invoiceItems.length === 0 || !selectedCustomer?.id}
                 className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
               >
-                Print Invoice
+                Search Invoice
               </Button>
-            )}
 
-            <Button
-              onClick={() => {
-                setSearchInvoice(!searchInvocie);
-              }}
-              className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
-            >
-              Search Invoice
-            </Button>
+              <Button
+                variant="outline"
+                onClick={handleEngineerItems}
+                className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
+              >
+                {engineerLoading && <Spinner />}  <div className="break-words"> Engineer issued items</div>
+              </Button>
 
-            <Button
-              variant="outline"
-              onClick={handleEngineerItems}
-              className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
-            >
-              {engineerLoading && <Spinner />}  <div className="break-words"> Engineer issued items</div>
-            </Button>
+              <Button
+                onClick={handleInward}
+                className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
+              >
+                <div className="break-words">
+                  Inward Gatepass
+                </div>
+              </Button>
 
-            <Button
-              onClick={handleInward}
-              className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
-            >
-              <div className="break-words">
-                Inward Gatepass
-              </div>
-            </Button>
+              <Button
+                onClick={handleOutward}
+                className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
+              >
+                <div className="break-words">Outward Gatepass</div>
+              </Button>
 
-            <Button
-              onClick={handleOutward}
-              className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
-            >
-              <div className="break-words">Outward Gatepass</div>
-            </Button>
+              {selectedSearchItem && selectedSearchItem?.id && (
+                <Link href={`/${base_route}/pos/${selectedSearchItem?.id}`} target="_blank">
+                  <Button className="h-16 w-full rounded-md whitespace-normal text-wrap text-center text-xs font-semibold">
+                    <div>Payment Record</div>
+                  </Button>
+                </Link>
+              )}
 
-            {selectedSearchItem && selectedSearchItem?.id && (
-              <Link href={`/${base_route}/pos/${selectedSearchItem?.id}`} target="_blank">
-                <Button className="h-16 w-full rounded-md whitespace-normal text-wrap text-center text-xs font-semibold">
-                  <div>Payment Record</div>
-                </Button>
-              </Link>
-            )}
+              <DeleteInvoice
+                item={selectedSearchItem}
+                onRefresh={() => handleReset()}
+              />
 
-            <DeleteInvoice
-              item={selectedSearchItem}
-              onRefresh={() => handleReset()}
-            />
-
-          </div>
+            </div>
           </section>
 
           {searchInvocie && (
@@ -1016,6 +1045,6 @@ export default function POS() {
         visible={outwardModal}
         onClose={setOutwardModal}
       />
-   </>
+    </>
   );
 }

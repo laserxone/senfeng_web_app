@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/data";
+import { publicFile } from "@/lib/publicFile";
 import { QuotationData } from "@/lib/types";
 import {
     Document,
@@ -8,18 +9,9 @@ import {
     Text,
     View,
 } from "@react-pdf/renderer";
-import { readFileSync } from "fs";
 import moment from "moment";
-import path from "path";
 
-export const publicFile = (src: string) => {
 
-    const cleanSrc = src.split("?")[0].replace(/^\//, "");
-    return {
-        data: readFileSync(path.join(process.cwd(), "public", cleanSrc)),
-        format: "png" as const,
-    }
-};
 
 const styles = StyleSheet.create({
     bannerLeft: {

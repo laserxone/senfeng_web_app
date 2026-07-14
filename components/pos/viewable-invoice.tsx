@@ -10,7 +10,7 @@ import CurrencyFormatter from "../currency-formatter";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { SelectedUser } from "./POS";
-import InvoicePDF from "./invoicePDF";
+import InvoicePDFClient from "./invoicePDFClient";
 
 type ViewableInvoice = {
   companyName: string
@@ -53,7 +53,7 @@ export default function ViewableInvoice({
 
   const captureAndCopyToClipboard = async () => {
     const blob = await pdf(
-      <InvoicePDF
+      <InvoicePDFClient
         companyName={companyName}
         name={name}
         phoneNumber={phoneNumber}
