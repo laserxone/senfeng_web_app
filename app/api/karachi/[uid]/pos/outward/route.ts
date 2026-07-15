@@ -113,6 +113,7 @@ export async function GET() {
       FROM savedinvoices_karachi s
       LEFT JOIN outward_gatepass_karachi o
         ON o.savedinvoice_id = s.id
+        ORDER BY s.created_at DESC
     `);
     return NextResponse.json(res.rows)
   } catch (error: any) {

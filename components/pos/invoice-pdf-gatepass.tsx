@@ -1,3 +1,4 @@
+import { publicFile } from "@/lib/publicFile";
 import {
     Document,
     Image,
@@ -344,7 +345,7 @@ const CompanyDetails = () => (
 const Header = ({ gatepassType } : {gatepassType : string}) => (
     <View style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexDirection: 'row' }}>
         {/* <Text fontSize={60} color={'#0072BC'} fontWeight={'800'}>SENFENG</Text> */}
-        <Image src={"/logo.png"} style={{ height: '40px', width: '200px' }} />
+        <Image src={publicFile("/logo.png")} style={{ height: '40px', width: '200px' }} />
         <View style={{ backgroundColor: '#0072BC', borderTopLeftRadius: 20, borderTopRightRadius: 20, marginRight: 70, width: '150px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} >
             <Text style={{ fontSize: '15px', fontFamily: 'Helvetica-Bold', color: 'white', }}>
                 {gatepassType}

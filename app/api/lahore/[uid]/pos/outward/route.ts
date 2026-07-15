@@ -114,6 +114,7 @@ export async function GET() {
       FROM savedinvoices s
       LEFT JOIN outward_gatepass o
         ON o.savedinvoice_id = s.id
+        ORDER BY s.created_at DESC
     `);
     return NextResponse.json(res.rows)
   } catch (error: any) {

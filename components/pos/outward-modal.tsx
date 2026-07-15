@@ -8,8 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { InvoiceItem, OutwardProps, POSInvoiceReminder } from "@/lib/types";
-import { pdf } from "@react-pdf/renderer";
+import { InvoiceItem, OutwardProps } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, Edit } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
@@ -19,7 +18,6 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
 import Spinner from "../ui/spinner";
-import InvoicePDFGatepass from "./invoice-pdf-gatepass";
 
 
 const OutwardModal = ({ visible, onClose }: { visible: boolean, onClose: Dispatch<SetStateAction<boolean>>, }) => {
@@ -157,23 +155,40 @@ const OutwardModal = ({ visible, onClose }: { visible: boolean, onClose: Dispatc
                                 e.stopPropagation()
                                 try {
 
-                                    const blob = await pdf(
-                                        <InvoicePDFGatepass
-                                            from={currentItem?.outward_gatepass?.from_by ?? ""}
-                                            vehicle_no={currentItem?.outward_gatepass?.vehicle_no ?? ""}
-                                            driver_name={currentItem?.outward_gatepass?.driver_name ?? ""}
-                                            received_by={currentItem?.outward_gatepass?.received_by ?? ""}
-                                            manager={currentItem?.outward_gatepass?.manager ?? ""}
-                                            gatepass={String(currentItem?.outward_gatepass?.id ?? 0)}
-                                            gatepassType={"Outward Gate Pass"}
-                                            items={currentItem?.outward_gatepass?.fields ?? []}
-                                            created_at={currentItem?.outward_gatepass?.created_at}
-                                        />
-                                    ).toBlob();
+                                    const PDFData = {
+                                        from: currentItem?.outward_gatepass?.from_by ?? "",
+                                        vehicle_no: currentItem?.outward_gatepass?.vehicle_no ?? "",
+                                        driver_name: currentItem?.outward_gatepass?.driver_name ?? "",
+                                        received_by: currentItem?.outward_gatepass?.received_by ?? "",
+                                        manager: currentItem?.outward_gatepass?.manager ?? "",
+                                        gatepass: String(currentItem?.outward_gatepass?.id ?? 0),
+                                        gatepassType: "Outward Gate Pass",
+                                        items: currentItem?.outward_gatepass?.fields ?? [],
+                                        created_at: currentItem?.outward_gatepass?.created_at,
+                                    }
+
+                                    const pdfRes = await axios.post(
+                                        `/${userID}/pos/outward/pdf`,
+                                        {
+                                            data: PDFData,
+                                        },
+                                        {
+                                            responseType: "blob",
+                                            headers: {
+                                                "Content-Type": "application/json",
+                                            },
+                                        },
+                                    );
+
+                                    const blob = new Blob([pdfRes.data], {
+                                        type: "application/pdf",
+                                    });
 
                                     const url = URL.createObjectURL(blob);
                                     window.open(url, "_blank");
                                     setTimeout(() => URL.revokeObjectURL(url), 600000);
+
+
                                 } catch (e) {
                                     console.log(e)
                                 }
@@ -215,19 +230,34 @@ const OutwardModal = ({ visible, onClose }: { visible: boolean, onClose: Dispatc
 
         try {
             const response = await axios.post(`/${userID}/pos/outward`, data)
-            const blob = await pdf(
-                <InvoicePDFGatepass
-                    from={data.from_by}
-                    vehicle_no={data.vehicle_no}
-                    driver_name={data.driver_name}
-                    received_by={data.received_by}
-                    manager={data.manager}
-                    gatepass={response.data.id}
-                    gatepassType={"Outward Gate Pass"}
-                    created_at={response?.data?.created_at}
-                    items={items || []}
-                />
-            ).toBlob();
+            const PDFData = {
+                from: data.from_by,
+                vehicle_no: data.vehicle_no,
+                driver_name: data.driver_name,
+                received_by: data.received_by,
+                manager: data.manager,
+                gatepass: response.data.id,
+                gatepassType: "Outward Gate Pass",
+                created_at: response?.data?.created_at,
+                items: items || [],
+            }
+
+            const pdfRes = await axios.post(
+                `/${userID}/pos/outward/pdf`,
+                {
+                    data: PDFData,
+                },
+                {
+                    responseType: "blob",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                },
+            );
+
+            const blob = new Blob([pdfRes.data], {
+                type: "application/pdf",
+            });
 
             const url = URL.createObjectURL(blob);
             window.open(url, "_blank");

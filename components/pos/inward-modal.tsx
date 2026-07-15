@@ -9,15 +9,11 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import {
-    pdf
-} from "@react-pdf/renderer";
 import { FileText, PackageCheck, Plus, Trash2, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Label } from "../ui/label";
 import Spinner from "../ui/spinner";
 import { Switch } from "../ui/switch";
-import InvoicePDFGatepass from "./invoice-pdf-gatepass";
 import StockSearch from "./stock-search";
 
 type EmptyType = {
@@ -62,22 +58,37 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }: {
 
         try {
             const response = await axios.post(`/${userID}/pos/inward`, data)
-            const blob = await pdf(
-                <InvoicePDFGatepass
-                    from={data.from}
-                    vehicle_no={data.vehicle_no}
-                    driver_name={data.driver_name}
-                    received_by={data.received_by}
-                    manager={data.manager}
-                    gatepass={response.data.id}
-                    gatepassType={"Inward Gate Pass"}
-                    items={items}
-                />
-            ).toBlob();
+            const PDFData = {
+                from: data.from,
+                vehicle_no: data.vehicle_no,
+                driver_name: data.driver_name,
+                received_by: data.received_by,
+                manager: data.manager,
+                gatepass: response.data.id,
+                gatepassType: "Inward Gate Pass",
+                items: items,
+            }
+            const pdfRes = await axios.post(
+                `/${userID}/pos/inward/pdf`,
+                {
+                    data: PDFData,
+                },
+                {
+                    responseType: "blob",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                },
+            );
+
+            const blob = new Blob([pdfRes.data], {
+                type: "application/pdf",
+            });
 
             const url = URL.createObjectURL(blob);
             window.open(url, "_blank");
             setTimeout(() => URL.revokeObjectURL(url), 600000);
+
         } catch (e) {
             console.log(e)
         }
@@ -146,27 +157,27 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }: {
                             </div>
 
                             <div className="grid gap-3 md:grid-cols-2">
-                            <div>
-                                <label className="mb-1 block text-xs font-semibold text-muted-foreground">From</label>
-                                <Input className="h-8 rounded-md text-sm" name="from" placeholder="Enter From" required />
+                                <div>
+                                    <label className="mb-1 block text-xs font-semibold text-muted-foreground">From</label>
+                                    <Input className="h-8 rounded-md text-sm" name="from" placeholder="Enter From" required />
+                                </div>
+                                <div>
+                                    <label className="mb-1 block text-xs font-semibold text-muted-foreground">Vehicle No</label>
+                                    <Input className="h-8 rounded-md text-sm" name="vehicle_no" placeholder="Enter Vehicle No" required />
+                                </div>
+                                <div>
+                                    <label className="mb-1 block text-xs font-semibold text-muted-foreground">Driver Name</label>
+                                    <Input className="h-8 rounded-md text-sm" name="driver_name" placeholder="Enter Driver Name" required />
+                                </div>
+                                <div>
+                                    <label className="mb-1 block text-xs font-semibold text-muted-foreground">Manager</label>
+                                    <Input className="h-8 rounded-md text-sm" name="manager" placeholder="Enter Manager" required />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="mb-1 block text-xs font-semibold text-muted-foreground">Received By</label>
+                                    <Input className="h-8 rounded-md text-sm" name="received_by" placeholder="Enter Receiver Name" required />
+                                </div>
                             </div>
-                            <div>
-                                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Vehicle No</label>
-                                <Input className="h-8 rounded-md text-sm" name="vehicle_no" placeholder="Enter Vehicle No" required />
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Driver Name</label>
-                                <Input className="h-8 rounded-md text-sm" name="driver_name" placeholder="Enter Driver Name" required />
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Manager</label>
-                                <Input className="h-8 rounded-md text-sm" name="manager" placeholder="Enter Manager" required />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Received By</label>
-                                <Input className="h-8 rounded-md text-sm" name="received_by" placeholder="Enter Receiver Name" required />
-                            </div>
-                        </div>
                         </section>
 
                         <section className="rounded-md border bg-card p-3">
@@ -186,131 +197,131 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }: {
                             </div>
 
                             <div className="space-y-2">
-                            {items.map((item, index) => (
-                                <div key={index} className="rounded-md border bg-muted/10 p-3">
-                                    <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-background text-xs font-bold ring-1 ring-border">
-                                                {index + 1}
-                                            </span>
+                                {items.map((item, index) => (
+                                    <div key={index} className="rounded-md border bg-muted/10 p-3">
+                                        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-background text-xs font-bold ring-1 ring-border">
+                                                    {index + 1}
+                                                </span>
+                                                <div>
+                                                    <Label className="text-sm font-bold">Item #{index + 1}</Label>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {item.isExisting ? "Select from stock inventory" : "Enter a new item manually"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-8 rounded-md text-xs text-destructive hover:text-destructive"
+                                                disabled={items.length === 1}
+                                                onClick={() => removeItem(index)}
+                                            >
+                                                <Trash2 className="mr-1 h-3.5 w-3.5" /> Remove
+                                            </Button>
+                                        </div>
+
+                                        <div className="mb-3 flex items-center justify-between rounded-md border bg-background px-3 py-2">
                                             <div>
-                                                <Label className="text-sm font-bold">Item #{index + 1}</Label>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {item.isExisting ? "Select from stock inventory" : "Enter a new item manually"}
+                                                <Label className="text-xs font-bold">
+                                                    {item.isExisting ? "Existing Item" : "New Item"}
+                                                </Label>
+                                                <p className="text-[11px] text-muted-foreground">
+                                                    Toggle source for this item row
                                                 </p>
                                             </div>
+                                            <Switch
+                                                checked={item.isExisting}
+                                                onCheckedChange={(val) => {
+                                                    handleItemChange(index, "isExisting", val)
+                                                }
+                                                }
+                                            />
                                         </div>
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            variant="outline"
-                                            className="h-8 rounded-md text-xs text-destructive hover:text-destructive"
-                                            disabled={items.length === 1}
-                                            onClick={() => removeItem(index)}
-                                        >
-                                            <Trash2 className="mr-1 h-3.5 w-3.5" /> Remove
-                                        </Button>
-                                    </div>
 
-                                    <div className="mb-3 flex items-center justify-between rounded-md border bg-background px-3 py-2">
-                                        <div>
-                                            <Label className="text-xs font-bold">
-                                                {item.isExisting ? "Existing Item" : "New Item"}
-                                            </Label>
-                                            <p className="text-[11px] text-muted-foreground">
-                                                Toggle source for this item row
-                                            </p>
-                                        </div>
-                                        <Switch
-                                            checked={item.isExisting}
-                                            onCheckedChange={(val) => {
-                                                handleItemChange(index, "isExisting", val)
+                                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+
+                                            {item.isExisting ?
+                                                <div className="xl:col-span-2">
+                                                    <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Inventory</Label>
+                                                    <StockSearch
+                                                        value={item.inventory_id}
+                                                        passingData={stock}
+                                                        onReturnData={(val) => {
+                                                            const copy = [...items];
+                                                            copy[index] = {
+                                                                ...copy[index],
+                                                                inventory_id: Number(val.id),
+                                                                name: val.name,
+                                                                unit: val.unit
+                                                            };
+                                                            setItems(copy);
+                                                        }}
+                                                    />
+                                                </div>
+                                                :
+                                                <div className="xl:col-span-2">
+                                                    <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Name</Label>
+                                                    <Input
+                                                        className="h-8 rounded-md text-sm"
+                                                        value={item.name}
+                                                        onChange={(e) =>
+                                                            handleItemChange(index, "name", e.target.value)
+                                                        }
+                                                    />
+                                                </div>
                                             }
-                                            }
-                                        />
-                                    </div>
 
-                                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-
-                                        {item.isExisting ?
-                                            <div className="xl:col-span-2">
-                                                <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Inventory</Label>
-                                                <StockSearch
-                                                    value={item.inventory_id}
-                                                    passingData={stock}
-                                                    onReturnData={(val) => {
-                                                        const copy = [...items];
-                                                        copy[index] = {
-                                                            ...copy[index],
-                                                            inventory_id: Number(val.id),
-                                                            name: val.name,
-                                                            unit: val.unit
-                                                        };
-                                                        setItems(copy);
+                                            <div>
+                                                <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Quantity</Label>
+                                                <Input
+                                                    className="h-8 rounded-md text-sm"
+                                                    type="number"
+                                                    value={item.qty ? item.qty : ""}
+                                                    onChange={(e) => {
+                                                        if (!isNaN(Number(e.target.value)))
+                                                            handleItemChange(
+                                                                index,
+                                                                "qty",
+                                                                Number(e.target.value)
+                                                            );
                                                     }}
                                                 />
                                             </div>
-                                            :
-                                            <div className="xl:col-span-2">
-                                                <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Name</Label>
+                                            <div>
+                                                <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Unit</Label>
                                                 <Input
                                                     className="h-8 rounded-md text-sm"
-                                                    value={item.name}
+                                                    value={item.unit}
                                                     onChange={(e) =>
-                                                        handleItemChange(index, "name", e.target.value)
+                                                        handleItemChange(index, "unit", e.target.value)
                                                     }
                                                 />
                                             </div>
-                                        }
+                                            <div className="md:col-span-2 xl:col-span-4">
+                                                <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Remarks</Label>
+                                                <Input
+                                                    className="h-8 rounded-md text-sm"
+                                                    value={item.remarks}
+                                                    onChange={(e) =>
+                                                        handleItemChange(index, "remarks", e.target.value)
+                                                    }
+                                                />
+                                            </div>
+                                        </div>
 
-                                    <div>
-                                            <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Quantity</Label>
-                                            <Input
-                                                className="h-8 rounded-md text-sm"
-                                                type="number"
-                                                value={item.qty ? item.qty : ""}
-                                                onChange={(e) => {
-                                                    if (!isNaN(Number(e.target.value)))
-                                                        handleItemChange(
-                                                            index,
-                                                            "qty",
-                                                            Number(e.target.value)
-                                                        );
-                                                }}
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Unit</Label>
-                                            <Input
-                                                className="h-8 rounded-md text-sm"
-                                                value={item.unit}
-                                                onChange={(e) =>
-                                                    handleItemChange(index, "unit", e.target.value)
-                                                }
-                                            />
-                                        </div>
-                                        <div className="md:col-span-2 xl:col-span-4">
-                                            <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Remarks</Label>
-                                            <Input
-                                                className="h-8 rounded-md text-sm"
-                                                value={item.remarks}
-                                                onChange={(e) =>
-                                                    handleItemChange(index, "remarks", e.target.value)
-                                                }
-                                            />
-                                        </div>
                                     </div>
-
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
                         </section>
 
-                       
-                            <Button disabled={loading} type="submit" className="h-9 w-full rounded-md text-sm">
-                                {loading && <Spinner />} Submit Inward Gatepass
-                            </Button>
-                       
+
+                        <Button disabled={loading} type="submit" className="h-9 w-full rounded-md text-sm">
+                            {loading && <Spinner />} Submit Inward Gatepass
+                        </Button>
+
                     </form>
                 </ScrollArea>
             </DialogContent>
