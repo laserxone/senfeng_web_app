@@ -1,5 +1,6 @@
 import pool from "@/config/db"
 import { sendNotification } from "./sendNotification"
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 
 
 export async function sendNotificationToSMM(id: string, customer: string, page: string, saleperson: string) {
@@ -14,9 +15,7 @@ export async function sendNotificationToSMM(id: string, customer: string, page: 
   const salePersonResult = salePersonQuery.rows[0]
 
   if (salePersonResult) {
-    sendNotification(`${customer} assigned to ${salePersonQuery.rows[0].name || salePersonQuery.rows[0].email}`, page, id);
+    sendNotification(`${customer} assigned to ${salePersonQuery.rows[0].name || salePersonQuery.rows[0].email}`, page, id, NOTIFICATION_TYPES.customer_assigned.title, NOTIFICATION_TYPES.customer_assigned.category);
   }
-
-
 }
 

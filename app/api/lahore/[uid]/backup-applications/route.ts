@@ -1,4 +1,5 @@
 import pool from "@/config/db";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { sendNotification } from "@/lib/sendNotification";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -179,8 +180,8 @@ export async function POST(request: NextRequest) {
       expected_return_date,
       user_id,
       hierarchy_id,
-       sale_id,
-       backup_inventory_id
+      sale_id,
+      backup_inventory_id
     } = body;
 
     const applicationResult = await client.query(
@@ -272,8 +273,10 @@ export async function POST(request: NextRequest) {
 
         sendNotification(
           `${userName} submitted backup application requesting your approval`,
-          "applications/backup",
-          sendTo
+          `applications/backup?b=${application.id}`,
+          sendTo,
+          NOTIFICATION_TYPES.backup_applied.title,
+          NOTIFICATION_TYPES.backup_applied.category,
         );
       }
     }

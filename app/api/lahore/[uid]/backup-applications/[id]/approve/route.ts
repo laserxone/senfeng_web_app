@@ -1,5 +1,6 @@
 import pool from "@/config/db";
 import { sendNotification } from "@/lib/sendNotification";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
@@ -139,7 +140,7 @@ export async function POST(
             }
           }
 
-          await notify(action, applicantID, approverID);
+          await notify(action, applicantID, approverID, applicationId);
 
           return NextResponse.json({ success: true });
         }
@@ -210,7 +211,7 @@ export async function POST(
       }
     }
 
-    await notify(action, applicantID, approverID);
+    await notify(action, applicantID, approverID, applicationId);
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -224,13 +225,15 @@ export async function POST(
 }
 
 async function notify(
-  action: string, applicantID: string, approverID: string
+  action: string, applicantID: string, approverID: string, applicationId : number
 ) {
   if (action === "rejected") {
     await sendNotification(
       "Your backup application is rejected",
-      "applications/backup",
-      applicantID
+      `applications/backup?b=${applicationId}`,
+      applicantID,
+       NOTIFICATION_TYPES.backup_rejected.title,
+       NOTIFICATION_TYPES.backup_rejected.category
     );
   }
 
@@ -244,16 +247,20 @@ async function notify(
 
     sendNotification(
       `${name} submitted backup application requesting your approval`,
-      "applications/backup",
-      approverID
+      `applications/backup?b=${applicationId}`,
+      approverID,
+      NOTIFICATION_TYPES.backup_applied.title,
+       NOTIFICATION_TYPES.backup_applied.category
     );
   }
 
   if (action === "approved" && !approverID) {
     sendNotification(
       "Your backup application has been approved",
-      "applications/backup",
-      applicantID
+      `applications/backup?b=${applicationId}`,
+      applicantID,
+      NOTIFICATION_TYPES.backup_approved.title,
+      NOTIFICATION_TYPES.backup_approved.category
     );
   }
 }

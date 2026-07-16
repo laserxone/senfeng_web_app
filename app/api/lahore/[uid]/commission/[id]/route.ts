@@ -1,9 +1,10 @@
 import pool from "@/config/db";
 import { sendNotification } from "@/lib/sendNotification";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { NextRequest, NextResponse } from "next/server";
 
 
-export async function DELETE(req:NextResponse, { params }:{ params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextResponse, { params }: { params: Promise<{ id: string }> }) {
   try {
 
     const { id } = await params
@@ -15,12 +16,12 @@ export async function DELETE(req:NextResponse, { params }:{ params: Promise<{ id
 
 
     return NextResponse.json({ message: "Commission Deleted" }, { status: 200 });
-  } catch (error:any) {
+  } catch (error: any) {
     return NextResponse.json({ message: error.message || "Internal Server Error" }, { status: 500 });
   }
 }
 
-export async function PUT(req:NextRequest, { params }:{params:Promise<{id:string}>}) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const data = await req.json();
     const { ...updates } = data;
@@ -30,7 +31,7 @@ export async function PUT(req:NextRequest, { params }:{params:Promise<{id:string
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
-    const fields:string[] = [];
+    const fields: string[] = [];
     const values = [];
 
     Object.entries(updates).forEach(([key, value], index) => {
@@ -55,9 +56,9 @@ export async function PUT(req:NextRequest, { params }:{params:Promise<{id:string
     const response = await pool.query(query, values);
 
     if (data.is_approved === true) {
-      sendNotification("Your commission is approved", "commission", response.rows[0].user_id)
+      sendNotification("Your commission is approved", `commission?c=${response.rows?.[0].id}`, response.rows[0].user_id, NOTIFICATION_TYPES.commission_approved.title, NOTIFICATION_TYPES.commission_approved.category)
     } else if (data.is_approved === false) {
-      sendNotification("Your commission is rejected", "commission", response.rows[0].user_id)
+      sendNotification("Your commission is rejected", `commission?c=${response.rows?.[0].id}`, response.rows[0].user_id, NOTIFICATION_TYPES.commission_rejected.title, NOTIFICATION_TYPES.commission_rejected.category)
     }
 
     // Step 4: Add notifications to Firestore
@@ -65,7 +66,7 @@ export async function PUT(req:NextRequest, { params }:{params:Promise<{id:string
 
 
     return NextResponse.json({ message: "Updated successfully" }, { status: 200 });
-  } catch (error:any) {
+  } catch (error: any) {
     return NextResponse.json({ message: error.message || "Internal Server Error" }, { status: 500 });
   }
 }

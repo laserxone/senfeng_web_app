@@ -3,7 +3,7 @@ import { TIMEZONE } from "@/constants/data";
 import { ArrowUpDown, BadgeCheck, CircleDashed, Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 
 import PageTable from "@/components/app-table";
@@ -27,8 +27,39 @@ export default function TaskEmployee({ id }: { id: number | string }) {
   const [selectedTask, setSelectedTask] = useState<TaskProps | null>(null);
   const [filterVisible, setFilterVisible] = useState(false);
 
+  const fetchData = useCallback(async (
+    taskUserId: number | string,
+    start_date?: string,
+    end_date?: string
+  ) => {
+    try {
+      const query = start_date && end_date
+        ? `?start_date=${encodeURIComponent(start_date)}&end_date=${encodeURIComponent(end_date)}`
+        : "";
+      console.log(query)
+      const response = await axios.get(`/${taskUserId}/task${query}`);
+
+      const apiData = response.data.map((item: TaskProps) => ({
+        ...item,
+        created_at_time: item.created_at,
+      }));
+
+      setData(apiData);
+    } catch {
+      // The existing task list keeps its current data when refresh fails.
+    }
+  }, []);
+
   useEffect(() => {
     if (id) {
+      const taskId = new URLSearchParams(window.location.search).get("t");
+      if (taskId) {
+        const start = new URLSearchParams(window.location.search).get("start");
+        const end = new URLSearchParams(window.location.search).get("end");
+        queueMicrotask(() => void fetchData(id, start ?? undefined, end ?? undefined));
+        return;
+      }
+
       const startDate = momentT
         .tz(TIMEZONE)
         .startOf("month")
@@ -41,9 +72,51 @@ export default function TaskEmployee({ id }: { id: number | string }) {
         .endOf("day")
         .utc()
         .toISOString();
-      fetchData(id, startDate, endDate);
+      queueMicrotask(() => void fetchData(id, startDate, endDate));
     }
-  }, [id]);
+  }, [fetchData, id]);
+
+  function clearUrl() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("t");
+    url.searchParams.delete("start");
+    url.searchParams.delete("end");
+    url.hash = "";
+    window.history.replaceState({}, "", url);
+  }
+
+  const updateTaskQuery = useCallback((taskId?: string | number) => {
+    const url = new URL(window.location.href);
+
+    if (taskId !== undefined) {
+      url.searchParams.set("t", String(taskId));
+      window.history.pushState({}, "", url);
+    } else {
+      url.searchParams.delete("t");
+      window.history.replaceState({}, "", url);
+    }
+
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, []);
+
+  useEffect(() => {
+    const syncTaskFromUrl = () => {
+      const taskId = new URLSearchParams(window.location.search).get("t");
+      const task = taskId
+        ? data.find((item) => String(item.id) === taskId)
+        : undefined;
+
+      setSelectedTask(task || null);
+      setVisible(Boolean(task));
+    };
+
+    syncTaskFromUrl();
+    window.addEventListener("popstate", syncTaskFromUrl);
+
+    return () => {
+      window.removeEventListener("popstate", syncTaskFromUrl);
+    };
+  }, [data]);
 
   const columns: ColumnDef<TaskProps>[] = [
     {
@@ -169,24 +242,13 @@ export default function TaskEmployee({ id }: { id: number | string }) {
     // },
   ];
 
-  async function fetchData(id: number | string, start_date: string, end_date: string) {
-
-    try {
-      const response = await axios
-        .get(`/${id}/task?start_date=${start_date}&end_date=${end_date}`)
-
-      const apiData = response.data.map((item: TaskProps) => {
-        return { ...item, created_at_time: item.created_at };
-      });
-
-      setData(apiData);
-    } catch (error) {
-
-    }
-  }
-
-
   async function handleUpdateMark() {
+    const taskId = new URLSearchParams(window.location.search).get("t");
+    if (taskId) {
+      await fetchData(userID);
+      return;
+    }
+
     const startDate = momentT
       .tz(TIMEZONE)
       .startOf("month")
@@ -235,9 +297,8 @@ export default function TaskEmployee({ id }: { id: number | string }) {
         columns={columns}
         data={data}
 
-        onRowClick={(val, e) => {
-          setSelectedTask(val);
-          setVisible(true);
+        onRowClick={(val) => {
+          updateTaskQuery(val.id);
         }}
       >
         <Button
@@ -253,18 +314,25 @@ export default function TaskEmployee({ id }: { id: number | string }) {
         user_id={userID}
         detail={selectedTask}
         visible={visible}
-        onClose={setVisible}
-        onMark={async () => handleUpdateMark()}
+        onClose={(nextVisible) => {
+
+          setVisible(nextVisible);
+          if (!nextVisible) clearUrl();
+        }}
+        onMark={async () => {
+          clearUrl
+          await handleUpdateMark()
+        }}
       />
 
       <FilterSheet
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
+          clearUrl();
           await fetchData(id, val.start, val.end);
         }}
       />
     </div>
   );
 }
-

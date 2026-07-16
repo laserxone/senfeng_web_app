@@ -1,5 +1,8 @@
 import pool from "@/config/db";
+import { sendNotification } from "@/lib/sendNotification";
 import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
+import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -62,6 +65,7 @@ export async function POST(req:NextRequest) {
         await pool.query(`UPDATE complaints SET status = 'assigned' WHERE id = $1`, [data.complaint_id]);
 
         sendNotificationToMobile("New Complaint", `Complaint assigned to you`, data.engineer_id, data, "complaint", `/dashboard/complaint/${data.complaint_id}`)
+        sendNotification(`Complaint assigned to you`, `complaint?c=${data.complaint_id}&start=${moment().startOf("month").toDate().toISOString()}&end=${moment().endOf("month").toDate().toISOString()}`, data.engineer_id, NOTIFICATION_TYPES.complaint_assigned.title, NOTIFICATION_TYPES.complaint_assigned.category)
 
         return NextResponse.json({message : "Data inserted"}, { status: 200 });
     } catch (error:any) {

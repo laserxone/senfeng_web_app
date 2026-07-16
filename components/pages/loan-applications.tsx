@@ -44,7 +44,7 @@ import {
     XCircle
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import ConfirmationDialog from "../alert-dialog";
 import AppCalendar from "../app-calendar";
@@ -196,6 +196,47 @@ export default function LoanApplications() {
             fetchDataAll()
         }
     }, [userID])
+
+    const updateLoanApplicationQuery = useCallback((applicationId?: string | number) => {
+        const url = new URL(window.location.href)
+
+        if (applicationId !== undefined) {
+            url.searchParams.set("l", String(applicationId))
+            window.history.pushState({}, "", url)
+        } else {
+            url.searchParams.delete("l")
+            window.history.replaceState({}, "", url)
+        }
+
+        window.dispatchEvent(new PopStateEvent("popstate"))
+    }, [])
+
+    useEffect(() => {
+        const syncLoanApplicationFromUrl = () => {
+            const applicationId = new URLSearchParams(window.location.search).get("l")
+            const application = applicationId
+                ? allApplications.find((item) => String(item.id) === applicationId)
+                : undefined
+
+            setDetailApplication(application || null)
+            setIsDetailOpen(Boolean(application))
+        }
+
+        syncLoanApplicationFromUrl()
+        window.addEventListener("popstate", syncLoanApplicationFromUrl)
+
+        return () => {
+            window.removeEventListener("popstate", syncLoanApplicationFromUrl)
+        }
+    }, [allApplications])
+
+    function handleDetailOpenChange(nextOpen: boolean) {
+        setIsDetailOpen(nextOpen)
+
+        if (!nextOpen) {
+            updateLoanApplicationQuery()
+        }
+    }
 
     async function fetchData() {
         setLoading(true)
@@ -1056,10 +1097,7 @@ export default function LoanApplications() {
                                                 variant="outline"
                                                 size="sm"
                                                 className="w-full"
-                                                onClick={() => {
-                                                    setDetailApplication(application)
-                                                    setIsDetailOpen(true)
-                                                }}
+                                                onClick={() => updateLoanApplicationQuery(application.id)}
                                             >
                                                 <Eye className="size-4 mr-2" />
                                                 View Details
@@ -1085,7 +1123,7 @@ export default function LoanApplications() {
                 </Tabs>
             }
 
-            <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+            <Dialog open={isDetailOpen} onOpenChange={handleDetailOpenChange}>
                 <DialogContent className="w-full sm:max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>Application Details</DialogTitle>

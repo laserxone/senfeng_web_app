@@ -1,4 +1,5 @@
 import pool from "@/config/db";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { sendNotification } from "@/lib/sendNotification";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -151,7 +152,7 @@ export async function POST(
             }
           }
 
-          await notify(action, applicantID, approverID)
+          await notify(action, applicantID, approverID, applicationId)
 
           return NextResponse.json({ success: true });
         }
@@ -232,7 +233,7 @@ export async function POST(
       }
     }
 
-    await notify(action, applicantID, approverID)
+    await notify(action, applicantID, approverID, applicationId)
 
 
     return NextResponse.json({ success: true });
@@ -246,16 +247,16 @@ export async function POST(
   }
 }
 
-async function notify(action: string, applicantID: string, approverID: string) {
+async function notify(action: string, applicantID: string, approverID: string, applicationId: number) {
   if (action === 'rejected') {
-    await sendNotification(`Your loan application is rejected`, 'applications/loan', applicantID)
+    await sendNotification(`Your loan application is rejected`, `applications/loan?l=${applicationId}`, applicantID, NOTIFICATION_TYPES.loan_application_rejected.title, NOTIFICATION_TYPES.loan_application_rejected.category)
   }
   if (action === 'approved' && approverID) {
     const nameQuery = await pool.query(`SELECT name FROM users WHERE id = $1`, [applicantID])
     const name = nameQuery.rows?.[0]?.name ?? ""
-    sendNotification(`${name} submitted loan application requesting your approval`, "applications/loan", approverID)
+    sendNotification(`${name} submitted loan application requesting your approval`, `applications/loan?l=${applicationId}`, approverID, NOTIFICATION_TYPES.loan_application_submitted.title, NOTIFICATION_TYPES.loan_application_submitted.category)
   }
   if (action === 'approved' && !approverID) {
-    sendNotification(`Your loan application has been approved`, "applications/loan", applicantID)
+     sendNotification(`Your loan application has been approved`, `applications/loan?l=${applicationId}`, applicantID, NOTIFICATION_TYPES.loan_application_approved.title, NOTIFICATION_TYPES.loan_application_approved.category)
   }
 }

@@ -6,6 +6,8 @@ import { sendNotification } from "@/lib/sendNotification";
 import { sendNotificationToCRM, sendNotificationToCRMWithoutLead } from "@/lib/sendNotificationToCRM";
 import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
 import { NextRequest, NextResponse } from "next/server"
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
+import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 
 
 export async function POST(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
@@ -37,7 +39,7 @@ export async function POST(req:NextRequest, { params }:{params:Promise<{uid:stri
 
 
         if (result.rows[0].lead) {
-            sendNotificationToCRM(result.rows[0].lead, `${result.rows[0]?.name}-${result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`)
+             sendNotificationToCRM(result.rows[0].lead, `${result.rows[0]?.name}-${result.rows[0]?.owner}`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`)
         }
 
         if (result.rows[0]?.lead !== result.rows[0].created_by) {
@@ -45,9 +47,11 @@ export async function POST(req:NextRequest, { params }:{params:Promise<{uid:stri
         }
 
         if (result.rows[0].ownership) {
-            sendNotification(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
+          sendNotification(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership, NOTIFICATION_TYPES.customer_assigned.title, NOTIFICATION_TYPES.customer_assigned.category)
             sendNotificationToMobile(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, "Customer", result.rows[0].ownership, result.rows[0], "client", `/dashboard/customer/${result.rows[0].id}`)
         }
+
+         sendNotificationToOwner(`${result.rows[0]?.name} - new customer added`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, "karachi", "all", NOTIFICATION_TYPES.customer_added.title)
 
         try {
             const logMSG = generateLog(data, "New customer added")

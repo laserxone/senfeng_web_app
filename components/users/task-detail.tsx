@@ -1,25 +1,40 @@
-
-
 import { Button } from "@/components/ui/button";
-import { useState, type ElementType } from "react";
-
 import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
 } from "@/components/ui/sheet";
-
 import axios from "@/lib/axios";
 import { TaskProps } from "@/lib/types";
+import {
+  CalendarClock,
+  CheckCircle2,
+  ClipboardList,
+  Clock3,
+  Lightbulb,
+  MapPin,
+  MessageSquareText,
+  Tag,
+  UserRound,
+  UsersRound,
+  type LucideIcon,
+} from "lucide-react";
 import moment from "moment";
+import { useState } from "react";
 import { toast } from "sonner";
-import Spinner from "../ui/spinner";
 import { ScrollArea } from "../ui/scroll-area";
-import { CalendarClock, CheckCircle2, ClipboardList, Lightbulb, MessageSquareText, Sparkles } from "lucide-react";
+import Spinner from "../ui/spinner";
 
+type TaskDetailProps = {
+  detail: TaskProps | null;
+  visible: boolean;
+  onClose: (value: boolean) => void;
+  onMark: () => Promise<void>;
+  user_id: number | string;
+};
 
 const TaskDetail = ({
   detail,
@@ -27,138 +42,139 @@ const TaskDetail = ({
   onClose,
   onMark,
   user_id,
-} : {
-  detail : TaskProps | null,
-  visible : boolean,
-  onClose : (val : boolean)=> void,
-  onMark : ()=> Promise<void>
-  user_id : number | string
-}) => {
+}: TaskDetailProps) => {
   const [loading, setLoading] = useState(false);
-  if(!detail?.id) return null
-  
 
-  async function handleUpdateStatus(values : {id : number, status :string}) {
+  if (!detail?.id) return null;
+
+  const isCompleted = detail.status?.toLowerCase() === "completed";
+  const customerNumber = Array.isArray(detail.customer_number)
+    ? detail.customer_number.filter(Boolean).join(", ")
+    : String(detail.customer_number || "");
+
+  async function handleUpdateStatus() {
     setLoading(true);
-    axios
-      .put(`/${user_id}/task/${detail?.id}`, {
-        id: values.id,
-        status: values.status,
-      })
-      .then(() => {
-        toast.success("Status updated" );
-        onClose(false);
-      })
-
-      .finally(() => {
-        setLoading(false);
-        onMark();
+    try {
+      await axios.put(`/${user_id}/task/${detail?.id}`, {
+        id: detail.id,
+        status: "Completed",
       });
+      toast.success("Status updated");
+      onClose(false);
+      await onMark();
+    } catch (error) {
+      console.error("Failed to update task status", error);
+      toast.error("Unable to update task status");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <Sheet open={visible} onOpenChange={onClose}>
-      <SheetContent className="w-full overflow-hidden p-0 sm:max-w-xl">
-        <SheetHeader className="border-b bg-muted/20 px-5 py-5 text-left">
+      <SheetContent className="w-full gap-0 overflow-hidden p-0 sm:max-w-xl">
+        <SheetHeader className="border-b bg-muted/20 px-5 py-5 pr-12 text-left">
           <div className="flex items-start gap-3">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-              <ClipboardList className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <SheetTitle className="text-xl font-bold tracking-tight">Task Detail</SheetTitle>
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
+              <ClipboardList className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <SheetTitle className="text-lg font-semibold tracking-tight">
+                  Task Details
+                </SheetTitle>
+                <StatusBadge completed={isCompleted} status={detail.status} />
+              </div>
               <SheetDescription className="mt-1">
-                Review task scope, timeline, and completion status.
+                Task #{detail.id}
               </SheetDescription>
             </div>
           </div>
         </SheetHeader>
 
-        <ScrollArea className="h-[calc(100dvh-200px)]">
+        <ScrollArea className="min-h-0 flex-1">
           <div className="space-y-4 p-5">
-            <section className="overflow-hidden rounded-2xl border bg-background shadow-sm">
-              <div className="border-b bg-muted/15 p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <div className="mb-2 inline-flex items-center gap-2 rounded-full border bg-muted/30 px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                      <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-                      Assigned task
-                    </div>
-                    <h3 className="break-words text-lg font-bold leading-snug">
-                      {detail?.task_name || "Untitled task"}
-                    </h3>
-                  </div>
-
-                  <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${detail?.status === "Completed"
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-amber-50 text-amber-700"
-                    }`}>
-                    {detail?.status || "Pending"}
+            <section className="rounded-xl border bg-background p-4 shadow-sm">
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                {detail.type ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                    <Tag className="size-3" />
+                    {detail.type}
                   </span>
-                </div>
+                ) : null}
               </div>
-
-              <div className="grid gap-3 p-4 sm:grid-cols-2">
-                <DetailTile
-                  icon={CheckCircle2}
-                  label="Status"
-                  value={detail?.status || "N/A"}
-                  iconClassName="bg-emerald-50 text-emerald-700 ring-emerald-100"
-                />
-                <DetailTile
-                  icon={CalendarClock}
-                  label="Assigned Date"
-                  value={detail?.created_at ? moment(detail?.created_at).format("YYYY-MM-DD") : "N/A"}
-                  iconClassName="bg-blue-50 text-blue-700 ring-blue-100"
-                />
-              </div>
+              <h2 className="break-words text-lg font-semibold leading-7 text-foreground">
+                {detail.task_name || "Untitled task"}
+              </h2>
             </section>
 
-            {detail?.problem && (
-              <section className="grid gap-4">
-                <InfoCard
-                  icon={MessageSquareText}
-                  title="Problem"
-                  value={detail?.problem}
-                  iconClassName="bg-rose-50 text-rose-700 ring-rose-100"
-                />
-                {detail?.solution && (
-                  <InfoCard
-                    icon={Lightbulb}
-                    title="Solution"
-                    value={detail?.solution}
-                    iconClassName="bg-amber-50 text-amber-700 ring-amber-100"
-                  />
-                )}
-              </section>
-            )}
+            <section className="grid gap-3 sm:grid-cols-2">
+              <DetailItem icon={UserRound} label="Assigned to" value={detail.assigned_to_name} />
+              <DetailItem icon={UsersRound} label="Assigned by" value={detail.assigned_by_name} />
+              <DetailItem
+                icon={CalendarClock}
+                label="Assigned date"
+                value={detail.created_at ? moment(detail.created_at).format("DD MMM YYYY") : null}
+              />
+              <DetailItem
+                icon={Clock3}
+                label="Assigned time"
+                value={detail.created_at ? moment(detail.created_at).format("hh:mm A") : null}
+              />
+            </section>
 
-            {!detail?.problem && (
-              <div className="rounded-2xl border border-dashed bg-muted/15 p-8 text-center text-sm text-muted-foreground">
-                No problem or solution details were added for this task.
+            {(detail.customer_name || detail.customer_owner || customerNumber || detail.customer_address) ? (
+              <section className="rounded-xl border bg-background p-4 shadow-sm">
+                <SectionHeading icon={UsersRound} title="Customer" />
+                <div className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+                  <TextDetail label="Name" value={detail.customer_name || detail.customer_owner} />
+                  <TextDetail label="Contact" value={customerNumber} />
+                  <TextDetail className="sm:col-span-2" label="Address" value={detail.customer_address} />
+                  <TextDetail label="PIN" value={detail.customer_pin} />
+                </div>
+              </section>
+            ) : null}
+
+            {(detail.problem || detail.solution) ? (
+              <section className="grid gap-3">
+                {detail.problem ? (
+                  <NarrativeCard icon={MessageSquareText} title="Problem" value={detail.problem} />
+                ) : null}
+                {detail.solution ? (
+                  <NarrativeCard icon={Lightbulb} title="Solution" value={detail.solution} />
+                ) : null}
+              </section>
+            ) : null}
+
+            {(detail.remarks || detail.location) ? (
+              <section className="rounded-xl border bg-background p-4 shadow-sm">
+                <SectionHeading icon={MapPin} title="Additional information" />
+                <div className="grid gap-3">
+                  <TextDetail label="Location" value={detail.location} />
+                  <TextDetail label="Remarks" value={detail.remarks} />
+                </div>
+              </section>
+            ) : null}
+
+            {!detail.problem && !detail.solution && !detail.remarks && !detail.location ? (
+              <div className="rounded-xl border border-dashed bg-muted/15 px-5 py-7 text-center text-sm text-muted-foreground">
+                No additional task notes were added.
               </div>
-            )}
+            ) : null}
           </div>
         </ScrollArea>
 
         <SheetFooter className="border-t bg-background/95 p-4 backdrop-blur">
-          {detail?.status !== "Completed" ? (
-            <Button
-              className="w-full sm:w-auto"
-              onClick={() => {
-                handleUpdateStatus({
-                  ...detail,
-                  status: "Completed",
-                });
-              }}
-            >
-              {loading && <Spinner />}
-              Mark as Completed
-            </Button>
-          ) : (
-            <div className="flex w-full items-center justify-center gap-2 rounded-xl border bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 sm:w-auto">
-              <CheckCircle2 className="h-4 w-4" />
-              Completed
+          {isCompleted ? (
+            <div className="flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 sm:w-auto">
+              <CheckCircle2 className="size-4" />
+              Task completed
             </div>
+          ) : (
+            <Button className="w-full sm:w-auto" disabled={loading} onClick={handleUpdateStatus}>
+              {loading ? <Spinner /> : <CheckCircle2 />}
+              Mark as completed
+            </Button>
           )}
         </SheetFooter>
       </SheetContent>
@@ -166,56 +182,56 @@ const TaskDetail = ({
   );
 };
 
-function DetailTile({
-  icon: Icon,
-  label,
-  value,
-  iconClassName,
-}: {
-  icon: ElementType;
-  label: string;
-  value: string;
-  iconClassName: string;
-}) {
+function StatusBadge({ completed, status }: { completed: boolean; status?: string }) {
   return (
-    <div className="rounded-xl border bg-muted/15 p-3">
-      <div className="flex items-start gap-3">
-        <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1 ${iconClassName}`}>
-          <Icon className="h-4 w-4" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-muted-foreground">{label}</p>
-          <p className="mt-1 break-words text-sm font-semibold">{value}</p>
-        </div>
+    <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${completed
+      ? "bg-emerald-100 text-emerald-700"
+      : "bg-amber-100 text-amber-700"
+      }`}>
+      {status || "Pending"}
+    </span>
+  );
+}
+
+function DetailItem({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value?: string | null }) {
+  return (
+    <div className="flex items-start gap-3 rounded-xl border bg-muted/10 p-3">
+      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+        <Icon className="size-4" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="mt-1 break-words text-sm font-medium">{value || "N/A"}</p>
       </div>
     </div>
   );
 }
 
-function InfoCard({
-  icon: Icon,
-  title,
-  value,
-  iconClassName,
-}: {
-  icon: ElementType;
-  title: string;
-  value: string;
-  iconClassName: string;
-}) {
+function SectionHeading({ icon: Icon, title }: { icon: LucideIcon; title: string }) {
   return (
-    <section className="rounded-2xl border bg-background p-4 shadow-sm">
-      <div className="mb-3 flex items-center gap-3">
-        <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1 ${iconClassName}`}>
-          <Icon className="h-4 w-4" />
-        </div>
-        <h3 className="font-semibold">{title}</h3>
-      </div>
-      <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
-        {value}
-      </p>
+    <div className="mb-3 flex items-center gap-2">
+      <Icon className="size-4 text-primary" />
+      <h3 className="text-sm font-semibold">{title}</h3>
+    </div>
+  );
+}
+
+function TextDetail({ label, value, className = "" }: { label: string; value?: string | null; className?: string }) {
+  return (
+    <div className={className}>
+      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-5">{value || "N/A"}</p>
+    </div>
+  );
+}
+
+function NarrativeCard({ icon: Icon, title, value }: { icon: LucideIcon; title: string; value: string }) {
+  return (
+    <section className="rounded-xl border bg-background p-4 shadow-sm">
+      <SectionHeading icon={Icon} title={title} />
+      <p className="whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">{value}</p>
     </section>
   );
 }
 
-export default TaskDetail
+export default TaskDetail;

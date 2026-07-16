@@ -1,4 +1,5 @@
 import pool from "@/config/db";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { addLog } from "@/lib/addLog";
 import { generateLog } from "@/lib/generateLog";
 import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
@@ -6,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 
 
-export async function POST(req:NextRequest) {
+export async function POST(req: NextRequest) {
 
     try {
         const data = await req.json();
@@ -34,7 +35,7 @@ export async function POST(req:NextRequest) {
             JOIN customer c ON s.customer_id = c.id
             WHERE p.id = $1`, [result.rows[0].id])
 
-        sendNotificationToOwner(`New payment added for ${customerResult.rows[0].customer_name}`, `member/${customerResult.rows[0].customer_id}/${result.rows[0].machine_id}`, 'lahore')
+        sendNotificationToOwner(`New payment added for ${customerResult.rows[0].customer_name}`, `member/${customerResult.rows[0].customer_id}/${result.rows[0].machine_id}?mp=${result.rows[0]?.id}`, 'lahore', NOTIFICATION_TYPES.payment_added.category, NOTIFICATION_TYPES.payment_added.title)
 
 
         try {
@@ -50,14 +51,14 @@ export async function POST(req:NextRequest) {
             message: "Payment added successfully",
         }, { status: 200 });
 
-    } catch (error:any) {
+    } catch (error: any) {
         console.error('Error inserting data: ', error);
         return NextResponse.json({ message: error?.message || 'Error adding payment' }, { status: 500 })
     }
 }
 
 
-export async function PUT(req:NextRequest) {
+export async function PUT(req: NextRequest) {
     try {
         const data = await req.json();
         const { id, ...updates } = data;
@@ -66,7 +67,7 @@ export async function PUT(req:NextRequest) {
             return NextResponse.json({ message: "ID is required" }, { status: 400 });
         }
 
-        const fields:string[] = [];
+        const fields: string[] = [];
         const values = [];
 
         Object.entries(updates).forEach(([key, value], index) => {

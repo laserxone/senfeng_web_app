@@ -11,10 +11,13 @@ import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  ChevronDown,
-  Filter,
   ArrowUpCircle,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Factory,
+  Filter,
+  Headphones,
   MapPin,
   MapPinOff,
   Presentation,
@@ -25,7 +28,6 @@ import {
   Truck,
   Wrench,
   type LucideIcon,
-  Headphones,
 } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
@@ -70,8 +72,8 @@ import Spinner from "../ui/spinner";
 import { UserSearch } from "../user-search";
 
 import { MyImgZooming } from "../img-zooming";
-import FilterSheet from "../users/filter-sheet";
 import { Badge } from "../ui/badge";
+import FilterSheet from "../users/filter-sheet";
 
 const formSchema = z
   .object({
@@ -119,15 +121,15 @@ const taskCategories: Array<{
   value: string;
   icon: LucideIcon;
 }> = [
-  { label: "Installation", value: "Installation", icon: ShieldCheck },
-  { label: "Complaint", value: "Complaint", icon: Wrench },
-  { label: "Overhauling", value: "Overhauling", icon: Settings2 },
-  { label: "Machine Shifting", value: "Machine Shifting", icon: Truck },
-  { label: "Machine Preparation", value: "Machine Preparation", icon: Factory },
-  { label: "Demonstration", value: "Demonstration", icon: Presentation },
-  { label: "Machine Upgradation", value: "Machine Upgradation", icon: ArrowUpCircle },
-  { label: "Online Support", value: "Online Support", icon: Headphones },
-];
+    { label: "Installation", value: "Installation", icon: ShieldCheck },
+    { label: "Complaint", value: "Complaint", icon: Wrench },
+    { label: "Overhauling", value: "Overhauling", icon: Settings2 },
+    { label: "Machine Shifting", value: "Machine Shifting", icon: Truck },
+    { label: "Machine Preparation", value: "Machine Preparation", icon: Factory },
+    { label: "Demonstration", value: "Demonstration", icon: Presentation },
+    { label: "Machine Upgradation", value: "Machine Upgradation", icon: ArrowUpCircle },
+    { label: "Online Support", value: "Online Support", icon: Headphones },
+  ];
 
 export default function ComplaintSystem() {
   const [loading, setLoading] = useState(false);
@@ -140,6 +142,9 @@ export default function ComplaintSystem() {
   const [resetLoading, setResetLoading] = useState(false);
   const [selected, setSelected] = useState("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [linkedComplaintId, setLinkedComplaintId] = useState<number | null>(null);
+  const pageSize = 10;
 
   const [dates, setDates] = useState({
     start: moment().startOf("month").toDate(),
@@ -162,15 +167,68 @@ export default function ComplaintSystem() {
 
   useEffect(() => {
     if (userID) {
-      fetchData(dates.start.toISOString(), dates.end.toISOString());
+      const complaintId = new URLSearchParams(window.location.search).get("c");
+      const start = new URLSearchParams(window.location.search).get("start");
+      const end = new URLSearchParams(window.location.search).get("end");
+      if (complaintId) {
+        fetchData(start ?? undefined, end ?? undefined);
+      } else {
+        fetchData(dates.start.toISOString(), dates.end.toISOString());
+      }
     }
   }, [userID]);
 
-  async function fetchData(startDate: string, endDate: string) {
+  useEffect(() => {
+    const syncComplaintFromUrl = () => {
+      const complaintId = new URLSearchParams(window.location.search).get("c");
+      if (!complaintId) return;
+
+      const complaint = data.find(
+        (item) => String(item.complaint_id) === complaintId
+      );
+      if (!complaint) return;
+
+      setSelected("all");
+      setSearch("");
+      setPage(1);
+      setLinkedComplaintId(complaint.complaint_id);
+      setOpenItems((prev) => ({
+        ...prev,
+        [complaint.complaint_id]: true,
+      }));
+
+      const hash = `complaint-${complaint.complaint_id}`;
+      if (window.location.hash !== `#${hash}`) {
+        window.location.hash = hash;
+      }
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          document.getElementById(hash)?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        });
+      });
+    };
+
+    syncComplaintFromUrl();
+    window.addEventListener("popstate", syncComplaintFromUrl);
+
+    return () => {
+      window.removeEventListener("popstate", syncComplaintFromUrl);
+    };
+  }, [data]);
+
+  async function fetchData(startDate?: string, endDate?: string) {
     setLoading(true);
 
+    const query = startDate && endDate
+      ? `?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`
+      : "";
+
     axios
-      .get(`/${userID}/complaint?start_date=${startDate}&end_date=${endDate}`)
+      .get(`/${userID}/complaint${query}`)
       .then((response) => {
         setData(response.data);
       })
@@ -208,7 +266,7 @@ export default function ComplaintSystem() {
 
   const totals = useMemo(() => calculateTotals(data), [data]);
 
-  const filteredData = data.filter((item) => {
+  const filteredData = useMemo(() => data.filter((item) => {
     if (selected === "paid" && !item.complaint_paid) return false;
     if (selected === "unpaid" && item.complaint_paid) return false;
 
@@ -222,7 +280,32 @@ export default function ComplaintSystem() {
       (item?.customer_owner || "").toLowerCase().includes(searchLower) ||
       (item?.customer_ownership_name || "").toLowerCase().includes(searchLower)
     );
-  });
+  }), [data, search, selected]);
+
+  const orderedData = useMemo(() => {
+    if (!linkedComplaintId) return filteredData;
+
+    const linkedComplaint = data.find(
+      (item) => item.complaint_id === linkedComplaintId
+    );
+    if (!linkedComplaint) return filteredData;
+
+    return [
+      linkedComplaint,
+      ...filteredData.filter(
+        (item) => item.complaint_id !== linkedComplaintId
+      ),
+    ];
+  }, [data, filteredData, linkedComplaintId]);
+
+  const totalPages = Math.max(1, Math.ceil(orderedData.length / pageSize));
+  const paginatedData = orderedData.slice((page - 1) * pageSize, page * pageSize);
+  const pageStart = orderedData.length ? (page - 1) * pageSize + 1 : 0;
+  const pageEnd = Math.min(page * pageSize, orderedData.length);
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
 
   const handleAssignEngineer = (complaintId: number) => {
     setSelectedComplaint(complaintId);
@@ -243,8 +326,19 @@ export default function ComplaintSystem() {
     }
   }
 
+  function clearUrl (){
+    const url = new URL(window.location.href);
+    url.searchParams.delete("c");
+    url.searchParams.delete("start");
+    url.searchParams.delete("end");
+    url.hash = "";
+    window.history.replaceState({}, "", url);
+  }
+
   async function handleReset() {
     setResetLoading(true);
+
+    clearUrl()
 
     const startDate = moment().startOf("month").toISOString();
     const endDate = moment().endOf("month").toISOString();
@@ -256,6 +350,8 @@ export default function ComplaintSystem() {
 
     setSearch("");
     setSelected("all");
+    setPage(1);
+    setLinkedComplaintId(null);
 
     await fetchData(startDate, endDate);
     setResetLoading(false);
@@ -288,13 +384,19 @@ export default function ComplaintSystem() {
           <Input
             value={search}
             placeholder="Search by title, customer, owner or manager..."
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
             className="pl-9"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Select value={selected} onValueChange={(v) => setSelected(v)}>
+          <Select value={selected} onValueChange={(v) => {
+            setSelected(v);
+            setPage(1);
+          }}>
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Select option" />
             </SelectTrigger>
@@ -326,7 +428,7 @@ export default function ComplaintSystem() {
         <div className="flex h-40 items-center justify-center rounded-xl border bg-card">
           <Spinner />
         </div>
-      ) : filteredData.length === 0 ? (
+      ) : orderedData.length === 0 ? (
         <div className="flex h-40 flex-col items-center justify-center rounded-xl border bg-card text-center">
           <p className="font-medium">No records found</p>
           <p className="text-sm text-muted-foreground">
@@ -335,7 +437,7 @@ export default function ComplaintSystem() {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredData.map((complaint) => (
+          {paginatedData.map((complaint) => (
             <ComplaintCard
               key={complaint.complaint_id}
               complaint={complaint}
@@ -355,6 +457,37 @@ export default function ComplaintSystem() {
               }
             />
           ))}
+
+          {totalPages > 1 && (
+            <div className="flex flex-col gap-3 rounded-xl border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-muted-foreground">
+                Showing {pageStart}-{pageEnd} of {orderedData.length} complaints
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 1}
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                >
+                  <ChevronLeft />
+                  Previous
+                </Button>
+                <span className="min-w-20 text-center text-xs font-medium">
+                  Page {page} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === totalPages}
+                  onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                >
+                  Next
+                  <ChevronRight />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -363,7 +496,9 @@ export default function ComplaintSystem() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
+          clearUrl()
           await fetchData(val.start, val.end);
+          setPage(1);
           setDates({
             start: moment(val.start).toDate(),
             end: moment(val.end).toDate(),
@@ -452,9 +587,9 @@ function StatusBadge({ status }: { status?: string }) {
         "bg-gray-100 text-gray-800"
         }`}
     >
-   {status
-  ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
-  : "N/A"}
+      {status
+        ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
+        : "N/A"}
     </span>
   );
 }
@@ -513,6 +648,7 @@ function ComplaintCard({
 
   return (
     <Collapsible
+      id={`complaint-${complaint.complaint_id}`}
       open={isOpen}
       onOpenChange={onOpenChange}
       className="w-[calc(100vw-44px)] overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:border-primary/20 hover:shadow-md sm:w-full"
@@ -527,7 +663,7 @@ function ComplaintCard({
                 </p>
                 <Badge>{complaint.complaint_category}</Badge>
                 <StatusBadge status={complaint.complaint_status} />
-               
+
               </div>
 
               <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
@@ -544,9 +680,9 @@ function ComplaintCard({
             </div>
 
             <div className="flex w-full items-center justify-between gap-2 lg:w-auto lg:justify-end">
-             
+
               <div className="min-w-0 rounded-xl border bg-muted/25 px-3 py-1.5 text-left lg:min-w-36 lg:text-right">
-                
+
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Manager</p>
                 <p className="truncate text-xs font-bold">
                   {complaint.customer_ownership_name || "N/A"}
@@ -793,12 +929,12 @@ function ComplaintFormContent({
                   <FieldLabel>
                     Select Task Category <RequiredStar />
                   </FieldLabel>
-                  <Select value={field.value} onValueChange={(e)=>{
+                  <Select value={field.value} onValueChange={(e) => {
                     field.onChange(e)
-                    if(e === "Installation"){
+                    if (e === "Installation") {
                       form.setValue("installation", true)
                     } else {
-                       form.setValue("installation", false)
+                      form.setValue("installation", false)
                     }
                   }}>
                     <SelectTrigger
@@ -840,7 +976,7 @@ function ComplaintFormContent({
                 <div className="flex items-center justify-between rounded-lg border p-3">
                   <FieldLabel>Machine Installation?</FieldLabel>
                   <Checkbox
-                  disabled
+                    disabled
                     checked={field.value}
                     onCheckedChange={(checked) => field.onChange(checked)}
                   />

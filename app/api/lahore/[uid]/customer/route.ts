@@ -5,8 +5,9 @@ import { generateLog } from "@/lib/generateLog";
 import { sendNotification } from "@/lib/sendNotification";
 import { sendNotificationToCRM, sendNotificationToCRMWithoutLead } from "@/lib/sendNotificationToCRM";
 import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
+import {  sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import { NextRequest, NextResponse } from "next/server";
-
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ uid: string }> }) {
 
@@ -45,10 +46,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ uid
         }
 
         if (result.rows[0].ownership) {
-            sendNotification(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
+            sendNotification(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership, NOTIFICATION_TYPES.customer_assigned.title, NOTIFICATION_TYPES.customer_assigned.category)
             sendNotificationToMobile(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, "Customer", result.rows[0].ownership, result.rows[0], "client", `/dashboard/customer/${result.rows[0].id}`)
         }
-
+        sendNotificationToOwner(`${result.rows[0]?.name} - new customer added`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, "lahore", "all", NOTIFICATION_TYPES.customer_added.title)
         try {
             const logMSG = generateLog(data, "New customer added")
 
@@ -123,9 +124,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ uid:
                 return NextResponse.json(result.rows, { status: 200 });
             }
             else if (machinesQuery) {
-  const queryParams = [];
+                const queryParams = [];
 
-  let query = `
+                let query = `
     SELECT 
       c.id,
       c.name,
@@ -174,34 +175,34 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ uid:
       ON c.ownership = u.id
   `;
 
-  if (member) {
-    query += ` WHERE c.member IS TRUE`;
-  } else {
-    query += ` WHERE c.member IS FALSE`;
-  }
+                if (member) {
+                    query += ` WHERE c.member IS TRUE`;
+                } else {
+                    query += ` WHERE c.member IS FALSE`;
+                }
 
-  if (start_date && end_date) {
-    queryParams.push(start_date, end_date);
+                if (start_date && end_date) {
+                    queryParams.push(start_date, end_date);
 
-    query += `
+                    query += `
       AND s.contract_date BETWEEN $${queryParams.length - 1} AND $${queryParams.length}
     `;
-  }
+                }
 
-  if (user) {
-    queryParams.push(user);
+                if (user) {
+                    queryParams.push(user);
 
-    query += ` AND c.ownership = $${queryParams.length}`;
-  }
+                    query += ` AND c.ownership = $${queryParams.length}`;
+                }
 
-  query += `
+                query += `
     GROUP BY c.id, u.name, u.dp
   `;
 
-  const result = await pool.query(query, queryParams);
+                const result = await pool.query(query, queryParams);
 
-  return NextResponse.json(result.rows, { status: 200 });
-}
+                return NextResponse.json(result.rows, { status: 200 });
+            }
             else {
                 let query = `
                 SELECT 
@@ -285,8 +286,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ uid:
       ) AS handshake_images` : ''}
     FROM customer c
     LEFT JOIN users u ON c.ownership = u.id
-    ${machinesQuery ? 
-        `LEFT JOIN sale s ON c.id = s.customer_id
+    ${machinesQuery ?
+                    `LEFT JOIN sale s ON c.id = s.customer_id
         LEFT JOIN LATERAL unnest(s.handshake_images) AS handshake_image 
       ON TRUE` : ''}
   `;

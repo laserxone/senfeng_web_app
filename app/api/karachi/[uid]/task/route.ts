@@ -1,13 +1,16 @@
 import pool from "@/config/db";
+import { TIMEZONE } from "@/constants/data";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { sendNotification } from "@/lib/sendNotification";
 import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
-import { NextRequest, NextResponse } from "next/server"
+import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
+import momentT from "moment-timezone";
+import { NextRequest, NextResponse } from "next/server";
 
 
 
-
-export async function POST(req:NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         const { task_name, type, client, status, assigned_to, assigned_by, problem, solution } = await req.json();
 
@@ -55,7 +58,20 @@ export async function POST(req:NextRequest) {
         const newTask = await pool.query(query, values);
 
         if (assigned_by && assigned_by !== assigned_to) {
-            sendNotification(`Task assigned: ${taskName}`, "task", assigned_to)
+            const start = momentT
+                .tz(TIMEZONE)
+                .startOf("month")
+                .startOf("day")
+                .utc()
+                .toISOString();
+            const end = momentT
+                .tz(TIMEZONE)
+                .endOf("month")
+                .endOf("day")
+                .utc()
+                .toISOString();
+            sendNotification(`Task assigned: ${taskName}`, `task?t=${newTask.rows?.[0]?.id}&start=${start}&end=${end}`, assigned_to, NOTIFICATION_TYPES.task_assigned.title, NOTIFICATION_TYPES.task_assigned.category)
+            sendNotificationToOwner(`Task assigned: ${taskName}`, `task?t=${newTask.rows?.[0]?.id}&start=${start}&end=${end}`, "karachi", NOTIFICATION_TYPES.task_assigned.category, NOTIFICATION_TYPES.task_assigned.title)
         }
 
         return NextResponse.json({ message: "Task created successfully" }, { status: 201 });
@@ -72,7 +88,7 @@ export async function POST(req:NextRequest) {
 
 
 
-export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ uid: string }> }) {
 
     const { uid } = await params
     const searchParams = req.nextUrl.searchParams
@@ -235,7 +251,7 @@ WHERE u.id = $1
 
         }
 
-    } catch (error:any) {
+    } catch (error: any) {
         console.error('Error inserting data: ', error);
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }

@@ -5,21 +5,24 @@ import moment from "moment";
 import { useEffect, useState } from "react";
 import useUserDetail from "./use-user-detail";
 
-type InfoProps = {
+export type ChequeAlert = {
   id: number
   link: string
   title: string
   date: string
   amount: string | number
+  price?: string | number | null
   serial_no: string
   sale_id : number
   customer_id : number
   customer_name : string
   customer_owner : string
+  seller_name : string
+  seller_dp : string
 }
 
 export function useChequeAlerts() {
-  const [info, setInfo] = useState<InfoProps[]>([]);
+  const [info, setInfo] = useState<ChequeAlert[]>([]);
   const { userID } = useUserDetail();
 
   async function fetchData() {

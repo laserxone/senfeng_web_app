@@ -3,14 +3,14 @@ import { partFields, profileFields, saleFields } from "@/constants/data";
 import { addLog } from "@/lib/addLog";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import DeleteStorageBackend from "@/lib/delete-storage-backend";
-import admin from "@/lib/firebaseAdmin";
 import { generateLog } from "@/lib/generateLog";
 import { sendNotification } from "@/lib/sendNotification";
 import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
 import { sendNotificationToSMM } from "@/lib/sendNotificationToSMM";
 import { NextRequest, NextResponse } from "next/server";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 
-export async function GET(req:NextRequest, { params }:{params:Promise<{id:string,uid:string}>}) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string, uid: string }> }) {
   const { id } = await params;
   const { uid } = await params
 
@@ -19,7 +19,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
 
   try {
 
-      const isAdmin = await checkSuperadmin(uid)
+    const isAdmin = await checkSuperadmin(uid)
 
 
     if (isAdmin) {
@@ -211,13 +211,13 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{id:string
     }
 
 
-  } catch (error:any) {
+  } catch (error: any) {
     console.error('Error fetching data: ', error);
     return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 });
   }
 }
 
-export async function PUT(req:NextRequest, { params }:{params:Promise<{uid:string,id:string}>}) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ uid: string, id: string }> }) {
 
 
 
@@ -237,7 +237,7 @@ export async function PUT(req:NextRequest, { params }:{params:Promise<{uid:strin
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
-    const fields:string[] = [];
+    const fields: string[] = [];
     const values = [];
 
     Object.entries(updates).forEach(([key, value], index) => {
@@ -267,7 +267,7 @@ export async function PUT(req:NextRequest, { params }:{params:Promise<{uid:strin
       }
 
       if (result.rows[0].ownership) {
-        sendNotification(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
+        sendNotification(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership, NOTIFICATION_TYPES.customer_assigned.title, NOTIFICATION_TYPES.customer_assigned.category)
         sendNotificationToMobile(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, "Customer", result.rows[0].ownership, result.rows[0], "client", `/dashboard/customer/${result.rows[0].id}`)
       }
     }

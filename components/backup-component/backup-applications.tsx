@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import {
+    useCallback,
     useEffect,
     useState
 } from "react"
@@ -68,6 +69,39 @@ export default function BackupApplications() {
 
         loadInitialData()
     }, [userID])
+
+    const updateBackupApplicationQuery = useCallback((applicationId?: string | number) => {
+        const url = new URL(window.location.href)
+
+        if (applicationId !== undefined) {
+            url.searchParams.set("b", String(applicationId))
+            window.history.pushState({}, "", url)
+        } else {
+            url.searchParams.delete("b")
+            window.history.replaceState({}, "", url)
+        }
+
+        window.dispatchEvent(new PopStateEvent("popstate"))
+    }, [])
+
+    useEffect(() => {
+        const syncBackupApplicationFromUrl = () => {
+            const applicationId = new URLSearchParams(window.location.search).get("b")
+            const application = applicationId
+                ? allApplications.find((item) => String(item.id) === applicationId)
+                : undefined
+
+            setDetailApplication(application || null)
+            setIsDetailOpen(Boolean(application))
+        }
+
+        syncBackupApplicationFromUrl()
+        window.addEventListener("popstate", syncBackupApplicationFromUrl)
+
+        return () => {
+            window.removeEventListener("popstate", syncBackupApplicationFromUrl)
+        }
+    }, [allApplications])
 
 
     async function loadInitialData() {
@@ -268,12 +302,7 @@ export default function BackupApplications() {
                                             showUser
                                             showDelete
                                             currentUserId={userID}
-                                            onViewDetails={() => {
-                                                setDetailApplication(
-                                                    application
-                                                )
-                                                setIsDetailOpen(true)
-                                            }}
+                                            onViewDetails={() => updateBackupApplicationQuery(application.id)}
                                             onDelete={() =>
                                                 setSelectedForDelete(
                                                     application
@@ -295,7 +324,10 @@ export default function BackupApplications() {
 
             <Dialog
                 open={isDetailOpen}
-                onOpenChange={setIsDetailOpen}
+                onOpenChange={(nextOpen) => {
+                    setIsDetailOpen(nextOpen)
+                    if (!nextOpen) updateBackupApplicationQuery()
+                }}
             >
                 <DialogContent className="w-full sm:max-w-3xl">
                     <DialogHeader>

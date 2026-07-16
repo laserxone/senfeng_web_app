@@ -1,6 +1,7 @@
 import pool from "@/config/db";
 import { sendNotification } from "@/lib/sendNotification";
 import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -68,7 +69,7 @@ async function sendNotificationToOwnership(paymentId:string, status = "", commen
   if (result.rows.length > 0) {
     const user = result.rows[0];
     const title = status === 'approved' ? "Payment verified" : "Payment rejected";
-    sendNotification(title, `member/${user.customer_id}/${user.sale_id}`, user.user_id);
+    sendNotification(title, `member/${user.customer_id}/${user.sale_id}?mp=${paymentId}`, user.user_id, NOTIFICATION_TYPES.payment_verified.title, NOTIFICATION_TYPES.payment_verified.category);
     sendNotificationToMobile(title, "Payment", user.user_id, user, "client", `/dashboard/customer/${user.customer_id}/machine/${user.sale_id}`)
   }
 }

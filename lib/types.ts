@@ -471,6 +471,7 @@ export type TaskProps = {
     task_name: string;
     type: string;
     assigned_by: number | null;
+    assigned_by_name?: string | null;
     customer_id: number;
     problem: string | null;
     solution: string | null;

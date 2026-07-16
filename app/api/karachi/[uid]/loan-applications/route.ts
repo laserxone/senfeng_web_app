@@ -1,6 +1,7 @@
 import pool from "@/config/db";
 import { sendNotification } from "@/lib/sendNotification";
 import { NextRequest, NextResponse } from "next/server";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 
 export async function GET(request: NextRequest) {
   try {
@@ -324,7 +325,7 @@ export async function POST(request: NextRequest) {
         const nameQuery = await pool.query(`SELECT name from users WHERE id = $1`, [applicant_id])
         const name = nameQuery.rows?.[0]?.name || ""
         const sendTo = approversResult.rows?.[0].user_id ?? null
-        sendNotification(`${name} submitted loan application requesting your approval`, "applications/loan", sendTo)
+         sendNotification(`${name} submitted loan application requesting your approval`, `applications/loan?l=${application.id}`, sendTo, NOTIFICATION_TYPES.loan_application_submitted.title, NOTIFICATION_TYPES.loan_application_submitted.category)
       }
     }
 

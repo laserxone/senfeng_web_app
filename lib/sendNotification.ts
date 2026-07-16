@@ -1,9 +1,10 @@
 import moment from "moment"
 import admin from "./firebaseAdmin"
+import { NotificationCategory } from "@/constants/notifications";
 
 
 
-export const sendNotification = async (title : string, page : string, sendTo : string) => {
+export const sendNotification = async (description : string, page : string, sendTo : string, title : string, category : NotificationCategory) => {
   if(!sendTo) return
     try {
       const TimeStamp = moment().valueOf()
@@ -13,7 +14,9 @@ export const sendNotification = async (title : string, page : string, sendTo : s
         page,
         read: false,
         title,
-        sendTo
+        sendTo,
+        category,
+        description
       }
   
       const db = admin.firestore()

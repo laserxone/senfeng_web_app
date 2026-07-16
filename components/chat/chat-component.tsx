@@ -134,13 +134,13 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }: ChatComp
 
 
   return (
-    <div className="flex flex-col w-full h-full bg-muted/40 z-99999">
+    <div className="flex h-full min-h-0 w-full flex-col bg-muted/30">
       {stateLoading ? (
         <div className="flex-1 flex items-center justify-center text-muted-foreground">
           <Spinner />
         </div>
       ) : (
-        <ScrollArea className="h-[calc(100dvh-320px)] px-5" >
+        <ScrollArea className="min-h-0 flex-1 px-4 sm:px-6" >
           {visibleCount < realMessages.length && (
             <div className="flex justify-center my-3">
               <Button
@@ -198,7 +198,7 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }: ChatComp
         </ScrollArea>
       )}
 
-      <div className="w-full px-5 py-4 bg-background border-t">
+      <div className="w-full border-t bg-background px-4 py-3 sm:px-5">
         <div className="flex items-center gap-2">
           <Input
             value={input}

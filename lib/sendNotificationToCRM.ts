@@ -1,5 +1,6 @@
 import pool from "@/config/db"
 import { sendNotification } from "./sendNotification"
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 
 
 export async function sendNotificationToCRM(id : string, customer : string, page : string) {
@@ -17,7 +18,7 @@ export async function sendNotificationToCRM(id : string, customer : string, page
   if (crmQuery.rows.length === 0) return;
 
    crmQuery.rows.forEach((crm) => {
-      sendNotification(`${customer} added by social media manager`, page, crm.id);
+      sendNotification(`${customer} added by social media manager`, page, crm.id, NOTIFICATION_TYPES.customer_added.title, NOTIFICATION_TYPES.customer_added.category);
     });
 }
 
@@ -32,6 +33,6 @@ export async function sendNotificationToCRMWithoutLead( customer : string, page 
   if (crmQuery.rows.length === 0) return;
 
    crmQuery.rows.forEach((crm) => {
-      sendNotification(`${customer} added in the systems`, page, crm.id);
+      sendNotification(`${customer} added in the systems`, page, crm.id, NOTIFICATION_TYPES.customer_added.title, NOTIFICATION_TYPES.customer_added.category);
     });
 }

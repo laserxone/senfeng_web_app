@@ -1,8 +1,8 @@
 import pool from "@/config/db";
 import { partFields, profileFields, saleFields } from "@/constants/data";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
-import admin from "@/lib/firebaseAdmin";
-import moment from "moment";
+import {  sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
         RETURNING *
     `;
 
-    await pool.query(query, values);
+    const result = await pool.query(query, values);
 
     // Step 2: Get applicant user info
     const userResult = await pool.query(
@@ -35,32 +35,7 @@ export async function POST(req: NextRequest) {
     );
     const userName = userResult.rows[0]?.name || "Someone";
 
-    // Step 3: Get all owners
-    const ownersResult = await pool.query(
-      "SELECT id FROM users WHERE designation = 'Owner'",
-    );
-    const ownerIds = ownersResult.rows.map((owner) => owner.id);
-
-    // Step 4: Add notifications to Firestore
-    const timestamp = moment().valueOf();
-
-    const notifications = ownerIds.map((eachId) => ({
-      TimeStamp: timestamp,
-      page: "commission",
-      read: false,
-      title: `${userName} applied for commission`,
-      sendTo: eachId,
-    }));
-
-    const db = admin.firestore();
-    const batch = db.batch();
-
-    notifications.forEach((notification) => {
-      const docRef = db.collection("Notification").doc();
-      batch.set(docRef, notification);
-    });
-
-    await batch.commit();
+    sendNotificationToOwner(`${userName} applied for commission`, `commission?c=${result.rows?.[0]?.id}`, "lahore", NOTIFICATION_TYPES.commission_applied.category, NOTIFICATION_TYPES.commission_applied?.title)
 
     return NextResponse.json(
       {

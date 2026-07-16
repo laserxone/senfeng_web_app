@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/config/db"
+import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 
 export async function GET(){
 
@@ -33,10 +35,11 @@ export async function POST(req:NextRequest) {
         const query = `
         INSERT INTO quotation (${fields.join(", ")})
         VALUES (${placeholders})
-        RETURNING id
+        RETURNING *
     `;
 
      const res =    await pool?.query(query, values);
+ sendNotificationToOwner(`${res.rows?.[0]?.customer_name || res?.rows?.[0]?.contact_person}`,`quotation?q=${res?.rows?.[0]?.id}`, "karachi", "sales", NOTIFICATION_TYPES.quotation_submitted.title)
 
         
         return NextResponse.json({ message: "Inserted successfully", id : res?.rows?.[0]?.id ?? null }, { status: 201 });

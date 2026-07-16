@@ -1,510 +1,183 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
-import { useDebouncedCallback } from "@/hooks/use-debounce";
-import { useMessages } from "@/hooks/use-messages";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import exportToExcel from "@/lib/exportToExcel";
-import { TriggerFirebase } from "@/lib/triggerFirebase";
-import { ConversationType, Messages, UserConversation } from "@/lib/types";
-import { Clock, Send } from "lucide-react";
-import moment from "moment";
+import { ConversationType, UserConversation } from "@/lib/types";
+import { Maximize2, MessagesSquare, Send, X } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
-import { Card, CardContent, CardHeader } from "../ui/card";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { ScrollArea } from "../ui/scroll-area";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
-import Spinner from "../ui/spinner";
+import { useCallback, useEffect, useState } from "react";
+import { ProfilePicture } from "../users/profile-picture";
+import Chatcomponent from "./chat-component";
 import UserChatIcon from "./chatIcon";
 
-export default function MessagePage() {
-  const { userID } = useUserDetail()
+type MessagePageProps = {
+  embedded?: boolean;
+  onClose?: () => void;
+};
+
+export default function MessagePage({ embedded = false, onClose }: MessagePageProps) {
+  const { userID, base_route } = useUserDetail();
   const [selectedConversation, setSelectedConversation] = useState<ConversationType | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const searchParams = useSearchParams();
+  const getConversation = useCallback(async (otherUserId: string | number) => {
+    if (!userID) return;
 
-
-
-  useEffect(() => {
-    const tabsParam = searchParams.get("chat");
-    if (!tabsParam || !userID) return
-    handleGetConversation(tabsParam)
-  }, [searchParams, userID])
-
-  async function handleGetConversation(tabsParam: string) {
-
-    const response = await axios.post(
-      `/${userID}/conversations`,
-      {
+    setLoading(true);
+    try {
+      const response = await axios.post(`/${userID}/conversations`, {
         user1: userID,
-        user2: tabsParam,
-      }
-    );
-
-    if (response.data.id) {
-      setSelectedConversation({
-        id: response.data.id,
-        user: response.data?.otherUser
+        user2: otherUserId,
       });
-    } else {
-      setSelectedConversation(null)
-    }
-  }
 
-  const handleStartConversation = useDebouncedCallback(async (item: UserConversation) => {
-    setLoading(true);
-    setSelectedConversation({
-      id: item.id,
-      user: {
-        name: item.name,
-        dp: item.dp,
-        id: item.id,
-        conversation: {
-          last_message: item.conversation.last_message,
-          last_updated: item.conversation.last_updated,
-          unreadCount: item.conversation.unreadCount
-        }
-      }
-    });
-
-    window.history.pushState(
-      {},
-      "",
-      `?chat=${item.id}`
-    );
-  }, 500)
-
-
-  return (
-    <div className="flex flex-1 h-[calc(100dvh-70px)] overflow-hidden">
-      <div className="flex flex-1">
-        <div className="w-[30%] border-r">
-          <h2 className="text-lg font-bold mb-4">Messages</h2>
-          <UserChatIcon
-            active={selectedConversation?.user?.id ?? null}
-            className="h-[calc(100dvh-160px)] pr-4"
-            myId={userID}
-            onChatSelected={(item) => {
-              if (item?.id === selectedConversation?.user?.id) return;
-              handleStartConversation(item);
-            }}
-          />
-
-
-        </div>
-
-        <div className="w-[70%] flex">
-          {!selectedConversation ? (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground">
-              No chat selected
-            </div>
-          ) : (
-
-            <Chatcomponent
-
-              id={selectedConversation?.id}
-              user={selectedConversation?.user}
-              stateLoading={loading}
-              onSetLoading={() => setLoading(false)}
-            />
-
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
-type ChatComponentType = {
-  id: number | undefined
-  user: UserConversation | null | undefined
-  onSetLoading: (val: boolean) => void
-  stateLoading: boolean
-}
-const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }: ChatComponentType) => {
-
-  const { userID } = useUserDetail()
-  const { messages: realMessages, loading } = useMessages(id);
-  const [input, setInput] = useState("");
-  const [tempMessages, setTempMessages] = useState<Messages[]>([]);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
-  const [selectedContent, setSelectedContent] = useState<any | null>(null);
-  const [visibleCount, setVisibleCount] = useState(20);
-
-  useEffect(() => {
-    if (!id) return;
-    onSetLoading(loading);
-    setTempMessages((prev) =>
-      prev.filter((tempMsg) => {
-        const existsInReal = realMessages.some((realMsg) => {
-          const realTime = new Date(realMsg.created_at).toISOString();
-          const tempTime = new Date(tempMsg.created_at).toISOString();
-
-          return (
-            realMsg.sender_id === tempMsg.sender_id &&
-            realMsg.message === tempMsg.message &&
-            realTime === tempTime
-          );
+      if (response.data.id) {
+        setSelectedConversation({
+          id: response.data.id,
+          user: response.data?.otherUser,
         });
-
-        return !existsInReal;
-      })
-    );
-  }, [realMessages]);
-
-  useEffect(() => {
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [realMessages, tempMessages]);
-
-  useEffect(() => {
-    if (!userID || !realMessages.length) return;
-    const unreadExists = realMessages.some(
-      (msg) => Number(msg.sender_id) !== Number(userID) && !msg.is_read
-    );
-
-    if (unreadExists) {
-      markAsRead();
-    }
-  }, [realMessages]);
-
-  const handleSend = async () => {
-    if (!input.trim()) return;
-
-    const created = new Date();
-
-    const tempId = `temp-${Date.now()}`;
-    const tempMessage = {
-      id: tempId,
-      message: input,
-      created_at: created,
-      sender_id: userID,
-      pending: true,
-    };
-
-    setTempMessages((prev) => [...prev, tempMessage]);
-    setInput("");
-
-    axios
-      .post(`/${userID}/conversations/${id}`, {
-        senderId: userID,
-        message: input,
-        created_at: created,
-      })
-      .then(() => {
-        if (id && user?.id) {
-          TriggerFirebase(id.toString(), user?.id?.toString());
-          TriggerFirebase("", userID.toString());
-        }
-      })
-      .catch(() => {
-        setTempMessages((prev) => prev.filter((msg) => msg.id !== tempId));
-      });
-  };
-
-  const markAsRead = async () => {
-    try {
-      await axios.put(`/${userID}/conversations/${id}/read`, {
-        userId: user?.id,
-      });
-    } catch (err) {
-      console.error("Failed to mark as read", err);
-    }
-
-    // TriggerFirebase(id.toString(), user?.id?.toString());
-    // TriggerFirebase(id.toString(), userID?.toString());
-  };
-
-  const visibleRealMessages = useMemo(() => {
-    return realMessages.slice(-visibleCount);
-  }, [realMessages, visibleCount]);
-
-  const combinedMessages = [...visibleRealMessages, ...tempMessages];
-
-
-  const handleLoadMore = () => {
-    setVisibleCount((prev) =>
-      Math.min(prev + 20, realMessages.length)
-    );
-  };
-
-
-
-  return (
-    <div className="flex flex-col w-full bg-muted/40">
-      {stateLoading ? (
-        <div className="flex-1 flex items-center justify-center text-muted-foreground">
-          <Spinner />
-        </div>
-      ) : (
-        <ScrollArea className="h-[calc(100dvh-140px)] px-5 py-2" >
-          {visibleCount < realMessages.length && (
-            <div className="flex justify-center my-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLoadMore}
-              >
-                Load more messages
-              </Button>
-            </div>
-          )}
-          {combinedMessages.map((item, index) => {
-            const isMe = item.sender_id === userID;
-            return (
-              <div
-                key={index}
-                className={`flex flex-col gap-1 max-w-[80%] my-2 ${isMe ? "ml-auto items-end" : "mr-auto items-start"
-                  }`}
-              >
-                <div
-                  className={`rounded-xl px-4 py-2 text-sm shadow-sm transition-all ${isMe
-                    ? "bg-primary text-white"
-                    : "bg-accent text-accent-foreground"
-                    }`}
-                >
-                  <div className="text-sm">{item.message}</div>
-                  {item.data && item.data.trim() && (
-                    <Button
-                      onClick={() => {
-                        setSelectedContent(JSON.parse(item.data));
-                      }}
-                      variant="secondary"
-                      size="sm"
-                      className="m-2"
-                    >
-                      Open
-                    </Button>
-                  )}
-                </div>
-                <span className="text-[11px] text-muted-foreground">
-                  {item.pending ? (
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3 animate-pulse" />
-                      Sending...
-                    </div>
-                  ) : (
-                    moment(item.created_at).format("MMM D, YYYY, h:mm A")
-                  )}
-                </span>
-              </div>
-            );
-          })}
-
-          <div ref={bottomRef} />
-        </ScrollArea>
-      )}
-
-      <div className="w-full px-5 py-4 bg-background border-t">
-        <div className="flex items-center gap-2">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder="Type your message..."
-            className="flex-1"
-          />
-          <Button onClick={handleSend} disabled={!input.trim()} size="icon">
-            <Send size={16} />
-          </Button>
-        </div>
-      </div>
-
-      <RenderSelectedContent
-        visible={!!selectedContent}
-        data={selectedContent ? selectedContent?.content : []}
-        onClose={() => setSelectedContent(null)}
-        type={selectedContent ? selectedContent?.type : ""}
-      />
-    </div>
-  );
-};
-
-const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: boolean, onClose: (val: boolean) => void, data: any | null, type: string }) => {
-
-  const [loading, setLoading] = useState(false);
-  const { base_route } = useUserDetail()
-
-  async function handleCreateExcel() {
-    setLoading(true);
-
-    const headers = [
-      "Name",
-      "English Name",
-      "New Order",
-      "Buying Price",
-      "Image",
-    ];
-
-    try {
-      if (data.length === 0) {
-        toast.info("Please select items first.");
-        return;
+      } else {
+        setSelectedConversation(null);
       }
-      await exportToExcel(
-        headers,
-        data.map((item: any) => [
-          item.chinese_name,
-          item.name,
-          item.new_order,
-          item.buying,
-          item.img,
-        ]),
-        "New Order.xlsx",
-        true,
-        "",
-        true
-      );
-    } catch (error) {
-      toast.error("Error creating excel");
     } finally {
       setLoading(false);
     }
-  }
+  }, [userID]);
 
-  if (type === "feedback")
-    return (
-      <Sheet open={visible} onOpenChange={onClose}>
-        <SheetContent
-          style={{ width: "100%", maxWidth: "95vw", alignItems: "flex-start" }}
-        >
-          <SheetHeader className="mb-4">
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-2xl">Report</SheetTitle>
-              <Label className="text-muted-foreground text-lg">
-                Entries: {data.length}
-              </Label>
-            </div>
-            <ScrollArea className="h-[80vh] px-4">
-              {data.length == 0 ? (
-                <div className="flex flex-1 flex-col gap-2">
-                  <p>No data to display</p>
-                </div>
-              ) : (
-                <div className="px-4 py-6 space-y-2 border-l-2 border-muted relative">
-                  {data.map((fb: any) => (
-                    <div key={fb.id} className="relative pl-6">
-                      {/* Dot on the timeline */}
-                      <div className="absolute left-[-9px] top-2 w-3 h-3 bg-primary rounded-full border-2 border-background shadow-md" />
+  useEffect(() => {
+    if (embedded || !userID) return;
 
-                      {/* Card content */}
-                      <Card className="bg-background border border-border shadow-sm">
-                        <CardHeader className="pb-0">
-                          <div className="text-sm text-muted-foreground">
-                            <span className="mr-2">{fb?.user_name}</span>
-                            {moment(fb.feedback_date).format("YYYY-MM-DD")}
-                          </div>
-                          <Link
-                            target="blank"
-                            href={`/${base_route}/member/${fb.customer_id}`}
-                          >
-                            <div className="text-base font-semibold text-foreground hover:underline">
-                              {`${fb.name} - ${fb.owner} - ${fb.location}`}
-                            </div>
-                          </Link>
-                        </CardHeader>
+    const syncConversationFromUrl = () => {
+      const chatId = new URLSearchParams(window.location.search).get("chat");
+      if (chatId) {
+        void getConversation(chatId);
+      } else {
+        setSelectedConversation(null);
+      }
+    };
 
-                        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-sm">
-                          <div>
-                            <span className="font-medium text-foreground">
-                              Manager:
-                            </span>{" "}
-                            {fb?.ownership_name || "NIL"}
-                          </div>
-                          <div>
-                            <span className="font-medium text-foreground">
-                              Number:
-                            </span>{" "}
-                            {fb.number}
-                          </div>
-                          <div>
-                            <span className="font-medium text-foreground">
-                              Status:
-                            </span>{" "}
-                            {fb.status}
-                          </div>
+    syncConversationFromUrl();
+    window.addEventListener("popstate", syncConversationFromUrl);
 
-                          <div className="col-span-full pt-2 border-t mt-2 text-foreground whitespace-pre-line">
-                            <p className="mt-2">
-                              {fb.feedback || (
-                                <em className="text-muted-foreground">
-                                  No feedback provided.
-                                </em>
-                              )}
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </SheetHeader>
-        </SheetContent>
-      </Sheet>
-    );
-  if (type === "neworder")
-    return (
-      <Sheet open={visible} onOpenChange={onClose}>
-        <SheetContent
-          style={{ width: "100%", maxWidth: "95vw", alignItems: "flex-start" }}
-        >
-          <SheetHeader className="mb-4">
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-2xl">New Stock Order</SheetTitle>
-              <Label className="text-muted-foreground text-lg">
-                Entries: {data.length}
-              </Label>
-              <Button disabled={data.length === 0} onClick={handleCreateExcel}>
-                {loading && <Spinner className="mr-2" />}
-                Export
-              </Button>
-            </div>
-            <ScrollArea className="h-[80vh] px-4">
-              {data.length == 0 ? (
-                <div className="flex flex-1 flex-col gap-2">
-                  <p>No data to display</p>
-                </div>
-              ) : (
-                <div className="px-4 py-6 space-y-2 border-l-2 border-muted relative">
-                  {data.map((item: any, index: number) => (
-                    <RenderOtherStockItems key={index} item={item} />
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </SheetHeader>
-        </SheetContent>
-      </Sheet>
-    );
-};
+    return () => window.removeEventListener("popstate", syncConversationFromUrl);
+  }, [embedded, getConversation, userID]);
 
-const RenderOtherStockItems = ({ item }: { item: any }) => {
+  const selectUser = async (item: UserConversation) => {
+    if (item.id === selectedConversation?.user?.id) return;
+
+    if (!embedded) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("chat", String(item.id));
+      window.history.pushState({}, "", url);
+    }
+
+    await getConversation(item.id);
+  };
+
+  const clearSelection = () => {
+    setSelectedConversation(null);
+
+    if (!embedded) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("chat");
+      window.history.replaceState({}, "", url);
+    }
+  };
+
   return (
-    <div
-      className={`w-full border border-gray-300 rounded-lg shadow-md p-5 flex flex-col`}
-    >
-      <div className="flex flex-1 flex-row justify-between">
-        <div className="w-1/3">
-          <p>{item.name}</p>
-          <p>{item.chinese_name}</p>
+    <div className={`grid min-h-0 flex-1 grid-cols-1 overflow-hidden md:grid-cols-[320px_minmax(0,1fr)] ${embedded ? "h-full" : "h-[calc(100dvh-70px)] rounded-xl border bg-background"}`}>
+      <aside className={`${selectedConversation ? "hidden md:flex" : "flex"} min-h-0 flex-col border-r bg-background`}>
+        <div className="flex h-[69px] shrink-0 items-center justify-between gap-3 border-b px-5">
+          <div className="min-w-0">
+            <h1 className="text-lg font-semibold tracking-tight">Messages</h1>
+            <p className="text-xs text-muted-foreground">Select a user to start messaging</p>
+          </div>
+          {embedded && onClose ? (
+            <Button variant="ghost" size="icon-sm" className="md:hidden" onClick={onClose} aria-label="Close messages">
+              <X />
+            </Button>
+          ) : null}
         </div>
-        <p className="w-1/3">New order: {item.new_order}</p>
-        <p className="w-1/3">Buying ¥: {item.buying}</p>
+
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <UserChatIcon
+            active={selectedConversation?.user?.id ?? null}
+            className={embedded ? "h-[calc(88dvh-113px)]" : "h-[calc(100dvh-182px)]"}
+            myId={userID}
+            onChatSelected={(item) => void selectUser(item)}
+          />
+        </div>
+      </aside>
+
+      <main className={`${selectedConversation ? "flex" : "hidden md:flex"} min-h-0 flex-col bg-muted/20`}>
+        {!selectedConversation ? (
+          <EmptyChat embedded={embedded} onClose={onClose} />
+        ) : (
+          <>
+            <div className="flex h-[69px] shrink-0 items-center justify-between gap-3 border-b bg-background px-4 sm:px-5">
+              <div className="flex min-w-0 items-center gap-3">
+                <Button variant="ghost" size="icon-sm" className="md:hidden" onClick={clearSelection} aria-label="Back to users">
+                  <MessagesSquare />
+                </Button>
+                <ProfilePicture
+                  img={selectedConversation.user?.dp}
+                  name={selectedConversation.user?.name}
+                  className="mr-0 size-9"
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{selectedConversation.user?.name}</p>
+                  <p className="text-xs text-muted-foreground">Conversation</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1">
+                {embedded ? (
+                  <Button asChild variant="ghost" size="icon-sm" aria-label="Open full messages page">
+                    <Link href={`/${base_route}/messages?chat=${selectedConversation.user.id}`}>
+                      <Maximize2 />
+                    </Link>
+                  </Button>
+                ) : null}
+                {embedded && onClose ? (
+                  <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close messages">
+                    <X />
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="min-h-0 flex-1">
+              <Chatcomponent
+                id={selectedConversation.id}
+                user={selectedConversation.user}
+                stateLoading={loading}
+                onSetLoading={setLoading}
+              />
+            </div>
+          </>
+        )}
+      </main>
+    </div>
+  );
+}
+
+function EmptyChat({ embedded, onClose }: { embedded: boolean; onClose?: () => void }) {
+  return (
+    <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-8 text-center">
+      {embedded && onClose ? (
+        <Button variant="ghost" size="icon-sm" className="absolute right-4 top-4" onClick={onClose} aria-label="Close messages">
+          <X />
+        </Button>
+      ) : null}
+      <div className="max-w-sm">
+        <span className="mx-auto mb-5 grid size-20 place-items-center rounded-3xl bg-primary/10 text-primary ring-1 ring-primary/10">
+          <Send className="size-8" />
+        </span>
+        <h2 className="text-xl font-semibold tracking-tight">No chat selected</h2>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          Choose a user from the list to start or continue a conversation.
+        </p>
       </div>
     </div>
   );
-};
+}

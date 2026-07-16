@@ -1,4 +1,5 @@
 import pool from "@/config/db";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { sendNotification } from "@/lib/sendNotification";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -270,10 +271,12 @@ export async function POST(request: NextRequest) {
         const userName = nameQuery.rows?.[0]?.name || "";
         const sendTo = approversResult.rows?.[0]?.user_id ?? null;
 
-        sendNotification(
+         sendNotification(
           `${userName} submitted backup application requesting your approval`,
-          "applications/backup",
-          sendTo
+          `applications/backup?b=${application.id}`,
+          sendTo,
+          NOTIFICATION_TYPES.backup_applied.title,
+          NOTIFICATION_TYPES.backup_applied.category,
         );
       }
     }

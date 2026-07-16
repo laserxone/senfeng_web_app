@@ -4,12 +4,11 @@ import admin from "./firebaseAdmin";
 import { NotificationCategory } from "@/constants/notifications";
 
 
-
-export const sendNotificationToOwner = async (description : string, page: string, office: string, category: NotificationCategory, title: string) => {
+export const sendNotificationToComplaintManagers = async (description : string, page: string, office: string, category: NotificationCategory, title: string) => {
   try {
 
     const ownersResult = await pool.query(
-      `SELECT id FROM users WHERE designation = 'Owner' AND office = '${office}'`
+      `SELECT id FROM users WHERE complaint_assigned IS TRUE AND office = '${office}'`
     );
     const ownerIds = ownersResult.rows.map((owner) => owner.id);
 

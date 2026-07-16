@@ -5,7 +5,7 @@ import Heading from "@/components/ui/heading";
 import { db } from "@/config/firebase";
 import useUserDetail from "@/hooks/use-user-detail";
 import { useNotification } from "@/store/context/NotificationContext";
-import { deleteDoc, doc } from "firebase/firestore";
+import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { Bell, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
@@ -21,7 +21,7 @@ export default function Notification() {
     await Promise.all(
       NotificationData.map(
         async (eachNotification) =>
-          await deleteDoc(doc(db, "Notification", eachNotification.id))
+          await updateDoc(doc(db, "Notification", eachNotification.id), {read : true})
       )
     );
   };

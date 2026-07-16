@@ -15,11 +15,13 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
          SELECT 
   mi.*, 
   s.serial_no, 
+  s.price,
   s.sell_by, 
   s.customer_id,
   c.name AS customer_name, 
   c.owner AS customer_owner, 
   u.name AS seller_name,
+  u.dp AS seller_dp,
   -- custom flags
   CONCAT('Cheque of ', mi.amount, ' against ', s.serial_no, ' from customer ', c.name, ' ', c.owner) AS title,
   CONCAT('/member/', s.customer_id, '/', s.id) AS link
@@ -43,11 +45,13 @@ ORDER BY mi.date ASC;
     SELECT 
       mi.*, 
       s.serial_no, 
+      s.price,
       s.sell_by, 
       s.customer_id,
       c.name AS customer_name, 
       c.owner AS customer_owner, 
       u.name AS seller_name,
+      u.dp AS seller_dp,
       -- custom flags
       CONCAT('Cheque of ', mi.amount, ' against ', s.serial_no, ' from customer ', c.name, ' ', c.owner) AS title,
       CONCAT('/member/', s.customer_id, '/', s.id) AS link

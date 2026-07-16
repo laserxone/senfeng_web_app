@@ -1,12 +1,13 @@
 import pool from "@/config/db";
+import { sendNotificationToComplaintManagers } from "@/lib/sendNotificationToComplaintManagers";
+import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import UploadImageForMobile from "@/lib/uploadImageForMobile";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 
 
-
-
-export async function POST(req:NextRequest) {
+export async function POST(req: NextRequest) {
     const { image_base64, ...data } = await req.json()
 
 
@@ -35,19 +36,25 @@ export async function POST(req:NextRequest) {
         const query = `
     INSERT INTO complaint_logs (${fields.join(", ")})
     VALUES (${placeholders})
+    RETURNING *
 `;
 
-        await pool.query(query, values);
+        const result = await pool.query(query, values);
+
+        sendNotificationToOwner(`Complaint updates`, `complaint?c=${result.rows?.[0].complaint_id}`, "lahore", NOTIFICATION_TYPES.complaint_updated.category, NOTIFICATION_TYPES.complaint_updated.title)
+
+
+        sendNotificationToComplaintManagers(`Complaint updates`, `complaint?c=${result.rows?.[0].complaint_id}`, "lahore", NOTIFICATION_TYPES.complaint_updated.category, NOTIFICATION_TYPES.complaint_updated.title)
 
         return NextResponse.json({ message: "Data inserted" }, { status: 200 });
-    } catch (error:any) {
+    } catch (error: any) {
         console.log(error)
         return NextResponse.json({ message: error.message || "Error occured" }, { status: 500 });
     }
 
 }
 
-export async function PUT(req:NextRequest) {
+export async function PUT(req: NextRequest) {
     try {
         const data = await req.json();
         const { id, ...updates } = data;
@@ -56,7 +63,7 @@ export async function PUT(req:NextRequest) {
             return NextResponse.json({ message: "ID is required" }, { status: 400 });
         }
 
-        const fields:string[] = [];
+        const fields: string[] = [];
         const values = [];
 
         Object.entries(updates).forEach(([key, value], index) => {

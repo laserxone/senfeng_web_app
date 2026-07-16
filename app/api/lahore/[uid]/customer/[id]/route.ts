@@ -3,10 +3,10 @@ import { partFields, profileFields, saleFields } from "@/constants/data";
 import { addLog } from "@/lib/addLog";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import DeleteStorageBackend from "@/lib/delete-storage-backend";
-import admin from "@/lib/firebaseAdmin";
 import { generateLog } from "@/lib/generateLog";
 import { sendNotification } from "@/lib/sendNotification";
 import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { sendNotificationToSMM } from "@/lib/sendNotificationToSMM";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -267,7 +267,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ uid:
       }
 
       if (result.rows[0].ownership) {
-        sendNotification(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership)
+        sendNotification(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`, result.rows[0].ownership, NOTIFICATION_TYPES.customer_assigned.title, NOTIFICATION_TYPES.customer_assigned.category)
         sendNotificationToMobile(`${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`, "Customer", result.rows[0].ownership, result.rows[0], "client", `/dashboard/customer/${result.rows[0].id}`)
       }
     }
