@@ -41,10 +41,10 @@ export async function POST(req: NextRequest) {
 
         const result = await pool.query(query, values);
 
-        sendNotificationToOwner(`Complaint updates`, `complaint?c=${result.rows?.[0].complaint_id}`, "lahore", NOTIFICATION_TYPES.complaint_updated.category, NOTIFICATION_TYPES.complaint_updated.title)
+        sendNotificationToOwner(`Complaint updates`, `complaint?c=${result.rows?.[0].complaint_id}&start=${moment().startOf("month").toDate().toISOString()}&end=${moment().endOf("month").toDate().toISOString()}`, "lahore", NOTIFICATION_TYPES.complaint_updated.category, NOTIFICATION_TYPES.complaint_updated.title)
 
 
-        sendNotificationToComplaintManagers(`Complaint updates`, `complaint?c=${result.rows?.[0].complaint_id}`, "lahore", NOTIFICATION_TYPES.complaint_updated.category, NOTIFICATION_TYPES.complaint_updated.title)
+        sendNotificationToComplaintManagers(`Complaint updates`, `complaint?c=${result.rows?.[0].complaint_id}&start=${moment().startOf("month").toDate().toISOString()}&end=${moment().endOf("month").toDate().toISOString()}`, "lahore", NOTIFICATION_TYPES.complaint_updated.category, NOTIFICATION_TYPES.complaint_updated.title)
 
         return NextResponse.json({ message: "Data inserted" }, { status: 200 });
     } catch (error: any) {

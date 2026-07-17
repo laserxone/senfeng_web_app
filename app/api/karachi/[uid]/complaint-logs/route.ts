@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
         sendNotificationToOwner(`Complaint updates`, `complaint?c=${result.rows?.[0].complaint_id}`, "karachi", NOTIFICATION_TYPES.complaint_updated.category, NOTIFICATION_TYPES.complaint_updated.title)
 
 
-        sendNotificationToComplaintManagers(`Complaint updates`, `complaint?c=${result.rows?.[0].complaint_id}`, "karachi", NOTIFICATION_TYPES.complaint_updated.category, NOTIFICATION_TYPES.complaint_updated.title)
+        sendNotificationToComplaintManagers(`Complaint updates`, `complaint?c=${result.rows?.[0].complaint_id}&start=${moment().startOf("month").toDate().toISOString()}&end=${moment().endOf("month").toDate().toISOString()}`, "karachi", NOTIFICATION_TYPES.complaint_updated.category, NOTIFICATION_TYPES.complaint_updated.title)
 
 
         return NextResponse.json({ message: "Data inserted" }, { status: 200 });
