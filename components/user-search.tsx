@@ -36,6 +36,7 @@ type UserSearchProps = {
   lead?: boolean;
   remove?: boolean;
   className ?: string
+  disabled ?: boolean
 };
 
 type LocalUserData = {
@@ -51,7 +52,7 @@ export function UserSearch({
   remove = false,
   onReturnName,
   onReturnData,
-  className = ""
+ disabled=false
 }:UserSearchProps) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState<LocalUserData[]>([]);
@@ -126,6 +127,7 @@ export function UserSearch({
     <>
      
           <Button
+          disabled={disabled}
             variant="outline"
             role="combobox"
             aria-expanded={open}

@@ -17,15 +17,18 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CustomerSearch } from "../customer-components/customer-search";
 import { FieldLegend, FieldSet } from "../ui/field";
 import { ScrollArea } from "../ui/scroll-area";
+import { Skeleton } from "../ui/skeleton";
 import { UserSearch } from "../user-search";
 
 type Props = {
     open: boolean;
-
+    loading?: boolean
     onClose: () => void;
-    userId?: number;
+    userId?: number | string;
     userDesignation?: string;
-    fetchData: () => Promise<void>
+    fetchData: () => Promise<void>,
+    location: { latitude?: number, longitude?: number },
+    error?: string | null
 };
 
 const OFFICE_COORDS = { lat: 31.587590571462428, lon: 74.41925907140265 };
@@ -34,11 +37,12 @@ const ALLOWED_DISTANCE = 200;
 
 export default function RenderMarkAttendance({
     open,
-
     onClose,
+    fetchData,
     userId,
-    userDesignation,
-    fetchData
+    location,
+    error = null,
+    loading = false
 }: Props) {
     const [note, setNote] = useState("");
     const [task, setTask] = useState("");
@@ -48,8 +52,8 @@ export default function RenderMarkAttendance({
     const [longitude, setLongitude] = useState("");
     const [mapsUrl, setMapsUrl] = useState("");
     const [imageFile, setImageFile] = useState<File | null | Blob>(null);
-    const [imagePreview, setImagePreview] = useState("");
-    const [selectedUser, setSelectedUser] = useState<number | null>(null)
+    const [imagePreview, setImagePreview] = useState<string | null>("");
+    const [selectedUser, setSelectedUser] = useState<number | string | null>(null)
     const [selectedCustomer, setSelectedCustomer] = useState<number | string | null>(null);
     const [saveLoading, setSaveLoading] = useState(false);
     const [mainError, setMainError] = useState("");
@@ -63,6 +67,19 @@ export default function RenderMarkAttendance({
         latitude: "",
         longitude: "",
     });
+
+    useEffect(() => {
+        if (location?.latitude && location?.longitude) {
+            setLatitude(location.latitude?.toString())
+            setLongitude(location.longitude?.toString())
+        }
+    }, [location])
+
+    useEffect(() => {
+        if (userId) {
+            setSelectedUser(userId)
+        }
+    }, [userId])
 
     const validate = useCallback(() => {
         const nextErrors = {
@@ -169,9 +186,6 @@ export default function RenderMarkAttendance({
 
         setSaveLoading(true);
         setMainError("");
-
-        console.log(imageFile)
-
         try {
 
             const base64 = await convertToBase64(imageFile as File);
@@ -195,7 +209,6 @@ export default function RenderMarkAttendance({
                 form.customer_id = selectedCustomer
             }
 
-            console.log(form)
             await axios.post(`/${selectedUser}/attendance`, form);
             clearForm();
             onClose();
@@ -211,11 +224,11 @@ export default function RenderMarkAttendance({
 
     const notAllowed = office ? reason !== "Office" : reason === "Office";
 
-   console.log(office)
-function handleClose(){
-    clearForm()
-    onClose()
-}
+
+    function handleClose() {
+        clearForm()
+        onClose()
+    }
     return (
 
         <Dialog open={open} onOpenChange={handleClose}>
@@ -233,37 +246,41 @@ function handleClose(){
                             </FieldLegend>
 
                             <div className="mt-3 space-y-4">
-                                <div className="space-y-2">
-                                    <Label>Google Maps URL</Label>
+                                {!userId &&
+                                    <div className="space-y-2">
+                                        <Label>Google Maps URL</Label>
 
-                                    <div className="flex flex-col gap-2 sm:flex-row">
-                                        <Input
-                                            value={mapsUrl}
-                                            onChange={(e) => setMapsUrl(e.target.value)}
-                                            placeholder="Paste Google Maps URL"
-                                            className="flex-1"
-                                        />
+                                        <div className="flex flex-col gap-2 sm:flex-row">
+                                            <Input
+                                                value={mapsUrl}
+                                                onChange={(e) => setMapsUrl(e.target.value)}
+                                                placeholder="Paste Google Maps URL"
+                                                className="flex-1"
+                                            />
 
-                                        <Button
-                                            type="button"
-                                            variant="secondary"
-                                            onClick={handleExtractCoordinates}
-                                            className="sm:w-28"
-                                        >
-                                            Extract
-                                        </Button>
+                                            <Button
+                                                type="button"
+                                                variant="secondary"
+                                                onClick={handleExtractCoordinates}
+                                                className="sm:w-28"
+                                            >
+                                                Extract
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
+                                }
 
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label>Latitude</Label>
-                                        <Input
-                                            value={latitude}
-                                            readOnly
-                                            placeholder="24.8607"
-                                            className="bg-muted"
-                                        />
+                                        {loading ? <Skeleton className="flex flex-1 h-8" /> :
+                                            <Input
+                                                value={latitude}
+                                                readOnly
+                                                placeholder="24.8607"
+                                                className="bg-muted"
+                                            />
+                                        }
                                         {errors.latitude && (
                                             <p className="text-xs text-destructive">
                                                 {errors.latitude}
@@ -273,20 +290,40 @@ function handleClose(){
 
                                     <div className="space-y-2">
                                         <Label>Longitude</Label>
-                                        <Input
-                                            value={longitude}
-                                            readOnly
-                                            placeholder="67.0011"
-                                            className="bg-muted"
-                                        />
+                                        {loading ? <Skeleton className="flex flex-1 h-8" /> :
+                                            <Input
+                                                value={longitude}
+                                                readOnly
+                                                placeholder="67.0011"
+                                                className="bg-muted"
+                                            />
+                                        }
                                         {errors.longitude && (
                                             <p className="text-xs text-destructive">
                                                 {errors.longitude}
                                             </p>
                                         )}
                                     </div>
+
                                 </div>
-                            </div>
+                                {error && (
+                                    <div
+                                        role="alert"
+                                        className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700"
+                                    >
+                                        <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100">
+                                            <span className="text-sm font-bold">!</span>
+                                        </div>
+
+                                        <div>
+                                            <p className="text-sm font-semibold">Unable to fetch your location</p>
+                                            <p className="mt-1 text-sm leading-5 text-red-600">
+                                                Make sure location services are enabled and location access is allowed
+                                                in your browser, then refresh the page and try again.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}      </div>
                         </FieldSet>
 
                         {/* 2. User */}
@@ -298,6 +335,7 @@ function handleClose(){
                             <div className="mt-3 space-y-2">
                                 <Label>Select User</Label>
                                 <UserSearch
+                                    disabled={!!userId}
                                     value={selectedUser}
                                     onReturn={(val) => setSelectedUser(val)}
                                 />
@@ -337,108 +375,108 @@ function handleClose(){
 
                         {!longitude ? null :
 
-                        notAllowed ? (
-                            <div className="rounded-lg border border-dashed p-4">
-                                <p className="text-sm italic text-muted-foreground">
-                                    Attendance is not allowed outside office area
-                                </p>
-                            </div>
-                        ) : (
-                            <>
-                                {/* 4. Attendance Details */}
-                                <FieldSet className="rounded-lg border p-4">
-                                    <FieldLegend className="px-2 text-sm font-medium">
-                                        Attendance Details
-                                    </FieldLegend>
+                            notAllowed ? (
+                                <div className="rounded-lg border border-dashed p-4">
+                                    <p className="text-sm italic text-muted-foreground">
+                                        Attendance is not allowed
+                                    </p>
+                                </div>
+                            ) : (
+                                <>
+                                    {/* 4. Attendance Details */}
+                                    <FieldSet className="rounded-lg border p-4">
+                                        <FieldLegend className="px-2 text-sm font-medium">
+                                            Attendance Details
+                                        </FieldLegend>
 
-                                    <div className="mt-3 space-y-4">
-                                        <div className="space-y-2">
-                                            <Label>Note</Label>
-                                            <Input
-                                                value={note}
-                                                onChange={(e) => setNote(e.target.value)}
-                                                placeholder="Enter a note"
-                                            />
-                                            {errors.note && (
-                                                <p className="text-xs text-destructive">
-                                                    {errors.note}
-                                                </p>
-                                            )}
-                                        </div>
-
-                                        {reason === "Visit" && (
+                                        <div className="mt-3 space-y-4">
                                             <div className="space-y-2">
-                                                <Label>Customer</Label>
-                                                <CustomerSearch
-                                                    value={selectedCustomer}
-                                                    onReturn={(val) =>
-                                                        setSelectedCustomer(val)
-                                                    }
+                                                <Label>Note</Label>
+                                                <Input
+                                                    value={note}
+                                                    onChange={(e) => setNote(e.target.value)}
+                                                    placeholder="Enter a note"
                                                 />
-                                                {errors.customer && (
+                                                {errors.note && (
                                                     <p className="text-xs text-destructive">
-                                                        {errors.customer}
+                                                        {errors.note}
                                                     </p>
                                                 )}
                                             </div>
-                                        )}
 
-                                        <div className="space-y-2">
-                                            <Label>Task</Label>
-                                            <Input
-                                                value={task}
-                                                onChange={(e) => setTask(e.target.value)}
-                                                placeholder="Enter task"
+                                            {reason === "Visit" && (
+                                                <div className="space-y-2">
+                                                    <Label>Customer</Label>
+                                                    <CustomerSearch
+                                                        value={selectedCustomer}
+                                                        onReturn={(val) =>
+                                                            setSelectedCustomer(val)
+                                                        }
+                                                    />
+                                                    {errors.customer && (
+                                                        <p className="text-xs text-destructive">
+                                                            {errors.customer}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <div className="space-y-2">
+                                                <Label>Task</Label>
+                                                <Input
+                                                    value={task}
+                                                    onChange={(e) => setTask(e.target.value)}
+                                                    placeholder="Enter task"
+                                                />
+                                                {errors.task && (
+                                                    <p className="text-xs text-destructive">
+                                                        {errors.task}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </FieldSet>
+
+                                    {/* 5. Image Upload */}
+                                    <FieldSet className="rounded-lg border p-4">
+                                        <FieldLegend className="px-2 text-sm font-medium">
+                                            Image Upload
+                                        </FieldLegend>
+
+                                        <div className="mt-3 space-y-3 flex justify-center">
+                                            <Dropzone
+                                                value={imagePreview}
+                                                onDrop={(file) => setImagePreview(file)}
+                                                onDropFile={(file) => setImageFile(file)}
+                                                title="Click to upload"
+                                                subheading="or drag and drop"
+                                                description="PNG or JPG"
+                                                drag="Drop the files here..."
                                             />
-                                            {errors.task && (
+
+                                            {errors.image && (
                                                 <p className="text-xs text-destructive">
-                                                    {errors.task}
+                                                    {errors.image}
                                                 </p>
                                             )}
                                         </div>
-                                    </div>
-                                </FieldSet>
+                                    </FieldSet>
 
-                                {/* 5. Image Upload */}
-                                <FieldSet className="rounded-lg border p-4">
-                                    <FieldLegend className="px-2 text-sm font-medium">
-                                        Image Upload
-                                    </FieldLegend>
+                                    {mainError && (
+                                        <p className="text-sm text-destructive">
+                                            {mainError}
+                                        </p>
+                                    )}
 
-                                    <div className="mt-3 space-y-3 flex justify-center">
-                                        <Dropzone
-                                            value={imagePreview}
-                                            onDrop={(file) => setImagePreview(file)}
-                                            onDropFile={(file)=> setImageFile(file)}
-                                            title="Click to upload"
-                                            subheading="or drag and drop"
-                                            description="PNG or JPG"
-                                            drag="Drop the files here..."
-                                        />
-
-                                        {errors.image && (
-                                            <p className="text-xs text-destructive">
-                                                {errors.image}
-                                            </p>
-                                        )}
-                                    </div>
-                                </FieldSet>
-
-                                {mainError && (
-                                    <p className="text-sm text-destructive">
-                                        {mainError}
-                                    </p>
-                                )}
-
-                                <Button
-                                    onClick={handleSubmit}
-                                    disabled={saveLoading}
-                                    className="w-full"
-                                >
-                                    {saveLoading ? "Submitting..." : "Submit"}
-                                </Button>
-                            </>
-                        )}
+                                    <Button
+                                        onClick={handleSubmit}
+                                        disabled={saveLoading}
+                                        className="w-full"
+                                    >
+                                        {saveLoading ? "Submitting..." : "Submit"}
+                                    </Button>
+                                </>
+                            )}
                     </div>
                 </ScrollArea>
             </DialogContent>
@@ -447,7 +485,7 @@ function handleClose(){
     );
 }
 
-const convertToBase64 = (file: File): Promise<string> => {
+export const convertToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
 

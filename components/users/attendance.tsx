@@ -4,12 +4,15 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import PageTable from "@/components/app-table";
+import { useIsMobile } from "@/hooks/use-mobile";
+import useUserDetail from "@/hooks/use-user-detail";
 import { UserAttendanceRecord } from "@/lib/types";
 import moment from "moment";
 import Spinner from "../ui/spinner";
+import RenderMarkAttendance from "./attendance-marking";
 import { columns } from "./AttendanceColumns";
 import FilterSheet from "./filter-sheet";
 import { AttendanceDetail } from "./teamAttendance";
@@ -33,6 +36,7 @@ export default function Attendance({
   const [visible, setVisible] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState<UserAttendanceRecord | null>(null);
   const [resetLoading, setResetLoading] = useState(false);
+  const isMobile = useIsMobile()
 
 
   useEffect(() => {
@@ -75,6 +79,8 @@ export default function Attendance({
               >
                 {resetLoading && <Spinner />} Reset
               </Button>
+
+              {isMobile && <MarkAttendance />}
             </div>
           </div>
         </PageTable>
@@ -95,4 +101,55 @@ export default function Attendance({
       />
     </div>
   );
+}
+
+const MarkAttendance = () => {
+
+  const [markPressed, setMarkPressed] = useState(false);
+  const [locationMark, setLocationMark] = useState<{ coords: { latitude: number; longitude: number } } | null>(null);
+  const { userID } = useUserDetail()
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (markPressed) {
+      getLocation()
+    }
+  }, [markPressed])
+
+  const getLocation = () => {
+    setLoading(true)
+    setError(null)
+
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported by your browser.')
+      setLoading(false)
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocationMark({ coords: { latitude: position.coords.latitude, longitude: position.coords.longitude } })
+
+        setLoading(false)
+      },
+      () => {
+        setError('Unable to get your location. Please try again.')
+        setLoading(false)
+      }
+    )
+  }
+
+  const handleMarkToggle = useCallback(() => {
+    setMarkPressed((prev) => !prev);
+  }, []);
+
+  return (
+    <>
+      <Button onClick={handleMarkToggle}>
+        Mark Attendance
+      </Button>
+      <RenderMarkAttendance loading={loading} error={error} open={markPressed} onClose={handleMarkToggle} fetchData={async () => { }} location={{ latitude: locationMark?.coords.latitude, longitude: locationMark?.coords?.longitude }} userId={userID ?? null} />
+    </>
+  )
 }
