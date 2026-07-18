@@ -13,7 +13,7 @@ import {
 import { db } from "@/config/firebase";
 import useUserDetail from "@/hooks/use-user-detail";
 import { useNotification } from "@/store/context/NotificationContext";
-import { doc, updateDoc } from "firebase/firestore";
+import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import {
   Banknote,
   Bell,
@@ -29,6 +29,7 @@ import {
   MessageSquareText,
   PackageCheck,
   Settings,
+  Trash2,
   UserRound,
   Wrench,
   X,
@@ -41,8 +42,9 @@ import { BellNotification } from "./NotificationBadge";
 import { Button } from "./ui/button";
 import { useRouter } from "nextjs-toploader/app";
 
-const FILTERS = ["unread", "all", "sales", "engineering", "tasks"] as const;
-type NotificationFilter = (typeof FILTERS)[number];
+const ADMIN_FILTERS = ["unread", "all", "sales", "engineering", "tasks"] as const;
+const USER_FILTERS = ["unread", "all"] as const;
+type NotificationFilter = (typeof ADMIN_FILTERS)[number];
 
 const notificationIconRules: Array<[string[], LucideIcon]> = [
   [["customer"], UserRound],
@@ -92,13 +94,15 @@ function getViewLabel(title?: string) {
 }
 
 export default function NotificationDropdown() {
-  const { base_route } = useUserDetail();
+  const { base_route, isAdmin } = useUserDetail();
   const { NotificationData, UnreadNotificationData } = useNotification();
   const router = useRouter();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<NotificationFilter>("unread");
   const [isMarkingAll, setIsMarkingAll] = useState(false);
   const [openingNotification, setOpeningNotification] = useState<string | null>(null);
+  const [updatingNotification, setUpdatingNotification] = useState<string | null>(null);
+  const [deletingNotification, setDeletingNotification] = useState<string | null>(null);
 
   
 
@@ -138,6 +142,34 @@ export default function NotificationDropdown() {
       );
     } finally {
       setIsMarkingAll(false);
+    }
+  };
+
+  const markAsRead = async (notificationId: string) => {
+    if (updatingNotification) return;
+
+    setUpdatingNotification(notificationId);
+    try {
+      await updateDoc(doc(db, "Notification", notificationId), { read: true });
+    } catch (error) {
+      console.error("Failed to mark notification as read", error);
+      toast.error("Unable to mark notification as read");
+    } finally {
+      setUpdatingNotification(null);
+    }
+  };
+
+  const deleteNotification = async (notificationId: string) => {
+    if (deletingNotification) return;
+
+    setDeletingNotification(notificationId);
+    try {
+      await deleteDoc(doc(db, "Notification", notificationId));
+    } catch (error) {
+      console.error("Failed to delete notification", error);
+      toast.error("Unable to delete notification");
+    } finally {
+      setDeletingNotification(null);
     }
   };
 
@@ -218,7 +250,7 @@ export default function NotificationDropdown() {
 
         <div className="border-b px-4 py-3">
           <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {FILTERS.map((filter) => (
+            {(isAdmin ? ADMIN_FILTERS : USER_FILTERS).map((filter) => (
               <Button
                 key={filter}
                 type="button"
@@ -272,9 +304,34 @@ export default function NotificationDropdown() {
                         </Link>
                       ) : null}
                     </div>
-                    {notification.read === false ? (
-                      <span className="mt-1 size-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />
-                    ) : null}
+                    <div className="flex shrink-0 items-center gap-1 pt-0.5">
+                      {notification.read === false ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          title="Mark as read"
+                          aria-label="Mark notification as read"
+                          disabled={updatingNotification === notification.id}
+                          onClick={() => void markAsRead(notification.id)}
+                          className="rounded-full text-primary hover:bg-primary/10 hover:text-primary"
+                        >
+                          <Bell className="size-4" />
+                        </Button>
+                      ) : null}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        title="Delete notification"
+                        aria-label="Delete notification"
+                        disabled={deletingNotification === notification.id}
+                        onClick={() => void deleteNotification(notification.id)}
+                        className="rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
                   </div>
                 );
               })

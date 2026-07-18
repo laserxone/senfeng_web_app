@@ -149,6 +149,27 @@
   }
 }
 
+@keyframes notification-popup-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.notification-popup-progress {
+  animation-name: notification-popup-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-popup-progress {
+    animation: none;
+  }
+}
+
 @keyframes pulseOpacity {
   0%,
   100% {

@@ -24,7 +24,7 @@ export default function MainProviders({ children }: { children: ReactNode }) {
                                 showSpinner={false} />
                             <NotificationPopup />
                             {children}
-                            <Toaster richColors closeButton/>
+                            <Toaster richColors/>
                         </TooltipProvider>
                     </ThemeProvider>
                 </NotificationProvider>
