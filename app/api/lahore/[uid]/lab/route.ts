@@ -1,7 +1,9 @@
 import pool from "@/config/db";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
+import { sendNotification } from "@/lib/sendNotification";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req:NextRequest) {
+export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
 
@@ -24,7 +26,7 @@ export async function POST(req:NextRequest) {
 
     await pool.query(query, values);
 
-    console.log("data inserted successfully");
+    sendNotification(data?.remarks, `dashboard?p=repair`, data?.user_id, NOTIFICATION_TYPES.repairing_assigned.title, NOTIFICATION_TYPES.repairing_assigned.category)
     return NextResponse.json(
       {
         message: "Data saved",
@@ -40,7 +42,7 @@ export async function POST(req:NextRequest) {
   }
 }
 
-export async function GET(req:NextRequest, { params }:{params:Promise<{}>}) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{}> }) {
 
   const searchParams = req.nextUrl.searchParams;
   const user = searchParams.get("user");
@@ -60,16 +62,16 @@ LEFT JOIN users o ON o.id = c.ownership
 WHERE lt.managing_office = 'lahore'
   `;
 
-  if(user){
-    query += " AND u.id = $1"
-    queryParams.push(user)
-  }
-  query += " ORDER BY lt.assign_date DESC"
+    if (user) {
+      query += " AND u.id = $1"
+      queryParams.push(user)
+    }
+    query += " ORDER BY lt.assign_date DESC"
 
     const result = await pool.query(query, queryParams);
 
     return NextResponse.json(result.rows, { status: 200 });
-  } catch (error:any) {
+  } catch (error: any) {
     console.error("Error ", error);
     return NextResponse.json(
       { message: error.message || "Something went wrong" },

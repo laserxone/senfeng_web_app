@@ -1,17 +1,19 @@
 import pool from "@/config/db";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { addLog } from "@/lib/addLog";
 import { generateLog } from "@/lib/generateLog";
+import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import { NextRequest, NextResponse } from "next/server";
 
 
-export async function POST(req:NextRequest) {
+export async function POST(req: NextRequest) {
 
     const searchParams = req.nextUrl.searchParams
     const inventory = searchParams.get('inventory')
-  
+
 
     try {
-        const data  = await req.json();
+        const data = await req.json();
 
         if (!data || Object.keys(data).length === 0) {
             return NextResponse.json({ message: "No data provided for insertion" }, { status: 400 });
@@ -24,7 +26,7 @@ export async function POST(req:NextRequest) {
         const query = `
         INSERT INTO sale (${fields.join(", ")})
         VALUES (${placeholders})
-        RETURNING id
+        RETURNING *
     `;
 
         const result = await pool.query(query, values);
@@ -40,7 +42,7 @@ export async function POST(req:NextRequest) {
         } catch (error) {
             console.log(error)
         }
- 
+
         if (inventory) {
             const inventoryId = Number(inventory)
             await pool.query(
@@ -55,8 +57,13 @@ export async function POST(req:NextRequest) {
                 , [new Date(), result.rows[0].id, data.sell_by, data.customer_id, inventoryId])
         }
 
-        console.log("data inserted successfully");
-        return NextResponse.json({ message: "Inserted successfully", sale_id : result.rows[0].id }, { status: 201 });
+        const machine = result.rows?.[0] ?? null
+
+        if (machine) {
+            const item = machine?.type === "Machine" ? NOTIFICATION_TYPES.machine_added : NOTIFICATION_TYPES.part_added
+            sendNotificationToOwner(`${machine?.serial_no}`, `member/${machine?.customer_id}/${machine?.id}`, "lahore", item.category, item.title)
+        }
+        return NextResponse.json({ message: "Inserted successfully", sale_id: result.rows[0].id }, { status: 201 });
 
     } catch (error) {
         console.error('Error inserting data: ', error);

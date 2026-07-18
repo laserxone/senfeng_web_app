@@ -153,7 +153,7 @@ export default function AddFeedbackDialog({ open, onClose, user_id, customer_id,
 
                     <Button
                         className="h-9 w-full rounded-lg"
-                        disabled={!next || !feedback || rating === 0}
+                        disabled={loading || !next || !feedback || rating === 0}
                         onClick={() => {
                             handleSaveFeedback();
                         }}

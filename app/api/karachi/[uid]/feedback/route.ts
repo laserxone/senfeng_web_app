@@ -1,10 +1,12 @@
 import pool from "@/config/db";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
+import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import moment from "moment";
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server";
 
 
-export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ uid: string }> }) {
 
     const { uid } = await params;
     const searchParams = req.nextUrl.searchParams;
@@ -24,7 +26,8 @@ SELECT
     c.name AS customer_name, 
     c.owner AS customer_owner,
     u.id AS user_id,
-    u.name AS user_name
+    u.name AS user_name,
+    c.member AS customer_member,
 FROM feedback f
 LEFT JOIN customer c ON f.customer_id = c.id
 LEFT JOIN users u ON f.user_id = u.id
@@ -96,7 +99,7 @@ ORDER BY created_at DESC;
 
         }
 
-    } catch (error:any) {
+    } catch (error: any) {
         console.error('Error ', error);
         return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
     }
@@ -136,9 +139,10 @@ export async function POST(req: NextRequest) {
         const query = `
             INSERT INTO feedback (${fields.join(", ")})
             VALUES (${placeholders})
+             RETURNING *
             `;
 
-        await pool.query(query, values);
+        const result = await pool.query(query, values);
 
         if (rating > 0) {
             await pool.query(
@@ -156,7 +160,16 @@ export async function POST(req: NextRequest) {
                 [Number(rating), data.customer_id]
             );
         }
+        const customer_id = result.rows?.[0]?.customer_id
+        if (customer_id) {
+            const customerQ = await pool.query(`SELECT name, owner FROM customer WHERE id = $1`, [result.rows?.[0]?.customer_id])
 
+            const customer = customerQ.rows?.[0] ?? null
+            const customerName = customer?.name || customer?.owner || "Unknowd"
+
+            sendNotificationToOwner(customerName, `feedback?f=${result.rows?.[0]?.id}`, "lahore", NOTIFICATION_TYPES.feedback_added.category, NOTIFICATION_TYPES.feedback_added.title)
+
+        }
         console.log("Data inserted successfully");
         return NextResponse.json({ message: "Inserted successfully" }, { status: 200 });
 

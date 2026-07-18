@@ -1,8 +1,11 @@
 import pool from "@/config/db";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
+import { sendNotificationToLabManagers } from "@/lib/sendNotificationToLabManagers";
+import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import { NextRequest, NextResponse } from "next/server";
 
 
-export async function DELETE(req:NextRequest, { params }:{params:Promise<{id:string}>}) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
 
     const { id } = await params
@@ -14,12 +17,12 @@ export async function DELETE(req:NextRequest, { params }:{params:Promise<{id:str
 
 
     return NextResponse.json({ message: "fine Deleted" }, { status: 200 });
-  } catch (error:any) {
+  } catch (error: any) {
     return NextResponse.json({ message: error.message || "Internal Server Error" }, { status: 500 });
   }
 }
 
-export async function PUT(req:NextRequest, { params }:{params:Promise<{uid:string,id:string}>}) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ uid: string, id: string }> }) {
   try {
     const data = await req.json();
     const { ...updates } = data;
@@ -29,7 +32,7 @@ export async function PUT(req:NextRequest, { params }:{params:Promise<{uid:strin
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
-    const fields:string[] = [];
+    const fields: string[] = [];
     const values = [];
 
     Object.entries(updates).forEach(([key, value], index) => {
@@ -48,9 +51,25 @@ export async function PUT(req:NextRequest, { params }:{params:Promise<{uid:strin
           UPDATE lab_tasks
           SET ${fields.join(", ")}
           WHERE id = $${values.length}
+          RETURNING *
       `;
 
-    await pool.query(query, values);
+
+
+    const result = await pool.query(query, values);
+
+    const labTask = result.rows?.[0] ?? null
+    if (labTask) {
+
+      sendNotificationToOwner(`${labTask?.remarks_other || labTask?.remarks}`, `repairandmaintenance?r=${labTask?.id}`,
+        "lahore", NOTIFICATION_TYPES.repairing_updated.category, NOTIFICATION_TYPES.repairing_updated.title
+      )
+
+      sendNotificationToLabManagers(`${labTask?.remarks_other || labTask?.remarks}`, `repairandmaintenance?r=${labTask?.id}`,
+        "lahore", NOTIFICATION_TYPES.repairing_updated.category, NOTIFICATION_TYPES.repairing_updated.title
+      )
+    }
+
 
     console.log("data updated successfully");
     return NextResponse.json({ message: "Updated successfully" }, { status: 200 });

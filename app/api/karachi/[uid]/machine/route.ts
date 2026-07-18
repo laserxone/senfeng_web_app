@@ -1,6 +1,8 @@
 import pool from "@/config/db";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { addLog } from "@/lib/addLog";
 import { generateLog } from "@/lib/generateLog";
+import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -24,7 +26,7 @@ export async function POST(req:NextRequest) {
         const query = `
         INSERT INTO sale (${fields.join(", ")})
         VALUES (${placeholders})
-        RETURNING id
+        RETURNING *
     `;
 
         const result = await pool.query(query, values);
@@ -54,6 +56,13 @@ export async function POST(req:NextRequest) {
                 WHERE id = $5`
                 , [new Date(), result.rows[0].id, data.sell_by, data.customer_id, inventoryId])
         }
+
+        const machine = result.rows?.[0] ?? null
+        
+                if (machine) {
+                    const item = machine?.type === "Machine" ? NOTIFICATION_TYPES.machine_added : NOTIFICATION_TYPES.part_added
+                    sendNotificationToOwner(`${machine?.serial_no}`, `member/${machine?.customer_id}/${machine?.id}`, "lahore", item.category, item.title)
+                }
 
         console.log("data inserted successfully");
         return NextResponse.json({ message: "Inserted successfully", sale_id: result.rows[0].id }, { status: 201 });

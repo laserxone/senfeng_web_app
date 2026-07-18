@@ -282,7 +282,7 @@ const UpdateTaskModal = ({ open, onChange, userID, onRefresh, task_id }: UpdateT
                         </div>
 
 
-                        <Button disabled={!form.status} onClick={handleSaveTask}>
+                        <Button disabled={!form.status || loading} onClick={handleSaveTask}>
                             {loading && <Spinner />} Save
                         </Button>
                     </div>

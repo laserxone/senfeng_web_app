@@ -1,5 +1,7 @@
 import pool from "@/config/db";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
+import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -23,6 +25,7 @@ SELECT
     c.id AS customer_id, 
     c.name AS customer_name, 
     c.owner AS customer_owner,
+    c.member AS customer_member,
     u.id AS user_id,
     u.name AS user_name
 FROM feedback f
@@ -137,9 +140,10 @@ export async function POST(req: NextRequest) {
         const query = `
             INSERT INTO feedback (${fields.join(", ")})
             VALUES (${placeholders})
+            RETURNING *
             `;
 
-        await pool.query(query, values);
+        const result = await pool.query(query, values);
 
         if (rating > 0) {
             await pool.query(
@@ -158,7 +162,17 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        console.log("Data inserted successfully");
+        const customer_id = result.rows?.[0]?.customer_id
+        if (customer_id) {
+            const customerQ = await pool.query(`SELECT name, owner FROM customer WHERE id = $1`, [result.rows?.[0]?.customer_id])
+
+            const customer = customerQ.rows?.[0] ?? null
+            const customerName = customer?.name || customer?.owner || "Unknowd"
+
+            sendNotificationToOwner(customerName, `feedback?f=${result.rows?.[0]?.id}`, "lahore", NOTIFICATION_TYPES.feedback_added.category, NOTIFICATION_TYPES.feedback_added.title)
+
+        }
+
         return NextResponse.json({ message: "Inserted successfully" }, { status: 200 });
 
     } catch (error) {

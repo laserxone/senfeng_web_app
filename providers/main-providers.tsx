@@ -1,4 +1,5 @@
 "use client"
+import NotificationPopup from "@/components/notification-popup";
 import ThemeProvider from "@/components/ThemeToggle/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NotificationProvider } from "@/store/context/NotificationContext";
@@ -21,8 +22,9 @@ export default function MainProviders({ children }: { children: ReactNode }) {
                         <TooltipProvider>
                             <NextTopLoader
                                 showSpinner={false} />
+                            <NotificationPopup />
                             {children}
-                            <Toaster richColors />
+                            <Toaster richColors closeButton/>
                         </TooltipProvider>
                     </ThemeProvider>
                 </NotificationProvider>

@@ -1,10 +1,12 @@
 import pool from "@/config/db";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { addLog } from "@/lib/addLog";
 import { generateLog } from "@/lib/generateLog";
+import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import { NextRequest, NextResponse } from "next/server";
 
 
-export async function PUT(req:NextRequest, { params }:{params:Promise<{id:string,uid:string}>}) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string, uid: string }> }) {
     try {
         const data = await req.json();
         const { ...updates } = data;
@@ -14,7 +16,7 @@ export async function PUT(req:NextRequest, { params }:{params:Promise<{id:string
             return NextResponse.json({ message: "ID is required" }, { status: 400 });
         }
 
-        const fields:string[] = [];
+        const fields: string[] = [];
         const values = [];
 
         Object.entries(updates).forEach(([key, value], index) => {
@@ -41,6 +43,11 @@ export async function PUT(req:NextRequest, { params }:{params:Promise<{id:string
         await pool.query(`UPDATE order_items
         SET status = 'Delivery Requested'
         WHERE machine_id = $1`, [id])
+
+        const machine = result.rows?.[0] ?? null
+        if (machine && data?.ready_for_delivery && data?.ready_for_delivery === true) {
+            sendNotificationToOwner(`${machine?.serial_no}`, `member/${machine?.customer_id}/${machine.id}`, "lahore", NOTIFICATION_TYPES.machine_delivery_applied.category, NOTIFICATION_TYPES.machine_delivery_applied.title)
+        }
 
         try {
             const logMSG = generateLog(data, "Machine updated")
