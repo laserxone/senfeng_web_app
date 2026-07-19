@@ -115,7 +115,6 @@ export const NotificationProvider = ({
       where("sendTo", "==", userID),
       where("read", "==", false),
       orderBy("TimeStamp", "desc"),
-      limit(50)
     );
 
     const unsubscribe = onSnapshot(

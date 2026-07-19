@@ -14,7 +14,7 @@ export default async function CommonLayout({ office, children }: { office: strin
             <div className="w-full">
               <Header />
             </div>
-            <div className="flex flex-1">
+            <div className="flex flex-1 ">
               {children}
             </div>
           </div>

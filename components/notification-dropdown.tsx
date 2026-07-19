@@ -33,10 +33,11 @@ import {
   UserRound,
   Wrench,
   X,
+  CircleCheck,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { BellNotification } from "./NotificationBadge";
 import { Button } from "./ui/button";
@@ -44,7 +45,28 @@ import { useRouter } from "nextjs-toploader/app";
 
 const ADMIN_FILTERS = ["unread", "all", "sales", "engineering", "tasks"] as const;
 const USER_FILTERS = ["unread", "all"] as const;
+const MAX_SHEET_NOTIFICATIONS = 20;
 type NotificationFilter = (typeof ADMIN_FILTERS)[number];
+
+function formatRelativeTime(timestamp?: number) {
+  if (!timestamp) return null;
+
+  const elapsedSeconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+  if (elapsedSeconds < 60) return "Just now";
+
+  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+  if (elapsedMinutes < 60) {
+    return `${elapsedMinutes} ${elapsedMinutes === 1 ? "minute" : "minutes"} ago`;
+  }
+
+  const elapsedHours = Math.floor(elapsedMinutes / 60);
+  if (elapsedHours < 24) {
+    return `${elapsedHours} ${elapsedHours === 1 ? "hr" : "hrs"} ago`;
+  }
+
+  const elapsedDays = Math.floor(elapsedHours / 24);
+  return `${elapsedDays} ${elapsedDays === 1 ? "day" : "days"} ago`;
+}
 
 const notificationIconRules: Array<[string[], LucideIcon]> = [
   [["customer"], UserRound],
@@ -93,7 +115,7 @@ function getViewLabel(title?: string) {
   );
 }
 
-export default function NotificationDropdown() {
+export default function NotificationSheet() {
   const { base_route, isAdmin } = useUserDetail();
   const { NotificationData, UnreadNotificationData } = useNotification();
   const router = useRouter();
@@ -103,6 +125,18 @@ export default function NotificationDropdown() {
   const [openingNotification, setOpeningNotification] = useState<string | null>(null);
   const [updatingNotification, setUpdatingNotification] = useState<string | null>(null);
   const [deletingNotification, setDeletingNotification] = useState<string | null>(null);
+  const [, refreshRelativeTimes] = useState(0);
+
+  useEffect(() => {
+    if (!sheetOpen) return;
+
+    const interval = window.setInterval(
+      () => refreshRelativeTimes((current) => current + 1),
+      60_000
+    );
+
+    return () => window.clearInterval(interval);
+  }, [sheetOpen]);
 
   
 
@@ -129,6 +163,13 @@ export default function NotificationDropdown() {
     });
   }, [NotificationData, activeFilter, UnreadNotificationData]);
 
+  const visibleNotifications = filteredNotifications.slice(
+    0,
+    MAX_SHEET_NOTIFICATIONS
+  );
+  const hasMoreNotifications =
+    filteredNotifications.length > MAX_SHEET_NOTIFICATIONS;
+
   const markAllAsRead = async () => {
     if (!UnreadNotificationData.length || isMarkingAll) return;
 
@@ -137,7 +178,6 @@ export default function NotificationDropdown() {
       await Promise.all(
         UnreadNotificationData.map((notification) =>
           updateDoc(doc(db, "Notification", notification.id), {read : true})
-          // deleteDoc(doc(db, "Notification", notification.id))
         )
       );
     } finally {
@@ -150,6 +190,7 @@ export default function NotificationDropdown() {
 
     setUpdatingNotification(notificationId);
     try {
+      await new Promise((resolve) => window.setTimeout(resolve, 850));
       await updateDoc(doc(db, "Notification", notificationId), { read: true });
     } catch (error) {
       console.error("Failed to mark notification as read", error);
@@ -164,6 +205,8 @@ export default function NotificationDropdown() {
 
     setDeletingNotification(notificationId);
     try {
+      // Allow the row's delete animation to finish before removing the document.
+      await new Promise((resolve) => window.setTimeout(resolve, 850));
       await deleteDoc(doc(db, "Notification", notificationId));
     } catch (error) {
       console.error("Failed to delete notification", error);
@@ -222,7 +265,7 @@ export default function NotificationDropdown() {
                 Notifications
               </SheetTitle>
               <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">
-                {UnreadNotificationData.length > 99 ? "99+" : UnreadNotificationData.length}
+                {UnreadNotificationData.length}
               </span>
             </div>
             <SheetClose asChild>
@@ -269,12 +312,57 @@ export default function NotificationDropdown() {
         <ScrollArea className="min-h-0 flex-1">
           <div className="divide-y px-4">
             {filteredNotifications.length > 0 ? (
-              filteredNotifications.map((notification) => {
+              visibleNotifications.map((notification) => {
                 const NotificationIcon = getNotificationIcon(notification.title);
                 const viewLabel = getViewLabel(notification.title);
+                const relativeTime = formatRelativeTime(notification.TimeStamp);
+                const isBeingMarkedRead = updatingNotification === notification.id;
+                const isBeingDeleted = deletingNotification === notification.id;
 
                 return (
-                  <div key={notification.id} className="flex gap-3 py-4">
+                  <div
+                    key={notification.id}
+                    style={
+                      isBeingMarkedRead || isBeingDeleted
+                        ? { animationDelay: "350ms" }
+                        : undefined
+                    }
+                    className={`relative flex gap-3 overflow-hidden rounded-xl py-4 transition-colors motion-reduce:animate-none ${
+                      isBeingMarkedRead
+                        ? "animate-out fade-out slide-out-to-right-4 bg-emerald-500/10 duration-500"
+                        : isBeingDeleted
+                          ? "animate-out fade-out slide-out-to-right-4 bg-destructive/10 duration-500"
+                          : ""
+                    }`}
+                  >
+                    {(isBeingMarkedRead || isBeingDeleted) && (
+                      <div
+                        className="absolute inset-0 z-10 flex items-center justify-center border border-border/70 bg-background/90 px-5 text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200 motion-reduce:animate-none dark:bg-background/85 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_8px_30px_rgba(0,0,0,0.35)]"
+                        role="status"
+                        aria-live="polite"
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <span
+                            className={`grid size-10 shrink-0 place-items-center rounded-full text-white ring-4 shadow-md ${
+                              isBeingMarkedRead
+                                ? "bg-emerald-500 ring-emerald-500/15 shadow-emerald-500/20"
+                                : "bg-red-500 ring-red-500/15 shadow-red-500/20"
+                            }`}
+                          >
+                            {isBeingMarkedRead ? (
+                              <CircleCheck className="size-5" strokeWidth={2.5} />
+                            ) : (
+                              <Trash2 className="size-4.5" strokeWidth={2.5} />
+                            )}
+                          </span>
+                          <span className="text-[15px] font-semibold tracking-tight text-foreground">
+                            {isBeingMarkedRead
+                              ? "Marked as read"
+                              : "Notification deleted"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                     <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
                       <NotificationIcon className="size-4.5" />
                     </span>
@@ -289,6 +377,7 @@ export default function NotificationDropdown() {
                           {notification.description}
                         </p>
                       ) : null}
+                     
                       {notification.page ? (
                         <Link
                           href={`/${base_route}/${notification.page}`}
@@ -304,7 +393,12 @@ export default function NotificationDropdown() {
                         </Link>
                       ) : null}
                     </div>
-                    <div className="flex shrink-0 items-center gap-1 pt-0.5">
+                    <div className="flex shrink-0 items-start gap-1 pt-0.5">
+                       {relativeTime ? (
+                        <p className="mt-1 text-[11px] font-medium text-muted-foreground/80">
+                          {relativeTime}
+                        </p>
+                      ) : null}
                       {notification.read === false ? (
                         <Button
                           type="button"
@@ -312,11 +406,15 @@ export default function NotificationDropdown() {
                           size="icon-sm"
                           title="Mark as read"
                           aria-label="Mark notification as read"
-                          disabled={updatingNotification === notification.id}
-                          onClick={() => void markAsRead(notification.id)}
+                          disabled={isBeingMarkedRead || isBeingDeleted}
+                          onClick={() => markAsRead(notification.id)}
                           className="rounded-full text-primary hover:bg-primary/10 hover:text-primary"
                         >
-                          <Bell className="size-4" />
+                          {isBeingMarkedRead ? (
+                            <CheckCheck className="size-4 animate-in zoom-in-50 spin-in-12 duration-300 motion-reduce:animate-none" />
+                          ) : (
+                            <Bell className="size-4" />
+                          )}
                         </Button>
                       ) : null}
                       <Button
@@ -325,11 +423,17 @@ export default function NotificationDropdown() {
                         size="icon-sm"
                         title="Delete notification"
                         aria-label="Delete notification"
-                        disabled={deletingNotification === notification.id}
+                        disabled={isBeingDeleted || isBeingMarkedRead}
                         onClick={() => void deleteNotification(notification.id)}
                         className="rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                       >
-                        <Trash2 className="size-4" />
+                        <Trash2
+                          className={`size-4 ${
+                            isBeingDeleted
+                              ? "animate-in zoom-in-50 spin-in-12 duration-300 motion-reduce:animate-none"
+                              : ""
+                          }`}
+                        />
                       </Button>
                     </div>
                   </div>
@@ -352,6 +456,18 @@ export default function NotificationDropdown() {
                 </p>
               </div>
             )}
+            {hasMoreNotifications ? (
+              <div className="flex justify-center py-4">
+                <Link
+                  href={`/${base_route}/notification`}
+                  onClick={() => setSheetOpen(false)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/5 px-4 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+                >
+                  View all notifications
+                  <ChevronRight className="size-3.5" />
+                </Link>
+              </div>
+            ) : null}
           </div>
         </ScrollArea>
       </SheetContent>
