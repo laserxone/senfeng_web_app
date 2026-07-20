@@ -1,11 +1,11 @@
 "use client";
-import ChequeClearanceAlert from "@/components/sales/cheque-alert";
-import { CustomerInsights } from "@/components/sales/customer-insights";
-import SalesQuickActions from "@/components/sales/quick-actions";
-import RecentQuotations from "@/components/sales/recent-quotations";
-import { MetricDialogState, SalesMetricCard, SalesMetricDetailsDialog } from "@/components/sales/sales-metric";
-import TargetOverview from "@/components/sales/target-overview";
-import RenderTodayTasks from "@/components/sales/today-task";
+import ChequeClearanceAlert from "@/components/features/sales/cheque-alert";
+import { CustomerInsights } from "@/components/features/sales/customer-insights";
+import SalesQuickActions from "@/components/features/sales/quick-actions";
+import RecentQuotations from "@/components/features/sales/recent-quotations";
+import { MetricDialogState, SalesMetricCard, SalesMetricDetailsDialog } from "@/components/features/sales/sales-metric";
+import TargetOverview from "@/components/features/sales/target-overview";
+import RenderTodayTasks from "@/components/features/sales/today-task";
 import {
   Accordion,
   AccordionContent,
@@ -26,13 +26,13 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import AddFeedbackDialog from "@/components/users/add-feedback";
-import Attendance from "@/components/users/attendance";
-import CustomerEmployee from "@/components/users/customer";
-import { CustomerExtraData } from "@/components/users/extra-data";
-import MyTasks from "@/components/users/my-tasks";
-import Reimbursement from "@/components/users/reimbursement/Reimbursement";
-import VisitTab from "@/components/users/visit-tab";
+import AddFeedbackDialog from "@/components/features/customer-relations/add-feedback";
+import Attendance from "@/components/features/attendance/attendance";
+import CustomerEmployee from "@/components/features/customer-relations/customer";
+import { CustomerExtraData } from "@/components/features/users/extra-data";
+import MyTasks from "@/components/features/tasks/my-tasks";
+import Reimbursement from "@/components/features/reimbursements/Reimbursement";
+import VisitTab from "@/components/features/customer-relations/visit-tab";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
@@ -43,10 +43,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./styles.css";
-import RenderFines from "@/components/users/render-fines";
-import RenderReturnable from "@/components/users/render-returnable";
-import SalaryRecord from "@/components/users/salary-record";
-import UserTabs from "@/components/users/user-tabs";
+import RenderFines from "@/components/features/employee-finance/render-fines";
+import RenderReturnable from "@/components/features/employee-finance/render-returnable";
+import SalaryRecord from "@/components/features/employee-finance/salary-record";
+import UserTabs from "@/components/features/users/user-tabs";
 
 export default function Page() {
   const [data, setData] = useState<SalesDashboard>();

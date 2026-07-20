@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
-import { UserSearch } from "@/components/user-search";
+import { UserSearch } from "@/components/shared/search/user-search";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import moment from "moment";

@@ -27,12 +27,12 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import AddOrderDialog from "@/components/add-order";
-import ConfirmationDialog from "@/components/alert-dialog";
-import BookOrderDialog from "@/components/book-order";
-import EditOrderDialog from "@/components/edit-order";
-import CreateOrderDialog from "@/components/new-order";
-import SortableCard from "@/components/sortable-card";
+import AddOrderDialog from "@/components/features/orders/add-order";
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
+import BookOrderDialog from "@/components/features/orders/book-order";
+import EditOrderDialog from "@/components/features/orders/edit-order";
+import CreateOrderDialog from "@/components/features/orders/new-order";
+import SortableCard from "@/components/features/orders/sortable-card";
 import {
   Accordion,
   AccordionContent,
@@ -42,7 +42,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import Heading from "@/components/ui/heading";
-import FilterSheet from "@/components/users/filter-sheet";
+import FilterSheet from "@/components/features/users/filter-sheet";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { Order, OrderItem } from "@/lib/types";

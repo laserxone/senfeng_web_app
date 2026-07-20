@@ -4,7 +4,7 @@ import { Clock3, Filter, ImageIcon, LogIn, LogOut, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useState } from "react";
 
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/shared/tables/app-table";
 import {
   Dialog,
   DialogContent,
@@ -14,9 +14,9 @@ import {
 import Heading from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
-import { columns } from "@/components/users/AttendanceColumns";
-import FilterSheet from "@/components/users/filter-sheet";
-import LeaveApproval from "@/components/users/leave-approval";
+import { columns } from "@/components/features/attendance/AttendanceColumns";
+import FilterSheet from "@/components/features/users/filter-sheet";
+import LeaveApproval from "@/components/features/employee-finance/leave-approval";
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
@@ -27,7 +27,7 @@ import { GoogleMap, Marker } from "@react-google-maps/api";
 import moment from "moment";
 import momentT from "moment-timezone";
 import { useTheme } from "next-themes";
-import { AttendanceDetail } from "@/components/users/teamAttendance";
+import { AttendanceDetail } from "@/components/features/attendance/teamAttendance";
 
 export default function Page() {
   const [filterVisible, setFilterVisible] = useState(false);

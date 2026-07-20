@@ -1,4 +1,4 @@
-import MachineDelivered from "@/components/deliveries/machine-delivered";
+import MachineDelivered from "@/components/features/deliveries/machine-delivered";
 
 export default function Page() {
   return (

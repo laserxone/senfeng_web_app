@@ -1,10 +1,6 @@
-import FloatingChat from "@/components/chat/floating-chat";
-import CommonLayout from "@/components/common-layout";
-import EdgePanel from "@/components/edge-panel";
-import FinePopup from "@/components/fine-popup";
-import FloatingInformation from "@/components/floating-information";
-import FloatingTodo from "@/components/floating-todo";
-import PageContainer from "@/components/page-container";
+import PageContainer from "@/components/core/layout/page-container";
+import CommonLayout from "@/components/core/layout/common-layout";
+import FinePopup from "@/components/shared/notifications/fine-popup";
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
 

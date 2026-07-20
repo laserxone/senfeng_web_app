@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
 
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/shared/tables/app-table";
 import Heading from "@/components/ui/heading";
-import FilterSheet from "@/components/users/filter-sheet";
+import FilterSheet from "@/components/features/users/filter-sheet";
 import { TIMEZONE } from "@/constants/data";
 
 
-import AddTaskDialog from "@/components/add-task-dialog";
-import TaskDetail from "@/components/users/task-detail";
+import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog";
+import TaskDetail from "@/components/features/tasks/task-detail";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { TaskProps } from "@/lib/types";

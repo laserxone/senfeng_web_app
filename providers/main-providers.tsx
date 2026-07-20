@@ -1,6 +1,6 @@
 "use client"
-import NotificationPopup from "@/components/notification-popup";
-import ThemeProvider from "@/components/ThemeToggle/theme-provider";
+import NotificationPopup from "@/components/shared/notifications/notification-popup";
+import ThemeProvider from "@/components/core/theme/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NotificationProvider } from "@/store/context/NotificationContext";
 import OfficeContextProvider from "@/store/context/OfficeContext";

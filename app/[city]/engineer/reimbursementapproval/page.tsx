@@ -1,4 +1,4 @@
-import ReimbursementApproval from "@/components/users/reimbursement/reimbursement-approval";
+import ReimbursementApproval from "@/components/features/reimbursements/reimbursement-approval";
 
 
 export default function Page(){

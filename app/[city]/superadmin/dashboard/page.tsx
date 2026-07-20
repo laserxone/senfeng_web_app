@@ -1,6 +1,6 @@
 "use client";
-import CRMDashboard from "@/components/dashboards/crm-dashboard";
-import SuperadminDashboard from "@/components/dashboards/superadmin-dashboard";
+import CRMDashboard from "@/components/features/dashboards/crm-dashboard";
+import SuperadminDashboard from "@/components/features/dashboards/superadmin-dashboard";
 import useUserDetail from "@/hooks/use-user-detail";
 
 export default function Page() {

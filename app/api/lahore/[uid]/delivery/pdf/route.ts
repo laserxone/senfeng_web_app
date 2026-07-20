@@ -1,6 +1,6 @@
 import React from "react";
 import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
-import DOPDFGatepass from "@/components/deliveries/do-pdf-gatepass";
+import DOPDFGatepass from "@/components/features/deliveries/do-pdf-gatepass";
 
 export const runtime = "nodejs";
 

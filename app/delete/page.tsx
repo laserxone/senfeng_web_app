@@ -1,6 +1,6 @@
 "use client";
 
-import PageContainer from "@/components/page-container";
+import PageContainer from "@/components/core/layout/page-container";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useCallback } from "react";

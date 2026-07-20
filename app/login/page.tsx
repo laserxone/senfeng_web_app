@@ -1,5 +1,5 @@
 "use client"
-import { LoginForm } from "@/components/login-form"
+import { LoginForm } from "@/components/features/auth/login-form"
 import Spinner from "@/components/ui/spinner"
 import { UserContext } from "@/store/context/UserContext"
 import { useContext } from "react"

@@ -1,6 +1,6 @@
 "use client";
 
-import PageContainer from "@/components/page-container";
+import PageContainer from "@/components/core/layout/page-container";
 import { Separator } from "@/components/ui/separator";
 
 export default function Page() {

@@ -2,7 +2,7 @@ import React from "react";
 import path from "path";
 import { readFileSync } from "fs";
 import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
-import InvoicePDF from "@/components/invoicepdf";
+import InvoicePDF from "@/components/features/customers/components/invoicepdf";
 
 export const runtime = "nodejs";
 

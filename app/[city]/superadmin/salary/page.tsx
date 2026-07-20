@@ -5,9 +5,9 @@ import {
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import RecordComponent from "@/components/salary/salary-record";
-import SalaryComponent from "@/components/salary/salary-user";
-import DetailComponent from "@/components/salary/user-detatils";
+import RecordComponent from "@/components/features/salary/salary-record";
+import SalaryComponent from "@/components/features/salary/salary-user";
+import DetailComponent from "@/components/features/salary/user-detatils";
 
 export default function Page() {
 

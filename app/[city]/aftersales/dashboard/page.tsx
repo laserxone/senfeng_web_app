@@ -1,4 +1,4 @@
-import AfterSalesDashboardNew from "@/components/users/aftersales/AfterSalesDashboardNew";
+import AfterSalesDashboardNew from "@/components/features/aftersales/AfterSalesDashboardNew";
 
 
 export default function Page(){

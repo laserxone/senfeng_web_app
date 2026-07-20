@@ -1,5 +1,5 @@
 "use client";
-import PageTable from "@/components/app-table";
+import PageTable from "@/components/shared/tables/app-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Heading from "@/components/ui/heading";

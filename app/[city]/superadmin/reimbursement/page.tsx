@@ -23,9 +23,9 @@ import {
   useState
 } from "react";
 
-import PageTable from "@/components/app-table";
-import CurrencyFormatter from "@/components/currency-formatter";
-import { MyImgZooming } from "@/components/img-zooming";
+import PageTable from "@/components/shared/tables/app-table";
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -36,8 +36,8 @@ import {
 } from "@/components/ui/sheet";
 import Spinner from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import FilterSheet from "@/components/users/filter-sheet";
-import AddReimbursementDialog from "@/components/users/reimbursement/add-reimbursement";
+import FilterSheet from "@/components/features/users/filter-sheet";
+import AddReimbursementDialog from "@/components/features/reimbursements/add-reimbursement";
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";

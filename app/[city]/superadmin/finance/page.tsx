@@ -1,12 +1,12 @@
 "use client";
 
-import PageTable from "@/components/app-table";
-import CurrencyFormatter from "@/components/currency-formatter";
+import PageTable from "@/components/shared/tables/app-table";
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import  Heading  from "@/components/ui/heading";
 import { Skeleton } from "@/components/ui/skeleton";
-import FilterSheet from "@/components/users/filter-sheet";
+import FilterSheet from "@/components/features/users/filter-sheet";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { ArrowUpDown, Filter } from "lucide-react";

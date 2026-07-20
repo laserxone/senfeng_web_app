@@ -1,5 +1,5 @@
 "use client";
-import { MapComponent } from "@/components/map-component";
+import { MapComponent } from "@/components/page-compositions/general/map-component";
 import { Button } from "@/components/ui/button";
 import useUserDetail from "@/hooks/use-user-detail";
 import { MapProvider } from "@/providers/map-provider";

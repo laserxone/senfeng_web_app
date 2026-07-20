@@ -1,5 +1,5 @@
 "use client"
-import SenfengLogoLoader from "@/components/senfengLogoLoader";
+import SenfengLogoLoader from "@/components/shared/feedback/senfengLogoLoader";
 
 import { useEffect } from "react";
 

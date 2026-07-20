@@ -1,5 +1,5 @@
 "use client";
-import AppCalendar from "@/components/app-calendar";
+import AppCalendar from "@/components/features/calendar/app-calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Heading from "@/components/ui/heading";
@@ -90,12 +90,15 @@ export default function NewsPage() {
         <div className="flex gap-4">
           <div className="flex-1 space-y-2">
             <Label htmlFor="start_date">Start Date</Label>
-            <AppCalendar date={startDate} onChange={setStartDate} max={""}/>
+            <AppCalendar date={startDate} onChange={(d)=>{
+              setStartDate(moment(d).startOf("day").toDate())}} max={""}/>
           </div>
 
           <div className="flex-1 space-y-2">
             <Label htmlFor="end_date">End Date</Label>
-            <AppCalendar date={endDate} onChange={setEndDate} max={""}/>
+            <AppCalendar date={endDate} onChange={(d)=>{
+              
+              setEndDate(moment(d).endOf("day").toDate())}} max={""}/>
           </div>
         </div>
 

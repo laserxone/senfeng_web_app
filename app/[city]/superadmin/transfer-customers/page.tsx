@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserSearch } from "@/components/user-search";
+import { UserSearch } from "@/components/shared/search/user-search";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { MyCustomer } from "@/lib/types";

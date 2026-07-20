@@ -1,4 +1,4 @@
-import NotAuthorized from "@/components/pages/restricted-page";
+import NotAuthorized from "@/components/page-compositions/general/restricted-page";
 
 
 export default function Page() {

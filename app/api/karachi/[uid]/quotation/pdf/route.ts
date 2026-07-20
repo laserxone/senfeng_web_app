@@ -1,7 +1,7 @@
 import React from "react";
 import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
 import { PDFDocument } from "pdf-lib";
-import { QuotationPDF } from "@/components/users/quotation/quotation-pdf";
+import { QuotationPDF } from "@/components/features/quotations/quotation-pdf";
 
 export const runtime = "nodejs";
 

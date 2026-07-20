@@ -1,4 +1,4 @@
-import QuotationPage from '@/components/users/quotation/quotation-page'
+import QuotationPage from '@/components/features/quotations/quotation-page'
 
 export default function Page(){
 

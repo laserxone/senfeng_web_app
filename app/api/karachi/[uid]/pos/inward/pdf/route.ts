@@ -1,4 +1,4 @@
-import InvoicePDFGatepass from "@/components/pos/invoice-pdf-gatepass";
+import InvoicePDFGatepass from "@/components/features/pos/invoice-pdf-gatepass";
 import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
 import React from "react";
 

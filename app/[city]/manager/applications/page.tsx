@@ -1,4 +1,4 @@
-import Applications from "@/components//pages/applications";
+import Applications from "@/components/page-compositions/general/applications";
 
 
 export default function Page(){

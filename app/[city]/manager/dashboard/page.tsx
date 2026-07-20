@@ -1,12 +1,12 @@
 "use client";
-import TeamTask from "@/components/users/team-task";
+import TeamTask from "@/components/features/tasks/team-task";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Attendance from "@/components/users/attendance";
-import { ProfilePicture } from "@/components/users/profile-picture";
-import Reimbursement from "@/components/users/reimbursement/Reimbursement";
-import RenderFines from "@/components/users/render-fines";
-import SalaryRecord from "@/components/users/salary-record";
+import Attendance from "@/components/features/attendance/attendance";
+import { ProfilePicture } from "@/components/features/users/profile-picture";
+import Reimbursement from "@/components/features/reimbursements/Reimbursement";
+import RenderFines from "@/components/features/employee-finance/render-fines";
+import SalaryRecord from "@/components/features/employee-finance/salary-record";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { UserAttendanceRecord, UserDashboard, UserReimbursementType } from "@/lib/types";
@@ -14,7 +14,7 @@ import { updateItemPurpose } from "@/lib/updatePurpose";
 import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
-import AutoScrollMembers from "@/components/users/autoScroll";
+import AutoScrollMembers from "@/components/features/attendance/autoScroll";
 
 export default function Page() {
   const [data, setData] = useState<{ user: UserDashboard }>();

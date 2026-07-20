@@ -1,4 +1,4 @@
-import BackupPartsPage from "@/components/backup-component/backup-parts";
+import BackupPartsPage from "@/components/features/backup/backup-parts";
 
 export default function Page(){
 

@@ -1,5 +1,5 @@
-import MaintenanceWrapper from "@/components/maintenance-wrapper";
-import SenfengLogoLoader from "@/components/senfengLogoLoader";
+import MaintenanceWrapper from "@/components/core/layout/maintenance-wrapper";
+import SenfengLogoLoader from "@/components/shared/feedback/senfengLogoLoader";
 import { cn } from "@/lib/utils";
 import MainProviders from "@/providers/main-providers";
 import { Geist_Mono, Inter, Nunito_Sans } from "next/font/google";

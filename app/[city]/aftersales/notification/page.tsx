@@ -1,4 +1,4 @@
-import Notification from "@/components/notification-component";
+import Notification from "@/components/shared/notifications/notification-component";
 
 export default function page() {
   return <Notification />;

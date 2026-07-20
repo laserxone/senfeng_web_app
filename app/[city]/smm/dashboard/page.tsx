@@ -2,14 +2,14 @@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useSidebar } from "@/components/ui/sidebar";
-import Attendance from "@/components/users/attendance";
-import CustomerEmployee from "@/components/users/customer";
-import { CustomerExtraData } from "@/components/users/extra-data";
-import OldRecordSheet from "@/components/users/old-record-sheet";
-import { ProfilePicture } from "@/components/users/profile-picture";
-import Reimbursement from "@/components/users/reimbursement/Reimbursement";
-import RenderFines from "@/components/users/render-fines";
-import SalaryRecord from "@/components/users/salary-record";
+import Attendance from "@/components/features/attendance/attendance";
+import CustomerEmployee from "@/components/features/customer-relations/customer";
+import { CustomerExtraData } from "@/components/features/users/extra-data";
+import OldRecordSheet from "@/components/features/employee-finance/old-record-sheet";
+import { ProfilePicture } from "@/components/features/users/profile-picture";
+import Reimbursement from "@/components/features/reimbursements/Reimbursement";
+import RenderFines from "@/components/features/employee-finance/render-fines";
+import SalaryRecord from "@/components/features/employee-finance/salary-record";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
@@ -20,7 +20,7 @@ import moment from "moment";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import "./styles.css";
-import UserTabs from "@/components/users/user-tabs";
+import UserTabs from "@/components/features/users/user-tabs";
 
 export default function Page() {
   const [data, setData] = useState<{ user: UserDashboard }>();

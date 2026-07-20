@@ -1,6 +1,6 @@
 import React from "react";
 import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
-import InvoicePDF from "@/components/pos/invoicePDF";
+import InvoicePDF from "@/components/features/pos/invoicePDF";
 
 export const runtime = "nodejs";
 

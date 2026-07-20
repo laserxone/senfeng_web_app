@@ -1,4 +1,4 @@
-import PaymentRequestsPage from "@/components/deliveries/payment-requests";
+import PaymentRequestsPage from "@/components/features/deliveries/payment-requests";
 
 
 export default function Page(){

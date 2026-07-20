@@ -1,9 +1,9 @@
 "use client";
 
-import { RequiredStar } from "@/components/RequiredStar";
-import AppCalendar from "@/components/app-calendar";
-import Dropzone from "@/components/dropzone";
-import { MyImgZooming } from "@/components/img-zooming";
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import Dropzone from "@/components/shared/uploads/dropzone";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -36,7 +36,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { UserSearch } from "@/components/user-search";
+import { UserSearch } from "@/components/shared/search/user-search";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { Loan, LoanPayment } from "@/lib/types";

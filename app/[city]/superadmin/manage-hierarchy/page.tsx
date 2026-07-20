@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import axios from "@/lib/axios"
 import useUserDetail from "@/hooks/use-user-detail"
-import { UserSearch } from "@/components/user-search"
+import { UserSearch } from "@/components/shared/search/user-search"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import Heading from "@/components/ui/heading"
 

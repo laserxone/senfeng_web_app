@@ -1,9 +1,9 @@
 "use client";
-import { BarStats } from "@/components/charts/bar_stats/page";
-import { Stats } from "@/components/charts/pie_stats/page";
-import { Sale } from "@/components/charts/sales/page";
-import CurrencyFormatter from "@/components/currency-formatter";
-import CustomerMap from "@/components/customer-components/customer-map";
+import { BarStats } from "@/components/shared/charts/bar_stats/page";
+import { Stats } from "@/components/shared/charts/pie_stats/page";
+import { Sale } from "@/components/shared/charts/sales/page";
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
+import CustomerMap from "@/components/features/customers/components/customer-map";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PakCities } from "@/constants/data";

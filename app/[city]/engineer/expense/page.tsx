@@ -1,5 +1,5 @@
 import React from 'react'
-import EmployeeBranchExpenses from '@/components/users/employee-expense'
+import EmployeeBranchExpenses from '@/components/features/employee-finance/employee-expense'
 
 export default function page() {
   return (

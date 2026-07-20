@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-import AppCalendar from "@/components/app-calendar";
+import AppCalendar from "@/components/features/calendar/app-calendar";
 import { Badge } from "@/components/ui/badge";
 import { FieldLegend, FieldSet } from "@/components/ui/field";
 import Heading from "@/components/ui/heading";
