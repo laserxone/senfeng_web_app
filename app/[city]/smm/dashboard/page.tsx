@@ -150,7 +150,7 @@ export default function Page() {
         </div>
         <div className="min-w-0 flex-1 overflow-hidden">
           <CustomerEmployee
-            height="min-h-[calc(100dvh-470px)]"
+            height="min-h-[calc(100dvh-400px)]"
             totalCustomerText={"Total Customers"}
             ownership={true}
             customer_data={

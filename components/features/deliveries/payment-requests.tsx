@@ -17,11 +17,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 
-import {
-    Card,
-    CardContent
-} from "@/components/ui/card";
-
 import PageTable from "@/components/shared/tables/app-table";
 import Dropzone from "@/components/shared/uploads/dropzone";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
@@ -35,6 +30,7 @@ import AppCalendar from "@/components/features/calendar/app-calendar";
 import { MyImgZooming } from "@/components/shared/media/img-zooming";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type PaymentRequest = {
     id: number;
@@ -369,7 +365,12 @@ export default function PaymentRequestsPage() {
             id: "slip",
             header: "Slip",
             cell: ({ row }) =>
-                row.original.slip ? <MyImgZooming img={row.original.slip} /> : "-",
+                row.original.slip 
+            ?    <div className="inline-flex items-center justify-center min-w-[104px] rounded-lg border border-emerald-100 bg-emerald-50 p-1">
+    
+                <MyImgZooming img={row.original.slip} compact/>
+                </div> 
+                : "-",
         },
         {
             id: "actions",
@@ -416,49 +417,34 @@ export default function PaymentRequestsPage() {
 
     return (
         <div className="flex flex-1 flex-col space-y-6">
-            <Heading
-                title="Payment Requests"
-                description="Track requested, submitted and pending payments"
-            />
+            <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+              <div className="p-4 sm:p-5">
+                <Heading
+                    panel
+                    title="Payment Requests"
+                    description="Track requested, submitted and pending payments"
+                />
+              </div>
 
-            {/* Summary Cards */}
-            <div className="grid gap-3 md:grid-cols-3">
-                <Card className="border-border/60 p-0">
-                    <CardContent className="flex items-center justify-between p-4">
-                        <div>
-                            <p className="text-xs text-muted-foreground">Total Requested</p>
-                            <h2 className="text-xl font-semibold">
-                                PKR {totals.totalRequested.toLocaleString()}
-                            </h2>
-                        </div>
-                        <Wallet className="h-5 w-5 text-muted-foreground" />
-                    </CardContent>
-                </Card>
-
-                <Card className="border-border/60 p-0">
-                    <CardContent className="flex items-center justify-between p-4">
-                        <div>
-                            <p className="text-xs text-muted-foreground">Total Paid</p>
-                            <h2 className="text-xl font-semibold">
-                                PKR {totals.totalPaid.toLocaleString()}
-                            </h2>
-                        </div>
-                        <CircleDollarSign className="h-5 w-5 text-muted-foreground" />
-                    </CardContent>
-                </Card>
-
-                <Card className="border-border/60 p-0">
-                    <CardContent className="flex items-center justify-between p-4">
-                        <div>
-                            <p className="text-xs text-muted-foreground">Total Due</p>
-                            <h2 className="text-xl font-semibold">
-                                PKR {totals.totalDue.toLocaleString()}
-                            </h2>
-                        </div>
-                        <Clock3 className="h-5 w-5 text-muted-foreground" />
-                    </CardContent>
-                </Card>
-            </div>
+              <div className="grid border-t bg-muted/20 md:grid-cols-3 md:divide-x">
+                {[
+                  { label: "Total requested", value: totals.totalRequested, icon: Wallet, color: "text-violet-600 dark:text-violet-400" },
+                  { label: "Total paid", value: totals.totalPaid, icon: CircleDollarSign, color: "text-emerald-600 dark:text-emerald-400" },
+                  { label: "Total due", value: totals.totalDue, icon: Clock3, color: "text-amber-600 dark:text-amber-400" },
+                ].map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <div key={item.label} className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 md:border-t-0 md:px-5">
+                      <Icon className={`size-4 ${item.color}`} />
+                      <div className="flex min-w-0 items-baseline gap-2">
+                        <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{item.label}</span>
+                        <span className="truncate text-sm font-bold">PKR {item.value.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
 
             {loading ? (
                 <div className="flex h-40 items-center justify-center">
@@ -479,15 +465,15 @@ export default function PaymentRequestsPage() {
             )}
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="sm:max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle>Record Payment</DialogTitle>
-                        <DialogDescription>
+                <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
+                    <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+                        <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><Wallet className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Record Payment</DialogTitle><DialogDescription className="text-xs text-muted-foreground">
                             Submit payment information for this request.
-                        </DialogDescription>
+                        </DialogDescription></div></div>
                     </DialogHeader>
 
-                    <div className="grid gap-4 pt-4">
+                    <ScrollArea className="max-h-[calc(100dvh-132px)]">
+                    <div className="grid gap-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
                         <div className="grid gap-2">
                             <label className="text-sm font-medium">Date</label>
                             <AppCalendar
@@ -558,6 +544,7 @@ export default function PaymentRequestsPage() {
                             {edit ? "Edit" : "Submit"} Payment
                         </Button>
                     </div>
+                    </ScrollArea>
                 </DialogContent>
             </Dialog>
 

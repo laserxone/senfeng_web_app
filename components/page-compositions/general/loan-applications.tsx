@@ -401,7 +401,7 @@ export default function LoanApplications() {
     return (
         <div className="flex flex-1 flex-col space-y-4">
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
                 <Link
                     href={`/${base_route}/applications`}
                     className="group inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-gradient-to-b from-white to-slate-50 text-slate-700 shadow-sm transition-all duration-300 hover:-translate-x-1 hover:border-slate-300 hover:text-slate-950 hover:shadow-lg"
@@ -409,7 +409,7 @@ export default function LoanApplications() {
                     <ArrowLeft className="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-0.5" />
                 </Link>
 
-                <Heading title="Loan Applications" />
+                <Heading panel title="Loan Applications" />
             </div>
             {loading ? (
                 <div className="flex flex-1 items-center justify-center">

@@ -3,7 +3,7 @@
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { cn } from "@/lib/utils";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, ListChecks } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,7 +19,7 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -157,16 +157,26 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }: { data: MyCustome
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="w-full sm:max-w-[80vw] h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Quick Action</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-[80vw]">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+              <ListChecks className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <DialogTitle className="text-sm font-semibold text-foreground">Quick Action</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Reassign individual customers or update a selected batch.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        {/* This wrapper allows horizontal scroll on small screens */}
-        <div className="flex-1 overflow-x-auto">
-          <div className="min-w-[900px] flex flex-col h-full">
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
+          <div className="overflow-x-auto p-3.5">
+          <div className="min-w-[900px] space-y-3">
             {/* Header */}
-            <div className="flex items-center gap-4 border p-2 rounded-md mx-4 bg-muted sticky top-0 z-10">
+            <div className="sticky top-0 z-10 flex items-center gap-4 rounded-lg border border-border bg-muted/40 p-2.5">
               <Checkbox
                 checked={checkedAll}
                 onCheckedChange={(checked: boolean) => {
@@ -181,7 +191,7 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }: { data: MyCustome
             </div>
 
             {/* Filters */}
-            <div className="flex px-4 py-2 gap-2 sticky top-12 z-10 bg-background mb-4">
+            <div className="sticky top-12 z-10 flex gap-2 rounded-lg border border-border bg-card p-2">
               <Input
                 placeholder="Search customer"
                 value={search}
@@ -202,8 +212,7 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }: { data: MyCustome
             </div>
 
             {/* Scrollable Data Rows */}
-            <ScrollArea className="flex-1 overflow-y-auto px-2">
-              <div className="px-2 space-y-4 pb-4">
+              <div className="space-y-2">
                 {filteredData.map(
                   ({ id, name, owner, location, checked }) => (
                     <RenderEachRow
@@ -220,25 +229,20 @@ const AddQuickAction = ({ data, visible, onClose, onRefresh }: { data: MyCustome
                   )
                 )}
               </div>
-            </ScrollArea>
+
+            {filteredData.length > 0 && loadMore <= filteredData.length && (
+              <Button
+                className="h-9 w-full rounded-lg"
+                onClick={() => {
+                  if (loadMore <= filteredData.length) setLoadMore(loadMore + 50);
+                }}
+              >
+                Load More
+              </Button>
+            )}
           </div>
         </div>
-
-        {/* Footer with Load More */}
-        <DialogFooter className="pt-4">
-          {filteredData.length > 0 && loadMore <= filteredData.length && (
-            <Button
-              className="w-full"
-              onClick={() => {
-                if (loadMore <= filteredData.length) {
-                  setLoadMore(loadMore + 50);
-                }
-              }}
-            >
-              Load More
-            </Button>
-          )}
-        </DialogFooter>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
 
@@ -268,7 +272,7 @@ const RenderEachRow = ({
   const [loading, setLoading] = useState(false);
 
   return (
-    <div className="flex items-center gap-4 border p-2 rounded-md">
+    <div className="flex min-h-11 items-center gap-4 rounded-lg border border-border bg-muted/30 p-2.5 text-foreground">
       <div>
         <Checkbox
           checked={checked}
@@ -295,6 +299,7 @@ const RenderEachRow = ({
             setLoading(false);
           }}
           disabled={loading}
+          className="h-8 rounded-lg"
         >
           {loading ? <Spinner /> : "Update"}
         </Button>

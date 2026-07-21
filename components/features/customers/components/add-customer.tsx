@@ -9,7 +9,7 @@ import { NumberSearch } from "@/components/shared/search/number-search";
 import { UserSearch } from "@/components/shared/search/user-search";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -291,28 +291,31 @@ function AddCustomerDialog({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="w-full sm:max-w-6xl">
-        <DialogHeader className="border-b bg-muted/20 px-4 py-4 sm:px-6">
-          <div className="flex items-start gap-3">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-              <UserPlus className="h-5 w-5" />
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-6xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+              <UserPlus className="h-4 w-4" />
             </div>
             <div className="min-w-0">
-              <DialogTitle className="text-xl font-bold tracking-tight">Add New Customer</DialogTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <DialogTitle className="text-sm font-semibold text-foreground">Add New Customer</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
                 Register customer profile, contact, location, ownership, and lead details.
-              </p>
+              </DialogDescription>
             </div>
           </div>
         </DialogHeader>
-        <ScrollArea className="max-h-[calc(100dvh-200px)]">
-          <div className="px-4 sm:px-6">
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
+          <div className="p-3.5">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground"
+            >
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
 
                 {/* CONTACT INFORMATION */}
-                <FieldSet className="rounded-lg border bg-background p-3 shadow-sm sm:p-4 lg:col-span-2">
-                  <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
+                <FieldSet className="rounded-xl border border-border bg-muted/20 p-3 lg:col-span-2">
+                  <FieldLegend className="flex items-center gap-2 px-2 text-xs font-semibold text-foreground">
                     <Phone className="h-4 w-4 text-emerald-700" />
                     Contact Information
                   </FieldLegend>
@@ -421,8 +424,8 @@ function AddCustomerDialog({
                 </FieldSet>
 
                 {/* CUSTOMER DETAILS */}
-                <FieldSet className="rounded-lg border bg-background p-3 shadow-sm sm:p-4">
-                  <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
+                <FieldSet className="rounded-xl border border-border bg-muted/20 p-3">
+                  <FieldLegend className="flex items-center gap-2 px-2 text-xs font-semibold text-foreground">
                     <Building2 className="h-4 w-4 text-blue-700" />
                     Customer Details
                   </FieldLegend>
@@ -477,8 +480,8 @@ function AddCustomerDialog({
                 </FieldSet>
 
                 {/* LOCATION */}
-                <FieldSet className="rounded-lg border bg-background p-3 shadow-sm sm:p-4">
-                  <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
+                <FieldSet className="rounded-xl border border-border bg-muted/20 p-3">
+                  <FieldLegend className="flex items-center gap-2 px-2 text-xs font-semibold text-foreground">
                     <MapPin className="h-4 w-4 text-rose-700" />
                     Location
                   </FieldLegend>
@@ -521,8 +524,8 @@ function AddCustomerDialog({
                 </FieldSet>
 
                 {/* BUSINESS SETTINGS */}
-                <FieldSet className="rounded-lg border bg-background p-3 shadow-sm sm:p-4">
-                  <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
+                <FieldSet className="rounded-xl border border-border bg-muted/20 p-3">
+                  <FieldLegend className="flex items-center gap-2 px-2 text-xs font-semibold text-foreground">
                     <Settings2 className="h-4 w-4 text-amber-700" />
                     Business Settings
                   </FieldLegend>
@@ -594,8 +597,8 @@ function AddCustomerDialog({
                 </FieldSet>
 
                 {/* LEAD & REMARKS */}
-                <FieldSet className="rounded-lg border bg-background p-3 shadow-sm sm:p-4">
-                  <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
+                <FieldSet className="rounded-xl border border-border bg-muted/20 p-3">
+                  <FieldLegend className="flex items-center gap-2 px-2 text-xs font-semibold text-foreground">
                     <BriefcaseBusiness className="h-4 w-4 text-violet-700" />
                     Lead & Remarks
                   </FieldLegend>
@@ -639,8 +642,8 @@ function AddCustomerDialog({
                 </FieldSet>
 
                 {/* ADDITIONAL OPTIONS */}
-                <FieldSet className="rounded-lg border bg-background p-3 shadow-sm sm:p-4">
-                  <FieldLegend className="flex items-center gap-2 px-2 text-sm font-semibold text-foreground">
+                <FieldSet className="rounded-xl border border-border bg-muted/20 p-3">
+                  <FieldLegend className="flex items-center gap-2 px-2 text-xs font-semibold text-foreground">
                     <CalendarDays className="h-4 w-4 text-slate-700" />
                     Additional Options
                   </FieldLegend>
@@ -695,7 +698,7 @@ function AddCustomerDialog({
 
               </div>
 
-              <div className="w-full mt-2">
+              <div className="w-full rounded-xl border border-border bg-muted/20 p-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Sparkles className="h-3.5 w-3.5 text-blue-600" />

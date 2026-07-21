@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogTrigger
@@ -718,26 +719,26 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }: { cust
     return (
         <Dialog open={visible} onOpenChange={handleClose}>
             <DialogTrigger asChild></DialogTrigger>
-            <DialogContent className="w-full sm:max-w-4xl">
-                <DialogHeader className="border-b bg-muted/20 px-4 py-4 sm:px-6">
-                    <div className="flex items-start gap-3">
-                        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-                            <Images className="h-5 w-5" />
+            <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-4xl">
+                <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+                            <Images className="h-4 w-4" />
                         </div>
                         <div className="min-w-0">
-                            <DialogTitle className="text-lg font-bold tracking-tight">
+                            <DialogTitle className="text-sm font-semibold text-foreground">
                                 Add Machine Images
                             </DialogTitle>
-                            <p className="mt-1 text-sm text-muted-foreground">
+                            <DialogDescription className="text-xs text-muted-foreground">
                                 Upload categorized machine documents, reports, and delivery photos.
-                            </p>
+                            </DialogDescription>
                         </div>
                     </div>
                 </DialogHeader>
 
-                <ScrollArea className="h-[calc(92dvh-160px)]">
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4 sm:p-6">
-                        <div className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                <ScrollArea className="max-h-[calc(100dvh-132px)]">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 p-3.5">
+                        <div className="rounded-xl border border-border bg-muted/20 p-3">
                             <div className="mb-3 flex items-center justify-between gap-3">
                                 <div>
                                     <h3 className="text-sm font-semibold text-foreground">
@@ -793,7 +794,7 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }: { cust
                         </div>
 
                         {form.watch("note") === "handover" && (
-                            <div className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                            <div className="rounded-xl border border-border bg-muted/20 p-3">
                                 <Controller
                                     name="handover_user_id"
                                     control={form.control}
@@ -815,7 +816,7 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }: { cust
                             </div>
                         )}
 
-                        <div className="rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                        <div className="rounded-xl border border-border bg-muted/20 p-3">
                             <div className="mb-3 flex items-start gap-3">
                                 <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
                                     <UploadCloud className="h-4 w-4" />
@@ -860,7 +861,7 @@ const AddImages = ({ customer_id, machine, visible, onClose, onRefresh }: { cust
                             <Separator className="flex-1" />
                         </div>
 
-                        <div className="rounded-2xl border bg-muted/15 p-3 shadow-sm sm:p-4">
+                        <div className="rounded-xl border border-border bg-muted/20 p-3">
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex items-start gap-3">
                                     <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-50 text-amber-700 ring-1 ring-amber-100">

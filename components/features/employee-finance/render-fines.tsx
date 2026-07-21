@@ -154,15 +154,9 @@ const RenderFines = ({ height, onUpdateTotal, userID }: { height?: string, onUpd
             loading={loading}
             columns={columns}
             data={data}
-          >
-            <Button
-              onClick={() => setFilterVisible(true)}
-              variant="ghost"
-              className="p-0 w-8"
-            >
-              <Filter />
-            </Button>
-          </PageTable>
+            filter
+             onFilterPress={() => setFilterVisible(true)}
+          />
         </div>
       </div>
 

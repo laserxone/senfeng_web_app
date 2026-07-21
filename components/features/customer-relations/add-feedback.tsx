@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Spinner from "@/components/ui/spinner";
 import { CustomerSearch } from "@/components/features/customers/components/customer-search";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 
 export default function AddFeedbackDialog({ open, onClose, user_id, customer_id, onRefresh }: { open: boolean, onClose: () => void, user_id: number | string, customer_id?: number | undefined, onRefresh?: () => Promise<void> }) {
@@ -84,7 +85,9 @@ export default function AddFeedbackDialog({ open, onClose, user_id, customer_id,
                     </div>
                 </DialogHeader>
 
-                <div className="max-h-[calc(100dvh-120px)] space-y-3 overflow-y-auto p-3.5">
+                 <ScrollArea className="max-h-[calc(100dvh-132px)]">
+
+                <div className="space-y-3 p-3.5">
 
                     {!customer_id &&
                         <div className="space-y-1.5">
@@ -161,6 +164,7 @@ export default function AddFeedbackDialog({ open, onClose, user_id, customer_id,
                         {loading && <Spinner />} Save Feedback
                     </Button>
                 </div>
+                </ScrollArea>
             </DialogContent>
         </Dialog>
     )

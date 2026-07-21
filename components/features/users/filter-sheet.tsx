@@ -2,7 +2,7 @@ import { TIMEZONE } from "@/constants/data";
 import { zodResolver } from "@hookform/resolvers/zod";
 import moment from "moment";
 import momentT from "moment-timezone";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import AppCalendar from "@/components/features/calendar/app-calendar";
@@ -23,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 type FilterSheetProps = {
   visible: boolean,
-  onClose: () => void,
+  onClose: Dispatch<SetStateAction<boolean>>,
   user_disable?: boolean,
   onReturn: (
     { start, end, user }:
@@ -62,12 +62,12 @@ const FilterSheet = ({ visible, onClose, onReturn, user_disable = true }: Filter
       user: values.user,
     });
     setLoading(false);
-    onClose();
+    onClose(false);
     handleClear();
   }
 
   function handleClose() {
-    onClose();
+    onClose(false);
     handleClear();
   }
 
@@ -183,7 +183,7 @@ export const FilterSheetMonth = ({ visible, onClose, onReturn }: FilterSheetProp
     }
 
     function handleClose() {
-        onClose();
+        onClose(false);
         handleClear();
     }
 
@@ -219,7 +219,7 @@ export const FilterSheetMonth = ({ visible, onClose, onReturn }: FilterSheetProp
             end: endDate,
         });
 
-        onClose();
+        onClose(false);
     }
 
     return (

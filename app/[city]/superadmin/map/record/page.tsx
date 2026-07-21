@@ -198,8 +198,8 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex  flex-row justify-between items-center flex-wrap gap-2">
-        <Heading title="Map record" description="View user locations record" />
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+        <Heading panel title="Map record" description="View user locations record" />
         <div>
           {userID && (
             <div className="flex gap-2">

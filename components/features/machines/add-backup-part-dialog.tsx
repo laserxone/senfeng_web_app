@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -112,27 +113,27 @@ export default function AddBackupPartDialog({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="overflow-hidden p-0 sm:max-w-xl">
-        <DialogHeader className="border-b bg-muted/20 px-5 py-5 text-left">
-          <div className="flex items-start gap-3">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-              <Plus className="h-5 w-5" />
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+              <Plus className="h-4 w-4" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold tracking-tight">
+              <DialogTitle className="text-sm font-semibold text-foreground">
                 Add Backup Part
               </DialogTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <DialogDescription className="text-xs text-muted-foreground">
                 Add a backup part with serial, power, size, and remarks.
-              </p>
+              </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(100dvh-140px)]">
-          <div className="p-5">
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FieldSet className="gap-4 rounded-2xl border bg-background p-4 shadow-sm">
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
+          <div className="p-3.5">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
+              <FieldSet className="gap-3 rounded-xl border border-border bg-muted/20 p-3">
                 <FieldLegend className="px-1 text-sm font-semibold text-foreground">
                   Part Details
                 </FieldLegend>

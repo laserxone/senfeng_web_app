@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import AppCalendar from "@/components/features/calendar/app-calendar";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { WalletCards } from "lucide-react";
 
 
 const formSchema = z.object({
@@ -173,14 +174,15 @@ const EditPayment = ({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="p-4">
-        <DialogHeader>
-          <DialogTitle>Edit Payment</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><WalletCards className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Edit Payment</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Update transaction, receiving account, and payment details.</DialogDescription></div></div>
         </DialogHeader>
+        <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
         <div className="w-full ">
-          <ScrollArea className="px-2 w-full h-[calc(100dvh-160px)]">
-            <div className="px-2">
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          
+            <div className="p-3.5">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
                 <FieldGroup>
 
                   <Controller
@@ -372,8 +374,8 @@ const EditPayment = ({
                 </FieldGroup>
               </form>
             </div>
-          </ScrollArea>
         </div>
+          </ScrollArea>
       </DialogContent>
     </Dialog>
   );

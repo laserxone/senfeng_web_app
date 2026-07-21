@@ -177,8 +177,8 @@ export default function HierarchyPage() {
 
     return (
         <div className="flex flex-1 flex-col space-y-4">
-            <div className="flex justify-between flex-wrap items-end">
-                <Heading title="Approval Hierarchies" description="Create and manage approval workflows for loan applications" />
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+                <Heading panel title="Approval Hierarchies" description="Create and manage approval workflows for loan applications" />
                 <Button onClick={() => setIsDialogOpen(true)} >
                     <Plus className="size-4" />
                     Create Hierarchy
@@ -277,16 +277,16 @@ export default function HierarchyPage() {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               
               
-                    <DialogContent className="w-full sm:max-w-xl">
-                        <DialogHeader>
-                            <DialogTitle>Create Approval Hierarchy</DialogTitle>
+                    <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-xl">
+                        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+                            <DialogTitle className="text-sm font-semibold text-foreground">Create Approval Hierarchy</DialogTitle>
                             <DialogDescription>
                                 Set up a new approval workflow. The order of approvers determines the approval sequence.
                             </DialogDescription>
                         </DialogHeader>
-                           <ScrollArea className="max-h-[calc(100dvh-200px)]">
+                           <ScrollArea className="max-h-[calc(100dvh-132px)]">
 
-                        <div className="space-y-6 py-4">
+                        <div className="space-y-3 p-3.5 pb-4">
                             <Field>
                                 <FieldLabel>Hierarchy Name</FieldLabel>
                                 <Input
@@ -382,9 +382,7 @@ export default function HierarchyPage() {
                                 </div>
                             )}
                         </div>
-                        </ScrollArea>
-
-                        <DialogFooter>
+                        <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:justify-end">
                             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                                 Cancel
                             </Button>
@@ -395,7 +393,8 @@ export default function HierarchyPage() {
                             >
                                 {isSubmitting ? "Creating..." : "Create Hierarchy"}
                             </Button>
-                        </DialogFooter>
+                        </div>
+                        </ScrollArea>
                     </DialogContent>
                
             </Dialog>

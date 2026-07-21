@@ -20,11 +20,11 @@ type EngineerModalType = {
 const EngineerModal = ({ engineersModal, setEngineersModal, allEngineersData, onRefresh }: EngineerModalType) => {
   return (
     <Dialog open={engineersModal} onOpenChange={setEngineersModal}>
-      <DialogContent className="max-h-[92vh] max-w-[94vw] overflow-hidden rounded-md p-0 sm:max-w-5xl">
-        <DialogHeader className="border-b bg-muted/30 px-4 py-3">
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-5xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <DialogTitle className="text-base font-bold">
+              <DialogTitle className="text-sm font-semibold text-foreground">
                 Issued Items To Engineers
               </DialogTitle>
               <p className="mt-1 text-xs text-muted-foreground">
@@ -37,7 +37,7 @@ const EngineerModal = ({ engineersModal, setEngineersModal, allEngineersData, on
             </div>
           </div>
         </DialogHeader>
-
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
         {allEngineersData.length == 0 ? (
           <div className="flex min-h-[240px] flex-col items-center justify-center px-4 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-md bg-muted text-muted-foreground">
@@ -50,7 +50,7 @@ const EngineerModal = ({ engineersModal, setEngineersModal, allEngineersData, on
           </div>
         ) : (
           <div className="bg-background">
-            <ScrollArea className="h-[74vh] px-3 py-3">
+            <div className="space-y-3 p-3.5 pb-4">
               {allEngineersData.map((item, index) => (
                 <RenderEachEngineerRow
                   key={index}
@@ -58,9 +58,10 @@ const EngineerModal = ({ engineersModal, setEngineersModal, allEngineersData, on
                   onRefresh={onRefresh}
                 />
               ))}
-            </ScrollArea>
+            </div>
           </div>
         )}
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

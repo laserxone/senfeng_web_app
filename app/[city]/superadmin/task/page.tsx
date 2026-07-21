@@ -1,13 +1,13 @@
 "use client";
-import { ArrowUpDown, BadgeCheck, CircleDashed, Filter } from "lucide-react";
+import { ArrowUpDown, BadgeCheck, CircleDashed } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
 
+import FilterSheet from "@/components/features/users/filter-sheet";
 import PageTable from "@/components/shared/tables/app-table";
 import Heading from "@/components/ui/heading";
-import FilterSheet from "@/components/features/users/filter-sheet";
 import { TIMEZONE } from "@/constants/data";
 
 
@@ -199,8 +199,8 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <Heading title="Task Management" description="Manage team tasks" />
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+        <Heading panel title="Task Management" description="Manage team tasks" />
 
         <AddTaskDialog
           mode="team"
@@ -234,15 +234,9 @@ export default function Page() {
           setSelectedTask(val);
           setVisible(true);
         }}
-      >
-        <Button
-          onClick={() => setFilterVisible(true)}
-          variant="ghost"
-          className="p-0 w-8"
-        >
-          <Filter />
-        </Button>
-      </PageTable>
+        filter
+        onFilterPress={() => setFilterVisible(true)}
+      />
 
       <TaskDetail
         user_id={userID}
@@ -263,5 +257,4 @@ export default function Page() {
     </div>
   );
 }
-
 

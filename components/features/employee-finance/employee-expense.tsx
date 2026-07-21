@@ -1,72 +1,83 @@
-"use client";
+"use client"
 import {
   ArrowUpDown,
   CalendarDays,
   ChevronDown,
   FileDown,
-  Filter,
   ImageIcon,
   Plus,
   ReceiptText,
-  RotateCcw,
   Trash2,
   UserRound,
   WalletCards,
-} from "lucide-react";
+} from "lucide-react"
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useContext, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useContext, useEffect, useState } from "react"
 
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
-import AppCalendar from "@/components/features/calendar/app-calendar";
-import PageTable from "@/components/shared/tables/app-table";
-import Dropzone from "@/components/shared/uploads/dropzone";
+import AppCalendar from "@/components/features/calendar/app-calendar"
+import FilterSheet from "@/components/features/users/filter-sheet"
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
+import PageTable from "@/components/shared/tables/app-table"
+import Dropzone from "@/components/shared/uploads/dropzone"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@/components/ui/dropdown-menu"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { Textarea } from "@/components/ui/textarea";
-import FilterSheet from "@/components/features/users/filter-sheet";
-import { TIMEZONE } from "@/constants/data";
+} from "@/components/ui/sheet"
+import { Textarea } from "@/components/ui/textarea"
+import { TIMEZONE } from "@/constants/data"
 
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import exportToExcel from "@/lib/exportToExcel";
-import formatCurrency from "@/lib/formatCurrency";
-import { OfficeExpenseProps } from "@/lib/types";
-import { UploadImage } from "@/lib/uploadFunction";
-import { OfficeContext } from "@/store/context/OfficeContext";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Document, Page, pdf, StyleSheet, Text, View } from "@react-pdf/renderer";
-import { ColumnDef } from "@tanstack/react-table";
-import { saveAs } from "file-saver";
-import moment from "moment";
-import momentT from "moment-timezone";
-import { useRouter } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
-import { MyImgZooming } from "@/components/shared/media/img-zooming";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
-import Spinner from "@/components/ui/spinner";
+import { MyImgZooming } from "@/components/shared/media/img-zooming"
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field"
+import Spinner from "@/components/ui/spinner"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import exportToExcel from "@/lib/exportToExcel"
+import formatCurrency from "@/lib/formatCurrency"
+import { OfficeExpenseProps } from "@/lib/types"
+import { UploadImage } from "@/lib/uploadFunction"
+import { OfficeContext } from "@/store/context/OfficeContext"
+import { zodResolver } from "@hookform/resolvers/zod"
+import {
+  Document,
+  Page,
+  pdf,
+  StyleSheet,
+  Text,
+  View,
+} from "@react-pdf/renderer"
+import { ColumnDef } from "@tanstack/react-table"
+import { saveAs } from "file-saver"
+import moment from "moment"
+import momentT from "moment-timezone"
+import { useRouter } from "next/navigation"
+import { Controller, useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
 
 const expensePdfStyles = StyleSheet.create({
   page: {
@@ -133,7 +144,7 @@ const expensePdfStyles = StyleSheet.create({
     padding: 10,
     color: "#6B7280",
   },
-});
+})
 
 const ExpensePdfDocument = ({ data }: { data: OfficeExpenseProps[] }) => (
   <Document>
@@ -142,18 +153,24 @@ const ExpensePdfDocument = ({ data }: { data: OfficeExpenseProps[] }) => (
       <Text style={expensePdfStyles.totalText}>
         Total PKR:{" "}
         {formatCurrency(
-          data.reduce((sum, item) => sum + Number(item.amount || 0), 0),
+          data.reduce((sum, item) => sum + Number(item.amount || 0), 0)
         )}
       </Text>
       <View style={expensePdfStyles.table}>
         <View style={expensePdfStyles.row} fixed>
-          <Text style={[expensePdfStyles.headerCell, expensePdfStyles.dateCell]}>
+          <Text
+            style={[expensePdfStyles.headerCell, expensePdfStyles.dateCell]}
+          >
             Date
           </Text>
-          <Text style={[expensePdfStyles.headerCell, expensePdfStyles.noteCell]}>
+          <Text
+            style={[expensePdfStyles.headerCell, expensePdfStyles.noteCell]}
+          >
             Note
           </Text>
-          <Text style={[expensePdfStyles.headerCell, expensePdfStyles.amountCell]}>
+          <Text
+            style={[expensePdfStyles.headerCell, expensePdfStyles.amountCell]}
+          >
             Amount
           </Text>
           <Text
@@ -184,11 +201,16 @@ const ExpensePdfDocument = ({ data }: { data: OfficeExpenseProps[] }) => (
               <Text style={[expensePdfStyles.cell, expensePdfStyles.noteCell]}>
                 {item.note || ""}
               </Text>
-              <Text style={[expensePdfStyles.cell, expensePdfStyles.amountCell]}>
+              <Text
+                style={[expensePdfStyles.cell, expensePdfStyles.amountCell]}
+              >
                 {Number(item.amount || 0)}
               </Text>
               <Text
-                style={[expensePdfStyles.cell, expensePdfStyles.submittedByCell]}
+                style={[
+                  expensePdfStyles.cell,
+                  expensePdfStyles.submittedByCell,
+                ]}
               >
                 {item.submitted_by_name || ""}
               </Text>
@@ -198,69 +220,65 @@ const ExpensePdfDocument = ({ data }: { data: OfficeExpenseProps[] }) => (
       </View>
     </Page>
   </Document>
-);
+)
 
 export default function EmployeeBranchExpenses() {
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [filterVisible, setFilterVisible] = useState(false);
-  const [data, setData] = useState<OfficeExpenseProps[]>([]);
-  const [imageURL, setImageURL] = useState<OfficeExpenseProps | null>(null);
-  const [visible, setVisible] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [filterVisible, setFilterVisible] = useState(false)
+  const [data, setData] = useState<OfficeExpenseProps[]>([])
+  const [imageURL, setImageURL] = useState<OfficeExpenseProps | null>(null)
+  const [visible, setVisible] = useState(false)
   const {
     userID,
     isAdmin,
     branch_expenses_assigned,
     branch_expenses_write_access,
-  } = useUserDetail();
-  const [visibleAdd, setVisibleAdd] = useState(false);
-  const [exportLoading, setExportLoading] = useState<"excel" | "pdf" | null>(
-    null,
-  );
-  const router = useRouter();
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
-  const [loading, setLoading] = useState(true);
+  } = useUserDetail()
+  const [visibleAdd, setVisibleAdd] = useState(false)
+
+  const router = useRouter()
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (userID) {
-      const allowed = branch_expenses_assigned || isAdmin;
+      const allowed = branch_expenses_assigned || isAdmin
       if (!allowed) {
-        router.push("/not-allowed");
+        router.push("/not-allowed")
       }
       const startDate = momentT
         .tz(TIMEZONE)
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString();
+        .toISOString()
       const endDate = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString();
-      fetchData(startDate, endDate);
+        .toISOString()
+      fetchData(startDate, endDate)
     }
-  }, [userID]);
+  }, [userID])
 
   async function fetchData(startDate: string, endDate: string) {
     return new Promise((resolve, reject) => {
       axios
         .get(`/${userID}/expenses?start_date=${startDate}&end_date=${endDate}`)
         .then((response) => {
-          setData(response.data);
+          setData(response.data)
         })
         .catch((e) => {
-          console.log(e);
+          console.log(e)
         })
         .finally(() => {
-          setLoading(false);
-          resolve(true);
-        });
-    });
+          setLoading(false)
+          resolve(true)
+        })
+    })
   }
-
-
 
   const columns: ColumnDef<OfficeExpenseProps>[] = [
     {
@@ -275,7 +293,7 @@ export default function EmployeeBranchExpenses() {
             Date
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => (
         <div className="ml-2">
@@ -298,7 +316,7 @@ export default function EmployeeBranchExpenses() {
             Note
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("note")}</div>,
     },
@@ -314,7 +332,7 @@ export default function EmployeeBranchExpenses() {
             Amount
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("amount")}</div>,
     },
@@ -331,151 +349,97 @@ export default function EmployeeBranchExpenses() {
             Submitted By
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("submitted_by_name")}</div>,
     },
-  ];
-
-  async function handleExcelExport() {
-    setExportLoading("excel");
-    try {
-      const headers = ["Date", "Note", "Amount", "Submitted By"];
-      let finalData = [];
-      finalData = [...data];
-      const formattedData = finalData.map((item) => [
-        moment(item.date).format("YYYY-MM-DD"),
-        item.note,
-        Number(item.amount || 0),
-        item.submitted_by_name,
-        item.image,
-      ]);
-      await exportToExcel(
-        headers,
-        formattedData,
-        "Branch-Expenses.xlsx",
-        false,
-        "",
-        true,
-      );
-    } catch (error) {
-      console.log(error);
-      toast.error("Failed to export Excel");
-    } finally {
-      setExportLoading(null);
-    }
-  }
-
-  async function handlePdfExport() {
-    setExportLoading("pdf");
-    try {
-      const blob = await pdf(<ExpensePdfDocument data={data} />).toBlob();
-      saveAs(blob, "Branch-Expenses.pdf");
-    } catch (error) {
-      console.log(error);
-      toast.error("Failed to export PDF");
-    } finally {
-      setExportLoading(null);
-    }
-  }
+  ]
 
   async function handleDelete(id: number | undefined) {
-    if (!id) return;
-    setDeleteLoading(true);
+    if (!id) return
+    setDeleteLoading(true)
     try {
-      await axios.delete(`/${userID}/expenses/${id}`);
+      await axios.delete(`/${userID}/expenses/${id}`)
       toast.success("Branch Expense Deleted")
       const startDate = moment()
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString();
-      const endDate = moment()
-        .endOf("month")
-        .endOf("day")
-        .utc()
-        .toISOString();
-      await fetchData(startDate, endDate);
+        .toISOString()
+      const endDate = moment().endOf("month").endOf("day").utc().toISOString()
+      await fetchData(startDate, endDate)
     } finally {
-      setDeleteLoading(false);
-      setShowConfirmation(false);
-      setVisible(false);
-      setImageURL(null);
+      setDeleteLoading(false)
+      setShowConfirmation(false)
+      setVisible(false)
+      setImageURL(null)
     }
   }
 
-  const total = data.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const total = data.reduce((sum, item) => sum + Number(item.amount || 0), 0)
 
   return (
-    <div className="flex flex-1 flex-col gap-5">
-      <section className="overflow-hidden rounded-2xl border bg-background shadow-sm">
-        <div className="flex flex-col gap-5 border-b bg-muted/20 p-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 items-start gap-4">
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-              <ReceiptText className="h-6 w-6" />
+    <div className="flex min-w-0 flex-1 flex-col gap-4">
+      <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="flex flex-col gap-3 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+              <ReceiptText className="size-5" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Branch finance
-              </p>
-              <h1 className="mt-1 text-2xl font-bold tracking-tight">
-                Office Expenses
-              </h1>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                Manage branch expense entries, receipts, exports, and monthly totals.
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+                  Office expenses
+                </h1>
+                <span className="hidden rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold tracking-wide text-muted-foreground uppercase sm:inline-flex">
+                  Branch finance
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Review and manage branch spending records.
               </p>
             </div>
           </div>
 
-          {branch_expenses_write_access && (
-            <Button
-              onClick={() => setVisibleAdd(true)}
-              className="w-full gap-2 sm:w-auto"
-            >
-              <Plus className="h-4 w-4" />
-              Add Office Expenses
-            </Button>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* <ExpenseExport data={data} /> */}
+            {branch_expenses_write_access && (
+              <Button onClick={() => setVisibleAdd(true)} className="gap-2">
+                <Plus className="size-4" />
+                Add expense
+              </Button>
+            )}
+          </div>
         </div>
 
-        <div className="grid gap-3 p-4 sm:grid-cols-3">
-          <div className="rounded-2xl border bg-background p-4">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
-                <WalletCards className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">
-                  Total PKR
-                </p>
-                <p className="text-xl font-bold">{formatCurrency(total)}</p>
-              </div>
+        <div className="grid border-t bg-muted/20 sm:grid-cols-3 sm:divide-x">
+          <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
+            <WalletCards className="size-4 text-emerald-600 dark:text-emerald-400" />
+            <div className="flex min-w-0 items-baseline gap-2">
+              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Total
+              </span>
+              <span className="truncate text-sm font-bold">
+                PKR {formatCurrency(total)}
+              </span>
             </div>
           </div>
-          <div className="rounded-2xl border bg-background p-4">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-700 ring-1 ring-violet-100">
-                <ReceiptText className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">
-                  Entries
-                </p>
-                <p className="text-xl font-bold">{data.length}</p>
-              </div>
+          <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
+            <ReceiptText className="size-4 text-violet-600 dark:text-violet-400" />
+            <div className="flex items-baseline gap-2">
+              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Entries
+              </span>
+              <span className="text-sm font-bold">{data.length}</span>
             </div>
           </div>
-          <div className="rounded-2xl border bg-background p-4">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-700 ring-1 ring-amber-100">
-                <CalendarDays className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">
-                  View
-                </p>
-                <p className="text-xl font-bold">Monthly</p>
-              </div>
+          <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
+            <CalendarDays className="size-4 text-amber-600 dark:text-amber-400" />
+            <div className="flex items-baseline gap-2">
+              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Period
+              </span>
+              <span className="text-sm font-bold">Monthly</span>
             </div>
           </div>
         </div>
@@ -489,95 +453,44 @@ export default function EmployeeBranchExpenses() {
         onPressCancel={() => setShowConfirmation(false)}
         loading={deleteLoading}
       />
-      <div>
+      <section className="min-w-0 overflow-hidden rounded-2xl border bg-card p-3 shadow-sm sm:p-4">
         <PageTable
           loading={loading}
           columns={columns}
           data={data}
           onRowClick={(val, e) => {
-            setImageURL(val);
-            setVisible(true);
+            setImageURL(val)
+            setVisible(true)
           }}
-        // filter={true}
-        // onFilterClick={() => setFilterVisible(true)}
-        >
-          <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={() => setFilterVisible(true)}
-                variant="outline"
-                className="gap-2"
-              >
-                <Filter className="h-4 w-4" />
-                Filter
-              </Button>
-              <Button
-                variant="outline"
-                className="gap-2"
-                onClick={async () => {
-                  setResetLoading(true);
-                  const startDate = momentT
-                    .tz(TIMEZONE)
-                    .startOf("month")
-                    .startOf("day")
-                    .utc()
-                    .toISOString();
-                  const endDate = momentT
-                    .tz(TIMEZONE)
-                    .endOf("month")
-                    .endOf("day")
-                    .utc()
-                    .toISOString();
-                  await fetchData(startDate, endDate);
-                  setResetLoading(false);
-                }}
-              >
-                {resetLoading ? <Spinner /> : <RotateCcw className="h-4 w-4" />}
-                Reset
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant={"outline"} disabled={!!exportLoading} className="gap-2">
-                    {exportLoading ? <Spinner /> : <FileDown className="h-4 w-4" />}
-                    Export
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-36">
-                  <DropdownMenuItem
-                    disabled={!!exportLoading}
-                    onClick={handleExcelExport}
-                  >
-                    {exportLoading === "excel" && <Spinner />} Excel
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    disabled={!!exportLoading}
-                    onClick={handlePdfExport}
-                  >
-                    {exportLoading === "pdf" && <Spinner />} PDF
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <Card className="w-full border bg-background shadow-none sm:w-auto">
-              <CardContent className="px-4 py-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total PKR:{" "}
-                  <span className="text-base font-bold text-foreground">
-                    {formatCurrency(total)}
-                  </span>
-                </CardTitle>
-              </CardContent>
-            </Card>
-          </div>
-        </PageTable>
-      </div>
+          filter
+          onFilterPress={() => setFilterVisible(true)}
+          reset
+          resetLoading={resetLoading}
+          onResetPress={async () => {
+            setResetLoading(true)
+            const startDate = momentT
+              .tz(TIMEZONE)
+              .startOf("month")
+              .startOf("day")
+              .utc()
+              .toISOString()
+            const endDate = momentT
+              .tz(TIMEZONE)
+              .endOf("month")
+              .endOf("day")
+              .utc()
+              .toISOString()
+            await fetchData(startDate, endDate)
+            setResetLoading(false)
+          }}
+        />
+      </section>
 
       <FilterSheet
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(val.start, val.end);
+          await fetchData(val.start, val.end)
         }}
       />
 
@@ -593,15 +506,9 @@ export default function EmployeeBranchExpenses() {
               .startOf("day")
               .utc()
               .toISOString(),
-            momentT
-              .tz(TIMEZONE)
-              .endOf("month")
-              .endOf("day")
-              .utc()
-              .toISOString(),
+            momentT.tz(TIMEZONE).endOf("month").endOf("day").utc().toISOString()
           )
-        }
-        }
+        }}
       />
 
       <ImageSheet
@@ -613,17 +520,18 @@ export default function EmployeeBranchExpenses() {
         date={imageURL?.date}
       />
     </div>
-  );
+  )
 }
 type ImageSheetProps = {
-  visible: boolean;
-  onClose: () => void;
-  img: string | null;
-  submittedBy: string | null;
-  onDelete: () => void;
-  loading?: boolean;
-  date: string | Date | undefined;
-};
+  visible: boolean
+  onClose: () => void
+  img: string | null
+  submittedBy: string | null
+  onDelete: () => void
+  loading?: boolean
+  date: string | Date | undefined
+}
+
 const ImageSheet = ({
   visible,
   onClose,
@@ -633,18 +541,17 @@ const ImageSheet = ({
   loading,
   date,
 }: ImageSheetProps) => {
+  const { isAdmin, branch_expenses_delete_access } = useUserDetail()
 
-  const { isAdmin, branch_expenses_delete_access } = useUserDetail();
-
-  const hasPermission = isAdmin || branch_expenses_delete_access;
+  const hasPermission = isAdmin || branch_expenses_delete_access
 
   const isCurrentOrFutureMonth =
-    date && !moment(date).startOf("day").isBefore(moment().startOf("month"));
+    date && !moment(date).startOf("day").isBefore(moment().startOf("month"))
 
-  const isAllowed = hasPermission && isCurrentOrFutureMonth;
+  const isAllowed = hasPermission && isCurrentOrFutureMonth
 
   function handleClose() {
-    onClose();
+    onClose()
   }
 
   return (
@@ -676,7 +583,7 @@ const ImageSheet = ({
                 <p className="text-xs font-medium text-muted-foreground">
                   Submitted by
                 </p>
-                <Label className="mt-1 block break-words text-sm font-semibold">
+                <Label className="mt-1 block text-sm font-semibold break-words">
                   {submittedBy || "N/A"}
                 </Label>
               </div>
@@ -685,12 +592,7 @@ const ImageSheet = ({
 
           <div className="overflow-hidden rounded-2xl border bg-muted/15 p-3">
             {img ? (
-
-              <MyImgZooming
-                img={img}
-                className="rounded-xl object-contain"
-              />
-
+              <MyImgZooming img={img} className="rounded-xl object-contain" />
             ) : (
               <div className="grid h-[220px] place-items-center rounded-xl border border-dashed bg-background text-sm text-muted-foreground">
                 No receipt image available
@@ -711,22 +613,31 @@ const ImageSheet = ({
         </div>
       </SheetContent>
     </Sheet>
-  );
-};
+  )
+}
 
 const formSchema = z.object({
   note: z.string().min(1, { message: "TID is required." }),
   amount: z.coerce.number<number>().min(0, "Amount is required"),
   date: z.date({ error: "Date is required." }),
   image: z.string().min(1, { message: "Image is required." }),
-});
+})
 
-type ExpenseFormValues = z.infer<typeof formSchema>;
+type ExpenseFormValues = z.infer<typeof formSchema>
 
-export const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, user_id: number | null | string }) => {
-  const [loading, setLoading] = useState(false);
+export const AddExpensesDialog = ({
+  visible,
+  onClose,
+  onRefresh,
+  user_id,
+}: {
+  visible: boolean
+  onClose: (val: boolean) => void
+  onRefresh: () => Promise<void>
+  user_id: number | null | string
+}) => {
+  const [loading, setLoading] = useState(false)
   const { state: OfficeState } = useContext(OfficeContext)!
-
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(formSchema),
@@ -736,67 +647,66 @@ export const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { vi
       date: undefined,
       image: "",
     },
-  });
+  })
 
   async function onSubmit(values: ExpenseFormValues) {
-    setLoading(true);
+    setLoading(true)
     try {
       if (values.image) {
         const name = `${OfficeState.value.data}/Expenses/${moment()
           .valueOf()
-          .toString()}.png`;
-        const imgRes = await UploadImage(values.image, name);
+          .toString()}.png`
+        const imgRes = await UploadImage(values.image, name)
         const response = await axios.post(`/${user_id}/expenses`, {
           ...values,
           submitted_by: user_id,
           image: name,
-        });
-        await onRefresh();
-        handleClose(false);
+        })
+        await onRefresh()
+        handleClose(false)
       } else {
         const response = await axios.post(`/${user_id}/expenses`, {
           ...values,
           submitted_by: user_id,
-        });
-        await onRefresh();
-        handleClose(false);
+        })
+        await onRefresh()
+        handleClose(false)
       }
     } catch (error) {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
   function handleClose(val: boolean) {
-    form.reset();
-    setLoading(false);
-    onClose(val);
+    form.reset()
+    setLoading(false)
+    onClose(val)
   }
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="overflow-hidden p-0 sm:max-w-lg">
-        <DialogHeader className="border-b bg-muted/20 px-5 py-5 text-left">
-          <div className="flex items-start gap-3">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
-              <Plus className="h-5 w-5" />
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+              <Plus className="h-4 w-4" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold tracking-tight">
+              <DialogTitle className="text-sm font-semibold text-foreground">
                 Add New Office Expense
               </DialogTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <DialogDescription className="text-xs text-muted-foreground">
                 Record amount, date, note, and receipt attachment.
-              </p>
+              </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(100dvh-140px)]">
-          <div className="p-5">
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
+          <div className="p-3.5 pb-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
               {/* Entry Details */}
-              <FieldSet className="gap-4 rounded-2xl border bg-background p-4 shadow-sm">
+              <FieldSet className="gap-3 rounded-xl border border-border bg-muted/20 p-3">
                 <FieldLegend className="px-1 text-sm font-semibold text-foreground">
                   Entry Details
                 </FieldLegend>
@@ -809,7 +719,9 @@ export const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { vi
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Note</FieldLabel>
                       <Textarea placeholder="Enter note" {...field} />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
                     </Field>
                   )}
                 />
@@ -823,7 +735,9 @@ export const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { vi
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel>Amount</FieldLabel>
                         <Input placeholder="Enter amount" {...field} />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
                       </Field>
                     )}
                   />
@@ -840,7 +754,9 @@ export const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { vi
                           date={field.value ? new Date(field.value) : undefined}
                           onChange={field.onChange}
                         />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
                       </Field>
                     )}
                   />
@@ -866,7 +782,9 @@ export const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { vi
                         description="PNG or JPG"
                         drag="Drop the files here..."
                       />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
                     </Field>
                   )}
                 />
@@ -879,8 +797,82 @@ export const AddExpensesDialog = ({ visible, onClose, onRefresh, user_id }: { vi
             </form>
           </div>
         </ScrollArea>
-
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
+
+const ExpenseExport = ({ data }: { data: OfficeExpenseProps[] }) => {
+  const [exportLoading, setExportLoading] = useState<"excel" | "pdf" | null>(
+    null
+  )
+
+  async function handleExcelExport() {
+    setExportLoading("excel")
+    try {
+      const headers = ["Date", "Note", "Amount", "Submitted By"]
+      let finalData = []
+      finalData = [...data]
+      const formattedData = finalData.map((item) => [
+        moment(item.date).format("YYYY-MM-DD"),
+        item.note,
+        Number(item.amount || 0),
+        item.submitted_by_name,
+        item.image,
+      ])
+      await exportToExcel(
+        headers,
+        formattedData,
+        "Branch-Expenses.xlsx",
+        false,
+        "",
+        true
+      )
+    } catch (error) {
+      console.log(error)
+      toast.error("Failed to export Excel")
+    } finally {
+      setExportLoading(null)
+    }
+  }
+
+  async function handlePdfExport() {
+    setExportLoading("pdf")
+    try {
+      const blob = await pdf(<ExpensePdfDocument data={data} />).toBlob()
+      saveAs(blob, "Branch-Expenses.pdf")
+    } catch (error) {
+      console.log(error)
+      toast.error("Failed to export PDF")
+    } finally {
+      setExportLoading(null)
+    }
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant={"outline"}
+          disabled={!!exportLoading}
+          className="gap-2"
+        >
+          {exportLoading ? <Spinner /> : <FileDown className="h-4 w-4" />}
+          Export
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-36">
+        <DropdownMenuItem
+          disabled={!!exportLoading}
+          onClick={handleExcelExport}
+        >
+          {exportLoading === "excel" && <Spinner />} Excel
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled={!!exportLoading} onClick={handlePdfExport}>
+          {exportLoading === "pdf" && <Spinner />} PDF
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}

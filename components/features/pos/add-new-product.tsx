@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger
@@ -134,14 +135,12 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
           <Plus className="ml-auto h-4 w-4 text-muted-foreground transition group-hover:text-primary" />
         </button>
       </DialogTrigger>
-      <DialogContent className="max-h-[92vh] w-[96vw] overflow-hidden rounded-md p-0 sm:max-w-2xl">
-        <DialogHeader className="border-b bg-muted/30 px-4 py-3">
-          <DialogTitle className="text-base font-bold">Add new stock item</DialogTitle>
-          <p className="text-xs text-muted-foreground">Add product details and upload a product image.</p>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-2xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><PackagePlus className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Add New Stock Item</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Add product details and upload a product image.</DialogDescription></div></div>
         </DialogHeader>
-        <div className="p-3">
-          <ScrollArea className="max-h-[72vh] pr-3">
-            <div className="space-y-3">
+          <ScrollArea className="max-h-[calc(100dvh-132px)]">
+            <div className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
               <div className="rounded-md border bg-card p-3">
                 <div className="mb-3 flex items-center gap-2">
                   <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
@@ -255,7 +254,6 @@ const AddNewProduct = ({ visible, onClose, onRefresh }) => {
               </Button>
             </div>
           </ScrollArea>
-        </div>
       </DialogContent>
     </Dialog>
   );

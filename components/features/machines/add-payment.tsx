@@ -1,21 +1,8 @@
 import Dropzone from "@/components/shared/uploads/dropzone";
 
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { debounce } from "@/lib/debounce";
-import { UploadImage } from "@/lib/uploadFunction";
-import { cn } from "@/lib/utils";
-import { OfficeContext } from "@/store/context/OfficeContext";
-import { zodResolver } from "@hookform/resolvers/zod";
-import moment from "moment";
-import Link from "next/link";
-import { useCallback, useContext, useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
 import AppCalendar from "@/components/features/calendar/app-calendar";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,6 +16,20 @@ import {
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useIsMobile } from "@/hooks/use-mobile";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { debounce } from "@/lib/debounce";
+import { UploadImage } from "@/lib/uploadFunction";
+import { cn } from "@/lib/utils";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { WalletCards } from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 const formSchema = z.object({
   note: z.string().min(1, { message: "TID is required." }),
@@ -172,12 +173,12 @@ const AddPayment = ({
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent
         className={cn(
-          "p-4 transition-all duration-200",
+          "max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-200",
           imageFile ? "sm:max-w-[90vw]" : "sm:max-w-md"
         )}
       >
-        <DialogHeader>
-          <DialogTitle className="text-xl">Add New Payment</DialogTitle>
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><WalletCards className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Add New Payment</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Record transaction, receiving account, and supporting details.</DialogDescription></div></div>
         </DialogHeader>
 
         <div className={cn(
@@ -190,193 +191,195 @@ const AddPayment = ({
             imageFile ? "w-[320px] shrink-0" : "w-full"
           )}>
 
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-              <ScrollArea className="h-[calc(100dvh-160px)] pr-3">
-                {/* Payment Info */}
-                <FieldSet className="border rounded-md p-3 gap-3">
-                  <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Payment Info</FieldLegend>
+            <ScrollArea className="max-h-[calc(100dvh-132px)] pb-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+                <div className="space-y-3 p-3.5 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
+                  {/* Payment Info */}
+                  <FieldSet className="border rounded-md p-3 gap-3">
+                    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Payment Info</FieldLegend>
 
-                  <Controller
-                    name="amount"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Amount</FieldLabel>
-                        <Input placeholder="Enter amount" {...field} />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
-                  />
-
-                  <Controller
-                    name="mode"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Payment Mode</FieldLabel>
-                        <Select
-                          value={field.value}
-                          onValueChange={(val) => {
-                            field.onChange(val);
-                            if (val === "Cash") {
-                              form.setValue("note", moment().format("YYYYMMDDHHmmss"));
-                              setLockTID(true);
-                            } else {
-                              if (form.getValues("note") && lockTID) {
-                                setLockTID(false);
-                              }
-                            }
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select payment mode" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {["Cheque", "Cash", "Deposit", "Online", "Pay Order"].map((m) => (
-                              <SelectItem key={m} value={m}>
-                                {m}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
-                  />
-
-                  <Controller
-                    name="note"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>TID</FieldLabel>
-                        <div className="flex items-center gap-2">
-                          <Input disabled={lockTID} placeholder="Enter TID" {...field} />
-                          {checking && <Spinner />}
-                        </div>
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
-                  />
-
-                  {error?.errorMessage && (
-                    <Link
-                      target="blank"
-                      className="text-red-500 text-sm"
-                      href={
-                        `/${base_route}/member/${error.saleData[0]?.customer_id}/${error?.machine_id}` ||
-                        "#"
-                      }
-                    >
-                      {error.errorMessage}
-                    </Link>
-                  )}
-
-                  {form.watch("mode") === "Cheque" && (
                     <Controller
-                      name="cheque_id"
+                      name="amount"
                       control={form.control}
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>Cheque ID</FieldLabel>
-                          <Input placeholder="Enter cheque ID" {...field} />
+                          <FieldLabel>Amount</FieldLabel>
+                          <Input placeholder="Enter amount" {...field} />
                           {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                         </Field>
                       )}
                     />
-                  )}
 
-                  <Controller
-                    name="received_by"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Bank Name</FieldLabel>
-                        <Input placeholder="Enter bank name" {...field} />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
+                    <Controller
+                      name="mode"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Payment Mode</FieldLabel>
+                          <Select
+                            value={field.value}
+                            onValueChange={(val) => {
+                              field.onChange(val);
+                              if (val === "Cash") {
+                                form.setValue("note", moment().format("YYYYMMDDHHmmss"));
+                                setLockTID(true);
+                              } else {
+                                if (form.getValues("note") && lockTID) {
+                                  setLockTID(false);
+                                }
+                              }
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select payment mode" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {["Cheque", "Cash", "Deposit", "Online", "Pay Order"].map((m) => (
+                                <SelectItem key={m} value={m}>
+                                  {m}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+
+                    <Controller
+                      name="note"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>TID</FieldLabel>
+                          <div className="flex items-center gap-2">
+                            <Input disabled={lockTID} placeholder="Enter TID" {...field} />
+                            {checking && <Spinner />}
+                          </div>
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+
+                    {error?.errorMessage && (
+                      <Link
+                        target="blank"
+                        className="text-red-500 text-sm"
+                        href={
+                          `/${base_route}/member/${error.saleData[0]?.customer_id}/${error?.machine_id}` ||
+                          "#"
+                        }
+                      >
+                        {error.errorMessage}
+                      </Link>
                     )}
-                  />
-                </FieldSet>
 
-                {/* Dates */}
-                <FieldSet className="border rounded-md p-3 gap-3">
-                  <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Dates</FieldLegend>
-
-                  <Controller
-                    name="transaction_date"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Transaction Date</FieldLabel>
-                        <AppCalendar date={field.value} onChange={field.onChange} />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
+                    {form.watch("mode") === "Cheque" && (
+                      <Controller
+                        name="cheque_id"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel>Cheque ID</FieldLabel>
+                            <Input placeholder="Enter cheque ID" {...field} />
+                            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                          </Field>
+                        )}
+                      />
                     )}
-                  />
 
-                  <Controller
-                    name="clearance_date"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Clearance Date</FieldLabel>
-                        <AppCalendar date={field.value} onChange={field.onChange} />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
-                  />
-                </FieldSet>
+                    <Controller
+                      name="received_by"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Bank Name</FieldLabel>
+                          <Input placeholder="Enter bank name" {...field} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+                  </FieldSet>
 
-                {/* Additional */}
-                <FieldSet className="border rounded-md p-3 gap-3">
-                  <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Additional</FieldLegend>
+                  {/* Dates */}
+                  <FieldSet className="border rounded-md p-3 gap-3">
+                    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Dates</FieldLegend>
 
-                  <Controller
-                    name="remarks"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Remarks</FieldLabel>
-                        <Textarea placeholder="Enter remarks" {...field} />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
-                  />
+                    <Controller
+                      name="transaction_date"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Transaction Date</FieldLabel>
+                          <AppCalendar date={field.value} onChange={field.onChange} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
 
-                  <Controller
-                    name="image"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Image</FieldLabel>
-                        <Dropzone
-                          noImage
-                          value={field.value}
-                          onDrop={(file) => field.onChange(file)}
-                          title="Click to upload"
-                          subheading="or drag and drop"
-                          description="PNG or JPG"
-                          drag="Drop the files here..."
-                        />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
-                  />
-                </FieldSet>
+                    <Controller
+                      name="clearance_date"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Clearance Date</FieldLabel>
+                          <AppCalendar date={field.value} onChange={field.onChange} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+                  </FieldSet>
 
-                 <Button
-                type="submit"
-                disabled={!!error?.errorMessage || checking || loading}
-                className="w-full"
-              >
-                {loading && <Spinner />} Submit
-              </Button>
-              </ScrollArea>
-              {/* Submit */}
-             
+                  {/* Additional */}
+                  <FieldSet className="border rounded-md p-3 gap-3">
+                    <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Additional</FieldLegend>
 
-            </form>
+                    <Controller
+                      name="remarks"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Remarks</FieldLabel>
+                          <Textarea placeholder="Enter remarks" {...field} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+
+                    <Controller
+                      name="image"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Image</FieldLabel>
+                          <Dropzone
+                            noImage
+                            value={field.value}
+                            onDrop={(file) => field.onChange(file)}
+                            title="Click to upload"
+                            subheading="or drag and drop"
+                            description="PNG or JPG"
+                            drag="Drop the files here..."
+                          />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+                  </FieldSet>
+
+                  <Button
+                    type="submit"
+                    disabled={!!error?.errorMessage || checking || loading}
+                    className="w-full"
+                  >
+                    {loading && <Spinner />} Submit
+                  </Button>
+                </div>
+                {/* Submit */}
+
+
+              </form>
+            </ScrollArea>
 
           </div>
 

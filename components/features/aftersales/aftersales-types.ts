@@ -164,7 +164,7 @@ export type CustomerEmployeeAfterSalesProps = {
     user_id: number | string,
     data: DashboardData | null,
     onFilterData: (a: string, b: string) => void,
-    handleClear: () => void,
+    handleClear: () => Promise<void>,
     selectedOption: string,
     setSelectedOption: Dispatch<SetStateAction<string>>,
     height?: string

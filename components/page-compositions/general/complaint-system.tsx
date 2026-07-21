@@ -12,6 +12,8 @@ import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowUpCircle,
+  CircleDollarSign,
+  Clock3,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -48,10 +50,11 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Field,
   FieldError,
@@ -360,21 +363,18 @@ export default function ComplaintSystem() {
   return (
     <div className="flex flex-1 flex-col gap-5 pb-6">
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <Heading
-          title="Complaint & Installation System"
-          description="Manage complaints, installations, engineers and payments"
-        />
-
-        <div className="flex flex-wrap items-center gap-3">
-          <SummaryBox label="Paid" value={totals.totalPaid} />
-          <SummaryBox label="Pending" value={totals.totalPending} />
-
+      <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="flex flex-col gap-3 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+          <Heading panel title="Complaint & Installation System" description="Manage complaints, installations, engineers and payments" />
           {(complaint_assigned || isAdmin) && (
             <Button onClick={() => setVisible(true)}>Register</Button>
           )}
         </div>
-      </div>
+        <div className="grid border-t bg-muted/20 sm:grid-cols-2 sm:divide-x">
+          <SummaryBox label="Paid" value={totals.totalPaid} />
+          <SummaryBox label="Pending" value={totals.totalPending} />
+        </div>
+      </section>
 
 
 
@@ -564,10 +564,14 @@ export default function ComplaintSystem() {
 }
 
 function SummaryBox({ label, value }: { label: string; value: number }) {
+  const Icon = label === "Paid" ? CircleDollarSign : Clock3;
   return (
-    <div className="min-w-[120px] rounded-lg border bg-background px-4 py-2 bg-card">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-lg font-semibold">{value.toLocaleString()}</p>
+    <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">
+      <Icon className={`size-4 ${label === "Paid" ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`} />
+      <div className="flex items-baseline gap-2">
+        <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{label}</span>
+        <span className="text-sm font-bold">{value.toLocaleString()}</span>
+      </div>
     </div>
   );
 }
@@ -890,12 +894,13 @@ const AddNewComplaint = ({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>New Registration</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-2xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><Headphones className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">New Registration</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Register customer complaint and service information.</DialogDescription></div></div>
         </DialogHeader>
-
+        <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="p-3.5 pb-4">
         <ComplaintFormContent form={form} loading={loading} onSubmit={onSubmit} />
+        </div></ScrollArea>
       </DialogContent>
     </Dialog>
   );
@@ -1166,11 +1171,11 @@ const AssignEngineerModal = ({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Assign Engineer</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><Wrench className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Assign Engineer</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Select the engineer responsible for this complaint.</DialogDescription></div></div>
         </DialogHeader>
-
+        <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="p-3.5 pb-4">
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
             <FieldSet className="rounded-lg border p-4">
@@ -1203,6 +1208,7 @@ const AssignEngineerModal = ({
             </Button>
           </FieldGroup>
         </form>
+        </div></ScrollArea>
       </DialogContent>
     </Dialog>
   );
@@ -1260,11 +1266,11 @@ const CloseComplaint = ({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Close Complaint</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><ShieldCheck className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Close Complaint</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Record the resolution details before closing.</DialogDescription></div></div>
         </DialogHeader>
-
+        <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="p-3.5 pb-4">
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
             <FieldSet className="rounded-lg border p-4">
@@ -1297,6 +1303,7 @@ const CloseComplaint = ({
             </Button>
           </FieldGroup>
         </form>
+        </div></ScrollArea>
       </DialogContent>
     </Dialog>
   );
@@ -1358,11 +1365,11 @@ const AddPaymentForComplaint = ({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Add Payment</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><CircleDollarSign className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Add Payment</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Record complaint payment and supporting information.</DialogDescription></div></div>
         </DialogHeader>
-
+        <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="p-3.5 pb-4">
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
             <FieldSet className="rounded-lg border p-4">
@@ -1477,6 +1484,7 @@ const AddPaymentForComplaint = ({
             </Button>
           </FieldGroup>
         </form>
+        </div></ScrollArea>
       </DialogContent>
     </Dialog>
   );
@@ -1639,15 +1647,15 @@ const EditComplaint = ({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Edit Complaint</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-2xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><Settings2 className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Edit Complaint</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Update complaint and customer service details.</DialogDescription></div></div>
         </DialogHeader>
-
+        <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="space-y-3 p-3.5 pb-4">
         <ComplaintFormContent form={form} loading={loading} onSubmit={onSubmit} />
 
         {data && (
-          <DialogFooter>
+          <div>
             <Button
               onClick={() => onDelete(data)}
               variant="destructive"
@@ -1656,8 +1664,9 @@ const EditComplaint = ({
             >
               Delete
             </Button>
-          </DialogFooter>
+          </div>
         )}
+        </div></ScrollArea>
       </DialogContent>
     </Dialog>
   );

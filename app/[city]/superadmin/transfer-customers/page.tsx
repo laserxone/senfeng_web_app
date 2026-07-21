@@ -98,40 +98,36 @@ export default function Page() {
 
     <div className="flex flex-1 flex-col gap-4 pb-4">
       <section className="overflow-hidden rounded-2xl border bg-background shadow-sm">
-        <div className="flex flex-col gap-4 p-4 sm:p-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="p-4 sm:p-5">
           <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-muted/30 px-3 py-1 text-xs font-medium text-muted-foreground">
-              <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
-              Ownership reassignment
-            </div>
             <Heading
+              panel
               title="Customer Transfers"
               description="Reassign customers between owners in just a few clicks"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            <div className="rounded-xl border bg-muted/15 px-3 py-2">
-              <p className="text-[11px] font-medium uppercase text-muted-foreground">
-                Customers
-              </p>
-              <p className="mt-1 text-lg font-bold">{customers.length}</p>
+        </div>
+        <div className="grid border-t bg-muted/20 sm:grid-cols-3 sm:divide-x">
+          <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
+            <UsersRound className="size-4 text-blue-600 dark:text-blue-400" />
+            <div className="flex items-baseline gap-2">
+              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Customers</span>
+              <span className="text-sm font-bold">{customers.length}</span>
             </div>
-            <div className="rounded-xl border bg-muted/15 px-3 py-2">
-              <p className="text-[11px] font-medium uppercase text-muted-foreground">
-                Selected
-              </p>
-              <p className="mt-1 text-lg font-bold text-blue-700">
-                {selectedCustomers.length}
-              </p>
+          </div>
+          <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
+            <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
+            <div className="flex items-baseline gap-2">
+              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Selected</span>
+              <span className="text-sm font-bold">{selectedCustomers.length}</span>
             </div>
-            <div className="col-span-2 rounded-xl border bg-muted/15 px-3 py-2 sm:col-span-1">
-              <p className="text-[11px] font-medium uppercase text-muted-foreground">
-                Status
-              </p>
-              <p className="mt-1 truncate text-sm font-semibold">
-                {fromUserId ? "Ready to select" : "Choose source"}
-              </p>
+          </div>
+          <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
+            <ArrowRightLeft className="size-4 text-violet-600 dark:text-violet-400" />
+            <div className="flex min-w-0 items-baseline gap-2">
+              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Status</span>
+              <span className="truncate text-sm font-bold">{fromUserId ? "Ready to select" : "Choose source"}</span>
             </div>
           </div>
         </div>

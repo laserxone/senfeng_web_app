@@ -160,12 +160,13 @@ const AddPOSPayment = ({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="w-full sm:max-w-[95vw] p-4">
-        <DialogHeader>
-          <DialogTitle>Add New Payment</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-[95vw]">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <DialogTitle className="text-sm font-semibold text-foreground">Add New Payment</DialogTitle>
         </DialogHeader>
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
         <div
-          className="flex flex-col sm:flex-row gap-4 sm:gap-6 max-h-[7d5vh] sm:max-h-[85vh]"
+          className="flex flex-col gap-3 p-3.5 pb-4 sm:flex-row"
           style={{
             display: "flex",
             flexDirection: imageFile ? "row" : "column",
@@ -173,8 +174,8 @@ const AddPOSPayment = ({
           }}
         >
           <div className="w-full sm:w-[30%] flex">
-            <ScrollArea className="px-2 w-full h-[calc(100dvh-160px)]">
-              <div className="px-2">
+            <div className="w-full">
+              <div>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
                   className="space-y-2"
@@ -415,7 +416,7 @@ const AddPOSPayment = ({
                   </FieldGroup>
                 </form>
               </div>
-            </ScrollArea>
+            </div>
           </div>
 
           {imageFile && (
@@ -428,6 +429,7 @@ const AddPOSPayment = ({
             </div>
           )}
         </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

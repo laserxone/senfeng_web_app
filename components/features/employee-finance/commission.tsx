@@ -12,7 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { CommissionCRMProps, CommissionMachineItemProps, CommissionOwnerProps } from "@/lib/types";
-import { ChevronRight } from "lucide-react";
+import { BadgeCheck, ChevronRight, CircleDollarSign, Clock3 } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { memo, useEffect, useState } from "react";
@@ -24,7 +24,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -347,8 +347,8 @@ const OwnerView = () => {
 
   return (
     <div className="flex min-w-0 flex-1 flex-col space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Heading title="Commission" description="Approve employee commission" />
+      <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <Heading panel title="Commission" description="Approve employee commission" />
       </div>
 
       {loading ? (
@@ -449,26 +449,30 @@ const OwnerView = () => {
           setVisibleDisapprove(val);
         }}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject Commission</DialogTitle>
+        <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
+          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-destructive/15 bg-destructive/10 text-destructive"><CircleDollarSign className="h-4 w-4" /></span>
+              <div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Reject Commission</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Provide a clear reason for rejecting this commission.</DialogDescription></div>
+            </div>
           </DialogHeader>
-          <div className="flex flex-col space-y-4">
-            <Label>Rejection Message</Label>
+          <ScrollArea className="max-h-[calc(100dvh-132px)]">
+          <div className="space-y-3 p-3.5 pb-4">
+            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Rejection Message</Label>
             <Input
               placeholder="Enter message"
               value={disapproveMsg}
               onChange={(e) => setDisapproveMsg(e.target.value)}
             />
-          </div>
-          <DialogFooter>
             <Button
               disabled={disapproveLoading || !disapproveMsg}
               onClick={handleDisapprove}
+              className="h-9 w-full rounded-lg"
             >
               {disapproveLoading && <Spinner />} Submit
             </Button>
-          </DialogFooter>
+          </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
@@ -756,9 +760,14 @@ const OtherView = () => {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-center justify-between">
-        <Heading title="Commission" description="Apply for your commission" />
-      </div>
+      <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="p-4 sm:p-5"><Heading panel title="Commission" description="Apply for your commission" /></div>
+        <div className="grid border-t bg-muted/20 sm:grid-cols-3 sm:divide-x">
+          <CommissionMetric icon={<CircleDollarSign className="size-4 text-violet-600 dark:text-violet-400" />} label="Eligible" value={data.length} />
+          <CommissionMetric icon={<Clock3 className="size-4 text-amber-600 dark:text-amber-400" />} label="Applied" value={data.filter((item) => Boolean(item.commission)).length} />
+          <CommissionMetric icon={<BadgeCheck className="size-4 text-emerald-600 dark:text-emerald-400" />} label="Issued" value={data.filter((item) => item.commission?.commission_issued).length} />
+        </div>
+      </section>
 
       {loading ? (
         <div className="flex flex-1 items-center justify-center">
@@ -793,6 +802,10 @@ const OtherView = () => {
     </div>
   );
 };
+
+function CommissionMetric({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+  return <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">{icon}<div className="flex items-baseline gap-2"><span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{label}</span><span className="text-sm font-bold">{value}</span></div></div>;
+}
 
 const CrmView = () => {
   const { userID } = useUserDetail();

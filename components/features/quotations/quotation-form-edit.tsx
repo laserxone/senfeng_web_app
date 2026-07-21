@@ -4,7 +4,7 @@ import AppCalendar from "@/components/features/calendar/app-calendar"
 import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data"
 import { PricesSearch } from "@/components/shared/search/prices-search"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -221,22 +221,17 @@ export function QuotationFormEdit({ onRefresh, data, id }: { onRefresh: () => Pr
       <Button size={"icon"} onClick={() => setOpen(true)}><SquarePen /></Button>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="w-full sm:max-w-4xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-blue-600" />
-              Quotation Details
-            </DialogTitle>
+        <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-4xl">
+          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><FileText className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Edit Quotation</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Update customer, machine, pricing, and delivery terms.</DialogDescription></div></div>
           </DialogHeader>
 
-
-
+          <ScrollArea className="max-h-[calc(100dvh-132px)]">
           <form
             onSubmit={form.handleSubmit(handleGeneratePDF)}
-            className="space-y-5"
+            className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground"
           >
-           <ScrollArea className="h-[calc(100dvh-200px)] pr-4">
-              <FieldSet className="rounded-xl border bg-muted/20 p-4">
+              <FieldSet className="rounded-xl border border-border bg-muted/20 p-3">
                 <FieldLegend className="px-2 text-sm font-medium">
                   Basic Information
                 </FieldLegend>
@@ -268,7 +263,7 @@ export function QuotationFormEdit({ onRefresh, data, id }: { onRefresh: () => Pr
                 </div>
               </FieldSet>
 
-              <FieldSet className="rounded-xl border bg-muted/20 p-4 mt-2">
+              <FieldSet className="mt-2 rounded-xl border border-border bg-muted/20 p-3">
                 <FieldLegend className="flex items-center gap-2 px-2 text-sm font-medium">
                   <Building2 className="h-4 w-4 text-blue-600" />
                   Customer Information
@@ -415,7 +410,7 @@ export function QuotationFormEdit({ onRefresh, data, id }: { onRefresh: () => Pr
                 </div>
               </FieldSet>
 
-              <FieldSet className="rounded-xl border bg-muted/20 p-4 mt-2">
+              <FieldSet className="mt-2 rounded-xl border border-border bg-muted/20 p-3">
                 <FieldLegend className="flex items-center gap-2 px-2 text-sm font-medium">
                   <Settings className="h-4 w-4 text-blue-600" />
                   Machine Details
@@ -596,8 +591,6 @@ export function QuotationFormEdit({ onRefresh, data, id }: { onRefresh: () => Pr
                 </div>
               </FieldSet>
 
-            </ScrollArea>
-
             <Button
               type="submit"
               className="w-full"
@@ -614,6 +607,7 @@ export function QuotationFormEdit({ onRefresh, data, id }: { onRefresh: () => Pr
               )}
             </Button>
           </form>
+          </ScrollArea>
 
 
         </DialogContent>

@@ -538,8 +538,10 @@ export default function BackupPartsPage() {
 
     return (
         <div className="flex flex-1 flex-col space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
                 <Heading
+                    panel
                     title="Backup Parts"
                     description="Manage and track all backup parts inventory and movements."
                 />
@@ -548,9 +550,9 @@ export default function BackupPartsPage() {
                     <Plus className="h-4 w-4" />
                     Add Backup Part
                 </Button>
-            </div>
+              </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid border-t bg-muted/20 sm:grid-cols-2 sm:divide-x xl:grid-cols-4">
                 <StatCard
                     label="Total Backup Parts"
                     value={stats.total}
@@ -579,7 +581,8 @@ export default function BackupPartsPage() {
                     icon={<Clock3 className="h-5 w-5" />}
                     variant="red"
                 />
-            </div>
+              </div>
+            </section>
 
             <PageTable
                 tableWidth="w-[calc(100dvw-30px)]"
@@ -638,28 +641,23 @@ function StatCard({
     variant: "blue" | "green" | "orange" | "red";
 }) {
     const variants = {
-        blue: "bg-blue-50 text-blue-600 ring-blue-100",
-        green: "bg-emerald-50 text-emerald-600 ring-emerald-100",
-        orange: "bg-orange-50 text-orange-600 ring-orange-100",
-        red: "bg-red-50 text-red-600 ring-red-100",
+        blue: "text-blue-600 dark:text-blue-400",
+        green: "text-emerald-600 dark:text-emerald-400",
+        orange: "text-orange-600 dark:text-orange-400",
+        red: "text-red-600 dark:text-red-400",
     };
 
     return (
-        <div className="rounded-lg border bg-background p-4 shadow-sm">
-            <div className="flex items-center gap-4">
-                <div
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ring-1 ${variants[variant]}`}
-                >
-                    {icon}
+        <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:[&:nth-child(2)]:border-t-0 xl:border-t-0 sm:px-5">
+            <div className={`shrink-0 [&>svg]:size-4 ${variants[variant]}`}>
+                {icon}
+            </div>
+            <div className="min-w-0">
+                <div className="flex items-baseline gap-2">
+                    <span className="truncate text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{label}</span>
+                    <span className="text-sm font-bold">{value}</span>
                 </div>
-
-                <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-muted-foreground">
-                        {label}
-                    </p>
-                    <p className="text-2xl font-bold tracking-tight">{value}</p>
-                    <p className="text-xs text-muted-foreground">{description}</p>
-                </div>
+                <p className="truncate text-[10px] text-muted-foreground">{description}</p>
             </div>
         </div>
     );

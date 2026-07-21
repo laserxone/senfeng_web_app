@@ -98,7 +98,7 @@ export default function FeedbackDialog({
                         onFilterData={(start, end) => {
                             setFilter({ start: moment(start), end: moment(end) });
                         }}
-                        handleClear={() => setFilter({ start: null, end: null })}
+                        handleClear={async() => setFilter({ start: null, end: null })}
                         selectedOption={selectedOption}
                         setSelectedOption={setSelectedOption}
                     />
@@ -318,21 +318,12 @@ const CustomerEmployeeAfterSales = ({
                     onRowClick={(val) => {
                         setSelectedDetail(val);
                     }}
+                    filter
+                    onFilterPress={()=> setFilterVisible(true)}
+                    reset
+                    onResetPress={handleClear}
                 >
                     <div className=" flex justify-between gap-2 flex-wrap items-center">
-                        <div className="flex flex-row gap-2 flex-wrap items-center">
-                            <Button
-                                onClick={() => setFilterVisible(true)}
-                                variant="ghost"
-                                className="p-0 w-8"
-                            >
-                                <Filter />
-                            </Button>
-                            <Button variant="destructive" onClick={() => handleClear()}>
-                                Clear
-                            </Button>
-                        </div>
-
                         {customer_add_access && (
                             <Button onClick={() => setAddCustomer(true)}>
                                 Add Customer

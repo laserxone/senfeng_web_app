@@ -1,22 +1,21 @@
 "use client";
 import { TIMEZONE } from "@/constants/data";
-import { ArrowUpDown, BadgeCheck, CircleDashed, Filter } from "lucide-react";
+import { ArrowUpDown, BadgeCheck, CircleDashed, ListTodo } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useState } from "react";
 
 
 import PageTable from "@/components/shared/tables/app-table";
-import Heading from "@/components/ui/heading";
 
+import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog";
+import FilterSheet from "@/components/features/users/filter-sheet";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { TaskProps } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import moment from "moment";
 import momentT from "moment-timezone";
-import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog";
-import FilterSheet from "@/components/features/users/filter-sheet";
 import TaskDetail from "./task-detail";
 
 
@@ -266,32 +265,47 @@ export default function TaskEmployee({ id }: { id: number | string }) {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-center justify-between">
-        <Heading title="Task Management" description="Manage tasks" />
+      <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="flex flex-col gap-3 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+              <ListTodo className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Task Management</h1>
+                <span className="hidden rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold tracking-wide text-muted-foreground uppercase sm:inline-flex">Task workspace</span>
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">Review and manage assigned tasks.</p>
+            </div>
+          </div>
+          <AddTaskDialog
+            onRefresh={async () => {
+              const startDate = momentT
+                .tz(TIMEZONE)
+                .subtract(2, "months")
+                .startOf("month")
+                .startOf("day")
+                .utc()
+                .toISOString();
+              const endDate = momentT
+                .tz(TIMEZONE)
+                .endOf("month")
+                .endOf("day")
+                .utc()
+                .toISOString();
 
-        <AddTaskDialog
-          onRefresh={async () => {
-            const startDate = momentT
-              .tz(TIMEZONE)
-              .subtract(2, "months")
-              .startOf("month")
-              .startOf("day")
-              .utc()
-              .toISOString();
-            const endDate = momentT
-              .tz(TIMEZONE)
-              .endOf("month")
-              .endOf("day")
-              .utc()
-              .toISOString();
-
-            await fetchData(userID, startDate, endDate);
-          }}
-          user_id={userID}
-        />
-
-
-      </div>
+              await fetchData(userID, startDate, endDate);
+            }}
+            user_id={userID}
+          />
+        </div>
+        <div className="grid border-t bg-muted/20 sm:grid-cols-3 sm:divide-x">
+          <Metric icon={<ListTodo className="size-4 text-violet-600 dark:text-violet-400" />} label="Total tasks" value={data.length} />
+          <Metric icon={<BadgeCheck className="size-4 text-emerald-600 dark:text-emerald-400" />} label="Completed" value={data.filter((task) => task.status?.toLowerCase() === "completed").length} />
+          <Metric icon={<CircleDashed className="size-4 text-amber-600 dark:text-amber-400" />} label="Pending" value={data.filter((task) => task.status?.toLowerCase() !== "completed").length} />
+        </div>
+      </section>
 
       <PageTable
         columns={columns}
@@ -300,15 +314,10 @@ export default function TaskEmployee({ id }: { id: number | string }) {
         onRowClick={(val) => {
           updateTaskQuery(val.id);
         }}
+        filter
+        onFilterPress={() => setFilterVisible(true)}
       >
-        <Button
-          onClick={() => setFilterVisible(true)}
-          variant="ghost"
-          className="p-0 w-8"
-        >
-          <Filter />
-        </Button>
-      </PageTable>
+        /</PageTable>
 
       <TaskDetail
         user_id={userID}
@@ -335,4 +344,8 @@ export default function TaskEmployee({ id }: { id: number | string }) {
       />
     </div>
   );
+}
+
+function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+  return <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">{icon}<div className="flex items-baseline gap-2"><span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{label}</span><span className="text-sm font-bold">{value}</span></div></div>;
 }

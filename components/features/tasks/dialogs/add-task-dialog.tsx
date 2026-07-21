@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -19,7 +20,7 @@ import Spinner from "@/components/ui/spinner";
 import { UserSearch } from "@/components/shared/search/user-search";
 import axios from "@/lib/axios";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, ListTodo } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -201,18 +202,28 @@ children,
           </Button>
         </DialogTrigger>
       )}
-        <DialogContent className="w-full sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
+        <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-xl">
+          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+                <ListTodo className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <DialogTitle className="text-sm font-semibold text-foreground">{title}</DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Add the task details, assignment, and customer context.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
 
-          <ScrollArea className="max-h-[calc(100dvh-160px)]">
-            <div className="py-4">
+          <ScrollArea className="max-h-[calc(100dvh-132px)]">
+            <div className="p-3.5">
               <form
                 onSubmit={handleSubmit(onSubmit, (e) => {
                   console.log(e);
                 })}
-                className="space-y-4"
+                className="space-y-3 [&_input]:h-9 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground"
               >
                 <FieldGroup>
                   <Controller
@@ -330,7 +341,7 @@ children,
                     </>
                   )}
 
-                  <Button disabled={loading || !creatorId} className="w-full" type="submit">
+                  <Button disabled={loading || !creatorId} className="h-9 w-full rounded-lg" type="submit">
                     {loading && <Spinner />} Submit
                   </Button>
                 </FieldGroup>

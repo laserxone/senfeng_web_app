@@ -2,8 +2,11 @@
 import { Button } from "@/components/ui/button";
 import {
     ArrowUpDown,
-    Filter,
+    Banknote,
+    CircleCheck,
+    Clock3,
     Loader2,
+    ReceiptText,
     Trash
 } from "lucide-react";
 import {
@@ -12,8 +15,9 @@ import {
     useState
 } from "react";
 
+import FilterSheet from "@/components/features/users/filter-sheet";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
 import PageTable from "@/components/shared/tables/app-table";
-import Heading from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Sheet,
@@ -22,7 +26,6 @@ import {
     SheetTitle,
 } from "@/components/ui/sheet";
 import Spinner from "@/components/ui/spinner";
-import FilterSheet from "@/components/features/users/filter-sheet";
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
@@ -31,7 +34,6 @@ import { ColumnDef } from "@tanstack/react-table";
 import moment from "moment";
 import momentT from "moment-timezone";
 import Link from "next/link";
-import { MyImgZooming } from "@/components/shared/media/img-zooming";
 
 export default function ReimbursementApproval() {
     const [filterVisible, setFilterVisible] = useState(false);
@@ -253,36 +255,47 @@ export default function ReimbursementApproval() {
             header: "Action",
             cell: ({ row }) => {
                 const currentItem = row.original;
+                const isVerifying = selectedItem === currentItem?.id;
+                const isDeleting = deleteItem === currentItem?.id;
 
                 return (
-                    <div>
+                    <div className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1 shadow-sm">
                         <Button
-                            disabled={selectedItem === currentItem?.id}
+                            size="xs"
+                            variant="outline"
+                            className="border-emerald-500/25 bg-background px-2.5 text-emerald-700 shadow-none hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
+                            disabled={isVerifying || isDeleting}
+                            aria-label="Verify reimbursement"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleVerify(currentItem?.id);
                             }}
                         >
-                            {selectedItem === currentItem?.id ? (
-                                <Spinner />
+                            {isVerifying ? (
+                                <Spinner className="size-3" />
                             ) : (
-                                "Verify"
+                                <CircleCheck className="size-3.5" />
                             )}
+                            Verify
                         </Button>
 
                         <Button
-                            variant={"destructive"}
-                            disabled={deleteItem === currentItem?.id}
+                            size="xs"
+                            variant="ghost"
+                            className="px-2.5 text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/15"
+                            disabled={isDeleting || isVerifying}
+                            aria-label="Delete reimbursement"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleDelete(currentItem?.id);
                             }}
                         >
-                            {deleteItem === currentItem?.id ? (
-                                <Spinner />
+                            {isDeleting ? (
+                                <Spinner className="size-3" />
                             ) : (
-                                "Delete"
+                                <Trash className="size-3.5" />
                             )}
+                            Delete
                         </Button>
                     </div>
                 );
@@ -345,10 +358,25 @@ export default function ReimbursementApproval() {
 
     return (
         <div className="flex flex-1 flex-col space-y-4">
-            <div className="flex justify-between flex-wrap">
-                <Heading title="Reimbursement" description="Manage reimbursements" />
-
-            </div>
+            <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+                <div className="flex min-w-0 items-center gap-3 px-4 py-4 sm:px-5">
+                    <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+                        <ReceiptText className="size-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Reimbursement</h1>
+                            <span className="hidden rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold tracking-wide text-muted-foreground uppercase sm:inline-flex">Approval workspace</span>
+                        </div>
+                        <p className="mt-0.5 text-xs text-muted-foreground">Review and manage reimbursement requests.</p>
+                    </div>
+                </div>
+                <div className="grid border-t bg-muted/20 sm:grid-cols-3 sm:divide-x">
+                    <ApprovalMetric icon={<ReceiptText className="size-4 text-violet-600 dark:text-violet-400" />} label="Requests" value={data.length} />
+                    <ApprovalMetric icon={<Clock3 className="size-4 text-amber-600 dark:text-amber-400" />} label="Pending" value={data.filter((item) => !item.verified).length} />
+                    <ApprovalMetric icon={<Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />} label="Total amount" value={data.reduce((sum, item) => sum + Number(item.amount || 0), 0).toLocaleString()} />
+                </div>
+            </section>
 
             <div className="flex flex-1 min-h-[600px]">
                 <PageTable
@@ -359,39 +387,29 @@ export default function ReimbursementApproval() {
                         setImageURL(val);
                         setVisible(true);
                     }}
-                >
-                    <Button
-                        onClick={() => setFilterVisible(true)}
-                        variant="ghost"
-                        className="p-0 w-8"
-                    >
-                        <Filter />
-                    </Button>
+                    filter
+                    reset
+                    resetLoading={resetLoading}
+                    onResetPress={async () => {
+                        setResetLoading(true);
+                        const startDate = momentT
+                            .tz(TIMEZONE)
+                            .startOf("month")
+                            .startOf("day")
+                            .utc()
+                            .toISOString();
+                        const endDate = momentT
+                            .tz(TIMEZONE)
+                            .endOf("month")
+                            .endOf("day")
+                            .utc()
+                            .toISOString();
+                        await fetchData(startDate, endDate);
+                        setResetLoading(false);
+                    }}
+                    onFilterPress={() => setFilterVisible(true)}
+                />
 
-                    <Button
-                        variant="destructive"
-                        onClick={async () => {
-                            setResetLoading(true);
-                            const startDate = momentT
-                                .tz(TIMEZONE)
-                                .startOf("month")
-                                .startOf("day")
-                                .utc()
-                                .toISOString();
-                            const endDate = momentT
-                                .tz(TIMEZONE)
-                                .endOf("month")
-                                .endOf("day")
-                                .utc()
-                                .toISOString();
-                            await fetchData(startDate, endDate);
-                            setResetLoading(false);
-                        }}
-                    >
-                        {resetLoading && <Spinner />} Reset
-                    </Button>
-
-                </PageTable>
             </div>
             <FilterSheet
                 user_disable={false}
@@ -414,10 +432,12 @@ export default function ReimbursementApproval() {
                     return true;
                 }}
             />
-
-
         </div>
     );
+}
+
+function ApprovalMetric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
+    return <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">{icon}<div className="flex min-w-0 items-baseline gap-2"><span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{label}</span><span className="truncate text-sm font-bold">{value}</span></div></div>;
 }
 const ImageSheet = ({
     visible,

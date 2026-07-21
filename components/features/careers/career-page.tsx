@@ -58,41 +58,42 @@ export default function CareerPage() {
   return (
     <div className="flex flex-1 flex-col gap-4 pb-4">
       <section className="overflow-hidden rounded-2xl border bg-background shadow-sm">
-        <div className="flex flex-col gap-5 p-4 sm:p-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-muted/30 px-3 py-1 text-xs font-medium text-muted-foreground">
-              <BriefcaseBusiness className="h-3.5 w-3.5 text-blue-600" />
-              Hiring pipeline
+        <div className="p-4 sm:p-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+              <BriefcaseBusiness className="size-5" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-              Resume Applications
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              View submitted applications, review cover letters, and open uploaded CVs.
-            </p>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Resume Applications</h1>
+                <span className="hidden rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold tracking-wide text-muted-foreground uppercase sm:inline-flex">Workspace</span>
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">Review submitted applications and uploaded CVs.</p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:min-w-[520px]">
+        </div>
+
+          <div className="grid border-t bg-muted/20 sm:grid-cols-3 sm:divide-x">
             <CareerStatCard
               title="Total Resumes"
               value={totalResumes}
               icon={UsersRound}
-              iconClassName="bg-blue-50 text-blue-700 ring-blue-100"
+              iconClassName="text-blue-600 dark:text-blue-400"
             />
             <CareerStatCard
               title="With CV"
               value={withCv}
               icon={FileText}
-              iconClassName="bg-emerald-50 text-emerald-700 ring-emerald-100"
+              iconClassName="text-emerald-600 dark:text-emerald-400"
             />
             <CareerStatCard
               title="Positions"
               value={positions}
               icon={BriefcaseBusiness}
-              iconClassName="bg-violet-50 text-violet-700 ring-violet-100"
+              iconClassName="text-violet-600 dark:text-violet-400"
             />
           </div>
-        </div>
       </section>
 
       <Card className="rounded-2xl border-border/70 shadow-sm">
@@ -134,15 +135,11 @@ function CareerStatCard({
   iconClassName: string;
 }) {
   return (
-    <div className="rounded-2xl border bg-muted/15 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground">{title}</p>
-          <p className="mt-2 text-2xl font-bold">{value}</p>
-        </div>
-        <div className={`grid h-10 w-10 place-items-center rounded-xl ring-1 ${iconClassName}`}>
-          <Icon className="h-4 w-4" />
-        </div>
+    <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">
+      <Icon className={`size-4 ${iconClassName}`} />
+      <div className="flex min-w-0 items-baseline gap-2">
+        <span className="truncate text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{title}</span>
+        <span className="text-sm font-bold">{value}</span>
       </div>
     </div>
   )

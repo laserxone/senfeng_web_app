@@ -1,7 +1,7 @@
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -87,20 +87,20 @@ export default function AddCheque({
 
   return (
     <Dialog open={visible} onOpenChange={onClose}>
-      <DialogContent className="flex max-h-[94dvh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border-slate-200 bg-white p-0 shadow-2xl sm:rounded-2xl md:max-w-3xl lg:max-w-6xl">
-        <DialogHeader className="border-b border-slate-200 bg-slate-50/90 px-4 py-4 sm:px-6">
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground md:max-w-3xl lg:max-w-6xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-sm">
-                <CreditCard className="h-5 w-5" />
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+                <CreditCard className="h-4 w-4" />
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg font-semibold tracking-normal text-slate-950 sm:text-xl">
+                <DialogTitle className="text-sm font-semibold text-foreground">
                   Credit Cheque
                 </DialogTitle>
-                <p className="mt-1 text-xs font-medium text-slate-500 sm:text-sm">
+                <DialogDescription className="text-xs text-muted-foreground">
                   Add installment dates, amounts, and cheque images.
-                </p>
+                </DialogDescription>
               </div>
             </div>
             <div className="flex w-fit items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
@@ -110,8 +110,8 @@ export default function AddCheque({
           </div>
         </DialogHeader>
 
-        <ScrollArea className="h-[calc(100dvh-300px)] bg-slate-50/40">
-          <div className="px-3 py-1 sm:px-6">
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
+          <div className="space-y-3 p-3.5">
             <ChequeCredit
               setTotal={setTotal}
               setValue={setValue}
@@ -125,18 +125,11 @@ export default function AddCheque({
                 {errors}
               </Label>
             )}
+            <Button disabled={loading} onClick={handleSubmit} className="h-9 w-full rounded-lg">
+              {loading && <Spinner />} Submit
+            </Button>
           </div>
         </ScrollArea>
-
-        <DialogFooter className="px-6 pb-6">
-          <Button
-            disabled={loading}
-            onClick={handleSubmit}
-            className=""
-          >
-            {loading && <Spinner />} Submit
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -1,15 +1,17 @@
 "use client";
 
-import PageTable from "@/components/shared/tables/app-table";
+import FilterSheet from "@/components/features/users/filter-sheet";
 import CurrencyFormatter from "@/components/shared/common/currency-formatter";
+import PageTable from "@/components/shared/tables/app-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import  Heading  from "@/components/ui/heading";
+import Heading from "@/components/ui/heading";
 import { Skeleton } from "@/components/ui/skeleton";
-import FilterSheet from "@/components/features/users/filter-sheet";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { ArrowUpDown, Filter } from "lucide-react";
+import { FinanceProps } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown, Banknote, CircleDollarSign, Clock3 } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -17,7 +19,7 @@ import { useEffect, useState } from "react";
 export default function Page() {
   const [filterVisible, setFilterVisible] = useState(false);
   const { userID, base_route } = useUserDetail();
-  const [tableData, setTableData] = useState([]);
+  const [tableData, setTableData] = useState<FinanceProps[]>([]);
   const [loading, setLoading] = useState(false);
   const [commulative, setCommulative] = useState({
     total: 0,
@@ -25,7 +27,7 @@ export default function Page() {
     received: 0,
   });
   const [commloading, setCommloading] = useState(false);
-  const [filterDate, setFilterDate] = useState({ start: null, end: null });
+  const [filterDate, setFilterDate] = useState<{ start: string | null, end: string | null }>({ start: null, end: null });
 
   useEffect(() => {
     if (userID) fetchCommulative();
@@ -63,7 +65,7 @@ export default function Page() {
     },
   );
 
-  const columns = [
+  const columns: ColumnDef<FinanceProps>[] = [
     {
       accessorKey: "customer_owner",
       filterFn: "includesString",
@@ -148,8 +150,8 @@ export default function Page() {
         <div>
           {row.getValue("machine_contract_date")
             ? moment(new Date(row.getValue("machine_contract_date"))).format(
-                "YYYY-MM-DD",
-              )
+              "YYYY-MM-DD",
+            )
             : "-"}
         </div>
       ),
@@ -224,135 +226,57 @@ export default function Page() {
     },
   ];
 
-  async function fetchData(startDate, endDate, user = null) {
-    return new Promise((resolve, reject) => {
-      axios
+  async function fetchData(startDate = "", endDate = "", user: string | null | number = null) {
+
+    try {
+      const response = await axios
         .get(
           `/${userID}/finance?start_date=${startDate}&end_date=${endDate}&user=${user || ""}`,
         )
-        .then((response) => {
-          setTableData(response.data);
-        })
-        .finally(() => {
-          setLoading(false);
-          resolve();
-        });
-
+      setTableData(response.data);
       setFilterDate({
         start: startDate,
         end: endDate,
       });
-    });
+    } finally {
+      setLoading(false);
+    }
+
   }
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-center justify-between space-y-2">
+      <div className="flex items-center justify-between rounded-t-2xl border border-b-0 bg-card p-4 sm:p-5">
         <Heading
-          className="my-2"
+          panel
           title={"Finance"}
           description={"Manage finance"}
         />
       </div>
-      <div className="flex flex-row justify-between flex-wrap gap-4">
-        <Card className="w-full sm:w-auto sm:min-w-[350px]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Bill Generated
-            </CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            {commloading ? (
-              <Skeleton className="h-6 w-32" />
-            ) : (
-              <div className="text-2xl font-bold">
-                <CurrencyFormatter amount={commulative?.total} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <div className="!-mt-4 grid overflow-hidden rounded-b-2xl border bg-muted/20 shadow-sm sm:grid-cols-3 sm:divide-x">
+        <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
+          <Banknote className="size-4 text-violet-600 dark:text-violet-400" />
+          <div className="flex min-w-0 items-baseline gap-2">
+            <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Bill generated</span>
+            <span className="truncate text-sm font-bold">{commloading ? <Skeleton className="h-4 w-20" /> : <CurrencyFormatter amount={commulative?.total} />}</span>
+          </div>
+        </div>
 
-        <Card className="w-full sm:w-auto sm:min-w-[350px]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Payment Received
-            </CardTitle>
-            {commulative?.received ? (
-              <div>
-                {`${((Number(commulative.received) * 100) / Number(commulative.total)).toFixed(0)}%`}{" "}
-              </div>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                className="h-4 w-4 text-muted-foreground"
-              >
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-              </svg>
-            )}
-          </CardHeader>
-          <CardContent>
-            {commloading ? (
-              <Skeleton className="h-6 w-24" />
-            ) : (
-              <div className="text-2xl font-bold text-green-700">
-                <CurrencyFormatter amount={commulative?.received} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
+          <CircleDollarSign className="size-4 text-emerald-600 dark:text-emerald-400" />
+          <div className="flex min-w-0 items-baseline gap-2">
+            <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Received</span>
+            <span className="truncate text-sm font-bold">{commloading ? <Skeleton className="h-4 w-20" /> : <CurrencyFormatter amount={commulative?.received} />}</span>
+          </div>
+        </div>
 
-        <Card className="w-full sm:w-auto sm:min-w-[350px]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Payment Pending
-            </CardTitle>
-            {commulative?.pending ? (
-              <div>
-                {`${((Number(commulative.pending) * 100) / Number(commulative.total)).toFixed(0)}%`}{" "}
-              </div>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                className="h-4 w-4 text-muted-foreground"
-              >
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-              </svg>
-            )}
-          </CardHeader>
-          <CardContent>
-            {commloading ? (
-              <Skeleton className="h-6 w-24" />
-            ) : (
-              <div className="text-2xl font-bold text-red-700">
-                <CurrencyFormatter amount={commulative?.pending} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
+          <Clock3 className="size-4 text-red-600 dark:text-red-400" />
+          <div className="flex min-w-0 items-baseline gap-2">
+            <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Pending</span>
+            <span className="truncate text-sm font-bold">{commloading ? <Skeleton className="h-4 w-20" /> : <CurrencyFormatter amount={commulative?.pending} />}</span>
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-row justify-between flex-wrap gap-4">
@@ -427,26 +351,17 @@ export default function Page() {
         loading={loading}
         columns={columns}
         data={tableData}
-        onRowClick={(val, e) => {}}
-        // filter={true}
-        // onFilterClick={() => setFilterVisible(true)}
-      >
-        <Button
-          onClick={() => setFilterVisible(true)}
-          variant="ghost"
-          className="p-0 w-8"
-        >
-          <Filter />
-        </Button>
-      </PageTable>
+        onRowClick={(val, e) => { }}
+        filter
+        onFilterPress={() => setFilterVisible(true)}
+      />
 
       <FilterSheet
-        user_disable={false}
         visible={filterVisible}
         onClose={setFilterVisible}
         onReturn={async (val) => {
           setLoading(true);
-          await fetchData(val.start, val.end, val.user);
+          await fetchData(val.start, val.end, userID);
         }}
       />
     </div>

@@ -6,10 +6,11 @@ import { RequiredStar } from "@/components/shared/common/RequiredStar";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ListPlus } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -276,15 +277,15 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }: { visible:
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>Add in existing order</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-3xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><ListPlus className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Add to Existing Order</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Add and configure new inventory items for this order.</DialogDescription></div></div>
         </DialogHeader>
 
-        <ScrollArea className="h-[70vh] pr-4">
-          <div className="space-y-6">
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
+          <div className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
             {items.map((item, index) => (
-              <div key={index} className="border p-4 rounded-md space-y-4">
+              <div key={index} className="space-y-3 rounded-xl border border-border bg-muted/20 p-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-base font-medium">
                     Item #{index + 1}
@@ -670,20 +671,20 @@ const AddOrderDialog = ({ visible, onClose, user_id, onRefresh, id }: { visible:
               </div>
             ))}
           </div>
-        </ScrollArea>
 
-        <Button onClick={addItem} className="mt-4">
+        <Button onClick={addItem} className="mx-3.5 mt-3">
           Add New Item
         </Button>
 
-        <DialogFooter className="mt-6">
+        <div className="mx-3.5 mb-4 mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
           <Button type="button" variant="secondary" onClick={() => handleClose(false)}>
             Cancel
           </Button>
           <Button disabled={loading} onClick={handleSubmit}>
             {loading && <Spinner />}Add Order Items
           </Button>
-        </DialogFooter>
+        </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

@@ -209,8 +209,8 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <Heading title="Team" description="Manage team members" />
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+        <Heading panel title="Team" description="Manage team members" />
         <Button
           onClick={() => {
             setOpen(true);
@@ -360,13 +360,13 @@ const AddUserDialog = ({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Add new user</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-[425px]">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <DialogTitle className="text-sm font-semibold text-foreground">Add New User</DialogTitle>
         </DialogHeader>
-           <ScrollArea className="h-[70vh] pr-2">
+           <ScrollArea className="max-h-[calc(100dvh-132px)]">
         
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
   
   {/* Personal Information */}
   <FieldSet className="border rounded-md p-3 gap-3">

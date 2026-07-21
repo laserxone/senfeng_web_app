@@ -1,161 +1,182 @@
-"use client";
-import { Button } from "@/components/ui/button";
-import { useTodos } from "@/hooks/use-todos";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { ListCheck, X } from "lucide-react";
-import moment from "moment";
-import { MouseEventHandler, useEffect, useState } from "react";
-import { BellNotification } from "@/components/shared/notifications/NotificationBadge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import Spinner from "@/components/ui/spinner";
+"use client"
+import { Button } from "@/components/ui/button"
+import { useTodos } from "@/hooks/use-todos"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { ListCheck, X } from "lucide-react"
+import moment from "moment"
+import { useEffect, useState } from "react"
+import { BellNotification } from "@/components/shared/notifications/NotificationBadge"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import Spinner from "@/components/ui/spinner"
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
-function FloatingTodoButton({ onClick, pending }: { onClick: MouseEventHandler<HTMLButtonElement>, pending: number }) {
+function FloatingTodoButton({ pending }: { pending: number }) {
   return (
-    <Button size="icon" variant="outline" onClick={onClick}>
+    <Button
+      size="icon"
+      variant="outline"
+      className="relative rounded-xl"
+      aria-label="Open todo list"
+    >
       <BellNotification Icon={ListCheck} count={pending} />
     </Button>
   )
 }
 
-
 export default function FloatingTodo() {
-  const [isOpen, setIsOpen] = useState(false);
-  const { tasks, setTasks, fetchTasks } = useTodos();
-  const [newTask, setNewTask] = useState("");
-  const { userID } = useUserDetail();
-  const [loading, setLoading] = useState(false);
-
+  const [isOpen, setIsOpen] = useState(false)
+  const { tasks, setTasks, fetchTasks } = useTodos()
+  const [newTask, setNewTask] = useState("")
+  const { userID } = useUserDetail()
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (userID) fetchTasks();
-  }, [userID]);
+    if (userID) fetchTasks()
+  }, [userID])
 
   const addTask = async () => {
-    if (!newTask.trim()) return;
+    if (!newTask.trim()) return
 
-    const tempId = Date.now();
-    const optimisticTask = { id: tempId, title: newTask, is_done: false };
-    setTasks((prev) => [...prev, optimisticTask]);
-    setNewTask("");
+    const tempId = Date.now()
+    const optimisticTask = { id: tempId, title: newTask, is_done: false }
+    setTasks((prev) => [...prev, optimisticTask])
+    setNewTask("")
 
     try {
       const response = await axios.post(`/${userID}/todo`, {
         title: newTask,
-      });
+      })
 
-      setTasks((prev) =>
-        prev.map((t) => (t.id === tempId ? response.data : t)),
-      );
+      setTasks((prev) => prev.map((t) => (t.id === tempId ? response.data : t)))
     } catch (err) {
-      setTasks((prev) => prev.filter((t) => t.id !== tempId));
-      console.error("Failed to add task:", err);
+      setTasks((prev) => prev.filter((t) => t.id !== tempId))
+      console.error("Failed to add task:", err)
     }
-  };
+  }
 
   const toggleTask = async (id: number, done: boolean) => {
-
     setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, is_done: done } : t)),
-    );
+      prev.map((t) => (t.id === id ? { ...t, is_done: done } : t))
+    )
 
     try {
       await axios.put(`/${userID}/todo/${id}`, {
         is_done: done,
-      });
+      })
     } catch (err) {
       setTasks((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, is_done: !done } : t)),
-      );
-      console.error("Failed to update task:", err);
-    }
-  };
-
-  async function handleClear() {
-    setLoading(true);
-    try {
-      await axios.get(`/${userID}/todo/clear`);
-      await fetchTasks();
-    } finally {
-      setLoading(false);
+        prev.map((t) => (t.id === id ? { ...t, is_done: !done } : t))
+      )
+      console.error("Failed to update task:", err)
     }
   }
 
+  async function handleClear() {
+    setLoading(true)
+    try {
+      await axios.get(`/${userID}/todo/clear`)
+      await fetchTasks()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const pendingTasks = tasks.filter((task) => !task.is_done)
+  const completedTasks = tasks.filter((task) => task.is_done)
+
   return (
-    <>
-      <FloatingTodoButton
-        onClick={() => setIsOpen(!isOpen)}
-        pending={tasks.filter((t) => !t.is_done).length}
-      />
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
+       <Button
+      size="icon"
+      variant="outline"
+      className="relative rounded-xl"
+      aria-label="Open todo list"
+    >
+      <BellNotification Icon={ListCheck} count={pendingTasks.length} />
+    </Button>
+      </SheetTrigger>
 
-      <div
-        className={`absolute bottom-0 right-0  w-[calc(100vw-30px)] sm:w-96 h-[600px]
-    bg-white dark:bg-neutral-900 rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col
-    overflow-hidden border transition-all z-99 duration-200 z-10 sm:mx-0 ${isOpen ? "block" : "hidden"
-          }`}
+      <SheetContent
+        showCloseButton={false}
+        className="w-full gap-0 sm:max-w-md"
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
-          <div className="flex items-center gap-2">
-            <p className="font-semibold text-sm">My Todo List</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div
-              className="cursor-pointer hover:text-red-500"
-              onClick={() => {
-                setIsOpen(!isOpen);
-              }}
-            >
-              <X size={18} />
+        <SheetHeader className="border-b px-5 py-4 text-left">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <SheetTitle className="text-lg font-semibold tracking-tight">
+                My Todo List
+              </SheetTitle>
+              <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">
+                {pendingTasks.length}
+              </span>
             </div>
+            <SheetClose asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Close todo list"
+              >
+                <X />
+              </Button>
+            </SheetClose>
           </div>
-        </div>
+          <SheetDescription className="text-xs">
+            Keep track of your pending and completed tasks
+          </SheetDescription>
+        </SheetHeader>
 
-        <div className="flex-1 p-2">
-          <ScrollArea className="flex-1 h-[480px] my-2 pr-4">
+        <ScrollArea className="min-h-0 flex-1">
+          <div className="p-4">
             <div className="space-y-6">
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">
                   Pending
                 </Label>
                 <ul className="mt-2 space-y-2">
-                  {tasks
-                    .filter((item) => !item.is_done)
-                    .map((t) => (
-                      <li
-                        key={t.id}
-                        className="flex flex-col rounded-lg border p-2 hover:bg-accent transition"
-                      >
-                        <div className="flex gap-2 items-start">
-                          <Checkbox
-                            className="mt-1"
-                            checked={t.is_done}
-                            onCheckedChange={(checked: boolean) =>
-                              toggleTask(t.id, checked)
-                            }
-                          />
-                          <span className="word-break break-all">
-                            {t.title}
-                          </span>
-                        </div>
-                        <span className="text-xs text-gray-500 text-right">
-                          {t.created_at &&
-                            moment(t.created_at).format("YYYY-MM-DD")}
-                        </span>
-                      </li>
-                    ))}
+                  {pendingTasks.map((t) => (
+                    <li
+                      key={t.id}
+                      className="flex flex-col rounded-lg border p-2 transition hover:bg-accent"
+                    >
+                      <div className="flex items-start gap-2">
+                        <Checkbox
+                          className="mt-1"
+                          checked={t.is_done}
+                          onCheckedChange={(checked: boolean) =>
+                            toggleTask(t.id, checked)
+                          }
+                        />
+                        <span className="word-break break-all">{t.title}</span>
+                      </div>
+                      <span className="text-right text-xs text-gray-500">
+                        {t.created_at &&
+                          moment(t.created_at).format("YYYY-MM-DD")}
+                      </span>
+                    </li>
+                  ))}
                 </ul>
               </div>
 
               <div>
-                <div className="flex w-full justify-between items-center">
+                <div className="flex w-full items-center justify-between">
                   <Label className="text-sm font-medium text-muted-foreground">
                     Completed
                   </Label>
 
-                  {tasks.filter((item) => item.is_done).length > 0 && (
+                  {completedTasks.length > 0 && (
                     <Button
                       disabled={loading}
                       variant="destructive"
@@ -167,36 +188,34 @@ export default function FloatingTodo() {
                   )}
                 </div>
                 <ul className="mt-2 space-y-2">
-                  {tasks
-                    .filter((item) => item.is_done)
-                    .map((t) => (
-                      <li
-                        key={t.id}
-                        className="flex flex-col rounded-lg border p-2 hover:bg-accent transition"
-                      >
-                        <div className="flex gap-2 items-start">
-                          <Checkbox
-                            className="mt-1"
-                            checked={t.is_done}
-                            onCheckedChange={(checked: boolean) =>
-                              toggleTask(t.id, checked)
-                            }
-                          />
-                          <span className="word-break break-all">
-                            {t.title}
-                          </span>
-                        </div>
-                        <span className="text-xs text-gray-500 text-right">
-                          {t.created_at &&
-                            moment(t.created_at).format("YYYY-MM-DD")}
-                        </span>
-                      </li>
-                    ))}
+                  {completedTasks.map((t) => (
+                    <li
+                      key={t.id}
+                      className="flex flex-col rounded-lg border p-2 transition hover:bg-accent"
+                    >
+                      <div className="flex items-start gap-2">
+                        <Checkbox
+                          className="mt-1"
+                          checked={t.is_done}
+                          onCheckedChange={(checked: boolean) =>
+                            toggleTask(t.id, checked)
+                          }
+                        />
+                        <span className="word-break break-all">{t.title}</span>
+                      </div>
+                      <span className="text-right text-xs text-gray-500">
+                        {t.created_at &&
+                          moment(t.created_at).format("YYYY-MM-DD")}
+                      </span>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>
-          </ScrollArea>
+          </div>
+        </ScrollArea>
 
+        <div className="border-t p-4">
           <div className="flex gap-2">
             <Input
               value={newTask}
@@ -205,15 +224,15 @@ export default function FloatingTodo() {
               className="flex-1"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  e.preventDefault();
-                  addTask();
+                  e.preventDefault()
+                  addTask()
                 }
               }}
             />
             <Button onClick={addTask}>Add</Button>
           </div>
         </div>
-      </div>
-    </>
-  );
+      </SheetContent>
+    </Sheet>
+  )
 }

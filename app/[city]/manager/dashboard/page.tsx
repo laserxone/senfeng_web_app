@@ -125,7 +125,7 @@ export default function Page() {
   const RenderAttendance = useCallback(() => {
     return (
       <Card className="flex flex-1 p-0">
-        <CardContent className="pt-0 flex flex-1">
+                <CardContent className="pt-2 flex flex-1">
           <Attendance
             height="min-h-[calc(100dvh-370px)]"
             passingData={attendanceData}

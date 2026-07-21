@@ -1,5 +1,7 @@
 "use client";
+import FilterSheet from "@/components/features/users/filter-sheet";
 import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
+import { UserSearch } from "@/components/shared/search/user-search";
 import PageTable from "@/components/shared/tables/app-table";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
@@ -12,8 +14,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
-import { UserSearch } from "@/components/shared/search/user-search";
-import FilterSheet from "@/components/features/users/filter-sheet";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { MyCustomer, MyCustomerResolved } from "@/lib/types";
@@ -347,9 +347,18 @@ export default function MemberMainPage({ onReturn }: { onReturn: (val: number) =
 
           onRowClick={(val, e) => {
             if (val.id) {
-
               onReturn(val.id);
             }
+          }}
+          filter
+          onFilterPress={() => setFilterVisible(true)}
+          reset
+          resetLoading={resetLoading}
+          onResetPress={async () => {
+            setResetLoading(true);
+            fetchData().then(() => {
+              setResetLoading(false)
+            })
           }}
         >
           <div className=" flex justify-between flex-wrap">
@@ -403,30 +412,6 @@ export default function MemberMainPage({ onReturn }: { onReturn: (val: number) =
               >
                 Clear
               </Button>
-
-
-              <div className="flex gap-4">
-                <Button
-                  onClick={() => setFilterVisible(true)}
-                  variant="ghost"
-                  className="p-0 w-8"
-                >
-                  <Filter />
-                </Button>
-                <Button
-                  disabled={resetLoading}
-                  variant="destructive"
-                  onClick={async () => {
-                    setResetLoading(true);
-                    fetchData().then(() => {
-                      setResetLoading(false)
-                    })
-                  }}
-                >
-                  {resetLoading && <Spinner />} Reset
-                </Button>
-
-              </div>
             </div>
           </div>
         </PageTable>

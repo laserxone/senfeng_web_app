@@ -2,14 +2,14 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { MachineProps } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash } from "lucide-react";
+import { Pencil, Plus, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import AppCalendar from "@/components/features/calendar/app-calendar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 
 import { Input } from "@/components/ui/input";
@@ -155,14 +155,15 @@ const EditMachine = (
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="p-4 w-full sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Edit Machine</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-2xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><Pencil className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Edit Machine</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Update machine, pricing, contract, and payment details.</DialogDescription></div></div>
         </DialogHeader>
 
     
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            <ScrollArea className="pr-2 w-full h-[calc(100dvh-160px)]">
+            <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
+              <div className="space-y-3 p-3.5 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
 
               {/* Machine Details */}
               <FieldSet className="border rounded-md p-3 gap-3">
@@ -352,6 +353,7 @@ const EditMachine = (
                   </>
                 )}
               </FieldSet>
+              </div>
             </ScrollArea>
             {/* Submit */}
             <Button className="w-full" type="submit" disabled={loading}>

@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import Spinner from "@/components/ui/spinner";
@@ -237,8 +238,8 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-center justify-between">
-        <Heading title="Fine" description="Manage fines to your eomplyes" />
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+        <Heading panel title="Fine" description="Manage fines to your eomplyes" />
       </div>
 
       <PageTable
@@ -316,15 +317,15 @@ const AddFine = ({ open, setOpen, onRefresh, userID }: { open: boolean, setOpen:
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild></DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add Fine</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <DialogTitle className="text-sm font-semibold text-foreground">Add Fine</DialogTitle>
           <DialogDescription>
             Fill in the details below to add a fine.
           </DialogDescription>
         </DialogHeader>
-
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
           <FieldGroup>
 
             {/* User */}
@@ -411,6 +412,7 @@ const AddFine = ({ open, setOpen, onRefresh, userID }: { open: boolean, setOpen:
 
           </FieldGroup>
         </form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

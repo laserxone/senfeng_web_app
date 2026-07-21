@@ -16,6 +16,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -224,7 +225,7 @@ export default function KhataDetailPage() {
 
     return (
         <div className="flex flex-1 flex-col space-y-5">
-            <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
                 <div className="flex items-center gap-3">
                     <Button
                         variant="outline"
@@ -234,7 +235,7 @@ export default function KhataDetailPage() {
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
 
-                    <Heading
+                    <Heading panel
                         title={khata?.name || "Khata Detail"}
                         description="Khata detail and payment history"
                     />
@@ -424,14 +425,14 @@ export default function KhataDetailPage() {
             </Card>
 
             <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>
+                <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
+                    <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+                        <DialogTitle className="text-sm font-semibold text-foreground">
                             {editingPayment ? "Edit Payment" : "Create Payment"}
                         </DialogTitle>
                     </DialogHeader>
-
-                    <FieldSet className="rounded-lg border p-4">
+                    <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="space-y-3 p-3.5 pb-4">
+                    <FieldSet className="rounded-xl border border-border bg-muted/20 p-3">
                         <FieldLegend className="px-2 text-sm font-medium">
                             Payment Information
                         </FieldLegend>
@@ -526,7 +527,7 @@ export default function KhataDetailPage() {
                         </div>
                     </FieldSet>
 
-                    <DialogFooter>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
                         <Button
                             variant="outline"
                             disabled={savingPayment}
@@ -541,7 +542,8 @@ export default function KhataDetailPage() {
                             )}
                             {editingPayment ? "Update" : "Create"}
                         </Button>
-                    </DialogFooter>
+                    </div>
+                    </div></ScrollArea>
                 </DialogContent>
             </Dialog>
         </div>

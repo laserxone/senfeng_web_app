@@ -12,11 +12,12 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import AppCalendar from "@/components/features/calendar/app-calendar";
 import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
+import { MapPinned } from "lucide-react";
 
 const formSchema = z.object({
     note: z.string().min(1, "Note cannot be empty"),
@@ -97,23 +98,31 @@ export default function AddVisit({ onRefresh, open, onClose, id }: { id: string 
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
-            <DialogContent className="w-full sm:max-w-3xl">
-                <DialogHeader>
-                    <DialogTitle>
-                        Add Visit
-                    </DialogTitle>
+            <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-3xl">
+                <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+                            <MapPinned className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0">
+                            <DialogTitle className="text-sm font-semibold text-foreground">Add Visit</DialogTitle>
+                            <DialogDescription className="text-xs text-muted-foreground">
+                                Record the visit details and schedule the next follow-up.
+                            </DialogDescription>
+                        </div>
+                    </div>
                 </DialogHeader>
                 <ScrollArea className="max-h-[calc(100dvh-132px)]">
                     <form
                         onSubmit={form.handleSubmit(onSubmit, (err) => {
                             console.log("Validation Errors", err)
                         })}
-                        className="space-y-2.5 p-3"
+                        className="space-y-3 p-3.5"
                     >
 
 
                         <div className="min-w-[260px] flex-1 space-y-1">
-                            <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                                 Customer
                             </Label>
                             <CustomerSearchWithData
@@ -139,7 +148,7 @@ export default function AddVisit({ onRefresh, open, onClose, id }: { id: string 
                                     data-invalid={fieldState.invalid}
                                     className="gap-1.5"
                                 >
-                                    <FieldLabel className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                    <FieldLabel className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                                         Image
                                     </FieldLabel>
                                     <div className="flex items-center">
@@ -150,7 +159,7 @@ export default function AddVisit({ onRefresh, open, onClose, id }: { id: string 
                                             subheading={"or drag and drop"}
                                             description={"PNG or JPG"}
                                             drag={"Drop the files here..."}
-                                            className="min-h-20 w-full border-dashed bg-slate-50/70 dark:bg-zinc-900/70"
+                                            className="min-h-20 w-full rounded-lg border-dashed bg-muted/30"
                                         />
                                     </div>
                                     {fieldState.invalid && (
@@ -168,7 +177,7 @@ export default function AddVisit({ onRefresh, open, onClose, id }: { id: string 
                                     data-invalid={fieldState.invalid}
                                     className="gap-1.5 xl:order-3"
                                 >
-                                    <FieldLabel className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                    <FieldLabel className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                                         Next follow up
                                     </FieldLabel>
                                     <AppCalendar
@@ -193,7 +202,7 @@ export default function AddVisit({ onRefresh, open, onClose, id }: { id: string 
                                     className="gap-1.5 xl:order-2"
                                 >
                                     <div className="flex items-center justify-between gap-2">
-                                        <FieldLabel className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                        <FieldLabel className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                                             Remarks
                                         </FieldLabel>
 
@@ -203,7 +212,7 @@ export default function AddVisit({ onRefresh, open, onClose, id }: { id: string 
                                         rows={3}
                                         placeholder="Write visit summary, decisions, and pending work..."
                                         aria-invalid={fieldState.invalid}
-                                        className="min-h-20 resize-none rounded-lg bg-slate-50/70 text-sm shadow-inner dark:bg-zinc-900/70"
+                                        className="min-h-20 resize-none rounded-lg bg-muted/30 text-sm"
                                     />
                                     {fieldState.invalid && (
                                         <FieldError errors={[fieldState.error]} />
@@ -216,7 +225,7 @@ export default function AddVisit({ onRefresh, open, onClose, id }: { id: string 
                         <Button
                             disabled={!selectedCustomer?.id || loading}
                             type="submit"
-                            className="h-8 w-full rounded-lg"
+                            className="h-9 w-full rounded-lg"
                         >
                             {loading && <Spinner />} Post Visit
                         </Button>

@@ -4,14 +4,11 @@ import {
   ArrowUpDown,
   Banknote,
   CalendarDays,
-  Download,
   FileText,
-  Filter,
   Info,
   Loader2,
   Plus,
   ReceiptText,
-  RotateCcw,
   ShieldCheck,
   Trash,
   UserRound,
@@ -23,10 +20,11 @@ import {
   useState
 } from "react";
 
-import PageTable from "@/components/shared/tables/app-table";
+import AddReimbursementDialog from "@/components/features/reimbursements/add-reimbursement";
+import FilterSheet from "@/components/features/users/filter-sheet";
 import CurrencyFormatter from "@/components/shared/common/currency-formatter";
 import { MyImgZooming } from "@/components/shared/media/img-zooming";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import PageTable from "@/components/shared/tables/app-table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
@@ -34,10 +32,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import Spinner from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import FilterSheet from "@/components/features/users/filter-sheet";
-import AddReimbursementDialog from "@/components/features/reimbursements/add-reimbursement";
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
@@ -333,21 +328,19 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 flex-col gap-5">
-      <section className="overflow-hidden rounded-2xl border bg-background shadow-sm">
-        <div className="flex flex-col gap-5 border-b bg-muted/20 p-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 items-start gap-4">
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-              <WalletCards className="h-6 w-6" />
+      <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="flex flex-col gap-3 border-b p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+              <WalletCards className="size-5" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Expense control
-              </p>
-              <h1 className="mt-1 text-2xl font-bold tracking-tight">
-                Reimbursement
-              </h1>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                Manage reimbursement claims, receipt proofs, verification state, and monthly totals.
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Reimbursement</h1>
+                <span className="hidden rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold tracking-wide text-muted-foreground uppercase sm:inline-flex">Superadmin</span>
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Manage reimbursement claims and receipt proofs.
               </p>
             </div>
           </div>
@@ -361,54 +354,28 @@ export default function Page() {
           </Button>
         </div>
 
-        <div className="grid gap-3 p-4 sm:grid-cols-3">
-          <Card className="rounded-2xl shadow-none">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
-                  <Banknote className="h-5 w-5" />
-                </div>
-                <div>
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Total Amount
-                  </CardTitle>
-                  <div className="text-xl font-bold">
-                    <CurrencyFormatter amount={total} />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl shadow-none">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-700 ring-1 ring-violet-100">
-                  <ReceiptText className="h-5 w-5" />
-                </div>
-                <div>
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Claims
-                  </CardTitle>
-                  <div className="text-xl font-bold">{data.length}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl shadow-none">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-700 ring-1 ring-amber-100">
-                  <CalendarDays className="h-5 w-5" />
-                </div>
-                <div>
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    View
-                  </CardTitle>
-                  <div className="text-xl font-bold">Monthly</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid bg-muted/20 sm:grid-cols-3 sm:divide-x">
+          <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
+            <Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />
+            <div className="flex min-w-0 items-baseline gap-2">
+              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Total amount</span>
+              <span className="truncate text-sm font-bold"><CurrencyFormatter amount={total} /></span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
+            <ReceiptText className="size-4 text-violet-600 dark:text-violet-400" />
+            <div className="flex items-baseline gap-2">
+              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Claims</span>
+              <span className="text-sm font-bold">{data.length}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
+            <CalendarDays className="size-4 text-amber-600 dark:text-amber-400" />
+            <div className="flex items-baseline gap-2">
+              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Period</span>
+              <span className="text-sm font-bold">Monthly</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -422,61 +389,29 @@ export default function Page() {
             setImageURL(val);
             setVisible(true);
           }}
-        >
-          <div className="flex w-full flex-col gap-3 rounded-xl border bg-muted/15 p-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={() => setFilterVisible(true)}
-                variant="outline"
-                className="gap-2"
-              >
-                <Filter className="h-4 w-4" />
-                Filter
-              </Button>
-
-              <Button
-                variant="outline"
-                className="gap-2"
-                onClick={async () => {
-                  setResetLoading(true);
-                  const startDate = momentT
-                    .tz(TIMEZONE)
-                    .startOf("month")
-                    .startOf("day")
-                    .utc()
-                    .toISOString();
-                  const endDate = momentT
-                    .tz(TIMEZONE)
-                    .endOf("month")
-                    .endOf("day")
-                    .utc()
-                    .toISOString();
-                  await fetchData(startDate, endDate);
-                  setResetLoading(false);
-                }}
-              >
-                {resetLoading ? <Spinner /> : <RotateCcw className="h-4 w-4" />}
-                Reset
-              </Button>
-
-              <Button
-                variant="outline"
-                className="gap-2"
-                onClick={handleDownload}
-              >
-                <Download className="h-4 w-4" />
-                Download
-              </Button>
-            </div>
-
-            <div className="rounded-xl border bg-background px-4 py-2 text-sm font-medium text-muted-foreground">
-              Total:{" "}
-              <span className="font-bold text-foreground">
-                <CurrencyFormatter amount={total} />
-              </span>
-            </div>
-          </div>
-        </PageTable>
+          download
+          filter
+          reset
+          resetLoading={resetLoading}
+          onFilterPress={() => setFilterVisible(true)}
+          onResetPress={async () => {
+            setResetLoading(true);
+            const startDate = momentT
+              .tz(TIMEZONE)
+              .startOf("month")
+              .startOf("day")
+              .utc()
+              .toISOString();
+            const endDate = momentT
+              .tz(TIMEZONE)
+              .endOf("month")
+              .endOf("day")
+              .utc()
+              .toISOString();
+            await fetchData(startDate, endDate);
+            setResetLoading(false)
+          }}
+        />
       </section>
 
       <AddReimbursementDialog
@@ -643,5 +578,3 @@ const ImageSheet = ({
     </Sheet>
   );
 };
-
-

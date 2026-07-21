@@ -85,8 +85,8 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4 pb-4">
-      <div className="flex items-start justify-between">
-        <Heading title="Old Commissions" description="Clear old commissions" />
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+        <Heading panel title="Old Commissions" description="Clear old commissions" />
       </div>
 
       <Input

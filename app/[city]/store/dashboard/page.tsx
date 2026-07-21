@@ -1,25 +1,25 @@
 "use client";
 
-import AddTaskDialog from '@/components/features/tasks/dialogs/add-task-dialog';
-import PageTable from '@/components/shared/tables/app-table';
-import CurrencyFormatter from "@/components/shared/common/currency-formatter";
-import { MyImgZooming } from '@/components/shared/media/img-zooming';
+import { AddExpensesDialog } from '@/components/features/employee-finance/employee-expense';
 import EngineerModal from '@/components/features/pos/engineer-modal';
 import GatePassSlip from '@/components/features/pos/gatepass-slip';
 import NotificationBadge from "@/components/features/pos/NotificationBadge";
 import { OrderDonutChart } from '@/components/features/pos/order-donut-chart';
 import SearchResultModal from "@/components/features/pos/search-result-modal";
+import Reimbursement from '@/components/features/reimbursements/Reimbursement';
+import AddTaskDialog from '@/components/features/tasks/dialogs/add-task-dialog';
+import TaskDetail from "@/components/features/tasks/task-detail";
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
+import { MyImgZooming } from '@/components/shared/media/img-zooming';
+import PageTable from '@/components/shared/tables/app-table';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Spinner from '@/components/ui/spinner';
-import { AddExpensesDialog } from '@/components/features/employee-finance/employee-expense';
-import TaskDetail from "@/components/features/tasks/task-detail";
 import { useMachineDelivery } from '@/hooks/use-machine-delivery';
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { StoreAvailableStock, StoreDashboardResponse, StoreLowStockData, StorePosStatsEach, StoreStockGroup, StoreStockItem, TaskProps } from "@/lib/types";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { StoreAvailableStock, StoreDashboardResponse, StoreLowStockData, StorePosStatsEach, StoreStockGroup, StoreStockItem, TaskProps, UserReimbursementType } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import {
   AlertTriangle,
@@ -43,7 +43,7 @@ import {
 } from "lucide-react";
 import moment from "moment";
 import { useRouter } from 'nextjs-toploader/app';
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 
 
@@ -62,9 +62,14 @@ export default function StoreManagerDashboard() {
   const [selectedData, setSelectedData] = useState<StorePosStatsEach | null>(null)
   const router = useRouter()
   const { pendingDelivery } = useMachineDelivery()
+  const [reimbursementData, setReimbursementData] = useState<UserReimbursementType[]>([]);
+
 
   useEffect(() => {
     if (userID) {
+      const startDate = moment().startOf("month").toISOString();
+      const endDate = moment().endOf("month").toISOString();
+      fetchReimbursementData(startDate, endDate)
       fetchData()
     }
   }, [userID])
@@ -87,6 +92,17 @@ export default function StoreManagerDashboard() {
       setEngineerLoading(false);
     }
   }
+
+  async function fetchReimbursementData(startDate: string, endDate: string) {
+
+    const response = await axios.get(
+      `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+    );
+
+    setReimbursementData(response.data);
+
+  }
+
 
   const quickActions = [
     {
@@ -380,6 +396,27 @@ export default function StoreManagerDashboard() {
 
   ]
 
+  const RenderReimbursement = useCallback(() => {
+    return (
+
+      <Reimbursement
+        id={userID}
+        passingData={reimbursementData || []}
+        onAddRefresh={async () => {
+          const startDate = moment().startOf("month").toISOString();
+          const endDate = moment().endOf("month").toISOString();
+          await fetchReimbursementData(startDate, endDate);
+        }}
+        onFilterReturn={async (start, end) => { await fetchReimbursementData(start, end) }
+        }
+        onReset={async (start: string, end: string) => {
+          await fetchReimbursementData(start, end);
+        }}
+      />
+
+    );
+  }, [reimbursementData]);
+
   return (
 
     <div className="flex flex-1 pb-2">
@@ -568,6 +605,10 @@ export default function StoreManagerDashboard() {
               data={data?.available_stock?.groups?.slice(0, 5) || []}
               columns={machineColumns} />
           </div>
+
+          <div className='xl:col-span-2'>
+            <RenderReimbursement />
+          </div>
         </section>
       </div>
 
@@ -614,15 +655,12 @@ export default function StoreManagerDashboard() {
       <LowStockModal visible={lowStock} onClose={() => setLowStock(false)} data={data?.low_stock?.data} />
 
       <Dialog onOpenChange={setGatePass} open={gatePass}>
-        <DialogContent className='w-full sm:max-w-4xl'>
-          <VisuallyHidden>
-            <DialogHeader>
-              <DialogTitle>Gate Pass</DialogTitle>
-            </DialogHeader>
-          </VisuallyHidden>
-          <ScrollArea className='h-[95dvh]'>
-
-            <GatePassSlip />
+        <DialogContent className='max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-4xl'>
+          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><Truck className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Gate Pass</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Prepare and review the store gate-pass information.</DialogDescription></div></div>
+          </DialogHeader>
+          <ScrollArea className='max-h-[calc(100dvh-132px)]'>
+            <div className="p-3.5 pb-4"><GatePassSlip /></div>
 
           </ScrollArea>
         </DialogContent>
@@ -838,5 +876,3 @@ const ShowMachines = ({ visible, data, onClose }: { visible: boolean, data: Stor
     </Dialog>
   )
 }
-
-

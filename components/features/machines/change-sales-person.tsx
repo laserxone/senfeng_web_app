@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { FieldLegend, FieldSet } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { UserSearch } from "@/components/shared/search/user-search";
@@ -61,25 +63,26 @@ const ChangeSalesPersonDialog = ({
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
-            <DialogContent className="overflow-hidden p-0 sm:max-w-[430px]">
-                <DialogHeader className="border-b bg-gradient-to-r from-slate-50 via-white to-slate-50 px-4 py-3">
+            <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-[430px]">
+                <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-white text-slate-700 shadow-sm">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
                             <User className="h-4 w-4" />
                         </div>
                         <div className="min-w-0">
-                            <DialogTitle className="text-base font-semibold leading-tight text-slate-950">
+                            <DialogTitle className="text-sm font-semibold text-foreground">
                                 Change Sales Person
                             </DialogTitle>
-                            <p className="mt-0.5 text-xs text-muted-foreground">
+                            <DialogDescription className="text-xs text-muted-foreground">
                                 Reassign this machine without changing other details.
-                            </p>
+                            </DialogDescription>
                         </div>
                     </div>
                 </DialogHeader>
 
-                <div className="space-y-3 px-4 py-4">
-                    <FieldSet className="gap-2 rounded-lg border bg-slate-50/70 p-3">
+                <ScrollArea className="max-h-[calc(100dvh-132px)]">
+                <div className="space-y-3 p-3.5">
+                    <FieldSet className="gap-2 rounded-lg border border-border bg-muted/30 p-3">
                         <FieldLegend className="mb-0 text-xs font-semibold uppercase text-slate-500">
                             Current Assignment
                         </FieldLegend>
@@ -125,6 +128,7 @@ const ChangeSalesPersonDialog = ({
                         </Button>
                     </div>
                 </div>
+                </ScrollArea>
             </DialogContent>
         </Dialog>
     );

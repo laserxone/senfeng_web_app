@@ -288,8 +288,9 @@ export default function MachineDelivered() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
         <Heading
+          panel
           title="Machine Delivery"
           description="Manage machine deliveries"
         />
@@ -312,7 +313,6 @@ export default function MachineDelivered() {
     </div>
   );
 }
-
 
 
 

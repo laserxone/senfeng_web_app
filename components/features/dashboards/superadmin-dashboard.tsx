@@ -125,7 +125,7 @@ export default function SuperadminDashboard() {
 
     return (
         <div className="flex flex-1 flex-col space-y-4">
-            <div className="flex items-center justify-between space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
                 <h2 className="text-2xl font-bold tracking-tight">
                     Hi, Welcome back 👋
                 </h2>

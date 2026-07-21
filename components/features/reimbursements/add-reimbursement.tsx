@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -134,25 +135,25 @@ const AddReimbursementDialog = ({ onRefresh, id, open, onClose }: { onRefresh?: 
         onClose()
       }}
     >
-      <DialogContent className="max-w-[94vw] overflow-hidden p-0 sm:max-w-2xl">
-        <DialogHeader className="border-b bg-slate-50/80 px-4 py-3 text-left">
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-2xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
               <Plus className="h-4 w-4" />
             </div>
             <div className="min-w-0">
-              <DialogTitle className="text-base font-semibold tracking-tight">
+              <DialogTitle className="text-sm font-semibold text-foreground">
                 Add New Reimbursement
               </DialogTitle>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <DialogDescription className="text-xs text-muted-foreground">
                 Capture visit purpose, expense details, submitter, and receipt attachment.
-              </p>
+              </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         <ScrollArea className="max-h-[calc(100dvh-132px)]">
-          <div className="space-y-3 p-4">
+          <div className="space-y-3 p-3.5 pb-4">
             <RadioGroup
               defaultValue={selectedRadio}
               onValueChange={setSelectedRadio}
@@ -169,7 +170,7 @@ const AddReimbursementDialog = ({ onRefresh, id, open, onClose }: { onRefresh?: 
             </RadioGroup>
             <form onSubmit={form.handleSubmit(onSubmit, (er) => {
               console.log(er)
-            })} className="space-y-3">
+            })} className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
 
                 {/* Trip Details */}

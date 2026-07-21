@@ -9,7 +9,7 @@ import { UserSearch } from "@/components/shared/search/user-search";
 import Dropzone from "@/components/shared/uploads/dropzone";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -322,30 +322,33 @@ const EditCustomerDialog = ({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="w-full sm:max-w-6xl">
-        <DialogHeader className="border-b bg-muted/20 px-4 py-4 sm:px-6">
-          <div className="flex items-start gap-3">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-              <Pencil className="h-5 w-5" />
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-6xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+              <Pencil className="h-4 w-4" />
             </div>
             <div className="min-w-0">
-              <DialogTitle className="text-xl font-bold tracking-tight">
+              <DialogTitle className="text-sm font-semibold text-foreground">
                 Edit Customer
               </DialogTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <DialogDescription className="text-xs text-muted-foreground">
                 Update profile, contact, location, ownership, image, and lead details.
-              </p>
+              </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <ScrollArea className="h-[70dvh] sm:h-[80dvh]">
-          <div className="p-4 sm:p-6">
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
+          <div className="p-3.5">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground"
+            >
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
                 {/* Contact Information */}
-                <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                <FieldSet className="gap-3 rounded-xl border border-border bg-muted/20 p-3">
                   <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
                     <Phone className="h-4 w-4 text-emerald-700" />
                     Contact Information
@@ -456,7 +459,7 @@ const EditCustomerDialog = ({
                 </FieldSet>
 
                 {/* Customer Details */}
-                <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                <FieldSet className="gap-3 rounded-xl border border-border bg-muted/20 p-3">
                   <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
                     <Building2 className="h-4 w-4 text-blue-700" />
                     Customer Details
@@ -537,7 +540,7 @@ const EditCustomerDialog = ({
                 </FieldSet>
 
                 {/* Location */}
-                <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                <FieldSet className="gap-3 rounded-xl border border-border bg-muted/20 p-3">
                   <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
                     <MapPin className="h-4 w-4 text-rose-700" />
                     Location
@@ -584,7 +587,7 @@ const EditCustomerDialog = ({
                 </FieldSet>
 
                 {/* Business Settings */}
-                <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+                <FieldSet className="gap-3 rounded-xl border border-border bg-muted/20 p-3">
                   <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
                     <Settings2 className="h-4 w-4 text-amber-700" />
                     Business Settings
@@ -683,7 +686,7 @@ const EditCustomerDialog = ({
                 </FieldSet>
 
                 {/* Additional Options */}
-                <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4 lg:col-span-2">
+                <FieldSet className="gap-3 rounded-xl border border-border bg-muted/20 p-3 lg:col-span-2">
                   <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
                     <CalendarDays className="h-4 w-4 text-slate-700" />
                     Additional Options
@@ -738,7 +741,7 @@ const EditCustomerDialog = ({
                 </FieldSet>
               </div>
 
-              <div className="w-full mt-2">
+              <div className="w-full rounded-xl border border-border bg-muted/20 p-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Sparkles className="h-3.5 w-3.5 text-blue-600" />

@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   ColumnDef,
@@ -13,17 +13,25 @@ import {
   SortingState,
   useReactTable,
   VisibilityState,
-} from "@tanstack/react-table";
-import { ChevronLeftIcon, ChevronRightIcon, Download, Search } from "lucide-react";
+} from "@tanstack/react-table"
+import {
+  ChevronDown,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  Download,
+  Filter,
+  RotateCcw,
+  Search
+} from "lucide-react"
 
 import {
   DoubleArrowLeftIcon,
   DoubleArrowRightIcon,
-} from "@radix-ui/react-icons";
+} from "@radix-ui/react-icons"
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -31,108 +39,120 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { memo, useMemo, useState } from "react";
+} from "@/components/ui/table"
+import { memo, useMemo, useState } from "react"
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useDebounce } from "@/hooks/use-debounce";
-import { useIsMobile } from "@/hooks/use-mobile";
-import exportToExcel from "@/lib/exportToExcel";
-import moment from "moment";
-import Spinner from "@/components/ui/spinner";
+} from "@/components/ui/select"
+import Spinner from "@/components/ui/spinner"
+import { useDebounce } from "@/hooks/use-debounce"
+import { useIsMobile } from "@/hooks/use-mobile"
+import exportToExcel from "@/lib/exportToExcel"
+import { saveAs } from "file-saver"
+import moment from "moment"
 
-
-type ExtendedColumnDef<T> = ColumnDef<T> & {
-  accessorKey?: keyof T;
-};
-
-type PageTableProps<T extends Record<string, any>> = {
-  children?: React.ReactNode;
-  columns: ColumnDef<T>[];
-  data: T[];
+type PageTableProps<T extends object> = {
+  children?: React.ReactNode
+  columns: ColumnDef<T>[]
+  data: T[]
   pageSizeOptions?: number[]
   totalCustomerText?: string
-  disableInput?: boolean;
-  onRowClick?: (row: T, event: React.MouseEvent<HTMLTableRowElement>) => void;
-  loading?: boolean;
+  disableInput?: boolean
+  onRowClick?: (row: T, event: React.MouseEvent<HTMLTableRowElement>) => void
+  loading?: boolean
   defaultPageSize?: number
-  download?: boolean;
+  download?: boolean
   tableWidth?: string
   height?: string
-  hideFooter ?: boolean
-};
+  hideFooter?: boolean
+  filter?: boolean
+  reset?: boolean
+  onFilterPress?: () => void
+  onResetPress?: () => Promise<void>
+  resetLoading?: boolean
+}
 
-const PageTable = <T extends Record<string, any>>({
+const PageTable = <T extends object>({
   children,
   columns,
   data,
-  pageSizeOptions = [10, 20, 30, 40, 50, 100],
+  pageSizeOptions = [100, 200, 300, 400, 500],
   disableInput = false,
   totalCustomerText,
   onRowClick,
   loading = false,
   defaultPageSize = 100,
-  download = false,
+  download = true,
+  filter = false,
+  reset = false,
+  onFilterPress,
+  onResetPress,
   tableWidth = "",
   height = "min-h-[calc(100dvh-280px)]",
-  hideFooter = false
-  
-
+  hideFooter = false,
+  resetLoading = false
 }: PageTableProps<T>) => {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = useState({});
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(defaultPageSize);
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 500);
-  const isMobile = useIsMobile();
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [rowSelection, setRowSelection] = useState({})
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(defaultPageSize)
+  const [search, setSearch] = useState("")
+  const debouncedSearch = useDebounce(search, 500)
+  const isMobile = useIsMobile()
 
   const paginationState = {
     pageIndex: currentPage - 1,
     pageSize: pageSize,
-  };
+  }
 
   const filteredData = useMemo(() => {
-    let filtered = data;
+    let filtered = data
     columnFilters.forEach((filter) => {
       filtered = filtered.filter((row) => {
-        const key = filter.id as keyof T;
-        const cellValue = row[key];
+        const key = filter.id as keyof T
+        const cellValue = row[key]
         return String(cellValue ?? "")
           .toLowerCase()
-          .includes(String(filter.value).toLowerCase());
-      });
-    });
+          .includes(String(filter.value).toLowerCase())
+      })
+    })
 
     if (debouncedSearch) {
       filtered = filtered.filter((row) => {
         return Object.values(row).some((value) =>
-          String(value).toLowerCase().includes(debouncedSearch.toLowerCase()),
-        );
-      });
+          String(value).toLowerCase().includes(debouncedSearch.toLowerCase())
+        )
+      })
     }
 
-    return filtered;
-  }, [data, columnFilters, debouncedSearch]);
-  const pageCount = Math.ceil(filteredData.length / pageSize);
+    return filtered
+  }, [data, columnFilters, debouncedSearch])
+  const pageCount = Math.ceil(filteredData.length / pageSize)
 
-  const handlePaginationChange: OnChangeFn<PaginationState> = (updaterOrValue) => {
+  const handlePaginationChange: OnChangeFn<PaginationState> = (
+    updaterOrValue
+  ) => {
     const pagination =
       typeof updaterOrValue === "function"
         ? updaterOrValue(paginationState)
-        : updaterOrValue;
+        : updaterOrValue
 
-    setCurrentPage(pagination.pageIndex + 1);
-    setPageSize(pagination.pageSize);
-  };
+    setCurrentPage(pagination.pageIndex + 1)
+    setPageSize(pagination.pageSize)
+  }
 
   const table = useReactTable<T>({
     data: filteredData,
@@ -152,98 +172,209 @@ const PageTable = <T extends Record<string, any>>({
       columnVisibility,
       rowSelection,
       pagination: paginationState,
-
     },
     onPaginationChange: handlePaginationChange,
     defaultColumn: {
       size: 200,
     },
+  })
 
-  });
-
-  const startIndex = paginationState.pageIndex * paginationState.pageSize + 1;
+  const startIndex = paginationState.pageIndex * paginationState.pageSize + 1
   const endIndex = Math.min(
     (paginationState.pageIndex + 1) * paginationState.pageSize,
-    filteredData.length,
-  );
+    filteredData.length
+  )
 
-  function handleDownload() {
+  function getVisibleExportData() {
+    const exportableColumns = table
+      .getVisibleLeafColumns()
+      .filter((column) => Boolean(column.accessorFn))
+
+    const headers = exportableColumns.map((column) => {
+      const header = column.columnDef.header
+      return typeof header === "string"
+        ? header
+        : column.id
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (letter) => letter.toUpperCase())
+    })
+
+    const rows = table
+      .getRowModel()
+      .rows.map((row) =>
+        exportableColumns.map((column) =>
+          formatExportValue(row.getValue(column.id))
+        )
+      )
+
+    return { headers, rows }
+  }
+
+  function formatExportValue(value: unknown): string {
+    if (value == null) return ""
+    if (
+      typeof value === "string" &&
+      moment(value, moment.ISO_8601, true).isValid()
+    ) {
+      return moment(value).format("YYYY-MM-DD")
+    }
+    if (Array.isArray(value)) return value.map(formatExportValue).join(", ")
+    if (typeof value === "object") return JSON.stringify(value)
+    return String(value)
+  }
+
+  async function handleExcelDownload() {
     try {
-      if (!filteredData || !filteredData.length) return;
-
-
-
-      const exportableColumns = columns.filter(
-        (col: ExtendedColumnDef<T>): col is ExtendedColumnDef<T> & { accessorKey: keyof T } =>
-          typeof col.accessorKey === "string"
-      );
-
-      const headers = exportableColumns.map((col) =>
-        String(col.accessorKey)
-      );
-
-      const formattedData = filteredData.map((row) =>
-        exportableColumns.map((col) => {
-          const key = col.accessorKey as keyof T;
-          const value = row[key];
-          if (isValidDateString(value) && value) {
-            return moment(value as any).format("YYYY-MM-DD");
-          }
-          return value != null ? String(value) : "";
-        })
-      );
-
-      exportToExcel(
-        headers,
-        formattedData,
-        "Table-Export.xlsx",
-        false,
-        "",
-        false
-      );
+      const { headers, rows } = getVisibleExportData()
+      if (!rows.length || !headers.length) return
+      await exportToExcel(headers, rows, "Table-Export.xlsx")
     } catch (error) {
-      console.error("Error exporting Excel:", error);
+      console.error("Error exporting Excel:", error)
     }
   }
 
-  function isValidDateString(value: string): boolean {
-    console.log(value, moment(value, moment.ISO_8601, true).isValid())
-    return moment(value, moment.ISO_8601, true).isValid();
+  async function handlePdfDownload() {
+    try {
+      const { headers, rows } = getVisibleExportData()
+      if (!rows.length || !headers.length) return
+
+      const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib")
+      const pdf = await PDFDocument.create()
+      const font = await pdf.embedFont(StandardFonts.Helvetica)
+      const boldFont = await pdf.embedFont(StandardFonts.HelveticaBold)
+      const pageSize: [number, number] = [841.89, 595.28]
+      const margin = 24
+      const rowHeight = 22
+      const fontSize = 7
+      const columnWidth = (pageSize[0] - margin * 2) / headers.length
+      let page = pdf.addPage(pageSize)
+      let y = pageSize[1] - margin
+
+      const safeText = (value: string) => value.replace(/[^\x20-\x7E]/g, "?")
+      const fitText = (value: string, width: number) => {
+        const text = safeText(value)
+        if (font.widthOfTextAtSize(text, fontSize) <= width) return text
+        let shortened = text
+        while (
+          shortened.length &&
+          font.widthOfTextAtSize(`${shortened}...`, fontSize) > width
+        ) {
+          shortened = shortened.slice(0, -1)
+        }
+        return `${shortened}...`
+      }
+      const drawRow = (values: string[], header = false) => {
+        values.forEach((value, index) => {
+          const x = margin + index * columnWidth
+          page.drawRectangle({
+            x,
+            y: y - rowHeight,
+            width: columnWidth,
+            height: rowHeight,
+            borderWidth: 0.5,
+            borderColor: rgb(0.75, 0.75, 0.75),
+            color: header ? rgb(0.92, 0.94, 0.97) : undefined,
+          })
+          page.drawText(fitText(value, columnWidth - 8), {
+            x: x + 4,
+            y: y - 14,
+            size: fontSize,
+            font: header ? boldFont : font,
+          })
+        })
+        y -= rowHeight
+      }
+
+      drawRow(headers, true)
+      rows.forEach((row) => {
+        if (y - rowHeight < margin) {
+          page = pdf.addPage(pageSize)
+          y = pageSize[1] - margin
+          drawRow(headers, true)
+        }
+        drawRow(row)
+      })
+
+      const bytes = await pdf.save()
+      saveAs(
+        new Blob([bytes as BlobPart], { type: "application/pdf" }),
+        "Table-Export.pdf"
+      )
+    } catch (error) {
+      console.error("Error exporting PDF:", error)
+    }
   }
-
-
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      {(children || !disableInput || download) &&
+      {(children || !disableInput || download) && (
         <div className="flex w-full flex-wrap items-center gap-2 rounded-lg border bg-background/95 p-2 shadow-sm">
           {!disableInput && (
             <div className="relative min-w-[220px] flex-1 sm:max-w-sm">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 placeholder={`Search...`}
                 onChange={(event) => {
-                  setSearch(event.target.value);
+                  setSearch(event.target.value)
                 }}
                 className="h-8 rounded-md bg-muted/20 pl-9 text-xs"
               />
             </div>
           )}
           {download && (
-            <Button variant="outline" className="h-9 gap-2" onClick={handleDownload}>
-              <Download className="h-4 w-4" />
-              Download
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  disabled={!table.getRowModel().rows.length}
+                >
+                  <Download className="h-4 w-4" />
+                  Export
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="text-xs" align="end">
+                <DropdownMenuItem className="text-xs" onSelect={handlePdfDownload}>
+
+                  PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-xs" onSelect={handleExcelDownload}>
+
+                  EXCEL
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
+          {filter &&
+            <Button
+              onClick={onFilterPress}
+              variant="outline"
+              className="gap-2"
+            >
+              <Filter className="h-4 w-4" />
+              Filter
+            </Button>
+
+          }
+          {reset &&
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={onResetPress}
+            >
+              {resetLoading ? <Spinner /> : <RotateCcw className="h-4 w-4" />}
+              Reset
+            </Button>}
           {children}
         </div>
-      }
+      )}
 
       <div
         className={`relative flex flex-1 ${height} ${isMobile && tableWidth ? tableWidth : ""}`}
       >
-        <div className="absolute bottom-0 left-0 right-0 top-0 flex overflow-auto rounded-md border bg-background shadow-sm custom-scrollbar md:overflow-auto">
+        <div className="custom-scrollbar absolute top-0 right-0 bottom-0 left-0 flex overflow-auto rounded-md border bg-background shadow-sm md:overflow-auto">
           {/* <ScrollArea className="flex-1"> */}
           <Table className="relative text-xs">
             <TableHeader>
@@ -256,13 +387,13 @@ const PageTable = <T extends Record<string, any>>({
                     <TableHead
                       style={{ width: header.getSize() }}
                       key={header.id}
-                      className="h-8 whitespace-nowrap px-3 text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:text-zinc-200"
+                      className="h-8 px-3 text-[11px] font-bold tracking-wide whitespace-nowrap text-slate-700 uppercase dark:text-zinc-200"
                     >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
                           header.column.columnDef.header,
-                          header.getContext(),
+                          header.getContext()
                         )}
                     </TableHead>
                   ))}
@@ -279,10 +410,15 @@ const PageTable = <T extends Record<string, any>>({
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell className="whitespace-normal break-words px-3 py-1.5 text-[12px] leading-snug text-slate-800 dark:text-zinc-100 max-w-[200px]" key={cell.id}>
+                      <TableCell
+                        className="max-w-[200px] px-3 py-1.5 text-[12px] leading-snug break-words whitespace-normal text-slate-800 dark:text-zinc-100"
+                        key={cell.id}
+                      >
                         {flexRender(cell.column.columnDef.cell, {
                           ...cell.getContext(),
-                          stopRowClick: (e: React.MouseEvent<HTMLTableRowElement>) => e.stopPropagation(),
+                          stopRowClick: (
+                            e: React.MouseEvent<HTMLTableRowElement>
+                          ) => e.stopPropagation(),
                         })}
                       </TableCell>
                     ))}
@@ -313,30 +449,30 @@ const PageTable = <T extends Record<string, any>>({
         </div>
       </div>
 
-   {!hideFooter &&   <div className="flex flex-col items-center justify-end gap-2 rounded-lg border bg-background/95 p-2 shadow-sm sm:flex-row">
-        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex-1 text-xs font-medium text-muted-foreground">
-            {filteredData.length > 0 ? (
-              <>
-                Showing {startIndex} to {endIndex} of {filteredData.length}{" "}
-                entries
-              </>
-            ) : (
-              "No entries found"
-            )}
-          </div>
-          <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-4">
-            <div className="flex items-center gap-2">
+      {!hideFooter && (
+        <div className="grid w-full grid-cols-1 items-center gap-3 rounded-lg border bg-background/95 p-3 shadow-sm sm:grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1fr)_auto_auto]">
+          <div className="flex min-w-0 flex-col gap-3 sm:contents">
+            <div className="min-w-0 text-xs font-medium text-muted-foreground">
+              {filteredData.length > 0 ? (
+                <>
+                  Showing {startIndex} to {endIndex} of {filteredData.length}{" "}
+                  entries
+                </>
+              ) : (
+                "No entries found"
+              )}
+            </div>
+            <div className="flex items-center justify-between gap-2 sm:justify-end">
               <p className="whitespace-nowrap text-xs font-semibold text-muted-foreground">
                 Rows per page
               </p>
               <Select
                 value={`${paginationState.pageSize}`}
                 onValueChange={(value) => {
-                  table.setPageSize(Number(value));
+                  table.setPageSize(Number(value))
                 }}
               >
-                <SelectTrigger className="h-8 w-[72px] rounded-md text-xs">
+                <SelectTrigger className="h-8 w-[72px] shrink-0 rounded-md text-xs">
                   <SelectValue placeholder={paginationState.pageSize} />
                 </SelectTrigger>
                 <SelectContent side="top">
@@ -349,62 +485,64 @@ const PageTable = <T extends Record<string, any>>({
               </Select>
             </div>
           </div>
-        </div>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
-          <div className="flex items-center text-xs font-semibold text-muted-foreground sm:w-[220px] sm:justify-center">
-            {filteredData.length > 0 ? (
-              <>
-                {totalCustomerText &&
-                  `${totalCustomerText} ${filteredData.length}`}{" "}
-                Page {paginationState.pageIndex + 1} of {pageCount}
-              </>
-            ) : (
-              "No pages"
-            )}
+          <div className="flex min-w-0 flex-col gap-3 sm:col-span-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between lg:col-span-1 lg:flex-nowrap lg:justify-end">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-1 text-xs font-semibold text-muted-foreground lg:justify-end">
+              {filteredData.length > 0 ? (
+                <>
+                  {totalCustomerText && (
+                    <span>{`${totalCustomerText} ${filteredData.length}`}</span>
+                  )}
+                  <span className="whitespace-nowrap">
+                    Page {paginationState.pageIndex + 1} of {pageCount}
+                  </span>
+                </>
+              ) : (
+                "No pages"
+              )}
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <Button
+                aria-label="Go to first page"
+                variant="outline"
+                className="hidden h-8 w-8 rounded-md p-0 sm:inline-flex"
+                onClick={() => table.setPageIndex(0)}
+                disabled={!table.getCanPreviousPage()}
+              >
+                <DoubleArrowLeftIcon className="h-4 w-4" aria-hidden="true" />
+              </Button>
+              <Button
+                aria-label="Go to previous page"
+                variant="outline"
+                className="h-8 w-8 rounded-md p-0"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                <ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />
+              </Button>
+              <Button
+                aria-label="Go to next page"
+                variant="outline"
+                className="h-8 w-8 rounded-md p-0"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                <ChevronRightIcon className="h-4 w-4" aria-hidden="true" />
+              </Button>
+              <Button
+                aria-label="Go to last page"
+                variant="outline"
+                className="hidden h-8 w-8 rounded-md p-0 sm:inline-flex"
+                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                disabled={!table.getCanNextPage()}
+              >
+                <DoubleArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <Button
-              aria-label="Go to first page"
-              variant="outline"
-              className="hidden h-8 w-8 rounded-md p-0 lg:flex"
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
-            >
-              <DoubleArrowLeftIcon className="h-4 w-4" aria-hidden="true" />
-            </Button>
-            <Button
-              aria-label="Go to previous page"
-              variant="outline"
-              className="h-8 w-8 rounded-md p-0"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              <ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />
-            </Button>
-            <Button
-              aria-label="Go to next page"
-              variant="outline"
-              className="h-8 w-8 rounded-md p-0"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              <ChevronRightIcon className="h-4 w-4" aria-hidden="true" />
-            </Button>
-            <Button
-              aria-label="Go to last page"
-              variant="outline"
-              className="hidden h-8 w-8 rounded-md p-0 lg:flex"
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
-            >
-              <DoubleArrowRightIcon className="h-4 w-4" aria-hidden="true" />
-            </Button>
-          </div>
         </div>
-      </div>
-}
+      )}
     </div>
-  );
-};
+  )
+}
 
-export default memo(PageTable) as typeof PageTable;
+export default memo(PageTable) as typeof PageTable

@@ -13,13 +13,13 @@ import { AvailableMachines } from "./available-machines";
 import ChequeCredit from "./cheque-credit";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus } from "lucide-react";
+import { Plus, Wrench } from "lucide-react";
 import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase";
 
 
@@ -160,21 +160,24 @@ const AddMachine = ({ customer_id, user_id,  onRefresh }: { customer_id?: number
               
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
-        className={`transition-all duration-300 ${cheque ? "sm:max-w-[90vw] w-[90vw]" : "sm:max-w-lg w-full"
+        className={`max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-300 ${cheque ? "sm:max-w-[90vw]" : "sm:max-w-lg"
           }`}
       >
-        <DialogHeader>
-          <DialogTitle className="text-xl">Add New Machine</DialogTitle>
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><Wrench className="h-4 w-4" /></span>
+            <div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Add New Machine</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Record machine, contract, pricing, and payment details.</DialogDescription></div>
+          </div>
         </DialogHeader>
 
         <div className="w-full flex flex-1">
-          <ScrollArea className="px-2 w-full h-[80dvh]">
+          <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
             <div
               className={`flex gap-6 ${cheque ? "flex-row" : "flex-col"
                 } w-full`}
             >
-              <div className={`${cheque ? "w-1/2" : "w-full"} px-2 space-y-2`}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+              <div className={`${cheque ? "w-1/2" : "w-full"} space-y-2 p-3.5`}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
 
                   {/* Machine Details */}
                   <FieldSet className="border rounded-md p-3 gap-3">

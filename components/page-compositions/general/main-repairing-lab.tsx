@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -274,8 +275,8 @@ export default function MainRepairingLab() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-center justify-between space-y-2">
-        <Heading title="Repair and Maintenance" description="" />
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+        <Heading panel title="Repair and Maintenance" description="" />
         <div className="flex gap-2">
           <Button onClick={() => setAssignTask(true)}>Register Lab Task</Button>
         </div>
@@ -384,11 +385,12 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }: { open: boolean
 
   return (
     <Dialog open={open} onOpenChange={onChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="text-xl">Assign Lab Task</DialogTitle>
-          <ScrollArea className="max-h-[calc(100dvh-200px)]">
-          <div className="flex flex-1 flex-col gap-3">
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><Wrench className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Assign Lab Task</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Schedule repair work, ownership, charges, and remarks.</DialogDescription></div></div>
+        </DialogHeader>
+          <ScrollArea className="max-h-[calc(100dvh-132px)]">
+          <div className="flex flex-col gap-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
 
             {/* Schedule */}
             <FieldSet className="border rounded-md p-3 gap-3">
@@ -494,7 +496,6 @@ const AssignTasksModal = ({ open, onChange, userID, onRefresh }: { open: boolean
             </Button>
           </div>
           </ScrollArea>
-        </DialogHeader>
       </DialogContent>
     </Dialog>
   );
@@ -540,11 +541,12 @@ const UpdateTaskModal = ({ open, onChange, userID, onRefresh, task }: { open: bo
 
   return (
     <Dialog open={open} onOpenChange={onChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Update Task</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <DialogTitle className="text-sm font-semibold text-foreground">Update Task</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-4">
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
+        <div className="flex flex-col gap-3 p-3.5 pb-4">
           <div>
             <p className="text-sm font-medium">
               Status <RequiredStar />
@@ -578,6 +580,7 @@ const UpdateTaskModal = ({ open, onChange, userID, onRefresh, task }: { open: bo
             {loading && <Spinner />} Save
           </Button>
         </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

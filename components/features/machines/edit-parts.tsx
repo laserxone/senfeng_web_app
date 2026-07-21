@@ -2,7 +2,7 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { MachineProps } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Trash2 } from "lucide-react";
+import { PackageOpen, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -10,7 +10,7 @@ import AppCalendar from "@/components/features/calendar/app-calendar";
 import { RequiredStar } from "@/components/shared/common/RequiredStar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -148,16 +148,16 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, }: { machine
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="p-4">
-        <DialogHeader>
-          <DialogTitle>Edit Parts</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><PackageOpen className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Edit Parts</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Update parts, contract, pricing, and related details.</DialogDescription></div></div>
         </DialogHeader>
 
         <div className="w-full flex flex-1">
-          <ScrollArea className="px-2 w-full h-[80vh]">
-            <div className="px-2">
+          <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
+            <div className="p-3.5">
 
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
                 <FieldGroup>
 
 
@@ -182,12 +182,12 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, }: { machine
 
                   <div className="w-full space-y-6">
                     {newParts.map((item, index) => (
-                      <div key={index} className="flex flex-col gap-3 w-full p-4 rounded-2xl border border-gray-700/50">
+                      <div key={index} className="flex flex-col gap-3 w-full p-4 rounded-2xl border ">
                         <div className="flex justify-between items-center">
                           <Label className="font-semibold text-lg mb-2">
                             Part {index + 1}
                           </Label>
-                          <Button
+                          {/* <Button
                             onClick={(e) => {
                               e.preventDefault();
                               setNewParts((prevState) =>
@@ -198,7 +198,7 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, }: { machine
                             size="icon"
                           >
                             <Trash2 />
-                          </Button>
+                          </Button> */}
                         </div>
                         {Object.entries(item).map(([key, val], i) => (
                           <div key={key} className="flex flex-col gap-1">
@@ -229,10 +229,10 @@ const EditParts = ({ machine_id, visible, onClose, onRefresh, data, }: { machine
                   </div>
 
 
-                  <Button onClick={(e) => {
+                  {/* <Button onClick={(e) => {
                     e.preventDefault()
                     setNewParts([...newParts, { name: "", model: "", power: "", serial_no: "" }])
-                  }} className="mt-2">Add new part</Button>
+                  }} className="mt-2">Add new part</Button> */}
 
 
                   <Controller

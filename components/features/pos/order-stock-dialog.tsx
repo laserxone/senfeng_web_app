@@ -142,15 +142,15 @@ const OrderStockDialog = ({
 
   return (
     <Dialog open={dialogVisible} onOpenChange={onCloseDialog}>
-      <DialogContent className="flex max-h-[92vh] w-[96vw] flex-col gap-0 overflow-hidden p-0 sm:max-w-[92vw] xl:max-w-[1180px]">
-        <DialogHeader className="border-b bg-muted/20 px-4 py-3 sm:px-5">
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-[92vw] xl:max-w-[1180px]">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                <PackagePlus className="h-5 w-5" />
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+                <PackagePlus className="h-4 w-4" />
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-base font-bold sm:text-lg">Order new stock</DialogTitle>
+                <DialogTitle className="text-sm font-semibold text-foreground">Order New Stock</DialogTitle>
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   {selectedItems.length} selected from {stock.length} items
                 </p>
@@ -203,8 +203,8 @@ const OrderStockDialog = ({
             </div>
           </div>
         </DialogHeader>
-
-        <div className="border-b px-4 py-3 sm:px-5">
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
+        <div className="border-b p-3.5">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -216,7 +216,7 @@ const OrderStockDialog = ({
           </div>
         </div>
 
-        <ScrollArea className="h-[68vh] bg-muted/10">
+        <div className="bg-muted/10">
           <div className="p-3 sm:p-4">
             <div className="grid w-full gap-2">
               {filteredStock.map((item, index) => (
@@ -247,6 +247,7 @@ const OrderStockDialog = ({
               )}
             </div>
           </div>
+        </div>
         </ScrollArea>
       </DialogContent>
     </Dialog>

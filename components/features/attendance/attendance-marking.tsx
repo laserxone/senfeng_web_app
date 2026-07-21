@@ -27,7 +27,7 @@ type Props = {
     userId?: number | string;
     userDesignation?: string;
     fetchData: () => Promise<void>,
-    location: { latitude?: number, longitude?: number },
+    location?: { latitude?: number, longitude?: number },
     error?: string | null
 };
 
@@ -232,13 +232,13 @@ export default function RenderMarkAttendance({
     return (
 
         <Dialog open={open} onOpenChange={handleClose}>
-            <DialogContent className="w-full sm:max-w-lg p-0">
-                <DialogHeader className="px-6 pt-6 pb-3">
-                    <DialogTitle>Mark Attendance</DialogTitle>
+            <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
+                <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+                    <DialogTitle className="text-sm font-semibold text-foreground">Mark Attendance</DialogTitle>
                 </DialogHeader>
 
-                <ScrollArea className="max-h-[calc(100dvh-200px)] px-6 pb-6">
-                    <div className="space-y-5">
+                <ScrollArea className="max-h-[calc(100dvh-132px)]">
+                    <div className="space-y-3 p-3.5 pb-4">
                         {/* 1. Location */}
                         <FieldSet className="rounded-lg border p-4">
                             <FieldLegend className="px-2 text-sm font-medium">

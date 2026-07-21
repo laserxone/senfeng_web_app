@@ -14,6 +14,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -194,8 +195,8 @@ export default function KhataPage() {
 
     return (
         <div className="flex flex-1 flex-col space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-                <Heading title="Khata" description="" />
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+                <Heading panel title="Khata" description="" />
 
                 <Button onClick={openKhataCreate}>
                     <Plus className="mr-2 h-4 w-4" />
@@ -313,14 +314,14 @@ export default function KhataPage() {
             )}
 
             <Dialog open={khataOpen} onOpenChange={setKhataOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>
+                <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
+                    <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+                        <DialogTitle className="text-sm font-semibold text-foreground">
                             {editingKhata ? "Edit Khata" : "Create Khata"}
                         </DialogTitle>
                     </DialogHeader>
-
-                    <FieldSet className="rounded-lg border p-4">
+                    <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="space-y-3 p-3.5 pb-4">
+                    <FieldSet className="rounded-xl border border-border bg-muted/20 p-3">
                         <FieldLegend className="px-2 text-sm font-medium">
                             Khata Information
                         </FieldLegend>
@@ -420,7 +421,7 @@ export default function KhataPage() {
                         </div>
                     </FieldSet>
 
-                    <DialogFooter>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
                         <Button
                             variant="outline"
                             disabled={savingKhata}
@@ -435,7 +436,8 @@ export default function KhataPage() {
                             )}
                             {editingKhata ? "Update" : "Create"}
                         </Button>
-                    </DialogFooter>
+                    </div>
+                    </div></ScrollArea>
                 </DialogContent>
             </Dialog>
         </div>

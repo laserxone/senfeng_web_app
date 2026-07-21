@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+import Heading from "@/components/ui/heading";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import formatCurrency from "@/lib/formatCurrency";
@@ -259,17 +260,14 @@ export default function Page() {
     return (
         <div className="flex flex-1 flex-col gap-6 pb-8">
             {/* Header */}
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-                <div>
-                    <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                        Order Management
-                    </h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        {totalItems > 0
-                            ? `${totalItems} item${totalItems !== 1 ? "s" : ""} across ${Object.keys(groupedRows).length} order${Object.keys(groupedRows).length !== 1 ? "s" : ""}`
-                            : "Manage and organize your orders"}
-                    </p>
-                </div>
+            <div className="flex flex-col justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:p-5">
+                <Heading
+                    panel
+                    title="Order Management"
+                    description={totalItems > 0
+                        ? `${totalItems} item${totalItems !== 1 ? "s" : ""} across ${Object.keys(groupedRows).length} order${Object.keys(groupedRows).length !== 1 ? "s" : ""}`
+                        : "Manage and organize your orders"}
+                />
 
                 <Button onClick={fetchData} disabled={loading} variant="outline" size="sm" className="w-full sm:w-auto gap-2">
                     <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />

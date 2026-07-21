@@ -81,8 +81,8 @@ export default function ApplicationsPage() {
 
     return (
         <div className="flex flex-1 flex-col space-y-4">
-            <div className="flex items-center justify-between">
-                <Heading title="Applications" />
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+                <Heading panel title="Applications" />
             </div>
 
 

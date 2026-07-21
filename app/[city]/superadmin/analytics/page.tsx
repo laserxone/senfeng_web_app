@@ -43,8 +43,8 @@ export default function Page() {
     return (
 
         <div className="flex flex-1 flex-col space-y-4">
-            <div className="flex items-start justify-between">
-                <Heading title="Analytics" description="View team analytics" />
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+                <Heading panel title="Analytics" description="View team analytics" />
                 <Button
                     disabled={!userID || loading}
                     onClick={() => setFilterVisible(true)}

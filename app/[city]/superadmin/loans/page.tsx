@@ -18,6 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Field,
   FieldGroup,
@@ -97,29 +98,17 @@ export default function EmployeeLoans() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4 pb-6">
-      <div className="flex items-center justify-between space-y-2 flex-wrap">
-        <Heading title="Loans" description="Manage employee loans and repayments" />
-
-        <LoanIssueModal userID={userID} onSuccess={fetchLoans} />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        <SummaryCard
-          title="Total Loans"
-          value={totalLoans}
-          icon={<FileText className="h-5 w-5" />}
-        />
-        <SummaryCard
-          title="Active Loans"
-          value={activeLoans}
-          icon={<Wallet className="h-5 w-5" />}
-        />
-        <SummaryCard
-          title="Remaining Amount"
-          value={totalRemaining.toLocaleString()}
-          icon={<CreditCard className="h-5 w-5" />}
-        />
-      </div>
+      <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
+          <Heading panel title="Loans" description="Manage employee loans and repayments" />
+          <LoanIssueModal userID={userID} onSuccess={fetchLoans} />
+        </div>
+        <div className="grid border-t bg-muted/20 sm:grid-cols-3 sm:divide-x">
+          <SummaryCard title="Total Loans" value={totalLoans} icon={<FileText className="size-4 text-violet-600 dark:text-violet-400" />} />
+          <SummaryCard title="Active Loans" value={activeLoans} icon={<Wallet className="size-4 text-emerald-600 dark:text-emerald-400" />} />
+          <SummaryCard title="Remaining Amount" value={totalRemaining.toLocaleString()} icon={<CreditCard className="size-4 text-amber-600 dark:text-amber-400" />} />
+        </div>
+      </section>
 
       <LoanCollapsibleList
         loansByUser={loansByUser}
@@ -140,16 +129,11 @@ function SummaryCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border bg-card p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="mt-1 text-2xl font-semibold">{value}</p>
-        </div>
-
-        <div className="rounded-full bg-muted p-3 text-muted-foreground">
-          {icon}
-        </div>
+    <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">
+      {icon}
+      <div className="flex min-w-0 items-baseline gap-2">
+        <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{title}</span>
+        <span className="truncate text-sm font-bold">{value}</span>
       </div>
     </div>
   );
@@ -203,11 +187,11 @@ export function LoanIssueModal({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Issue New Loan</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <DialogTitle className="text-sm font-semibold text-foreground">Issue New Loan</DialogTitle>
         </DialogHeader>
-
+        <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="space-y-3 p-3.5 pb-4">
         <FieldGroup>
           <FieldLegend>Loan Details</FieldLegend>
 
@@ -240,12 +224,13 @@ export function LoanIssueModal({
           </Field>
         </FieldGroup>
 
-        <DialogFooter>
+        <div className="flex justify-end">
           <Button onClick={createLoan} disabled={loading}>
             {loading && <Spinner />}
             Submit
           </Button>
-        </DialogFooter>
+        </div>
+        </div></ScrollArea>
       </DialogContent>
     </Dialog>
   );
@@ -293,11 +278,11 @@ export function LoanPaymentModal({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Loan Repayment</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <DialogTitle className="text-sm font-semibold text-foreground">Loan Repayment</DialogTitle>
         </DialogHeader>
-
+        <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="space-y-3 p-3.5 pb-4">
         <FieldGroup>
           <FieldLegend>Payment Details</FieldLegend>
 
@@ -347,12 +332,13 @@ export function LoanPaymentModal({
           </div>
         </FieldGroup>
 
-        <DialogFooter>
+        <div className="flex justify-end">
           <Button onClick={makePayment} disabled={loading}>
             {loading && <Spinner />}
             Submit Payment
           </Button>
-        </DialogFooter>
+        </div>
+        </div></ScrollArea>
       </DialogContent>
     </Dialog>
   );
@@ -613,11 +599,11 @@ const EditPaymentLoan = ({
         open={!!selectedPayment}
         onOpenChange={() => setSelectedPayment(null)}
       >
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit Loan Payment</DialogTitle>
+        <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
+          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+            <DialogTitle className="text-sm font-semibold text-foreground">Edit Loan Payment</DialogTitle>
           </DialogHeader>
-
+          <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="space-y-3 p-3.5 pb-4">
           <FieldGroup>
             <FieldLegend>Payment Information</FieldLegend>
 
@@ -649,7 +635,7 @@ const EditPaymentLoan = ({
             </Field>
           </FieldGroup>
 
-          <DialogFooter>
+          <div className="flex justify-end">
             <Button
               onClick={handleSave}
               disabled={
@@ -661,7 +647,8 @@ const EditPaymentLoan = ({
               {loading && <Spinner />}
               Save
             </Button>
-          </DialogFooter>
+          </div>
+          </div></ScrollArea>
         </DialogContent>
       </Dialog>
     </>
@@ -708,11 +695,11 @@ const EditDescription = ({
         open={!!selectedLoan}
         onOpenChange={() => setSelectedLoan(null)}
       >
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit Loan Description</DialogTitle>
+        <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
+          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+            <DialogTitle className="text-sm font-semibold text-foreground">Edit Loan Description</DialogTitle>
           </DialogHeader>
-
+          <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="space-y-3 p-3.5 pb-4">
           <FieldGroup>
             <FieldLegend>Description</FieldLegend>
 
@@ -731,7 +718,7 @@ const EditDescription = ({
             </Field>
           </FieldGroup>
 
-          <DialogFooter>
+          <div className="flex justify-end">
             <Button
               onClick={handleSave}
               disabled={!selectedLoan?.description || loading}
@@ -739,7 +726,8 @@ const EditDescription = ({
               {loading && <Spinner />}
               Save
             </Button>
-          </DialogFooter>
+          </div>
+          </div></ScrollArea>
         </DialogContent>
       </Dialog>
     </>

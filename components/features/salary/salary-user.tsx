@@ -655,9 +655,9 @@ const SalaryComponent = ({ onSelectedId }: { onSelectedId: Dispatch<SetStateActi
       {/* Header + TT Rate */}
       <div className="flex flex-col lg:flex-row justify-between gap-4">
         <div className="space-y-4 flex-1">
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div className="flex flex-col justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:p-5">
             <Heading
-              className="my-2"
+              panel
               title={"Generate Salary"}
               description={"Manage employee salaries"}
             />

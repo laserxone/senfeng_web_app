@@ -147,11 +147,13 @@ const RecordComponent = () => {
 
     return (
         <div className="flex flex-1 flex-col gap-4">
-            <Heading
-                className="my-4"
-                title={"Salary Record"}
-                description={"Explore issued salaries"}
-            />
+            <div className="my-4 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+                <Heading
+                    panel
+                    title={"Salary Record"}
+                    description={"Explore issued salaries"}
+                />
+            </div>
        
                 <PageTable
                     loading={loading}

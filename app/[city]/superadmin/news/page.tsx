@@ -73,7 +73,9 @@ export default function NewsPage() {
 
   return (
     <div className="flex flex-1 flex-col space-y-6">
-      <Heading title="News" description="Manage all news updates" />
+      <div className="rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+        <Heading panel title="News" description="Manage all news updates" />
+      </div>
 
       {/* Form */}
       <div className="bg-white dark:bg-zinc-900 p-4 rounded-lg border space-y-4">

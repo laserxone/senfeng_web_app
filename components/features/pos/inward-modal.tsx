@@ -131,20 +131,20 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }: {
 
     return (
         <Dialog open={visible} onOpenChange={onClose}>
-            <DialogContent className="w-full sm:max-w-2xl">
-                <DialogHeader className="border-b bg-muted/30 px-4 py-3">
+            <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-2xl">
+                <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
                     <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                            <Truck className="h-5 w-5" />
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+                            <Truck className="h-4 w-4" />
                         </span>
                         <div>
-                            <DialogTitle className="text-base font-bold">Inward Gatepass</DialogTitle>
+                            <DialogTitle className="text-sm font-semibold text-foreground">Inward Gatepass</DialogTitle>
                             <p className="text-xs text-muted-foreground">Record received items and generate inward gate pass PDF.</p>
                         </div>
                     </div>
                 </DialogHeader>
-                <ScrollArea className="h-[calc(100dvh-200px)] w-full">
-                    <form onSubmit={handleSubmit} className="space-y-3 p-3">
+                <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
+                    <form onSubmit={handleSubmit} className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
                         <section className="rounded-md border bg-card p-3">
                             <div className="mb-3 flex items-center gap-2">
                                 <span className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-muted-foreground">

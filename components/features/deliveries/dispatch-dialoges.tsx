@@ -10,6 +10,7 @@ import { z } from "zod";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -64,6 +65,8 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
   const { userID } = useUserDetail();
   const [originalImage, setOriginalImage] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [selectedOrderNo, setSelectedOrderNo] = useState<OrderNoTypes | null>(null)
+
 
   const form = useForm<FormValues>({
     resolver: zodResolver(dispatchSchema),
@@ -149,6 +152,7 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
             transporter: values.transporter
           },
         },
+        order_no_data: selectedOrderNo
       };
 
       await axios.put(`/${userID}/delivery`, apiData);
@@ -206,15 +210,14 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-6xl">
-        <DialogHeader>
-          <DialogTitle>Dispatch Order</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-6xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><MapPinCheck className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Dispatch Order</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Review delivery details and update the dispatch record.</DialogDescription></div></div>
         </DialogHeader>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 border rounded-lg">
-            <ScrollArea className="h-[85dvh]">
-              <div className="p-6">
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
+        <div className="grid grid-cols-1 gap-3 p-3.5 pb-4 md:grid-cols-3">
+          <div className="rounded-xl border border-border bg-muted/20 md:col-span-2">
+            <div className="p-3">
 
                 <form onSubmit={form.handleSubmit(handleSubmit)}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -223,7 +226,7 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
                         Order Information
                       </FieldLegend>
 
-                      <Controller
+                     <Controller
                         name="orderNo"
                         control={form.control}
                         render={({ field, fieldState }) => (
@@ -232,20 +235,37 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
                               Order No <RequiredStar />
                             </FieldLabel>
 
-                            <div className="space-y-2">
-                              {(field.value || []).map((order: string, index: number) => (
-                                <div key={index} className="flex items-center gap-2">
-                                  <Input
-                                    placeholder="Enter order number"
-                                    value={order}
-                                    onChange={(e) => {
-                                      const updated = [...(field.value || [])]
-                                      updated[index] = e.target.value
-                                      field.onChange(updated)
-                                    }}
-                                  />
+                            {data?.type === "Parts" ?
 
-                                  <Button
+                              <div className="space-y-2">
+                                {(field.value || []).map((order: string, index: number) => (
+                                  <div key={index} className="flex items-center gap-2">
+                                    <div className="flex flex-1">
+                                      <Input value={order} onChange={(e) => {
+                                       const updated = [...(field.value || [])]
+                                       updated[index] = e.target.value
+                                        field.onChange(updated)
+                                       }} />
+                                    </div>
+
+                                  </div>
+                                ))}
+                              </div>
+                              :
+
+
+                              <div className="space-y-2">
+                                {(field.value || []).map((order: string, index: number) => (
+                                  <div key={index} className="flex items-center gap-2">
+                                    <div className="flex flex-1">
+                                      <SelectOrderNo value={order} onReturnData={(e) => {
+                                        const updated = [...(field.value || [])]
+                                        updated[index] = e.machine_serial
+                                        field.onChange(updated)
+                                        setSelectedOrderNo(e)
+                                      }} />
+                                    </div>
+                                    {/* <Button
                                     type="button"
                                     variant="destructive"
                                     size="icon"
@@ -260,19 +280,22 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
                                     }}
                                   >
                                     <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
+                                  </Button> */}
+                                  </div>
+                                ))}
+                              </div>
+                            }
 
-                            <Button
+                            {/* <Button
                               type="button"
-                              size="icon"
-                              className="mt-2 size-8"
+                              size="sm"
+                              variant="outline"
+                              className="mt-2"
                               onClick={() => field.onChange([...(field.value || []), ""])}
                             >
-                              <Plus className="h-4 w-4" />
-                            </Button>
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add Order No
+                            </Button> */}
 
                             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                           </Field>
@@ -508,11 +531,9 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
                 </form>
 
               </div>
-            </ScrollArea>
           </div>
 
-          <div className="border rounded-lg  bg-muted/30">
-            <ScrollArea className="h-[85dvh] p-5">
+          <div className="rounded-xl border border-border bg-muted/30 p-3">
               <h3 className="text-sm font-semibold mb-4 tracking-wide text-muted-foreground uppercase">
                 Delivery Information
               </h3>
@@ -546,9 +567,9 @@ export function DispatchOrderEditDialog({ open, onClose, onRefresh, data }:
                   No delivery information available.
                 </p>
               )}
-            </ScrollArea>
           </div>
         </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
@@ -736,15 +757,14 @@ export function DispatchOrderDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-6xl">
-        <DialogHeader>
-          <DialogTitle>Dispatch Order</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-6xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><MapPinCheck className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Dispatch Order</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Complete transport, machine, checklist, and delivery information.</DialogDescription></div></div>
         </DialogHeader>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 border rounded-lg">
-            <ScrollArea className="h-[85dvh]">
-              <div className="p-6">
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
+        <div className="grid grid-cols-1 gap-3 p-3.5 pb-4 md:grid-cols-3">
+          <div className="rounded-xl border border-border bg-muted/20 md:col-span-2">
+            <div className="p-3">
 
 
                 <form onSubmit={form.handleSubmit(handleSubmit)}>
@@ -1041,11 +1061,9 @@ export function DispatchOrderDialog({
 
 
               </div>
-            </ScrollArea>
           </div>
 
-          <div className="border rounded-lg  bg-muted/30">
-            <ScrollArea className="h-[85dvh] p-5">
+          <div className="rounded-xl border border-border bg-muted/30 p-3">
               <h3 className="text-sm font-semibold mb-4 tracking-wide text-muted-foreground uppercase">
                 Delivery Information
               </h3>
@@ -1083,9 +1101,9 @@ export function DispatchOrderDialog({
                   No delivery information available.
                 </p>
               )}
-            </ScrollArea>
           </div>
         </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

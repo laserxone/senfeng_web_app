@@ -6,15 +6,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useState } from "react";
 
+import FilterSheet from "@/components/features/users/filter-sheet";
 import PageTable from "@/components/shared/tables/app-table";
+import Spinner from "@/components/ui/spinner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import { UserAttendanceRecord } from "@/lib/types";
 import moment from "moment";
-import Spinner from "@/components/ui/spinner";
 import RenderMarkAttendance from "./attendance-marking";
 import { columns } from "./AttendanceColumns";
-import FilterSheet from "@/components/features/users/filter-sheet";
 import { AttendanceDetail } from "./teamAttendance";
 
 type AttendanceProps = {
@@ -56,30 +56,20 @@ export default function Attendance({
               setVisible(true);
             }
           }}
+          filter
+          onFilterPress={() => setFilterVisible(true)}
+          reset
+          resetLoading={resetLoading}
+          onResetPress={async () => {
+            setResetLoading(true);
+            const startDate = moment().startOf("month").toISOString();
+            const endDate = moment().endOf("month").toISOString();
+            await onRefresh?.(startDate, endDate);
+            setResetLoading(false);
+          }}
         >
           <div className="flex justify-between">
             <div className="flex gap-4">
-              <Button
-                onClick={() => setFilterVisible(true)}
-                variant="ghost"
-                className="p-0 w-8"
-              >
-                <Filter />
-              </Button>
-
-              <Button
-                variant="destructive"
-                onClick={async () => {
-                  setResetLoading(true);
-                  const startDate = moment().startOf("month").toISOString();
-                  const endDate = moment().endOf("month").toISOString();
-                  await onRefresh?.(startDate, endDate);
-                  setResetLoading(false);
-                }}
-              >
-                {resetLoading && <Spinner />} Reset
-              </Button>
-
               {isMobile && <MarkAttendance />}
             </div>
           </div>

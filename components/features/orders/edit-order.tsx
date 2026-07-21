@@ -6,10 +6,11 @@ import { RequiredStar } from "@/components/shared/common/RequiredStar";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ListRestart } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -189,14 +190,14 @@ const EditOrderDialog = ({
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>Edit in existing order</DialogTitle>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-3xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><ListRestart className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Edit Order Item</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Update the selected inventory item and machine details.</DialogDescription></div></div>
         </DialogHeader>
 
-        <ScrollArea className="h-[70vh] pr-4">
-          <div className="space-y-6">
-            <div className="border p-4 rounded-md space-y-4">
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
+          <div className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
+            <div className="space-y-3 rounded-xl border border-border bg-muted/20 p-3">
               <div>
                 <Label>
                   Location <RequiredStar />
@@ -547,16 +548,16 @@ const EditOrderDialog = ({
               )}
             </div>
           </div>
-        </ScrollArea>
 
-        <DialogFooter className="mt-6">
+        <div className="mx-3.5 mb-4 mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
           <Button type="button" variant="secondary" onClick={() => handleClose(false)}>
             Cancel
           </Button>
           <Button disabled={loading} onClick={handleSubmit}>
             {loading && <Spinner />}Update Order Item
           </Button>
-        </DialogFooter>
+        </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

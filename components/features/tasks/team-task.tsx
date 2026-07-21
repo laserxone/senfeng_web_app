@@ -1,17 +1,17 @@
 "use client";
+import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog";
+import FilterSheet from "@/components/features/users/filter-sheet";
 import PageTable from "@/components/shared/tables/app-table";
 import { Button } from "@/components/ui/button";
-import FilterSheet from "@/components/features/users/filter-sheet";
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { TaskProps } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, BadgeCheck, CircleDashed, Filter } from "lucide-react";
+import { ArrowUpDown, BadgeCheck, CircleDashed } from "lucide-react";
 import moment from "moment";
 import momentT from "moment-timezone";
 import { useEffect, useState } from "react";
-import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog";
 import TaskDetail from "./task-detail";
 
 const columns: ColumnDef<TaskProps>[] = [
@@ -224,14 +224,9 @@ export default function TeamTask({ height, onUpdateTotal }: { height?: string, o
             setSelectedTask(val);
             setVisible(true);
           }}
+          filter
+          onFilterPress={() => setFilterVisible(true)}
         >
-          <Button
-            onClick={() => setFilterVisible(true)}
-            variant="ghost"
-            className="p-0 w-8"
-          >
-            <Filter />
-          </Button>
           {userID && (
             <AddTaskDialog
               mode="team"

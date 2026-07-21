@@ -122,11 +122,11 @@ const AddItemDialog = ({
 
   return (
     <Dialog open={dialogVisible} onOpenChange={onCloseDialog}>
-      <DialogContent className="max-h-[92vh] w-[96vw] overflow-hidden rounded-md p-0 sm:max-w-6xl">
-        <DialogHeader className="border-b bg-muted/30 px-4 py-3">
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-6xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between ">
             <div>
-              <DialogTitle className="text-base font-bold">Select Item</DialogTitle>
+              <DialogTitle className="text-sm font-semibold text-foreground">Select Item</DialogTitle>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {stock.length} items available
               </p>
@@ -174,6 +174,7 @@ const AddItemDialog = ({
             </div>
           </div>
         </DialogHeader>
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr]">
 
           <div className="border-b bg-muted/10 p-3 lg:border-b-0 lg:border-r">
@@ -321,7 +322,7 @@ const AddItemDialog = ({
                 </Button>
               </div>
             </div>
-        <ScrollArea className="h-[68vh]">
+        <div>
           <div className="flex flex-col gap-3 p-3">
             <div className={view ? "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "flex flex-col gap-2"}>
 
@@ -369,9 +370,10 @@ const AddItemDialog = ({
 
 
           </div>
+        </div>
+        </div>
+        </div>
         </ScrollArea>
-        </div>
-        </div>
 
       </DialogContent>
     </Dialog>

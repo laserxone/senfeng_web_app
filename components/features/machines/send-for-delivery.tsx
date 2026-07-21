@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle
 } from "@/components/ui/dialog";
@@ -25,6 +26,7 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { TriggerFirebaseForMachine } from "@/lib/triggerFirebase";
 import { MachineResponse } from "@/lib/types";
+import { Truck } from "lucide-react";
 import "pdfjs-dist/build/pdf.worker.mjs";
 
 
@@ -94,18 +96,18 @@ const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }: { open: boole
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="w-full sm:max-w-2xl">
-                <DialogHeader>
-                    <DialogTitle>Sending for Delivery</DialogTitle>
+            <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-2xl">
+                <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+                    <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><Truck className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Sending for Delivery</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Confirm delivery information and machine configuration.</DialogDescription></div></div>
                 </DialogHeader>
+                <ScrollArea className="max-h-[calc(100dvh-132px)] px-2 pb-4">
+                    <form
+                        onSubmit={form.handleSubmit(onSubmit, (err) => {
+                            console.log("Validation Errors", err);
+                        })}
+                    >
 
-                <form
-                    onSubmit={form.handleSubmit(onSubmit, (err) => {
-                        console.log("Validation Errors", err);
-                    })}
-                >
-                    <ScrollArea className="h-[calc(100dvh-160px)] pr-2">
-                        <div className="grid gap-4 py-4 px-2">
+                        <div className="grid gap-3 p-3.5 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
 
                             <Controller
                                 name="name"
@@ -261,10 +263,10 @@ const SendForDeliveryDialog = ({ open, onClose, onRefresh, data }: { open: boole
                                 Yes
                             </Button>
                         </div>
-                    </ScrollArea>
 
 
-                </form>
+                    </form>
+                </ScrollArea>
             </DialogContent>
         </Dialog>
     );

@@ -294,14 +294,13 @@ const OutwardModal = ({ visible, onClose }: { visible: boolean, onClose: Dispatc
 
     return (
         <Dialog open={visible} onOpenChange={onClose}>
-            <DialogContent className={`transition-all duration-300 ${createOutward ? "sm:max-w-[90vw] w-[90vw]" : "sm:max-w-4xl w-full"
+            <DialogContent className={`max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-300 ${createOutward ? "sm:max-w-[90vw]" : "sm:max-w-4xl"
                 }`}>
-                <DialogHeader>
-                    <DialogTitle>Outward Gatepass</DialogTitle>
+                <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+                    <DialogTitle className="text-sm font-semibold text-foreground">Outward Gatepass</DialogTitle>
                 </DialogHeader>
-
-                <div className="w-full flex flex-1">
-                    <ScrollArea className="px-2 w-full h-[85dvh]">
+                    <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
+                <div className="w-full p-3.5 pb-4">
                         <div
                             className={`flex gap-6 ${createOutward ? "flex-row" : "flex-col"
                                 } w-full`}
@@ -412,8 +411,8 @@ const OutwardModal = ({ visible, onClose }: { visible: boolean, onClose: Dispatc
                                     </Button>
                                 </form>}
                         </div>
-                    </ScrollArea>
                 </div>
+                    </ScrollArea>
             </DialogContent>
         </Dialog>
     );

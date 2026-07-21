@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { ArrowUpDown, Plus } from "lucide-react";
+import { ArrowUpDown, ClipboardCheck, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 
 
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -209,8 +209,9 @@ export default function MachineDelivery() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
         <Heading
+          panel
           title="Machine Delivery"
           description="Manage machine deliveries"
         />
@@ -325,13 +326,13 @@ const MachineChecklist = () => {
       </Button>
 
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Configure Machine Checklist</DialogTitle>
+        <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
+          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><ClipboardCheck className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Configure Machine Checklist</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Add or update the checklist fields required for delivery.</DialogDescription></div></div>
           </DialogHeader>
 
-          <ScrollArea className="h-[70dvh] pr-4 py-2">
-            <div className="space-y-4 px-2">
+          <ScrollArea className="max-h-[calc(100dvh-132px)]">
+            <div className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
               {Object.entries(form).map(([k, v]) => (
                 <div key={k} className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -355,19 +356,14 @@ const MachineChecklist = () => {
               <Button onClick={handleAddNew}>
                 <Plus /> Add Field
               </Button>
+              <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:justify-end">
+                <Button variant="outline" onClick={onClose}>Cancel</Button>
+                <Button disabled={saveLoading} onClick={handleSave}>{saveLoading && <Spinner />}Save</Button>
+              </div>
             </div>
           </ScrollArea>
-          <DialogFooter>
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button disabled={saveLoading} onClick={handleSave}>
-              {saveLoading && <Spinner />}Save
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
   );
 };
-

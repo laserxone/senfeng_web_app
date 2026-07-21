@@ -12,9 +12,11 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import Spinner from "@/components/ui/spinner";
 
@@ -119,8 +121,9 @@ export default function Page() {
                   Change Password
                 </Button>
               </DialogTrigger>
-              <DialogContent>
-                <DialogTitle>Change Password</DialogTitle>
+              <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
+                <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3"><DialogTitle className="text-sm font-semibold text-foreground">Change Password</DialogTitle></DialogHeader>
+                <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="space-y-3 p-3.5 pb-4">
                 <Input
                   type="password"
                   value={currentPassword}
@@ -140,6 +143,7 @@ export default function Page() {
                   {passwordLoading && <Spinner />}
                   Submit
                 </Button>
+                </div></ScrollArea>
               </DialogContent>
             </Dialog>
           </CardContent>

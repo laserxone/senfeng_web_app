@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import Heading from "@/components/ui/heading"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TIMEZONE } from "@/constants/data"
 import useUserDetail from "@/hooks/use-user-detail"
@@ -61,10 +62,8 @@ export default function EngineerPerformance() {
 
     return (
         <div className="flex flex-1 flex-col space-y-4 pb-4">
-            <div className="flex items-center justify-between gap-2 flex-wrap space-y-2">
-                <h2 className="text-2xl font-bold tracking-tight">
-                    Engineers Performance
-                </h2>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+                <Heading panel title="Engineers Performance" description="Review engineering team performance" />
                 <Button
                     onClick={() => setFilterVisible(true)}
                     variant="outline"

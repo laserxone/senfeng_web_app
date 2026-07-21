@@ -1,21 +1,20 @@
 "use client";
-import { Clock3, Filter, ImageIcon, LogIn, LogOut, MapPin } from "lucide-react";
+import { CalendarDays, Clock3, ImageIcon, LogIn, LogOut, MapPin, UsersRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ElementType, useEffect, useMemo, useState } from "react";
 
+import LeaveApproval from "@/components/features/employee-finance/leave-approval";
+import FilterSheet from "@/components/features/users/filter-sheet";
 import PageTable from "@/components/shared/tables/app-table";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import Heading from "@/components/ui/heading";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Spinner from "@/components/ui/spinner";
-import FilterSheet from "@/components/features/users/filter-sheet";
-import LeaveApproval from "@/components/features/employee-finance/leave-approval";
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
@@ -26,7 +25,6 @@ import { GoogleMap, Marker } from "@react-google-maps/api";
 import moment from "moment";
 import momentT from "moment-timezone";
 import { useTheme } from "next-themes";
-import { Badge } from "@/components/ui/badge";
 import { columns } from "./AttendanceColumns";
 import RenderMarkAttendance from "./attendance-marking";
 
@@ -166,9 +164,28 @@ export default function TeamAttendance() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-start justify-between">
-        <Heading title="Attendace" description="Manage attendance" />
-      </div>
+      <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="flex flex-col gap-3 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+              <Clock3 className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Attendance</h1>
+                <span className="hidden rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold tracking-wide text-muted-foreground uppercase sm:inline-flex">Team workspace</span>
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">Review and manage team attendance records.</p>
+            </div>
+          </div>
+          {team_attendance_marking && <Button onClick={() => setOpen(true)}>Add Attendance</Button>}
+        </div>
+        <div className="grid border-t bg-muted/20 sm:grid-cols-3 sm:divide-x">
+          <AttendanceMetric icon={<UsersRound className="size-4 text-violet-600 dark:text-violet-400" />} label="Records" value={data.length} />
+          <AttendanceMetric icon={<LogIn className="size-4 text-emerald-600 dark:text-emerald-400" />} label="Checked in" value={data.filter((item) => item.time_in).length} />
+          <AttendanceMetric icon={<CalendarDays className="size-4 text-amber-600 dark:text-amber-400" />} label="Leaves" value={data.filter((item) => item.leave_id).length} />
+        </div>
+      </section>
 
 
       <PageTable
@@ -183,43 +200,27 @@ export default function TeamAttendance() {
             setApproveLeave(val);
           }
         }}
-      >
-        <div className=" flex justify-between">
-          <div className="flex gap-4">
-            <Button
-              onClick={() => setFilterVisible(true)}
-              variant="ghost"
-              className="p-0 w-8"
-            >
-              <Filter />
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={async () => {
-                setResetLoading(true);
-                const startDate = momentT
-                  .tz(TIMEZONE)
-                  .startOf("month")
-                  .startOf("day")
-                  .utc()
-                  .toISOString();
-                const endDate = momentT
-                  .tz(TIMEZONE)
-                  .endOf("month")
-                  .endOf("day")
-                  .utc()
-                  .toISOString();
-                await fetchData(startDate, endDate);
-                setResetLoading(false);
-              }}
-            >
-              {resetLoading && <Spinner />} Reset
-            </Button>
-            {team_attendance_marking && <Button onClick={() => setOpen(true)}>Add Attendance</Button>}
-          </div>
-        </div>
-        {/* <Button onClick={handleDownload}>Download</Button> */}
-      </PageTable>
+        onFilterPress={() => setFilterVisible(true)}
+        reset
+        resetLoading={resetLoading}
+        onResetPress={async () => {
+          setResetLoading(true);
+          const startDate = momentT
+            .tz(TIMEZONE)
+            .startOf("month")
+            .startOf("day")
+            .utc()
+            .toISOString();
+          const endDate = momentT
+            .tz(TIMEZONE)
+            .endOf("month")
+            .endOf("day")
+            .utc()
+            .toISOString();
+          await fetchData(startDate, endDate);
+          setResetLoading(false);
+        }}
+      />
       <FilterSheet
         user_disable={false}
         visible={filterVisible}
@@ -271,6 +272,10 @@ export default function TeamAttendance() {
       }} />
     </div>
   );
+}
+
+function AttendanceMetric({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+  return <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">{icon}<div className="flex items-baseline gap-2"><span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{label}</span><span className="text-sm font-bold">{value}</span></div></div>;
 }
 
 export const AttendanceDetail = ({
@@ -377,8 +382,8 @@ export const AttendanceDetail = ({
                         <Badge
                           variant="outline"
                           className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${entry.position
-                              ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
-                              : "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
+                            : "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
                             }`}
                         >
                           {entry.position ? "GPS available" : "No GPS"}

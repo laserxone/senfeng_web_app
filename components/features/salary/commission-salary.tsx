@@ -9,10 +9,11 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import Heading  from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
+import { CircleDollarSign } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -297,26 +299,30 @@ const CommissionRecord = ({ data, fetchData } : {data : CommissionOwnerProps[], 
           setVisibleDisapprove(val);
         }}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject Commission</DialogTitle>
+        <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
+          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-destructive/15 bg-destructive/10 text-destructive"><CircleDollarSign className="h-4 w-4" /></span>
+              <div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Reject Commission</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Provide a clear reason for rejecting this commission.</DialogDescription></div>
+            </div>
           </DialogHeader>
-          <div className="flex flex-col space-y-4">
-            <Label>Rejection Message</Label>
+          <ScrollArea className="max-h-[calc(100dvh-132px)]">
+          <div className="space-y-3 p-3.5 pb-4">
+            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Rejection Message</Label>
             <Input
               placeholder="Enter message"
               value={disapproveMsg}
               onChange={(e) => setDisapproveMsg(e.target.value)}
             />
-          </div>
-          <DialogFooter>
             <Button
               disabled={disapproveLoading || !disapproveMsg}
               onClick={handleDisapprove}
+              className="h-9 w-full rounded-lg"
             >
               {disapproveLoading && <Spinner />} Submit
             </Button>
-          </DialogFooter>
+          </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>

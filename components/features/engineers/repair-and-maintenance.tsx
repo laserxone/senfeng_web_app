@@ -16,6 +16,7 @@ import axios from "@/lib/axios";
 import { UserRepairing } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import moment from "moment";
 import { useEffect, useState } from "react";
 
@@ -242,10 +243,12 @@ const UpdateTaskModal = ({ open, onChange, userID, onRefresh, task_id }: UpdateT
 
     return (
         <Dialog open={open} onOpenChange={onChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Update Task</DialogTitle>
-                    <div className="flex flex-1 flex-col gap-4">
+            <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
+                <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+                    <DialogTitle className="text-sm font-semibold text-foreground">Update Task</DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="max-h-[calc(100dvh-132px)]">
+                    <div className="flex flex-col gap-3 p-3.5 pb-4">
 
                         <div>
                             <h1>
@@ -282,7 +285,7 @@ const UpdateTaskModal = ({ open, onChange, userID, onRefresh, task_id }: UpdateT
                             {loading && <Spinner />} Save
                         </Button>
                     </div>
-                </DialogHeader>
+                </ScrollArea>
             </DialogContent>
         </Dialog>
     );

@@ -1,15 +1,15 @@
-import ThemeToggle from "@/components/core/theme/theme-toggle";
 import { Breadcrumbs } from "@/components/core/navigation/breadcrumbs";
+import ThemeToggle from "@/components/core/theme/theme-toggle";
 import FloatingChat from "@/components/features/chat/floating-chat";
+import { UserNav } from "@/components/features/users/user-nav";
 import FloatingInformation from "@/components/shared/floating/floating-information";
 import FloatingTodo from "@/components/shared/floating/floating-todo";
 import NewsTicker from "@/components/shared/notifications/newsTicker";
 import NotificationSheet from "@/components/shared/notifications/notification-dropdown";
-import SearchInput from "@/components/shared/search/search-input";
 import AppSearch from "@/components/shared/search/app-search";
+import SearchInput from "@/components/shared/search/search-input";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { UserNav } from "@/components/features/users/user-nav";
 
 export default function Header() {
   return (
@@ -20,7 +20,7 @@ export default function Header() {
           <Separator orientation="vertical" className="mr-2 h-6" />
           <Breadcrumbs />
         </div>
-        <div className="hidden md:flex">
+        {/* <div className="hidden md:flex">
           <AppSearch />
         </div>
         <div className="flex items-center gap-2 px-4">
@@ -37,14 +37,14 @@ export default function Header() {
           <FloatingChat />
 
           <UserNav />
-        </div>
+        </div> */}
       </header>
-      <div className="flex flex-1">
+      {/* <div className="flex flex-1">
         <NewsTicker />
       </div>
-       <div className="flex md:hidden">
-          <AppSearch />
-        </div>
+      <div className="flex md:hidden px-4 pb-2">
+        <AppSearch />
+      </div> */}
     </>
   );
 }

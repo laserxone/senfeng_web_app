@@ -215,55 +215,48 @@ export default function PaymentVerification() {
   return (
     <div className="flex flex-1 flex-col gap-5">
       <section className="overflow-hidden rounded-2xl border bg-background shadow-sm">
-        <div className="flex flex-col gap-5 border-b bg-muted/20 p-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 items-start gap-4">
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-              <ShieldCheck className="h-6 w-6" />
+        <div className="p-4 sm:p-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+              <ShieldCheck className="size-5" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Finance control
-              </p>
-              <h1 className="mt-1 text-2xl font-bold tracking-tight">
-                Payment Verification
-              </h1>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                Review customer payments, verify receipt proofs, and approve or reject pending entries.
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Payment Verification</h1>
+                <span className="hidden rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold tracking-wide text-muted-foreground uppercase sm:inline-flex">Workspace</span>
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Review payment receipts and pending approvals.
               </p>
             </div>
           </div>
 
-          <div className="rounded-2xl border bg-background px-4 py-3 shadow-sm">
-            <p className="text-xs font-medium text-muted-foreground">
-              Unverified Payments
-            </p>
-            <div className="mt-1 flex items-end gap-2">
-              <Label className="text-3xl font-bold leading-none">
-                {unverifiedCount}
-              </Label>
-              <span className="text-xs text-muted-foreground">pending</span>
-            </div>
-          </div>
         </div>
 
-        <div className="grid gap-3 p-4 sm:grid-cols-3">
+        <div className="grid border-t bg-muted/20 sm:grid-cols-2 sm:divide-x xl:grid-cols-4">
+          <SummaryTile
+            icon={ShieldCheck}
+            label="Unverified"
+            value={unverifiedCount}
+            iconClassName="text-red-600 dark:text-red-400"
+          />
           <SummaryTile
             icon={CreditCard}
             label="Total Payments"
             value={paymentCount}
-            iconClassName="bg-emerald-50 text-emerald-700 ring-emerald-100"
+            iconClassName="text-emerald-600 dark:text-emerald-400"
           />
           <SummaryTile
             icon={Zap}
             label="Machines"
             value={machineCount}
-            iconClassName="bg-amber-50 text-amber-700 ring-amber-100"
+            iconClassName="text-amber-600 dark:text-amber-400"
           />
           <SummaryTile
             icon={ClipboardCheck}
             label="Customers"
             value={data.length}
-            iconClassName="bg-violet-50 text-violet-700 ring-violet-100"
+            iconClassName="text-violet-600 dark:text-violet-400"
           />
         </div>
       </section>
@@ -544,15 +537,11 @@ function SummaryTile({
   iconClassName: string;
 }) {
   return (
-    <div className="rounded-2xl border bg-background p-4">
-      <div className="flex items-center gap-3">
-        <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ring-1 ${iconClassName}`}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <div>
-          <p className="text-xs font-medium text-muted-foreground">{label}</p>
-          <p className="text-xl font-bold">{value}</p>
-        </div>
+    <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:[&:nth-child(2)]:border-t-0 xl:border-t-0 sm:px-5">
+      <Icon className={`size-4 shrink-0 ${iconClassName}`} />
+      <div className="flex min-w-0 items-baseline gap-2">
+        <span className="truncate text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{label}</span>
+        <span className="text-sm font-bold">{value}</span>
       </div>
     </div>
   );
@@ -594,5 +583,3 @@ function StatusPill({ status }: { status: string }) {
     </span>
   );
 }
-
-

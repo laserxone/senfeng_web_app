@@ -1,33 +1,19 @@
 "use client";
-import { Clock3, Filter, ImageIcon, LogIn, LogOut, MapPin } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-import PageTable from "@/components/shared/tables/app-table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import Heading from "@/components/ui/heading";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import Spinner from "@/components/ui/spinner";
 import { columns } from "@/components/features/attendance/AttendanceColumns";
-import FilterSheet from "@/components/features/users/filter-sheet";
+import { AttendanceDetail } from "@/components/features/attendance/teamAttendance";
 import LeaveApproval from "@/components/features/employee-finance/leave-approval";
+import FilterSheet from "@/components/features/users/filter-sheet";
+import PageTable from "@/components/shared/tables/app-table";
+import Heading from "@/components/ui/heading";
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import { GetProfileImage } from "@/lib/getProfileImage";
 import { AttendanceTableRow, UserAttendanceRecord } from "@/lib/types";
-import { MapProvider } from "@/providers/map-provider";
-import { GoogleMap, Marker } from "@react-google-maps/api";
 import moment from "moment";
 import momentT from "moment-timezone";
-import { useTheme } from "next-themes";
-import { AttendanceDetail } from "@/components/features/attendance/teamAttendance";
 
 export default function Page() {
   const [filterVisible, setFilterVisible] = useState(false);
@@ -164,8 +150,8 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-start justify-between">
-        <Heading title="Attendace" description="Manage attendance" />
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+        <Heading panel title="Attendace" description="Manage attendance" />
       </div>
 
 
@@ -182,42 +168,28 @@ export default function Page() {
             setApproveLeave(val);
           }
         }}
-      >
-        <div className=" flex justify-between">
-          <div className="flex gap-4">
-            <Button
-              onClick={() => setFilterVisible(true)}
-              variant="ghost"
-              className="p-0 w-8"
-            >
-              <Filter />
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={async () => {
-                setResetLoading(true);
-                const startDate = momentT
-                  .tz(TIMEZONE)
-                  .startOf("month")
-                  .startOf("day")
-                  .utc()
-                  .toISOString();
-                const endDate = momentT
-                  .tz(TIMEZONE)
-                  .endOf("month")
-                  .endOf("day")
-                  .utc()
-                  .toISOString();
-                await fetchData(startDate, endDate);
-                setResetLoading(false);
-              }}
-            >
-              {resetLoading && <Spinner />} Reset
-            </Button>
-          </div>
-        </div>
-        {/* <Button onClick={handleDownload}>Download</Button> */}
-      </PageTable>
+        filter
+        onFilterPress={() => setFilterVisible(true)}
+        reset
+        onResetPress={async () => {
+          setResetLoading(true);
+          const startDate = momentT
+            .tz(TIMEZONE)
+            .startOf("month")
+            .startOf("day")
+            .utc()
+            .toISOString();
+          const endDate = momentT
+            .tz(TIMEZONE)
+            .endOf("month")
+            .endOf("day")
+            .utc()
+            .toISOString();
+          await fetchData(startDate, endDate);
+          setResetLoading(false);
+        }}
+        resetLoading={resetLoading}
+      />
       <FilterSheet
         user_disable={false}
         visible={filterVisible}
@@ -250,6 +222,5 @@ export default function Page() {
     </div>
   );
 }
-
 
 

@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
@@ -266,8 +267,8 @@ export default function PricesComponent() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex justify-between flex-wrap">
-        <Heading title="Pricing" description="Manage machine pricings" />
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+        <Heading panel title="Pricing" description="Manage machine pricings" />
       </div>
       {/* <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Price Table</h2>
@@ -350,12 +351,12 @@ export default function PricesComponent() {
       </div>
 
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{isEdit ? "Edit Entry" : "Add New Entry"}</DialogTitle>
+        <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
+          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+            <DialogTitle className="text-sm font-semibold text-foreground">{isEdit ? "Edit Entry" : "Add New Entry"}</DialogTitle>
           </DialogHeader>
-
-          <div className="grid gap-3">
+          <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="space-y-3 p-3.5 pb-4">
+          <div className="grid gap-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
             {Object.keys(emptyForm).map((field, i) => (
               <div key={i}>
                 <Label className="uppercase">
@@ -372,7 +373,7 @@ export default function PricesComponent() {
             ))}
           </div>
 
-          <DialogFooter >
+          <div>
             <div className="flex flex-col w-full gap-2">
               <Button disabled={loading} onClick={handleSave}>
                 {loading && <Spinner />}Save
@@ -380,7 +381,8 @@ export default function PricesComponent() {
               {formData?.id &&
                 <Button variant={"destructive"} onClick={() => setSelectedForDelete(formData)}>Delete</Button>}
             </div>
-          </DialogFooter>
+          </div>
+          </div></ScrollArea>
 
         </DialogContent>
       </Dialog>
@@ -523,12 +525,11 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }: { attachment?
       </DropdownMenu>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Attach file</DialogTitle>
+        <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
+          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+            <DialogTitle className="text-sm font-semibold text-foreground">Attach File</DialogTitle>
           </DialogHeader>
-
-          <div className="space-y-4">
+          <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="space-y-3 p-3.5 pb-4">
             <div className="rounded-lg border border-dashed p-4">
               <input
                 type="file"
@@ -557,6 +558,7 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }: { attachment?
               Upload File
             </Button>
           </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
