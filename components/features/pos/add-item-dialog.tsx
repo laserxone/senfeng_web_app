@@ -1,9 +1,3 @@
-import {
-  List,
-  Search,
-  Table2
-} from "lucide-react";
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,12 +7,17 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  List,
+  Search,
+  Table2
+} from "lucide-react";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import "./Button.css";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 import { InvoiceItem, StockProps } from "@/lib/types";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
-import AddNewProduct from "./add-new-product";
 import RenderStockItems from "./render-stock-items";
 import RenderStockItemsOtherView from "./render-stock-items-other-view";
 
@@ -133,22 +132,6 @@ const AddItemDialog = ({
             </div>
 
             <div className="flex flex-wrap items-center gap-2 pr-4">
-              <Button
-                size="sm"
-                onClick={() => {
-                  if (lowStockStatus) {
-                    handleLowStock();
-                  }
-                }}
-                variant={clickedLowStock ? "destructive" : "outline"}
-                className={`h-8 rounded-md px-3 text-xs ${lowStockStatus ? "blinking-button" : ""}`}
-              >
-                Low Stock
-              </Button>
-              <Button size="sm" className="h-8 rounded-md px-3 text-xs" onClick={handleOrderStock}>
-                Order Stock
-              </Button>
-
               <div className="flex rounded-md border bg-background p-1">
                 <Button
                   type="button"
@@ -174,10 +157,9 @@ const AddItemDialog = ({
             </div>
           </div>
         </DialogHeader>
-        <ScrollArea className="max-h-[calc(100dvh-132px)]">
-        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr]">
-
-          <div className="border-b bg-muted/10 p-3 lg:border-b-0 lg:border-r">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+          <div className="col-span-1">
+          <div className="border-b bg-muted/10 pl-2 py-2">
             <div className="space-y-3">
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
@@ -289,92 +271,78 @@ const AddItemDialog = ({
               )}
             </div>
           </div>
-
-
-          <div className="min-w-0">
-            <div className="flex flex-col gap-2 border-b bg-background/80 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs font-semibold text-muted-foreground">
-                Showing {pageStart}-{pageEnd} of {filteredStock.length} items
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="h-7 rounded-md px-2 text-xs"
-                  disabled={page <= 1}
-                  onClick={() => setPage((current) => Math.max(1, current - 1))}
-                >
-                  Previous
-                </Button>
-                <span className="rounded-md border bg-muted px-2 py-1 text-xs font-bold">
-                  {page} / {totalPages}
-                </span>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="h-7 rounded-md px-2 text-xs"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-        <div>
-          <div className="flex flex-col gap-3 p-3">
-            <div className={view ? "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "flex flex-col gap-2"}>
-
-              {paginatedStock
-                .map((item, index) =>
-                  view ? (
-                    <RenderStockItems
-                      key={index}
-                      item={item}
-                      index={index}
-                      invoiceItems={invoiceItems}
-                      handleDecrease={handleDecrease}
-                      handleIncrease={handleIncrease}
-                      showOther={showOther}
-                      setShowOther={setShowOther}
-                      setQty={setQty}
-                      setPrice={setPrice}
-                      setOther={setOther}
-                      visible={visible}
-                      onClose={onClose}
-                      onRefresh={onRefresh}
-                      designation={designation}
-                    />
-                  ) : (
-                    <RenderStockItemsOtherView
-                      key={index}
-                      item={item}
-                      index={index}
-                      invoiceItems={invoiceItems}
-                      handleDecrease={handleDecrease}
-                      handleIncrease={handleIncrease}
-                      showOther={showOther}
-                      setShowOther={setShowOther}
-                      setQty={setQty}
-                      setPrice={setPrice}
-                      setOther={setOther}
-                      visible={visible}
-                      onClose={onClose}
-                      onRefresh={onRefresh}
-                      designation={designation}
-                    />
-                  )
-                )}
-            </div>
-
-
           </div>
-        </div>
-        </div>
-        </div>
-        </ScrollArea>
+         
+          <ScrollArea className="col-span-3 max-h-[calc(100dvh-400px)] sm:max-h-[calc(100dvh-132px)] lg:border-l">
+              <div className="min-w-0">
+                <div className="flex flex-col gap-2 border-b bg-background/80 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs font-semibold text-muted-foreground">
+                    Showing {pageStart}-{pageEnd} of {filteredStock.length} items
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 rounded-md px-2 text-xs"
+                      disabled={page <= 1}
+                      onClick={() => setPage((current) => Math.max(1, current - 1))}
+                    >
+                      Previous
+                    </Button>
+                    <span className="rounded-md border bg-muted px-2 py-1 text-xs font-bold">
+                      {page} / {totalPages}
+                    </span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 rounded-md px-2 text-xs"
+                      disabled={page >= totalPages}
+                      onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex flex-col gap-3 p-3">
+                    <div className={view ? "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "flex flex-col gap-2"}>
 
+                      {paginatedStock
+                        .map((item, index) =>
+                          view ? (
+                            <RenderStockItems
+                              key={index}
+                              item={item}
+                              invoiceItems={invoiceItems}
+                              handleDecrease={handleDecrease}
+                              handleIncrease={handleIncrease}
+                              onRefresh={onRefresh}
+                              designation={designation}
+                            />
+                          ) : (
+                            <RenderStockItemsOtherView
+                              key={index}
+                              item={item}
+                              invoiceItems={invoiceItems}
+                              handleDecrease={handleDecrease}
+                              handleIncrease={handleIncrease}
+                              onRefresh={onRefresh}
+                              designation={designation}
+                            />
+                          )
+                        )}
+                    </div>
+
+
+                  </div>
+                </div>
+              </div>
+          
+          </ScrollArea>
+        
+        </div>
       </DialogContent>
     </Dialog>
   );

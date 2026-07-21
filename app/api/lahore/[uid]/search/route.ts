@@ -5,6 +5,9 @@ type SearchTable =
   | "customer"
   | "users"
   | "sale"
+  | "payment"
+  | "savedinvoices"
+  | "customer_parts"
   | "lab_tasks"
   | "complaints"
   | "task";
@@ -24,6 +27,15 @@ type SearchUser = {
   limited_access: boolean;
   complaint_assigned: boolean;
   repairing_and_maintenance: boolean;
+  pos_assigned: boolean;
+};
+
+type PaymentSearchRow = SearchRow & {
+  machine_id: number;
+};
+
+type POSSearchRow = SearchRow & {
+  invoice_id: number;
 };
 
 const CUSTOMER_ONLY_ROLES = new Set([
@@ -61,7 +73,8 @@ export async function GET(
           COALESCE(full_access, false) AS full_access,
           COALESCE(limited_access, false) AS limited_access,
           COALESCE(complaint_assigned, false) AS complaint_assigned,
-          COALESCE(repairing_and_maintenance, false) AS repairing_and_maintenance
+          COALESCE(repairing_and_maintenance, false) AS repairing_and_maintenance,
+          COALESCE(pos_assigned, false) AS pos_assigned
         FROM users
         WHERE id = $1
         LIMIT 1
@@ -91,6 +104,8 @@ export async function GET(
       isAdmin || isEngineer || user.complaint_assigned;
     const canSearchRepairs =
       isAdmin || isEngineer || user.repairing_and_maintenance;
+    const canSearchPOS =
+      isAdmin || user.designation === "Store Manager" || user.pos_assigned;
     const restrictComplaintsToUser =
       isEngineer && !isAdmin && !user.complaint_assigned;
     const restrictRepairsToUser =
@@ -275,7 +290,117 @@ export async function GET(
       `);
     }
 
-    const result = await pool.query<SearchRow>(
+    const paymentRowsPromise: Promise<PaymentSearchRow[]> = canSearchSales
+      ? pool
+          .query<PaymentSearchRow>(
+            `
+              SELECT * FROM (
+                SELECT
+                  p.id,
+                  'payment' AS "table",
+                  matches.title,
+                  s.customer_id,
+                  CONCAT_WS(
+                    ' · ',
+                    'Payment',
+                    CASE WHEN c.id IS NOT NULL THEN 'Customer: ' || COALESCE(NULLIF(c.name, ''), c.owner) END,
+                    CASE WHEN s.serial_no IS NOT NULL THEN 'Machine: ' || s.serial_no END
+                  ) AS description,
+                  p.machine_id
+                FROM payment p
+                INNER JOIN sale s ON s.id = p.machine_id
+                LEFT JOIN customer c ON c.id = s.customer_id
+                CROSS JOIN LATERAL (
+                  SELECT p.note AS title WHERE p.note ILIKE $1
+                  UNION
+                  SELECT p.received_by AS title WHERE p.received_by ILIKE $1
+                  UNION
+                  SELECT p.remarks AS title WHERE p.remarks ILIKE $1
+                  UNION
+                  SELECT p.comment AS title WHERE p.comment ILIKE $1
+                  UNION
+                  SELECT p.cheque_id AS title WHERE p.cheque_id ILIKE $1
+                ) matches
+                WHERE TRUE ${
+                  user.limited_access && !isAdmin ? "AND s.sell_by = $2" : ""
+                }
+                ORDER BY p.transaction_date DESC NULLS LAST, p.id DESC
+                LIMIT 10
+              ) AS payment_results
+            `,
+            user.limited_access && !isAdmin
+              ? [`%${q}%`, user.id]
+              : [`%${q}%`],
+          )
+          .then((paymentResult) => paymentResult.rows)
+      : Promise.resolve([]);
+
+    const isKarachiRequest = req.nextUrl.pathname.startsWith("/api/karachi/");
+    const invoiceTable = isKarachiRequest
+      ? "savedinvoices_karachi"
+      : "savedinvoices";
+    const customerPartsTable = isKarachiRequest
+      ? "customer_parts_karachi"
+      : "customer_parts";
+    const posRowsPromise: Promise<POSSearchRow[]> = canSearchPOS
+      ? pool
+          .query<POSSearchRow>(
+            `
+              SELECT * FROM (
+                SELECT
+                  si.id,
+                  'savedinvoices' AS "table",
+                  si.invoicenumber AS title,
+                  si.customer_id,
+                  CONCAT_WS(
+                    ' · ',
+                    'POS Invoice',
+                    CASE WHEN c.id IS NOT NULL THEN 'Customer: ' || COALESCE(NULLIF(c.name, ''), c.owner) END
+                  ) AS description,
+                  si.id AS invoice_id
+                FROM ${invoiceTable} si
+                LEFT JOIN customer c ON c.id = si.customer_id
+                WHERE si.invoicenumber ILIKE $1
+                ORDER BY si.created_at DESC NULLS LAST, si.id DESC
+                LIMIT 10
+              ) AS invoice_results
+
+              UNION ALL
+
+              SELECT * FROM (
+                SELECT
+                  cp.id,
+                  'customer_parts' AS "table",
+                  matches.title,
+                  si.customer_id,
+                  CONCAT_WS(
+                    ' · ',
+                    'POS Payment',
+                    'Invoice: ' || si.invoicenumber,
+                    CASE WHEN c.id IS NOT NULL THEN 'Customer: ' || COALESCE(NULLIF(c.name, ''), c.owner) END
+                  ) AS description,
+                  si.id AS invoice_id
+                FROM ${customerPartsTable} cp
+                INNER JOIN ${invoiceTable} si ON si.id = cp.part_id
+                LEFT JOIN customer c ON c.id = si.customer_id
+                CROSS JOIN LATERAL (
+                  SELECT cp.note AS title WHERE cp.note ILIKE $1
+                  UNION
+                  SELECT cp.remarks AS title WHERE cp.remarks ILIKE $1
+                  UNION
+                  SELECT cp.received_by AS title WHERE cp.received_by ILIKE $1
+                ) matches
+                ORDER BY cp.id DESC
+                LIMIT 10
+              ) AS customer_part_results
+            `,
+            [`%${q}%`],
+          )
+          .then((posResult) => posResult.rows)
+      : Promise.resolve([]);
+
+    const [result, paymentRows, posRows] = await Promise.all([
+      pool.query<SearchRow>(
       `
         WITH matched_customers AS (
           SELECT c.id, c.name, c.owner, matches.title
@@ -296,13 +421,19 @@ export async function GET(
         ORDER BY "table", title
       `,
       usesUserIdParameter ? [`%${q}%`, user.id] : [`%${q}%`],
-    );
+      ),
+      paymentRowsPromise,
+      posRowsPromise,
+    ]);
 
     const results = result.rows.map((row) => {
       const routes: Record<SearchTable, string> = {
         customer: `/${baseRoute}/customer/${row.id}`,
         users: `/${baseRoute}/team/${row.id}`,
         sale: `/${baseRoute}/member/${row.customer_id}/${row.id}`,
+        payment: "",
+        savedinvoices: "",
+        customer_parts: "",
         lab_tasks: `/${baseRoute}/repairandmaintenance?r=${row.id}`,
         complaints: `/${baseRoute}/complaint?c=${row.id}`,
         task: `/${baseRoute}/task?t=${row.id}`,
@@ -310,6 +441,22 @@ export async function GET(
 
       return { ...row, route: routes[row.table] };
     });
+
+    results.push(
+      ...paymentRows.map((row) => ({
+        ...row,
+        route: `/${baseRoute}/member/${row.customer_id}/${row.machine_id}?mp=${row.id}`,
+      })),
+    );
+    results.push(
+      ...posRows.map((row) => ({
+        ...row,
+        route:
+          row.table === "customer_parts"
+            ? `/${baseRoute}/pos/${row.invoice_id}?mp=${row.id}`
+            : `/${baseRoute}/pos/${row.invoice_id}`,
+      })),
+    );
 
     return NextResponse.json(results, { status: 200 });
   } catch (error) {

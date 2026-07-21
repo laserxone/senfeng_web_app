@@ -9,8 +9,6 @@ export async function PUT(
   const {pid :  paymentId } = await params;
   const body = await req.json();
 
-  console.log(body)
-
   const { amount, date, remarks, tid } = body;
 
   const result = await pool.query(

@@ -1,8 +1,8 @@
 "use client";
 
-import PageTablePagination from "@/components/shared/tables/app-table";
 import CurrencyFormatter from "@/components/shared/common/currency-formatter";
 import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import PageTablePagination from "@/components/shared/tables/app-table";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -59,11 +59,11 @@ import {
 import AfterSalesDashboard from "./AfterSalesDashboard";
 
 
-export default function AfterSalesDashboardNew() {
+export default function AfterSalesDashboardNew({ userID }: { userID: string | number | null }) {
 
 
 
-    const { userID, reimbursement_approval } = useUserDetail();
+    const { reimbursement_approval } = useUserDetail();
 
     const [data, setData] = useState<AfterSalesReimbursement[]>([]);
     const [feedbacks, setFeedbacks] = useState<AfterSalesFeedbackResponse | null>(null)
@@ -118,26 +118,27 @@ export default function AfterSalesDashboardNew() {
                 <div className="flex w-full flex-col gap-3">
                     <div className="flex gap-3 w-full">
                         <div className="grid gap-3 xl:grid-cols-2 w-full">
-                            <Feedback data={feedbacks} iconSize="size-3.5"/>
-                            <Complaint start={start} end={end} iconSize="size-3.5"/>
-                            <POSAfterSales iconSize="size-3.5"/>
-                            <TeamAttendanceAfterSales start={start} end={end} iconSize="size-3.5"/>
-                            <ReimbursementAfterSalesMetrics data={data} iconSize="size-3.5"/>
+                            <Feedback data={feedbacks} iconSize="size-3.5" />
+                            <Complaint userID={userID} start={start} end={end} iconSize="size-3.5" />
+                            <POSAfterSales userID={userID} iconSize="size-3.5" />
+                            <TeamAttendanceAfterSales userID={userID} start={start} end={end} iconSize="size-3.5" />
+                            <ReimbursementAfterSalesMetrics data={data} iconSize="size-3.5" />
                         </div>
-                        {data.length > 0 && <ReimbursementAfterSales data={data} onRefresh={fetchData} />}
+                        {data.length > 0 && <ReimbursementAfterSales userID={userID} data={data} onRefresh={fetchData} />}
 
                     </div>
-                    <AfterSalesDashboard onRefresh={fetchFeedbackData} data={{
+                    {userID && <AfterSalesDashboard userID={userID} onRefresh={fetchFeedbackData} data={{
                         withFeedback: feedbacks?.withFeedback.data.map((item) => ({ ...item, number: item.number.join(", ") })) ?? [],
                         withoutFeedback: feedbacks?.withoutFeedback.data.map((item) => ({ ...item, number: item.number.join(", ") })) ?? []
                     }} />
+                    }
                 </div>
             </div>
         </div>
     );
 }
 
-const Feedback = ({ data, iconSize="" }: { data: AfterSalesFeedbackResponse | null, iconSize ?: string }) => {
+const Feedback = ({ data, iconSize = "" }: { data: AfterSalesFeedbackResponse | null, iconSize?: string }) => {
 
     const [open, setOpen] = useState(false)
 
@@ -168,10 +169,10 @@ const Feedback = ({ data, iconSize="" }: { data: AfterSalesFeedbackResponse | nu
 
                 metrics={[
                     { label: "Total", value: analytics.total, icon: <Users />, tone: "blue" },
-                    { label: "Completed", value: analytics.completed, icon: <CheckCircle2 className={iconSize}/>, tone: "green" },
-                    { label: "Satisfied", value: analytics.satisfied, icon: <ThumbsUp className={iconSize}/>, tone: "green" },
-                    { label: "Unsatisfied", value: analytics.unsatisfied, icon: <ThumbsDown className={iconSize}/>, tone: "red" },
-                    { label: "Rate", value: `${analytics.satisfactionRate}%`, icon: <Gauge className={iconSize}/>, tone: "violet" },
+                    { label: "Completed", value: analytics.completed, icon: <CheckCircle2 className={iconSize} />, tone: "green" },
+                    { label: "Satisfied", value: analytics.satisfied, icon: <ThumbsUp className={iconSize} />, tone: "green" },
+                    { label: "Unsatisfied", value: analytics.unsatisfied, icon: <ThumbsDown className={iconSize} />, tone: "red" },
+                    { label: "Rate", value: `${analytics.satisfactionRate}%`, icon: <Gauge className={iconSize} />, tone: "violet" },
                 ]}
             />
 
@@ -183,8 +184,8 @@ const Feedback = ({ data, iconSize="" }: { data: AfterSalesFeedbackResponse | nu
     );
 };
 
-const Complaint = ({ start, end, iconSize = "" }: { start: string, end: string, iconSize ?: string }) => {
-    const { userID, base_route } = useUserDetail();
+const Complaint = ({ userID, start, end, iconSize = "" }: { userID: string | number | null, start: string, end: string, iconSize?: string }) => {
+    const { base_route } = useUserDetail();
     const [data, setData] = useState<ComplaintAssignment[]>([]);
     const router = useRouter()
 
@@ -223,11 +224,11 @@ const Complaint = ({ start, end, iconSize = "" }: { start: string, end: string, 
                 button={true}
                 onClick={() => router.push(`/${base_route}/complaint`)}
                 metrics={[
-                    { label: "New", value: analytics.newComplaints, icon: <CircleAlert className={iconSize}/>, tone: "blue" },
-                    { label: "Pending", value: analytics.pending, icon: <Clock3 className={iconSize}/>, tone: "amber" },
-                    { label: "Resolved", value: analytics.resolved, icon: <BadgeCheck className={iconSize}/>, tone: "green" },
-                    { label: "Installations", value: analytics.installations, icon: <Wrench className={iconSize}/>, tone: "violet" },
-                    { label: "Completed", value: analytics.completed, icon: <ClipboardCheck className={iconSize}/>, tone: "green" },
+                    { label: "New", value: analytics.newComplaints, icon: <CircleAlert className={iconSize} />, tone: "blue" },
+                    { label: "Pending", value: analytics.pending, icon: <Clock3 className={iconSize} />, tone: "amber" },
+                    { label: "Resolved", value: analytics.resolved, icon: <BadgeCheck className={iconSize} />, tone: "green" },
+                    { label: "Installations", value: analytics.installations, icon: <Wrench className={iconSize} />, tone: "violet" },
+                    { label: "Completed", value: analytics.completed, icon: <ClipboardCheck className={iconSize} />, tone: "green" },
                 ]}
             />
 
@@ -235,8 +236,8 @@ const Complaint = ({ start, end, iconSize = "" }: { start: string, end: string, 
     );
 };
 
-const POSAfterSales = ({iconSize=""} : {iconSize ?: string}) => {
-    const { userID } = useUserDetail();
+const POSAfterSales = ({ iconSize = "", userID }: { iconSize?: string, userID: string | number | null }) => {
+
     const [data, setData] = useState<null | AfterSalesPOSResponse>(null);
 
     useEffect(() => {
@@ -264,17 +265,17 @@ const POSAfterSales = ({iconSize=""} : {iconSize ?: string}) => {
             icon={<ReceiptText className="size-4" />}
             option={4}
             metrics={[
-                { label: "Total Sales", value: <CurrencyFormatter amount={totalSales} showPKR={false} />, icon: <Banknote className={iconSize}/>, tone: "blue" },
-                { label: "Pending", value: <CurrencyFormatter amount={pending} showPKR={false} />, icon: <Clock3 className={iconSize}/>, tone: "amber" },
-                { label: "Completed", value: <CurrencyFormatter amount={completed} showPKR={false} />, icon: <CheckCircle2 className={iconSize}/>, tone: "green" },
-                { label: "Collection", value: `${collectionRate}%`, icon: <CircleDollarSign className={iconSize}/>, tone: "violet" },
+                { label: "Total Sales", value: <CurrencyFormatter amount={totalSales} showPKR={false} />, icon: <Banknote className={iconSize} />, tone: "blue" },
+                { label: "Pending", value: <CurrencyFormatter amount={pending} showPKR={false} />, icon: <Clock3 className={iconSize} />, tone: "amber" },
+                { label: "Completed", value: <CurrencyFormatter amount={completed} showPKR={false} />, icon: <CheckCircle2 className={iconSize} />, tone: "green" },
+                { label: "Collection", value: `${collectionRate}%`, icon: <CircleDollarSign className={iconSize} />, tone: "violet" },
             ]}
         />
     );
 };
 
-const TeamAttendanceAfterSales = ({ start, end, iconSize="" }: { start: string, end: string, iconSize ?: string }) => {
-    const { userID } = useUserDetail();
+const TeamAttendanceAfterSales = ({ start, end, iconSize = "", userID }: { userID: string | number | null, start: string, end: string, iconSize?: string }) => {
+
     const [open, setOpen] = useState(false);
 
     const [data, setData] = useState<AttendanceTableRow[]>([]);
@@ -344,10 +345,10 @@ const TeamAttendanceAfterSales = ({ start, end, iconSize="" }: { start: string, 
                 button={true}
                 onClick={() => setOpen(true)}
                 metrics={[
-                    { label: "Present", value: `${analytics.presentPercentage}%`, icon: <UserCheck className={iconSize}/>, tone: "green" },
-                    { label: "Absent", value: `${analytics.absentPercentage}%`, icon: <UserMinus className={iconSize}/>, tone: "red" },
-                    { label: "Late", value: `${analytics.latePercentage}%`, icon: <Clock3 className={iconSize}/>, tone: "amber" },
-                    { label: "Working Days", value: analytics.workingDays, icon: <CalendarDays className={iconSize}/>, tone: "blue" },
+                    { label: "Present", value: `${analytics.presentPercentage}%`, icon: <UserCheck className={iconSize} />, tone: "green" },
+                    { label: "Absent", value: `${analytics.absentPercentage}%`, icon: <UserMinus className={iconSize} />, tone: "red" },
+                    { label: "Late", value: `${analytics.latePercentage}%`, icon: <Clock3 className={iconSize} />, tone: "amber" },
+                    { label: "Working Days", value: analytics.workingDays, icon: <CalendarDays className={iconSize} />, tone: "blue" },
                 ]}
             />
             <Dialog open={open} onOpenChange={setOpen}>
@@ -363,7 +364,7 @@ const TeamAttendanceAfterSales = ({ start, end, iconSize="" }: { start: string, 
     );
 };
 
-const ReimbursementAfterSalesMetrics = ({ data, iconSize="" }: { data: AfterSalesReimbursement[], iconSize ?: string }) => {
+const ReimbursementAfterSalesMetrics = ({ data, iconSize = "" }: { data: AfterSalesReimbursement[], iconSize?: string }) => {
 
     const pending = data.filter((item) => !item.verified).length;
     const approved = data.filter((item) => item.verified).length;
@@ -383,17 +384,17 @@ const ReimbursementAfterSalesMetrics = ({ data, iconSize="" }: { data: AfterSale
             </div>
 
             <div className="grid grid-cols-3 gap-2">
-                <MiniMetric label="Requests" value={data.length} icon={<ReceiptText className={iconSize}/>} tone="blue" />
-                <MiniMetric label="Pending" value={pending} icon={<Clock3 className={iconSize}/>} tone="amber" />
-                <MiniMetric label="Approved" value={approved} icon={<BadgeCheck className={iconSize}/>} tone="green" />
+                <MiniMetric label="Requests" value={data.length} icon={<ReceiptText className={iconSize} />} tone="blue" />
+                <MiniMetric label="Pending" value={pending} icon={<Clock3 className={iconSize} />} tone="amber" />
+                <MiniMetric label="Approved" value={approved} icon={<BadgeCheck className={iconSize} />} tone="green" />
             </div>
         </section>
     );
 };
 
 
-export const ReimbursementAfterSales = ({ data, onRefresh }: { data: AfterSalesReimbursement[], onRefresh: () => Promise<void> }) => {
-    const { userID } = useUserDetail();
+export const ReimbursementAfterSales = ({ data, onRefresh, userID }: { userID: string | number | null, data: AfterSalesReimbursement[], onRefresh: () => Promise<void> }) => {
+
     const [page, setPage] = useState(0);
     const [selectedItem, setSelectedItem] = useState<number | null>(null)
     const [deleteItem, setDeleteItem] = useState<number | null>(null)

@@ -2,8 +2,9 @@
 import AppCalendar from "@/components/features/calendar/app-calendar";
 import ProfilePictureTeam from "@/components/features/users/ProfilePicture";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Field, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -11,6 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import Spinner from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
@@ -32,13 +34,8 @@ import {
   WalletCards,
 } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { ChangeEvent, Dispatch, SetStateAction, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { UserContext } from "@/store/context/UserContext";
-import { Field, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 
 type DocsDataType = {
   cnic: string;
@@ -58,6 +55,7 @@ type UserProfile = {
   name: string;
   number: string;
   kin: string;
+  full_access ?: boolean
 };
 
 export default function DetailComponent({ id }: { id: string | null }) {
@@ -100,9 +98,9 @@ export default function DetailComponent({ id }: { id: string | null }) {
     customer_full_access: false,
     repairing_and_maintenance: false,
     team_attendance: false,
-    careers : false,
-    reimbursement_approval : false,
-    team_attendance_marking : false
+    careers: false,
+    reimbursement_approval: false,
+    team_attendance_marking: false
   });
 
   const [docsData, setDocsData] = useState({
@@ -116,8 +114,6 @@ export default function DetailComponent({ id }: { id: string | null }) {
   });
 
   const [otherDocs, setOtherDocs] = useState([])
-
-
 
   useEffect(() => {
     if (userID && id) {
@@ -140,6 +136,7 @@ export default function DetailComponent({ id }: { id: string | null }) {
             name: apiData?.name,
             number: apiData?.number || "",
             kin: apiData?.kin_number || "",
+            full_access : apiData?.full_access || false
           });
           setChecks({
             branch_expenses_assigned: apiData?.branch_expenses_assigned,
@@ -158,9 +155,9 @@ export default function DetailComponent({ id }: { id: string | null }) {
             customer_full_access: apiData?.customer_full_access,
             repairing_and_maintenance: apiData?.repairing_and_maintenance,
             team_attendance: apiData?.false,
-            careers : apiData?.careers,
-            reimbursement_approval : apiData?.reimbursement_approval,
-            team_attendance_marking : apiData?.team_attendance_marking
+            careers: apiData?.careers,
+            reimbursement_approval: apiData?.reimbursement_approval,
+            team_attendance_marking: apiData?.team_attendance_marking
           });
           setForm({
             basic_salary: apiData?.basic_salary || 0,
@@ -200,6 +197,13 @@ export default function DetailComponent({ id }: { id: string | null }) {
   };
 
   const handleCheck = (field: string, value: boolean) => {
+    const isDealerRestrictedField =
+      fixedData.designation === "Dealer" &&
+      field !== "limited_access" &&
+      !field.startsWith("customer_");
+
+    if (isDealerRestrictedField) return;
+
     setChecks((prev) => ({
       ...prev,
       [field]: value,
@@ -208,6 +212,12 @@ export default function DetailComponent({ id }: { id: string | null }) {
       setChecks((prev) => ({
         ...prev,
         ["limited_access"]: false,
+      }));
+    }
+    if (field == "limited_access" && value == true) {
+      setChecks((prev) => ({
+        ...prev,
+        ["full_access"]: false,
       }));
     }
   };
@@ -240,9 +250,9 @@ export default function DetailComponent({ id }: { id: string | null }) {
         repairing_and_maintenance: checks?.repairing_and_maintenance,
         team_attendance: checks?.team_attendance,
         active: active,
-        careers : checks?.careers,
-        reimbursement_approval : checks?.reimbursement_approval,
-        team_attendance_marking : checks?.team_attendance_marking
+        careers: checks?.careers,
+        reimbursement_approval: checks?.reimbursement_approval,
+        team_attendance_marking: checks?.team_attendance_marking
 
       })
       .then(() => {
@@ -253,176 +263,185 @@ export default function DetailComponent({ id }: { id: string | null }) {
       });
   }
 
+  const OpenDashboard = ["Sales", "Store Manager", "Engineer", "Manager", "Customer Relationship Manager", "Social Media Manager", "Customer Relationship Manager (After Sales)", "Dealer"]
+
 
   return (
-   <div className="flex w-full justify-center pb-4">
-  <div className="w-full space-y-5">
+    <div className="flex w-full justify-center pb-4">
+      <div className="w-full space-y-5">
 
-    {/* Header */}
-    <div className="overflow-hidden rounded-2xl border bg-background shadow-sm">
-      <div className="flex flex-col gap-4 p-4 sm:p-5 md:flex-row md:items-center">
-        <div className="rounded-2xl border bg-muted/20 p-2">
-          <ProfilePictureTeam
-            img={fixedData?.dp}
-            name={fixedData?.name}
-            loading={loading}
-          />
+        {/* Header */}
+        <div className="overflow-hidden rounded-2xl border bg-background shadow-sm">
+          <div className="flex flex-col gap-4 p-4 sm:p-5 md:flex-row md:items-center">
+            <div className="rounded-2xl border bg-muted/20 p-2">
+              <ProfilePictureTeam
+                img={fixedData?.dp}
+                name={fixedData?.name}
+                loading={loading}
+              />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full border bg-muted/30 px-3 py-1 text-xs font-medium text-muted-foreground">
+                <BriefcaseBusiness className="h-3.5 w-3.5 text-blue-600" />
+                Employee profile
+              </div>
+              <h1 className="truncate text-2xl font-bold tracking-tight">{fixedData?.name || "Employee"}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">{fixedData?.designation || "No designation"}</p>
+
+              {OpenDashboard?.includes(fixedData?.designation) && (
+                <Link
+                  href={`/lahore/superadmin/team/${id}/dashboard?designation=${fixedData?.designation}&admin=${fixedData?.full_access}`}
+                  target="_blank"
+                  className="mt-2 inline-flex items-center rounded-full border bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 hover:underline"
+                >
+                  Open Dashboard
+                </Link>
+              )}
+            </div>
+
+            <div className="flex sm:items-center flex-col gap-2 sm:flex-row md:justify-end">
+              <div>
+                <div className={`rounded-full border px-3 py-1 text-xs font-semibold ${active ? "bg-emerald-50 text-emerald-700" : "bg-muted/30 text-muted-foreground"}`}>
+                  {active ? "Active" : "Inactive"}
+                </div>
+              </div>
+              <Button onClick={handleSave} className="w-full sm:w-auto">
+                {dataLoading && <Spinner />} Save Changes
+              </Button>
+            </div>
+          </div>
         </div>
 
-        <div className="min-w-0 flex-1">
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border bg-muted/30 px-3 py-1 text-xs font-medium text-muted-foreground">
-            <BriefcaseBusiness className="h-3.5 w-3.5 text-blue-600" />
-            Employee profile
-          </div>
-          <h1 className="truncate text-2xl font-bold tracking-tight">{fixedData?.name || "Employee"}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{fixedData?.designation || "No designation"}</p>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
-          {fixedData?.designation === "Sales" && (
-            <Link
-              href={`/lahore/superadmin/team/${id}/dashboard`}
-              target="blank"
-              className="mt-2 inline-flex items-center rounded-full border bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 hover:underline"
-            >
-              Open Dashboard
-            </Link>
-          )}
-        </div>
+          {/* Personal Details */}
+          <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+            <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+              <WalletCards className="h-4 w-4 text-emerald-700" />
+              Salary Details
+            </FieldLegend>
+            {Object.keys(form).map(
+              (key) =>
+                key !== "note" && (
+                  <Field key={key}>
+                    <FieldLabel>{key.replace(/_/g, " ").toUpperCase()}</FieldLabel>
+                    <Input
+                      value={form[key as keyof typeof form]}
+                      onChange={(e) => handleInputChange(key, e.target.value)}
+                    />
+                  </Field>
+                ),
+            )}
+          </FieldSet>
 
-        <div className="flex flex-col gap-2 sm:flex-row md:justify-end">
-          <div className={`rounded-full border px-3 py-1 text-xs font-semibold ${active ? "bg-emerald-50 text-emerald-700" : "bg-muted/30 text-muted-foreground"}`}>
-            {active ? "Active" : "Inactive"}
-          </div>
-          <Button onClick={handleSave} className="w-full sm:w-auto">
-            {dataLoading && <Spinner />} Save Changes
-          </Button>
+          {/* Preferences */}
+          <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+            <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+              <ShieldCheck className="h-4 w-4 text-blue-700" />
+              Access & Preferences
+            </FieldLegend>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {Object.keys(checks).map((key) => (
+                (fixedData?.designation === 'Engineer' && key === "complaint_assigned") ? null :
+                  <div key={key} className="flex min-h-11 items-center gap-3 rounded-xl border bg-muted/15 px-3 py-2">
+                    <Checkbox
+                      checked={checks[key as keyof typeof checks]}
+                      onCheckedChange={(checked: boolean) => handleCheck(key, checked)}
+                      disabled={
+                        fixedData.designation === "Dealer" &&
+                        key !== "limited_access" &&
+                        !key.startsWith("customer_")
+                      }
+                    />
+                    <Label className="text-xs font-medium leading-snug">{key.replace(/_/g, " ").toUpperCase()}</Label>
+                  </div>
+              ))}
+            </div>
+          </FieldSet>
+
+          {/* Contact Information */}
+          <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+            <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+              <Phone className="h-4 w-4 text-violet-700" />
+              Contact Information
+            </FieldLegend>
+
+            <Field>
+              <FieldLabel>PHONE NUMBER</FieldLabel>
+              <Input value={fixedData?.number} disabled />
+            </Field>
+
+            <Field>
+              <FieldLabel>KINSHIP NUMBER</FieldLabel>
+              <Input value={fixedData?.kin} disabled />
+            </Field>
+          </FieldSet>
+
+          {/* Dates & Status */}
+          <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
+            <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+              <CalendarDays className="h-4 w-4 text-amber-700" />
+              Dates & Status
+            </FieldLegend>
+
+            <Field>
+              <FieldLabel>JOINING DATE</FieldLabel>
+              <AppCalendar
+                date={joiningDate}
+                onChange={(date) => setJoiningDate(date)}
+              />
+            </Field>
+
+            <Field>
+              <FieldLabel>LEAVING DATE</FieldLabel>
+              <AppCalendar
+                date={leavingDate}
+                onChange={(date) => setLeavingDate(date)}
+              />
+            </Field>
+
+            <div className="flex items-center justify-between rounded-xl border bg-muted/15 p-3">
+              <Label className="font-medium">Status</Label>
+              <Switch checked={active} onCheckedChange={setActive} />
+            </div>
+          </FieldSet>
+
+          {/* Note */}
+          <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4 lg:col-span-2">
+            <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+              <StickyNote className="h-4 w-4 text-slate-700" />
+              Note
+            </FieldLegend>
+            <Field>
+              <Textarea
+                value={form.note}
+                onChange={(e) => handleInputChange("note", e.target.value)}
+              />
+            </Field>
+          </FieldSet>
+
+          {/* Documents */}
+          <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4 lg:col-span-2">
+            <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
+              <FileText className="h-4 w-4 text-rose-700" />
+              Documents
+            </FieldLegend>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <DocumentCard type={"cnic"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+              <DocumentCard type={"father_cnic"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+              <DocumentCard type={"police"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+              <DocumentCard type={"education"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+              <DocumentCard type={"resume"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+              <DocumentCard type={"appointment_letter"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+              <DocumentCard type={"contract"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
+              <DocumentCardOther userID={userID} otherDocs={otherDocs} employeeId={employeeId} fetchData={fetchData} />
+            </div>
+          </FieldSet>
+
         </div>
       </div>
     </div>
-
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      
-      {/* Personal Details */}
-      <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
-        <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
-          <WalletCards className="h-4 w-4 text-emerald-700" />
-          Salary Details
-        </FieldLegend>
-        {Object.keys(form).map(
-          (key) =>
-            key !== "note" && (
-              <Field key={key}>
-                <FieldLabel>{key.replace(/_/g, " ").toUpperCase()}</FieldLabel>
-                <Input
-                  value={form[key as keyof typeof form]}
-                  onChange={(e) => handleInputChange(key, e.target.value)}
-                />
-              </Field>
-            ),
-        )}
-      </FieldSet>
-
-      {/* Preferences */}
-      <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
-        <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
-          <ShieldCheck className="h-4 w-4 text-blue-700" />
-          Access & Preferences
-        </FieldLegend>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {Object.keys(checks).map((key) => (
-            (fixedData?.designation === 'Engineer' && key === "complaint_assigned") ? null :
-            <div key={key} className="flex min-h-11 items-center gap-3 rounded-xl border bg-muted/15 px-3 py-2">
-              <Checkbox
-                checked={checks[key as keyof typeof checks]}
-                onCheckedChange={(checked: boolean) => handleCheck(key, checked)}
-              />
-              <Label className="text-xs font-medium leading-snug">{key.replace(/_/g, " ").toUpperCase()}</Label>
-            </div>
-          ))}
-        </div>
-      </FieldSet>
-
-      {/* Contact Information */}
-      <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
-        <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
-          <Phone className="h-4 w-4 text-violet-700" />
-          Contact Information
-        </FieldLegend>
-        
-        <Field>
-          <FieldLabel>PHONE NUMBER</FieldLabel>
-          <Input value={fixedData?.number} disabled />
-        </Field>
-
-        <Field>
-          <FieldLabel>KINSHIP NUMBER</FieldLabel>
-          <Input value={fixedData?.kin} disabled />
-        </Field>
-      </FieldSet>
-
-      {/* Dates & Status */}
-      <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
-        <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
-          <CalendarDays className="h-4 w-4 text-amber-700" />
-          Dates & Status
-        </FieldLegend>
-        
-        <Field>
-          <FieldLabel>JOINING DATE</FieldLabel>
-          <AppCalendar
-            date={joiningDate}
-            onChange={(date) => setJoiningDate(date)}
-          />
-        </Field>
-
-        <Field>
-          <FieldLabel>LEAVING DATE</FieldLabel>
-          <AppCalendar
-            date={leavingDate}
-            onChange={(date) => setLeavingDate(date)}
-          />
-        </Field>
-
-        <div className="flex items-center justify-between rounded-xl border bg-muted/15 p-3">
-          <Label className="font-medium">Status</Label>
-          <Switch checked={active} onCheckedChange={setActive} />
-        </div>
-      </FieldSet>
-
-      {/* Note */}
-      <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4 lg:col-span-2">
-        <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
-          <StickyNote className="h-4 w-4 text-slate-700" />
-          Note
-        </FieldLegend>
-        <Field>
-          <Textarea
-            value={form.note}
-            onChange={(e) => handleInputChange("note", e.target.value)}
-          />
-        </Field>
-      </FieldSet>
-
-      {/* Documents */}
-      <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4 lg:col-span-2">
-        <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
-          <FileText className="h-4 w-4 text-rose-700" />
-          Documents
-        </FieldLegend>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <DocumentCard type={"cnic"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-          <DocumentCard type={"father_cnic"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-          <DocumentCard type={"police"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-          <DocumentCard type={"education"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-          <DocumentCard type={"resume"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-          <DocumentCard type={"appointment_letter"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-          <DocumentCard type={"contract"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-          <DocumentCardOther userID={userID} otherDocs={otherDocs} employeeId={employeeId} fetchData={fetchData} />
-        </div>
-      </FieldSet>
-
-    </div>
-  </div>
-</div>
   );
 }
 
@@ -742,7 +761,7 @@ const DocumentCard =
   }
 
 const RenderEachFile = ({ file, userId, otherDocs, employeeId, fetchData }: {
-  file: any, userId: number | string, otherDocs: string[], employeeId: string | null, fetchData: ()=> Promise<void>
+  file: any, userId: number | string, otherDocs: string[], employeeId: string | null, fetchData: () => Promise<void>
 }) => {
   const [loading, setLoading] = useState(false)
   const cleanName = file.name.replace(/^\d+-/, "");
@@ -784,74 +803,74 @@ const RenderEachFile = ({ file, userId, otherDocs, employeeId, fetchData }: {
   };
 
   return (
-   <div
-  className="
+    <div
+      className="
     grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto]
     gap-4
     rounded-2xl border p-4
     hover:bg-muted/40 transition-colors
   "
->
-  <a
-    href={file.url}
-    download={cleanName}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="min-w-0 flex flex-col"
-  >
-    <span
-      className="
-        text-sm font-medium leading-relaxed
-        break-words
-      "
-    >
-      {cleanName}
-    </span>
-
-    <span className="text-xs text-muted-foreground mt-1">
-      Click to download
-    </span>
-  </a>
-
-  <div
-    className="
-      flex flex-row sm:flex-col
-      items-stretch
-      gap-2
-      w-full sm:w-auto
-    "
-  >
-    <Button
-      type="button"
-      size="sm"
-      variant="secondary"
-      className="flex-1 sm:flex-none"
-      asChild
     >
       <a
         href={file.url}
         download={cleanName}
         target="_blank"
         rel="noopener noreferrer"
+        className="min-w-0 flex flex-col"
       >
-        Download
-      </a>
-    </Button>
+        <span
+          className="
+        text-sm font-medium leading-relaxed
+        break-words
+      "
+        >
+          {cleanName}
+        </span>
 
-    <Button
-      type="button"
-      size="sm"
-      variant="destructive"
-      className="flex-1 sm:flex-none"
-      onClick={() => handleDelete(file.path)}
-      disabled={loading}
-    >
-      <div className="flex items-center gap-2">
-        {loading && <Spinner />}
-        Delete
+        <span className="text-xs text-muted-foreground mt-1">
+          Click to download
+        </span>
+      </a>
+
+      <div
+        className="
+      flex flex-row sm:flex-col
+      items-stretch
+      gap-2
+      w-full sm:w-auto
+    "
+      >
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          className="flex-1 sm:flex-none"
+          asChild
+        >
+          <a
+            href={file.url}
+            download={cleanName}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Download
+          </a>
+        </Button>
+
+        <Button
+          type="button"
+          size="sm"
+          variant="destructive"
+          className="flex-1 sm:flex-none"
+          onClick={() => handleDelete(file.path)}
+          disabled={loading}
+        >
+          <div className="flex items-center gap-2">
+            {loading && <Spinner />}
+            Delete
+          </div>
+        </Button>
       </div>
-    </Button>
-  </div>
-</div>
+    </div>
   )
 }

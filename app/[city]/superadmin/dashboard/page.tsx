@@ -4,9 +4,9 @@ import SuperadminDashboard from "@/components/features/dashboards/superadmin-das
 import useUserDetail from "@/hooks/use-user-detail";
 
 export default function Page() {
-  const { designation } = useUserDetail()
+  const { designation, userID } = useUserDetail()
 
   if (designation === 'Customer Relationship Manager')
-    return <CRMDashboard />
+    return <CRMDashboard userID={userID}/>
   else return <SuperadminDashboard />
 }

@@ -4,8 +4,9 @@ import { MyImg } from "@/components/features/machines/machine-component";
 import AddPOSPayment from "@/components/features/pos/add-pos-payment";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import Heading from "@/components/ui/heading";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
@@ -18,13 +19,47 @@ import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
 import { POSPaymentDetailProps, Payment } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, Info, ShieldCheck, Trash, TriangleAlert } from "lucide-react";
+import {
+  ArrowUpDown,
+  Building2,
+  CalendarDays,
+  CircleDollarSign,
+  Clock3,
+  Hash,
+  Info,
+  MessageSquareText,
+  PackageOpen,
+  Phone,
+  Plus,
+  ReceiptText,
+  ShieldCheck,
+  Trash,
+  TriangleAlert,
+  UserRound,
+  WalletCards,
+} from "lucide-react";
 import moment from "moment";
 import { Params } from "next/dist/server/request/params";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { MyImgZooming } from "@/components/shared/media/img-zooming";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
+
+function DetailTile({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: ReactNode }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-xl border bg-muted/20 p-3">
+      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-background text-primary shadow-sm ring-1 ring-border">
+        <Icon className="size-4" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+        <div className="mt-0.5 truncate text-sm font-semibold">{value}</div>
+      </div>
+    </div>
+  );
+}
 
 export default function PaymentDetail({ params }: { params: Params }) {
   const [data, setData] = useState<POSPaymentDetailProps | null>(null);
@@ -34,6 +69,20 @@ export default function PaymentDetail({ params }: { params: Params }) {
   const [imageURL, setImageURL] = useState<Payment | null>(null);
   const [visible, setVisible] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
+
+  const updatePaymentQuery = useCallback((paymentId?: string | number) => {
+    const url = new URL(window.location.href);
+
+    if (paymentId !== undefined) {
+      url.searchParams.set("mp", String(paymentId));
+      window.history.pushState({}, "", url);
+    } else {
+      url.searchParams.delete("mp");
+      window.history.replaceState({}, "", url);
+    }
+
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, []);
 
   useEffect(() => {
     if (userID && params?.id) {
@@ -46,6 +95,25 @@ export default function PaymentDetail({ params }: { params: Params }) {
       ?.reduce((sum, p) => sum + Number(p.amount || 0), 0)
       .toFixed(0) || 0,
   );
+
+  useEffect(() => {
+    const syncPaymentImageFromUrl = () => {
+      const paymentId = new URLSearchParams(window.location.search).get("mp");
+      const payment = paymentId
+        ? data?.payments?.find((item) => String(item.id) === paymentId)
+        : undefined;
+
+      setImageURL(payment || null);
+      setVisible(Boolean(payment));
+    };
+
+    syncPaymentImageFromUrl();
+    window.addEventListener("popstate", syncPaymentImageFromUrl);
+
+    return () => {
+      window.removeEventListener("popstate", syncPaymentImageFromUrl);
+    };
+  }, [data?.payments]);
 
   async function fetchData() {
     setLoading(true);
@@ -197,8 +265,9 @@ export default function PaymentDetail({ params }: { params: Params }) {
                 <div
                   className="cursor-pointer"
                   onClick={() => {
-                    setImageURL(payment);
-                    setVisible(true);
+                    if (payment.id) {
+                      updatePaymentQuery(payment.id);
+                    }
                   }}
                 >
                   <MyImg img={payment.image} />
@@ -217,13 +286,13 @@ export default function PaymentDetail({ params }: { params: Params }) {
         },
       },
     ],
-    [isAdmin],
+    [isAdmin, updatePaymentQuery],
   );
 
   useEffect(() => {
     if (data && data?.fields?.length > 0) {
       let total = 0;
-      let dis = Number(data?.discount) || 0;
+      const dis = Number(data?.discount) || 0;
       data?.fields?.forEach((item) => {
         total = total + Number(item.total);
       });
@@ -241,80 +310,148 @@ export default function PaymentDetail({ params }: { params: Params }) {
   }
 
   const status = calculateStatus();
+  const pending = Math.max(totalAmount - paid, 0);
+  const itemsSubtotal = (data?.fields || []).reduce(
+    (sum, item) => sum + Number(item.total || 0),
+    0,
+  );
+  const totalQuantity = (data?.fields || []).reduce(
+    (sum, item) => sum + Number(item.qty || 0),
+    0,
+  );
   return (
-    <div className="flex flex-col gap-6 w-full">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
-        <Heading
-          panel
-          title="Invoice Payments"
-          description="Invoice details and payment history"
-        />
-
-        <Button onClick={() => setShow(!show)}>Add Payment</Button>
-      </div>
-
-      <Card>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Customer</p>
-            <p className="font-semibold text-base">{data?.name}</p>
-            {data?.company && (
-              <p className="text-sm text-muted-foreground">{data.company}</p>
-            )}
-            {data?.phone && (
-              <p className="text-sm text-muted-foreground">{data.phone}</p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Invoice</p>
-            <p className="font-semibold">{data?.invoicenumber}</p>
-            <p className="text-sm text-muted-foreground">
-              {data?.created_at
-                ? moment(data.created_at).format("YYYY-MM-DD")
-                : "-"}
-            </p>
-          </div>
-
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Summary</p>
-
-            <div className="flex justify-between text-sm">
-              <span>Payable</span>
-              <span className="font-medium">{totalAmount}</span>
+    <div className="flex w-full flex-col gap-4">
+      <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="flex flex-col gap-4 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+              <ReceiptText className="size-5" />
             </div>
-
-            <div className="flex justify-between text-sm">
-              <span>Paid</span>
-              <span className="font-medium">{paid}</span>
-            </div>
-
-             <div className="flex justify-between text-sm">
-              <span>Pending</span>
-              <span className="font-medium">{Number(totalAmount)-Number(paid)}</span>
-            </div>
-
-            <div className="flex justify-between text-sm">
-              <span>Discount</span>
-              <span className="font-medium">
-                {Math.floor(Number(data?.discount ?? 0))}
-              </span>
-            </div>
-
-            <div className="flex justify-between text-sm">
-              <span>Status</span>
-              <span
-                className={`font-medium ${status === "Paid" ? "text-green-600" : "text-orange-600"
-                  }`}
-              >
-                {status}
-              </span>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Payment detail</h1>
+                <Badge variant="outline" className="rounded-full bg-muted/50 text-[10px] uppercase tracking-wider">
+                  {status}
+                </Badge>
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">Invoice details and complete payment history.</p>
             </div>
           </div>
+          <Button onClick={() => setShow(!show)} className="gap-2 self-start rounded-xl lg:self-auto">
+            <Plus className="size-4" /> Add payment
+          </Button>
+        </div>
+
+        <div className="grid border-t bg-muted/20 sm:grid-cols-3 sm:divide-x">
+          {[
+            { label: "Payable", value: totalAmount, icon: WalletCards, color: "text-violet-600 dark:text-violet-400" },
+            { label: "Paid", value: paid, icon: CircleDollarSign, color: "text-emerald-600 dark:text-emerald-400" },
+            { label: "Pending", value: pending, icon: Clock3, color: "text-amber-600 dark:text-amber-400" },
+          ].map(({ label, value, icon: Icon, color }, index) => (
+            <div key={label} className={`flex items-center gap-3 px-4 py-3 sm:px-5 ${index ? "border-t sm:border-t-0" : ""}`}>
+              <Icon className={`size-4 ${color}`} />
+              <div className="flex min-w-0 items-baseline gap-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
+                <span className="truncate text-sm font-bold"><CurrencyFormatter amount={value} /></span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <Card className="overflow-hidden rounded-2xl shadow-sm">
+        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-4">
+          <DetailTile icon={UserRound} label="Customer" value={data?.name || "—"} />
+          <DetailTile icon={Building2} label="Company" value={data?.company || "—"} />
+          <DetailTile icon={Hash} label="Invoice" value={data?.invoicenumber || "—"} />
+          <DetailTile icon={CalendarDays} label="Invoice date" value={data?.created_at ? moment(data.created_at).format("DD MMM YYYY") : "—"} />
+          {data?.phone && <DetailTile icon={Phone} label="Phone" value={data.phone} />}
+          <DetailTile icon={CircleDollarSign} label="Discount" value={<CurrencyFormatter amount={Math.floor(Number(data?.discount ?? 0))} />} />
         </CardContent>
       </Card>
 
-      <Card className="w-full">
+      <Card className="w-full overflow-hidden rounded-2xl border-border/70 shadow-sm">
+        <CardHeader className="border-b bg-muted/10 px-4 py-3 sm:px-5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15">
+                <PackageOpen className="size-4" />
+              </span>
+              <div className="flex min-w-0 items-baseline gap-2">
+                <h2 className="shrink-0 text-sm font-semibold">Items Sold</h2>
+                <span className="hidden truncate text-xs text-muted-foreground sm:inline">Invoice contents</span>
+              </div>
+            </div>
+            <Badge variant="secondary" className="shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium">
+              {totalQuantity} {totalQuantity === 1 ? "item" : "items"}
+            </Badge>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-0">
+          {data?.fields?.length ? (
+            <>
+              <div className="hidden grid-cols-[minmax(0,1fr)_72px_140px] border-b bg-muted/20 px-5 py-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground sm:grid">
+                <span>Description</span>
+                <span className="text-center">Qty</span>
+                <span className="text-right">Total</span>
+              </div>
+              <div className="divide-y">
+                {data.fields.map((item, index) => (
+                  <div
+                    key={item.id ?? `${item.description}-${index}`}
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 px-4 py-2.5 transition-colors hover:bg-muted/20 sm:grid-cols-[minmax(0,1fr)_72px_140px] sm:px-5"
+                  >
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <span className="grid size-6 shrink-0 place-items-center rounded-md bg-muted text-[10px] font-semibold text-muted-foreground">
+                        {index + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium leading-5" title={item.description}>
+                        {item.description || "Unnamed item"}
+                        </p>
+                        <span className="text-[11px] text-muted-foreground sm:hidden">Qty {item.qty}</span>
+                      </div>
+                    </div>
+                    <div className="hidden text-center sm:block">
+                      <Badge variant="outline" className="h-6 min-w-9 justify-center rounded-md bg-background px-1.5 text-xs font-medium">
+                        {item.qty}
+                      </Badge>
+                    </div>
+                    <div className="text-right">
+                      <span className="whitespace-nowrap text-sm font-semibold tabular-nums">
+                        <CurrencyFormatter amount={Number(item.total || 0)} />
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-2 border-t bg-muted/20 px-4 py-3 text-xs sm:px-5">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <span>Subtotal</span>
+                  <span className="font-medium text-foreground"><CurrencyFormatter amount={itemsSubtotal} /></span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <span>Discount</span>
+                  <span className="font-medium text-foreground">- <CurrencyFormatter amount={Number(data.discount || 0)} /></span>
+                </div>
+                <div className="flex items-center gap-2 border-l pl-5">
+                  <span className="font-medium">Invoice total</span>
+                  <span className="text-sm font-bold text-primary"><CurrencyFormatter amount={totalAmount} /></span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center px-4 py-10 text-center">
+              <PackageOpen className="mb-3 size-8 text-muted-foreground/50" />
+              <p className="text-sm font-medium">No invoice items found</p>
+              <p className="mt-1 text-xs text-muted-foreground">Items sold on this invoice will appear here.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="w-full overflow-hidden rounded-2xl shadow-sm">
         <CardHeader className="border-b">
           <div className="flex items-center justify-between">
             <div>
@@ -341,8 +478,7 @@ export default function PaymentDetail({ params }: { params: Params }) {
         editAllowed={isAdmin}
         visible={visible}
         onClose={() => {
-          setVisible(false);
-          setImageURL(null);
+          updatePaymentQuery();
         }}
         img={imageURL?.image || null}
         note={imageURL?.note || null}
@@ -448,39 +584,82 @@ const ImageSheet = ({
 
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
-      <SheetContent>
-        <SheetHeader className="mb-4">
-          <SheetTitle>Payment Image</SheetTitle>
-          {!payment_lock && editAllowed && (
-            <Button
-              className="mb-2"
-              variant="destructive"
-              size="icon"
-              onClick={(e) => {
-                if (!id) return;
-                setDeleteLoading(true);
-                handleDelete(id);
-              }}
-            >
-              {deleteLoading ? <Spinner /> : <Trash size={16} />}
-            </Button>
-          )}
-          <MyImgZooming img={img} />
+      <SheetContent className="w-full overflow-hidden border-l-0 p-0 sm:max-w-xl sm:border-l">
+        <div className="flex h-full flex-col bg-muted/20">
+          <SheetHeader className="border-b bg-background px-5 py-5 text-left sm:px-6">
+            <div className="flex items-start justify-between gap-4 pr-8">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15">
+                  <ReceiptText className="size-5" />
+                </span>
+                <div className="min-w-0">
+                  <SheetTitle className="text-lg font-bold tracking-tight">Payment Receipt</SheetTitle>
+                  <p className="mt-1 text-xs text-muted-foreground">Transaction proof and payment details</p>
+                </div>
+              </div>
+              {!payment_lock && editAllowed && (
+                <Button
+                  className="h-9 shrink-0 rounded-xl px-3 shadow-sm"
+                  variant="destructive"
+                  size="sm"
+                  disabled={deleteLoading}
+                  onClick={() => {
+                    if (!id) return;
+                    setDeleteLoading(true);
+                    handleDelete(id);
+                  }}
+                >
+                  {deleteLoading ? <Spinner /> : <Trash className="size-4" />}
+                  <span className="hidden sm:inline">Delete</span>
+                </Button>
+              )}
+            </div>
+          </SheetHeader>
 
-          <strong>TID</strong>
-          <Label>{note}</Label>
+          <ScrollArea className="min-h-0 flex-1">
+            <div className="space-y-4 p-4 sm:p-6">
+              <div className="overflow-hidden rounded-2xl border bg-background shadow-sm">
+                <div className="flex items-center justify-between border-b bg-muted/30 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-semibold">Payment proof</p>
+                    <p className="text-xs text-muted-foreground">Select the image to inspect it closely</p>
+                  </div>
+                  <Badge variant="outline" className="rounded-full bg-background px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider">Receipt</Badge>
+                </div>
+                <div className="relative flex min-h-64 items-center justify-center bg-slate-50/80 p-3 dark:bg-zinc-950/40 sm:min-h-80 sm:p-4">
+                  <MyImgZooming img={img} fill />
+                </div>
+              </div>
 
-          {cheque_id && (
-            <>
-              <strong>Cheque#</strong>
-              <Label>{cheque_id}</Label>
-            </>
-          )}
-
-          <strong>Remarks</strong>
-          <Label>{remarks}</Label>
-        </SheetHeader>
+              <div className="rounded-2xl border bg-background p-4 shadow-sm">
+                <div className="mb-4 flex items-center gap-2">
+                  <ShieldCheck className="size-4 text-emerald-600" />
+                  <h3 className="text-sm font-semibold">Payment details</h3>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <ReceiptField icon={Hash} label="TID" value={note || "Not provided"} />
+                  {cheque_id && <ReceiptField icon={ReceiptText} label="Cheque #" value={cheque_id} />}
+                  <div className="sm:col-span-2">
+                    <ReceiptField icon={MessageSquareText} label="Remarks" value={remarks || "No remarks added"} multiline />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+        </div>
       </SheetContent>
     </Sheet>
   );
 };
+
+function ReceiptField({ icon: Icon, label, value, multiline = false }: { icon: LucideIcon; label: string; value: string; multiline?: boolean }) {
+  return (
+    <div className="h-full rounded-xl border bg-muted/20 p-3">
+      <div className="mb-2 flex items-center gap-2 text-muted-foreground">
+        <Icon className="size-3.5" />
+        <span className="text-[10px] font-semibold uppercase tracking-wider">{label}</span>
+      </div>
+      <Label className={`block break-words text-sm font-semibold leading-6 ${multiline ? "whitespace-pre-wrap" : ""}`}>{value}</Label>
+    </div>
+  );
+}

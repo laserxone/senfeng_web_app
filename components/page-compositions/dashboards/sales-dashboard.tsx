@@ -1,4 +1,12 @@
 "use client";
+import Attendance from "@/components/features/attendance/attendance";
+import AddFeedbackDialog from "@/components/features/customer-relations/add-feedback";
+import CustomerEmployee from "@/components/features/customer-relations/customer";
+import VisitTab from "@/components/features/customer-relations/visit-tab";
+import RenderFines from "@/components/features/employee-finance/render-fines";
+import RenderReturnable from "@/components/features/employee-finance/render-returnable";
+import SalaryRecord from "@/components/features/employee-finance/salary-record";
+import Reimbursement from "@/components/features/reimbursements/Reimbursement";
 import ChequeClearanceAlert from "@/components/features/sales/cheque-alert";
 import { CustomerInsights } from "@/components/features/sales/customer-insights";
 import SalesQuickActions from "@/components/features/sales/quick-actions";
@@ -6,6 +14,9 @@ import RecentQuotations from "@/components/features/sales/recent-quotations";
 import { MetricDialogState, SalesMetricCard, SalesMetricDetailsDialog } from "@/components/features/sales/sales-metric";
 import TargetOverview from "@/components/features/sales/target-overview";
 import RenderTodayTasks from "@/components/features/sales/today-task";
+import MyTasks from "@/components/features/tasks/my-tasks";
+import { CustomerExtraData } from "@/components/features/users/extra-data";
+import UserTabs from "@/components/features/users/user-tabs";
 import {
   Accordion,
   AccordionContent,
@@ -26,17 +37,6 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import AddFeedbackDialog from "@/components/features/customer-relations/add-feedback";
-import Attendance from "@/components/features/attendance/attendance";
-import CustomerEmployee from "@/components/features/customer-relations/customer";
-import { CustomerExtraData } from "@/components/features/users/extra-data";
-import MyTasks from "@/components/features/tasks/my-tasks";
-import Reimbursement from "@/components/features/reimbursements/Reimbursement";
-import RenderFines from "@/components/features/employee-finance/render-fines";
-import RenderReturnable from "@/components/features/employee-finance/render-returnable";
-import SalaryRecord from "@/components/features/employee-finance/salary-record";
-import UserTabs from "@/components/features/users/user-tabs";
-import VisitTab from "@/components/features/customer-relations/visit-tab";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
@@ -46,15 +46,11 @@ import moment from "moment";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import "./styles.css";
 
+export default function SalesDashboardPage({ id: userID, }: { id: string | number }) {
 
-
-export default function UserDashboard({ id: userID, }: { id: string}) {
-
-
-  const { userID: ownerId, base_route } = useUserDetail();
   const [data, setData] = useState<SalesDashboard>();
+  const { base_route } = useUserDetail();
   const [visitData, setVisitData] = useState<SalesVisitTypes[]>([]);
   const [extraData, setExtraData] = useState<UserExtraTypes>();
   const [selectedOption, setSelectedOption] = useState("thisMonth");
@@ -74,35 +70,36 @@ export default function UserDashboard({ id: userID, }: { id: string}) {
   const pendingRequests = useRef(0)
 
   const { open } = useSidebar()
-   useEffect(() => {
-      if (userID && ownerId) {
-        let cancelled = false;
-        const startDate = moment().startOf("month").toISOString();
-        const endDate = moment().endOf("month").toISOString();
-        const start = moment().startOf("day").toISOString();
-        const end = moment().endOf("day").toISOString();
-  
-        setDashboardSkeletonLoading(true);
-  
-        Promise.allSettled([
-          fetchData(),
-          fetchVisitData(startDate, endDate),
-          fetchExtraCustomerOptions(),
-          fetchReimbursementData(startDate, endDate),
-          fetchAttendanceData(startDate, endDate),
-          fetchCallData(startDate, endDate),
-          fetchTasks(start, end),
-        ]).finally(() => {
-          if (!cancelled) {
-            setDashboardSkeletonLoading(false);
-          }
-        });
-  
-        return () => {
-          cancelled = true;
-        };
-      }
-    }, [userID, ownerId]);
+
+  useEffect(() => {
+    if (userID) {
+      let cancelled = false;
+      const startDate = moment().startOf("month").toISOString();
+      const endDate = moment().endOf("month").toISOString();
+      const start = moment().startOf("day").toISOString();
+      const end = moment().endOf("day").toISOString();
+
+      setDashboardSkeletonLoading(true);
+
+      Promise.allSettled([
+        fetchData(),
+        fetchVisitData(startDate, endDate),
+        fetchExtraCustomerOptions(),
+        fetchReimbursementData(startDate, endDate),
+        fetchAttendanceData(startDate, endDate),
+        fetchCallData(startDate, endDate),
+        fetchTasks(start, end),
+      ]).finally(() => {
+        if (!cancelled) {
+          setDashboardSkeletonLoading(false);
+        }
+      });
+
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [userID]);
 
   useEffect(() => {
     const paramTab = searchParams.get("p");
@@ -298,8 +295,8 @@ export default function UserDashboard({ id: userID, }: { id: string}) {
   }, [userID, data]);
 
   const RenderReimbursement = useCallback(() => {
-
     return (
+
       <Reimbursement
         id={userID}
         passingData={reimbursementData || []}
@@ -447,215 +444,212 @@ export default function UserDashboard({ id: userID, }: { id: string}) {
     );
   }
 
-   return (
-      <div className="flex flex-1 gap-4 bg-background  py-2">
-        <div className="flex flex-1 flex-col gap-4">
-          {loading && (
-            <div className="sticky top-0 z-20 h-1 overflow-hidden rounded-full bg-muted">
-              <div className="h-full w-1/3 animate-pulse rounded-full bg-primary" />
-            </div>
-          )}
-  
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
-            <SalesMetricCard
-              title="Pending Payments"
-              value={data?.new_entries?.pending_payments?.total || 0}
-              icon={WalletCards}
-              accent="from-blue-50 via-sky-50 to-white text-blue-700 ring-blue-100"
-              iconClassName="bg-blue-600"
-              description="Machine payments"
-              onClick={() =>
-                setSelectedMetric({
-                  kind: "pending_payments",
-                  title: "Pending Payments",
-                  total: data?.new_entries?.pending_payments?.total || 0,
-                  totalAmount: data?.new_entries?.pending_payments?.total_amount,
-                  data: data?.new_entries?.pending_payments?.data || [],
-                })
-              }
-            />
-  
-            <SalesMetricCard
-              title="Pending Parts Payments"
-              value={data?.new_entries?.pending_parts_payments?.total || 0}
-              icon={ReceiptText}
-              accent="from-violet-50 via-purple-50 to-white text-violet-700 ring-violet-100"
-              iconClassName="bg-violet-600"
-              description="Parts invoices"
-              onClick={() =>
-                setSelectedMetric({
-                  kind: "pending_parts_payments",
-                  title: "Pending Parts Payments",
-                  total: data?.new_entries?.pending_parts_payments?.total || 0,
-                  totalAmount: data?.new_entries?.pending_parts_payments?.total_amount,
-                  data: data?.new_entries?.pending_parts_payments?.data || [],
-                })
-              }
-            />
-  
-            <SalesMetricCard
-              title="Pending Deliveries"
-              value={data?.new_entries?.pending_deliveries?.total || 0}
-              icon={Truck}
-              accent="from-amber-50 via-orange-50 to-white text-amber-700 ring-amber-100"
-              iconClassName="bg-amber-600"
-              description="Ready / awaiting"
-              onClick={() =>
-                setSelectedMetric({
-                  kind: "pending_deliveries",
-                  title: "Pending Deliveries",
-                  total: data?.new_entries?.pending_deliveries?.total || 0,
-                  data: data?.new_entries?.pending_deliveries?.data || [],
-                })
-              }
-            />
-  
-            <SalesMetricCard
-              title="Follow up Required"
-              value={data?.new_entries?.top_follow?.total || 0}
-              icon={MessageSquareWarning}
-              accent="from-rose-50 via-red-50 to-white text-rose-700 ring-rose-100"
-              iconClassName="bg-rose-600"
-              description="Priority follow ups"
-              onClick={() =>
-                setSelectedMetric({
-                  kind: "top_follow",
-                  title: "Follow up Required",
-                  total: data?.new_entries?.top_follow?.total || 0,
-                  data: data?.new_entries?.top_follow?.data || [],
-                })
-              }
-            />
-  
-            <SalesMetricCard
-              title="Calls This Month"
-              value={data?.feedbacksTakenThisMonth || 0}
-              icon={PhoneCall}
-              accent="from-emerald-50 via-teal-50 to-white text-emerald-700 ring-emerald-100"
-              iconClassName="bg-emerald-600"
-              description={`of ${data?.totalCustomersWithSale || 0}`}
-            />
-  
-            <SalesMetricCard
-              title="Visits This Month"
-              value={data?.totalVisits || 0}
-              icon={MapPinned}
-              accent="from-indigo-50 via-blue-50 to-white text-indigo-700 ring-indigo-100"
-              iconClassName="bg-indigo-600"
-              description="of 15"
-            />
+  return (
+    <div className="flex flex-1 gap-4 bg-background  py-2">
+      <div className="flex flex-1 flex-col gap-4">
+        {loading && (
+          <div className="sticky top-0 z-20 h-1 overflow-hidden rounded-full bg-muted">
+            <div className="h-full w-1/3 animate-pulse rounded-full bg-primary" />
           </div>
-          <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-3">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:col-span-2 xl:auto-rows-[300px]">
-  
-              <CustomerInsights
-                cities={cityInsightItems}
-                industries={industryInsightItems}
-              />
-  
-              <TargetOverview data={data?.target} />
-  
-              <SalesQuickActions onRefreshVisit={async () => {
+        )}
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
+          <SalesMetricCard
+            title="Pending Payments"
+            value={data?.new_entries?.pending_payments?.total || 0}
+            icon={WalletCards}
+            accent="from-blue-50 via-sky-50 to-white text-blue-700 ring-blue-100"
+            iconClassName="bg-blue-600"
+            description="Machine payments"
+            onClick={() =>
+              setSelectedMetric({
+                kind: "pending_payments",
+                title: "Pending Payments",
+                total: data?.new_entries?.pending_payments?.total || 0,
+                totalAmount: data?.new_entries?.pending_payments?.total_amount,
+                data: data?.new_entries?.pending_payments?.data || [],
+              })
+            }
+          />
+
+          <SalesMetricCard
+            title="Pending Parts Payments"
+            value={data?.new_entries?.pending_parts_payments?.total || 0}
+            icon={ReceiptText}
+            accent="from-violet-50 via-purple-50 to-white text-violet-700 ring-violet-100"
+            iconClassName="bg-violet-600"
+            description="Parts invoices"
+            onClick={() =>
+              setSelectedMetric({
+                kind: "pending_parts_payments",
+                title: "Pending Parts Payments",
+                total: data?.new_entries?.pending_parts_payments?.total || 0,
+                totalAmount: data?.new_entries?.pending_parts_payments?.total_amount,
+                data: data?.new_entries?.pending_parts_payments?.data || [],
+              })
+            }
+          />
+
+          <SalesMetricCard
+            title="Pending Deliveries"
+            value={data?.new_entries?.pending_deliveries?.total || 0}
+            icon={Truck}
+            accent="from-amber-50 via-orange-50 to-white text-amber-700 ring-amber-100"
+            iconClassName="bg-amber-600"
+            description="Ready / awaiting"
+            onClick={() =>
+              setSelectedMetric({
+                kind: "pending_deliveries",
+                title: "Pending Deliveries",
+                total: data?.new_entries?.pending_deliveries?.total || 0,
+                data: data?.new_entries?.pending_deliveries?.data || [],
+              })
+            }
+          />
+
+          <SalesMetricCard
+            title="Follow up Required"
+            value={data?.new_entries?.top_follow?.total || 0}
+            icon={MessageSquareWarning}
+            accent="from-rose-50 via-red-50 to-white text-rose-700 ring-rose-100"
+            iconClassName="bg-rose-600"
+            description="Priority follow ups"
+            onClick={() =>
+              setSelectedMetric({
+                kind: "top_follow",
+                title: "Follow up Required",
+                total: data?.new_entries?.top_follow?.total || 0,
+                data: data?.new_entries?.top_follow?.data || [],
+              })
+            }
+          />
+
+          <SalesMetricCard
+            title="Calls This Month"
+            value={data?.feedbacksTakenThisMonth || 0}
+            icon={PhoneCall}
+            accent="from-emerald-50 via-teal-50 to-white text-emerald-700 ring-emerald-100"
+            iconClassName="bg-emerald-600"
+            description={`of ${data?.totalCustomersWithSale || 0}`}
+          />
+
+          <SalesMetricCard
+            title="Visits This Month"
+            value={data?.totalVisits || 0}
+            icon={MapPinned}
+            accent="from-indigo-50 via-blue-50 to-white text-indigo-700 ring-indigo-100"
+            iconClassName="bg-indigo-600"
+            description="of 15"
+          />
+        </div>
+        <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:col-span-2 xl:auto-rows-[300px]">
+
+            <CustomerInsights
+              cities={cityInsightItems}
+              industries={industryInsightItems}
+            />
+
+            <TargetOverview data={data?.target} />
+
+            <SalesQuickActions onRefreshVisit={async () => {
+              const startDate = moment().startOf("month").toISOString();
+              const endDate = moment().endOf("month").toISOString();
+              await fetchVisitData(startDate, endDate);
+              await fetchData();
+            }}
+              onRefreshReimbursement={async () => {
                 const startDate = moment().startOf("month").toISOString();
                 const endDate = moment().endOf("month").toISOString();
-                await fetchVisitData(startDate, endDate);
-                await fetchData();
+                await fetchReimbursementData(startDate, endDate);
+
               }}
-                onRefreshReimbursement={async () => {
-                  const startDate = moment().startOf("month").toISOString();
-                  const endDate = moment().endOf("month").toISOString();
-                  await fetchReimbursementData(startDate, endDate);
-  
-                }}
-                onRefreshCustomer={async () => {
-                  await fetchData()
-                  await fetchExtraCustomerOptions()
-                }}
-                onRefreshFeedback={async () => {
-                  await fetchData()
-                  await fetchExtraCustomerOptions()
-                }}
-                onRefreshQuotation={async () => {
-                  await fetchData()
-                }}
-                onRefreshTask={async () => {
-  
-                  await fetchData()
-                  const start = moment().startOf("day").toISOString();
-                  const end = moment().endOf("day").toISOString();
-                  await fetchTasks(start, end)
-                }} />
-              <MyTasks data={data?.allTasks} />
-  
-            </div>
-            <div className="min-h-0 xl:col-span-1 xl:h-[616px]">
-              <RecentQuotations data={data?.recentQuotations} />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-3">
-            <div className="min-h-0 xl:col-span-2">
-              <RenderTodayTasks data={todayTasks} onRefresh={async () => {
+              onRefreshCustomer={async () => {
+                await fetchData()
+                await fetchExtraCustomerOptions()
+              }}
+              onRefreshFeedback={async () => {
+                await fetchData()
+                await fetchExtraCustomerOptions()
+              }}
+              onRefreshQuotation={async () => {
+                await fetchData()
+              }}
+              onRefreshTask={async () => {
+
                 await fetchData()
                 const start = moment().startOf("day").toISOString();
                 const end = moment().endOf("day").toISOString();
                 await fetchTasks(start, end)
               }} />
-            </div>
-            <div className="min-h-0 xl:col-span-1 xl:h-[600px]">
-              <ChequeClearanceAlert />
-            </div>
+            <MyTasks data={data?.allTasks} />
+
           </div>
-  
-  
-          <ScrollArea className={`${tabsMaxWidth}`}>
-            <UserTabs tabs={tabs} routeTo={routeTo} activeTab={activeTab} />
-            <ScrollBar orientation="horizontal" />
-  
-          </ScrollArea>
-  
-  
-          <div hidden={activeTab !== "newCustomers"} className={`${isMobile && "max-w-[calc(100vw-30px)]"}`}>
-            <RenderNewCustomer />
+          <div className="min-h-0 xl:col-span-1 xl:h-[616px]">
+            <RecentQuotations data={data?.recentQuotations} />
           </div>
-          <div hidden={activeTab !== "members"} >
-            <RenderMembers />
-          </div>
-          <div hidden={activeTab !== "reimbursement"} >
-            <RenderReimbursement />
-          </div>
-          <div hidden={activeTab !== "visit"}>
-            <RenderVisitTab />
-          </div>
-          <div hidden={activeTab !== "calls"} >
-            <RenderCallTab />
-          </div>
-          <div hidden={activeTab !== "attendance"} >
-            <RenderAttendance />
-          </div>
-          <div hidden={activeTab !== "salary"} >
-  
-  
-            <SalaryRecord id={userID} height="min-h-[calc(100dvh-420px)]" />
-  
-  
-          </div>
-          <div hidden={activeTab !== "issued"} >
-            <RenderReturnable userID={userID} height="min-h-[calc(100dvh-420px)]" onUpdateTotal={(val) => setAllReturnables(val)} />
-          </div>
-          <div hidden={activeTab !== "fines"} >
-            <RenderFines userID={userID} height="min-h-[calc(100dvh-480px)]" onUpdateTotal={(val) => setAllFines(val)} />
-          </div>
-  
-  
         </div>
-  
-        <SalesMetricDetailsDialog
-          metric={selectedMetric}
-          onClose={() => setSelectedMetric(null)}
-          baseRoute={base_route}
-        />
-      </div >
-    );
+        <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-3">
+          <div className="min-h-0 xl:col-span-2">
+            <RenderTodayTasks data={todayTasks} onRefresh={async () => {
+              await fetchData()
+              const start = moment().startOf("day").toISOString();
+              const end = moment().endOf("day").toISOString();
+              await fetchTasks(start, end)
+            }} />
+          </div>
+          <div className="min-h-0 xl:col-span-1 xl:h-[600px]">
+            <ChequeClearanceAlert />
+          </div>
+        </div>
+
+        <ScrollArea className={`${tabsMaxWidth}`}>
+          <UserTabs tabs={tabs} routeTo={routeTo} activeTab={activeTab} />
+          <ScrollBar orientation="horizontal" />
+
+        </ScrollArea>
+
+
+        <div hidden={activeTab !== "newCustomers"} className={`${isMobile && "max-w-[calc(100vw-30px)]"}`}>
+          <RenderNewCustomer />
+        </div>
+        <div hidden={activeTab !== "members"} >
+          <RenderMembers />
+        </div>
+        <div hidden={activeTab !== "reimbursement"} >
+          <RenderReimbursement />
+        </div>
+        <div hidden={activeTab !== "visit"}>
+          <RenderVisitTab />
+        </div>
+        <div hidden={activeTab !== "calls"} >
+          <RenderCallTab />
+        </div>
+        <div hidden={activeTab !== "attendance"} >
+          <RenderAttendance />
+        </div>
+        <div hidden={activeTab !== "salary"} >
+
+
+          <SalaryRecord id={userID} height="min-h-[calc(100dvh-420px)]" />
+
+
+        </div>
+        <div hidden={activeTab !== "issued"} >
+          <RenderReturnable userID={userID} height="min-h-[calc(100dvh-420px)]" onUpdateTotal={(val) => setAllReturnables(val)} />
+        </div>
+        <div hidden={activeTab !== "fines"} >
+          <RenderFines userID={userID} height="min-h-[calc(100dvh-480px)]" onUpdateTotal={(val) => setAllFines(val)} />
+        </div>
+      </div>
+      {/* <MachinesSold visible={visible} setVisible={setVisible} machineData={machineData} base_route={base_route} /> */}
+      <SalesMetricDetailsDialog
+        metric={selectedMetric}
+        onClose={() => setSelectedMetric(null)}
+        baseRoute={base_route}
+      />
+    </div >
+  );
 }
 
 function SalesDashboardSkeleton() {

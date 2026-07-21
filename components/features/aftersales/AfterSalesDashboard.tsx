@@ -1,31 +1,26 @@
 "use client";
+import Attendance from "@/components/features/attendance/attendance";
+import RenderFines from "@/components/features/employee-finance/render-fines";
+import SalaryRecord from "@/components/features/employee-finance/salary-record";
+import Reimbursement from "@/components/features/reimbursements/Reimbursement";
 import TeamTask from "@/components/features/tasks/team-task";
+import UserTabs from "@/components/features/users/user-tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useSidebar } from "@/components/ui/sidebar";
-import Attendance from "@/components/features/attendance/attendance";
-import Reimbursement from "@/components/features/reimbursements/Reimbursement";
-import RenderFines from "@/components/features/employee-finance/render-fines";
-import SalaryRecord from "@/components/features/employee-finance/salary-record";
 import { useIsMobile } from "@/hooks/use-mobile";
-import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { UserAttendanceRecord, UserReimbursementType } from "@/lib/types";
-import { updateItemPurpose } from "@/lib/updatePurpose";
 import { BadgeAlert, CalendarCheck, ReceiptText, UserPlus, Users, Wallet } from "lucide-react";
 import moment from "moment";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import UserTabs from "@/components/features/users/user-tabs";
 import PendingFeedbackData from "./aftersales-pending-feedback";
 import { DashboardData } from "./aftersales-types";
 
-export default function AfterSalesDashboard({ data, onRefresh }: { data: DashboardData, onRefresh: () => Promise<void> }) {
+export default function AfterSalesDashboard({ data, onRefresh, userID }: { userID: string | number, data: DashboardData, onRefresh: () => Promise<void> }) {
   const [reimbursementData, setReimbursementData] = useState<UserReimbursementType[]>([]);
   const [attendanceData, setAttendanceData] = useState<UserAttendanceRecord[]>([]);
-
-  const { userID } = useUserDetail();
-
   const [activeTab, setActiveTab] = useState("feedback");
   const [allFines, setAllFines] = useState(0)
   const [allTeamTasks, setAllTeamTasks] = useState(0)
@@ -148,13 +143,13 @@ export default function AfterSalesDashboard({ data, onRefresh }: { data: Dashboa
 
   const RenderAttendance = useCallback(() => {
     return (
-          <Attendance
+      <Attendance
 
-            passingData={attendanceData}
-            onFilterReturn={async (start, end) => {
-              await fetchAttendanceData(start, end);
-            }}
-          />
+        passingData={attendanceData}
+        onFilterReturn={async (start, end) => {
+          await fetchAttendanceData(start, end);
+        }}
+      />
     );
   }, [attendanceData]);
 
@@ -237,8 +232,6 @@ export default function AfterSalesDashboard({ data, onRefresh }: { data: Dashboa
         </div>
 
       </div>
-
-      {/* <AutoScrollMembers /> */}
     </div>
   );
 }

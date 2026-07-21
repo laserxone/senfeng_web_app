@@ -1,58 +1,42 @@
+import Dropzone from "@/components/shared/uploads/dropzone";
+import { Button } from "@/components/ui/button";
+import Spinner from "@/components/ui/spinner";
 import { storage } from "@/config/firebase";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { InvoiceItem, StockProps } from "@/lib/types";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { Minus, PencilIcon, Plus } from "lucide-react";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import Spinner from "@/components/ui/spinner";
 import "./Button.css";
-import Dropzone from "@/components/shared/uploads/dropzone";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
-import { MyImgZooming } from "@/components/shared/media/img-zooming";
 
 type RenderStockItemsProps = {
-  designation: string,
+  designation?: string,
   item: StockProps,
-  index: number,
-  invoiceItems: InvoiceItem[],
-  handleDecrease: (item: StockProps) => void,
-  handleIncrease: (item: StockProps) => void,
-  showOther: boolean,
-  setShowOther: Dispatch<SetStateAction<boolean>>,
-  setPrice: Dispatch<SetStateAction<string | number>>,
-  setQty: Dispatch<SetStateAction<string | number>>,
-  setOther: Dispatch<SetStateAction<string>>,
-  visible: boolean,
-  onClose: (val: boolean) => void,
-  onRefresh: () => void,
+  invoiceItems?: InvoiceItem[],
+  handleDecrease?: (item: StockProps) => void,
+  handleIncrease?: (item: StockProps) => void,
+  onRefresh?: () => void,
 }
 
 const RenderStockItems = ({
   designation,
   item,
-  index,
   invoiceItems,
   handleDecrease,
   handleIncrease,
-  showOther,
-  setShowOther,
-  setPrice,
-  setQty,
-  setOther,
-  visible,
-  onClose,
   onRefresh,
 }: RenderStockItemsProps) => {
   const [localName, setLocalName] = useState("");
   const [localChineseName, setLocalChineseName] = useState("");
   const [localQty, setLocalQty] = useState<number | string>("");
   const [localPrice, setLocalPrice] = useState("");
-  const [localImage, setLocalImage] = useState<File | null>(null);
+  const [localImage, setLocalImage] = useState<File | Blob | null>(null);
   const [editable, setEditable] = useState(false);
   const [remarks, setRemarks] = useState("")
   const [loading, setLoading] = useState(false);
@@ -198,7 +182,7 @@ const RenderStockItems = ({
 
       await axios.put(`/${userID}/pos/${id}`, formData);
 
-      onRefresh();
+      onRefresh?.();
     } catch (error) {
       toast.error("Failed to upload image or data. Try again");
     } finally {
@@ -246,7 +230,7 @@ const RenderStockItems = ({
           <Dropzone
 
             value={localImage ? URL.createObjectURL(localImage) : null}
-            onDrop={(file) => {
+            onDropFile={(file) => {
               setLocalImage(file);
             }}
             title="Click to upload"
@@ -353,20 +337,20 @@ const RenderStockItems = ({
             style={{ opacity: editable ? 0.5 : 1 }}
             onClick={() => {
               if (!editable) {
-                handleDecrease(item);
+                handleDecrease?.(item);
               }
             }}
           >
             <Minus className="h-3.5 w-3.5 text-red-600" />
           </div>
 
-          <p className="min-w-7 text-center text-xs font-bold">{invoiceItems.find((eachItem) => eachItem.id === item.id)?.qty ?? 0}</p>
+          <p className="min-w-7 text-center text-xs font-bold">{invoiceItems?.find((eachItem) => eachItem.id === item.id)?.qty ?? 0}</p>
           <div
             className="flex h-7 w-7 items-center justify-center rounded-md hover:cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
             style={{ opacity: editable ? 0.5 : 1 }}
             onClick={() => {
               if (!editable) {
-                handleIncrease(item);
+                handleIncrease?.(item);
               }
             }}
           >

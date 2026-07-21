@@ -18,11 +18,14 @@ import axios, { cancelRequest } from "@/lib/axios";
 import { cn } from "@/lib/utils";
 import {
   ClipboardList,
+  CreditCard,
   MessageSquareWarning,
+  ReceiptText,
   Search,
   ShoppingBag,
   UserRound,
   UsersRound,
+  WalletCards,
   Wrench,
   X,
 } from "lucide-react";
@@ -34,6 +37,9 @@ type SearchTable =
   | "customer"
   | "users"
   | "sale"
+  | "payment"
+  | "savedinvoices"
+  | "customer_parts"
   | "lab_tasks"
   | "complaints"
   | "task";
@@ -52,6 +58,9 @@ const tableOrder: SearchTable[] = [
   "customer",
   "users",
   "sale",
+  "payment",
+  "savedinvoices",
+  "customer_parts",
   "lab_tasks",
   "complaints",
   "task",
@@ -61,6 +70,9 @@ const resultMeta = {
   customer: { label: "Customers", icon: UsersRound },
   users: { label: "People", icon: UserRound },
   sale: { label: "Sales", icon: ShoppingBag },
+  payment: { label: "Payments", icon: CreditCard },
+  savedinvoices: { label: "POS Invoices", icon: ReceiptText },
+  customer_parts: { label: "POS Payments", icon: WalletCards },
   lab_tasks: { label: "Repairing & Maintenance", icon: Wrench },
   complaints: { label: "Complaints & Installations", icon: MessageSquareWarning },
   task: { label: "Tasks", icon: ClipboardList },

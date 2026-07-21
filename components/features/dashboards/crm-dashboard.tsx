@@ -1,7 +1,12 @@
 "use client";
+import { ReimbursementAfterSales } from "@/components/features/aftersales/AfterSalesDashboardNew";
+import { AfterSalesReimbursement } from "@/components/features/aftersales/aftersales-types";
+import SalesTeamProgressChartCRM from "@/components/shared/charts/sales_progress/crm-sales-progress";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebounce } from "@/hooks/use-debounce";
 import useUserDetail from "@/hooks/use-user-detail";
@@ -13,9 +18,9 @@ import {
   Banknote,
   BriefcaseBusiness,
   CalendarClock,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  CheckCircle2,
   CircleDashed,
   Clock3,
   MessageSquareText,
@@ -29,22 +34,16 @@ import moment from "moment";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect, useMemo, useState } from "react";
-import SalesTeamProgressChartCRM from "@/components/shared/charts/sales_progress/crm-sales-progress";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { ReimbursementAfterSales } from "@/components/features/aftersales/AfterSalesDashboardNew";
-import { AfterSalesReimbursement } from "@/components/features/aftersales/aftersales-types";
 
-export default function CRMDashboard() {
+export default function CRMDashboard({ userID }: { userID: string | number }) {
   const [data, setData] = useState<CRMDashboardData>();
   const [loading, setLoading] = useState(false);
   const [userTaskData, setUserTaskData] = useState<AdminTeamTasks[]>([]);
-  const { userID, base_route } = useUserDetail()
+  const { base_route } = useUserDetail()
   const debouncedUserId = useDebounce(userID, 1000);
   const { state: OfficeState } = useContext(OfficeContext)!
   const [feedbackOpen, setFeedbackOpen] = useState(false)
-   const [unassigned, setUnassigned] = useState(false)
+  const [unassigned, setUnassigned] = useState(false)
   const [topOpen, setTopOpen] = useState(false)
   const [reimbursementApprovals, setReimbursementApprovals] = useState<AfterSalesReimbursement[]>([])
   const router = useRouter()
@@ -63,25 +62,23 @@ export default function CRMDashboard() {
 
   async function fetchReimbursementApprovals() {
 
-     const start = moment()
-            .startOf("month")
-            .startOf("day")
-            .utc()
-            .toISOString();
-        const end = moment()
-            .endOf("month")
-            .endOf("day")
-            .utc()
-            .toISOString();
-          try {
-  
-             
-                  const res = await axios.get(`/${userID}/reimbursementapproval?start_date=${start}&end_date=${end}`);
-                  setReimbursementApprovals(res.data);
-              
-          } finally {
-          }
-      }
+    const start = moment()
+      .startOf("month")
+      .startOf("day")
+      .utc()
+      .toISOString();
+    const end = moment()
+      .endOf("month")
+      .endOf("day")
+      .utc()
+      .toISOString();
+    try {
+      const res = await axios.get(`/${userID}/reimbursementapproval?start_date=${start}&end_date=${end}`);
+      setReimbursementApprovals(res.data);
+
+    } finally {
+    }
+  }
 
 
   async function fetchDashboardData() {
@@ -246,31 +243,31 @@ export default function CRMDashboard() {
           </CardHeader>
 
           <CardContent className="p-3">
-              <ScrollArea className="h-[420px] pr-2">
-                {userTaskData.map((user) => (
-                  <div key={user.assigned_user_id} className="mb-3 rounded-md border bg-background p-2.5 last:mb-0">
-                    <div className="mb-2 flex items-center justify-between gap-2">
-                      <h2 className="truncate text-sm font-bold">
-                        {user.assigned_user_name}
-                      </h2>
-                      <span className="rounded-md bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground">
-                        {(user.yesterdayTasks?.length || 0) + (user.todayTasks?.length || 0)} tasks
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                      {renderTaskCard(user.yesterdayTasks, "Yesterday")}
-                      {renderTaskCard(user.todayTasks, "Today")}
-                    </div>
+            <ScrollArea className="h-[420px] pr-2">
+              {userTaskData.map((user) => (
+                <div key={user.assigned_user_id} className="mb-3 rounded-md border bg-background p-2.5 last:mb-0">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <h2 className="truncate text-sm font-bold">
+                      {user.assigned_user_name}
+                    </h2>
+                    <span className="rounded-md bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground">
+                      {(user.yesterdayTasks?.length || 0) + (user.todayTasks?.length || 0)} tasks
+                    </span>
                   </div>
-                ))}
-              </ScrollArea>
+
+                  <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                    {renderTaskCard(user.yesterdayTasks, "Yesterday")}
+                    {renderTaskCard(user.todayTasks, "Today")}
+                  </div>
+                </div>
+              ))}
+            </ScrollArea>
           </CardContent>
         </Card>
       )}
 
 
-        {reimbursementApprovals.length > 0 && <ReimbursementAfterSales data={reimbursementApprovals} onRefresh={fetchReimbursementApprovals} />}
+      {reimbursementApprovals.length > 0 && <ReimbursementAfterSales userID={userID} data={reimbursementApprovals} onRefresh={fetchReimbursementApprovals} />}
 
       <FeedbackDialog
         open={feedbackOpen}
@@ -282,7 +279,7 @@ export default function CRMDashboard() {
       />
 
 
-       <UnassignedDialog
+      <UnassignedDialog
         open={unassigned}
         data={[
           ...(data?.total_unassigned?.data ?? []),
@@ -433,9 +430,9 @@ const UnassignedDialog = ({
 
                   </div>
 
-                  
 
-                  
+
+
                 </div>
               ))
             ) : (
