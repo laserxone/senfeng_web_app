@@ -99,8 +99,9 @@ const OrderStockDialog = ({
         toast.info("No items selected");
         return;
       }
-      await exportToExcel(headers, formattedData, "New Order.xlsx", true, "products", true);
+      await exportToExcel(headers, formattedData, "New Order.xlsx", true, "products", true, userID);
     } catch (error) {
+      console.log(error)
       toast.error("Error creating excel");
     } finally {
       setLoading(false);

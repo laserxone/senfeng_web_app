@@ -1,15 +1,17 @@
-import * as XLSX from "xlsx";
+import { storage } from "@/config/firebase";
+import useUserDetail from "@/hooks/use-user-detail";
 import { saveAs } from "file-saver";
 import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@/config/firebase";
+import axios from "./axios";
 
 const exportToExcel = async (
-  headers : any[],
-  data : any[],
+  headers: unknown[],
+  data: unknown[][],
   fileName = "data.xlsx",
   formatBuyingPrice = false,
   baseStorage = "",
-  image = false
+  image = false,
+  userID : string | number | null = null
 ) => {
   if (!data || data.length === 0) {
     throw new Error("No data available to export");
@@ -38,48 +40,43 @@ const exportToExcel = async (
       worksheetData.push(newRow);
     }
   } else {
-   for (const row of data) {
+    for (const row of data) {
       worksheetData.push(row);
-   }
-  }
-
-
-
-  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-
-  worksheet['!cols'] = [
-    { wch: 20 },
-    { wch: 20 },
-    { wch: 20 },
-    { wch: 20 },
-    { wch: 50 }, // Image column
-  ];
-
-  if (formatBuyingPrice) {
-    for (let rowIndex = 1; rowIndex < worksheetData.length; rowIndex++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: rowIndex, c: 3 });
-      const cell = worksheet[cellAddress];
-      if (cell && !isNaN(cell.v)) {
-        cell.t = 'n';
-        cell.z = '¥#,##0.00';
-        cell.v = parseFloat(cell.v);
-      }
     }
   }
 
   try {
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
 
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const excelBlob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(excelBlob, fileName);
+    const PDFData = {
+      worksheetData,
+      formatBuyingPrice,
+      fileName
+    }
+ 
+    const pdfRes = await axios.post(
+      `/${userID}/export-excel`,
+      PDFData,
+      
+      {
+        responseType: "blob",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    const blob = new Blob([pdfRes.data], {
+      type: "application/pdf",
+    });
+
+
+    saveAs(blob, fileName);
   } catch (error) {
     console.error("Failed to generate or download Excel:", error);
-    throw new Error("Failed to generate Excel file");
+    throw error instanceof Error
+      ? error
+      : new Error("Failed to generate Excel file");
   }
 };
-
-
 
 export default exportToExcel;

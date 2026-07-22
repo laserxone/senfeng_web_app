@@ -1,3 +1,4 @@
+"use client"
 import AfterSalesDashboardNew from "@/components/features/aftersales/AfterSalesDashboardNew";
 import useUserDetail from "@/hooks/use-user-detail";
 

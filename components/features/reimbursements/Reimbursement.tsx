@@ -30,7 +30,6 @@ export default function Reimbursement({
   onFilterReturn,
   onReset,
 }: UserReimbursementTypes) {
-  const { reimbursement_approval } = useUserDetail()
   const [filterVisible, setFilterVisible] = useState(false);
   const [data, setData] = useState<UserReimbursementType[]>([]);
   const [resetLoading, setResetLoading] = useState(false);
