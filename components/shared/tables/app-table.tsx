@@ -15,10 +15,8 @@ import {
   VisibilityState,
 } from "@tanstack/react-table"
 import {
-  ChevronDown,
   ChevronLeftIcon,
   ChevronRightIcon,
-  Download,
   Filter,
   RotateCcw,
   Search
@@ -43,12 +41,6 @@ import {
 import { memo, useMemo, useState } from "react"
 
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -58,9 +50,11 @@ import {
 import Spinner from "@/components/ui/spinner"
 import { useDebounce } from "@/hooks/use-debounce"
 import { useIsMobile } from "@/hooks/use-mobile"
+import useUserDetail from "@/hooks/use-user-detail"
 import exportToExcel from "@/lib/exportToExcel"
-import { saveAs } from "file-saver"
+import exportToPdf from "@/lib/exportToPdf"
 import moment from "moment"
+import ExportButton from "../exports/export-button"
 
 type PageTableProps<T extends object> = {
   children?: React.ReactNode
@@ -111,6 +105,7 @@ const PageTable = <T extends object>({
   const [pageSize, setPageSize] = useState(defaultPageSize)
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 500)
+  const { userID } = useUserDetail()
   const isMobile = useIsMobile()
 
   const paginationState = {
@@ -227,7 +222,7 @@ const PageTable = <T extends object>({
     try {
       const { headers, rows } = getVisibleExportData()
       if (!rows.length || !headers.length) return
-      await exportToExcel(headers, rows, "Table-Export.xlsx")
+      await exportToExcel(headers, rows, "Table-Export.xlsx", false, "", false, userID)
     } catch (error) {
       console.error("Error exporting Excel:", error)
     }
@@ -237,72 +232,12 @@ const PageTable = <T extends object>({
     try {
       const { headers, rows } = getVisibleExportData()
       if (!rows.length || !headers.length) return
-
-      const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib")
-      const pdf = await PDFDocument.create()
-      const font = await pdf.embedFont(StandardFonts.Helvetica)
-      const boldFont = await pdf.embedFont(StandardFonts.HelveticaBold)
-      const pageSize: [number, number] = [841.89, 595.28]
-      const margin = 24
-      const rowHeight = 22
-      const fontSize = 7
-      const columnWidth = (pageSize[0] - margin * 2) / headers.length
-      let page = pdf.addPage(pageSize)
-      let y = pageSize[1] - margin
-
-      const safeText = (value: string) => value.replace(/[^\x20-\x7E]/g, "?")
-      const fitText = (value: string, width: number) => {
-        const text = safeText(value)
-        if (font.widthOfTextAtSize(text, fontSize) <= width) return text
-        let shortened = text
-        while (
-          shortened.length &&
-          font.widthOfTextAtSize(`${shortened}...`, fontSize) > width
-        ) {
-          shortened = shortened.slice(0, -1)
-        }
-        return `${shortened}...`
-      }
-      const drawRow = (values: string[], header = false) => {
-        values.forEach((value, index) => {
-          const x = margin + index * columnWidth
-          page.drawRectangle({
-            x,
-            y: y - rowHeight,
-            width: columnWidth,
-            height: rowHeight,
-            borderWidth: 0.5,
-            borderColor: rgb(0.75, 0.75, 0.75),
-            color: header ? rgb(0.92, 0.94, 0.97) : undefined,
-          })
-          page.drawText(fitText(value, columnWidth - 8), {
-            x: x + 4,
-            y: y - 14,
-            size: fontSize,
-            font: header ? boldFont : font,
-          })
-        })
-        y -= rowHeight
-      }
-
-      drawRow(headers, true)
-      rows.forEach((row) => {
-        if (y - rowHeight < margin) {
-          page = pdf.addPage(pageSize)
-          y = pageSize[1] - margin
-          drawRow(headers, true)
-        }
-        drawRow(row)
-      })
-
-      const bytes = await pdf.save()
-      saveAs(
-        new Blob([bytes as BlobPart], { type: "application/pdf" }),
-        "Table-Export.pdf"
-      )
-    } catch (error) {
+      await exportToPdf(headers, rows, "Table-Export.pdf", userID)
+    }
+    catch (error) {
       console.error("Error exporting PDF:", error)
     }
+
   }
 
   return (
@@ -323,29 +258,10 @@ const PageTable = <T extends object>({
             </div>
           )}
           {download && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  disabled={!table.getRowModel().rows.length}
-                >
-                  <Download className="h-4 w-4" />
-                  Export
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="text-xs" align="end">
-                <DropdownMenuItem className="text-xs" onSelect={handlePdfDownload}>
-
-                  PDF
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-xs" onSelect={handleExcelDownload}>
-
-                  EXCEL
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <ExportButton
+              handleExcelDownload={handleExcelDownload}
+              handlePdfDownload={handlePdfDownload}
+              disabled={!table.getRowModel().rows.length} />
           )}
           {filter &&
             <Button

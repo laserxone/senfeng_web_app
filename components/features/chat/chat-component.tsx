@@ -231,7 +231,7 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }: ChatComp
 const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: boolean, onClose: (val: boolean) => void, data: any | null, type: string }) => {
 
   const [loading, setLoading] = useState(false);
-  const { base_route } = useUserDetail()
+  const { base_route, userID } = useUserDetail()
 
   async function handleCreateExcel() {
     setLoading(true);
@@ -261,7 +261,8 @@ const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: bool
         "New Order.xlsx",
         true,
         "",
-        true
+        true,
+        userID
       );
     } catch (error) {
       toast.error("Error creating excel");

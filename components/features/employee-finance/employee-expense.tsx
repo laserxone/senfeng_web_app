@@ -2,14 +2,12 @@
 import {
   ArrowUpDown,
   CalendarDays,
-  ChevronDown,
-  FileDown,
   ImageIcon,
   Plus,
   ReceiptText,
   Trash2,
   UserRound,
-  WalletCards,
+  WalletCards
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -29,12 +27,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sheet,
@@ -56,7 +48,6 @@ import {
 import Spinner from "@/components/ui/spinner"
 import useUserDetail from "@/hooks/use-user-detail"
 import axios from "@/lib/axios"
-import exportToExcel from "@/lib/exportToExcel"
 import formatCurrency from "@/lib/formatCurrency"
 import { OfficeExpenseProps } from "@/lib/types"
 import { UploadImage } from "@/lib/uploadFunction"
@@ -65,13 +56,11 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import {
   Document,
   Page,
-  pdf,
   StyleSheet,
   Text,
-  View,
+  View
 } from "@react-pdf/renderer"
 import { ColumnDef } from "@tanstack/react-table"
-import { saveAs } from "file-saver"
 import moment from "moment"
 import momentT from "moment-timezone"
 import { useRouter } from "next/navigation"
@@ -799,80 +788,5 @@ export const AddExpensesDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
-
-const ExpenseExport = ({ data }: { data: OfficeExpenseProps[] }) => {
-  const [exportLoading, setExportLoading] = useState<"excel" | "pdf" | null>(
-    null
-  )
-
-  async function handleExcelExport() {
-    setExportLoading("excel")
-    try {
-      const headers = ["Date", "Note", "Amount", "Submitted By"]
-      let finalData = []
-      finalData = [...data]
-      const formattedData = finalData.map((item) => [
-        moment(item.date).format("YYYY-MM-DD"),
-        item.note,
-        Number(item.amount || 0),
-        item.submitted_by_name,
-        item.image,
-      ])
-      await exportToExcel(
-        headers,
-        formattedData,
-        "Branch-Expenses.xlsx",
-        false,
-        "",
-        true
-      )
-    } catch (error) {
-      console.log(error)
-      toast.error("Failed to export Excel")
-    } finally {
-      setExportLoading(null)
-    }
-  }
-
-  async function handlePdfExport() {
-    setExportLoading("pdf")
-    try {
-      const blob = await pdf(<ExpensePdfDocument data={data} />).toBlob()
-      saveAs(blob, "Branch-Expenses.pdf")
-    } catch (error) {
-      console.log(error)
-      toast.error("Failed to export PDF")
-    } finally {
-      setExportLoading(null)
-    }
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant={"outline"}
-          disabled={!!exportLoading}
-          className="gap-2"
-        >
-          {exportLoading ? <Spinner /> : <FileDown className="h-4 w-4" />}
-          Export
-          <ChevronDown className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-36">
-        <DropdownMenuItem
-          disabled={!!exportLoading}
-          onClick={handleExcelExport}
-        >
-          {exportLoading === "excel" && <Spinner />} Excel
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled={!!exportLoading} onClick={handlePdfExport}>
-          {exportLoading === "pdf" && <Spinner />} PDF
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
   )
 }

@@ -8,19 +8,19 @@ import {
   useState
 } from "react";
 
+import FilterSheet from "@/components/features/users/filter-sheet";
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import Spinner from "@/components/ui/spinner";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import exportToExcel from "@/lib/exportToExcel";
 import { UserReimbursementType, UserReimbursementTypes } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import moment from "moment";
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
-import CurrencyFormatter from "@/components/shared/common/currency-formatter";
-import { MyImgZooming } from "@/components/shared/media/img-zooming";
-import { Badge } from "@/components/ui/badge";
-import Spinner from "@/components/ui/spinner";
-import FilterSheet from "@/components/features/users/filter-sheet";
 import AddReimbursementDialog from "./add-reimbursement";
 
 export default function Reimbursement({
@@ -69,6 +69,7 @@ export default function Reimbursement({
       false,
       "",
       false,
+      id
     );
   }
 

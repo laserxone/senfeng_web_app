@@ -6,11 +6,13 @@ type ExportRequest = {
   worksheetData?: unknown[][];
   formatBuyingPrice?: boolean;
   fileName?: string;
+  format?: string;
 };
 
 export async function POST(request: Request) {
   try {
-   const body = await request.json();
+    const passingBody = await request.json();
+    const body = passingBody?.data as ExportRequest;
     const { worksheetData, formatBuyingPrice = false } = body;
 
     if (!Array.isArray(worksheetData) || worksheetData.length < 2) {
@@ -47,14 +49,24 @@ export async function POST(request: Request) {
     const excelBuffer = XLSX.write(workbook, {
       bookType: "xlsx",
       type: "buffer",
-    });
+    }) as Buffer;
+    const fileName = cleanFileName(body.fileName);
+    const mimeType =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
-    return new Response(excelBuffer, {
+    if (body.format === "base64") {
+      return Response.json({
+        fileName,
+        mimeType,
+        base64: Buffer.from(excelBuffer).toString("base64"),
+      });
+    }
+
+    return new Response(Buffer.from(excelBuffer), {
       status: 200,
       headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="${cleanFileName(body.fileName)}"`,
+        "Content-Type": mimeType,
+        "Content-Disposition": `attachment; filename="${fileName}"`,
         "Cache-Control": "no-store",
       },
     });

@@ -1,5 +1,4 @@
 import { storage } from "@/config/firebase";
-import useUserDetail from "@/hooks/use-user-detail";
 import { saveAs } from "file-saver";
 import { getDownloadURL, ref } from "firebase/storage";
 import axios from "./axios";
@@ -11,10 +10,14 @@ const exportToExcel = async (
   formatBuyingPrice = false,
   baseStorage = "",
   image = false,
-  userID : string | number | null = null
+  userID: string | number | null = null
 ) => {
   if (!data || data.length === 0) {
     throw new Error("No data available to export");
+  }
+
+  if (!userID) {
+    throw new Error("User is missing");
   }
 
   const worksheetData = [headers];
@@ -52,11 +55,11 @@ const exportToExcel = async (
       formatBuyingPrice,
       fileName
     }
- 
+
     const pdfRes = await axios.post(
       `/${userID}/export-excel`,
-      PDFData,
-      
+      { data: PDFData },
+
       {
         responseType: "blob",
         headers: {
