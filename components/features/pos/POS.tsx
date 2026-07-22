@@ -41,7 +41,7 @@ import { InvoiceItem, MyCustomer, POSInvoiceReminder, SearchItem, StockProps } f
 import Link from "next/link";
 import { toast } from "sonner";
 import OutwardModal from "./outward-modal";
-import LoweStock from "./low-stock";
+import LowStock from "./low-stock";
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -868,7 +868,7 @@ export default function POS() {
                 <div className="break-words">Outward Gatepass</div>
               </Button>
 
-              <LoweStock handleOrderStock={handleOrderStock} stock={stock}/>
+              <LowStock handleOrderStock={handleOrderStock} stock={stock}/>
 
               {selectedSearchItem && selectedSearchItem?.id && (
                 <Link href={`/${base_route}/pos/${selectedSearchItem?.id}`} target="_blank">

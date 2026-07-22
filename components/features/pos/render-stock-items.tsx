@@ -22,6 +22,7 @@ type RenderStockItemsProps = {
   handleDecrease?: (item: StockProps) => void,
   handleIncrease?: (item: StockProps) => void,
   onRefresh?: () => void,
+  edit?: boolean
 }
 
 const RenderStockItems = ({
@@ -31,6 +32,7 @@ const RenderStockItems = ({
   handleDecrease,
   handleIncrease,
   onRefresh,
+  edit = true
 }: RenderStockItemsProps) => {
   const [localName, setLocalName] = useState("");
   const [localChineseName, setLocalChineseName] = useState("");
@@ -329,50 +331,50 @@ const RenderStockItems = ({
           </Button>
         </div>
       )}
+      {edit &&
+        <div className="mt-2 flex w-full items-center justify-between border-t pt-2">
+          <div className="flex items-center gap-1 rounded-md border bg-background p-1">
+            <div
+              className="flex h-7 w-7 items-center justify-center rounded-md hover:cursor-pointer hover:bg-red-50 dark:hover:bg-red-950/30"
+              style={{ opacity: editable ? 0.5 : 1 }}
+              onClick={() => {
+                if (!editable) {
+                  handleDecrease?.(item);
+                }
+              }}
+            >
+              <Minus className="h-3.5 w-3.5 text-red-600" />
+            </div>
 
-      <div className="mt-2 flex w-full items-center justify-between border-t pt-2">
-        <div className="flex items-center gap-1 rounded-md border bg-background p-1">
+            <p className="min-w-7 text-center text-xs font-bold">{invoiceItems?.find((eachItem) => eachItem.id === item.id)?.qty ?? 0}</p>
+            <div
+              className="flex h-7 w-7 items-center justify-center rounded-md hover:cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+              style={{ opacity: editable ? 0.5 : 1 }}
+              onClick={() => {
+                if (!editable) {
+                  handleIncrease?.(item);
+                }
+              }}
+            >
+              <Plus className="h-3.5 w-3.5 text-emerald-600" />
+            </div>
+          </div>
           <div
-            className="flex h-7 w-7 items-center justify-center rounded-md hover:cursor-pointer hover:bg-red-50 dark:hover:bg-red-950/30"
-            style={{ opacity: editable ? 0.5 : 1 }}
+            className="flex h-8 w-8 items-center justify-center rounded-md border bg-background hover:cursor-pointer hover:bg-muted"
             onClick={() => {
-              if (!editable) {
-                handleDecrease?.(item);
-              }
+              setLocalName(item.name || "");
+              setLocalQty(item?.qty || "");
+              setLocalPrice(item?.price || "");
+              setThreshold(item?.threshold || "");
+              setNewOrder(item?.new_order || "");
+              setLocalChineseName(item?.chinese_name || "");
+              setRemarks(item?.remarks || "")
+              setEditable(!editable);
             }}
           >
-            <Minus className="h-3.5 w-3.5 text-red-600" />
+            <PencilIcon className="h-3.5 w-3.5" />
           </div>
-
-          <p className="min-w-7 text-center text-xs font-bold">{invoiceItems?.find((eachItem) => eachItem.id === item.id)?.qty ?? 0}</p>
-          <div
-            className="flex h-7 w-7 items-center justify-center rounded-md hover:cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
-            style={{ opacity: editable ? 0.5 : 1 }}
-            onClick={() => {
-              if (!editable) {
-                handleIncrease?.(item);
-              }
-            }}
-          >
-            <Plus className="h-3.5 w-3.5 text-emerald-600" />
-          </div>
-        </div>
-        <div
-          className="flex h-8 w-8 items-center justify-center rounded-md border bg-background hover:cursor-pointer hover:bg-muted"
-          onClick={() => {
-            setLocalName(item.name || "");
-            setLocalQty(item?.qty || "");
-            setLocalPrice(item?.price || "");
-            setThreshold(item?.threshold || "");
-            setNewOrder(item?.new_order || "");
-            setLocalChineseName(item?.chinese_name || "");
-            setRemarks(item?.remarks || "")
-            setEditable(!editable);
-          }}
-        >
-          <PencilIcon className="h-3.5 w-3.5" />
-        </div>
-      </div>
+        </div>}
     </div>
   );
 };

@@ -22,7 +22,7 @@ import RenderStockItems from "./render-stock-items";
 import RenderStockItemsOtherView from "./render-stock-items-other-view";
 
 
-export default function LoweStock({ stock, handleOrderStock, }: { stock: StockProps[], handleOrderStock: () => void, }) {
+export default function LowStock({ stock, handleOrderStock, }: { stock: StockProps[], handleOrderStock: () => void, }) {
 
     const [search, setSearch] = useState("");
     const [lowStockStatus, setLowStockStatus] = useState(false);
@@ -181,12 +181,13 @@ export default function LoweStock({ stock, handleOrderStock, }: { stock: StockPr
                                                         <RenderStockItems
                                                             key={index}
                                                             item={item}
-
+                                                            edit={false}
                                                         />
                                                     ) : (
                                                         <RenderStockItemsOtherView
                                                             key={index}
                                                             item={item}
+                                                            edit={false}
                                                         />
                                                     )
                                                 )}

@@ -23,7 +23,7 @@ export default function Header() {
         <div className="hidden md:flex">
           <AppSearch />
         </div>
-        {/* <div className="flex items-center gap-2 px-4">
+        <div className="flex items-center gap-2 px-4">
 
           <div className="hidden md:flex">
             <SearchInput />
@@ -37,14 +37,14 @@ export default function Header() {
           <FloatingChat />
 
           <UserNav />
-        </div> */}
+        </div>
       </header>
-      {/* <div className="flex flex-1">
+      <div className="flex flex-1">
         <NewsTicker />
       </div>
       <div className="flex md:hidden px-4 pb-2">
         <AppSearch />
-      </div> */}
+      </div>
     </>
   );
 }
