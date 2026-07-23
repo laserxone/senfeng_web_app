@@ -31,7 +31,7 @@ export function UserNav() {
             className="group h-11 gap-2 px-2 pr-3"
           >
             <Avatar className="h-8 w-8 ring-2 ring-background">
-              <AvatarImage src={profileImage} alt={"user-dp"} />
+              {profileImage && <AvatarImage src={profileImage} alt={"user-dp"} />}
               <AvatarFallback className="bg-primary/10 text-xs font-bold text-primary">
                 {name.substring(0, 2)}
               </AvatarFallback>
@@ -51,7 +51,7 @@ export function UserNav() {
           <DropdownMenuLabel className="rounded-lg bg-muted/40 p-3 font-normal">
             <div className="flex items-start gap-3">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={profileImage} alt={"user-dp"} />
+                {profileImage && <AvatarImage src={profileImage} alt={"user-dp"} />}
                 <AvatarFallback className="bg-primary/10 text-xs font-bold text-primary">
                   {name.substring(0, 2)}
                 </AvatarFallback>

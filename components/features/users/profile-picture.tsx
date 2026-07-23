@@ -27,7 +27,7 @@ export const ProfilePicture = ({ img, name, className = "" } : {img ?: string, n
 
   return (
     <Avatar className={cn("w-24 h-24 mr-4", className)}>
-      <AvatarImage src={localImage || ""} alt="Profile Picture" />
+     {localImage && <AvatarImage src={localImage || ""} alt="Profile Picture" />}
       <AvatarFallback>{name?.substring(0, 2)}</AvatarFallback>
     </Avatar>
   );

@@ -22,9 +22,11 @@ import { useRouter } from "next/navigation";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { FaWhatsapp } from "react-icons/fa";
 
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
+import CustomerTask from "@/components/features/customer-relations/customer-task";
+import VisitTab from "@/components/features/customer-relations/visit-tab";
 import EditCustomerDialog from "@/components/features/customers/components/edit customer";
 import AddMachine from "@/components/features/machines/add-machine";
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
 import {
   Accordion,
   AccordionContent,
@@ -45,16 +47,14 @@ import {
   TimelineTime,
   TimelineTitle,
 } from "@/components/ui/timeline";
-import VisitTab from "@/components/features/customer-relations/visit-tab";
-import CustomerTask from "@/components/features/customer-relations/customer-task";
 import useUserDetail from "@/hooks/use-user-detail";
 import { debounce } from "@/lib/debounce";
 import { GetProfileImage } from "@/lib/getProfileImage";
 
-import CurrencyFormatter from "@/components/shared/common/currency-formatter";
-import AddParts from "@/components/features/machines/add-parts";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import AddFeedbackDialog from "@/components/features/customer-relations/add-feedback";
+import AddParts from "@/components/features/machines/add-parts";
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CustomerFeedbackProps, CustomerTaskProps, CustomerVisitProps, MachineProps, MyCustomer, PartsProps } from "@/lib/types";
 import { Scrollbar } from "@radix-ui/react-scroll-area";
@@ -172,7 +172,7 @@ export default function MemberDetail({
     if (!id) return;
     setDeleteLoading(true);
     try {
-    await axios.delete(`/${userID}/customer/${id}`);
+      await axios.delete(`/${userID}/customer/${id}`);
       toast.success("Customer Deleted");
 
       router.push(`/${base_route}/${from}`);
@@ -454,7 +454,7 @@ const ProfilePicture = ({ img, name, onClick }: { img?: string, name?: string, o
       onMouseLeave={() => setHover(false)}
     >
       <Avatar className="w-24 h-24">
-        <AvatarImage src={localImage || ""} alt="Profile Picture" />
+        {localImage && <AvatarImage src={localImage || ""} alt="Profile Picture" />}
         <AvatarFallback>{name?.substring(0, 2)}</AvatarFallback>
       </Avatar>
 

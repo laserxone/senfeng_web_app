@@ -18,6 +18,7 @@ import {
 } from "@dnd-kit/sortable";
 import {
   Calendar,
+  ChevronDown,
   Edit,
   Filter,
   Package,
@@ -35,11 +36,10 @@ import SortableCard from "@/components/features/orders/sortable-card";
 import FilterSheet from "@/components/features/users/filter-sheet";
 import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import Heading from "@/components/ui/heading";
@@ -340,14 +340,14 @@ export default function Page() {
             strategy={verticalListSortingStrategy}
           >
             {/* <ScrollArea className="h-[700px] pr-6"> */}
-            <div className="space-y-4">
+            <div className="space-y-2.5">
               {filteredData.map((order) => {
                 return (
                   <SortableCard
                     key={order?.id}
                     order={order}
                     dragHandle={
-                      <div className="cursor-grab p-1 text-muted-foreground">
+                      <div className="mt-3 cursor-grab self-start rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:cursor-grabbing">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           className="h-5 w-5"
@@ -359,30 +359,42 @@ export default function Page() {
                       </div>
                     }
                   >
-                    <Card className="border shadow-md w-full">
-                      <CardContent className="p-4 space-y-1">
-                        <div className="flex items-end justify-between">
-                          <div className="space-y-2">
-                            <p className="text-sm text-muted-foreground">
-                              Order By: {order?.user_name}
-                            </p>
-                            <div className="text-sm text-muted-foreground flex items-center gap-2">
-                              <Calendar className="w-4 h-4" />
-                              <span>
-                                {moment(order?.created_at).format("YYYY-MM-DD")}
-                              </span>
-                            </div>
-                          </div>
+                    <Card className="w-full overflow-hidden border-border/70 py-0 shadow-sm transition-shadow hover:shadow-md">
+                      <CardContent className="p-0">
+                        <Collapsible className="group">
+                          <div className="flex min-w-0 items-center gap-3 px-3 py-2.5 sm:px-4">
+                            <CollapsibleTrigger className="flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                <Package className="size-4" />
+                              </div>
 
-                          <h2 className="text-xl font-semibold text-primary">
-                            {order?.title}
-                          </h2>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <h2 className="truncate text-sm font-semibold text-foreground">
+                                    {order?.title}
+                                  </h2>
+                                  <Badge variant="outline" className="h-5 rounded-full px-2 text-[10px] capitalize">
+                                    {order?.status}
+                                  </Badge>
+                                </div>
+                                <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                                  <span className="truncate">{order?.user_name}</span>
+                                  <span className="inline-flex items-center gap-1">
+                                    <Calendar className="size-3.5" />
+                                    {moment(order?.created_at).format("YYYY-MM-DD")}
+                                  </span>
+                                  <span>{order?.order_items?.length || 0} items</span>
+                                </div>
+                              </div>
 
-                          <div className="flex flex-col gap-2">
-                            <div className="flex justify-between">
+                              <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                            </CollapsibleTrigger>
+
+                            <div className="flex shrink-0 items-center gap-1.5 border-l pl-3">
                               <Button
                                 size="icon"
-                                variant="destructive"
+                                variant="ghost"
+                                className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
                                 onClick={() => {
                                   setSelectedShipment(order?.id)
                                   // handleDelete(order.id)
@@ -392,35 +404,27 @@ export default function Page() {
                               </Button>
 
                               <Button
-                                size="icon"
+                              variant={"outline"}
+                                size="icon-sm"
                                 onClick={() => {
                                   setSelectedOrder(order?.id);
                                 }}
                               >
-                                <Plus size={14} />
+                                <Plus />
                               </Button>
                             </div>
-
-                            <Badge variant="outline" className="capitalize">
-                              {order?.status}
-                            </Badge>
                           </div>
-                        </div>
 
-                        <Accordion type="single" collapsible>
-                          <AccordionItem value={`order-${order?.id}`}>
-                            <AccordionTrigger className="text-sm font-medium h-5">
-                              View Items
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="space-y-1 mt-1">
+                          <CollapsibleContent>
+                            <div className="border-t bg-muted/15 p-2.5 sm:p-3">
+                              <div className="space-y-1.5">
                                 {order?.order_items?.map((item) => (
                                   <div
                                     key={item.id}
-                                    className={`relative px-2 py-1 ${item.is_machine
+                                    className={`relative overflow-hidden px-2.5 py-2 ${item.is_machine
                                       ? item.machine_color_bg
-                                      : "bg-muted"
-                                      } rounded-md border ${item.is_machine && item.machine_color_text
+                                      : "bg-background"
+                                      } rounded-lg border border-black/5 shadow-sm ${item.is_machine && item.machine_color_text
                                       }`}
                                   >
                                     {item?.booked && (
@@ -434,26 +438,26 @@ export default function Page() {
                                     )}
 
                                     <div className="relative z-10">
-                                      <div className="flex justify-between items-center">
-                                        <div className="flex items-center gap-2">
-                                          <span className="font-bold">
+                                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                        <div className="flex min-w-0 items-center gap-2">
+                                          <span className="text-xs font-bold">
                                             {item?.machine_type_count}
                                           </span>
-                                          <Package className="w-4 h-4 text-[#0A6666]" />
-                                          <span className="font-medium">
+                                          <Package className="size-4 shrink-0 text-[#0A6666]" />
+                                          <span className="min-w-0 truncate text-sm font-medium">
                                             {item.name}
                                             {item.location &&
                                               item.location?.toLocaleLowerCase() === "lahore" ? (
                                               <Badge
                                                 variant="outline"
-                                                className="bg-blue-500 text-white dark:bg-blue-600 ml-2 hover:none"
+                                                className="ml-2 h-5 bg-blue-500 px-1.5 text-[10px] text-white hover:bg-blue-500 dark:bg-blue-600"
                                               >
                                                 {item?.location?.charAt(0)?.toUpperCase() + item?.location?.slice(1)}
                                               </Badge>
                                             ) : (
                                               <Badge
                                                 variant="destructive"
-                                                className="text-xs ml-2"
+                                                className="ml-2 h-5 px-1.5 text-[10px]"
                                               >
                                                 {item?.location}
                                               </Badge>
@@ -462,10 +466,10 @@ export default function Page() {
                                           </span>
                                         </div>
 
-                                        <div className="flex gap-2 items-center">
+                                        <div className="flex flex-wrap items-center gap-1.5">
                                           <div>
                                             <Badge
-                                              className={`ml-2 px-2.5 py-0.5 rounded-full text-xs font-medium border ${item.show
+                                              className={`h-5 rounded-full border px-2 text-[10px] font-medium ${item.show
                                                 ? "bg-green-100 text-green-700 border-green-200"
                                                 : "bg-red-100 text-red-700 border-red-200"
                                                 }`}
@@ -477,13 +481,13 @@ export default function Page() {
                                           <div>
                                             <Badge
                                               variant="outline"
-                                              className="text-xs px-3 py-1 rounded-full border border-blue-300 bg-blue-50 text-blue-800"
+                                              className="h-5 rounded-full border-blue-300 bg-blue-50 px-2 text-[10px] text-blue-800"
                                             >
                                               {item.status}
                                             </Badge>
                                           </div>
                                           {!item.booked &&
-                                            <Button size="sm" onClick={() => {
+                                            <Button size="sm" className="h-7 px-2.5 text-xs" onClick={() => {
                                               handleBookItem(item)
                                             }}>
                                               Book
@@ -491,6 +495,7 @@ export default function Page() {
                                           }
                                           <Button
                                             size="icon"
+                                            className="size-7"
                                             onClick={() => handleEditItem(item)}
                                           >
                                             <Edit size={14} />
@@ -499,7 +504,7 @@ export default function Page() {
                                       </div>
 
                                       <div
-                                        className={`text-sm text-muted-foreground grid grid-cols-4 gap-1 ${item.is_machine
+                                        className={`mt-1.5 grid gap-x-3 gap-y-0.5 text-xs text-muted-foreground sm:grid-cols-2 lg:grid-cols-4 ${item.is_machine
                                           ? item.machine_color_text
                                           : "text-muted-foreground"
                                           }`}
@@ -541,9 +546,9 @@ export default function Page() {
                                   </div>
                                 ))}
                               </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        </Accordion>
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
                       </CardContent>
                     </Card>
                   </SortableCard>

@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useSidebar } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import Heading from "@/components/ui/heading";
 import useUserDetail from "@/hooks/use-user-detail";
@@ -96,7 +95,6 @@ export default function Page() {
     const [expandedOrders, setExpandedOrders] = useState<Set<string | number>>(new Set());
     const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
     const [sortState, setSortState] = useState<SortState>(null);
-    const { open } = useSidebar();
     const contextMenuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -258,8 +256,7 @@ export default function Page() {
     );
 
     return (
-        <div className="flex flex-1 flex-col gap-6 pb-8">
-            {/* Header */}
+        <div className="flex min-w-0 flex-1 flex-col gap-4 pb-8">
             <div className="flex flex-col justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:p-5">
                 <Heading
                     panel
@@ -276,8 +273,7 @@ export default function Page() {
             </div>
 
             {/* Main card */}
-            <div className="rounded-xl border border-border bg-card shadow-sm">
-                {/* Toolbar */}
+            <div className="min-w-0 rounded-xl border border-border bg-card shadow-sm">
                 <div className="flex flex-col justify-between gap-3 border-b border-border px-6 py-4 sm:flex-row sm:items-center">
                     <div className="flex items-center gap-3">
                         <h3 className="text-sm font-semibold text-foreground">Order Items</h3>
@@ -333,7 +329,7 @@ export default function Page() {
                 )}
 
                 {/* Content */}
-                <div className="p-6">
+                <div className="min-w-0 p-6">
                     {loading ? (
                         <div className="space-y-3">
                             <Skeleton className="h-14 w-full rounded-lg" />
@@ -342,13 +338,7 @@ export default function Page() {
                             <Skeleton className="h-10 w-3/4 rounded-lg" />
                         </div>
                     ) : (
-                        <div
-                            className={`w-full ${
-                                !open
-                                    ? "max-w-[calc(100vw-48px)]"
-                                    : "max-w-[calc(100vw-320px)]"
-                            }`}
-                        >
+                        <div className="min-w-0 w-full">
                             {Object.entries(groupedRows).length === 0 ? (
                                 <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-20 text-center">
                                     <Search className="mb-3 h-10 w-10 text-muted-foreground/30" />
@@ -360,7 +350,7 @@ export default function Page() {
                                     </p>
                                 </div>
                             ) : (
-                                <div className="space-y-3">
+                                <div className="min-w-0 space-y-3">
                                     {Object.entries(groupedRows).map(([orderId, orderRows]) => (
                                         <OrderAccordion
                                             key={orderId}
@@ -467,7 +457,7 @@ function OrderAccordion({
     }, [orderRows, sortState]);
 
     return (
-        <div className="rounded-lg border border-border bg-card transition-shadow hover:shadow-sm">
+        <div className="min-w-0 max-w-full rounded-lg border border-border bg-card transition-shadow hover:shadow-sm">
             {/* Accordion header */}
             <button
                 onClick={onToggle}
@@ -504,8 +494,8 @@ function OrderAccordion({
 
             {/* Accordion body */}
             {isExpanded && (
-                <div className="border-t border-border">
-                    <div className="overflow-x-auto">
+                <div className="min-w-0 border-t border-border">
+                    <div className="w-full max-w-full overflow-x-auto">
                         <RenderTable
                             orderRows={sortedRows}
                             movedRow={movedRow}
@@ -559,8 +549,8 @@ const RenderTable = ({
     };
 
     return (
-        <div className="relative">
-            <table className="w-full border-collapse text-sm">
+        <div className="relative min-w-max max-h-[500px]">
+            <table className="w-full border-collapse text-sm ">
                 <thead>
                     <tr className="border-b border-border bg-muted/20">
                         <th className="w-10 px-3 py-3" />

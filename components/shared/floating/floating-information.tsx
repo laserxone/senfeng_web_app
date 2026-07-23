@@ -190,7 +190,7 @@ function ReminderCard({
 
         <div className="mt-2.5 flex items-center gap-2">
           <Avatar size="sm">
-            <AvatarImage src={reminder.seller_dp || ""} alt={userName} />
+            {reminder.seller_dp && <AvatarImage src={reminder.seller_dp || ""} alt={userName} />}
             <AvatarFallback>{initials || "U"}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">

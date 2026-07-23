@@ -140,7 +140,7 @@ const MapComponent = () => {
                     }
                     className="h-10 w-10 cursor-pointer"
                   >
-                    <AvatarImage src={item.user_dp || ""} alt={"User-dp"} />
+                  {item.user_dp &&  <AvatarImage src={item.user_dp || ""} alt={"User-dp"} />}
                     <AvatarFallback className="rounded-lg bg-gray-700 text-white dark:bg-gray-100 dark:text-black">
                       {item?.user_name.substring(0, 2)}
                     </AvatarFallback>

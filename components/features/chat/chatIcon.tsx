@@ -1,25 +1,32 @@
 "use client";
 
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { db } from "@/config/firebase";
 import axios from "@/lib/axios";
 import { UserConversation } from "@/lib/types";
 import { doc, onSnapshot } from "firebase/firestore";
-import moment from "moment";
 import { MessageCircle, Search } from "lucide-react";
+import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProfilePicture } from "../users/profile-picture";
 
 export default function UserChatIcon({ myId, onChatSelected, className, active = null }: { myId: number | string, onChatSelected: (val: UserConversation) => void, className?: string, active?: number | null }) {
   const [conversations, setConversations] = useState<UserConversation[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false)
 
   const fetchConversations = useCallback(async () => {
-    const response = await axios.get(`/${myId}/chat`);
-    const convs = response.data;
+    setLoading(true)
+    try {
+      const response = await axios.get(`/${myId}/chat`);
+      const convs = response.data;
 
-    setConversations(convs);
+      setConversations(convs);
+    } finally {
+      setLoading(false)
+    }
+
   }, [myId]);
 
   useEffect(() => {
@@ -62,8 +69,8 @@ export default function UserChatIcon({ myId, onChatSelected, className, active =
               type="button"
               key={index}
               className={`w-full border-b px-4 py-3 text-left transition-colors hover:bg-muted/50 ${active === item.id
-                  ? "bg-primary/10 shadow-[inset_3px_0_0_var(--primary)]"
-                  : ""
+                ? "bg-primary/10 shadow-[inset_3px_0_0_var(--primary)]"
+                : ""
                 }`}
               onClick={() => onChatSelected(item)}
             >
@@ -105,8 +112,13 @@ export default function UserChatIcon({ myId, onChatSelected, className, active =
               <span className="mb-3 grid size-12 place-items-center rounded-2xl bg-muted text-muted-foreground">
                 <MessageCircle className="size-5" />
               </span>
-              <p className="text-sm font-medium">No users found</p>
-              <p className="mt-1 text-xs text-muted-foreground">Try another name.</p>
+              {loading ? <p className="text-sm font-medium">Fetching users list...</p>
+                :
+                <>
+                  <p className="text-sm font-medium">No users found</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Try another name.</p>
+                </>
+                }
             </div>
           ) : null}
 

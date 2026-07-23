@@ -43,8 +43,8 @@ export default function Page() {
 
   useEffect(() => {
     if (userID) {
-      setName(UserState.value.data.name);
-      setImage(UserState.value.data.dp);
+      setName(UserState.value.data?.name ?? "");
+      setImage(UserState.value.data?.dp ?? "");
     }
   }, [userID]);
 
@@ -97,7 +97,7 @@ export default function Page() {
           <CardContent className="flex flex-col items-center gap-4">
             <label htmlFor="profile-pic" className="cursor-pointer">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={image} alt={name} />
+               {image && <AvatarImage src={image} alt={name} />}
                 <AvatarFallback>{name?.substring(0, 2)}</AvatarFallback>
               </Avatar>
             </label>

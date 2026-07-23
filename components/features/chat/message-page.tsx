@@ -71,6 +71,14 @@ export default function MessagePage({ embedded = false, onClose }: MessagePagePr
       window.history.pushState({}, "", url);
     }
 
+    setSelectedConversation((prevState)=>{
+      if(!prevState) return prevState
+      const newState = {...prevState}
+      newState.user.name = item.name
+      newState.user.dp = item.dp
+      return newState
+    })
+
     await getConversation(item.id);
   };
 
