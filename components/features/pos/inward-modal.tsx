@@ -41,7 +41,7 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }: {
     const [loading, setLoading] = useState(false)
     const { userID } = useUserDetail()
 
-    const stock = data.length > 0 ? data.slice(0, -2) : [];
+    const stock = data;
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
