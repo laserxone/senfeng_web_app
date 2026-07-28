@@ -1,3 +1,4 @@
+import { InventorySearch } from "@/components/shared/search/inventory-select";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -6,15 +7,15 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { FileText, PackageCheck, Plus, Trash2, Truck } from "lucide-react";
-import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
-import StockSearch from "./stock-search";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { StockProps } from "@/lib/types";
+import { FileText, PackageCheck, Plus, Trash2, Truck } from "lucide-react";
+import { useEffect, useState } from "react";
 
 type EmptyType = {
     name: string
@@ -34,7 +35,7 @@ const emptyItem: EmptyType = {
 };
 
 const InwardModal = ({ visible, onClose, data = [], onRefresh }: {
-    visible: boolean, onClose: (val: boolean) => void, data: any[], onRefresh: () => Promise<void>
+    visible: boolean, onClose: (val: boolean) => void, data: StockProps[], onRefresh: () => Promise<void>
 }) => {
 
     const [items, setItems] = useState([emptyItem]);
@@ -246,20 +247,16 @@ const InwardModal = ({ visible, onClose, data = [], onRefresh }: {
                                             {item.isExisting ?
                                                 <div className="xl:col-span-2">
                                                     <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Inventory</Label>
-                                                    <StockSearch
-                                                        value={item.inventory_id}
-                                                        passingData={stock}
-                                                        onReturnData={(val) => {
-                                                            const copy = [...items];
-                                                            copy[index] = {
-                                                                ...copy[index],
-                                                                inventory_id: Number(val.id),
-                                                                name: val.name,
-                                                                unit: val.unit
-                                                            };
-                                                            setItems(copy);
-                                                        }}
-                                                    />
+                                                    <InventorySearch value={item.inventory_id} data={stock} onReturn={(val) => {
+                                                        const copy = [...items];
+                                                        copy[index] = {
+                                                            ...copy[index],
+                                                            inventory_id: Number(val.id),
+                                                            name: val.name ?? "",
+                                                            unit: val.unit
+                                                        };
+                                                        setItems(copy);
+                                                    }} />
                                                 </div>
                                                 :
                                                 <div className="xl:col-span-2">
