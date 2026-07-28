@@ -5,9 +5,11 @@ import {
     Banknote,
     CircleCheck,
     Clock3,
+    FileText,
     Loader2,
     ReceiptText,
-    Trash
+    Trash,
+    UserRound
 } from "lucide-react";
 import {
     useCallback,
@@ -456,40 +458,83 @@ const ImageSheet = ({
     id: number | null
     onRefresh: (id: number) => void
 }) => {
-
     const [deleteLoading, setDeleteLoading] = useState(false);
     const { userID } = useUserDetail();
 
-
     const handleClose = useCallback(() => {
-
         onClose();
-
     }, [onClose]);
 
 
-
     async function handleDelete() {
-        axios.delete(`/${userID}/reimbursement/${id}`).then(async () => {
-            if (id)
-                onRefresh(id);
+        if (!id) return
+
+        try {
+            await axios.delete(`/${userID}/reimbursement/${id}`)
+            onRefresh(id)
+        } finally {
             setDeleteLoading(false);
             handleClose();
-        });
+        }
     }
 
     return (
         <Sheet open={visible} onOpenChange={handleClose}>
-            <SheetContent>
-                <SheetHeader>
-                    <SheetTitle>Bill Detail</SheetTitle>
+            <SheetContent className="w-full overflow-hidden p-0 sm:max-w-md">
+                <SheetHeader className="border-b bg-muted/20 px-5 py-5 text-left">
+                    <div className="flex items-start gap-3">
+                        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+                            <ReceiptText className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0">
+                            <SheetTitle className="text-xl font-bold tracking-tight">
+                                Bill Detail
+                            </SheetTitle>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                Review receipt proof, description, and submitter details.
+                            </p>
+                        </div>
+                    </div>
                 </SheetHeader>
-                <ScrollArea className="flex flex-1 h-[80vh] px-4">
-                    <div className="flex flex-col">
+                <ScrollArea className="h-[calc(100dvh-150px)]">
+                    <div className="space-y-4 p-5">
+                        <div className="rounded-2xl border bg-background p-4 shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <div className="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-700 ring-1 ring-violet-100">
+                                    <UserRound className="h-5 w-5" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-xs font-medium text-muted-foreground">
+                                        Submitted by
+                                    </p>
+                                    <p className="mt-1 break-words text-sm font-semibold">
+                                        {submittedBy || "N/A"}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border bg-background p-4 shadow-sm">
+                            <div className="mb-3 flex items-center gap-3">
+                                <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-700 ring-1 ring-amber-100">
+                                    <FileText className="h-5 w-5" />
+                                </div>
+                                <p className="font-semibold">Description</p>
+                            </div>
+                            <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
+                                {description || "No description available"}
+                            </p>
+                        </div>
+
+                        <div className="overflow-hidden rounded-2xl border bg-muted/15 p-3">
+
+                            <MyImgZooming img={img} />
+
+                        </div>
+
                         <Button
-                            className="mb-2"
+                            className="w-full gap-2"
                             variant="destructive"
-                            size="icon"
                             onClick={(e) => {
                                 // e.stopPropagation()
                                 // setSelectedCustomerId(currentItem?.id);
@@ -500,19 +545,12 @@ const ImageSheet = ({
                             }}
                         >
                             {deleteLoading ? (
-                                <Loader2 className="animate-spin" size={16} />
+                                <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                                <Trash size={16} />
+                                <Trash className="h-4 w-4" />
                             )}
+                            Delete
                         </Button>
-
-                        <strong>Submitted by</strong>
-                        <p>{submittedBy || "N/A"}</p>
-
-                        <strong>Description</strong>
-                        <p>{description || "No description available"}</p>
-
-                        <MyImgZooming img={img} />
                     </div>
                 </ScrollArea>
             </SheetContent>

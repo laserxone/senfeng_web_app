@@ -4,6 +4,7 @@ import {
   ArrowUpDown,
   Banknote,
   CalendarDays,
+  CircleCheck,
   FileText,
   Info,
   Loader2,
@@ -42,6 +43,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import moment from "moment";
 import momentT from "moment-timezone";
 import Link from "next/link";
+import Spinner from "@/components/ui/spinner";
 
 export default function Page() {
   const [filterVisible, setFilterVisible] = useState(false);
@@ -53,6 +55,8 @@ export default function Page() {
   const { base_route, userID } = useUserDetail();
   const [resetLoading, setResetLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+    const [selectedItem, setSelectedItem] = useState<number | null>(null)
+    const [deleteItem, setDeleteItem] = useState<number | null>(null)
 
   useEffect(() => {
     if (userID) {
@@ -288,36 +292,111 @@ export default function Page() {
       cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
 
+     {
+                id: "actions",
+                header: "Action",
+                cell: ({ row }) => {
+                    const currentItem = row.original;
+                    const isVerifying = selectedItem === currentItem?.id;
+                    const isDeleting = deleteItem === currentItem?.id;
+    
+                    return (
+                        <div className="inline-flex flex-col items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1 shadow-sm">
+                            <Button
+                                size="xs"
+                                variant="outline"
+                                className="border-emerald-500/25 bg-background px-2.5 text-emerald-700 shadow-none hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
+                                disabled={isVerifying || isDeleting}
+                                aria-label="Verify reimbursement"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleVerify(currentItem?.id);
+                                }}
+                            >
+                                {isVerifying ? (
+                                    <Spinner className="size-3" />
+                                ) : (
+                                    <CircleCheck className="size-3.5" />
+                                )}
+                                Verify
+                            </Button>
+    
+                            <Button
+                                size="xs"
+                                variant="destructive"
+                                className="px-2.5"
+                                disabled={isDeleting || isVerifying}
+                                aria-label="Delete reimbursement"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(currentItem?.id);
+                                }}
+                            >
+                                {isDeleting ? (
+                                    <Spinner className="size-3" />
+                                ) : (
+                                    <Trash className="size-3.5" />
+                                )}
+                                Delete
+                            </Button>
+                        </div>
+                    );
+                },
+            },
+
   ];
 
-  function handleDownload() {
-    const headers = [
-      "Date",
-      "Customer",
-      "Submitted By",
-      "City",
-      "Amount",
-      "Description",
-    ];
 
-    const formattedData = data.map((item) => [
-      moment(item.date).format("YYYY-MM-DD"),
-      item?.title,
-      item.submitted_by_name,
-      item.city,
-      Number(item.amount || 0),
-      item.description,
-    ]);
-    exportToExcel(
-      headers,
-      formattedData,
-      "Reimbursement.xlsx",
-      false,
-      "",
-      false,
-      userID
-    );
-  }
+    async function handleVerify(id: number) {
+          if (!id) return
+  
+          setSelectedItem(id)
+          try {
+              await axios.put(`/${userID}/reimbursement/${id}`, {
+                  verified: true
+              })
+              const startDate = momentT
+                  .tz(TIMEZONE)
+                  .startOf("month")
+                  .startOf("day")
+                  .utc()
+                  .toISOString();
+              const endDate = momentT
+                  .tz(TIMEZONE)
+                  .endOf("month")
+                  .endOf("day")
+                  .utc()
+                  .toISOString();
+              await fetchData(startDate, endDate);
+          } finally {
+              setSelectedItem(null)
+          }
+      }
+  
+      async function handleDelete(id: number) {
+          if (!id) return
+  
+          setDeleteItem(id)
+          try {
+              await axios.delete(`/${userID}/reimbursement/${id}`)
+              const startDate = momentT
+                  .tz(TIMEZONE)
+                  .startOf("month")
+                  .startOf("day")
+                  .utc()
+                  .toISOString();
+              const endDate = momentT
+                  .tz(TIMEZONE)
+                  .endOf("month")
+                  .endOf("day")
+                  .utc()
+                  .toISOString();
+              await fetchData(startDate, endDate);
+          } finally {
+              setDeleteItem(null)
+          }
+      }
+      
 
   useEffect(() => {
     let localTotal = 0;
@@ -462,7 +541,7 @@ export default function Page() {
 
     </div>
   );
-}
+} 
 const ImageSheet = ({
   visible,
   onClose,
