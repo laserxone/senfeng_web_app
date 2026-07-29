@@ -29,6 +29,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -41,7 +42,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { SalesCustomer, SalesCustomerMachines, SalesDashboard, SalesMachine, SalesTodayTasks, SalesVisitTypes, UserAttendanceRecord, UserCallData, UserExtraTypes, UserReimbursementType } from "@/lib/types";
-import { AlertCircle, BadgeAlert, Building2, CalendarCheck, CheckCircle, Clock, Cpu, Gauge, MapPinned, MessageSquareWarning, PhoneCall, ReceiptText, RotateCcw, Truck, UserPlus, UserRound, Users, Wallet, WalletCards } from "lucide-react";
+import { AlertCircle, ArrowUpRight, BadgeAlert, Building2, CalendarCheck, CheckCircle, Clock, Cpu, Gauge, MapPinned, MessageSquareWarning, PhoneCall, ReceiptText, RotateCcw, Truck, UserPlus, UserRound, Users, Wallet, WalletCards } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -62,6 +63,7 @@ export default function SalesDashboardPage({ id: userID, }: { id: string | numbe
   const [allFines, setAllFines] = useState(0)
   const [allReturnables, setAllReturnables] = useState(0)
   const [selectedMetric, setSelectedMetric] = useState<MetricDialogState | null>(null)
+  const [machinesSoldDialogOpen, setMachinesSoldDialogOpen] = useState(false)
   const [todayTasks, setTodayTasks] = useState<SalesTodayTasks | null>(null)
   const [showingAutoScroll, setShowingAutoScroll] = useState(false)
   const searchParams = useSearchParams()
@@ -550,7 +552,10 @@ export default function SalesDashboardPage({ id: userID, }: { id: string | numbe
               industries={industryInsightItems}
             />
 
-            <TargetOverview data={data?.target} />
+            <TargetOverview
+              data={data?.target}
+              onClick={() => setMachinesSoldDialogOpen(true)}
+            />
 
             <SalesQuickActions onRefreshVisit={async () => {
               const startDate = moment().startOf("month").toISOString();
@@ -642,7 +647,12 @@ export default function SalesDashboardPage({ id: userID, }: { id: string | numbe
           <RenderFines userID={userID} height="min-h-[calc(100dvh-480px)]" onUpdateTotal={(val) => setAllFines(val)} />
         </div>
       </div>
-      {/* <MachinesSold visible={visible} setVisible={setVisible} machineData={machineData} base_route={base_route} /> */}
+      <MachinesSold
+        visible={machinesSoldDialogOpen}
+        setVisible={setMachinesSoldDialogOpen}
+        machineData={data?.machinesSoldThisMonthDetail || []}
+        base_route={base_route}
+      />
       <SalesMetricDetailsDialog
         metric={selectedMetric}
         onClose={() => setSelectedMetric(null)}
@@ -1141,35 +1151,75 @@ function Calls({ data, onRefresh }: { data: UserCallData[], onRefresh: () => Pro
 }
 
 function MachinesSold({ visible, setVisible, machineData, base_route }: { visible: boolean, setVisible: (val: boolean) => void, machineData: SalesMachine[], base_route: string }) {
-
+ 
   return (
     <Dialog open={visible} onOpenChange={setVisible}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Machines Sold</DialogTitle>
-        </DialogHeader>
-        <ScrollArea className="h-[70vh]">
-          <div className="flex flex-1 flex-col gap-2">
-            <div className="grid grid-cols-3 font-semibold border-b pb-2">
-              <div>Serial No</div>
-              <div>Company</div>
-              <div>Owner</div>
+      <DialogContent className="w-full max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-300 sm:max-w-xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+              <Cpu className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <DialogTitle className="text-sm font-semibold text-foreground">
+                Machines Sold This Month
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Select a machine to open its complete record in a new tab.
+              </DialogDescription>
             </div>
-
-            {machineData.map((item, index) => (
+            <Badge variant="outline" className="ml-auto w-fit shrink-0 rounded-full bg-background px-2 py-0.5 text-[10px]">
+              {machineData.length} {machineData.length === 1 ? "machine" : "machines"}
+            </Badge>
+          </div>
+        </DialogHeader>
+        
+         <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
+          <div className="space-y-3 p-3.5 pt-0">
+            {machineData.length === 0 ? (
+              <div className="grid min-h-40 place-items-center rounded-2xl border border-dashed bg-muted/15 p-6 text-center">
+                <div>
+                  <AlertCircle className="mx-auto size-9 text-muted-foreground" />
+                  <p className="mt-3 text-sm font-semibold">No machines sold yet</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    This month&apos;s machine sales will appear here.
+                  </p>
+                </div>
+              </div>
+            ) : machineData.map((item) => (
               <Link
-                key={index}
+                key={item.id}
                 target="_blank"
                 href={`/${base_route}/member/${item.customer_id}/${item.id}`}
-                className="grid grid-cols-3 hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded"
+                className="flex items-center gap-2.5 rounded-xl border border-slate-200/80 bg-background px-3 py-2.5 hover:bg-muted/40 dark:border-white/10"
               >
-                <div>{item.serial_no}</div>
-                <div>{item.customer_name || "-"}</div>
-                <div>{item.customer_owner || "-"}</div>
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Cpu className="size-3.5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold">
+                    {item.serial_no || "Machine record"}
+                  </span>
+                  <span className="block truncate text-[11px] text-muted-foreground">
+                    {item.customer_name || "Unknown customer"}
+                    {item.customer_owner ? ` - ${item.customer_owner}` : ""}
+                  </span>
+                </span>
+                <span className="shrink-0 text-right">
+                  <span className="block text-xs font-semibold tabular-nums">
+                    {Number(item.price || 0).toLocaleString("en-US")}
+                  </span>
+                  <span className="block text-[10px] text-muted-foreground">
+                    {item.contract_date ? moment(item.contract_date).format("DD MMM YYYY") : "-"}
+                  </span>
+                </span>
+                <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground" />
               </Link>
             ))}
+          
           </div>
         </ScrollArea>
+       
       </DialogContent>
     </Dialog>
   )

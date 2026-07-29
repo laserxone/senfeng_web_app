@@ -87,7 +87,10 @@ export default function AddCheque({
 
   return (
     <Dialog open={visible} onOpenChange={onClose}>
-      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground md:max-w-3xl lg:max-w-6xl">
+       <DialogContent
+        className={`max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-300 sm:max-w-lg"
+          }`}
+      >
         <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-3">

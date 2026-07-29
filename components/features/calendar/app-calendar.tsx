@@ -20,8 +20,7 @@ const AppCalendar = ({
   required = false
 }:AppCalendarProps) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-   const startMonth = min || new Date("1900-01-01")
-  const endMonth = max || new Date()
+  
   return (
     <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
       <PopoverTrigger asChild>

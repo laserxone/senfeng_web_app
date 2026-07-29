@@ -1309,7 +1309,7 @@ export type InventoryItem = {
 export type ChequeProp = {
     date: Date | undefined,
     amount: number,
-    img: string
+    img: string | null
 }
 
 

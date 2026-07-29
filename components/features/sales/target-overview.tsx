@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import type { SalesTarget } from "@/lib/types";
 import CircularProgress from "@/components/shared/common/circular-progress";
 
-export default function TargetOverview({ data }: { data?: SalesTarget }) {
+export default function TargetOverview({ data, onClick }: { data?: SalesTarget, onClick : ()=> void }) {
   const achieved = Number(data?.target_achieved || 0);
   const remaining = Number(data?.remaining_target || 0);
   const targetTotal = achieved + remaining;
@@ -30,7 +30,7 @@ export default function TargetOverview({ data }: { data?: SalesTarget }) {
             <p className="text-xs font-medium text-muted-foreground">
               Total Sales
             </p>
-            <p className="mt-1.5 text-xl font-bold tracking-tight tabular-nums">
+            <p className="mt-1.5 text-xl font-bold tracking-tight tabular-nums hover:underline cursor-pointer hover:text-blue-600" onClick={onClick}>
               {formatCurrency(achieved)}
             </p>
             <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
