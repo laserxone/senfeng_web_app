@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, Building2, Calendar, CircleCheck, Download, Filter, MapPin, Plus, ReceiptText, RotateCcw, Search, Trash2 } from "lucide-react";
+import { AlertCircle, Building2, Calendar, CircleCheck, Download, Filter, MapPin, Plus, ReceiptText, RotateCcw, Search, Trash2, User } from "lucide-react";
 import {
   useEffect,
   useMemo,
@@ -278,6 +278,11 @@ function ReimbursementCard({ onRefresh, item, onClickDelete, id }: { id: string 
               </div>
 
               <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                {item?.submitted_by_name && <span className="inline-flex items-center gap-1 rounded-md border bg-background px-2 py-1">
+                  <User className="size-3 shrink-0" />
+                  {item.submitted_by_name}
+                </span>
+                }
                 <span className="inline-flex items-center gap-1 rounded-md border bg-background px-2 py-1">
                   <Calendar className="size-3 shrink-0" />
                   {moment(item.date).format("YYYY-MM-DD")}
