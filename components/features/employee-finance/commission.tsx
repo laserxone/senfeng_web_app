@@ -1,45 +1,58 @@
-"use client";
+"use client"
 
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from "@/components/ui/sheet"
 
-import Heading from "@/components/ui/heading";
-import { useIsMobile } from "@/hooks/use-mobile";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { CommissionCRMProps, CommissionMachineItemProps, CommissionOwnerProps } from "@/lib/types";
-import { BadgeCheck, ChevronRight, CircleDollarSign, Clock3 } from "lucide-react";
-import moment from "moment";
-import Link from "next/link";
-import { memo, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { MyImgZooming } from "@/components/shared/media/img-zooming";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import Heading from "@/components/ui/heading"
+import { useIsMobile } from "@/hooks/use-mobile"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import {
+  CommissionCRMProps,
+  CommissionMachineItemProps,
+  CommissionOwnerProps,
+} from "@/lib/types"
+import {
+  BadgeCheck,
+  ChevronRight,
+  CircleDollarSign,
+  Clock3,
+} from "lucide-react"
+import moment from "moment"
+import Link from "next/link"
+import { memo, useEffect, useState } from "react"
+import { toast } from "sonner"
+import { MyImgZooming } from "@/components/shared/media/img-zooming"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useSidebar } from "@/components/ui/sidebar";
-import Spinner from "@/components/ui/spinner";
+} from "@/components/ui/select"
+import { useSidebar } from "@/components/ui/sidebar"
+import Spinner from "@/components/ui/spinner"
 import {
   Table,
   TableBody,
@@ -47,144 +60,173 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/ui/table"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@/components/ui/tooltip"
 
-
-export default function Commission({ owner, crm }: { owner?: boolean, crm?: boolean }) {
-  return owner ? <OwnerView /> : crm ? <CrmView /> : <OtherView />;
+export default function Commission({
+  owner,
+  crm,
+}: {
+  owner?: boolean
+  crm?: boolean
+}) {
+  return owner ? <OwnerView /> : crm ? <CrmView /> : <OtherView />
 }
 
 const OwnerView = () => {
-  const { userID } = useUserDetail();
-  const [data, setData] = useState<CommissionOwnerProps[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [visibleDisapprove, setVisibleDisapprove] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<CommissionOwnerProps | null>(null);
-  const [disapproveMsg, setDisapproveMsg] = useState("");
-  const [disapproveLoading, setDisapproveLoading] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<CommissionOwnerProps | null>(null)
-  const [search, setSearch] = useState("");
+  const { userID } = useUserDetail()
+  const [data, setData] = useState<CommissionOwnerProps[]>([])
+  const [loading, setLoading] = useState(true)
+  const [visibleDisapprove, setVisibleDisapprove] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<CommissionOwnerProps | null>(
+    null
+  )
+  const [disapproveMsg, setDisapproveMsg] = useState("")
+  const [disapproveLoading, setDisapproveLoading] = useState(false)
+  const [selectedRow, setSelectedRow] = useState<CommissionOwnerProps | null>(
+    null
+  )
+  const [search, setSearch] = useState("")
   const { state } = useSidebar()
   const isMobile = useIsMobile()
   useEffect(() => {
     if (userID) {
-      fetchData();
+      fetchData()
     }
-  }, [userID]);
+  }, [userID])
 
   async function fetchData() {
-
     try {
-      const route = `/${userID}/commission`;
-      const response = await axios.get(route);
+      const route = `/${userID}/commission`
+      const response = await axios.get(route)
 
-      setData(response.data);
+      setData(response.data)
     } catch (error) {
     } finally {
-
-      setLoading(false);
+      setLoading(false)
     }
-
   }
 
   function groupByMonth(data: CommissionOwnerProps[]) {
     return data.reduce((acc: any, item) => {
       const key = item.request_date
         ? moment(item.request_date).format("YYYY-MM")
-        : "Unknown";
+        : "Unknown"
 
       if (!acc[key]) {
-        acc[key] = [];
+        acc[key] = []
       }
-      acc[key].push(item);
-      return acc;
-    }, {});
+      acc[key].push(item)
+      return acc
+    }, {})
   }
 
   const filteredData = data.filter((item) => {
-    if (!search) return true;
-    const allSearch = `${item.customer_name || ""} ${item.user_name || ""} ${item.customer_owner || ""
-      }`;
-    return allSearch.toLowerCase().includes(search.toLowerCase());
-  });
+    if (!search) return true
+    const allSearch = `${item.customer_name || ""} ${item.user_name || ""} ${
+      item.customer_owner || ""
+    }`
+    return allSearch.toLowerCase().includes(search.toLowerCase())
+  })
 
-  const groupedData: Record<string, CommissionOwnerProps[]> = groupByMonth(filteredData);
+  const groupedData: Record<string, CommissionOwnerProps[]> =
+    groupByMonth(filteredData)
 
-  const RenderEachRow = ({ item, onRefresh, onDisapprove, onReturn, index }: { item: CommissionOwnerProps, onRefresh: () => Promise<void>, onDisapprove: () => void, onReturn: (val: CommissionOwnerProps) => void, index: number }) => {
-    const [loading, setLoading] = useState(false);
-    const { userID, base_route } = useUserDetail();
-    const [selectedPercentage, setSelectedPercentage] = useState<null | number>(null);
-    const [showManual, setShowManual] = useState(false);
-    const [manualNumber, setManualNumber] = useState("");
+  const RenderEachRow = ({
+    item,
+    onRefresh,
+    onDisapprove,
+    onReturn,
+    index,
+  }: {
+    item: CommissionOwnerProps
+    onRefresh: () => Promise<void>
+    onDisapprove: () => void
+    onReturn: (val: CommissionOwnerProps) => void
+    index: number
+  }) => {
+    const [loading, setLoading] = useState(false)
+    const { userID, base_route } = useUserDetail()
+    const [selectedPercentage, setSelectedPercentage] = useState<null | number>(
+      null
+    )
+    const [showManual, setShowManual] = useState(false)
+    const [manualNumber, setManualNumber] = useState("")
 
     async function handleUpdate(
       id: number,
       is_approved: boolean | null,
       approval_date: string | Date | null,
-      commission_amount: number | null,
+      commission_amount: number | null
     ) {
-
-      if (!id) return;
-      setLoading(true);
+      if (!id) return
+      setLoading(true)
       try {
         await axios.put(`/${userID}/commission/${id}`, {
           is_approved: is_approved,
           approval_date: approval_date,
           commission_amount: commission_amount,
-        });
-        await onRefresh();
-        setShowManual(false);
-        setManualNumber("");
-        setSelectedPercentage(null);
+        })
+        await onRefresh()
+        setShowManual(false)
+        setManualNumber("")
+        setSelectedPercentage(null)
       } catch (error) {
-        console.error("Update failed:", error);
+        console.error("Update failed:", error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
 
     async function revertIssued(id: number) {
-      if (!id) return;
-      setLoading(true);
+      if (!id) return
+      setLoading(true)
       try {
         await axios.put(`/${userID}/commission/${id}`, {
           commission_issued: false,
           issue_date: null,
-        });
-        await onRefresh();
-        setShowManual(false);
-        setManualNumber("");
-        setSelectedPercentage(null);
+        })
+        await onRefresh()
+        setShowManual(false)
+        setManualNumber("")
+        setSelectedPercentage(null)
       } catch (error) {
-        console.error("Update failed:", error);
+        console.error("Update failed:", error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
 
     const getRowBg = (item: CommissionOwnerProps, index: number) => {
-
-      if (item.commission_issued === true) return "bg-green-100 dark:bg-green-900 border-b-gray-400";
-      if (item.is_approved === false) return "bg-red-100 dark:bg-red-900 border-b-gray-400";
-      if (item.is_approved === true) return "bg-blue-100 dark:bg-blue-900 border-b-gray-400";
-      return index % 2 === 0 ? "bg-slate-50 dark:bg-gray-900 border-b-gray-400" : "bg-white dark:bg-slate-800 border-b-gray-400";
-    };
+      if (item.commission_issued === true)
+        return "bg-green-100 dark:bg-green-900 border-b-gray-400"
+      if (item.is_approved === false)
+        return "bg-red-100 dark:bg-red-900 border-b-gray-400"
+      if (item.is_approved === true)
+        return "bg-blue-100 dark:bg-blue-900 border-b-gray-400"
+      return index % 2 === 0
+        ? "bg-slate-50 dark:bg-gray-900 border-b-gray-400"
+        : "bg-white dark:bg-slate-800 border-b-gray-400"
+    }
 
     return (
-      <TableRow className={`${getRowBg(item, index)} hover:${getRowBg(item, index)}`}>
+      <TableRow
+        className={`${getRowBg(item, index)} hover:${getRowBg(item, index)}`}
+      >
         <TableCell className="min-w-[120px] whitespace-nowrap">
           {item.request_date
             ? moment(item.request_date).format("YYYY-MM-DD")
             : ""}
         </TableCell>
-        <TableCell className="min-w-[150px] max-w-[220px] whitespace-normal break-words">{item.user_name}</TableCell>
-        <TableCell className="min-w-[180px] max-w-[260px] whitespace-normal break-words">
+        <TableCell className="max-w-[220px] min-w-[150px] break-words whitespace-normal">
+          {item.user_name}
+        </TableCell>
+        <TableCell className="max-w-[260px] min-w-[180px] break-words whitespace-normal">
           <Link
             target="blank"
             href={`/${base_route}/member/${item.customer_id}/${item.sale_id}`}
@@ -193,7 +235,7 @@ const OwnerView = () => {
             {item.customer_name}
           </Link>
         </TableCell>
-        <TableCell className="min-w-[170px] max-w-[240px] whitespace-normal break-words">
+        <TableCell className="max-w-[240px] min-w-[170px] break-words whitespace-normal">
           <Link
             target="blank"
             href={`/${base_route}/member/${item.customer_id}/${item.sale_id}`}
@@ -202,14 +244,22 @@ const OwnerView = () => {
             {item.customer_owner}
           </Link>
         </TableCell>
-        <TableCell className="min-w-[150px] max-w-[220px] whitespace-normal break-words">{item.customer_group}</TableCell>
-        <TableCell className="min-w-[190px] max-w-[300px] whitespace-normal break-words">{item.machine_name}</TableCell>
-        <TableCell className="min-w-[180px] max-w-[280px] whitespace-normal break-words">{item.order_no_arr?.join(", ")}</TableCell>
-        <TableCell className="min-w-[110px] whitespace-nowrap">{item.total_amount}</TableCell>
+        <TableCell className="max-w-[220px] min-w-[150px] break-words whitespace-normal">
+          {item.customer_group}
+        </TableCell>
+        <TableCell className="max-w-[300px] min-w-[190px] break-words whitespace-normal">
+          {item.machine_name}
+        </TableCell>
+        <TableCell className="max-w-[280px] min-w-[180px] break-words whitespace-normal">
+          {item.order_no_arr?.join(", ")}
+        </TableCell>
+        <TableCell className="min-w-[110px] whitespace-nowrap">
+          {item.total_amount}
+        </TableCell>
         <TableCell className="min-w-[100px]">
           <Button
             onClick={() => {
-              onReturn(item);
+              onReturn(item)
             }}
             variant="outline"
           >
@@ -224,9 +274,9 @@ const OwnerView = () => {
               <Select
                 onValueChange={(val) => {
                   if (val === "manual") {
-                    setShowManual(true);
+                    setShowManual(true)
                   } else {
-                    setSelectedPercentage(Number(val));
+                    setSelectedPercentage(Number(val))
                   }
                 }}
                 value={String(selectedPercentage) || ""}
@@ -236,12 +286,12 @@ const OwnerView = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {Array.from({ length: 9 }, (_, i) => {
-                    const val = (i + 1).toString();
+                    const val = (i + 1).toString()
                     return (
                       <SelectItem key={val} value={val}>
                         {val}%
                       </SelectItem>
-                    );
+                    )
                   })}
                   <SelectItem value={"manual"}>Manual</SelectItem>
                 </SelectContent>
@@ -251,29 +301,33 @@ const OwnerView = () => {
               <Input
                 value={manualNumber}
                 onChange={(e) => {
-                  const value = e.target.value;
-                  const regex = /^\d*\.?\d*$/;
+                  const value = e.target.value
+                  const regex = /^\d*\.?\d*$/
 
                   if (regex.test(value)) {
-                    setManualNumber(value); // Keep as string
+                    setManualNumber(value) // Keep as string
                   }
                 }}
               />
             )}
           </div>
         </TableCell>
-        <TableCell className="min-w-[220px] max-w-[340px] whitespace-normal break-words">{item.note}</TableCell>
+        <TableCell className="max-w-[340px] min-w-[220px] break-words whitespace-normal">
+          {item.note}
+        </TableCell>
 
-        <TableCell className={`min-w-[220px] bg-inherit ${!isMobile && "sticky right-0 z-30"}`}>
+        <TableCell
+          className={`min-w-[220px] bg-inherit ${!isMobile && "sticky right-0 z-30"}`}
+        >
           {loading ? (
             <Spinner />
           ) : item.commission_issued === true ? (
-            <div className="flex gap-2 items-center">
+            <div className="flex items-center gap-2">
               <span className="text-green-600">Issued</span>
               <Button onClick={() => revertIssued(item.id)}>Revert</Button>
             </div>
           ) : item.is_approved === null ? (
-            <div className="flex gap-2 items-center">
+            <div className="flex items-center gap-2">
               <Button
                 disabled={
                   showManual ? manualNumber === "" : !selectedPercentage
@@ -285,10 +339,9 @@ const OwnerView = () => {
                     new Date(),
                     showManual
                       ? Number(manualNumber || 0)
-                      : (item.total_amount * (selectedPercentage || 0)) / 100,
+                      : (item.total_amount * (selectedPercentage || 0)) / 100
                   )
-                }
-                }
+                }}
               >
                 Approve
               </Button>
@@ -303,29 +356,27 @@ const OwnerView = () => {
                     <span className="text-red-600">Disapproved</span>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent className="bg-red-600 mr-2">
+                <TooltipContent className="mr-2 bg-red-600">
                   <p className="text-white">{item.owner_note}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           ) : (
-            <div className="flex gap-2 items-center">
+            <div className="flex items-center gap-2">
               <span className="text-green-600">Approved</span>
-              <Button
-                onClick={() => handleUpdate(item.id, null, null, null)}
-              >
+              <Button onClick={() => handleUpdate(item.id, null, null, null)}>
                 Undo
               </Button>
             </div>
           )}
         </TableCell>
       </TableRow>
-    );
-  };
+    )
+  }
 
   async function handleDisapprove() {
-    if (!selectedItem?.id) return;
-    setDisapproveLoading(true);
+    if (!selectedItem?.id) return
+    setDisapproveLoading(true)
     try {
       await axios
         .put(`/${userID}/commission/${selectedItem?.id}`, {
@@ -335,20 +386,24 @@ const OwnerView = () => {
         .then(async () => {
           await axios.put(`/${userID}/machine/${selectedItem.sale_id}`, {
             payment_lock: false,
-          });
-        });
-      await fetchData();
-      setVisibleDisapprove(false);
-      setDisapproveMsg("");
+          })
+        })
+      await fetchData()
+      setVisibleDisapprove(false)
+      setDisapproveMsg("")
     } finally {
-      setDisapproveLoading(false);
+      setDisapproveLoading(false)
     }
   }
 
   return (
     <div className="flex min-w-0 flex-1 flex-col space-y-4">
       <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
-        <Heading panel title="Commission" description="Approve employee commission" />
+        <Heading
+          panel
+          title="Commission"
+          description="Approve employee commission"
+        />
       </div>
 
       {loading ? (
@@ -368,17 +423,20 @@ const OwnerView = () => {
           {Object.keys(groupedData).length === 0 ? (
             <p>No data available.</p>
           ) : (
-
             Object.entries(groupedData).map(([month, items]) => (
-              <Collapsible key={month} className="min-w-0 rounded-xl border bg-background">
+              <Collapsible
+                key={month}
+                className="min-w-0 rounded-xl border bg-background"
+              >
                 <CollapsibleTrigger asChild>
                   <Button
                     variant="ghost"
-
                     className="group h-auto w-full justify-start gap-2 rounded-xl px-3 py-3 text-left transition-none hover:bg-card hover:text-accent-foreground sm:px-4"
                   >
                     <ChevronRight className="transition-transform group-data-[state=open]:rotate-90" />
-                    <span className="font-semibold">{moment(month, "YYYY-MM").format("MMMM YYYY")}</span>
+                    <span className="font-semibold">
+                      {moment(month, "YYYY-MM").format("MMMM YYYY")}
+                    </span>
                     <span className="ml-auto rounded-full border bg-muted/30 px-2 py-0.5 text-xs text-muted-foreground">
                       {items.length} rows
                     </span>
@@ -390,26 +448,51 @@ const OwnerView = () => {
                         className={`w-full  ${state === 'expanded' ? "max-w-[calc(100dvw-310px)]" : "max-w-[calc(100dvw-100px)]"}  overflow-x-auto`}
                       > */}
                     <div
-                      className={`custom-scrollbar rounded-lg border ${!isMobile && state === "expanded"
-                        ? "xl:max-w-[calc(100dvw-330px)]"
-                        : "xl:max-w-[calc(100dvw-130px)]"
-                        } ${isMobile && "w-[calc(100dvw-50px)]"}`}
+                      className={`custom-scrollbar rounded-lg border ${
+                        !isMobile && state === "expanded"
+                          ? "xl:max-w-[calc(100dvw-330px)]"
+                          : "xl:max-w-[calc(100dvw-130px)]"
+                      } ${isMobile && "w-[calc(100dvw-50px)]"}`}
                     >
                       <Table className="w-[2100px] min-w-[2100px]">
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="min-w-[120px]">Request Date</TableHead>
-                            <TableHead className="min-w-[150px]">Employee</TableHead>
-                            <TableHead className="min-w-[180px]">Customer</TableHead>
-                            <TableHead className="min-w-[170px]">Owner</TableHead>
-                            <TableHead className="min-w-[150px]">Group</TableHead>
-                            <TableHead className="min-w-[190px]">Machine</TableHead>
-                            <TableHead className="min-w-[180px]">Order No</TableHead>
-                            <TableHead className="min-w-[110px]">Price</TableHead>
-                            <TableHead className="min-w-[100px]">Images</TableHead>
-                            <TableHead className="min-w-[300px]">Commission</TableHead>
-                            <TableHead className="min-w-[220px]">Note</TableHead>
-                            <TableHead className={`min-w-[220px] ${!isMobile && "sticky right-0 z-30  border-l"} bg-background shadow-[-8px_0_12px_-12px_rgba(0,0,0,0.35)]`}>
+                            <TableHead className="min-w-[120px]">
+                              Request Date
+                            </TableHead>
+                            <TableHead className="min-w-[150px]">
+                              Employee
+                            </TableHead>
+                            <TableHead className="min-w-[180px]">
+                              Customer
+                            </TableHead>
+                            <TableHead className="min-w-[170px]">
+                              Owner
+                            </TableHead>
+                            <TableHead className="min-w-[150px]">
+                              Group
+                            </TableHead>
+                            <TableHead className="min-w-[190px]">
+                              Machine
+                            </TableHead>
+                            <TableHead className="min-w-[180px]">
+                              Order No
+                            </TableHead>
+                            <TableHead className="min-w-[110px]">
+                              Price
+                            </TableHead>
+                            <TableHead className="min-w-[100px]">
+                              Images
+                            </TableHead>
+                            <TableHead className="min-w-[300px]">
+                              Commission
+                            </TableHead>
+                            <TableHead className="min-w-[220px]">
+                              Note
+                            </TableHead>
+                            <TableHead
+                              className={`min-w-[220px] ${!isMobile && "sticky right-0 z-30 border-l"} bg-background shadow-[-8px_0_12px_-12px_rgba(0,0,0,0.35)]`}
+                            >
                               Status
                             </TableHead>
                           </TableRow>
@@ -423,8 +506,8 @@ const OwnerView = () => {
                               onRefresh={fetchData}
                               onReturn={(i) => setSelectedRow(i)}
                               onDisapprove={() => {
-                                setSelectedItem(item);
-                                setVisibleDisapprove(true);
+                                setSelectedItem(item)
+                                setVisibleDisapprove(true)
                               }}
                             />
                           ))}
@@ -437,8 +520,6 @@ const OwnerView = () => {
                 </CollapsibleContent>
               </Collapsible>
             ))
-
-
           )}
         </div>
       )}
@@ -446,95 +527,121 @@ const OwnerView = () => {
       <Dialog
         open={visibleDisapprove}
         onOpenChange={(val) => {
-          setVisibleDisapprove(val);
+          setVisibleDisapprove(val)
         }}
       >
         <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
           <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
             <div className="flex min-w-0 items-center gap-2.5">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-destructive/15 bg-destructive/10 text-destructive"><CircleDollarSign className="h-4 w-4" /></span>
-              <div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Reject Commission</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Provide a clear reason for rejecting this commission.</DialogDescription></div>
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-destructive/15 bg-destructive/10 text-destructive">
+                <CircleDollarSign className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <DialogTitle className="text-sm font-semibold text-foreground">
+                  Reject Commission
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Provide a clear reason for rejecting this commission.
+                </DialogDescription>
+              </div>
             </div>
           </DialogHeader>
           <ScrollArea className="max-h-[calc(100dvh-132px)]">
-          <div className="space-y-3 p-3.5 pb-4">
-            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Rejection Message</Label>
-            <Input
-              placeholder="Enter message"
-              value={disapproveMsg}
-              onChange={(e) => setDisapproveMsg(e.target.value)}
-            />
-            <Button
-              disabled={disapproveLoading || !disapproveMsg}
-              onClick={handleDisapprove}
-              className="h-9 w-full rounded-lg"
-            >
-              {disapproveLoading && <Spinner />} Submit
-            </Button>
-          </div>
+            <div className="space-y-3 p-3.5 pb-4">
+              <Label className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Rejection Message
+              </Label>
+              <Input
+                placeholder="Enter message"
+                value={disapproveMsg}
+                onChange={(e) => setDisapproveMsg(e.target.value)}
+              />
+              <Button
+                disabled={disapproveLoading || !disapproveMsg}
+                onClick={handleDisapprove}
+                className="h-9 w-full rounded-lg"
+              >
+                {disapproveLoading && <Spinner />} Submit
+              </Button>
+            </div>
           </ScrollArea>
         </DialogContent>
       </Dialog>
 
-      <ImageSheet data={selectedRow} onClose={() => setSelectedRow(null)} visible={!!selectedRow} />
+      <ImageSheet
+        data={selectedRow}
+        onClose={() => setSelectedRow(null)}
+        visible={!!selectedRow}
+      />
     </div>
-  );
-};
+  )
+}
 
 const OtherView = () => {
-  const { userID } = useUserDetail();
-  const [data, setData] = useState<CommissionMachineItemProps[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState("");
+  const { userID } = useUserDetail()
+  const [data, setData] = useState<CommissionMachineItemProps[]>([])
+  const [loading, setLoading] = useState(false)
+  const [search, setSearch] = useState("")
 
   useEffect(() => {
     if (userID) {
-      fetchData(userID);
+      fetchData(userID)
     }
-  }, [userID]);
+  }, [userID])
 
   async function fetchData(id: string | number) {
-    setLoading(true);
+    setLoading(true)
     return new Promise(async (resolve) => {
       try {
-        const route = `/${id}/commission`;
-        const response = await axios.get(route);
-        setData(response.data);
+        const route = `/${id}/commission`
+        const response = await axios.get(route)
+        setData(response.data)
       } catch (error) {
       } finally {
-        resolve(true);
-        setLoading(false);
+        resolve(true)
+        setLoading(false)
       }
-    });
+    })
   }
 
-
-
-  const RenderEachRow = ({ item, onRefresh }: { item: CommissionMachineItemProps, onRefresh: () => Promise<void> }) => {
-    const [loading, setLoading] = useState(false);
-    const { userID, base_route } = useUserDetail();
-    const [note, setNote] = useState(item?.commission?.note || "");
-    const [issueLoading, setIssueLoading] = useState(false);
+  const RenderEachRow = ({
+    item,
+    onRefresh,
+  }: {
+    item: CommissionMachineItemProps
+    onRefresh: () => Promise<void>
+  }) => {
+    const [loading, setLoading] = useState(false)
+    const { userID, base_route } = useUserDetail()
+    const [note, setNote] = useState(item?.commission?.note || "")
+    const [issueLoading, setIssueLoading] = useState(false)
     const { state } = useSidebar()
     const isMobile = useIsMobile()
 
-    async function handleApplyCommission(id: number, item: CommissionMachineItemProps) {
+    async function handleApplyCommission(
+      id: number,
+      item: CommissionMachineItemProps
+    ) {
       if (item.customer.profile_completion < 100) {
-        toast.error("Data incomplete in customer record, kindly enter all data in this customer")
-        return;
+        toast.error(
+          "Data incomplete in customer record, kindly enter all data in this customer"
+        )
+        return
       }
       if (item.percentage_completion < 100) {
-        toast.error("Data incomplete in machine record, kindly enter all data in this machine")
+        toast.error(
+          "Data incomplete in machine record, kindly enter all data in this machine"
+        )
 
-        return;
+        return
       }
-      if (!id) return;
-      setLoading(true);
+      if (!id) return
+      setLoading(true)
 
-      let totalPrice = item.price;
+      let totalPrice = item.price
 
       if (item.speed_money_amount && Number(item.speed_money_amount) > 0) {
-        totalPrice = Number(item.price) - Number(item.speed_money_amount);
+        totalPrice = Number(item.price) - Number(item.speed_money_amount)
       }
 
       try {
@@ -553,18 +660,18 @@ const OtherView = () => {
                 payment_lock: true,
               })
               .then(async () => {
-                await onRefresh();
-              });
-          });
+                await onRefresh()
+              })
+          })
       } catch (error) {
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
 
     async function handleApplyCommissionAgain(id: number | undefined) {
-      if (!id) return;
-      setLoading(true);
+      if (!id) return
+      setLoading(true)
 
       try {
         await axios
@@ -579,18 +686,18 @@ const OtherView = () => {
                 payment_lock: true,
               })
               .then(async () => {
-                await onRefresh();
-              });
-          });
+                await onRefresh()
+              })
+          })
       } catch (error) {
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
 
     async function handleAlreadyReceived(val: CommissionMachineItemProps) {
-      if (!val?.id) return;
-      setIssueLoading(true);
+      if (!val?.id) return
+      setIssueLoading(true)
       try {
         if (val?.commission?.id) {
           await axios.put(`/${userID}/commission/${val.commission.id}`, {
@@ -598,7 +705,7 @@ const OtherView = () => {
             is_requested: true,
             is_approved: true,
             // lead_commission_issued: true,
-          });
+          })
         } else {
           const formData = {
             sale_id: val.id,
@@ -610,32 +717,34 @@ const OtherView = () => {
             commission_amount: 0,
             total_amount: val.price,
             commission_issued: true,
-          };
+          }
 
-          await axios.post(`/${userID}/old-commissions`, formData);
-          await fetchData(userID);
+          await axios.post(`/${userID}/old-commissions`, formData)
+          await fetchData(userID)
         }
       } catch (error) {
-        console.log(error);
+        console.log(error)
       } finally {
-        setIssueLoading(false);
+        setIssueLoading(false)
       }
     }
 
     return (
       <Card className="max-w-[calc(100vw-34px)]">
-        <CardContent className="p-4 space-y-2">
+        <CardContent className="space-y-2 p-4">
           <Link
             target="_blank"
             href={`/${base_route}/member/${item.customer_id}/${item.id}`}
           >
-            <h2 className="font-semibold text-lg hover:underline">
+            <h2 className="text-lg font-semibold hover:underline">
               Customer: {item.customer?.name || item.customer?.owner || "NIL"}
             </h2>
           </Link>
 
-          <div className={`${state === 'expanded' ? "w-[calc(100dvw-350px)]" : "w-[calc(100dvw-150px)]"} ${isMobile && "w-full"} overflow-x-auto`}>
-            <Table className="table-fixed w-full">
+          <div
+            className={`${state === "expanded" ? "w-[calc(100dvw-350px)]" : "w-[calc(100dvw-150px)]"} ${isMobile && "w-full"} overflow-x-auto`}
+          >
+            <Table className="w-full table-fixed">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[120px]">Machine</TableHead>
@@ -649,19 +758,21 @@ const OtherView = () => {
               </TableHeader>
               <TableBody>
                 <TableRow>
-                  <TableCell className="align-middle whitespace-normal break-words">
+                  <TableCell className="align-middle break-words whitespace-normal">
                     {item.serial_no}
                   </TableCell>
-                  <TableCell className="align-middle whitespace-normal break-words">
+                  <TableCell className="align-middle break-words whitespace-normal">
                     {item.created_amount}
                   </TableCell>
-                  <TableCell className="align-middle whitespace-normal break-words">
+                  <TableCell className="align-middle break-words whitespace-normal">
                     {item.paid_amount}
                   </TableCell>
-                  <TableCell className="align-middle whitespace-normal break-words">{item.balance}</TableCell>
+                  <TableCell className="align-middle break-words whitespace-normal">
+                    {item.balance}
+                  </TableCell>
 
                   {/* Note column */}
-                  <TableCell className="align-middle whitespace-normal break-words">
+                  <TableCell className="align-middle break-words whitespace-normal">
                     {item.balance !== 0 ? null : item.commission?.id ? (
                       <span>{item.commission?.note}</span>
                     ) : (
@@ -675,7 +786,7 @@ const OtherView = () => {
                   </TableCell>
 
                   {/* Commission Status column */}
-                  <TableCell className="align-middle whitespace-normal break-words">
+                  <TableCell className="align-middle break-words whitespace-normal">
                     {loading ? (
                       <Spinner />
                     ) : item.commission?.commission_issued === true ? (
@@ -698,7 +809,7 @@ const OtherView = () => {
                                   </span>
                                 </div>
                               </TooltipTrigger>
-                              <TooltipContent className="bg-red-600 mr-2">
+                              <TooltipContent className="mr-2 bg-red-600">
                                 <p className="text-white">
                                   {item.commission.owner_note}
                                 </p>
@@ -719,9 +830,7 @@ const OtherView = () => {
                       )
                     ) : (
                       <Button
-                        onClick={() =>
-                          handleApplyCommission(item.id, item)
-                        }
+                        onClick={() => handleApplyCommission(item.id, item)}
                       >
                         Apply for Commission
                       </Button>
@@ -744,28 +853,54 @@ const OtherView = () => {
           </div>
         </CardContent>
       </Card>
-    );
-  };
+    )
+  }
 
   const filteredData = data.filter((item) => {
-    const customerName = item?.customer?.name?.toLowerCase() ?? "";
-    const customerOwner = item?.customer?.owner?.toLowerCase() ?? "";
-    const searchingValue = search.toLowerCase();
+    const customerName = item?.customer?.name?.toLowerCase() ?? ""
+    const customerOwner = item?.customer?.owner?.toLowerCase() ?? ""
+    const searchingValue = search.toLowerCase()
 
     return (
       customerName.includes(searchingValue) ||
       customerOwner.includes(searchingValue)
-    );
-  });
+    )
+  })
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-        <div className="p-4 sm:p-5"><Heading panel title="Commission" description="Apply for your commission" /></div>
+        <div className="p-4 sm:p-5">
+          <Heading
+            panel
+            title="Commission"
+            description="Apply for your commission"
+          />
+        </div>
         <div className="grid border-t bg-muted/20 sm:grid-cols-3 sm:divide-x">
-          <CommissionMetric icon={<CircleDollarSign className="size-4 text-violet-600 dark:text-violet-400" />} label="Eligible" value={data.length} />
-          <CommissionMetric icon={<Clock3 className="size-4 text-amber-600 dark:text-amber-400" />} label="Applied" value={data.filter((item) => Boolean(item.commission)).length} />
-          <CommissionMetric icon={<BadgeCheck className="size-4 text-emerald-600 dark:text-emerald-400" />} label="Issued" value={data.filter((item) => item.commission?.commission_issued).length} />
+          <CommissionMetric
+            icon={
+              <CircleDollarSign className="size-4 text-violet-600 dark:text-violet-400" />
+            }
+            label="Eligible"
+            value={data.length}
+          />
+          <CommissionMetric
+            icon={
+              <Clock3 className="size-4 text-amber-600 dark:text-amber-400" />
+            }
+            label="Applied"
+            value={data.filter((item) => Boolean(item.commission)).length}
+          />
+          <CommissionMetric
+            icon={
+              <BadgeCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
+            }
+            label="Issued"
+            value={
+              data.filter((item) => item.commission?.commission_issued).length
+            }
+          />
         </div>
       </section>
 
@@ -779,7 +914,7 @@ const OtherView = () => {
             value={search}
             placeholder={`Search...`}
             onChange={(event) => {
-              setSearch(event.target.value);
+              setSearch(event.target.value)
             }}
             className="w-[60vw] max-w-sm"
           />
@@ -792,7 +927,7 @@ const OtherView = () => {
                 key={item.id}
                 item={item}
                 onRefresh={async () => {
-                  await fetchData(userID);
+                  await fetchData(userID)
                 }}
               />
             ))
@@ -800,43 +935,60 @@ const OtherView = () => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-function CommissionMetric({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
-  return <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">{icon}<div className="flex items-baseline gap-2"><span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{label}</span><span className="text-sm font-bold">{value}</span></div></div>;
+function CommissionMetric({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: number
+}) {
+  return (
+    <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">
+      {icon}
+      <div className="flex items-baseline gap-2">
+        <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+          {label}
+        </span>
+        <span className="text-sm font-bold">{value}</span>
+      </div>
+    </div>
+  )
 }
 
 const CrmView = () => {
-  const { userID } = useUserDetail();
-  const [data, setData] = useState<CommissionCRMProps[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { userID } = useUserDetail()
+  const [data, setData] = useState<CommissionCRMProps[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (userID) {
-      fetchData(userID);
+      fetchData(userID)
     }
-  }, [userID]);
+  }, [userID])
 
   async function fetchData(id: number | string) {
     return new Promise(async (resolve, reject) => {
       try {
-        const route = `/${id}/commission?lead=true`;
-        const response = await axios.get(route);
-        setData(response.data);
+        const route = `/${id}/commission?lead=true`
+        const response = await axios.get(route)
+        setData(response.data)
       } catch (error) {
       } finally {
-        resolve(true);
-        setLoading(false);
+        resolve(true)
+        setLoading(false)
       }
-    });
+    })
   }
 
   const RenderEachRow = ({ item }: { item: CommissionCRMProps }) => {
     const renderCommissionStatus = (item: CommissionCRMProps) => {
-
       if (item.is_approved === true) {
-        return <span className="text-green-600">Approved</span>;
+        return <span className="text-green-600">Approved</span>
       } else if (item.is_approved === false) {
         return (
           <div className="flex items-center gap-2">
@@ -847,7 +999,7 @@ const CrmView = () => {
                     <span className="text-red-600">Disapproved</span>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent className="bg-red-600 mr-2">
+                <TooltipContent className="mr-2 bg-red-600">
                   <p className="text-white">
                     {item.owner_note || "No reason provided"}
                   </p>
@@ -855,11 +1007,11 @@ const CrmView = () => {
               </Tooltip>
             </TooltipProvider>
           </div>
-        );
+        )
       } else {
-        return <span className="text-yellow-600">Pending</span>;
+        return <span className="text-yellow-600">Pending</span>
       }
-    };
+    }
 
     return (
       <TableRow>
@@ -870,8 +1022,8 @@ const CrmView = () => {
 
         <TableCell>{renderCommissionStatus(item)}</TableCell>
       </TableRow>
-    );
-  };
+    )
+  }
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -889,7 +1041,7 @@ const CrmView = () => {
             <p>No data available.</p>
           ) : (
             <Card className="max-w-[calc(100vw-34px)]">
-              <CardContent className="p-4 space-y-2">
+              <CardContent className="space-y-2 p-4">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -912,52 +1064,47 @@ const CrmView = () => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
+const ImageSheet = memo(
+  ({
+    data,
+    visible,
+    onClose,
+  }: {
+    data: CommissionOwnerProps | null
+    visible: boolean
+    onClose: () => void
+  }) => {
+    function handleClose() {
+      onClose()
+    }
 
-const ImageSheet = memo(({
-  data,
-  visible,
-  onClose,
+    return (
+      <Sheet open={visible} onOpenChange={handleClose}>
+        <SheetContent>
+          <SheetHeader className="mb-4">
+            <SheetTitle>Images</SheetTitle>
 
-}: {
-  data: CommissionOwnerProps | null;
-  visible: boolean;
-  onClose: () => void;
-}) => {
+            <ScrollArea className="h-[85vh] px-4">
+              {data?.contract_images_png &&
+                data?.contract_images_png?.map((item) => (
+                  <div key={item}>
+                    <MyImgZooming img={item} />
+                  </div>
+                ))}
 
-
-  function handleClose() {
-
-    onClose();
-
+              {data?.machine_nameplate_images &&
+                data?.machine_nameplate_images?.map((item) => (
+                  <div key={item}>
+                    <MyImgZooming img={item} />
+                  </div>
+                ))}
+            </ScrollArea>
+          </SheetHeader>
+        </SheetContent>
+      </Sheet>
+    )
   }
-
-  return (
-    <Sheet open={visible} onOpenChange={handleClose}>
-      <SheetContent>
-        <SheetHeader className="mb-4">
-          <SheetTitle>Images</SheetTitle>
-
-          <ScrollArea className="h-[85vh] px-4">
-
-            {data?.contract_images_png &&
-              data?.contract_images_png?.map((item) => (
-                <div key={item}>
-                  <MyImgZooming img={item} />
-                </div>
-              ))}
-
-            {data?.machine_nameplate_images &&
-              data?.machine_nameplate_images?.map((item) => (
-                <div key={item}>
-                  <MyImgZooming img={item} />
-                </div>
-              ))}
-          </ScrollArea>
-        </SheetHeader>
-      </SheetContent>
-    </Sheet>
-  );
-});
+)

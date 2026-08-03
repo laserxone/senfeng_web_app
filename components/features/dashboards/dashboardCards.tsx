@@ -1,15 +1,20 @@
-import { Activity, CreditCard, MessageSquareText, type LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import {
+  Activity,
+  CreditCard,
+  MessageSquareText,
+  type LucideIcon,
+} from "lucide-react"
+import type { ReactNode } from "react"
 
 type MetricShellProps = {
-  title: string;
-  value: number;
-  icon: LucideIcon;
-  accent: string;
-  iconClassName: string;
-  children?: ReactNode;
-  onClick?: () => void;
-};
+  title: string
+  value: number
+  icon: LucideIcon
+  accent: string
+  iconClassName: string
+  children?: ReactNode
+  onClick?: () => void
+}
 
 function MetricShell({
   title,
@@ -21,26 +26,30 @@ function MetricShell({
   onClick,
 }: MetricShellProps) {
   return (
-    <div className={`relative flex h-full min-h-[92px] w-full overflow-hidden rounded-xl border bg-gradient-to-br ${accent} p-3 shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md`}>
+    <div
+      className={`relative flex h-full min-h-[92px] w-full overflow-hidden rounded-xl border bg-gradient-to-br ${accent} p-3 shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md`}
+    >
       <div className="pointer-events-none absolute -right-5 -bottom-10 h-16 w-24 rotate-[-18deg] rounded-[2rem] bg-white/50" />
       <div className="relative flex w-full items-start gap-2.5">
-        <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg text-white shadow-sm ${iconClassName}`}>
+        <div
+          className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg text-white shadow-sm ${iconClassName}`}
+        >
           <Icon className="h-4 w-4" />
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
-          <p className="break-words text-xs font-bold leading-tight text-slate-950">
+          <p className="text-xs leading-tight font-bold break-words text-slate-950">
             {title}
           </p>
           {onClick ? (
             <button
               type="button"
               onClick={onClick}
-              className="mt-1 text-left text-2xl font-black leading-none tracking-tight text-slate-950 hover:underline"
+              className="mt-1 text-left text-2xl leading-none font-black tracking-tight text-slate-950 hover:underline"
             >
               {value}
             </button>
           ) : (
-            <p className="mt-1 text-2xl font-black leading-none tracking-tight text-slate-950">
+            <p className="mt-1 text-2xl leading-none font-black tracking-tight text-slate-950">
               {value}
             </p>
           )}
@@ -48,7 +57,7 @@ function MetricShell({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 export const MachinesSoldCard = ({
@@ -56,9 +65,9 @@ export const MachinesSoldCard = ({
   percentage,
   onClick,
 }: {
-  value: number;
-  percentage: number;
-  onClick: () => void;
+  value: number
+  percentage: number
+  onClick: () => void
 }) => {
   return (
     <MetricShell
@@ -74,20 +83,21 @@ export const MachinesSoldCard = ({
           percentage >= 0 ? "text-emerald-600" : "text-red-600"
         }`}
       >
-        {percentage >= 0 ? "+" : "-"}{Math.abs(percentage)}% from last month
+        {percentage >= 0 ? "+" : "-"}
+        {Math.abs(percentage)}% from last month
       </p>
     </MetricShell>
-  );
-};
+  )
+}
 
 export const FeedbackTakenCard = ({
   value,
   remaining,
   total,
 }: {
-  value: number;
-  remaining: number;
-  total: number;
+  value: number
+  remaining: number
+  total: number
 }) => {
   return (
     <MetricShell
@@ -110,17 +120,17 @@ export const FeedbackTakenCard = ({
         </span>
       </div>
     </MetricShell>
-  );
-};
+  )
+}
 
 export const VisitsDoneCard = ({
   value,
   remaining,
   total,
 }: {
-  value: number;
-  remaining: number;
-  total: number;
+  value: number
+  remaining: number
+  total: number
 }) => {
   return (
     <MetricShell
@@ -143,5 +153,5 @@ export const VisitsDoneCard = ({
         </span>
       </div>
     </MetricShell>
-  );
-};
+  )
+}

@@ -6,7 +6,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import useUserDetail from "@/hooks/use-user-detail"
 import axios from "@/lib/axios"
-import { MachineProps, MyCustomer, PartsProps, SalesVisitTypes } from "@/lib/types"
+import {
+  MachineProps,
+  MyCustomer,
+  PartsProps,
+  SalesVisitTypes,
+} from "@/lib/types"
 import { UploadImage } from "@/lib/uploadFunction"
 import { zodResolver } from "@hookform/resolvers/zod"
 import {
@@ -51,14 +56,13 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>
 
 type LocalCustomerDetailProps = Omit<MyCustomer, "machines"> & {
-  bill_received: number;
-  bill_total: number;
-  profile_completion: number;
+  bill_received: number
+  bill_total: number
+  profile_completion: number
   lead_name?: string
-  parts: PartsProps[];
+  parts: PartsProps[]
   machines: MachineProps[]
 }
-
 
 type VisitTabProps = {
   id: number | null | string
@@ -66,9 +70,9 @@ type VisitTabProps = {
   onRefresh: () => Promise<void>
   customer_data?: {
     id?: number
-    location?: string,
-    owner?: string,
-    number?: string[],
+    location?: string
+    owner?: string
+    number?: string[]
     name?: string
   } | null
   height?: string
@@ -140,7 +144,9 @@ export default function VisitTab({
         })
         await onRefresh()
         form.reset()
-        setSelectedCustomer(customer_data?.id ? { id: customer_data?.id } : null)
+        setSelectedCustomer(
+          customer_data?.id ? { id: customer_data?.id } : null
+        )
         setLoading(false)
       } else {
         await axios.post(`/${id}/visit`, {
@@ -150,7 +156,9 @@ export default function VisitTab({
         })
         await onRefresh()
         form.reset()
-        setSelectedCustomer(customer_data?.id ? { id: customer_data?.id } : null)
+        setSelectedCustomer(
+          customer_data?.id ? { id: customer_data?.id } : null
+        )
         setLoading(false)
       }
     } catch (error) {
@@ -178,7 +186,7 @@ export default function VisitTab({
   return (
     <div className="w-full p-1">
       <div className="w-full space-y-3">
-        <Card className="overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 dark:bg-zinc-950 dark:ring-white/10 p-0">
+        <Card className="overflow-hidden border-0 bg-white p-0 shadow-sm ring-1 ring-slate-200/80 dark:bg-zinc-950 dark:ring-white/10">
           <CardContent className="p-0">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-slate-50/80 px-3 py-2 dark:bg-zinc-900/70">
               <div className="flex items-center gap-2">
@@ -186,7 +194,7 @@ export default function VisitTab({
                   <Sparkles className="h-4 w-4" />
                 </span>
                 <div>
-                  <h3 className="text-sm font-semibold leading-none">
+                  <h3 className="text-sm leading-none font-semibold">
                     Add Visit
                   </h3>
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -194,7 +202,10 @@ export default function VisitTab({
                   </p>
                 </div>
               </div>
-              <Badge variant="secondary" className="rounded-full px-2.5 text-[11px]">
+              <Badge
+                variant="secondary"
+                className="rounded-full px-2.5 text-[11px]"
+              >
                 {feedbacks.length} visits
               </Badge>
             </div>
@@ -273,7 +284,7 @@ export default function VisitTab({
                       designation === "Owner" ||
                       designation === "Customer Relationship Manager" ||
                       designation ===
-                      "Customer Relationship Manager (After Sales)"
+                        "Customer Relationship Manager (After Sales)"
                     }
                     visible={addCustomer}
                     onClose={setAddCustomer}
@@ -394,7 +405,7 @@ export default function VisitTab({
                 <Clock3 className="h-3.5 w-3.5" />
               </span>
               <div>
-                <h3 className="text-sm font-semibold leading-none">
+                <h3 className="text-sm leading-none font-semibold">
                   Visit History
                 </h3>
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -402,7 +413,10 @@ export default function VisitTab({
                 </p>
               </div>
             </div>
-            <Badge variant="outline" className="rounded-full bg-background text-[10px]">
+            <Badge
+              variant="outline"
+              className="rounded-full bg-background text-[10px]"
+            >
               {feedbacks.length} total
             </Badge>
           </div>
@@ -467,14 +481,17 @@ function VisitRecord({
                 </span>
                 <span className="inline-flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
                   <UserRound className="h-3.5 w-3.5" />
-                  <span className="truncate">{feedback?.user_name || "Unknown"}</span>
+                  <span className="truncate">
+                    {feedback?.user_name || "Unknown"}
+                  </span>
                 </span>
               </div>
 
               <Link
                 target="_blank"
-                href={`/${baseRoute}/${feedback.customer_member ? "member" : "customer"
-                  }/${feedback.customer_id}`}
+                href={`/${baseRoute}/${
+                  feedback.customer_member ? "member" : "customer"
+                }/${feedback.customer_id}`}
                 className="group/link inline-flex max-w-full items-center gap-1.5 text-sm font-semibold hover:text-primary"
               >
                 <span className="truncate">{customerLabel}</span>
@@ -540,11 +557,9 @@ function VisitRecord({
             </div>
           )}
 
-          <div className="flex gap-2 bg-muted rounded-lg px-3 py-2 text-sm leading-5 whitespace-pre-wrap dark:bg-zinc-900/80 items-center mr-2">
+          <div className="mr-2 flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm leading-5 whitespace-pre-wrap dark:bg-zinc-900/80">
             <MessageSquareText className="h-3 w-3" />
-            <p className="text-xs">
-              {feedback.note}
-            </p>
+            <p className="text-xs">{feedback.note}</p>
           </div>
         </div>
 
@@ -610,4 +625,3 @@ function MediaPreview({
     </div>
   )
 }
-

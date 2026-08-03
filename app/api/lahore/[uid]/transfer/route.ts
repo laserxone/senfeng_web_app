@@ -1,12 +1,12 @@
-import pool from "@/config/db";
-import { NextRequest, NextResponse } from "next/server";
+import pool from "@/config/db"
+import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(req:NextRequest) {
-  const searchParams = req.nextUrl.searchParams;
-  const user_id = searchParams.get("id");
+export async function GET(req: NextRequest) {
+  const searchParams = req.nextUrl.searchParams
+  const user_id = searchParams.get("id")
 
   if (!user_id) {
-    return NextResponse.json({ message: "User missing" }, { status: 400 });
+    return NextResponse.json({ message: "User missing" }, { status: 400 })
   }
 
   try {
@@ -22,39 +22,39 @@ export async function GET(req:NextRequest) {
       LEFT JOIN users u ON u.id  = c.ownership 
        WHERE c.ownership = $1
       `,
-      [user_id],
-    );
+      [user_id]
+    )
 
-    return NextResponse.json(query.rows, { status: 200 });
-  } catch (error:any) {
+    return NextResponse.json(query.rows, { status: 200 })
+  } catch (error: any) {
     return NextResponse.json(
       { message: error?.message || "Server error" },
-      { status: 500 },
-    );
+      { status: 500 }
+    )
   }
 }
 
-export async function POST(req:NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const { from_user_id, to_user_id, ids } = await req.json();
+    const { from_user_id, to_user_id, ids } = await req.json()
 
     if (!from_user_id || !to_user_id || !ids) {
       return NextResponse.json(
         { message: "Parameters missing" },
-        { status: 400 },
-      );
+        { status: 400 }
+      )
     }
 
     await pool.query(
       `UPDATE customer SET ownership = $1 WHERE id = ANY($2::int[])`,
-      [to_user_id, ids],
-    );
+      [to_user_id, ids]
+    )
 
-    return NextResponse.json({message : "Transfer completed"}, {status:200})
-  } catch (error:any) {
+    return NextResponse.json({ message: "Transfer completed" }, { status: 200 })
+  } catch (error: any) {
     return NextResponse.json(
       { message: error?.message || "Server error" },
-      { status: 500 },
-    );
+      { status: 500 }
+    )
   }
 }

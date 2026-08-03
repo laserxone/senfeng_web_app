@@ -1,28 +1,33 @@
-"use client";
-import AppCalendar from "@/components/features/calendar/app-calendar";
-import ProfilePictureTeam from "@/components/features/users/ProfilePicture";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Field, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+"use client"
+import AppCalendar from "@/components/features/calendar/app-calendar"
+import ProfilePictureTeam from "@/components/features/users/ProfilePicture"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Field, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
-import Spinner from "@/components/ui/spinner";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { storage } from "@/config/firebase";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { UploadImage } from "@/lib/uploadFunction";
-import { OfficeContext } from "@/store/context/OfficeContext";
-import { deleteObject, getDownloadURL, ref } from "firebase/storage";
+} from "@/components/ui/popover"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Skeleton } from "@/components/ui/skeleton"
+import Spinner from "@/components/ui/spinner"
+import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
+import { storage } from "@/config/firebase"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { UploadImage } from "@/lib/uploadFunction"
+import { OfficeContext } from "@/store/context/OfficeContext"
+import { deleteObject, getDownloadURL, ref } from "firebase/storage"
 import {
   BriefcaseBusiness,
   CalendarDays,
@@ -32,40 +37,39 @@ import {
   ShieldCheck,
   StickyNote,
   WalletCards,
-} from "lucide-react";
-import Link from "next/link";
-import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
+} from "lucide-react"
+import Link from "next/link"
+import { ChangeEvent, useContext, useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
 
 type DocsDataType = {
-  cnic: string;
-  education: string;
-  police: string;
-  resume: string;
-  appointment_letter: string;
-  father_cnic: string;
+  cnic: string
+  education: string
+  police: string
+  resume: string
+  appointment_letter: string
+  father_cnic: string
 }
 
-
 type UserProfile = {
-  id?: number;
-  designation: string;
-  dp: string;
-  email: string;
-  name: string;
-  number: string;
-  kin: string;
-  full_access ?: boolean
-};
+  id?: number
+  designation: string
+  dp: string
+  email: string
+  name: string
+  number: string
+  kin: string
+  full_access?: boolean
+}
 
 export default function DetailComponent({ id }: { id: string | null }) {
-  const { userID } = useUserDetail();
-  const [joiningDate, setJoiningDate] = useState<Date | null>(null);
-  const [leavingDate, setLeavingDate] = useState<Date | null>(null);
-  const [active, setActive] = useState(false);
-  const [dataLoading, setDataLoading] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [employeeId, setEmployeeId] = useState<string | null>(null);
+  const { userID } = useUserDetail()
+  const [joiningDate, setJoiningDate] = useState<Date | null>(null)
+  const [leavingDate, setLeavingDate] = useState<Date | null>(null)
+  const [active, setActive] = useState(false)
+  const [dataLoading, setDataLoading] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [employeeId, setEmployeeId] = useState<string | null>(null)
   const [fixedData, setFixedData] = useState<UserProfile>({
     designation: "",
     dp: "",
@@ -73,14 +77,14 @@ export default function DetailComponent({ id }: { id: string | null }) {
     name: "",
     number: "",
     kin: "",
-  });
+  })
   const [form, setForm] = useState({
     basic_salary: "",
     monthly_target: "",
     total_salary: "",
     note: "",
     fuel: 0,
-  });
+  })
 
   const [checks, setChecks] = useState({
     branch_expenses_assigned: false,
@@ -100,8 +104,8 @@ export default function DetailComponent({ id }: { id: string | null }) {
     team_attendance: false,
     careers: false,
     reimbursement_approval: false,
-    team_attendance_marking: false
-  });
+    team_attendance_marking: false,
+  })
 
   const [docsData, setDocsData] = useState({
     cnic: "",
@@ -111,23 +115,23 @@ export default function DetailComponent({ id }: { id: string | null }) {
     appointment_letter: "",
     father_cnic: "",
     contract: "",
-  });
+  })
 
   const [otherDocs, setOtherDocs] = useState([])
 
   useEffect(() => {
     if (userID && id) {
-      fetchData();
+      fetchData()
     }
-  }, [userID, id]);
+  }, [userID, id])
 
   async function fetchData() {
     axios
       .get(`/${userID}/user?user=${id}`)
       .then((response) => {
         if (response.data.length > 0) {
-          const apiData = response.data.length > 0 ? response.data[0] : {};
-          setEmployeeId(apiData?.id);
+          const apiData = response.data.length > 0 ? response.data[0] : {}
+          setEmployeeId(apiData?.id)
           setFixedData({
             id: apiData?.id,
             designation: apiData?.designation,
@@ -136,8 +140,8 @@ export default function DetailComponent({ id }: { id: string | null }) {
             name: apiData?.name,
             number: apiData?.number || "",
             kin: apiData?.kin_number || "",
-            full_access : apiData?.full_access || false
-          });
+            full_access: apiData?.full_access || false,
+          })
           setChecks({
             branch_expenses_assigned: apiData?.branch_expenses_assigned,
             branch_expenses_delete_access:
@@ -157,15 +161,15 @@ export default function DetailComponent({ id }: { id: string | null }) {
             team_attendance: apiData?.false,
             careers: apiData?.careers,
             reimbursement_approval: apiData?.reimbursement_approval,
-            team_attendance_marking: apiData?.team_attendance_marking
-          });
+            team_attendance_marking: apiData?.team_attendance_marking,
+          })
           setForm({
             basic_salary: apiData?.basic_salary || 0,
             monthly_target: apiData?.monthly_target || 0,
             note: apiData?.note || "",
             total_salary: apiData?.total_salary || 0,
             fuel: apiData?.fuel || 0,
-          });
+          })
 
           setDocsData({
             cnic: apiData.cnic || "",
@@ -175,56 +179,56 @@ export default function DetailComponent({ id }: { id: string | null }) {
             appointment_letter: apiData.appointment_letter || "",
             father_cnic: apiData.father_cnic || "",
             contract: apiData?.contract || "",
-          });
+          })
           setOtherDocs(apiData?.other_docs || [])
-          setJoiningDate(apiData?.joining_date || null);
-          setLeavingDate(apiData?.leaving_date || null);
-          setActive(apiData?.active || false);
+          setJoiningDate(apiData?.joining_date || null)
+          setLeavingDate(apiData?.leaving_date || null)
+          setActive(apiData?.active || false)
         } else {
-          toast.error("Employee details not found");
+          toast.error("Employee details not found")
         }
       })
       .finally(() => {
-        setLoading(false);
-      });
+        setLoading(false)
+      })
   }
 
   const handleInputChange = (field: string, value: string) => {
     setForm((prev) => ({
       ...prev,
       [field]: value,
-    }));
-  };
+    }))
+  }
 
   const handleCheck = (field: string, value: boolean) => {
     const isDealerRestrictedField =
       fixedData.designation === "Dealer" &&
       field !== "limited_access" &&
-      !field.startsWith("customer_");
+      !field.startsWith("customer_")
 
-    if (isDealerRestrictedField) return;
+    if (isDealerRestrictedField) return
 
     setChecks((prev) => ({
       ...prev,
       [field]: value,
-    }));
+    }))
     if (field == "full_access" && value == true) {
       setChecks((prev) => ({
         ...prev,
         ["limited_access"]: false,
-      }));
+      }))
     }
     if (field == "limited_access" && value == true) {
       setChecks((prev) => ({
         ...prev,
         ["full_access"]: false,
-      }));
+      }))
     }
-  };
+  }
 
   async function handleSave() {
-    if (!employeeId) return;
-    setDataLoading(true);
+    if (!employeeId) return
+    setDataLoading(true)
     axios
       .put(`/${userID}/user/${employeeId}`, {
         basic_salary: form?.basic_salary || 0,
@@ -252,24 +256,30 @@ export default function DetailComponent({ id }: { id: string | null }) {
         active: active,
         careers: checks?.careers,
         reimbursement_approval: checks?.reimbursement_approval,
-        team_attendance_marking: checks?.team_attendance_marking
-
+        team_attendance_marking: checks?.team_attendance_marking,
       })
       .then(() => {
-        toast.success("Information updated");
+        toast.success("Information updated")
       })
       .finally(() => {
-        setDataLoading(false);
-      });
+        setDataLoading(false)
+      })
   }
 
-  const OpenDashboard = ["Sales", "Store Manager", "Engineer", "Manager", "Customer Relationship Manager", "Social Media Manager", "Customer Relationship Manager (After Sales)", "Dealer"]
-
+  const OpenDashboard = [
+    "Sales",
+    "Store Manager",
+    "Engineer",
+    "Manager",
+    "Customer Relationship Manager",
+    "Social Media Manager",
+    "Customer Relationship Manager (After Sales)",
+    "Dealer",
+  ]
 
   return (
     <div className="flex w-full justify-center pb-4">
       <div className="w-full space-y-5">
-
         {/* Header */}
         <div className="overflow-hidden rounded-2xl border bg-background shadow-sm">
           <div className="flex flex-col gap-4 p-4 sm:p-5 md:flex-row md:items-center">
@@ -286,8 +296,12 @@ export default function DetailComponent({ id }: { id: string | null }) {
                 <BriefcaseBusiness className="h-3.5 w-3.5 text-blue-600" />
                 Employee profile
               </div>
-              <h1 className="truncate text-2xl font-bold tracking-tight">{fixedData?.name || "Employee"}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">{fixedData?.designation || "No designation"}</p>
+              <h1 className="truncate text-2xl font-bold tracking-tight">
+                {fixedData?.name || "Employee"}
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {fixedData?.designation || "No designation"}
+              </p>
 
               {OpenDashboard?.includes(fixedData?.designation) && (
                 <Link
@@ -300,9 +314,11 @@ export default function DetailComponent({ id }: { id: string | null }) {
               )}
             </div>
 
-            <div className="flex sm:items-center flex-col gap-2 sm:flex-row md:justify-end">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center md:justify-end">
               <div>
-                <div className={`rounded-full border px-3 py-1 text-xs font-semibold ${active ? "bg-emerald-50 text-emerald-700" : "bg-muted/30 text-muted-foreground"}`}>
+                <div
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${active ? "bg-emerald-50 text-emerald-700" : "bg-muted/30 text-muted-foreground"}`}
+                >
                   {active ? "Active" : "Inactive"}
                 </div>
               </div>
@@ -314,7 +330,6 @@ export default function DetailComponent({ id }: { id: string | null }) {
         </div>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-
           {/* Personal Details */}
           <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
             <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
@@ -325,13 +340,15 @@ export default function DetailComponent({ id }: { id: string | null }) {
               (key) =>
                 key !== "note" && (
                   <Field key={key}>
-                    <FieldLabel>{key.replace(/_/g, " ").toUpperCase()}</FieldLabel>
+                    <FieldLabel>
+                      {key.replace(/_/g, " ").toUpperCase()}
+                    </FieldLabel>
                     <Input
                       value={form[key as keyof typeof form]}
                       onChange={(e) => handleInputChange(key, e.target.value)}
                     />
                   </Field>
-                ),
+                )
             )}
           </FieldSet>
 
@@ -342,21 +359,30 @@ export default function DetailComponent({ id }: { id: string | null }) {
               Access & Preferences
             </FieldLegend>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {Object.keys(checks).map((key) => (
-                (fixedData?.designation === 'Engineer' && key === "complaint_assigned") ? null :
-                  <div key={key} className="flex min-h-11 items-center gap-3 rounded-xl border bg-muted/15 px-3 py-2">
+              {Object.keys(checks).map((key) =>
+                fixedData?.designation === "Engineer" &&
+                key === "complaint_assigned" ? null : (
+                  <div
+                    key={key}
+                    className="flex min-h-11 items-center gap-3 rounded-xl border bg-muted/15 px-3 py-2"
+                  >
                     <Checkbox
                       checked={checks[key as keyof typeof checks]}
-                      onCheckedChange={(checked: boolean) => handleCheck(key, checked)}
+                      onCheckedChange={(checked: boolean) =>
+                        handleCheck(key, checked)
+                      }
                       disabled={
                         fixedData.designation === "Dealer" &&
                         key !== "limited_access" &&
                         !key.startsWith("customer_")
                       }
                     />
-                    <Label className="text-xs font-medium leading-snug">{key.replace(/_/g, " ").toUpperCase()}</Label>
+                    <Label className="text-xs leading-snug font-medium">
+                      {key.replace(/_/g, " ").toUpperCase()}
+                    </Label>
                   </div>
-              ))}
+                )
+              )}
             </div>
           </FieldSet>
 
@@ -428,45 +454,100 @@ export default function DetailComponent({ id }: { id: string | null }) {
               Documents
             </FieldLegend>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <DocumentCard type={"cnic"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-              <DocumentCard type={"father_cnic"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-              <DocumentCard type={"police"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-              <DocumentCard type={"education"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-              <DocumentCard type={"resume"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-              <DocumentCard type={"appointment_letter"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-              <DocumentCard type={"contract"} docsData={docsData} employeeId={employeeId} fetchData={fetchData} userID={userID} />
-              <DocumentCardOther userID={userID} otherDocs={otherDocs} employeeId={employeeId} fetchData={fetchData} />
+              <DocumentCard
+                type={"cnic"}
+                docsData={docsData}
+                employeeId={employeeId}
+                fetchData={fetchData}
+                userID={userID}
+              />
+              <DocumentCard
+                type={"father_cnic"}
+                docsData={docsData}
+                employeeId={employeeId}
+                fetchData={fetchData}
+                userID={userID}
+              />
+              <DocumentCard
+                type={"police"}
+                docsData={docsData}
+                employeeId={employeeId}
+                fetchData={fetchData}
+                userID={userID}
+              />
+              <DocumentCard
+                type={"education"}
+                docsData={docsData}
+                employeeId={employeeId}
+                fetchData={fetchData}
+                userID={userID}
+              />
+              <DocumentCard
+                type={"resume"}
+                docsData={docsData}
+                employeeId={employeeId}
+                fetchData={fetchData}
+                userID={userID}
+              />
+              <DocumentCard
+                type={"appointment_letter"}
+                docsData={docsData}
+                employeeId={employeeId}
+                fetchData={fetchData}
+                userID={userID}
+              />
+              <DocumentCard
+                type={"contract"}
+                docsData={docsData}
+                employeeId={employeeId}
+                fetchData={fetchData}
+                userID={userID}
+              />
+              <DocumentCardOther
+                userID={userID}
+                otherDocs={otherDocs}
+                employeeId={employeeId}
+                fetchData={fetchData}
+              />
             </div>
           </FieldSet>
-
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-
-const DocumentCardOther = ({ userID, otherDocs, employeeId, fetchData }: { userID: number | string, otherDocs: string[], employeeId: string | null, fetchData: () => Promise<void> }) => {
+const DocumentCardOther = ({
+  userID,
+  otherDocs,
+  employeeId,
+  fetchData,
+}: {
+  userID: number | string
+  otherDocs: string[]
+  employeeId: string | null
+  fetchData: () => Promise<void>
+}) => {
   const [files, setFiles] = useState<
     {
-      url: string;
-      name: string;
-      path: string;
+      url: string
+      name: string
+      path: string
     }[]
-  >([]);
+  >([])
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false)
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const { state: OfficeState } = useContext(OfficeContext)!
   const [open, setOpen] = useState(false)
-  const userId = userID;
+  const userId = userID
 
   useEffect(() => {
     async function loadFiles() {
-      if (!otherDocs?.length) return;
+      if (!otherDocs?.length) return
 
-      setLoading(true);
+      setLoading(true)
 
       try {
         const loadedFiles = await Promise.all(
@@ -476,83 +557,76 @@ const DocumentCardOther = ({ userID, otherDocs, employeeId, fetchData }: { userI
                 url: filePath,
                 name: filePath.split("/").pop() || "file",
                 path: filePath,
-              };
+              }
             }
 
-            const storageRef = ref(storage, filePath);
-            const url = await getDownloadURL(storageRef);
+            const storageRef = ref(storage, filePath)
+            const url = await getDownloadURL(storageRef)
 
             return {
               url,
               name: filePath.split("/").pop() || "file",
               path: filePath,
-            };
+            }
           })
-        );
+        )
 
-        setFiles(loadedFiles);
+        setFiles(loadedFiles)
       } catch (error) {
-        console.error("Error loading files:", error);
+        console.error("Error loading files:", error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
 
-    loadFiles();
-  }, [otherDocs]);
+    loadFiles()
+  }, [otherDocs])
 
-  const handleFileUpload = async (
-    event: ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event?.target?.files?.[0];
+  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event?.target?.files?.[0]
 
-    if (!file) return;
+    if (!file) return
 
-    setLoading(true);
+    setLoading(true)
 
     try {
-      const extension = file.name.split(".").pop();
+      const extension = file.name.split(".").pop()
 
-      const fileName = `${Date.now()}-${file.name}`;
+      const fileName = `${Date.now()}-${file.name}`
 
-      const newFilePath = `${OfficeState.value.data}/${userId}/profile/other_docs/${fileName}`;
+      const newFilePath = `${OfficeState.value.data}/${userId}/profile/other_docs/${fileName}`
 
       await UploadImage(
         URL.createObjectURL(file),
         newFilePath,
         file.type || "application/octet-stream"
-      );
+      )
 
-      const updatedOtherDocs = [
-        ...(otherDocs || []),
-        newFilePath,
-      ];
+      const updatedOtherDocs = [...(otherDocs || []), newFilePath]
 
       const updatedData = {
         password: undefined,
         confirmPassword: undefined,
         currentPassword: undefined,
         other_docs: [...updatedOtherDocs],
-      };
+      }
 
-      await axios.put(`/${userId}/user/${employeeId}`, updatedData);
+      await axios.put(`/${userId}/user/${employeeId}`, updatedData)
 
       await fetchData()
 
-      toast.success("File uploaded successfully");
+      toast.success("File uploaded successfully")
     } catch (error) {
-      console.error(error);
-      toast.error("Upload failed");
+      console.error(error)
+      toast.error("Upload failed")
     } finally {
-      setLoading(false);
+      setLoading(false)
 
       if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+        fileInputRef.current.value = ""
       }
     }
-  };
-
-
+  }
 
   return (
     <div className="space-y-2">
@@ -569,11 +643,12 @@ const DocumentCardOther = ({ userID, otherDocs, employeeId, fetchData }: { userI
 
           <Popover>
             <PopoverTrigger asChild className="flex w-full gap-4">
-              <Button variant={"outline"} className="h-auto w-full justify-between rounded-xl px-3 py-3 text-left">
+              <Button
+                variant={"outline"}
+                className="h-auto w-full justify-between rounded-xl px-3 py-3 text-left"
+              >
                 OTHER DOCS
-                {files.length > 0 && (
-                  <CheckCircle className="text-green-500" />
-                )}
+                {files.length > 0 && <CheckCircle className="text-green-500" />}
               </Button>
             </PopoverTrigger>
 
@@ -584,18 +659,18 @@ const DocumentCardOther = ({ userID, otherDocs, employeeId, fetchData }: { userI
                   className="justify-start"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  {files.length > 0
-                    ? "Add More Files"
-                    : "Upload File"}
+                  {files.length > 0 ? "Add More Files" : "Upload File"}
                 </Button>
 
-                {files.length > 0 &&
-                  <Button onClick={() => setOpen(true)} variant="ghost" className="justify-start">
+                {files.length > 0 && (
+                  <Button
+                    onClick={() => setOpen(true)}
+                    variant="ghost"
+                    className="justify-start"
+                  >
                     See Files
                   </Button>
-                }
-
-
+                )}
               </div>
             </PopoverContent>
           </Popover>
@@ -606,240 +681,249 @@ const DocumentCardOther = ({ userID, otherDocs, employeeId, fetchData }: { userI
           <DialogHeader>
             <DialogTitle>Additional Files</DialogTitle>
           </DialogHeader>
-          {files.length > 0 ?
+          {files.length > 0 ? (
             <ScrollArea className="h-[60vh] pr-4">
               <div className="flex flex-col gap-3">
-
                 {files.map((file, index) => {
                   return (
-                    <RenderEachFile key={index} file={file} employeeId={employeeId} otherDocs={otherDocs} fetchData={fetchData} userId={userId} />
-                  );
-                })
-                }
+                    <RenderEachFile
+                      key={index}
+                      file={file}
+                      employeeId={employeeId}
+                      otherDocs={otherDocs}
+                      fetchData={fetchData}
+                      userId={userId}
+                    />
+                  )
+                })}
               </div>
             </ScrollArea>
-            :
+          ) : (
             <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">
               No files uploaded
             </div>
-
-          }
-
-
+          )}
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
 
+const DocumentCard = ({
+  type,
+  userID,
+  docsData,
+  employeeId,
+  fetchData,
+}: {
+  type: string
+  userID: number | string
+  docsData: DocsDataType
+  employeeId: string | null
+  fetchData: () => Promise<void>
+}) => {
+  const [fileUrl, setFileUrl] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [fileName, setFileName] = useState<string | undefined>("")
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const { state: OfficeState } = useContext(OfficeContext)!
+  const userId = userID
 
-const DocumentCard =
-  ({ type, userID, docsData, employeeId, fetchData }: { type: string, userID: number | string, docsData: DocsDataType, employeeId: string | null, fetchData: () => Promise<void> }) => {
-    const [fileUrl, setFileUrl] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [fileName, setFileName] = useState<string | undefined>("");
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const { state: OfficeState } = useContext(OfficeContext)!
-    const userId = userID;
-
-    useEffect(() => {
-      if (docsData?.[type as keyof typeof docsData]) {
-        setLoading(true);
-        const filePath = docsData[type as keyof typeof docsData];
-        if (filePath.includes("http")) {
-          setFileUrl(filePath);
-          setFileName(filePath.split("/").pop());
-          setLoading(false);
-        } else {
-          const storageRef = ref(storage, filePath);
-          getDownloadURL(storageRef)
-            .then((url) => {
-              setFileUrl(url);
-              setFileName(filePath.split("/").pop());
-            })
-            .catch((error) => console.error("Error loading file:", error))
-            .finally(() => setLoading(false));
-        }
+  useEffect(() => {
+    if (docsData?.[type as keyof typeof docsData]) {
+      setLoading(true)
+      const filePath = docsData[type as keyof typeof docsData]
+      if (filePath.includes("http")) {
+        setFileUrl(filePath)
+        setFileName(filePath.split("/").pop())
+        setLoading(false)
+      } else {
+        const storageRef = ref(storage, filePath)
+        getDownloadURL(storageRef)
+          .then((url) => {
+            setFileUrl(url)
+            setFileName(filePath.split("/").pop())
+          })
+          .catch((error) => console.error("Error loading file:", error))
+          .finally(() => setLoading(false))
       }
-    }, [docsData]);
+    }
+  }, [docsData])
 
-    const handleFileUpload = async (event: ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
-      const file = event?.target?.files?.[0];
-      if (!file) return;
+  const handleFileUpload = async (
+    event: ChangeEvent<HTMLInputElement, HTMLInputElement>
+  ) => {
+    const file = event?.target?.files?.[0]
+    if (!file) return
 
-      setLoading(true);
-      try {
-        const extension = file.name.split(".").pop();
-        const newFilePath = `${OfficeState.value.data}/${userId}/profile/${type}.${extension}`;
+    setLoading(true)
+    try {
+      const extension = file.name.split(".").pop()
+      const newFilePath = `${OfficeState.value.data}/${userId}/profile/${type}.${extension}`
 
-        // Step 1: Delete old file if exists
-        if (docsData?.[type as keyof typeof docsData] && !docsData[type as keyof typeof docsData].includes("http")) {
-          const oldFileRef = ref(storage, docsData[type as keyof typeof docsData]);
-          await deleteObject(oldFileRef).catch((err) =>
-            console.log("Old file could not be deleted:", err),
-          );
-        }
-
-        // Step 2: Upload new file
-        const uploadedPath = await UploadImage(
-          URL.createObjectURL(file),
-          newFilePath,
-          file.type || "application/octet-stream",
-        );
-
-        const updatedData = {
-          ...docsData,
-          password: undefined,
-          confirmPassword: undefined,
-          currentPassword: undefined,
-          [type]: newFilePath,
-        };
-        await axios.put(`/${userId}/user/${employeeId}`, updatedData);
-
-        toast.success("File uploaded successfully");
-        await fetchData();
-        setFileUrl(URL.createObjectURL(file));
-        setFileName(file.name);
-      } catch (error) {
-        toast.error("Upload failed");
-      } finally {
-        setLoading(false);
+      // Step 1: Delete old file if exists
+      if (
+        docsData?.[type as keyof typeof docsData] &&
+        !docsData[type as keyof typeof docsData].includes("http")
+      ) {
+        const oldFileRef = ref(storage, docsData[type as keyof typeof docsData])
+        await deleteObject(oldFileRef).catch((err) =>
+          console.log("Old file could not be deleted:", err)
+        )
       }
-    };
 
-    return (
-      <div className="space-y-2">
-        {loading ? (
-          <Skeleton className="h-[50px] w-full" />
-        ) : (
-          <>
-            <input
-              type="file"
-              accept="*"
-              hidden
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-            />
+      // Step 2: Upload new file
+      const uploadedPath = await UploadImage(
+        URL.createObjectURL(file),
+        newFilePath,
+        file.type || "application/octet-stream"
+      )
 
-            <Popover>
-              <PopoverTrigger asChild className="flex w-full gap-4">
-                <Button variant={"outline"} className="h-auto w-full justify-between rounded-xl px-3 py-3 text-left">
-                  {type?.replace("_", " ").toUpperCase()}{" "}
-                  {fileUrl && <CheckCircle className="text-green-500" />}
-                </Button>
-              </PopoverTrigger>
+      const updatedData = {
+        ...docsData,
+        password: undefined,
+        confirmPassword: undefined,
+        currentPassword: undefined,
+        [type]: newFilePath,
+      }
+      await axios.put(`/${userId}/user/${employeeId}`, updatedData)
 
-              <PopoverContent className="w-48 p-2">
-                <div className="flex flex-col gap-2">
-                  <Button
-                    variant="ghost"
-                    className="justify-start"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {fileUrl ? "Reupload File" : "Upload File"}
-                  </Button>
-
-                  {fileUrl && (
-                    <Button variant="ghost" className="justify-start" asChild>
-                      <a
-                        href={fileUrl}
-                        download={fileName}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Download File
-                      </a>
-                    </Button>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </>
-        )}
-      </div>
-    );
+      toast.success("File uploaded successfully")
+      await fetchData()
+      setFileUrl(URL.createObjectURL(file))
+      setFileName(file.name)
+    } catch (error) {
+      toast.error("Upload failed")
+    } finally {
+      setLoading(false)
+    }
   }
 
-const RenderEachFile = ({ file, userId, otherDocs, employeeId, fetchData }: {
-  file: any, userId: number | string, otherDocs: string[], employeeId: string | null, fetchData: () => Promise<void>
+  return (
+    <div className="space-y-2">
+      {loading ? (
+        <Skeleton className="h-[50px] w-full" />
+      ) : (
+        <>
+          <input
+            type="file"
+            accept="*"
+            hidden
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+          />
+
+          <Popover>
+            <PopoverTrigger asChild className="flex w-full gap-4">
+              <Button
+                variant={"outline"}
+                className="h-auto w-full justify-between rounded-xl px-3 py-3 text-left"
+              >
+                {type?.replace("_", " ").toUpperCase()}{" "}
+                {fileUrl && <CheckCircle className="text-green-500" />}
+              </Button>
+            </PopoverTrigger>
+
+            <PopoverContent className="w-48 p-2">
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="ghost"
+                  className="justify-start"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {fileUrl ? "Reupload File" : "Upload File"}
+                </Button>
+
+                {fileUrl && (
+                  <Button variant="ghost" className="justify-start" asChild>
+                    <a
+                      href={fileUrl}
+                      download={fileName}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Download File
+                    </a>
+                  </Button>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </>
+      )}
+    </div>
+  )
+}
+
+const RenderEachFile = ({
+  file,
+  userId,
+  otherDocs,
+  employeeId,
+  fetchData,
+}: {
+  file: any
+  userId: number | string
+  otherDocs: string[]
+  employeeId: string | null
+  fetchData: () => Promise<void>
 }) => {
   const [loading, setLoading] = useState(false)
-  const cleanName = file.name.replace(/^\d+-/, "");
+  const cleanName = file.name.replace(/^\d+-/, "")
 
   const handleDelete = async (path: string) => {
     if (!userId || !employeeId) return
     try {
-      setLoading(true);
+      setLoading(true)
 
       if (!path.includes("http")) {
-        const fileRef = ref(storage, path);
+        const fileRef = ref(storage, path)
 
         await deleteObject(fileRef).catch((err) =>
           console.log("Could not delete file from storage:", err)
-        );
+        )
       }
 
-      const updatedOtherDocs = otherDocs.filter(
-        (item) => item !== path
-      );
+      const updatedOtherDocs = otherDocs.filter((item) => item !== path)
 
       const updatedData = {
         password: undefined,
         confirmPassword: undefined,
         currentPassword: undefined,
         other_docs: updatedOtherDocs,
-      };
+      }
 
-      await axios.put(`/${userId}/user/${employeeId}`, updatedData);
+      await axios.put(`/${userId}/user/${employeeId}`, updatedData)
       await fetchData()
 
-      toast.success("File deleted successfully");
+      toast.success("File deleted successfully")
     } catch (error) {
-      console.error(error);
-      toast.error("Delete failed");
+      console.error(error)
+      toast.error("Delete failed")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <div
-      className="
-    grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto]
-    gap-4
-    rounded-2xl border p-4
-    hover:bg-muted/40 transition-colors
-  "
-    >
+    <div className="grid grid-cols-1 gap-4 rounded-2xl border p-4 transition-colors hover:bg-muted/40 sm:grid-cols-[minmax(0,1fr)_auto]">
       <a
         href={file.url}
         download={cleanName}
         target="_blank"
         rel="noopener noreferrer"
-        className="min-w-0 flex flex-col"
+        className="flex min-w-0 flex-col"
       >
-        <span
-          className="
-        text-sm font-medium leading-relaxed
-        break-words
-      "
-        >
+        <span className="text-sm leading-relaxed font-medium break-words">
           {cleanName}
         </span>
 
-        <span className="text-xs text-muted-foreground mt-1">
+        <span className="mt-1 text-xs text-muted-foreground">
           Click to download
         </span>
       </a>
 
-      <div
-        className="
-      flex flex-row sm:flex-col
-      items-stretch
-      gap-2
-      w-full sm:w-auto
-    "
-      >
+      <div className="flex w-full flex-row items-stretch gap-2 sm:w-auto sm:flex-col">
         <Button
           type="button"
           size="sm"

@@ -1,21 +1,26 @@
-import { Button } from "@/components/ui/button";
-import { useMessages } from "@/hooks/use-messages";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import exportToExcel from "@/lib/exportToExcel";
-import { TriggerFirebase } from "@/lib/triggerFirebase";
-import { Messages, UserConversation } from "@/lib/types";
-import { Clock, Send } from "lucide-react";
-import moment from "moment";
-import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import Spinner from "@/components/ui/spinner";
+import { Button } from "@/components/ui/button"
+import { useMessages } from "@/hooks/use-messages"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import exportToExcel from "@/lib/exportToExcel"
+import { TriggerFirebase } from "@/lib/triggerFirebase"
+import { Messages, UserConversation } from "@/lib/types"
+import { Clock, Send } from "lucide-react"
+import moment from "moment"
+import Link from "next/link"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { toast } from "sonner"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import Spinner from "@/components/ui/spinner"
 
 type ChatComponentType = {
   id: number | undefined
@@ -23,70 +28,74 @@ type ChatComponentType = {
   onSetLoading: (val: boolean) => void
   stateLoading: boolean
 }
-const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }: ChatComponentType) => {
-
+const Chatcomponent = ({
+  id,
+  user = null,
+  onSetLoading,
+  stateLoading,
+}: ChatComponentType) => {
   const { userID } = useUserDetail()
-  const { messages: realMessages, loading } = useMessages(id);
-  const [input, setInput] = useState("");
-  const [tempMessages, setTempMessages] = useState<Messages[]>([]);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
-  const [selectedContent, setSelectedContent] = useState<any | null>(null);
-  const [visibleCount, setVisibleCount] = useState(20);
+  const { messages: realMessages, loading } = useMessages(id)
+  const [input, setInput] = useState("")
+  const [tempMessages, setTempMessages] = useState<Messages[]>([])
+  const bottomRef = useRef<HTMLDivElement | null>(null)
+  const [selectedContent, setSelectedContent] = useState<any | null>(null)
+  const [visibleCount, setVisibleCount] = useState(20)
 
   useEffect(() => {
-    if (!id) return;
-    onSetLoading(loading);
+    if (!id) return
+    onSetLoading(loading)
     setTempMessages((prev) =>
       prev.filter((tempMsg) => {
         const existsInReal = realMessages.some((realMsg) => {
-          const realTime = new Date(realMsg.created_at).toISOString();
-          const tempTime = new Date(tempMsg.created_at).toISOString();
+          const realTime = new Date(realMsg.created_at).toISOString()
+          const tempTime = new Date(tempMsg.created_at).toISOString()
 
           return (
             realMsg.sender_id === tempMsg.sender_id &&
             realMsg.message === tempMsg.message &&
             realTime === tempTime
-          );
-        });
+          )
+        })
 
-        return !existsInReal;
+        return !existsInReal
       })
-    );
-  }, [realMessages]);
+    )
+  }, [realMessages])
 
   useEffect(() => {
     if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+      bottomRef.current.scrollIntoView({ behavior: "smooth" })
     }
-  }, [realMessages, tempMessages]);
+  }, [realMessages, tempMessages])
 
   useEffect(() => {
-    if (!userID || !realMessages.length) return;
+    if (!userID || !realMessages.length) return
     const unreadExists = realMessages.some(
       (msg) => Number(msg.sender_id) !== Number(userID) && !msg.is_read
-    );
+    )
 
     if (unreadExists) {
-      markAsRead();
+      markAsRead()
     }
-  }, [realMessages]);
+  }, [realMessages])
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim()) return
 
-    const created = new Date();
+    const created = new Date()
 
-    const tempId = `temp-${Date.now()}`;
+    const tempId = `temp-${Date.now()}`
     const tempMessage = {
       id: tempId,
       message: input,
       created_at: created,
       sender_id: userID,
       pending: true,
-    };
+    }
 
-    setTempMessages((prev) => [...prev, tempMessage]);
-    setInput("");
+    setTempMessages((prev) => [...prev, tempMessage])
+    setInput("")
 
     axios
       .post(`/${userID}/conversations/${id}`, {
@@ -96,81 +105,74 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }: ChatComp
       })
       .then(() => {
         if (id && user?.id) {
-          TriggerFirebase(id.toString(), user?.id?.toString());
-          TriggerFirebase("", userID.toString());
+          TriggerFirebase(id.toString(), user?.id?.toString())
+          TriggerFirebase("", userID.toString())
         }
       })
       .catch(() => {
-        setTempMessages((prev) => prev.filter((msg) => msg.id !== tempId));
-      });
-  };
+        setTempMessages((prev) => prev.filter((msg) => msg.id !== tempId))
+      })
+  }
 
   const markAsRead = async () => {
     try {
       await axios.put(`/${userID}/conversations/${id}/read`, {
         userId: user?.id,
-      });
+      })
     } catch (err) {
-      console.error("Failed to mark as read", err);
+      console.error("Failed to mark as read", err)
     }
 
     // TriggerFirebase(id.toString(), user?.id?.toString());
     // TriggerFirebase(id.toString(), userID?.toString());
-  };
+  }
 
   const visibleRealMessages = useMemo(() => {
-    return realMessages.slice(-visibleCount);
-  }, [realMessages, visibleCount]);
+    return realMessages.slice(-visibleCount)
+  }, [realMessages, visibleCount])
 
-  const combinedMessages = [...visibleRealMessages, ...tempMessages];
-
+  const combinedMessages = [...visibleRealMessages, ...tempMessages]
 
   const handleLoadMore = () => {
-    setVisibleCount((prev) =>
-      Math.min(prev + 20, realMessages.length)
-    );
-  };
-
-
+    setVisibleCount((prev) => Math.min(prev + 20, realMessages.length))
+  }
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col bg-muted/30">
       {stateLoading ? (
-        <div className="flex-1 flex items-center justify-center text-muted-foreground">
+        <div className="flex flex-1 items-center justify-center text-muted-foreground">
           <Spinner />
         </div>
       ) : (
-        <ScrollArea className="min-h-0 flex-1 px-4 sm:px-6" >
+        <ScrollArea className="min-h-0 flex-1 px-4 sm:px-6">
           {visibleCount < realMessages.length && (
-            <div className="flex justify-center my-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLoadMore}
-              >
+            <div className="my-3 flex justify-center">
+              <Button variant="outline" size="sm" onClick={handleLoadMore}>
                 Load more messages
               </Button>
             </div>
           )}
           {combinedMessages.map((item, index) => {
-            const isMe = item.sender_id === userID;
+            const isMe = item.sender_id === userID
             return (
               <div
                 key={index}
-                className={`flex flex-col gap-1 max-w-[80%] my-2 ${isMe ? "ml-auto items-end" : "mr-auto items-start"
-                  }`}
+                className={`my-2 flex max-w-[80%] flex-col gap-1 ${
+                  isMe ? "ml-auto items-end" : "mr-auto items-start"
+                }`}
               >
                 <div
-                  className={`rounded-xl px-4 py-2 text-sm shadow-sm transition-all ${isMe
-                    ? "bg-primary text-white"
-                    : "bg-accent text-accent-foreground"
-                    }`}
+                  className={`rounded-xl px-4 py-2 text-sm shadow-sm transition-all ${
+                    isMe
+                      ? "bg-primary text-white"
+                      : "bg-accent text-accent-foreground"
+                  }`}
                 >
                   <div className="text-sm">{item.message}</div>
                   {item.data && item.data.trim() && (
                     <Button
                       onClick={() => {
-                        setSelectedContent(JSON.parse(item.data));
+                        setSelectedContent(JSON.parse(item.data))
                       }}
                       variant="secondary"
                       size="sm"
@@ -183,7 +185,7 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }: ChatComp
                 <span className="text-[11px] text-muted-foreground">
                   {item.pending ? (
                     <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3 animate-pulse" />
+                      <Clock className="h-3 w-3 animate-pulse" />
                       Sending...
                     </div>
                   ) : (
@@ -191,7 +193,7 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }: ChatComp
                   )}
                 </span>
               </div>
-            );
+            )
           })}
 
           <div ref={bottomRef} />
@@ -205,8 +207,8 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }: ChatComp
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
+                e.preventDefault()
+                handleSend()
               }
             }}
             placeholder="Type your message..."
@@ -225,16 +227,25 @@ const Chatcomponent = ({ id, user = null, onSetLoading, stateLoading }: ChatComp
         type={selectedContent ? selectedContent?.type : ""}
       />
     </div>
-  );
-};
+  )
+}
 
-const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: boolean, onClose: (val: boolean) => void, data: any | null, type: string }) => {
-
-  const [loading, setLoading] = useState(false);
+const RenderSelectedContent = ({
+  visible,
+  onClose,
+  data,
+  type,
+}: {
+  visible: boolean
+  onClose: (val: boolean) => void
+  data: any | null
+  type: string
+}) => {
+  const [loading, setLoading] = useState(false)
   const { base_route, userID } = useUserDetail()
 
   async function handleCreateExcel() {
-    setLoading(true);
+    setLoading(true)
 
     const headers = [
       "Name",
@@ -242,12 +253,12 @@ const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: bool
       "New Order",
       "Buying Price",
       "Image",
-    ];
+    ]
 
     try {
       if (data.length === 0) {
-        toast.info("Please select items first.");
-        return;
+        toast.info("Please select items first.")
+        return
       }
       await exportToExcel(
         headers,
@@ -263,11 +274,11 @@ const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: bool
         "",
         true,
         userID
-      );
+      )
     } catch (error) {
-      toast.error("Error creating excel");
+      toast.error("Error creating excel")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
@@ -280,7 +291,7 @@ const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: bool
           <SheetHeader className="mb-4">
             <div className="flex items-center justify-between">
               <SheetTitle className="text-2xl">Report</SheetTitle>
-              <Label className="text-muted-foreground text-lg">
+              <Label className="text-lg text-muted-foreground">
                 Entries: {data.length}
               </Label>
             </div>
@@ -290,14 +301,14 @@ const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: bool
                   <p>No data to display</p>
                 </div>
               ) : (
-                <div className="px-4 py-6 space-y-2 border-l-2 border-muted relative">
+                <div className="relative space-y-2 border-l-2 border-muted px-4 py-6">
                   {data.map((fb: any) => (
                     <div key={fb.id} className="relative pl-6">
                       {/* Dot on the timeline */}
-                      <div className="absolute left-[-9px] top-2 w-3 h-3 bg-primary rounded-full border-2 border-background shadow-md" />
+                      <div className="absolute top-2 left-[-9px] h-3 w-3 rounded-full border-2 border-background bg-primary shadow-md" />
 
                       {/* Card content */}
-                      <Card className="bg-background border border-border shadow-sm">
+                      <Card className="border border-border bg-background shadow-sm">
                         <CardHeader className="pb-0">
                           <div className="text-sm text-muted-foreground">
                             <span className="mr-2">{fb?.user_name}</span>
@@ -313,7 +324,7 @@ const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: bool
                           </Link>
                         </CardHeader>
 
-                        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-sm">
+                        <CardContent className="grid grid-cols-1 gap-4 pt-2 text-sm sm:grid-cols-2">
                           <div>
                             <span className="font-medium text-foreground">
                               Manager:
@@ -333,7 +344,7 @@ const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: bool
                             {fb.status}
                           </div>
 
-                          <div className="col-span-full pt-2 border-t mt-2 text-foreground whitespace-pre-line">
+                          <div className="col-span-full mt-2 border-t pt-2 whitespace-pre-line text-foreground">
                             <p className="mt-2">
                               {fb.feedback || (
                                 <em className="text-muted-foreground">
@@ -352,7 +363,7 @@ const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: bool
           </SheetHeader>
         </SheetContent>
       </Sheet>
-    );
+    )
   if (type === "neworder")
     return (
       <Sheet open={visible} onOpenChange={onClose}>
@@ -362,7 +373,7 @@ const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: bool
           <SheetHeader className="mb-4">
             <div className="flex items-center justify-between">
               <SheetTitle className="text-2xl">New Stock Order</SheetTitle>
-              <Label className="text-muted-foreground text-lg">
+              <Label className="text-lg text-muted-foreground">
                 Entries: {data.length}
               </Label>
               <Button disabled={data.length === 0} onClick={handleCreateExcel}>
@@ -376,7 +387,7 @@ const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: bool
                   <p>No data to display</p>
                 </div>
               ) : (
-                <div className="px-4 py-6 space-y-2 border-l-2 border-muted relative">
+                <div className="relative space-y-2 border-l-2 border-muted px-4 py-6">
                   {data.map((item: any, index: number) => (
                     <RenderOtherStockItems key={index} item={item} />
                   ))}
@@ -386,13 +397,13 @@ const RenderSelectedContent = ({ visible, onClose, data, type }: { visible: bool
           </SheetHeader>
         </SheetContent>
       </Sheet>
-    );
-};
+    )
+}
 
 const RenderOtherStockItems = ({ item }: { item: any }) => {
   return (
     <div
-      className={`w-full border border-gray-300 rounded-lg shadow-md p-5 flex flex-col`}
+      className={`flex w-full flex-col rounded-lg border border-gray-300 p-5 shadow-md`}
     >
       <div className="flex flex-1 flex-row justify-between">
         <div className="w-1/3">
@@ -403,7 +414,7 @@ const RenderOtherStockItems = ({ item }: { item: any }) => {
         <p className="w-1/3">Buying ¥: {item.buying}</p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Chatcomponent;
+export default Chatcomponent

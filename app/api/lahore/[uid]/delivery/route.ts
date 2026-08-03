@@ -1,7 +1,7 @@
-import pool from "@/config/db";
-import { storage } from "@/config/firebase";
-import { deleteObject, ref } from "firebase/storage";
-import { NextRequest, NextResponse } from "next/server";
+import pool from "@/config/db"
+import { storage } from "@/config/firebase"
+import { deleteObject, ref } from "firebase/storage"
+import { NextRequest, NextResponse } from "next/server"
 
 export async function GET() {
   try {
@@ -42,33 +42,30 @@ export async function GET() {
     AND LOWER(c.office) = 'lahore'
 
   ORDER BY s.delivery_request_date ASC
-`);
+`)
 
-    return NextResponse.json(queryResult.rows, { status: 200 });
+    return NextResponse.json(queryResult.rows, { status: 200 })
   } catch (error: any) {
     return NextResponse.json(
       { message: error?.message || "Server error" },
-      { status: 500 },
-    );
+      { status: 500 }
+    )
   }
 }
 
 export async function POST(req: NextRequest) {
-  const client = await pool.connect();
-
-
+  const client = await pool.connect()
 
   try {
-    const data = await req.json();
-    await client.query("BEGIN");
+    const data = await req.json()
+    await client.query("BEGIN")
 
     const existingNamePlate = await client.query(
       `SELECT machine_nameplate_images FROM sale WHERE id = $1`,
-      [data.machine_id],
-    );
-    const existing =
-      existingNamePlate.rows?.[0]?.machine_nameplate_images || [];
-    const combinedNamePlates = [...existing, ...data.machine_nameplate_images];
+      [data.machine_id]
+    )
+    const existing = existingNamePlate.rows?.[0]?.machine_nameplate_images || []
+    const combinedNamePlates = [...existing, ...data.machine_nameplate_images]
 
     await client.query(
       `UPDATE sale SET machine_nameplate_images = $1, order_no_arr  =$2, delivery_date = $3, dispatch_information = $4 WHERE id = $5`,
@@ -78,14 +75,14 @@ export async function POST(req: NextRequest) {
         data.delivery_date,
         data.dispatch_information,
         data.machine_id,
-      ],
-    );
+      ]
+    )
 
     await client.query(
       `
         UPDATE order_items SET status = $1 WHERE machine_id = $2`,
-      ["Dispatched", data.machine_id],
-    );
+      ["Dispatched", data.machine_id]
+    )
 
     if (data.transportation && Number(data.transportation) > 0) {
       await client.query(
@@ -98,11 +95,9 @@ export async function POST(req: NextRequest) {
       VALUES (
         $1,$2,$3, $4
       )`,
-        [true, data.transportation, data.machine_id, "lahore"],
-      );
+        [true, data.transportation, data.machine_id, "lahore"]
+      )
     }
-
-
 
     // ////////////////////////////
 
@@ -116,7 +111,7 @@ export async function POST(req: NextRequest) {
     //   try {
     //     const oldItemRes = await client.query(
     //       `
-    //   SELECT 
+    //   SELECT
     //     id,
     //     machine_serial,
     //     booked,
@@ -143,7 +138,7 @@ export async function POST(req: NextRequest) {
     //     if (String(oldItem.machine_serial) !== String(newSerial)) {
     //       const newItemRes = await client.query(
     //         `
-    //     SELECT 
+    //     SELECT
     //       id,
     //       machine_serial,
     //       booked,
@@ -170,7 +165,7 @@ export async function POST(req: NextRequest) {
     //         await client.query(
     //           `
     //       UPDATE order_items
-    //       SET 
+    //       SET
     //         booked = $1,
     //         booking_date = $2,
     //         status = $3,
@@ -193,7 +188,7 @@ export async function POST(req: NextRequest) {
     //         await client.query(
     //           `
     //       UPDATE order_items
-    //       SET 
+    //       SET
     //         booked = $1,
     //         booking_date = $2,
     //         status = $3,
@@ -218,7 +213,7 @@ export async function POST(req: NextRequest) {
     //         await client.query(
     //           `
     //       UPDATE order_items
-    //       SET 
+    //       SET
     //         booked = $1,
     //         booking_date = $2,
     //         status = $3,
@@ -241,7 +236,7 @@ export async function POST(req: NextRequest) {
     //         await client.query(
     //           `
     //       UPDATE order_items
-    //       SET 
+    //       SET
     //         booked = false,
     //         booking_date = NULL,
     //         status = 'Order Placed',
@@ -262,38 +257,34 @@ export async function POST(req: NextRequest) {
     //   }
     // }
 
-
     // /////////////////////////////
 
+    await client.query("COMMIT")
 
-    await client.query("COMMIT");
-
-    return NextResponse.json({ message: "Done" }, { status: 200 });
+    return NextResponse.json({ message: "Done" }, { status: 200 })
   } catch (error: any) {
-    console.log(error);
-    await client.query("ROLLBACK");
+    console.log(error)
+    await client.query("ROLLBACK")
     return NextResponse.json(
       { message: error?.message || "Server error" },
-      { status: 500 },
-    );
+      { status: 500 }
+    )
   } finally {
-    client.release();
+    client.release()
   }
-
 }
 
 export async function PUT(req: NextRequest) {
-  const data = await req.json();
+  const data = await req.json()
 
   try {
     const existingNamePlate = await pool.query(
       `SELECT machine_nameplate_images FROM sale WHERE id = $1`,
-      [data.machine_id],
-    );
-    const existing =
-      existingNamePlate.rows?.[0]?.machine_nameplate_images || [];
-    const incoming = data.machine_nameplate_images;
-    const combinedNamePlates = [...new Set([...existing, ...incoming])];
+      [data.machine_id]
+    )
+    const existing = existingNamePlate.rows?.[0]?.machine_nameplate_images || []
+    const incoming = data.machine_nameplate_images
+    const combinedNamePlates = [...new Set([...existing, ...incoming])]
 
     await pool.query(
       `UPDATE sale SET machine_nameplate_images = $1, order_no_arr  =$2, delivery_date = $3, dispatch_information = $4 WHERE id = $5`,
@@ -303,84 +294,80 @@ export async function PUT(req: NextRequest) {
         data.delivery_date,
         data.dispatch_information,
         data.machine_id,
-      ],
-    );
+      ]
+    )
 
-
-
-    return NextResponse.json({ message: "Done" }, { status: 200 });
+    return NextResponse.json({ message: "Done" }, { status: 200 })
   } catch (error: any) {
-    console.log(error);
+    console.log(error)
     return NextResponse.json(
       { message: error?.message || "Server error" },
-      { status: 500 },
-    );
+      { status: 500 }
+    )
   }
 }
 
 export async function DELETE(req: NextRequest) {
-  const searchParams = req.nextUrl.searchParams;
-  const id = searchParams.get("id");
+  const searchParams = req.nextUrl.searchParams
+  const id = searchParams.get("id")
 
   try {
     if (!id) {
-      return NextResponse.json({ message: "ID is missing" }, { status: 400 });
+      return NextResponse.json({ message: "ID is missing" }, { status: 400 })
     }
 
-    await pool.query("BEGIN");
+    await pool.query("BEGIN")
 
     const checking = await pool.query(
       `SELECT machine_nameplate_images, dispatch_information FROM sale WHERE id = $1`,
-      [id],
-    );
+      [id]
+    )
     const namePlate = Array.isArray(
-      checking.rows?.[0]?.machine_nameplate_images,
+      checking.rows?.[0]?.machine_nameplate_images
     )
       ? checking.rows[0].machine_nameplate_images
-      : [];
-    const dispatch = checking.rows?.[0]?.dispatch_information ?? null;
-    let newNamePlate = [];
-    let img = null;
+      : []
+    const dispatch = checking.rows?.[0]?.dispatch_information ?? null
+    let newNamePlate = []
+    let img = null
     if (dispatch && typeof dispatch === "object") {
-      img = dispatch?.other_information?.image;
+      img = dispatch?.other_information?.image
     }
 
     if (img) {
       try {
-        await deleteObject(ref(storage, img));
+        await deleteObject(ref(storage, img))
       } catch (err: any) {
-        console.warn("Image delete failed:", err?.message);
-        throw err;
+        console.warn("Image delete failed:", err?.message)
+        throw err
       }
-      newNamePlate = namePlate?.filter((item: any) => item !== img);
+      newNamePlate = namePlate?.filter((item: any) => item !== img)
     }
 
     await pool.query(
       `UPDATE sale SET delivery_date = $1, dispatch_information = '{}'::jsonb, machine_nameplate_images = $2 WHERE id = $3`,
-      [null, newNamePlate, id],
-    );
+      [null, newNamePlate, id]
+    )
     await pool.query(
       `UPDATE order_items SET status = $1 WHERE machine_id = $2`,
-      ["Delivery Requested", id],
-    );
+      ["Delivery Requested", id]
+    )
 
-    await pool.query("COMMIT");
-
-
+    await pool.query("COMMIT")
 
     return NextResponse.json(
       { message: "Deleted successfully" },
-      { status: 200 },
-    );
+      { status: 200 }
+    )
   } catch (error: any) {
-    await pool.query("ROLLBACK");
-    console.log(error);
+    await pool.query("ROLLBACK")
+    console.log(error)
 
     return NextResponse.json(
       { message: error?.message || "Server error" },
-      { status: 500 },
-    );
+      { status: 500 }
+    )
   }
 }
 
-export const revalidate = 0;
+export const revalidate = 0

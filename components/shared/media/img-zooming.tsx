@@ -1,14 +1,14 @@
 "use client"
 
-import { storage } from "@/config/firebase";
-import { cn } from "@/lib/utils";
-import { getDownloadURL, ref } from "firebase/storage";
-import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
-import { Controlled as ControlledZoom } from "react-medium-image-zoom";
-import { Button } from "@/components/ui/button";
-import Spinner from "@/components/ui/spinner";
-import "react-medium-image-zoom/dist/styles.css";
+import { storage } from "@/config/firebase"
+import { cn } from "@/lib/utils"
+import { getDownloadURL, ref } from "firebase/storage"
+import Image from "next/image"
+import { useCallback, useEffect, useState } from "react"
+import { Controlled as ControlledZoom } from "react-medium-image-zoom"
+import { Button } from "@/components/ui/button"
+import Spinner from "@/components/ui/spinner"
+import "react-medium-image-zoom/dist/styles.css"
 
 export const MyImgZooming = ({
   img,
@@ -16,71 +16,69 @@ export const MyImgZooming = ({
   className = undefined,
   fill = false,
 }: {
-  img: string | null;
-  compact?: boolean;
-  className?: string;
-  fill?: boolean;
+  img: string | null
+  compact?: boolean
+  className?: string
+  fill?: boolean
 }) => {
   const [remoteImage, setRemoteImage] = useState<{
-    key: string;
-    url: string;
-    error: boolean;
-  } | null>(null);
+    key: string
+    url: string
+    error: boolean
+  } | null>(null)
 
-
-
-  const [isZoomed, setIsZoomed] = useState(false);
-  const [rotation, setRotation] = useState(0);
+  const [isZoomed, setIsZoomed] = useState(false)
+  const [rotation, setRotation] = useState(0)
 
   useEffect(() => {
-    if (!img || img.includes("http")) return;
+    if (!img || img.includes("http")) return
 
-    let active = true;
+    let active = true
 
     getDownloadURL(ref(storage, img))
       .then((url) => {
-        if (active) setRemoteImage({ key: img, url, error: false });
+        if (active) setRemoteImage({ key: img, url, error: false })
       })
       .catch((e) => {
-        console.log("error loading image", e);
-        if (active) setRemoteImage({ key: img, url: "", error: true });
-      });
+        console.log("error loading image", e)
+        if (active) setRemoteImage({ key: img, url: "", error: true })
+      })
 
     return () => {
-      active = false;
-    };
-  }, [img]);
+      active = false
+    }
+  }, [img])
 
   const localImage = img?.includes("http")
     ? img
     : remoteImage?.key === img
       ? remoteImage.url
-      : "";
+      : ""
 
   const error =
-    !img?.includes("http") && remoteImage?.key === img && remoteImage.error;
+    !img?.includes("http") && remoteImage?.key === img && remoteImage.error
 
-  const loading = !!img && !img.includes("http") && remoteImage?.key !== img;
+  const loading = !!img && !img.includes("http") && remoteImage?.key !== img
 
   const handleZoomChange = useCallback((shouldZoom: boolean) => {
-    setIsZoomed(shouldZoom);
-  }, []);
+    setIsZoomed(shouldZoom)
+  }, [])
 
   const rotateImageRight = () => {
-    setRotation((prev) => (prev + 90) % 360);
-  };
+    setRotation((prev) => (prev + 90) % 360)
+  }
 
   const rotateImageLeft = () => {
-    setRotation((prev) => (prev - 90 + 360) % 360);
-  };
+    setRotation((prev) => (prev - 90 + 360) % 360)
+  }
 
   const onPressClose = () => {
-    setIsZoomed(false);
-  };
+    setIsZoomed(false)
+  }
 
-  if (loading) return <Spinner />;
-  if (!img || !localImage) return <p>No image</p>;
-  if (error) return <p>Failed to load image</p>;
+  if (loading) return <Spinner />
+  if (!img || !localImage) return <p>No image</p>
+  if (error) return <p>Failed to load image</p>
 
   const normalImage = fill ? (
     <Image
@@ -109,7 +107,7 @@ export const MyImgZooming = ({
         className
       )}
     />
-  );
+  )
 
   return (
     <ControlledZoom
@@ -143,7 +141,10 @@ export const MyImgZooming = ({
               }}
             />
 
-            <div className="absolute bottom-5 flex gap-3" style={{ pointerEvents: "auto" }}>
+            <div
+              className="absolute bottom-5 flex gap-3"
+              style={{ pointerEvents: "auto" }}
+            >
               <Button variant="outline" size="sm" onClick={rotateImageLeft}>
                 Rotate Left
               </Button>
@@ -156,11 +157,11 @@ export const MyImgZooming = ({
             </div>
           </div>
         ) : (
-          img ?? <></>
+          (img ?? <></>)
         )
       }
     >
       {normalImage}
     </ControlledZoom>
-  );
-};
+  )
+}

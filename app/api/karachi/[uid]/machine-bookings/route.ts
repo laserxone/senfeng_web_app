@@ -1,11 +1,9 @@
-import pool from "@/config/db";
-import { NextResponse } from "next/server";
-
+import pool from "@/config/db"
+import { NextResponse } from "next/server"
 
 export async function GET() {
-
-    try {
-        const query = `
+  try {
+    const query = `
         SELECT 
     oi.id,
     oi.machine_serial,
@@ -30,11 +28,13 @@ WHERE oi.is_machine IS TRUE
 ORDER BY oi.id DESC;
 `
 
-        const result = await pool.query(query)
+    const result = await pool.query(query)
 
-        return NextResponse.json(result.rows, { status: 200 })
-
-    } catch (error:any) {
-        return NextResponse.json({ message: error?.message || "Failed to fetch data" }, { status: 500 })
-    }
+    return NextResponse.json(result.rows, { status: 200 })
+  } catch (error: any) {
+    return NextResponse.json(
+      { message: error?.message || "Failed to fetch data" },
+      { status: 500 }
+    )
+  }
 }

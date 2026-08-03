@@ -1,15 +1,13 @@
-import pool from "@/config/db";
-import { sendNotification } from "@/lib/sendNotification";
-import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
-import { NOTIFICATION_TYPES } from "@/constants/notifications";
-import moment from "moment";
-import { NextRequest, NextResponse } from "next/server";
-
+import pool from "@/config/db"
+import { sendNotification } from "@/lib/sendNotification"
+import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile"
+import { NOTIFICATION_TYPES } from "@/constants/notifications"
+import moment from "moment"
+import { NextRequest, NextResponse } from "next/server"
 
 export async function GET() {
-
-    try {
-     const result = await pool.query(`
+  try {
+    const result = await pool.query(`
   SELECT 
     c.*,
     cu.name AS customer_name,
@@ -33,86 +31,116 @@ export async function GET() {
   LEFT JOIN users engineer ON ca.engineer_id = engineer.id
   LEFT JOIN users assigned_by_user ON ca.assigned_by = assigned_by_user.id
   ORDER BY c.created_at DESC
-`);
+`)
 
-
-        return NextResponse.json(result.rows, { status: 200 })
-    } catch (error:any) {
-        return NextResponse.json({ message: error.message || "Error occured" }, { status: 500 })
-    }
+    return NextResponse.json(result.rows, { status: 200 })
+  } catch (error: any) {
+    return NextResponse.json(
+      { message: error.message || "Error occured" },
+      { status: 500 }
+    )
+  }
 }
 
-export async function POST(req:NextRequest) {
-    const data = await req.json()
+export async function POST(req: NextRequest) {
+  const data = await req.json()
 
-    try {
+  try {
+    if (!data || Object.keys(data).length === 0) {
+      return NextResponse.json(
+        { message: "No data provided for insertion" },
+        { status: 400 }
+      )
+    }
 
-        if (!data || Object.keys(data).length === 0) {
-            return NextResponse.json({ message: "No data provided for insertion" }, { status: 400 });
-        }
+    const fields = Object.keys(data)
+    const values = Object.values(data)
+    const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ")
 
-        const fields = Object.keys(data);
-        const values = Object.values(data);
-        const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
-
-        const query = `
+    const query = `
     INSERT INTO complaint_assignments (${fields.join(", ")})
     VALUES (${placeholders})
-`;
+`
 
-        await pool.query(query, values);
+    await pool.query(query, values)
 
-        await pool.query(`UPDATE complaints SET status = 'assigned' WHERE id = $1`, [data.complaint_id]);
+    await pool.query(
+      `UPDATE complaints SET status = 'assigned' WHERE id = $1`,
+      [data.complaint_id]
+    )
 
-        sendNotificationToMobile("New Complaint", `Complaint assigned to you`, data.engineer_id, data, "complaint", `/dashboard/complaint/${data.complaint_id}`)
-        sendNotification(`Complaint assigned to you`, `complaint?c=${data.complaint_id}&start=${moment().startOf("month").toDate().toISOString()}&end=${moment().endOf("month").toDate().toISOString()}`, data.engineer_id, NOTIFICATION_TYPES.complaint_assigned.title, NOTIFICATION_TYPES.complaint_assigned.category)
+    sendNotificationToMobile(
+      "New Complaint",
+      `Complaint assigned to you`,
+      data.engineer_id,
+      data,
+      "complaint",
+      `/dashboard/complaint/${data.complaint_id}`
+    )
+    sendNotification(
+      `Complaint assigned to you`,
+      `complaint?c=${data.complaint_id}&start=${moment().startOf("month").toDate().toISOString()}&end=${moment().endOf("month").toDate().toISOString()}`,
+      data.engineer_id,
+      NOTIFICATION_TYPES.complaint_assigned.title,
+      NOTIFICATION_TYPES.complaint_assigned.category
+    )
 
-        return NextResponse.json({message : "Data inserted"}, { status: 200 });
-    } catch (error:any) {
-        console.log(error)
-        return NextResponse.json({ message: error.message || "Error occured" }, { status: 500 });
-    }
-
+    return NextResponse.json({ message: "Data inserted" }, { status: 200 })
+  } catch (error: any) {
+    console.log(error)
+    return NextResponse.json(
+      { message: error.message || "Error occured" },
+      { status: 500 }
+    )
+  }
 }
 
-export async function PUT(req:NextRequest) {
-    try {
-        const data = await req.json();
-        const { id, ...updates } = data;
+export async function PUT(req: NextRequest) {
+  try {
+    const data = await req.json()
+    const { id, ...updates } = data
 
-        if (!id) {
-            return NextResponse.json({ message: "ID is required" }, { status: 400 });
-        }
+    if (!id) {
+      return NextResponse.json({ message: "ID is required" }, { status: 400 })
+    }
 
-        const fields:string[] = [];
-        const values = [];
+    const fields: string[] = []
+    const values = []
 
-        Object.entries(updates).forEach(([key, value], index) => {
-            if (value !== undefined) {
-                fields.push(`${key} = $${index + 1}`);
-                values.push(value);
-            }
-        });
+    Object.entries(updates).forEach(([key, value], index) => {
+      if (value !== undefined) {
+        fields.push(`${key} = $${index + 1}`)
+        values.push(value)
+      }
+    })
 
-        if (fields.length === 0) {
-            return NextResponse.json({ message: "No valid data provided for update" }, { status: 400 });
-        }
+    if (fields.length === 0) {
+      return NextResponse.json(
+        { message: "No valid data provided for update" },
+        { status: 400 }
+      )
+    }
 
-        values.push(id);
-        const query = `
+    values.push(id)
+    const query = `
             UPDATE complaints 
             SET ${fields.join(", ")}
             WHERE id = $${values.length}
-        `;
+        `
 
-        await pool.query(query, values);
+    await pool.query(query, values)
 
-
-        return NextResponse.json({ message: "Updated successfully" }, { status: 200 });
-    } catch (error) {
-        console.error("Error updating inventory data:", error);
-        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
-    }
+    return NextResponse.json(
+      { message: "Updated successfully" },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error("Error updating inventory data:", error)
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    )
+  }
 }
 
 export const revalidate = 0

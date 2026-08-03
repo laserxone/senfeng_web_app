@@ -1,51 +1,63 @@
-"use client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { auth, storage } from "@/config/firebase";
+"use client"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
+import { auth, storage } from "@/config/firebase"
 
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { UploadImage } from "@/lib/uploadFunction";
-import { OfficeContext } from "@/store/context/OfficeContext";
-import { UserContext } from "@/store/context/UserContext";
+} from "@/components/ui/popover"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { UploadImage } from "@/lib/uploadFunction"
+import { OfficeContext } from "@/store/context/OfficeContext"
+import { UserContext } from "@/store/context/UserContext"
 import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   updatePassword,
-} from "firebase/auth";
-import { deleteObject, getDownloadURL, ref } from "firebase/storage";
-import { CheckCircle } from "lucide-react";
-import { ChangeEvent, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import Spinner from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
+} from "firebase/auth"
+import { deleteObject, getDownloadURL, ref } from "firebase/storage"
+import { CheckCircle } from "lucide-react"
+import {
+  ChangeEvent,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
+import { toast } from "sonner"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import Spinner from "@/components/ui/spinner"
+import { Textarea } from "@/components/ui/textarea"
 
 type DocsDataType = {
-  cnic: string;
-  education: string;
-  police: string;
-  resume: string;
-  appointment_letter: string;
-  father_cnic: string;
+  cnic: string
+  education: string
+  police: string
+  resume: string
+  appointment_letter: string
+  father_cnic: string
 }
 
 export default function ProfilePage() {
-  const { state: UserState, setUser } = useContext(UserContext);
-  const { userID } = useUserDetail();
+  const { state: UserState, setUser } = useContext(UserContext)
+  const { userID } = useUserDetail()
   const { state: OfficeState } = useContext(OfficeContext)!
-  const [isPasswordResetVisible, setIsPasswordResetVisible] = useState(false);
-  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [isPasswordResetVisible, setIsPasswordResetVisible] = useState(false)
+  const [passwordLoading, setPasswordLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     father: "",
@@ -63,7 +75,7 @@ export default function ProfilePage() {
     total_salary: "",
     designation: "",
     email: "",
-  });
+  })
   const [docsData, setDocsData] = useState<DocsDataType>({
     cnic: "",
     education: "",
@@ -71,17 +83,16 @@ export default function ProfilePage() {
     resume: "",
     appointment_letter: "",
     father_cnic: "",
-  });
+  })
   const [otherDocs, setOtherDocs] = useState<string[]>([])
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null)
 
-
-  const [dp, setDp] = useState("");
-  const [formLoading, setFormLoading] = useState(false);
+  const [dp, setDp] = useState("")
+  const [formLoading, setFormLoading] = useState(false)
 
   useEffect(() => {
     if (UserState.value.data?.id) {
-      const u = UserState.value.data;
+      const u = UserState.value.data
       setFormData({
         name: u.name || "",
         father: u.father || "",
@@ -100,8 +111,8 @@ export default function ProfilePage() {
         designation: u.designation || "",
         email: u.email || "",
         dp: u.dp || "",
-      });
-      setDp(u.dp || "");
+      })
+      setDp(u.dp || "")
       setDocsData({
         cnic: u.cnic || "",
         education: u.education || "",
@@ -109,65 +120,66 @@ export default function ProfilePage() {
         resume: u.resume || "",
         appointment_letter: u.appointment_letter || "",
         father_cnic: u.father_cnic || "",
-      });
+      })
       setOtherDocs(u.other_docs || [])
     }
-  }, [UserState.value.data]);
+  }, [UserState.value.data])
 
   const RenderProfilePicture = useCallback(() => {
-    const [localImage, setLocalImage] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+    const [localImage, setLocalImage] = useState<string | null>(null)
+    const [loading, setLoading] = useState(false)
 
     useEffect(() => {
       if (dp?.trim()) {
-        setLoading(true);
+        setLoading(true)
         getDp()
       }
-    }, []);
+    }, [])
 
     async function getDp() {
       try {
         if (dp?.includes("http")) {
-          setLocalImage(dp);
+          setLocalImage(dp)
         } else {
-          const storageRef = ref(storage, dp);
+          const storageRef = ref(storage, dp)
           const url = await getDownloadURL(storageRef)
-          setLocalImage(url);
-
+          setLocalImage(url)
         }
       } catch (error) {
-        console.log(error);
+        console.log(error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
 
-    const handleImage = async (event: ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
+    const handleImage = async (
+      event: ChangeEvent<HTMLInputElement, HTMLInputElement>
+    ) => {
       if (!event.target.files) return
-      setLoading(true);
+      setLoading(true)
       try {
-        const fileList = Array.from(event.target.files);
-        const name = `${OfficeState.value.data}/${userID}/profile/${UserState.value.data?.email}-dp.png`;
-        const img = await UploadImage(URL.createObjectURL(fileList[0]), name);
+        const fileList = Array.from(event.target.files)
+        const name = `${OfficeState.value.data}/${userID}/profile/${UserState.value.data?.email}-dp.png`
+        const img = await UploadImage(URL.createObjectURL(fileList[0]), name)
         const response = await axios.put(`/${userID}`, {
           dp: name,
-        });
+        })
         if (UserState.value.data?.id) {
           setUser({
             ...UserState.value.data,
             ...formData,
             dp: name,
-          });
+          })
         }
 
-        toast.success("Profile Updated");
+        toast.success("Profile Updated")
       } catch (error: any) {
         toast.error(error?.message || "Error updating image")
-        console.log(error);
+        console.log(error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
     return (
       <>
@@ -176,13 +188,15 @@ export default function ProfilePage() {
             <Skeleton className="h-[350px] w-[350px]" />
           ) : (
             <Avatar
-              className="h-[350px] w-[350px] hover : cursor-pointer"
+              className="hover : h-[350px] w-[350px] cursor-pointer"
               onClick={() => {
-                if (inputRef.current) inputRef.current.click();
+                if (inputRef.current) inputRef.current.click()
               }}
             >
               {localImage && <AvatarImage src={localImage} />}
-              <AvatarFallback>{UserState.value.data?.name.substring(0, 2)}</AvatarFallback>
+              <AvatarFallback>
+                {UserState.value.data?.name.substring(0, 2)}
+              </AvatarFallback>
             </Avatar>
           )}
         </div>
@@ -195,79 +209,82 @@ export default function ProfilePage() {
           onChange={(e) => handleImage(e)}
         ></input>
       </>
-    );
-  }, [dp]);
+    )
+  }, [dp])
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement, HTMLInputElement> | ChangeEvent<HTMLTextAreaElement, HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+  const handleChange = (
+    e:
+      | ChangeEvent<HTMLInputElement, HTMLInputElement>
+      | ChangeEvent<HTMLTextAreaElement, HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target
+    setFormData({ ...formData, [name]: value })
+  }
 
   async function handleSave() {
-    setFormLoading(true);
-    const {password, confirmPassword, currentPassword, ...rest} = formData
+    setFormLoading(true)
+    const { password, confirmPassword, currentPassword, ...rest } = formData
 
     try {
       const response = await axios.put(`/${userID}`, {
         ...rest,
-      });
+      })
       if (UserState.value.data?.id) {
         setUser({
           ...UserState.value.data,
           ...rest,
-
-        });
+        })
       }
 
-      toast.success("Profile Updated");
+      toast.success("Profile Updated")
     } catch (error) {
     } finally {
-      setFormLoading(false);
+      setFormLoading(false)
     }
   }
 
   const handlePasswordResetToggle = () =>
-    setIsPasswordResetVisible(!isPasswordResetVisible);
+    setIsPasswordResetVisible(!isPasswordResetVisible)
 
   const handlePasswordUpdate = async () => {
     if (!formData.password || !formData.confirmPassword) {
-      return;
+      return
     }
     if (formData.password !== formData.confirmPassword) {
-      toast.info("Password do not match");
-      return;
+      toast.info("Password do not match")
+      return
     }
 
-    const user = auth.currentUser;
+    const user = auth.currentUser
     if (user?.email) {
-      setPasswordLoading(true);
+      setPasswordLoading(true)
       const credential = EmailAuthProvider.credential(
         user.email,
         formData.currentPassword
-      );
+      )
 
       reauthenticateWithCredential(user, credential)
         .then(() => {
           updatePassword(user, formData.password).then(() => {
-            handlePasswordResetToggle();
-            toast.success("Password changed");
+            handlePasswordResetToggle()
+            toast.success("Password changed")
             setFormData({
               ...formData,
               currentPassword: "",
               password: "",
               confirmPassword: "",
-            });
-          });
+            })
+          })
         })
         .catch((error) => {
-          toast.error(error?.message || "Error");
-          console.log(error);
+          toast.error(error?.message || "Error")
+          console.log(error)
         })
         .finally(() => {
-          setPasswordLoading(false);
-        });
+          setPasswordLoading(false)
+        })
     }
-  };
+  }
 
   return (
     <div className="flex flex-1 flex-col flex-wrap pb-4">
@@ -310,13 +327,16 @@ export default function ProfilePage() {
                     placeholder="Confirm new password"
                   />
                 </div>
-                <Button disabled={passwordLoading} onClick={handlePasswordUpdate}>
+                <Button
+                  disabled={passwordLoading}
+                  onClick={handlePasswordUpdate}
+                >
                   {passwordLoading && <Spinner />}Update Password
                 </Button>
               </div>
             ) : (
               <Button
-                className="w-full mt-5"
+                className="mt-5 w-full"
                 onClick={handlePasswordResetToggle}
               >
                 Change Password
@@ -327,7 +347,7 @@ export default function ProfilePage() {
         <Card className="flex flex-1 flex-col py-5">
           <CardContent>
             <div className="flex flex-col gap-3">
-              <div className="flex flex-row w-full gap-5">
+              <div className="flex w-full flex-row gap-5">
                 <div className="flex flex-1 flex-col space-y-2">
                   <Label>Display name</Label>
                   <Input
@@ -356,7 +376,7 @@ export default function ProfilePage() {
                 disabled
               />
 
-              <div className="flex flex-row w-full gap-5">
+              <div className="flex w-full flex-row gap-5">
                 <div className="flex flex-1 flex-col space-y-2">
                   <Label>Phone Number</Label>
                   <Input
@@ -394,8 +414,8 @@ export default function ProfilePage() {
                 disabled
               />
 
-              <div className="w-full flex gap-2">
-                <div className="flex flex-col flex-1 gap-3">
+              <div className="flex w-full gap-2">
+                <div className="flex flex-1 flex-col gap-3">
                   <Label>Basic salary</Label>
                   <Input
                     name="basic_salary"
@@ -404,7 +424,7 @@ export default function ProfilePage() {
                     disabled
                   />
                 </div>
-                <div className="flex flex-col flex-1 gap-3">
+                <div className="flex flex-1 flex-col gap-3">
                   <Label>Monthly target</Label>
                   <Input
                     name="monthly_target"
@@ -413,7 +433,7 @@ export default function ProfilePage() {
                     disabled
                   />
                 </div>
-                <div className="flex flex-col flex-1 gap-3">
+                <div className="flex flex-1 flex-col gap-3">
                   <Label>Total salary</Label>
                   <Input
                     name="total_salary"
@@ -453,180 +473,214 @@ export default function ProfilePage() {
             <CardTitle>Documents</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 ">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <DocumentCard type={"cnic"} userID={userID} docsData={docsData} />
-              <DocumentCard type={"father_cnic"} userID={userID} docsData={docsData} />
-              <DocumentCard type={"police"} userID={userID} docsData={docsData} />
-              <DocumentCard type={"education"} userID={userID} docsData={docsData} />
-              <DocumentCard type={"resume"} userID={userID} docsData={docsData} />
-              <DocumentCard type={"appointment_letter"} userID={userID} docsData={docsData} />
-              <DocumentCard type={"appointment_letter"} userID={userID} docsData={docsData} />
+              <DocumentCard
+                type={"father_cnic"}
+                userID={userID}
+                docsData={docsData}
+              />
+              <DocumentCard
+                type={"police"}
+                userID={userID}
+                docsData={docsData}
+              />
+              <DocumentCard
+                type={"education"}
+                userID={userID}
+                docsData={docsData}
+              />
+              <DocumentCard
+                type={"resume"}
+                userID={userID}
+                docsData={docsData}
+              />
+              <DocumentCard
+                type={"appointment_letter"}
+                userID={userID}
+                docsData={docsData}
+              />
+              <DocumentCard
+                type={"appointment_letter"}
+                userID={userID}
+                docsData={docsData}
+              />
               <DocumentCardOther userID={userID} otherDocs={otherDocs} />
             </div>
           </CardContent>
         </Card>
       )}
     </div>
-  );
+  )
 }
 
+const DocumentCard = ({
+  type,
+  userID,
+  docsData,
+}: {
+  type: keyof DocsDataType
+  userID: number | string
+  docsData: DocsDataType
+}) => {
+  const [fileUrl, setFileUrl] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [fileName, setFileName] = useState<string | undefined>("")
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const { state: UserState, setUser } = useContext(UserContext)
+  const { state: OfficeState } = useContext(OfficeContext)!
+  const userId = userID
 
-const DocumentCard =
-  ({ type, userID, docsData }: { type: keyof DocsDataType, userID: number | string, docsData: DocsDataType }) => {
-    const [fileUrl, setFileUrl] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [fileName, setFileName] = useState<string | undefined>("");
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const { state: UserState, setUser } = useContext(UserContext)
-    const { state: OfficeState } = useContext(OfficeContext)!
-    const userId = userID;
-
-    useEffect(() => {
-      if (docsData?.[type]) {
-        setLoading(true);
-        const filePath = docsData[type];
-        if (filePath.includes("http")) {
-          setFileUrl(filePath);
-          setFileName(filePath.split("/").pop());
-          setLoading(false);
-        } else {
-          const storageRef = ref(storage, filePath);
-          getDownloadURL(storageRef)
-            .then((url) => {
-              setFileUrl(url);
-              setFileName(filePath.split("/").pop());
-            })
-            .catch((error) => console.error("Error loading file:", error))
-            .finally(() => setLoading(false));
-        }
+  useEffect(() => {
+    if (docsData?.[type]) {
+      setLoading(true)
+      const filePath = docsData[type]
+      if (filePath.includes("http")) {
+        setFileUrl(filePath)
+        setFileName(filePath.split("/").pop())
+        setLoading(false)
+      } else {
+        const storageRef = ref(storage, filePath)
+        getDownloadURL(storageRef)
+          .then((url) => {
+            setFileUrl(url)
+            setFileName(filePath.split("/").pop())
+          })
+          .catch((error) => console.error("Error loading file:", error))
+          .finally(() => setLoading(false))
       }
-    }, [docsData]);
+    }
+  }, [docsData])
 
-    const handleFileUpload = async (event: ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
-      const file = event?.target?.files?.[0];
-      if (!file) return;
+  const handleFileUpload = async (
+    event: ChangeEvent<HTMLInputElement, HTMLInputElement>
+  ) => {
+    const file = event?.target?.files?.[0]
+    if (!file) return
 
-      setLoading(true);
-      try {
-        const extension = file.name.split(".").pop();
-        const newFilePath = `${OfficeState.value.data}/${userId}/profile/${type}.${extension}`;
+    setLoading(true)
+    try {
+      const extension = file.name.split(".").pop()
+      const newFilePath = `${OfficeState.value.data}/${userId}/profile/${type}.${extension}`
 
-
-        if (docsData?.[type] && !docsData[type].includes("http")) {
-          const oldFileRef = ref(storage, docsData[type]);
-          await deleteObject(oldFileRef).catch((err) =>
-            console.log("Old file could not be deleted:", err)
-          );
-        }
-
-
-        const uploadedPath = await UploadImage(
-          URL.createObjectURL(file),
-          newFilePath,
-          file.type || "application/octet-stream"
-        );
-
-        const updatedData = {
-          ...docsData,
-          [type]: newFilePath,
-        };
-        await axios.put(`/${userId}`, updatedData);
-        if (UserState.value.data?.id) {
-
-          setUser({
-            ...UserState.value.data,
-            ...updatedData,
-          });
-        }
-
-        toast.success("File uploaded successfully");
-        setFileUrl(URL.createObjectURL(file))
-        setFileName(file.name);
-      } catch (error) {
-        toast.error("Upload failed");
-      } finally {
-        setLoading(false);
+      if (docsData?.[type] && !docsData[type].includes("http")) {
+        const oldFileRef = ref(storage, docsData[type])
+        await deleteObject(oldFileRef).catch((err) =>
+          console.log("Old file could not be deleted:", err)
+        )
       }
-    };
 
-    return (
-      <div className="space-y-2">
-        {loading ? (
-          <Skeleton className="h-[50px] w-full" />
-        ) : (
-          <>
-            <input
-              type="file"
-              accept="*"
-              hidden
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-            />
+      const uploadedPath = await UploadImage(
+        URL.createObjectURL(file),
+        newFilePath,
+        file.type || "application/octet-stream"
+      )
 
-            <Popover>
-              <PopoverTrigger asChild className="w-full flex gap-4">
-                <Button variant={"outline"}>
-                  {type?.replace("_", " ").toUpperCase()}{" "}
-                  {fileUrl && <CheckCircle className="text-green-500" />}
-                </Button>
-              </PopoverTrigger>
+      const updatedData = {
+        ...docsData,
+        [type]: newFilePath,
+      }
+      await axios.put(`/${userId}`, updatedData)
+      if (UserState.value.data?.id) {
+        setUser({
+          ...UserState.value.data,
+          ...updatedData,
+        })
+      }
 
-              <PopoverContent className="w-48 p-2">
-                <div className="flex flex-col gap-2">
-                  {!fileUrl &&
-                    <Button
-                      variant="ghost"
-                      className="justify-start"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      {"Upload File"}
-                    </Button>
-                  }
-
-                  {fileUrl && (
-                    <Button variant="ghost" className="justify-start" asChild>
-                      <a
-                        href={fileUrl}
-                        download={fileName}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Download File
-                      </a>
-                    </Button>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </>
-        )}
-      </div>
-    );
+      toast.success("File uploaded successfully")
+      setFileUrl(URL.createObjectURL(file))
+      setFileName(file.name)
+    } catch (error) {
+      toast.error("Upload failed")
+    } finally {
+      setLoading(false)
+    }
   }
 
+  return (
+    <div className="space-y-2">
+      {loading ? (
+        <Skeleton className="h-[50px] w-full" />
+      ) : (
+        <>
+          <input
+            type="file"
+            accept="*"
+            hidden
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+          />
 
-const DocumentCardOther = ({ userID, otherDocs }: { userID: number | string, otherDocs: string[] }) => {
+          <Popover>
+            <PopoverTrigger asChild className="flex w-full gap-4">
+              <Button variant={"outline"}>
+                {type?.replace("_", " ").toUpperCase()}{" "}
+                {fileUrl && <CheckCircle className="text-green-500" />}
+              </Button>
+            </PopoverTrigger>
+
+            <PopoverContent className="w-48 p-2">
+              <div className="flex flex-col gap-2">
+                {!fileUrl && (
+                  <Button
+                    variant="ghost"
+                    className="justify-start"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {"Upload File"}
+                  </Button>
+                )}
+
+                {fileUrl && (
+                  <Button variant="ghost" className="justify-start" asChild>
+                    <a
+                      href={fileUrl}
+                      download={fileName}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Download File
+                    </a>
+                  </Button>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </>
+      )}
+    </div>
+  )
+}
+
+const DocumentCardOther = ({
+  userID,
+  otherDocs,
+}: {
+  userID: number | string
+  otherDocs: string[]
+}) => {
   const [files, setFiles] = useState<
     {
-      url: string;
-      name: string;
-      path: string;
+      url: string
+      name: string
+      path: string
     }[]
-  >([]);
+  >([])
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false)
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const { state: UserState, setUser } = useContext(UserContext)
   const { state: OfficeState } = useContext(OfficeContext)!
   const [open, setOpen] = useState(false)
-  const userId = userID;
+  const userId = userID
 
   useEffect(() => {
     async function loadFiles() {
-      if (!otherDocs?.length) return;
+      if (!otherDocs?.length) return
 
-      setLoading(true);
+      setLoading(true)
 
       try {
         const loadedFiles = await Promise.all(
@@ -636,69 +690,63 @@ const DocumentCardOther = ({ userID, otherDocs }: { userID: number | string, oth
                 url: filePath,
                 name: filePath.split("/").pop() || "file",
                 path: filePath,
-              };
+              }
             }
 
-            const storageRef = ref(storage, filePath);
-            const url = await getDownloadURL(storageRef);
+            const storageRef = ref(storage, filePath)
+            const url = await getDownloadURL(storageRef)
 
             return {
               url,
               name: filePath.split("/").pop() || "file",
               path: filePath,
-            };
+            }
           })
-        );
+        )
 
-        setFiles(loadedFiles);
+        setFiles(loadedFiles)
       } catch (error) {
-        console.error("Error loading files:", error);
+        console.error("Error loading files:", error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
 
-    loadFiles();
-  }, [otherDocs]);
+    loadFiles()
+  }, [otherDocs])
 
-  const handleFileUpload = async (
-    event: ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event?.target?.files?.[0];
+  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event?.target?.files?.[0]
 
-    if (!file) return;
+    if (!file) return
 
-    setLoading(true);
+    setLoading(true)
 
     try {
-      const extension = file.name.split(".").pop();
+      const extension = file.name.split(".").pop()
 
-      const fileName = `${Date.now()}-${file.name}`;
+      const fileName = `${Date.now()}-${file.name}`
 
-      const newFilePath = `${OfficeState.value.data}/${userId}/profile/other_docs/${fileName}`;
+      const newFilePath = `${OfficeState.value.data}/${userId}/profile/other_docs/${fileName}`
 
       await UploadImage(
         URL.createObjectURL(file),
         newFilePath,
         file.type || "application/octet-stream"
-      );
+      )
 
-      const updatedOtherDocs = [
-        ...(otherDocs || []),
-        newFilePath,
-      ];
+      const updatedOtherDocs = [...(otherDocs || []), newFilePath]
 
       const updatedData = {
         other_docs: [...updatedOtherDocs],
-      };
+      }
 
-      await axios.put(`/${userId}`, updatedData);
+      await axios.put(`/${userId}`, updatedData)
       if (UserState.value.data?.id) {
         setUser({
           ...UserState.value.data,
           ...updatedData,
-        });
-
+        })
       }
 
       setFiles((prev) => [
@@ -708,20 +756,20 @@ const DocumentCardOther = ({ userID, otherDocs }: { userID: number | string, oth
           name: file.name,
           path: newFilePath,
         },
-      ]);
+      ])
 
-      toast.success("File uploaded successfully");
+      toast.success("File uploaded successfully")
     } catch (error) {
-      console.error(error);
-      toast.error("Upload failed");
+      console.error(error)
+      toast.error("Upload failed")
     } finally {
-      setLoading(false);
+      setLoading(false)
 
       if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+        fileInputRef.current.value = ""
       }
     }
-  };
+  }
 
   return (
     <div className="space-y-2">
@@ -737,12 +785,10 @@ const DocumentCardOther = ({ userID, otherDocs }: { userID: number | string, oth
           />
 
           <Popover>
-            <PopoverTrigger asChild className="w-full flex gap-4">
+            <PopoverTrigger asChild className="flex w-full gap-4">
               <Button variant={"outline"}>
                 OTHER DOCS
-                {files.length > 0 && (
-                  <CheckCircle className="text-green-500" />
-                )}
+                {files.length > 0 && <CheckCircle className="text-green-500" />}
               </Button>
             </PopoverTrigger>
 
@@ -753,18 +799,18 @@ const DocumentCardOther = ({ userID, otherDocs }: { userID: number | string, oth
                   className="justify-start"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  {files.length > 0
-                    ? "Add More Files"
-                    : "Upload File"}
+                  {files.length > 0 ? "Add More Files" : "Upload File"}
                 </Button>
 
-                {files.length > 0 &&
-                  <Button onClick={() => setOpen(true)} variant="ghost" className="justify-start">
+                {files.length > 0 && (
+                  <Button
+                    onClick={() => setOpen(true)}
+                    variant="ghost"
+                    className="justify-start"
+                  >
                     See Files
                   </Button>
-                }
-
-
+                )}
               </div>
             </PopoverContent>
           </Popover>
@@ -775,12 +821,11 @@ const DocumentCardOther = ({ userID, otherDocs }: { userID: number | string, oth
           <DialogHeader>
             <DialogTitle>Additional Files</DialogTitle>
           </DialogHeader>
-          {files.length > 0 ?
+          {files.length > 0 ? (
             <ScrollArea className="h-[60vh] pr-4">
               <div className="flex flex-col gap-3">
-
                 {files.map((file, index) => {
-                  const cleanName = file.name.replace(/^\d+-/, "");
+                  const cleanName = file.name.replace(/^\d+-/, "")
 
                   return (
                     <a
@@ -789,14 +834,10 @@ const DocumentCardOther = ({ userID, otherDocs }: { userID: number | string, oth
                       download={cleanName}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="
-                  flex items-center justify-between gap-3
-                  rounded-xl border p-3
-                  hover:bg-muted/50 transition-colors
-                "
+                      className="flex items-center justify-between gap-3 rounded-xl border p-3 transition-colors hover:bg-muted/50"
                     >
                       <div className="flex min-w-0 flex-col">
-                        <span className="text-sm font-medium truncate">
+                        <span className="truncate text-sm font-medium">
                           {cleanName}
                         </span>
 
@@ -814,21 +855,17 @@ const DocumentCardOther = ({ userID, otherDocs }: { userID: number | string, oth
                         Download
                       </Button>
                     </a>
-                  );
-                })
-                }
+                  )
+                })}
               </div>
             </ScrollArea>
-            :
+          ) : (
             <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">
               No files uploaded
             </div>
-
-          }
-
-
+          )}
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

@@ -1,17 +1,19 @@
-import pool from "@/config/db";
-import { checkSuperadmin } from "@/lib/checkSuperadmin";
-import { NextRequest, NextResponse } from "next/server";
+import pool from "@/config/db"
+import { checkSuperadmin } from "@/lib/checkSuperadmin"
+import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
-  const { uid } = await params;
-  const searchParams = req.nextUrl.searchParams;
-  const user = searchParams.get("user");
-  const office = "karachi";
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ uid: string }> }
+) {
+  const { uid } = await params
+  const searchParams = req.nextUrl.searchParams
+  const user = searchParams.get("user")
+  const office = "karachi"
 
-  const isAdmin = await checkSuperadmin(uid);
-  const queryParams = [];
-  queryParams.push(office);
-  
+  const isAdmin = await checkSuperadmin(uid)
+  const queryParams = []
+  queryParams.push(office)
 
   if (isAdmin) {
     try {
@@ -42,48 +44,47 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
         FROM cancelled_machine cm
         WHERE cm.machine_id = s.id
     )
-`;
-
+`
 
       if (user) {
-        query += ` AND COALESCE(c.ownership, s.sell_by) = $2`;
-        queryParams.push(user);
+        query += ` AND COALESCE(c.ownership, s.sell_by) = $2`
+        queryParams.push(user)
       }
 
-      const { rows: sales } = await pool.query(query, queryParams);
+      const { rows: sales } = await pool.query(query, queryParams)
 
-      const machineIds = sales.map((s) => s.machine_id);
-      let payments = [];
+      const machineIds = sales.map((s) => s.machine_id)
+      let payments = []
       if (machineIds.length > 0) {
         const paymentQuery = `
       SELECT *
       FROM payment
       WHERE machine_id = ANY($1)
-    `;
+    `
         const { rows: paymentRows } = await pool.query(paymentQuery, [
           machineIds,
-        ]);
-        payments = paymentRows;
+        ])
+        payments = paymentRows
       }
 
       const normalizedSales = sales.map((sale) => {
         const salePayments = payments.filter(
-          (p) => p.machine_id === sale.machine_id,
-        );
+          (p) => p.machine_id === sale.machine_id
+        )
         const totalPaymentReceived = salePayments.reduce(
           (sum, p) => sum + Number(p.amount),
-          0,
-        );
+          0
+        )
         const speedMoneyDeduction = sale.speed_money
           ? sale.speed_money_amount
             ? Number(sale.speed_money_amount)
             : 0
-          : 0;
+          : 0
         const balance =
           Number(sale.total_generated) -
           totalPaymentReceived -
-          speedMoneyDeduction;
-        const pending = balance > 0 ? balance : 0;
+          speedMoneyDeduction
+        const pending = balance > 0 ? balance : 0
 
         return {
           ...sale,
@@ -91,40 +92,37 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
           total_payment_received: totalPaymentReceived,
           total_balance: balance,
           pending,
-        };
-      });
+        }
+      })
 
-      const pendingMachines = normalizedSales.filter(
-        (sale) => sale.pending > 0,
-      );
+      const pendingMachines = normalizedSales.filter((sale) => sale.pending > 0)
 
       const summary = pendingMachines.reduce(
         (acc, sale) => {
-          acc.total += Number(sale.total_generated);
-          acc.received += Number(sale.total_payment_received);
-          acc.pending += Number(sale.pending);
-          return acc;
+          acc.total += Number(sale.total_generated)
+          acc.received += Number(sale.total_payment_received)
+          acc.pending += Number(sale.pending)
+          return acc
         },
-        { total: 0, received: 0, pending: 0 },
-      );
+        { total: 0, received: 0, pending: 0 }
+      )
 
       return NextResponse.json(
         {
           summary,
           items: pendingMachines,
         },
-        { status: 200 },
-      );
-    } catch (error:any) {
+        { status: 200 }
+      )
+    } catch (error: any) {
       return NextResponse.json(
         { message: error?.message || "Server error" },
-        { status: 500 },
-      );
+        { status: 500 }
+      )
     }
   } else {
-
     if (!user) {
-      return NextResponse.json({ message: "USer missing" }, { status: 400 });
+      return NextResponse.json({ message: "USer missing" }, { status: 400 })
     }
 
     try {
@@ -155,42 +153,42 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
         FROM cancelled_machine cm
         WHERE cm.machine_id = s.id
     )
-`;
+`
 
-      const { rows: sales } = await pool.query(query, [user]);
+      const { rows: sales } = await pool.query(query, [user])
 
-      const machineIds = sales.map((s) => s.machine_id);
-      let payments = [];
+      const machineIds = sales.map((s) => s.machine_id)
+      let payments = []
       if (machineIds.length > 0) {
         const paymentQuery = `
       SELECT *
       FROM payment
       WHERE machine_id = ANY($1)
-    `;
+    `
         const { rows: paymentRows } = await pool.query(paymentQuery, [
           machineIds,
-        ]);
-        payments = paymentRows;
+        ])
+        payments = paymentRows
       }
 
       const normalizedSales = sales.map((sale) => {
         const salePayments = payments.filter(
-          (p) => p.machine_id === sale.machine_id,
-        );
+          (p) => p.machine_id === sale.machine_id
+        )
         const totalPaymentReceived = salePayments.reduce(
           (sum, p) => sum + Number(p.amount),
-          0,
-        );
+          0
+        )
         const speedMoneyDeduction = sale.speed_money
           ? sale.speed_money_amount
             ? Number(sale.speed_money_amount)
             : 0
-          : 0;
+          : 0
         const balance =
           Number(sale.total_generated) -
           totalPaymentReceived -
-          speedMoneyDeduction;
-        const pending = balance > 0 ? balance : 0;
+          speedMoneyDeduction
+        const pending = balance > 0 ? balance : 0
 
         return {
           ...sale,
@@ -198,35 +196,33 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{uid:strin
           total_payment_received: totalPaymentReceived,
           total_balance: balance,
           pending,
-        };
-      });
+        }
+      })
 
-      const pendingMachines = normalizedSales.filter(
-        (sale) => sale.pending > 0,
-      );
+      const pendingMachines = normalizedSales.filter((sale) => sale.pending > 0)
 
       const summary = pendingMachines.reduce(
         (acc, sale) => {
-          acc.total += Number(sale.total_generated);
-          acc.received += Number(sale.total_payment_received);
-          acc.pending += Number(sale.pending);
-          return acc;
+          acc.total += Number(sale.total_generated)
+          acc.received += Number(sale.total_payment_received)
+          acc.pending += Number(sale.pending)
+          return acc
         },
-        { total: 0, received: 0, pending: 0 },
-      );
+        { total: 0, received: 0, pending: 0 }
+      )
 
       return NextResponse.json(
         {
           summary,
           items: pendingMachines,
         },
-        { status: 200 },
-      );
-    } catch (error:any) {
+        { status: 200 }
+      )
+    } catch (error: any) {
       return NextResponse.json(
         { message: error?.message || "Server error" },
-        { status: 500 },
-      );
+        { status: 500 }
+      )
     }
   }
 }

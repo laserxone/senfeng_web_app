@@ -19,11 +19,11 @@ function Heading({
   panel = false,
 }: HeadingProps) {
   const pathname = usePathname()
-  const {base_route} = useUserDetail()
+  const { base_route } = useUserDetail()
   const isExcludeRoutes =
     pathname.includes(`${base_route}/customer`) ||
     pathname.includes(`${base_route}/member`)
-  const usePanel =  !isExcludeRoutes
+  const usePanel = !isExcludeRoutes
 
   console.log(usePanel)
 

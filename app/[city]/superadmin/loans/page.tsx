@@ -1,15 +1,15 @@
-"use client";
+"use client"
 
-import { RequiredStar } from "@/components/shared/common/RequiredStar";
-import AppCalendar from "@/components/features/calendar/app-calendar";
-import Dropzone from "@/components/shared/uploads/dropzone";
-import { MyImgZooming } from "@/components/shared/media/img-zooming";
-import { Button } from "@/components/ui/button";
+import { RequiredStar } from "@/components/shared/common/RequiredStar"
+import AppCalendar from "@/components/features/calendar/app-calendar"
+import Dropzone from "@/components/shared/uploads/dropzone"
+import { MyImgZooming } from "@/components/shared/media/img-zooming"
+import { Button } from "@/components/ui/button"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from "@/components/ui/collapsible"
 import {
   Dialog,
   DialogContent,
@@ -17,17 +17,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Field,
   FieldGroup,
   FieldLabel,
   FieldLegend,
-} from "@/components/ui/field";
-import Heading from "@/components/ui/heading";
-import { Input } from "@/components/ui/input";
-import Spinner from "@/components/ui/spinner";
+} from "@/components/ui/field"
+import Heading from "@/components/ui/heading"
+import { Input } from "@/components/ui/input"
+import Spinner from "@/components/ui/spinner"
 import {
   Table,
   TableBody,
@@ -35,13 +35,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
-import { UserSearch } from "@/components/shared/search/user-search";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { Loan, LoanPayment } from "@/lib/types";
-import { UploadImage } from "@/lib/uploadFunction";
+} from "@/components/ui/table"
+import { Textarea } from "@/components/ui/textarea"
+import { UserSearch } from "@/components/shared/search/user-search"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { Loan, LoanPayment } from "@/lib/types"
+import { UploadImage } from "@/lib/uploadFunction"
 import {
   ChevronRight,
   CreditCard,
@@ -49,31 +49,31 @@ import {
   FileText,
   Pencil,
   Plus,
-  Wallet
-} from "lucide-react";
-import moment from "moment";
-import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+  Wallet,
+} from "lucide-react"
+import moment from "moment"
+import { useEffect, useMemo, useState } from "react"
+import { toast } from "sonner"
 
 type LoansByUser = {
   [userId: number]: {
-    name: string;
-    loans: Loan[];
-  };
-};
+    name: string
+    loans: Loan[]
+  }
+}
 
 export default function EmployeeLoans() {
-  const [loans, setLoans] = useState<Loan[]>([]);
-  const { userID } = useUserDetail();
+  const [loans, setLoans] = useState<Loan[]>([])
+  const { userID } = useUserDetail()
 
   useEffect(() => {
-    if (userID) fetchLoans();
-  }, [userID]);
+    if (userID) fetchLoans()
+  }, [userID])
 
   const fetchLoans = async () => {
-    const res = await axios.get(`/${userID}/loans`);
-    setLoans(res.data);
-  };
+    const res = await axios.get(`/${userID}/loans`)
+    setLoans(res.data)
+  }
 
   const loansByUser = useMemo(() => {
     return loans.reduce<LoansByUser>((acc, loan) => {
@@ -81,32 +81,54 @@ export default function EmployeeLoans() {
         acc[loan.user_id] = {
           name: loan.user_name,
           loans: [],
-        };
+        }
       }
 
-      acc[loan.user_id].loans.push(loan);
-      return acc;
-    }, {});
-  }, [loans]);
+      acc[loan.user_id].loans.push(loan)
+      return acc
+    }, {})
+  }, [loans])
 
-  const totalLoans = loans.length;
-  const activeLoans = loans.filter((loan) => loan.status === "active").length;
+  const totalLoans = loans.length
+  const activeLoans = loans.filter((loan) => loan.status === "active").length
   const totalRemaining = loans.reduce(
     (sum, loan) => sum + Number(loan.remaining_amount || 0),
     0
-  );
+  )
 
   return (
     <div className="flex flex-1 flex-col space-y-4 pb-6">
       <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
-          <Heading panel title="Loans" description="Manage employee loans and repayments" />
+          <Heading
+            panel
+            title="Loans"
+            description="Manage employee loans and repayments"
+          />
           <LoanIssueModal userID={userID} onSuccess={fetchLoans} />
         </div>
         <div className="grid border-t bg-muted/20 sm:grid-cols-3 sm:divide-x">
-          <SummaryCard title="Total Loans" value={totalLoans} icon={<FileText className="size-4 text-violet-600 dark:text-violet-400" />} />
-          <SummaryCard title="Active Loans" value={activeLoans} icon={<Wallet className="size-4 text-emerald-600 dark:text-emerald-400" />} />
-          <SummaryCard title="Remaining Amount" value={totalRemaining.toLocaleString()} icon={<CreditCard className="size-4 text-amber-600 dark:text-amber-400" />} />
+          <SummaryCard
+            title="Total Loans"
+            value={totalLoans}
+            icon={
+              <FileText className="size-4 text-violet-600 dark:text-violet-400" />
+            }
+          />
+          <SummaryCard
+            title="Active Loans"
+            value={activeLoans}
+            icon={
+              <Wallet className="size-4 text-emerald-600 dark:text-emerald-400" />
+            }
+          />
+          <SummaryCard
+            title="Remaining Amount"
+            value={totalRemaining.toLocaleString()}
+            icon={
+              <CreditCard className="size-4 text-amber-600 dark:text-amber-400" />
+            }
+          />
         </div>
       </section>
 
@@ -116,7 +138,7 @@ export default function EmployeeLoans() {
         onUpdate={fetchLoans}
       />
     </div>
-  );
+  )
 }
 
 function SummaryCard({
@@ -124,59 +146,61 @@ function SummaryCard({
   value,
   icon,
 }: {
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
+  title: string
+  value: string | number
+  icon: React.ReactNode
 }) {
   return (
     <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">
       {icon}
       <div className="flex min-w-0 items-baseline gap-2">
-        <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{title}</span>
+        <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+          {title}
+        </span>
         <span className="truncate text-sm font-bold">{value}</span>
       </div>
     </div>
-  );
+  )
 }
 
 export function LoanIssueModal({
   userID,
   onSuccess,
 }: {
-  userID: number | string;
-  onSuccess: () => Promise<void>;
+  userID: number | string
+  onSuccess: () => Promise<void>
 }) {
-  const [open, setOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<number | null>(null);
-  const [loanAmount, setLoanAmount] = useState("");
-  const [description, setDescription] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<number | null>(null)
+  const [loanAmount, setLoanAmount] = useState("")
+  const [description, setDescription] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const createLoan = async () => {
     if (!selectedUser || !loanAmount) {
-      toast.error("Employee and amount required");
-      return;
+      toast.error("Employee and amount required")
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
 
     try {
       await axios.post(`/${userID}/loans`, {
         user_id: selectedUser,
         loan_amount: Number(loanAmount),
         description,
-      });
+      })
 
-      setLoanAmount("");
-      setDescription("");
-      setSelectedUser(null);
-      setOpen(false);
+      setLoanAmount("")
+      setDescription("")
+      setSelectedUser(null)
+      setOpen(false)
 
-      await onSuccess();
+      await onSuccess()
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -189,51 +213,55 @@ export function LoanIssueModal({
 
       <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
         <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
-          <DialogTitle className="text-sm font-semibold text-foreground">Issue New Loan</DialogTitle>
+          <DialogTitle className="text-sm font-semibold text-foreground">
+            Issue New Loan
+          </DialogTitle>
         </DialogHeader>
-        <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="space-y-3 p-3.5 pb-4">
-        <FieldGroup>
-          <FieldLegend>Loan Details</FieldLegend>
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
+          <div className="space-y-3 p-3.5 pb-4">
+            <FieldGroup>
+              <FieldLegend>Loan Details</FieldLegend>
 
-          <Field>
-            <FieldLabel>
-              Select Employee <RequiredStar />
-            </FieldLabel>
-            <UserSearch value={selectedUser} onReturn={setSelectedUser} />
-          </Field>
+              <Field>
+                <FieldLabel>
+                  Select Employee <RequiredStar />
+                </FieldLabel>
+                <UserSearch value={selectedUser} onReturn={setSelectedUser} />
+              </Field>
 
-          <Field>
-            <FieldLabel>
-              Loan Amount <RequiredStar />
-            </FieldLabel>
-            <Input
-              type="number"
-              placeholder="Enter loan amount"
-              value={loanAmount}
-              onChange={(e) => setLoanAmount(e.target.value)}
-            />
-          </Field>
+              <Field>
+                <FieldLabel>
+                  Loan Amount <RequiredStar />
+                </FieldLabel>
+                <Input
+                  type="number"
+                  placeholder="Enter loan amount"
+                  value={loanAmount}
+                  onChange={(e) => setLoanAmount(e.target.value)}
+                />
+              </Field>
 
-          <Field>
-            <FieldLabel>Note</FieldLabel>
-            <Input
-              placeholder="Optional description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </Field>
-        </FieldGroup>
+              <Field>
+                <FieldLabel>Note</FieldLabel>
+                <Input
+                  placeholder="Optional description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </Field>
+            </FieldGroup>
 
-        <div className="flex justify-end">
-          <Button onClick={createLoan} disabled={loading}>
-            {loading && <Spinner />}
-            Submit
-          </Button>
-        </div>
-        </div></ScrollArea>
+            <div className="flex justify-end">
+              <Button onClick={createLoan} disabled={loading}>
+                {loading && <Spinner />}
+                Submit
+              </Button>
+            </div>
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 export function LoanPaymentModal({
@@ -241,33 +269,33 @@ export function LoanPaymentModal({
   loan,
   onSuccess,
 }: {
-  userID: number | string;
-  loan: Loan;
-  onSuccess: () => Promise<void>;
+  userID: number | string
+  loan: Loan
+  onSuccess: () => Promise<void>
 }) {
-  const [open, setOpen] = useState(false);
-  const [repaymentAmount, setRepaymentAmount] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false)
+  const [repaymentAmount, setRepaymentAmount] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const makePayment = async () => {
-    if (!repaymentAmount) return;
+    if (!repaymentAmount) return
 
-    setLoading(true);
+    setLoading(true)
 
     try {
       await axios.post(`/${userID}/loans/repayment`, {
         loan_id: loan.id,
         amount: Number(repaymentAmount),
-      });
+      })
 
-      setRepaymentAmount("");
-      setOpen(false);
+      setRepaymentAmount("")
+      setOpen(false)
 
-      await onSuccess();
+      await onSuccess()
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -280,68 +308,72 @@ export function LoanPaymentModal({
 
       <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
         <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
-          <DialogTitle className="text-sm font-semibold text-foreground">Loan Repayment</DialogTitle>
+          <DialogTitle className="text-sm font-semibold text-foreground">
+            Loan Repayment
+          </DialogTitle>
         </DialogHeader>
-        <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="space-y-3 p-3.5 pb-4">
-        <FieldGroup>
-          <FieldLegend>Payment Details</FieldLegend>
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
+          <div className="space-y-3 p-3.5 pb-4">
+            <FieldGroup>
+              <FieldLegend>Payment Details</FieldLegend>
 
-          <Field>
-            <FieldLabel>
-              Repayment Amount <RequiredStar />
-            </FieldLabel>
-            <Input
-              type="number"
-              placeholder="Enter repayment amount"
-              value={repaymentAmount}
-              onChange={(e) => setRepaymentAmount(e.target.value)}
-            />
-          </Field>
+              <Field>
+                <FieldLabel>
+                  Repayment Amount <RequiredStar />
+                </FieldLabel>
+                <Input
+                  type="number"
+                  placeholder="Enter repayment amount"
+                  value={repaymentAmount}
+                  onChange={(e) => setRepaymentAmount(e.target.value)}
+                />
+              </Field>
 
-          <div className="rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {loan.payments?.length ? (
-                  loan.payments.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell>{p.amount}</TableCell>
-                      <TableCell>
-                        {new Date(p.payment_date).toLocaleString()}
-                      </TableCell>
+              <div className="rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Date</TableHead>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={2}
-                      className="text-center text-muted-foreground"
-                    >
-                      No payment history found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </FieldGroup>
+                  </TableHeader>
 
-        <div className="flex justify-end">
-          <Button onClick={makePayment} disabled={loading}>
-            {loading && <Spinner />}
-            Submit Payment
-          </Button>
-        </div>
-        </div></ScrollArea>
+                  <TableBody>
+                    {loan.payments?.length ? (
+                      loan.payments.map((p) => (
+                        <TableRow key={p.id}>
+                          <TableCell>{p.amount}</TableCell>
+                          <TableCell>
+                            {new Date(p.payment_date).toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={2}
+                          className="text-center text-muted-foreground"
+                        >
+                          No payment history found
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </FieldGroup>
+
+            <div className="flex justify-end">
+              <Button onClick={makePayment} disabled={loading}>
+                {loading && <Spinner />}
+                Submit Payment
+              </Button>
+            </div>
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 export function LoanCollapsibleList({
@@ -349,11 +381,11 @@ export function LoanCollapsibleList({
   userID,
   onUpdate,
 }: {
-  loansByUser: LoansByUser;
-  userID: number | string;
-  onUpdate: () => Promise<void>;
+  loansByUser: LoansByUser
+  userID: number | string
+  onUpdate: () => Promise<void>
 }) {
-  const entries = Object.entries(loansByUser);
+  const entries = Object.entries(loansByUser)
 
   if (!entries.length) {
     return (
@@ -363,7 +395,7 @@ export function LoanCollapsibleList({
           Issued loans will appear here.
         </p>
       </div>
-    );
+    )
   }
 
   return (
@@ -372,12 +404,12 @@ export function LoanCollapsibleList({
         const userTotal = userData.loans.reduce(
           (sum, loan) => sum + Number(loan.loan_amount || 0),
           0
-        );
+        )
 
         const userRemaining = userData.loans.reduce(
           (sum, loan) => sum + Number(loan.remaining_amount || 0),
           0
-        );
+        )
 
         return (
           <Collapsible
@@ -421,10 +453,10 @@ export function LoanCollapsibleList({
               </div>
             </CollapsibleContent>
           </Collapsible>
-        );
+        )
       })}
     </div>
-  );
+  )
 }
 
 function LoanCard({
@@ -432,9 +464,9 @@ function LoanCard({
   userID,
   onUpdate,
 }: {
-  loan: Loan;
-  userID: number | string;
-  onUpdate: () => Promise<void>;
+  loan: Loan
+  userID: number | string
+  onUpdate: () => Promise<void>
 }) {
   return (
     <div className="rounded-xl border bg-background p-4">
@@ -448,7 +480,11 @@ function LoanCard({
 
         <div className="flex flex-wrap gap-2 lg:justify-end">
           {loan.status === "active" && (
-            <LoanPaymentModal userID={userID} loan={loan} onSuccess={onUpdate} />
+            <LoanPaymentModal
+              userID={userID}
+              loan={loan}
+              onSuccess={onUpdate}
+            />
           )}
 
           <EditDescription loan={loan} onRefresh={onUpdate} />
@@ -457,26 +493,26 @@ function LoanCard({
 
       <PaymentHistory loan={loan} onUpdate={onUpdate} />
     </div>
-  );
+  )
 }
 
 function InfoBox({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="rounded-lg bg-muted/50 p-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
         {label}
       </p>
-      <p className="mt-1 break-words text-sm font-medium">{value}</p>
+      <p className="mt-1 text-sm font-medium break-words">{value}</p>
     </div>
-  );
+  )
 }
 
 function PaymentHistory({
   loan,
   onUpdate,
 }: {
-  loan: Loan;
-  onUpdate: () => Promise<void>;
+  loan: Loan
+  onUpdate: () => Promise<void>
 }) {
   return (
     <Collapsible className="group mt-4 rounded-lg border">
@@ -540,7 +576,7 @@ function PaymentHistory({
         </div>
       </CollapsibleContent>
     </Collapsible>
-  );
+  )
 }
 
 const EditPaymentLoan = ({
@@ -548,50 +584,46 @@ const EditPaymentLoan = ({
   user_id,
   onRefresh,
 }: {
-  p: LoanPayment;
-  user_id: number;
-  onRefresh: () => Promise<void>;
+  p: LoanPayment
+  user_id: number
+  onRefresh: () => Promise<void>
 }) => {
   const [selectedPayment, setSelectedPayment] = useState<LoanPayment | null>(
     null
-  );
-  const [loading, setLoading] = useState(false);
-  const { userID } = useUserDetail();
+  )
+  const [loading, setLoading] = useState(false)
+  const { userID } = useUserDetail()
 
   async function handleSave() {
-    if (!selectedPayment?.id) return;
+    if (!selectedPayment?.id) return
 
-    setLoading(true);
+    setLoading(true)
 
     try {
       const name = !p?.slip
         ? `/users/${user_id}/loans/payment_slip/${selectedPayment?.id}.png`
-        : p.slip;
+        : p.slip
 
       if (selectedPayment?.slip !== p?.slip) {
-        await UploadImage(selectedPayment?.slip, name, "image/png");
+        await UploadImage(selectedPayment?.slip, name, "image/png")
       }
 
       await axios.put(`/${userID}/loans/repayment`, {
         id: selectedPayment?.id,
         payment_date: selectedPayment?.payment_date,
         slip: name,
-      });
+      })
 
-      await onRefresh();
-      setSelectedPayment(null);
+      await onRefresh()
+      setSelectedPayment(null)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setSelectedPayment(p)}
-      >
+      <Button variant="ghost" size="icon" onClick={() => setSelectedPayment(p)}>
         <Edit className="h-4 w-4" />
       </Button>
 
@@ -601,86 +633,89 @@ const EditPaymentLoan = ({
       >
         <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
           <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
-            <DialogTitle className="text-sm font-semibold text-foreground">Edit Loan Payment</DialogTitle>
+            <DialogTitle className="text-sm font-semibold text-foreground">
+              Edit Loan Payment
+            </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="space-y-3 p-3.5 pb-4">
-          <FieldGroup>
-            <FieldLegend>Payment Information</FieldLegend>
+          <ScrollArea className="max-h-[calc(100dvh-132px)]">
+            <div className="space-y-3 p-3.5 pb-4">
+              <FieldGroup>
+                <FieldLegend>Payment Information</FieldLegend>
 
-            <Field>
-              <FieldLabel>Payment Slip</FieldLabel>
-              <Dropzone
-                value={selectedPayment?.slip ?? null}
-                onDrop={(file) => {
-                  setSelectedPayment((prev) => {
-                    if (!prev) return prev;
-                    return { ...prev, slip: file ?? "" };
-                  });
-                }}
-               
-              />
-            </Field>
+                <Field>
+                  <FieldLabel>Payment Slip</FieldLabel>
+                  <Dropzone
+                    value={selectedPayment?.slip ?? null}
+                    onDrop={(file) => {
+                      setSelectedPayment((prev) => {
+                        if (!prev) return prev
+                        return { ...prev, slip: file ?? "" }
+                      })
+                    }}
+                  />
+                </Field>
 
-            <Field>
-              <FieldLabel>Date</FieldLabel>
-              <AppCalendar
-                date={selectedPayment?.payment_date}
-                onChange={(date) => {
-                  setSelectedPayment((prev) => {
-                    if (!prev) return prev;
-                    return { ...prev, payment_date: date };
-                  });
-                }}
-              />
-            </Field>
-          </FieldGroup>
+                <Field>
+                  <FieldLabel>Date</FieldLabel>
+                  <AppCalendar
+                    date={selectedPayment?.payment_date}
+                    onChange={(date) => {
+                      setSelectedPayment((prev) => {
+                        if (!prev) return prev
+                        return { ...prev, payment_date: date }
+                      })
+                    }}
+                  />
+                </Field>
+              </FieldGroup>
 
-          <div className="flex justify-end">
-            <Button
-              onClick={handleSave}
-              disabled={
-                !selectedPayment?.payment_date ||
-                loading ||
-                !selectedPayment?.slip
-              }
-            >
-              {loading && <Spinner />}
-              Save
-            </Button>
-          </div>
-          </div></ScrollArea>
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleSave}
+                  disabled={
+                    !selectedPayment?.payment_date ||
+                    loading ||
+                    !selectedPayment?.slip
+                  }
+                >
+                  {loading && <Spinner />}
+                  Save
+                </Button>
+              </div>
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </>
-  );
-};
+  )
+}
 
 const EditDescription = ({
   loan,
   onRefresh,
 }: {
-  loan: Loan;
-  onRefresh: () => Promise<void>;
+  loan: Loan
+  onRefresh: () => Promise<void>
 }) => {
-  const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
-  const [loading, setLoading] = useState(false);
-  const { userID } = useUserDetail();
+  const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null)
+  const [loading, setLoading] = useState(false)
+  const { userID } = useUserDetail()
 
   async function handleSave() {
-    if (!selectedLoan?.id) return;
+    if (!selectedLoan?.id) return
 
-    setLoading(true);
+    setLoading(true)
 
     try {
       await axios.put(`/${userID}/loans`, {
         id: selectedLoan?.id,
         description: selectedLoan?.description,
-      });
+      })
 
-      await onRefresh();
-      setSelectedLoan(null);
+      await onRefresh()
+      setSelectedLoan(null)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
@@ -691,45 +726,46 @@ const EditDescription = ({
         Edit Description
       </Button>
 
-      <Dialog
-        open={!!selectedLoan}
-        onOpenChange={() => setSelectedLoan(null)}
-      >
+      <Dialog open={!!selectedLoan} onOpenChange={() => setSelectedLoan(null)}>
         <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
           <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
-            <DialogTitle className="text-sm font-semibold text-foreground">Edit Loan Description</DialogTitle>
+            <DialogTitle className="text-sm font-semibold text-foreground">
+              Edit Loan Description
+            </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="space-y-3 p-3.5 pb-4">
-          <FieldGroup>
-            <FieldLegend>Description</FieldLegend>
+          <ScrollArea className="max-h-[calc(100dvh-132px)]">
+            <div className="space-y-3 p-3.5 pb-4">
+              <FieldGroup>
+                <FieldLegend>Description</FieldLegend>
 
-            <Field>
-              <FieldLabel>Loan Description</FieldLabel>
-              <Textarea
-                value={selectedLoan?.description ?? ""}
-                placeholder="Enter loan description"
-                onChange={(e) => {
-                  setSelectedLoan((prev) => {
-                    if (!prev) return prev;
-                    return { ...prev, description: e.target.value };
-                  });
-                }}
-              />
-            </Field>
-          </FieldGroup>
+                <Field>
+                  <FieldLabel>Loan Description</FieldLabel>
+                  <Textarea
+                    value={selectedLoan?.description ?? ""}
+                    placeholder="Enter loan description"
+                    onChange={(e) => {
+                      setSelectedLoan((prev) => {
+                        if (!prev) return prev
+                        return { ...prev, description: e.target.value }
+                      })
+                    }}
+                  />
+                </Field>
+              </FieldGroup>
 
-          <div className="flex justify-end">
-            <Button
-              onClick={handleSave}
-              disabled={!selectedLoan?.description || loading}
-            >
-              {loading && <Spinner />}
-              Save
-            </Button>
-          </div>
-          </div></ScrollArea>
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleSave}
+                  disabled={!selectedLoan?.description || loading}
+                >
+                  {loading && <Spinner />}
+                  Save
+                </Button>
+              </div>
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </>
-  );
-};
+  )
+}

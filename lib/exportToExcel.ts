@@ -1,7 +1,7 @@
-import { storage } from "@/config/firebase";
-import { saveAs } from "file-saver";
-import { getDownloadURL, ref } from "firebase/storage";
-import axios from "./axios";
+import { storage } from "@/config/firebase"
+import { saveAs } from "file-saver"
+import { getDownloadURL, ref } from "firebase/storage"
+import axios from "./axios"
 
 const exportToExcel = async (
   headers: unknown[],
@@ -13,47 +13,46 @@ const exportToExcel = async (
   userID: string | number | null = null
 ) => {
   if (!data || data.length === 0) {
-    throw new Error("No data available to export");
+    throw new Error("No data available to export")
   }
 
   if (!userID) {
-    throw new Error("User is missing");
+    throw new Error("User is missing")
   }
 
-  const worksheetData = [headers];
+  const worksheetData = [headers]
 
   if (image) {
     for (const row of data) {
-      const newRow = [...row];
-      const refImage = row[4];
+      const newRow = [...row]
+      const refImage = row[4]
 
       if (refImage) {
         try {
-          const starsRef = ref(storage, `${baseStorage}/${refImage}`);
-          const url = await getDownloadURL(starsRef);
-          newRow[4] = `=IMAGE("${url}", "", 0)`;
+          const starsRef = ref(storage, `${baseStorage}/${refImage}`)
+          const url = await getDownloadURL(starsRef)
+          newRow[4] = `=IMAGE("${url}", "", 0)`
         } catch (err) {
-          console.error(`Failed to load image for ${refImage}:`, err);
-          newRow[4] = "Image not available";
+          console.error(`Failed to load image for ${refImage}:`, err)
+          newRow[4] = "Image not available"
         }
       } else {
-        newRow[4] = "Image not available";
+        newRow[4] = "Image not available"
       }
 
-      worksheetData.push(newRow);
+      worksheetData.push(newRow)
     }
   } else {
     for (const row of data) {
-      worksheetData.push(row);
+      worksheetData.push(row)
     }
   }
 
   try {
-
     const PDFData = {
       worksheetData,
       formatBuyingPrice,
-      fileName
+      fileName,
     }
 
     const pdfRes = await axios.post(
@@ -65,21 +64,20 @@ const exportToExcel = async (
         headers: {
           "Content-Type": "application/json",
         },
-      },
-    );
+      }
+    )
 
     const blob = new Blob([pdfRes.data], {
       type: "application/pdf",
-    });
+    })
 
-
-    saveAs(blob, fileName);
+    saveAs(blob, fileName)
   } catch (error) {
-    console.error("Failed to generate or download Excel:", error);
+    console.error("Failed to generate or download Excel:", error)
     throw error instanceof Error
       ? error
-      : new Error("Failed to generate Excel file");
+      : new Error("Failed to generate Excel file")
   }
-};
+}
 
-export default exportToExcel;
+export default exportToExcel

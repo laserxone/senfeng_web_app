@@ -1,11 +1,9 @@
-import pool from "@/config/db";
-import { NextRequest, NextResponse } from "next/server";
-
+import pool from "@/config/db"
+import { NextRequest, NextResponse } from "next/server"
 
 export async function GET() {
-
-    try {
-        const result = await pool.query(`
+  try {
+    const result = await pool.query(`
      SELECT 
   s.id AS sale_id,
   s.customer_id,
@@ -37,54 +35,56 @@ AND NOT EXISTS (
   WHERE cm.machine_id = s.id
 )
 ORDER BY s.contract_date DESC;
-    `);
+    `)
 
-        const groupedData = groupByCustomer(result.rows);
+    const groupedData = groupByCustomer(result.rows)
 
-        return NextResponse.json(groupedData, { status: 200 });
-    } catch (error:any) {
-        console.error("GET error:", error);
-        return NextResponse.json(
-            { message: error.message || "Internal Server Error" },
-            { status: 500 }
-        );
-    }
-
+    return NextResponse.json(groupedData, { status: 200 })
+  } catch (error: any) {
+    console.error("GET error:", error)
+    return NextResponse.json(
+      { message: error.message || "Internal Server Error" },
+      { status: 500 }
+    )
+  }
 }
 
-export async function POST(req:NextRequest) {
+export async function POST(req: NextRequest) {
+  try {
+    const data = await req.json()
 
-    try {
-        const data = await req.json();
+    if (!data || Object.keys(data).length === 0) {
+      return NextResponse.json(
+        { message: "No data provided for insertion" },
+        { status: 400 }
+      )
+    }
 
-        if (!data || Object.keys(data).length === 0) {
-            return NextResponse.json({ message: "No data provided for insertion" }, { status: 400 });
-        }
+    const fields = Object.keys(data)
+    const values = Object.values(data)
+    const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ")
 
-        const fields = Object.keys(data);
-        const values = Object.values(data);
-        const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
-
-        const query = `
+    const query = `
         INSERT INTO commissions (${fields.join(", ")})
         VALUES (${placeholders})
-    `;
+    `
 
-        await pool.query(query, values);
+    await pool.query(query, values)
 
-        return NextResponse.json({
-            message: "Data added successfully",
-        }, { status: 200 });
-
-    } catch (error) {
-        console.error('Error inserting data: ', error);
-        return NextResponse.json({ message: 'Error adding Data' }, { status: 500 })
-    }
+    return NextResponse.json(
+      {
+        message: "Data added successfully",
+      },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error("Error inserting data: ", error)
+    return NextResponse.json({ message: "Error adding Data" }, { status: 500 })
+  }
 }
 
-
-function groupByCustomer(rows:any[]) {
-  const customerMap = new Map();
+function groupByCustomer(rows: any[]) {
+  const customerMap = new Map()
 
   for (const row of rows) {
     const {
@@ -105,7 +105,7 @@ function groupByCustomer(rows:any[]) {
       speed_money,
       speed_money_note,
       speed_money_amount,
-    } = row;
+    } = row
 
     // Initialize customer if not already added
     if (!customerMap.has(customer_id)) {
@@ -116,15 +116,15 @@ function groupByCustomer(rows:any[]) {
         customer_owner_name,
         customer_number,
         machines: [],
-      });
+      })
     }
 
-    const customer = customerMap.get(customer_id);
+    const customer = customerMap.get(customer_id)
 
     // Prevent duplicate machine (sale_id)
     const machineExists = customer.machines.some(
-      (m:any) => m.sale_id === sale_id
-    );
+      (m: any) => m.sale_id === sale_id
+    )
 
     if (!machineExists) {
       customer.machines.push({
@@ -140,22 +140,20 @@ function groupByCustomer(rows:any[]) {
         speed_money,
         speed_money_note,
         speed_money_amount,
-      });
+      })
     }
   }
 
   // Sort machines by contract_date ascending
   for (const customer of customerMap.values()) {
     customer.machines.sort(
-  (a: any, b: any) =>
-    new Date(a.contract_date).getTime() -
-    new Date(b.contract_date).getTime()
-);
+      (a: any, b: any) =>
+        new Date(a.contract_date).getTime() -
+        new Date(b.contract_date).getTime()
+    )
   }
 
-  return Array.from(customerMap.values());
+  return Array.from(customerMap.values())
 }
-
-
 
 export const revalidate = 0

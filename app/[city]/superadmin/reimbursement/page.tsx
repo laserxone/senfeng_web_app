@@ -1,5 +1,5 @@
-"use client";
-import { Button } from "@/components/ui/button";
+"use client"
+import { Button } from "@/components/ui/button"
 import {
   ArrowUpDown,
   Banknote,
@@ -13,50 +13,50 @@ import {
   ShieldCheck,
   Trash,
   UserRound,
-  WalletCards
-} from "lucide-react";
-import {
-  useCallback,
-  useEffect,
-  useState
-} from "react";
+  WalletCards,
+} from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
 
-import AddReimbursementDialog from "@/components/features/reimbursements/add-reimbursement";
-import FilterSheet from "@/components/features/users/filter-sheet";
-import CurrencyFormatter from "@/components/shared/common/currency-formatter";
-import { MyImgZooming } from "@/components/shared/media/img-zooming";
-import PageTable from "@/components/shared/tables/app-table";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import AddReimbursementDialog from "@/components/features/reimbursements/add-reimbursement"
+import FilterSheet from "@/components/features/users/filter-sheet"
+import CurrencyFormatter from "@/components/shared/common/currency-formatter"
+import { MyImgZooming } from "@/components/shared/media/img-zooming"
+import PageTable from "@/components/shared/tables/app-table"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { TIMEZONE } from "@/constants/data";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import exportToExcel from "@/lib/exportToExcel";
-import { UserReimbursementType } from "@/lib/types";
-import { ColumnDef } from "@tanstack/react-table";
-import moment from "moment";
-import momentT from "moment-timezone";
-import Link from "next/link";
-import Spinner from "@/components/ui/spinner";
+} from "@/components/ui/sheet"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { TIMEZONE } from "@/constants/data"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import exportToExcel from "@/lib/exportToExcel"
+import { UserReimbursementType } from "@/lib/types"
+import { ColumnDef } from "@tanstack/react-table"
+import moment from "moment"
+import momentT from "moment-timezone"
+import Link from "next/link"
+import Spinner from "@/components/ui/spinner"
 
 export default function Page() {
-  const [filterVisible, setFilterVisible] = useState(false);
-  const [data, setData] = useState<UserReimbursementType[]>([]);
-  const [imageURL, setImageURL] = useState<UserReimbursementType | null>(null);
-  const [visible, setVisible] = useState(false);
-  const [reimbursementVisible, setReimbursementVisible] = useState(false);
-  const [total, setTotal] = useState(0);
-  const { base_route, userID } = useUserDetail();
-  const [resetLoading, setResetLoading] = useState(false);
-  const [loading, setLoading] = useState(true);
-    const [selectedItem, setSelectedItem] = useState<number | null>(null)
-    const [deleteItem, setDeleteItem] = useState<number | null>(null)
+  const [filterVisible, setFilterVisible] = useState(false)
+  const [data, setData] = useState<UserReimbursementType[]>([])
+  const [imageURL, setImageURL] = useState<UserReimbursementType | null>(null)
+  const [visible, setVisible] = useState(false)
+  const [reimbursementVisible, setReimbursementVisible] = useState(false)
+  const [total, setTotal] = useState(0)
+  const { base_route, userID } = useUserDetail()
+  const [resetLoading, setResetLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [selectedItem, setSelectedItem] = useState<number | null>(null)
+  const [deleteItem, setDeleteItem] = useState<number | null>(null)
 
   useEffect(() => {
     if (userID) {
@@ -65,36 +65,41 @@ export default function Page() {
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString();
+        .toISOString()
       const endDate = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString();
-      fetchData(startDate, endDate);
+        .toISOString()
+      fetchData(startDate, endDate)
     }
-  }, [userID]);
+  }, [userID])
 
-  async function fetchData(startDate: string, endDate: string, user: null | number = null) {
+  async function fetchData(
+    startDate: string,
+    endDate: string,
+    user: null | number = null
+  ) {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${user || ""
-          }`,
+          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${
+            user || ""
+          }`
         )
         .then((response) => {
-          setData(response.data);
-          resolve(true);
+          setData(response.data)
+          resolve(true)
         })
         .catch((e) => {
-          console.log(e);
-          reject(null);
+          console.log(e)
+          reject(null)
         })
         .finally(() => {
-          setLoading(false);
-        });
-    });
+          setLoading(false)
+        })
+    })
   }
 
   const columns: ColumnDef<UserReimbursementType>[] = [
@@ -110,36 +115,34 @@ export default function Page() {
             Date
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-
           {row.original?.verified ? (
-
             <Tooltip>
               <TooltipTrigger>
-
-                <ShieldCheck className="text-green-600 h-5 w-5" />
-
+                <ShieldCheck className="h-5 w-5 text-green-600" />
               </TooltipTrigger>
-              <TooltipContent className="bg-green-600 mr-2" arrowColor="bg-green-600 fill-green-600">
+              <TooltipContent
+                className="mr-2 bg-green-600"
+                arrowColor="bg-green-600 fill-green-600"
+              >
                 <p className="text-white">verified</p>
               </TooltipContent>
             </Tooltip>
           ) : (
-
             <Tooltip>
               <TooltipTrigger>
-
-                <Info className="text-orange-600 h-5 w-5 animate-pulse-opacity mr-2" />
-
+                <Info className="animate-pulse-opacity mr-2 h-5 w-5 text-orange-600" />
               </TooltipTrigger>
-              <TooltipContent className="bg-orange-600" arrowColor="bg-orange-600 fill-orange-600">
+              <TooltipContent
+                className="bg-orange-600"
+                arrowColor="bg-orange-600 fill-orange-600"
+              >
                 <p className="text-white">Unverified</p>
               </TooltipContent>
             </Tooltip>
-
           )}
 
           <div>
@@ -163,10 +166,10 @@ export default function Page() {
             Purpose
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => {
-        return <div className="ml-2">{row.getValue("title")}</div>;
+        return <div className="ml-2">{row.getValue("title")}</div>
       },
     },
 
@@ -182,15 +185,16 @@ export default function Page() {
             Customer
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => {
-        const currentItem = row.original;
+        const currentItem = row.original
         if (currentItem.customer_id)
           return (
             <Link
-              href={`/${base_route}/${currentItem.customer_member ? "member" : "customer"
-                }/${currentItem.customer_id}`}
+              href={`/${base_route}/${
+                currentItem.customer_member ? "member" : "customer"
+              }/${currentItem.customer_id}`}
               target="blank"
               onClick={(e) => e.stopPropagation()}
             >
@@ -198,7 +202,7 @@ export default function Page() {
                 {row.getValue("customer")}
               </div>
             </Link>
-          );
+          )
       },
     },
 
@@ -214,12 +218,12 @@ export default function Page() {
             Manager
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => {
-        const currentItem = row.original;
+        const currentItem = row.original
         if (currentItem.ownership_id)
-          return <div className="ml-2">{row.getValue("ownership_name")}</div>;
+          return <div className="ml-2">{row.getValue("ownership_name")}</div>
       },
     },
 
@@ -235,7 +239,7 @@ export default function Page() {
             Submitted By
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => (
         <div className="ml-2">{row.getValue("submitted_by_name")}</div>
@@ -254,7 +258,7 @@ export default function Page() {
             City
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div className="ml-2">{row.getValue("city")}</div>,
     },
@@ -270,7 +274,7 @@ export default function Page() {
             Amount
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("amount")}</div>,
     },
@@ -287,124 +291,121 @@ export default function Page() {
             Description
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
 
-     {
-                id: "actions",
-                header: "Action",
-                cell: ({ row }) => {
-                    const currentItem = row.original;
-                    const isVerifying = selectedItem === currentItem?.id;
-                    const isDeleting = deleteItem === currentItem?.id;
-    
-                    return (
-                        <div className="inline-flex flex-col items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1 shadow-sm">
-                            <Button
-                                size="xs"
-                                variant="outline"
-                                className="border-emerald-500/25 bg-background px-2.5 text-emerald-700 shadow-none hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
-                                disabled={isVerifying || isDeleting}
-                                aria-label="Verify reimbursement"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleVerify(currentItem?.id);
-                                }}
-                            >
-                                {isVerifying ? (
-                                    <Spinner className="size-3" />
-                                ) : (
-                                    <CircleCheck className="size-3.5" />
-                                )}
-                                Verify
-                            </Button>
-    
-                            <Button
-                                size="xs"
-                                variant="destructive"
-                                className="px-2.5"
-                                disabled={isDeleting || isVerifying}
-                                aria-label="Delete reimbursement"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDelete(currentItem?.id);
-                                }}
-                            >
-                                {isDeleting ? (
-                                    <Spinner className="size-3" />
-                                ) : (
-                                    <Trash className="size-3.5" />
-                                )}
-                                Delete
-                            </Button>
-                        </div>
-                    );
-                },
-            },
+    {
+      id: "actions",
+      header: "Action",
+      cell: ({ row }) => {
+        const currentItem = row.original
+        const isVerifying = selectedItem === currentItem?.id
+        const isDeleting = deleteItem === currentItem?.id
 
-  ];
+        return (
+          <div className="inline-flex flex-col items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1 shadow-sm">
+            <Button
+              size="xs"
+              variant="outline"
+              className="border-emerald-500/25 bg-background px-2.5 text-emerald-700 shadow-none hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
+              disabled={isVerifying || isDeleting}
+              aria-label="Verify reimbursement"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleVerify(currentItem?.id)
+              }}
+            >
+              {isVerifying ? (
+                <Spinner className="size-3" />
+              ) : (
+                <CircleCheck className="size-3.5" />
+              )}
+              Verify
+            </Button>
 
+            <Button
+              size="xs"
+              variant="destructive"
+              className="px-2.5"
+              disabled={isDeleting || isVerifying}
+              aria-label="Delete reimbursement"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleDelete(currentItem?.id)
+              }}
+            >
+              {isDeleting ? (
+                <Spinner className="size-3" />
+              ) : (
+                <Trash className="size-3.5" />
+              )}
+              Delete
+            </Button>
+          </div>
+        )
+      },
+    },
+  ]
 
-    async function handleVerify(id: number) {
-          if (!id) return
-  
-          setSelectedItem(id)
-          try {
-              await axios.put(`/${userID}/reimbursement/${id}`, {
-                  verified: true
-              })
-              const startDate = momentT
-                  .tz(TIMEZONE)
-                  .startOf("month")
-                  .startOf("day")
-                  .utc()
-                  .toISOString();
-              const endDate = momentT
-                  .tz(TIMEZONE)
-                  .endOf("month")
-                  .endOf("day")
-                  .utc()
-                  .toISOString();
-              await fetchData(startDate, endDate);
-          } finally {
-              setSelectedItem(null)
-          }
-      }
-  
-      async function handleDelete(id: number) {
-          if (!id) return
-  
-          setDeleteItem(id)
-          try {
-              await axios.delete(`/${userID}/reimbursement/${id}`)
-              const startDate = momentT
-                  .tz(TIMEZONE)
-                  .startOf("month")
-                  .startOf("day")
-                  .utc()
-                  .toISOString();
-              const endDate = momentT
-                  .tz(TIMEZONE)
-                  .endOf("month")
-                  .endOf("day")
-                  .utc()
-                  .toISOString();
-              await fetchData(startDate, endDate);
-          } finally {
-              setDeleteItem(null)
-          }
-      }
-      
+  async function handleVerify(id: number) {
+    if (!id) return
+
+    setSelectedItem(id)
+    try {
+      await axios.put(`/${userID}/reimbursement/${id}`, {
+        verified: true,
+      })
+      const startDate = momentT
+        .tz(TIMEZONE)
+        .startOf("month")
+        .startOf("day")
+        .utc()
+        .toISOString()
+      const endDate = momentT
+        .tz(TIMEZONE)
+        .endOf("month")
+        .endOf("day")
+        .utc()
+        .toISOString()
+      await fetchData(startDate, endDate)
+    } finally {
+      setSelectedItem(null)
+    }
+  }
+
+  async function handleDelete(id: number) {
+    if (!id) return
+
+    setDeleteItem(id)
+    try {
+      await axios.delete(`/${userID}/reimbursement/${id}`)
+      const startDate = momentT
+        .tz(TIMEZONE)
+        .startOf("month")
+        .startOf("day")
+        .utc()
+        .toISOString()
+      const endDate = momentT
+        .tz(TIMEZONE)
+        .endOf("month")
+        .endOf("day")
+        .utc()
+        .toISOString()
+      await fetchData(startDate, endDate)
+    } finally {
+      setDeleteItem(null)
+    }
+  }
 
   useEffect(() => {
-    let localTotal = 0;
+    let localTotal = 0
     data.forEach((item) => {
-      localTotal = localTotal + Number(item.amount);
-    });
-    setTotal(localTotal);
-  }, [data]);
+      localTotal = localTotal + Number(item.amount)
+    })
+    setTotal(localTotal)
+  }, [data])
 
   return (
     <div className="flex flex-1 flex-col gap-5">
@@ -416,8 +417,12 @@ export default function Page() {
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Reimbursement</h1>
-                <span className="hidden rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold tracking-wide text-muted-foreground uppercase sm:inline-flex">Superadmin</span>
+                <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+                  Reimbursement
+                </h1>
+                <span className="hidden rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold tracking-wide text-muted-foreground uppercase sm:inline-flex">
+                  Superadmin
+                </span>
               </div>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 Manage reimbursement claims and receipt proofs.
@@ -425,10 +430,7 @@ export default function Page() {
             </div>
           </div>
 
-          <Button
-            size="sm"
-            onClick={() => setReimbursementVisible(true)}
-          >
+          <Button size="sm" onClick={() => setReimbursementVisible(true)}>
             <Plus />
             Add Remibursement
           </Button>
@@ -438,21 +440,29 @@ export default function Page() {
           <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
             <Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />
             <div className="flex min-w-0 items-baseline gap-2">
-              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Total amount</span>
-              <span className="truncate text-sm font-bold"><CurrencyFormatter amount={total} /></span>
+              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Total amount
+              </span>
+              <span className="truncate text-sm font-bold">
+                <CurrencyFormatter amount={total} />
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
             <ReceiptText className="size-4 text-violet-600 dark:text-violet-400" />
             <div className="flex items-baseline gap-2">
-              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Claims</span>
+              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Claims
+              </span>
               <span className="text-sm font-bold">{data.length}</span>
             </div>
           </div>
           <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
             <CalendarDays className="size-4 text-amber-600 dark:text-amber-400" />
             <div className="flex items-baseline gap-2">
-              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Period</span>
+              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Period
+              </span>
               <span className="text-sm font-bold">Monthly</span>
             </div>
           </div>
@@ -466,8 +476,8 @@ export default function Page() {
           columns={columns}
           data={data}
           onRowClick={(val) => {
-            setImageURL(val);
-            setVisible(true);
+            setImageURL(val)
+            setVisible(true)
           }}
           download
           filter
@@ -475,20 +485,20 @@ export default function Page() {
           resetLoading={resetLoading}
           onFilterPress={() => setFilterVisible(true)}
           onResetPress={async () => {
-            setResetLoading(true);
+            setResetLoading(true)
             const startDate = momentT
               .tz(TIMEZONE)
               .startOf("month")
               .startOf("day")
               .utc()
-              .toISOString();
+              .toISOString()
             const endDate = momentT
               .tz(TIMEZONE)
               .endOf("month")
               .endOf("day")
               .utc()
-              .toISOString();
-            await fetchData(startDate, endDate);
+              .toISOString()
+            await fetchData(startDate, endDate)
             setResetLoading(false)
           }}
         />
@@ -503,17 +513,16 @@ export default function Page() {
             .startOf("month")
             .startOf("day")
             .utc()
-            .toISOString();
+            .toISOString()
           const endDate = momentT
             .tz(TIMEZONE)
             .endOf("month")
             .endOf("day")
             .utc()
-            .toISOString();
-          await fetchData(startDate, endDate);
-          setReimbursementVisible(false);
+            .toISOString()
+          await fetchData(startDate, endDate)
+          setReimbursementVisible(false)
         }}
-
       />
 
       <FilterSheet
@@ -521,7 +530,7 @@ export default function Page() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(val.start, val.end, val.user);
+          await fetchData(val.start, val.end, val.user)
         }}
       />
       <ImageSheet
@@ -532,16 +541,14 @@ export default function Page() {
         submittedBy={imageURL?.submitted_by_name || null}
         id={imageURL?.id || null}
         onRefresh={async (id) => {
-          const tempData = [...data.filter((item) => item.id !== id)];
-          setData([...tempData]);
-          return true;
+          const tempData = [...data.filter((item) => item.id !== id)]
+          setData([...tempData])
+          return true
         }}
       />
-
-
     </div>
-  );
-} 
+  )
+}
 const ImageSheet = ({
   visible,
   onClose,
@@ -551,21 +558,20 @@ const ImageSheet = ({
   id,
   onRefresh,
 }: {
-  visible: boolean,
-  onClose: () => void,
-  img: string | null,
-  submittedBy: string | null,
-  description: string | null,
+  visible: boolean
+  onClose: () => void
+  img: string | null
+  submittedBy: string | null
+  description: string | null
   id: number | null
   onRefresh: (id: number) => void
 }) => {
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const { userID } = useUserDetail();
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const { userID } = useUserDetail()
 
   const handleClose = useCallback(() => {
-    onClose();
-  }, [onClose]);
-
+    onClose()
+  }, [onClose])
 
   async function handleDelete() {
     if (!id) return
@@ -574,8 +580,8 @@ const ImageSheet = ({
       await axios.delete(`/${userID}/reimbursement/${id}`)
       onRefresh(id)
     } finally {
-      setDeleteLoading(false);
-      handleClose();
+      setDeleteLoading(false)
+      handleClose()
     }
   }
 
@@ -608,7 +614,7 @@ const ImageSheet = ({
                   <p className="text-xs font-medium text-muted-foreground">
                     Submitted by
                   </p>
-                  <p className="mt-1 break-words text-sm font-semibold">
+                  <p className="mt-1 text-sm font-semibold break-words">
                     {submittedBy || "N/A"}
                   </p>
                 </div>
@@ -622,15 +628,13 @@ const ImageSheet = ({
                 </div>
                 <p className="font-semibold">Description</p>
               </div>
-              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
+              <p className="text-sm leading-relaxed break-words whitespace-pre-wrap text-muted-foreground">
                 {description || "No description available"}
               </p>
             </div>
 
             <div className="overflow-hidden rounded-2xl border bg-muted/15 p-3">
-
               <MyImgZooming img={img} />
-
             </div>
 
             <Button
@@ -640,9 +644,9 @@ const ImageSheet = ({
                 // e.stopPropagation()
                 // setSelectedCustomerId(currentItem?.id);
                 // setShowConfirmation(true);
-                if (!id) return;
-                setDeleteLoading(true);
-                handleDelete();
+                if (!id) return
+                setDeleteLoading(true)
+                handleDelete()
               }}
             >
               {deleteLoading ? (
@@ -656,5 +660,5 @@ const ImageSheet = ({
         </ScrollArea>
       </SheetContent>
     </Sheet>
-  );
-};
+  )
+}

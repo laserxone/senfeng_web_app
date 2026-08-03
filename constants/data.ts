@@ -1,12 +1,8 @@
 export const OwnerSidebarItems = [
-
   {
     title: "Overview",
     icon: "dashboard",
-    isActive: [
-      "dashboard",
-      "news"
-    ],
+    isActive: ["dashboard", "news"],
     items: [
       {
         title: "Dashboard",
@@ -22,7 +18,6 @@ export const OwnerSidebarItems = [
     ],
   },
 
-
   {
     title: "Customers",
     icon: "customer",
@@ -31,7 +26,7 @@ export const OwnerSidebarItems = [
       "member",
       "feedback",
       "transfer-customers",
-      "quotation"
+      "quotation",
     ],
     items: [
       {
@@ -62,15 +57,10 @@ export const OwnerSidebarItems = [
     ],
   },
 
-
   {
     title: "Engineering",
     icon: "performance",
-    isActive: [
-      "complaint",
-      "repairandmaintenance",
-      "engineerperformance",
-    ],
+    isActive: ["complaint", "repairandmaintenance", "engineerperformance"],
     items: [
       {
         title: "Complaints & Installations",
@@ -91,8 +81,6 @@ export const OwnerSidebarItems = [
     ],
   },
 
-
-
   {
     title: "Sales",
     icon: "sales",
@@ -102,7 +90,6 @@ export const OwnerSidebarItems = [
       "prices",
       "oldcommissions",
       "analytics",
-
     ],
     items: [
       {
@@ -130,13 +117,8 @@ export const OwnerSidebarItems = [
         url: "/analytics",
         shortcut: ["a", "n", "a"],
       },
-
-
-
-    ]
-
+    ],
   },
-
 
   {
     title: "Human Resources",
@@ -148,7 +130,7 @@ export const OwnerSidebarItems = [
       "careers",
       "applications",
       "task",
-      "map"
+      "map",
     ],
     items: [
       {
@@ -166,7 +148,6 @@ export const OwnerSidebarItems = [
         url: "/salary",
         shortcut: ["s", "a", "l"],
       },
-
 
       {
         title: "Careers",
@@ -196,15 +177,13 @@ export const OwnerSidebarItems = [
     title: "Finance",
     icon: "finance",
     isActive: [
-
       "expense",
       "paymentverification",
       "reimbursement",
       "fine",
-      "loans"
+      "loans",
     ],
     items: [
-
       {
         title: "Office Expenses",
         url: "/expense",
@@ -232,18 +211,13 @@ export const OwnerSidebarItems = [
         url: "/loans",
         shortcut: ["l", "o", "a"],
       },
-
     ],
   },
-
 
   {
     title: "POS & Orders",
     icon: "pos",
-    isActive: [
-      "pos",
-      "orders",
-    ],
+    isActive: ["pos", "orders"],
     items: [
       {
         title: "Point Of Sale",
@@ -276,7 +250,7 @@ export const OwnerSidebarItems = [
       "delivery/machinedelivery",
       "delivery/otherdelivery",
       "delivery/delivered",
-      "delivery/due-payments"
+      "delivery/due-payments",
     ],
     items: [
       {
@@ -299,19 +273,13 @@ export const OwnerSidebarItems = [
         url: "/delivery/delivered",
         shortcut: ["d", "e", "l"],
       },
-
     ],
   },
-
-
 
   {
     title: "Documents & Cloud",
     icon: "cloud",
-    isActive: [
-      "dms",
-      "cloud",
-    ],
+    isActive: ["dms", "cloud"],
     items: [
       {
         title: "Document Management",
@@ -326,15 +294,10 @@ export const OwnerSidebarItems = [
     ],
   },
 
-
   {
     title: "Administration",
     icon: "tools",
-    isActive: [
-      "configuration",
-      "manage-hierarchy",
-      "backend"
-    ],
+    isActive: ["configuration", "manage-hierarchy", "backend"],
     items: [
       {
         title: "Configuration",
@@ -361,8 +324,8 @@ export const OwnerSidebarItems = [
     shortcut: ["k", "h", "a", "t"],
 
     items: [],
-    group: "engineer"
-  }
+    group: "engineer",
+  },
 ]
 
 // export const ownerNavItems = [
@@ -386,7 +349,6 @@ export const OwnerSidebarItems = [
 //     title: "Customer",
 //     url: "#",
 //     icon: "customer",
-
 
 //     items: [
 //       {
@@ -490,7 +452,6 @@ export const OwnerSidebarItems = [
 //     url: "#",
 //     icon: "task",
 
-
 //     items: [
 //       {
 //         title: "Assign Task",
@@ -518,7 +479,7 @@ export const OwnerSidebarItems = [
 //   //   url: '/inventory',
 //   //   icon: 'inventory',
 //   //   shortcut: ['i', 'n', 'v'],
-//   //   
+//   //
 //   //   items: [] // No child items
 //   // },
 
@@ -552,7 +513,6 @@ export const OwnerSidebarItems = [
 //     url: "#",
 //     icon: "truck",
 
-
 //     items: [
 //       {
 //         title: "Machine Delivery",
@@ -579,7 +539,7 @@ export const Careers = {
   icon: "careers",
   shortcut: ["a", "p", "p"],
   items: [],
-  group: "hr"
+  group: "hr",
 }
 
 export const FinanceItem = {
@@ -589,8 +549,8 @@ export const FinanceItem = {
   shortcut: ["f", "i", "n", "a"],
 
   items: [],
-  group: "sales"
-};
+  group: "sales",
+}
 
 export const EngineersPerformance = {
   title: "Engineer's Performance",
@@ -599,8 +559,8 @@ export const EngineersPerformance = {
   shortcut: ["e", "n", "g", "i"],
 
   items: [],
-  group: "engineer"
-};
+  group: "engineer",
+}
 
 export const complaintItem = {
   title: "Complaint & Installation",
@@ -609,8 +569,8 @@ export const complaintItem = {
 
   shortcut: ["c", "o", "m", "p"],
   items: [],
-  group: "engineer"
-};
+  group: "engineer",
+}
 
 export const myCloud = {
   title: "My Cloud",
@@ -619,8 +579,8 @@ export const myCloud = {
   shortcut: ["c", "l", "o"],
 
   items: [],
-  group: "dms"
-};
+  group: "dms",
+}
 
 export const teamAttendance = {
   title: "Team Attendance",
@@ -629,8 +589,8 @@ export const teamAttendance = {
   shortcut: ["t", "a", "t"],
 
   items: [],
-  group: "hr"
-};
+  group: "hr",
+}
 
 export const ReimbursementApproval = {
   title: "Reimbursement Approval",
@@ -639,8 +599,8 @@ export const ReimbursementApproval = {
   shortcut: ["r", "i", "a"],
 
   items: [],
-  group: "finance"
-};
+  group: "finance",
+}
 
 export const employeeNavItems = [
   {
@@ -668,7 +628,7 @@ export const employeeNavItems = [
       "member",
       "feedback",
       "transfer-customers",
-      "quotation"
+      "quotation",
     ],
     items: [
       {
@@ -706,8 +666,7 @@ export const employeeNavItems = [
 
     items: [],
   },
-
-];
+]
 
 export const Commission = {
   title: "Commission",
@@ -715,7 +674,7 @@ export const Commission = {
   icon: "commission",
   shortcut: ["c", "o", "m"],
   items: [],
-  group: "sales"
+  group: "sales",
 }
 
 export const dealerNavItems = [
@@ -750,7 +709,7 @@ export const dealerNavItems = [
 
     items: [],
   },
-];
+]
 
 export const branchNavItem = {
   title: "Office Expense",
@@ -759,9 +718,8 @@ export const branchNavItem = {
   shortcut: ["o", "f", "f"],
 
   items: [],
-  group: "finance"
-};
-
+  group: "finance",
+}
 
 export const StoreNavItem = [
   {
@@ -793,7 +751,6 @@ export const StoreNavItem = [
     url: "#",
     icon: "truck",
 
-
     items: [
       {
         title: "Machine Delivery",
@@ -811,7 +768,6 @@ export const StoreNavItem = [
         title: "Delivered",
         shortcut: ["d", "e", "l"],
         url: "/delivery/delivered",
-
       },
     ],
   },
@@ -823,13 +779,12 @@ export const StoreNavItem = [
 
     items: [],
   },
-];
+]
 
 export const POSNavItemAdmin = {
   title: "Point Of Sale",
   url: "#",
   icon: "pos",
-
 
   items: [
     {
@@ -848,7 +803,7 @@ export const POSNavItemAdmin = {
       url: "/gatepass",
     },
   ],
-};
+}
 
 export const POSNavItem = {
   title: "Point Of Sale",
@@ -856,8 +811,8 @@ export const POSNavItem = {
   icon: "pos",
   shortcut: ["p", "o", "s"],
   items: [],
-  group: "pos"
-};
+  group: "pos",
+}
 
 export const BackupNavItem = {
   title: "Backup Parts",
@@ -865,15 +820,13 @@ export const BackupNavItem = {
   icon: "pos",
   shortcut: ["b", "a", "c"],
   items: [],
-  group: "pos"
-};
-
+  group: "pos",
+}
 
 export const Tools = {
   title: "Tools",
   url: "#",
   icon: "tools",
-
 
   items: [
     {
@@ -885,31 +838,26 @@ export const Tools = {
       title: "Transfer Customers",
       shortcut: ["t", "r", "a"],
       url: "/transfer-customers",
-
     },
     {
       title: "Old Commissions",
       shortcut: ["o", "l", "d"],
       url: "/oldcommissions",
-
     },
     {
       title: "Configuration",
       shortcut: ["o", "l", "d"],
       url: "/configuration",
-
     },
     {
       title: "Manage Hierarchy",
       shortcut: ["m", "a", "n"],
       url: "/manage-hierarchy",
-
     },
     {
       title: "Backend",
       shortcut: ["b", "a", "c"],
       url: "/backend",
-
     },
     // {
     //   title: 'Multiple TID',
@@ -929,7 +877,7 @@ export const Tools = {
     //   shortcut: ['l', 'o', 'g'],
     // },
   ],
-};
+}
 
 export const Prices = {
   title: "Prices",
@@ -938,8 +886,8 @@ export const Prices = {
   shortcut: ["p", "r", "i"],
 
   items: [],
-  group: "sales"
-};
+  group: "sales",
+}
 
 export const RepairAndMaintenance = {
   title: "Repair and Maintenance",
@@ -948,8 +896,8 @@ export const RepairAndMaintenance = {
   shortcut: ["r", "a", "m"],
 
   items: [],
-  group: "engineer"
-};
+  group: "engineer",
+}
 
 export const PakCities = [
   {
@@ -3598,7 +3546,7 @@ export const PakCities = [
     lat: "30.38244",
     lng: "67.72562",
   },
-];
+]
 
 export const CountriesList = [
   {
@@ -5089,17 +5037,17 @@ export const CountriesList = [
     code: "AX",
     num: "+35818",
   },
-];
+]
 
 // export const BASE_URL = "https://senfeng-web.vercel.app/api"
 // export const BASE_URL = "http://localhost:3001/api"
-export const BASE_URL = "/api";
+export const BASE_URL = "/api"
 
 export const Colors = {
   button: "#1d76a4",
-};
+}
 
-export const TIMEZONE = "Asia/Karachi";
+export const TIMEZONE = "Asia/Karachi"
 
 export const saleFields = [
   "price",
@@ -5114,7 +5062,7 @@ export const saleFields = [
   "handover_user_id",
   "installation_report",
   "handshake_images",
-];
+]
 
 export const partFields = [
   "price",
@@ -5126,7 +5074,7 @@ export const partFields = [
   "handover_user_id",
   "installation_report",
   "handshake_images",
-];
+]
 
 export const profileFields = [
   "name",
@@ -5143,4 +5091,4 @@ export const profileFields = [
   "platform",
   "other",
   "pin",
-];
+]

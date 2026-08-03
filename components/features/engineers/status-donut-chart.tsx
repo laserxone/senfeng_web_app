@@ -24,8 +24,12 @@ export function StatusDonutChart({ data }: StatusDonutChartProps) {
   return (
     <Card className="border border-border bg-card shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-foreground">By Status</CardTitle>
-        <p className="text-xs text-muted-foreground">Complaint status distribution</p>
+        <CardTitle className="text-base font-semibold text-foreground">
+          By Status
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Complaint status distribution
+        </p>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="h-[200px] w-full">
@@ -42,7 +46,10 @@ export function StatusDonutChart({ data }: StatusDonutChartProps) {
                 stroke="none"
               >
                 {chartData.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
                 ))}
               </Pie>
               <Tooltip
@@ -61,12 +68,14 @@ export function StatusDonutChart({ data }: StatusDonutChartProps) {
         <div className="flex flex-wrap justify-center gap-3 pt-2">
           {chartData.map((item, index) => (
             <div key={item.name} className="flex items-center gap-1.5">
-              <div 
-                className="h-2.5 w-2.5 rounded-full" 
+              <div
+                className="h-2.5 w-2.5 rounded-full"
                 style={{ backgroundColor: COLORS[index] }}
               />
               <span className="text-xs text-muted-foreground">{item.name}</span>
-              <span className="text-xs font-medium text-foreground">{item.value}</span>
+              <span className="text-xs font-medium text-foreground">
+                {item.value}
+              </span>
             </div>
           ))}
         </div>

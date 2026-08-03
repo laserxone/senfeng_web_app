@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import { RequiredStar } from "@/components/shared/common/RequiredStar";
-import { CustomerSearch } from "@/components/features/customers/components/customer-search";
-import { Button } from "@/components/ui/button";
+import { RequiredStar } from "@/components/shared/common/RequiredStar"
+import { CustomerSearch } from "@/components/features/customers/components/customer-search"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -10,38 +10,58 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import Spinner from "@/components/ui/spinner";
-import { UserSearch } from "@/components/shared/search/user-search";
-import axios from "@/lib/axios";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarDays, ListTodo } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
+} from "@/components/ui/dialog"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import Spinner from "@/components/ui/spinner"
+import { UserSearch } from "@/components/shared/search/user-search"
+import axios from "@/lib/axios"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { CalendarDays, ListTodo } from "lucide-react"
+import { useMemo, useState, type ReactNode } from "react"
+import { Controller, useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
 
-type AddTaskMode = "self" | "team";
+type AddTaskMode = "self" | "team"
 
 type AddTaskDialogProps = {
-
-  onRefresh: () => Promise<void>;
-  mode?: AddTaskMode;
-  user_id?: number | string;
-  assigned_by?: number | string;
-  title?: string;
+  onRefresh: () => Promise<void>
+  mode?: AddTaskMode
+  user_id?: number | string
+  assigned_by?: number | string
+  title?: string
   placeholder?: string
-  icon ?: boolean
-variant ?: "default" | "link" | "outline" | "secondary" | "ghost" | "destructive"
-size ?: "default" | "icon" | "xs" | "sm" | "lg" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined
-btnClassname ?: string
-children?: ReactNode
-};
+  icon?: boolean
+  variant?:
+    | "default"
+    | "link"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "destructive"
+  size?:
+    | "default"
+    | "icon"
+    | "xs"
+    | "sm"
+    | "lg"
+    | "icon-xs"
+    | "icon-sm"
+    | "icon-lg"
+    | null
+    | undefined
+  btnClassname?: string
+  children?: ReactNode
+}
 
 const defaultValues = {
   radio: "office" as const,
@@ -50,17 +70,21 @@ const defaultValues = {
   user: undefined,
   problem: "",
   solution: "",
-};
+}
 
 const TaskTypeRadio = ({
   onSelection,
   value,
 }: {
-  onSelection: (val: string) => void;
-  value: string;
+  onSelection: (val: string) => void
+  value: string
 }) => {
   return (
-    <RadioGroup defaultValue={value} onValueChange={onSelection} className="flex">
+    <RadioGroup
+      defaultValue={value}
+      onValueChange={onSelection}
+      className="flex"
+    >
       <div className="flex items-center space-x-2">
         <RadioGroupItem value="office" id="task-office" />
         <Label htmlFor="task-office">Office</Label>
@@ -70,24 +94,24 @@ const TaskTypeRadio = ({
         <Label htmlFor="task-client">Client</Label>
       </div>
     </RadioGroup>
-  );
-};
+  )
+}
 
 export default function AddTaskDialog({
-icon = false,
-variant="default",
-size="default",
-btnClassname = "",
-children,
+  icon = false,
+  variant = "default",
+  size = "default",
+  btnClassname = "",
+  children,
   onRefresh,
   mode = "self",
   user_id,
   title = "Add new task",
-  placeholder = "Add Task"
+  placeholder = "Add Task",
 }: AddTaskDialogProps) {
-  const [loading, setLoading] = useState(false);
-  const isTeamTask = mode === "team";
-  const creatorId = user_id;
+  const [loading, setLoading] = useState(false)
+  const isTeamTask = mode === "team"
+  const creatorId = user_id
   const [open, setOpen] = useState(false)
 
   const formSchema = useMemo(
@@ -109,7 +133,7 @@ children,
               path: ["user"],
               code: z.ZodIssueCode.custom,
               message: "User is required",
-            });
+            })
           }
 
           if (data.radio === "client" && !data.client) {
@@ -117,77 +141,77 @@ children,
               path: ["client"],
               code: z.ZodIssueCode.custom,
               message: "Client is required.",
-            });
+            })
 
             if (isTeamTask) {
               ctx.addIssue({
                 path: ["problem"],
                 code: z.ZodIssueCode.custom,
                 message: "Problem is required.",
-              });
+              })
 
               ctx.addIssue({
                 path: ["solution"],
                 code: z.ZodIssueCode.custom,
                 message: "Solution is required.",
-              });
+              })
             }
           }
         }),
     [isTeamTask]
-  );
+  )
 
-  type TaskFormValues = z.infer<typeof formSchema>;
+  type TaskFormValues = z.infer<typeof formSchema>
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
-  });
+  })
 
-  const { watch, reset, handleSubmit, control } = form;
-  const selectedRadio = watch("radio");
+  const { watch, reset, handleSubmit, control } = form
+  const selectedRadio = watch("radio")
 
   const onSubmit = (values: TaskFormValues) => {
-    if (!creatorId) return;
+    if (!creatorId) return
 
-    setLoading(true);
+    setLoading(true)
 
     const payload = isTeamTask
       ? {
-        task_name: values.task,
-        type: values.radio == "office" ? "Office Task" : "Client Task",
-        client: values.client,
-        status: "Assigned",
-        assigned_to: values.user,
-        assigned_by: creatorId,
-        problem: values.problem,
-        solution: values.solution,
-      }
+          task_name: values.task,
+          type: values.radio == "office" ? "Office Task" : "Client Task",
+          client: values.client,
+          status: "Assigned",
+          assigned_to: values.user,
+          assigned_by: creatorId,
+          problem: values.problem,
+          solution: values.solution,
+        }
       : {
-        task_name: values.task,
-        type: values.radio == "office" ? "Office Task" : "Client Visit",
-        client: values.client,
-        status: "Pending",
-        assigned_to: creatorId,
-      };
+          task_name: values.task,
+          type: values.radio == "office" ? "Office Task" : "Client Visit",
+          client: values.client,
+          status: "Pending",
+          assigned_to: creatorId,
+        }
 
     axios
       .post(isTeamTask ? `${creatorId}/task` : `/${creatorId}/task`, payload)
       .then(() => {
-        onRefresh();
-        handleClose(false);
-        toast.success("Task created successfully");
+        onRefresh()
+        handleClose(false)
+        toast.success("Task created successfully")
       })
       .finally(() => {
-        setLoading(false);
-      });
-  };
+        setLoading(false)
+      })
+  }
 
   function handleClose(val: boolean) {
-    setOpen(val);
+    setOpen(val)
 
     if (!val) {
-      reset(defaultValues);
+      reset(defaultValues)
     }
   }
 
@@ -202,155 +226,181 @@ children,
           </Button>
         </DialogTrigger>
       )}
-        <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-xl">
-          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
-                <ListTodo className="h-4 w-4" />
-              </span>
-              <div className="min-w-0">
-                <DialogTitle className="text-sm font-semibold text-foreground">{title}</DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground">
-                  Add the task details, assignment, and customer context.
-                </DialogDescription>
-              </div>
+      <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-xl">
+        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+              <ListTodo className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <DialogTitle className="text-sm font-semibold text-foreground">
+                {title}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Add the task details, assignment, and customer context.
+              </DialogDescription>
             </div>
-          </DialogHeader>
+          </div>
+        </DialogHeader>
 
-          <ScrollArea className="max-h-[calc(100dvh-132px)]">
-            <div className="p-3.5">
-              <form
-                onSubmit={handleSubmit(onSubmit, (e) => {
-                  console.log(e);
-                })}
-                className="space-y-3 [&_input]:h-9 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground"
-              >
-                <FieldGroup>
+        <ScrollArea className="max-h-[calc(100dvh-132px)]">
+          <div className="p-3.5">
+            <form
+              onSubmit={handleSubmit(onSubmit, (e) => {
+                console.log(e)
+              })}
+              className="space-y-3 [&_input]:h-9 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase"
+            >
+              <FieldGroup>
+                <Controller
+                  name="radio"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>
+                        Type <RequiredStar />
+                      </FieldLabel>
+
+                      <TaskTypeRadio
+                        value={field.value}
+                        onSelection={(val) => {
+                          field.onChange(val)
+                        }}
+                      />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="task"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>
+                        Task <RequiredStar />
+                      </FieldLabel>
+
+                      <Input placeholder="Enter task" {...field} />
+
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+
+                {isTeamTask && (
                   <Controller
-                    name="radio"
+                    name="user"
                     control={control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel>
-                          Type <RequiredStar />
+                          Select Employee <RequiredStar />
                         </FieldLabel>
 
-                        <TaskTypeRadio
+                        <UserSearch
                           value={field.value}
-                          onSelection={(val) => {
-                            field.onChange(val);
-                          }}
+                          onReturn={field.onChange}
                         />
 
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
                       </Field>
                     )}
                   />
+                )}
 
-                  <Controller
-                    name="task"
-                    control={control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>
-                          Task <RequiredStar />
-                        </FieldLabel>
-
-                        <Input placeholder="Enter task" {...field} />
-
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
-                  />
-
-                  {isTeamTask && (
+                {selectedRadio === "client" && (
+                  <>
                     <Controller
-                      name="user"
+                      name="client"
                       control={control}
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
                           <FieldLabel>
-                            Select Employee <RequiredStar />
+                            Client <RequiredStar />
                           </FieldLabel>
 
-                          <UserSearch value={field.value} onReturn={field.onChange} />
+                          <CustomerSearch
+                            value={field.value}
+                            onReturn={field.onChange}
+                          />
 
-                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
                         </Field>
                       )}
                     />
-                  )}
 
-                  {selectedRadio === "client" && (
-                    <>
-                      <Controller
-                        name="client"
-                        control={control}
-                        render={({ field, fieldState }) => (
-                          <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel>
-                              Client <RequiredStar />
-                            </FieldLabel>
+                    {isTeamTask && (
+                      <>
+                        <Controller
+                          name="problem"
+                          control={control}
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                              <FieldLabel>
+                                Problem <RequiredStar />
+                              </FieldLabel>
 
-                            <CustomerSearch value={field.value} onReturn={field.onChange} />
+                              <Input
+                                placeholder="Describe the problem"
+                                {...field}
+                              />
 
-                            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                          </Field>
-                        )}
-                      />
+                              {fieldState.invalid && (
+                                <FieldError errors={[fieldState.error]} />
+                              )}
+                            </Field>
+                          )}
+                        />
 
-                      {isTeamTask && (
-                        <>
-                          <Controller
-                            name="problem"
-                            control={control}
-                            render={({ field, fieldState }) => (
-                              <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel>
-                                  Problem <RequiredStar />
-                                </FieldLabel>
+                        <Controller
+                          name="solution"
+                          control={control}
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                              <FieldLabel>
+                                Solution <RequiredStar />
+                              </FieldLabel>
 
-                                <Input placeholder="Describe the problem" {...field} />
+                              <Input
+                                placeholder="Proposed solution"
+                                {...field}
+                              />
 
-                                {fieldState.invalid && (
-                                  <FieldError errors={[fieldState.error]} />
-                                )}
-                              </Field>
-                            )}
-                          />
+                              {fieldState.invalid && (
+                                <FieldError errors={[fieldState.error]} />
+                              )}
+                            </Field>
+                          )}
+                        />
+                      </>
+                    )}
+                  </>
+                )}
 
-                          <Controller
-                            name="solution"
-                            control={control}
-                            render={({ field, fieldState }) => (
-                              <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel>
-                                  Solution <RequiredStar />
-                                </FieldLabel>
-
-                                <Input placeholder="Proposed solution" {...field} />
-
-                                {fieldState.invalid && (
-                                  <FieldError errors={[fieldState.error]} />
-                                )}
-                              </Field>
-                            )}
-                          />
-                        </>
-                      )}
-                    </>
-                  )}
-
-                  <Button disabled={loading || !creatorId} className="h-9 w-full rounded-lg" type="submit">
-                    {loading && <Spinner />} Submit
-                  </Button>
-                </FieldGroup>
-              </form>
-            </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
-  );
+                <Button
+                  disabled={loading || !creatorId}
+                  className="h-9 w-full rounded-lg"
+                  type="submit"
+                >
+                  {loading && <Spinner />} Submit
+                </Button>
+              </FieldGroup>
+            </form>
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
-export { AddTaskDialog };
+export { AddTaskDialog }

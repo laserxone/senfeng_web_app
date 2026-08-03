@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import PageTable from "@/components/shared/tables/app-table";
-import { CustomerSearch } from "@/components/features/customers/components/customer-search";
-import { Button } from "@/components/ui/button";
+import PageTable from "@/components/shared/tables/app-table"
+import { CustomerSearch } from "@/components/features/customers/components/customer-search"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -10,47 +10,51 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import Heading from "@/components/ui/heading";
-import { Input } from "@/components/ui/input";
-import Spinner from "@/components/ui/spinner";
-import { UserSearch } from "@/components/shared/search/user-search";
-import FilterSheet from "@/components/features/users/filter-sheet";
-import { TIMEZONE } from "@/constants/data";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowUpDown, Filter, Trash2 } from "lucide-react";
-import moment from "moment";
-import momentT from "moment-timezone";
-import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import * as z from "zod";
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import Heading from "@/components/ui/heading"
+import { Input } from "@/components/ui/input"
+import Spinner from "@/components/ui/spinner"
+import { UserSearch } from "@/components/shared/search/user-search"
+import FilterSheet from "@/components/features/users/filter-sheet"
+import { TIMEZONE } from "@/constants/data"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { ArrowUpDown, Filter, Trash2 } from "lucide-react"
+import moment from "moment"
+import momentT from "moment-timezone"
+import { useEffect, useState } from "react"
+import { Controller, useForm } from "react-hook-form"
+import * as z from "zod"
 
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { TriggerFirebaseForFine } from "@/lib/triggerFirebase";
-import { toast } from "sonner";
-import { ColumnDef } from "@tanstack/react-table";
-import { UserFine, UserFines } from "@/lib/types";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
+import { TriggerFirebaseForFine } from "@/lib/triggerFirebase"
+import { toast } from "sonner"
+import { ColumnDef } from "@tanstack/react-table"
+import { UserFine, UserFines } from "@/lib/types"
 
 const formSchema = z.object({
   user_id: z.number({ error: "User is required." }),
   customer_id: z.number({ error: "Customer is required." }),
   amount: z.coerce.number<number>().min(0, "Amount is required"),
   reason: z.string().min(3, "Reason must be at least 3 characters"),
-});
+})
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof formSchema>
 
 export default function Page() {
-  const [open, setOpen] = useState(false);
-  const [data, setData] = useState<UserFines[]>([]);
-  const { userID } = useUserDetail();
-  const [loading, setLoading] = useState(false);
-  const [filterVisible, setFilterVisible] = useState(false);
-  const [selectedFine, setSelectedFine] = useState<number | null>(null);
-
+  const [open, setOpen] = useState(false)
+  const [data, setData] = useState<UserFines[]>([])
+  const { userID } = useUserDetail()
+  const [loading, setLoading] = useState(false)
+  const [filterVisible, setFilterVisible] = useState(false)
+  const [selectedFine, setSelectedFine] = useState<number | null>(null)
 
   useEffect(() => {
     if (userID) {
@@ -59,37 +63,42 @@ export default function Page() {
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString();
+        .toISOString()
       const endDate = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString();
-      fetchData(startDate, endDate);
+        .toISOString()
+      fetchData(startDate, endDate)
     }
-  }, [userID]);
+  }, [userID])
 
-  async function fetchData(startDate: string, endDate: string, user: number | null = null) {
-    setLoading(true);
+  async function fetchData(
+    startDate: string,
+    endDate: string,
+    user: number | null = null
+  ) {
+    setLoading(true)
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/${userID}/fine?start_date=${startDate}&end_date=${endDate}&user=${user || ""
+          `/${userID}/fine?start_date=${startDate}&end_date=${endDate}&user=${
+            user || ""
           }`
         )
         .then((response) => {
-          setData(response.data);
-          resolve(true);
+          setData(response.data)
+          resolve(true)
         })
         .catch((e) => {
-          console.log(e);
-          reject(null);
+          console.log(e)
+          reject(null)
         })
         .finally(() => {
-          setLoading(false);
-        });
-    });
+          setLoading(false)
+        })
+    })
   }
 
   async function handleRefresh() {
@@ -98,17 +107,17 @@ export default function Page() {
       .startOf("month")
       .startOf("day")
       .utc()
-      .toISOString();
+      .toISOString()
     const endDate = momentT
       .tz(TIMEZONE)
       .endOf("month")
       .endOf("day")
       .utc()
-      .toISOString();
-    await fetchData(startDate, endDate);
+      .toISOString()
+    await fetchData(startDate, endDate)
   }
 
-  const columns : ColumnDef<UserFines>[] = [
+  const columns: ColumnDef<UserFines>[] = [
     {
       accessorKey: "created_at",
       filterFn: "includesString",
@@ -121,7 +130,7 @@ export default function Page() {
             Date
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => (
         <div>
@@ -144,7 +153,7 @@ export default function Page() {
             Employee
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("user_name")}</div>,
     },
@@ -160,7 +169,7 @@ export default function Page() {
             Customer
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("customer_name")}</div>,
     },
@@ -177,7 +186,7 @@ export default function Page() {
             Amount
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("amount")}</div>,
     },
@@ -194,7 +203,7 @@ export default function Page() {
             Reason
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("reason")}</div>,
     },
@@ -203,14 +212,14 @@ export default function Page() {
       id: "actions",
       header: "Action",
       cell: ({ row }) => {
-        const currentItem = row.original;
+        const currentItem = row.original
 
         return (
           <Button
             variant="ghost"
             onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(currentItem?.id);
+              e.stopPropagation()
+              handleDelete(currentItem?.id)
             }}
           >
             {selectedFine ? (
@@ -219,39 +228,43 @@ export default function Page() {
               <Trash2 className="h-5 w-5 text-red-500" size={16} />
             )}
           </Button>
-        );
+        )
       },
     },
   ]
 
   async function handleDelete(id?: number) {
-    if (!id) return;
-    setSelectedFine(id);
+    if (!id) return
+    setSelectedFine(id)
     try {
-      const response = await axios.delete(`/${userID}/fine/${id}`);
+      const response = await axios.delete(`/${userID}/fine/${id}`)
       toast.success("Fine Deleted")
-      await handleRefresh();
+      await handleRefresh()
     } finally {
-      setSelectedFine(null);
+      setSelectedFine(null)
     }
   }
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
-        <Heading panel title="Fine" description="Manage fines to your eomplyes" />
+        <Heading
+          panel
+          title="Fine"
+          description="Manage fines to your eomplyes"
+        />
       </div>
 
       <PageTable
         loading={loading}
         columns={columns}
         data={data}
-        onRowClick={() => { }}
+        onRowClick={() => {}}
       >
         <Button
           onClick={() => setFilterVisible(true)}
           variant="ghost"
-          className="p-0 w-8"
+          className="w-8 p-0"
         >
           <Filter />
         </Button>
@@ -263,7 +276,7 @@ export default function Page() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(val.start, val.end, val.user);
+          await fetchData(val.start, val.end, val.user)
         }}
       />
 
@@ -274,11 +287,21 @@ export default function Page() {
         onRefresh={handleRefresh}
       />
     </div>
-  );
+  )
 }
 
-const AddFine = ({ open, setOpen, onRefresh, userID }: { open: boolean, setOpen: (val: boolean) => void, onRefresh: () => Promise<void>, userID: number |  string }) => {
-  const [loading, setLoading] = useState(false);
+const AddFine = ({
+  open,
+  setOpen,
+  onRefresh,
+  userID,
+}: {
+  open: boolean
+  setOpen: (val: boolean) => void
+  onRefresh: () => Promise<void>
+  userID: number | string
+}) => {
+  const [loading, setLoading] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -288,132 +311,129 @@ const AddFine = ({ open, setOpen, onRefresh, userID }: { open: boolean, setOpen:
       amount: 0,
       reason: "",
     },
-  });
+  })
 
   const onSubmit = (values: FormValues) => {
-    if (!userID) return;
+    if (!userID) return
 
-    setLoading(true);
+    setLoading(true)
     axios
       .post(`/${userID}/fine`, values)
       .then(async () => {
-        await onRefresh();
-        handleOpenChange(false);
+        await onRefresh()
+        handleOpenChange(false)
         TriggerFirebaseForFine(values?.user_id)
       })
       .catch((e) => {
-        console.log(e);
+        console.log(e)
       })
       .finally(() => {
-        setLoading(false);
-      });
-  };
+        setLoading(false)
+      })
+  }
 
   const handleOpenChange = (val: boolean) => {
-    form.reset();
-    setOpen(val);
-  };
+    form.reset()
+    setOpen(val)
+  }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild></DialogTrigger>
       <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
         <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
-          <DialogTitle className="text-sm font-semibold text-foreground">Add Fine</DialogTitle>
+          <DialogTitle className="text-sm font-semibold text-foreground">
+            Add Fine
+          </DialogTitle>
           <DialogDescription>
             Fill in the details below to add a fine.
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[calc(100dvh-132px)]">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
-          <FieldGroup>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase"
+          >
+            <FieldGroup>
+              {/* User */}
+              <Controller
+                name="user_id"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>User</FieldLabel>
 
-            {/* User */}
-            <Controller
-              name="user_id"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>User</FieldLabel>
+                    <UserSearch value={field.value} onReturn={field.onChange} />
 
-                  <UserSearch
-                    value={field.value}
-                    onReturn={field.onChange}
-                  />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
 
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
+              {/* Customer */}
+              <Controller
+                name="customer_id"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Customer</FieldLabel>
 
-            {/* Customer */}
-            <Controller
-              name="customer_id"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>Customer</FieldLabel>
+                    <CustomerSearch
+                      value={field.value}
+                      onReturn={field.onChange}
+                    />
 
-                  <CustomerSearch
-                    value={field.value}
-                    onReturn={field.onChange}
-                  />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
 
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
+              {/* Amount */}
+              <Controller
+                name="amount"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Amount</FieldLabel>
 
-            {/* Amount */}
-            <Controller
-              name="amount"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>Amount</FieldLabel>
+                    <Input placeholder="Enter amount" {...field} />
 
-                  <Input
-                    placeholder="Enter amount"
-                    {...field}
-                  />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
 
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
+              {/* Reason */}
+              <Controller
+                name="reason"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Reason</FieldLabel>
 
-            {/* Reason */}
-            <Controller
-              name="reason"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>Reason</FieldLabel>
+                    <Input placeholder="Enter reason" {...field} />
 
-                  <Input placeholder="Enter reason" {...field} />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
 
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            {/* Submit */}
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading && <Spinner />} Submit
-            </Button>
-
-          </FieldGroup>
-        </form>
+              {/* Submit */}
+              <Button type="submit" disabled={loading} className="w-full">
+                {loading && <Spinner />} Submit
+              </Button>
+            </FieldGroup>
+          </form>
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}

@@ -1,23 +1,27 @@
-import pool from "@/config/db";
-import { NextRequest, NextResponse } from "next/server";
+import pool from "@/config/db"
+import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ uid: string }> }) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ uid: string }> }
+) {
+  const searchParams = req.nextUrl.searchParams
+  const start = searchParams.get("start")
+  const end = searchParams.get("end")
+  const { uid } = await params
 
-    const searchParams = req.nextUrl.searchParams
-    const start = searchParams.get("start")
-    const end = searchParams.get("end")
-    const { uid } = await params
+  try {
+    const queryParams = []
+    let query = ""
 
-    try {
+    const userQuery = await pool.query(
+      `SELECT complaint_assigned FROM users WHERE id = $1`,
+      [uid]
+    )
+    const user = userQuery.rows[0]
 
-        const queryParams = [];
-        let query = "";
-
-        const userQuery = await pool.query(`SELECT complaint_assigned FROM users WHERE id = $1`, [uid]);
-        const user = userQuery.rows[0];
-
-        if (user.complaint_assigned) {
-            query = `
+    if (user.complaint_assigned) {
+      query = `
         SELECT 
           c.*,
           c.id AS complaint_id,
@@ -84,23 +88,25 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ uid:
         LEFT JOIN users engineer ON ca.engineer_id = engineer.id
         LEFT JOIN users assigned_by_user ON ca.assigned_by = assigned_by_user.id
         WHERE c.customer_id IS NOT NULL AND c.managing_office = 'karachi'
-      `;
+      `
 
-            if (start && end) {
-                const paramIndex = queryParams.length + 1;
-                query += ` AND c.created_at BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
-                queryParams.push(start, end);
-            }
+      if (start && end) {
+        const paramIndex = queryParams.length + 1
+        query += ` AND c.created_at BETWEEN $${paramIndex} AND $${paramIndex + 1}`
+        queryParams.push(start, end)
+      }
 
-            query += ` ORDER BY c.created_at DESC`;
-        } else {
-            return NextResponse.json([])
-        }
-        const result = await pool.query(query, queryParams);
-        return NextResponse.json(result.rows, { status: 200 });
-    } catch (error: any) {
-        console.log(error)
-        return NextResponse.json({ message: error?.message || "Server error" }, { status: 500 })
+      query += ` ORDER BY c.created_at DESC`
+    } else {
+      return NextResponse.json([])
     }
-
+    const result = await pool.query(query, queryParams)
+    return NextResponse.json(result.rows, { status: 200 })
+  } catch (error: any) {
+    console.log(error)
+    return NextResponse.json(
+      { message: error?.message || "Server error" },
+      { status: 500 }
+    )
+  }
 }

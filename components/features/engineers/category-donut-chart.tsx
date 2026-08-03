@@ -21,7 +21,9 @@ export function CategoryDonutChart({ data }: CategoryDonutChartProps) {
   return (
     <Card className="border border-border bg-card shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-foreground">Categories</CardTitle>
+        <CardTitle className="text-base font-semibold text-foreground">
+          Categories
+        </CardTitle>
         <p className="text-xs text-muted-foreground">Complaints by type</p>
       </CardHeader>
       <CardContent className="pt-0">
@@ -39,7 +41,10 @@ export function CategoryDonutChart({ data }: CategoryDonutChartProps) {
                 stroke="none"
               >
                 {chartData.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
                 ))}
               </Pie>
               <Tooltip
@@ -58,8 +63,8 @@ export function CategoryDonutChart({ data }: CategoryDonutChartProps) {
         <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 pt-2">
           {chartData.map((item, index) => (
             <div key={item.name} className="flex items-center gap-1.5">
-              <div 
-                className="h-2.5 w-2.5 rounded-full" 
+              <div
+                className="h-2.5 w-2.5 rounded-full"
                 style={{ backgroundColor: COLORS[index] }}
               />
               <span className="text-xs text-muted-foreground">{item.name}</span>

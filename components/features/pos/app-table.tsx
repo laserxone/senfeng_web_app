@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   flexRender,
@@ -7,19 +7,16 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table";
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-} from "lucide-react";
+} from "@tanstack/react-table"
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 import {
   DoubleArrowLeftIcon,
   DoubleArrowRightIcon,
-} from "@radix-ui/react-icons";
+} from "@radix-ui/react-icons"
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -27,16 +24,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { useEffect, useImperativeHandle, useRef, useState } from "react";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+} from "@/components/ui/table"
+import { useEffect, useImperativeHandle, useRef, useState } from "react"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 
 const PageTable = ({
   children,
@@ -48,33 +45,33 @@ const PageTable = ({
   searchName,
   ref,
   tableHeader,
-  disableInput = false
+  disableInput = false,
 }) => {
-  const [sorting, setSorting] = useState([]);
-  const [columnFilters, setColumnFilters] = useState([]);
-  const [columnVisibility, setColumnVisibility] = useState({});
-  const [rowSelection, setRowSelection] = useState({});
+  const [sorting, setSorting] = useState([])
+  const [columnFilters, setColumnFilters] = useState([])
+  const [columnVisibility, setColumnVisibility] = useState({})
+  const [rowSelection, setRowSelection] = useState({})
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const inputRef = useRef();
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const inputRef = useRef()
 
   const paginationState = {
     pageIndex: currentPage - 1,
     pageSize: pageSize,
-  };
+  }
 
-  const pageCount = Math.ceil(totalItems / pageSize);
+  const pageCount = Math.ceil(totalItems / pageSize)
 
   const handlePaginationChange = (updaterOrValue) => {
     const pagination =
       typeof updaterOrValue === "function"
         ? updaterOrValue(paginationState)
-        : updaterOrValue;
+        : updaterOrValue
 
-    setCurrentPage(pagination.pageIndex + 1);
-    setPageSize(pagination.pageSize);
-  };
+    setCurrentPage(pagination.pageIndex + 1)
+    setPageSize(pagination.pageSize)
+  }
 
   const table = useReactTable({
     data,
@@ -98,37 +95,32 @@ const PageTable = ({
     onPaginationChange: handlePaginationChange,
     // manualPagination: true,
     // manualFiltering: true
-  });
+  })
 
   // Expose the handleClear method to parent using useImperativeHandle
-  useImperativeHandle(
-    ref,
-    () => {
-      return {
-        handleClear() {
-          tableHeader.map((item) => {
-            table.getColumn(item.value?.toLowerCase())?.setFilterValue("");
-          });
-        },
-        handleLocalInput() {
-          table.getColumn('qty')?.setFilterValue("00");
-        },
-      };
-    },
-    []
-  );
+  useImperativeHandle(ref, () => {
+    return {
+      handleClear() {
+        tableHeader.map((item) => {
+          table.getColumn(item.value?.toLowerCase())?.setFilterValue("")
+        })
+      },
+      handleLocalInput() {
+        table.getColumn("qty")?.setFilterValue("00")
+      },
+    }
+  }, [])
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex w-full flex-wrap gap-4 items-center">
-        {
-          !disableInput &&
+      <div className="flex w-full flex-wrap items-center gap-4">
+        {!disableInput && (
           <Input
             ref={inputRef}
             placeholder={`${searchName}`}
             value={
               searchItem
-                ? table.getColumn(searchItem)?.getFilterValue() ?? ""
+                ? (table.getColumn(searchItem)?.getFilterValue() ?? "")
                 : ""
             }
             onChange={(event) =>
@@ -137,13 +129,13 @@ const PageTable = ({
             }
             className="w-[60vw] max-w-sm"
           />
-        }
+        )}
 
         {children}
       </div>
 
       <div className="relative flex flex-1 flex-col">
-        <div className="absolute bottom-0 left-0 right-0 top-0 flex overflow-scroll rounded-md border md:overflow-auto">
+        <div className="absolute top-0 right-0 bottom-0 left-0 flex overflow-scroll rounded-md border md:overflow-auto">
           <ScrollArea className="flex-1">
             <Table className="relative">
               <TableHeader>
@@ -215,13 +207,13 @@ const PageTable = ({
           </div>
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6 lg:gap-8">
             <div className="flex items-center space-x-2">
-              <p className="whitespace-nowrap text-sm font-medium">
+              <p className="text-sm font-medium whitespace-nowrap">
                 Rows per page
               </p>
               <Select
                 value={`${paginationState.pageSize}`}
                 onValueChange={(value) => {
-                  table.setPageSize(Number(value));
+                  table.setPageSize(Number(value))
                 }}
               >
                 <SelectTrigger className="h-8 w-[70px]">
@@ -289,7 +281,7 @@ const PageTable = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default PageTable;
+export default PageTable

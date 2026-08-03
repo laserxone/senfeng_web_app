@@ -20,5 +20,4 @@ function ThemeProvider({
   )
 }
 
-export default ThemeProvider 
-
+export default ThemeProvider

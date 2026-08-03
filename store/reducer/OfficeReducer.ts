@@ -1,19 +1,19 @@
-import { SET_OFFICE } from '../action/OfficeAction'
+import { SET_OFFICE } from "../action/OfficeAction"
 
 export interface OfficeState {
   value: {
-    data: string | null;
-  };
+    data: string | null
+  }
 }
 
 export interface SetOfficeAction {
-  type: typeof SET_OFFICE;
+  type: typeof SET_OFFICE
   payload: {
-    data: string | null;
-  };
+    data: string | null
+  }
 }
 
-export type OfficeAction = SetOfficeAction;
+export type OfficeAction = SetOfficeAction
 
 export const myOfficeReducer = (
   state: OfficeState,
@@ -27,10 +27,9 @@ export const myOfficeReducer = (
           ...state.value,
           data: action.payload.data,
         },
-      };
+      }
 
     default:
-      return state;
+      return state
   }
-};
-
+}

@@ -1,5 +1,5 @@
-import pool from "@/config/db";
-import { NextRequest, NextResponse } from "next/server";
+import pool from "@/config/db"
+import { NextRequest, NextResponse } from "next/server"
 
 // export async function POST(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
 //   const { from, vehicle_no, driver_name, manager, received_by, items } =
@@ -66,46 +66,49 @@ import { NextRequest, NextResponse } from "next/server";
 //   }
 // }
 
+export async function POST(req: NextRequest) {
+  try {
+    const data = await req.json()
 
-export async function POST(req:NextRequest) {
+    if (!data || Object.keys(data).length === 0) {
+      return NextResponse.json(
+        { message: "No data provided for insertion" },
+        { status: 400 }
+      )
+    }
 
-    try {
-        const data = await req.json()
+    const fields = Object.keys(data)
+    const values = Object.values(data)
+    const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ")
 
-        if (!data || Object.keys(data).length === 0) {
-            return NextResponse.json({ message: "No data provided for insertion" }, { status: 400 });
-        }
-
-        const fields = Object.keys(data);
-        const values = Object.values(data);
-        const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
-
-        const query = `
+    const query = `
         INSERT INTO outward_gatepass (${fields.join(", ")})
         VALUES (${placeholders})
         RETURNING *
-    `;
+    `
 
-        const result = await pool.query(query, values);
+    const result = await pool.query(query, values)
 
-        const id = result.rows?.[0]?.id
-        const created_at = result.rows?.[0]?.created_at
-        
+    const id = result.rows?.[0]?.id
+    const created_at = result.rows?.[0]?.created_at
 
-        return NextResponse.json({
-             id,
-             created_at
-        }, { status: 200 });
-
-    } catch (error:any) {
-        console.error('Error inserting data: ', error);
-        return NextResponse.json({ message: error?.message || 'Error adding payment' }, { status: 500 })
-    }
+    return NextResponse.json(
+      {
+        id,
+        created_at,
+      },
+      { status: 200 }
+    )
+  } catch (error: any) {
+    console.error("Error inserting data: ", error)
+    return NextResponse.json(
+      { message: error?.message || "Error adding payment" },
+      { status: 500 }
+    )
+  }
 }
 
-
 export async function GET() {
-
   try {
     const res = await pool.query(`
       SELECT 
@@ -115,9 +118,12 @@ export async function GET() {
       LEFT JOIN outward_gatepass o
         ON o.savedinvoice_id = s.id
         ORDER BY s.created_at DESC
-    `);
+    `)
     return NextResponse.json(res.rows)
   } catch (error: any) {
-    return NextResponse.json({ message: error?.message || "Server error" }, { status: 500 })
+    return NextResponse.json(
+      { message: error?.message || "Server error" },
+      { status: 500 }
+    )
   }
 }

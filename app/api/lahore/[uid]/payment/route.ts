@@ -1,102 +1,127 @@
-import pool from "@/config/db";
-import { NOTIFICATION_TYPES } from "@/constants/notifications";
-import { addLog } from "@/lib/addLog";
-import { generateLog } from "@/lib/generateLog";
-import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
-import { NextRequest, NextResponse } from "next/server";
-
-
+import pool from "@/config/db"
+import { NOTIFICATION_TYPES } from "@/constants/notifications"
+import { addLog } from "@/lib/addLog"
+import { generateLog } from "@/lib/generateLog"
+import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner"
+import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(req: NextRequest) {
+  try {
+    const data = await req.json()
 
-    try {
-        const data = await req.json();
+    if (!data || Object.keys(data).length === 0) {
+      return NextResponse.json(
+        { message: "No data provided for insertion" },
+        { status: 400 }
+      )
+    }
 
-        if (!data || Object.keys(data).length === 0) {
-            return NextResponse.json({ message: "No data provided for insertion" }, { status: 400 });
-        }
+    const fields = Object.keys(data)
+    const values = Object.values(data)
+    const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ")
 
-        const fields = Object.keys(data);
-        const values = Object.values(data);
-        const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
-
-        const query = `
+    const query = `
         INSERT INTO payment (${fields.join(", ")})
         VALUES (${placeholders})
         RETURNING *
-    `;
+    `
 
-        const result = await pool.query(query, values);
+    const result = await pool.query(query, values)
 
-        const customerResult = await pool.query(`
+    const customerResult = await pool.query(
+      `
             SELECT c.name AS customer_name, c.id AS customer_id
             FROM payment p
             JOIN sale s ON p.machine_id = s.id
             JOIN customer c ON s.customer_id = c.id
-            WHERE p.id = $1`, [result.rows[0].id])
+            WHERE p.id = $1`,
+      [result.rows[0].id]
+    )
 
-        sendNotificationToOwner(`New payment added for ${customerResult.rows[0].customer_name}`, `member/${customerResult.rows[0].customer_id}/${result.rows[0].machine_id}?mp=${result.rows[0]?.id}`, 'lahore', NOTIFICATION_TYPES.payment_added.category, NOTIFICATION_TYPES.payment_added.title)
+    sendNotificationToOwner(
+      `New payment added for ${customerResult.rows[0].customer_name}`,
+      `member/${customerResult.rows[0].customer_id}/${result.rows[0].machine_id}?mp=${result.rows[0]?.id}`,
+      "lahore",
+      NOTIFICATION_TYPES.payment_added.category,
+      NOTIFICATION_TYPES.payment_added.title
+    )
 
+    try {
+      const logMSG = generateLog(data, "New Payment added")
 
-        try {
-            const logMSG = generateLog(data, "New Payment added")
-
-            addLog({ text: logMSG, user_id: null, customer_id: null, sale_id: result.rows[0].machine_id, payment_id: result.rows[0].id })
-
-        } catch (error) {
-            console.log(error)
-        }
-
-        return NextResponse.json({
-            message: "Payment added successfully",
-        }, { status: 200 });
-
-    } catch (error: any) {
-        console.error('Error inserting data: ', error);
-        return NextResponse.json({ message: error?.message || 'Error adding payment' }, { status: 500 })
+      addLog({
+        text: logMSG,
+        user_id: null,
+        customer_id: null,
+        sale_id: result.rows[0].machine_id,
+        payment_id: result.rows[0].id,
+      })
+    } catch (error) {
+      console.log(error)
     }
+
+    return NextResponse.json(
+      {
+        message: "Payment added successfully",
+      },
+      { status: 200 }
+    )
+  } catch (error: any) {
+    console.error("Error inserting data: ", error)
+    return NextResponse.json(
+      { message: error?.message || "Error adding payment" },
+      { status: 500 }
+    )
+  }
 }
 
-
 export async function PUT(req: NextRequest) {
-    try {
-        const data = await req.json();
-        const { id, ...updates } = data;
+  try {
+    const data = await req.json()
+    const { id, ...updates } = data
 
-        if (!id) {
-            return NextResponse.json({ message: "ID is required" }, { status: 400 });
-        }
+    if (!id) {
+      return NextResponse.json({ message: "ID is required" }, { status: 400 })
+    }
 
-        const fields: string[] = [];
-        const values = [];
+    const fields: string[] = []
+    const values = []
 
-        Object.entries(updates).forEach(([key, value], index) => {
-            if (value !== undefined) {
-                fields.push(`${key} = $${index + 1}`);
-                values.push(value);
-            }
-        });
+    Object.entries(updates).forEach(([key, value], index) => {
+      if (value !== undefined) {
+        fields.push(`${key} = $${index + 1}`)
+        values.push(value)
+      }
+    })
 
-        if (fields.length === 0) {
-            return NextResponse.json({ message: "No valid data provided for update" }, { status: 400 });
-        }
+    if (fields.length === 0) {
+      return NextResponse.json(
+        { message: "No valid data provided for update" },
+        { status: 400 }
+      )
+    }
 
-        values.push(id); // Add ID as the last parameter for WHERE clause
-        const query = `
+    values.push(id) // Add ID as the last parameter for WHERE clause
+    const query = `
             UPDATE payment 
             SET ${fields.join(", ")}
             WHERE id = $${values.length}
-        `;
+        `
 
-        await pool.query(query, values);
+    await pool.query(query, values)
 
-        console.log("data updated successfully");
-        return NextResponse.json({ message: "Updated successfully" }, { status: 200 });
-    } catch (error) {
-        console.error("Error updating data:", error);
-        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
-    }
+    console.log("data updated successfully")
+    return NextResponse.json(
+      { message: "Updated successfully" },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error("Error updating data:", error)
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    )
+  }
 }
-
 
 export const revalidate = 0

@@ -1,5 +1,5 @@
-"use client";
-import useUserDetail from "@/hooks/use-user-detail";
+"use client"
+import useUserDetail from "@/hooks/use-user-detail"
 
 import {
   KBarAnimator,
@@ -7,27 +7,22 @@ import {
   KBarPositioner,
   KBarProvider,
   KBarSearch,
-} from "kbar";
-import { useRouter } from "next/navigation";
-import { ReactNode, useEffect, useMemo, useState } from "react";
-import RenderResults from "./render-result";
-import { NavItems } from "@/lib/types";
+} from "kbar"
+import { useRouter } from "next/navigation"
+import { ReactNode, useEffect, useMemo, useState } from "react"
+import RenderResults from "./render-result"
+import { NavItems } from "@/lib/types"
 
-export default function KBar({ children } : {children : ReactNode}) {
-  const router = useRouter();
-  
-  const { base_route, userID, nav_items : navItems } = useUserDetail();
+export default function KBar({ children }: { children: ReactNode }) {
+  const router = useRouter()
 
- 
+  const { base_route, userID, nav_items: navItems } = useUserDetail()
 
-  const navigateTo = (url : string) => {
+  const navigateTo = (url: string) => {
     if (userID) {
-
-      router.push(`/${base_route}/${url}`);
+      router.push(`/${base_route}/${url}`)
     }
-  };
-
-  
+  }
 
   const actions = useMemo(
     () =>
@@ -44,7 +39,7 @@ export default function KBar({ children } : {children : ReactNode}) {
                 subtitle: `Go to ${navItem.title}`,
                 perform: () => navigateTo(navItem.url),
               }
-            : null;
+            : null
 
         // Map child items into actions
         const childActions =
@@ -56,25 +51,25 @@ export default function KBar({ children } : {children : ReactNode}) {
             section: navItem.title,
             subtitle: `Go to ${childItem.title}`,
             perform: () => navigateTo(childItem.url),
-          })) ?? [];
+          })) ?? []
 
         // Return only valid actions (ignoring null base actions for containers)
-        return baseAction ? [baseAction, ...childActions] : childActions;
+        return baseAction ? [baseAction, ...childActions] : childActions
       }),
     [navItems]
-  );
+  )
 
   if (actions.length === 0) {
-    return <>{children}</>;
+    return <>{children}</>
   }
 
   return (
     <KBarProvider actions={actions}>
       <KBarComponent>{children}</KBarComponent>
     </KBarProvider>
-  );
+  )
 }
-const KBarComponent = ({ children } : {children :ReactNode}) => {
+const KBarComponent = ({ children }: { children: ReactNode }) => {
   return (
     <>
       <KBarPortal>
@@ -82,7 +77,7 @@ const KBarComponent = ({ children } : {children :ReactNode}) => {
           <KBarAnimator className="relative !mt-64 w-full max-w-[600px] !-translate-y-12 overflow-hidden rounded-lg border bg-background text-foreground shadow-lg">
             <div className="bg-background">
               <div className="border-x-0 border-b-2">
-                <KBarSearch className="w-full border-none bg-background px-6 py-4 text-lg outline-none focus:outline-none focus:ring-0 focus:ring-offset-0" />
+                <KBarSearch className="w-full border-none bg-background px-6 py-4 text-lg outline-none focus:ring-0 focus:ring-offset-0 focus:outline-none" />
               </div>
               <RenderResults />
             </div>
@@ -91,5 +86,5 @@ const KBarComponent = ({ children } : {children :ReactNode}) => {
       </KBarPortal>
       {children}
     </>
-  );
-};
+  )
+}

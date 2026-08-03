@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { useMemo, useState } from "react";
+import { useMemo, useState } from "react"
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 import {
   Select,
   SelectContent,
@@ -11,33 +11,33 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 
-type InsightType = "industry" | "city";
+type InsightType = "industry" | "city"
 
 type CustomerInsightItem = {
-  label?: string;
-  name?: string;
-  count?: number;
-  total?: number;
-};
+  label?: string
+  name?: string
+  count?: number
+  total?: number
+}
 
 type CustomerInsightsProps = {
-  cities?: CustomerInsightItem[];
-  industries?: CustomerInsightItem[];
-};
+  cities?: CustomerInsightItem[]
+  industries?: CustomerInsightItem[]
+}
 
 export function CustomerInsights({
   cities = [],
   industries = [],
 }: CustomerInsightsProps) {
-  const [type, setType] = useState<InsightType>("industry");
+  const [type, setType] = useState<InsightType>("industry")
 
-  const selectedItems = type === "industry" ? industries : cities;
+  const selectedItems = type === "industry" ? industries : cities
   const title =
     type === "industry"
       ? "Member Categories by Industries"
-      : "Member Categories by Cities";
+      : "Member Categories by Cities"
 
   const normalizedItems = useMemo(() => {
     return selectedItems
@@ -46,21 +46,27 @@ export function CustomerInsights({
         count: Number(item.count ?? item.total ?? 0),
       }))
       .filter((item) => item.count > 0)
-      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
-  }, [selectedItems]);
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+  }, [selectedItems])
 
-  const totalMembers = useMemo(() => getTotal(normalizedItems), [normalizedItems]);
-  const topItems = normalizedItems.slice(0, 5);
+  const totalMembers = useMemo(
+    () => getTotal(normalizedItems),
+    [normalizedItems]
+  )
+  const topItems = normalizedItems.slice(0, 5)
 
   return (
-    <Card className="h-full w-full overflow-hidden border border-slate-200/80 shadow-sm ring-1 ring-black/5 xl:h-[300px] p-0">
+    <Card className="h-full w-full overflow-hidden border border-slate-200/80 p-0 shadow-sm ring-1 ring-black/5 xl:h-[300px]">
       <CardContent className="flex h-full flex-col gap-3 p-4">
         <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
           <div>
             <p className="text-sm font-semibold sm:text-base">{title}</p>
             <p className="text-xs text-muted-foreground">Top 5 member groups</p>
           </div>
-          <Select value={type} onValueChange={(value) => setType(value as InsightType)}>
+          <Select
+            value={type}
+            onValueChange={(value) => setType(value as InsightType)}
+          >
             <SelectTrigger className="h-8 w-[130px] rounded-md text-xs">
               <SelectValue placeholder="Select view" />
             </SelectTrigger>
@@ -78,7 +84,7 @@ export function CustomerInsights({
             {topItems.map((item, index) => {
               const percent = totalMembers
                 ? Math.round((item.count / totalMembers) * 100)
-                : 0;
+                : 0
 
               return (
                 <div
@@ -102,7 +108,7 @@ export function CustomerInsights({
                     {percent}%
                   </p>
                 </div>
-              );
+              )
             })}
           </div>
         ) : (
@@ -121,11 +127,11 @@ export function CustomerInsights({
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 function getTotal(items: CustomerInsightItem[]) {
   return items.reduce((sum, item) => {
-    return sum + Number(item.count ?? item.total ?? 0);
-  }, 0);
+    return sum + Number(item.count ?? item.total ?? 0)
+  }, 0)
 }

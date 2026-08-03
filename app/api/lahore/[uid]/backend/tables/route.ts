@@ -1,4 +1,4 @@
-import pool from "@/config/db";
+import pool from "@/config/db"
 import { NextResponse } from "next/server"
 
 export async function GET() {
@@ -9,10 +9,10 @@ export async function GET() {
       WHERE table_schema = 'public'
       AND table_type = 'BASE TABLE'
       ORDER BY table_name;
-    `;
-    const result = await pool.query(query);
-    return NextResponse.json(result.rows);
+    `
+    const result = await pool.query(query)
+    return NextResponse.json(result.rows)
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 }

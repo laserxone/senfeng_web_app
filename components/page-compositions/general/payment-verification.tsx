@@ -1,20 +1,20 @@
-"use client";
+"use client"
 
-import { RequiredStar } from "@/components/shared/common/RequiredStar";
-import { Button } from "@/components/ui/button";
+import { RequiredStar } from "@/components/shared/common/RequiredStar"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Spinner from "@/components/ui/spinner";
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import Spinner from "@/components/ui/spinner"
 
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { Payment } from "@/lib/types";
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { Payment } from "@/lib/types"
 import {
   Banknote,
   CalendarDays,
@@ -29,61 +29,66 @@ import {
   ShieldCheck,
   XCircle,
   Zap,
-} from "lucide-react";
-import moment from "moment";
-import { useEffect, useRef, useState, type ElementType } from "react";
-import { toast } from "sonner";
-import { MyImgZooming } from "@/components/shared/media/img-zooming";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-
+} from "lucide-react"
+import moment from "moment"
+import { useEffect, useRef, useState, type ElementType } from "react"
+import { toast } from "sonner"
+import { MyImgZooming } from "@/components/shared/media/img-zooming"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 
 type Machine = {
-  machine_id: number;
-  serial_no: string;
-  power: string;
-  source: string;
-  contract_date: string;
-  payments: Payment[];
+  machine_id: number
+  serial_no: string
+  power: string
+  source: string
+  contract_date: string
+  payments: Payment[]
   order_no_arr: string[]
-};
+}
 
 type CustomerMachinePayments = {
-  customer_id: number;
-  customer_name: string;
-  customer_owner: string;
-  customer_number: string[];
-  machines: Machine[];
-};
+  customer_id: number
+  customer_name: string
+  customer_owner: string
+  customer_number: string[]
+  machines: Machine[]
+}
 
 export default function PaymentVerification() {
-  const { userID } = useUserDetail();
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<CustomerMachinePayments[]>([]);
-  const hasFetched = useRef(false);
-  const [search, setSearch] = useState("");
-  const [comment, setComment] = useState("");
-  const [selectedPayment, setSelectedPayment] = useState<number | null>(null);
-  const [visible, setVisible] = useState(false);
-  const [approveLoadingId, setApproveLoadingId] = useState<number | null>(null);
-  const [rejectionLoading, setRejectionLoading] = useState(false);
-  const [machineApproveLoadingId, setMachineApproveLoadingId] = useState<number | null>(null);
+  const { userID } = useUserDetail()
+  const [loading, setLoading] = useState(false)
+  const [data, setData] = useState<CustomerMachinePayments[]>([])
+  const hasFetched = useRef(false)
+  const [search, setSearch] = useState("")
+  const [comment, setComment] = useState("")
+  const [selectedPayment, setSelectedPayment] = useState<number | null>(null)
+  const [visible, setVisible] = useState(false)
+  const [approveLoadingId, setApproveLoadingId] = useState<number | null>(null)
+  const [rejectionLoading, setRejectionLoading] = useState(false)
+  const [machineApproveLoadingId, setMachineApproveLoadingId] = useState<
+    number | null
+  >(null)
 
   useEffect(() => {
     if (userID && !hasFetched.current) {
-      hasFetched.current = true;
-      fetchData();
+      hasFetched.current = true
+      fetchData()
     }
-  }, [userID]);
+  }, [userID])
 
   async function fetchData() {
-    setLoading(true);
+    setLoading(true)
     try {
-      const response = await axios.get(`/${userID}/payment-verification`);
-      setData(response.data);
+      const response = await axios.get(`/${userID}/payment-verification`)
+      setData(response.data)
     } catch (err) {
-      console.error("Failed to fetch data:", err);
+      console.error("Failed to fetch data:", err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
@@ -91,15 +96,13 @@ export default function PaymentVerification() {
     try {
       await axios.put(`/${userID}/payment-verification/${paymentId}`, {
         status: "approved",
-
-      });
-
+      })
 
       setData((prevData) =>
         prevData.map((customer) => ({
           ...customer,
           machines: customer.machines.map((machine) => {
-            if (machine.machine_id !== machineId) return machine;
+            if (machine.machine_id !== machineId) return machine
             return {
               ...machine,
               payments: machine.payments.map((payment) =>
@@ -107,53 +110,53 @@ export default function PaymentVerification() {
                   ? { ...payment, status: "approved", payment_lock: true }
                   : payment
               ),
-            };
+            }
           }),
         }))
-      );
+      )
     } catch (err) {
-      console.error("Approve failed", err);
+      console.error("Approve failed", err)
     } finally {
-      setApproveLoadingId(null);
+      setApproveLoadingId(null)
     }
-  };
+  }
 
   const handleApproveAll = async (machineId: number) => {
-    setMachineApproveLoadingId(machineId);
+    setMachineApproveLoadingId(machineId)
 
     try {
-      const pendingPayments: number[] = [];
+      const pendingPayments: number[] = []
 
       data.forEach((customer) => {
         customer.machines.forEach((machine) => {
           if (machine.machine_id === machineId) {
             machine.payments.forEach((payment) => {
               if (payment.status !== "approved") {
-                pendingPayments.push(payment.id);
+                pendingPayments.push(payment.id)
               }
-            });
+            })
           }
-        });
-      });
+        })
+      })
 
       await Promise.all(
         pendingPayments.map((paymentId) => handleApprove(paymentId, machineId))
-      );
-      toast.success("All Payments updated");
+      )
+      toast.success("All Payments updated")
     } catch (err) {
-      toast.error("Bulk approval failed");
+      toast.error("Bulk approval failed")
     } finally {
-      setMachineApproveLoadingId(null);
+      setMachineApproveLoadingId(null)
     }
-  };
+  }
   const handleReject = async (paymentId: number | null) => {
     if (!paymentId) return
-    setRejectionLoading(true);
+    setRejectionLoading(true)
     try {
       await axios.put(`/${userID}/payment-verification/${paymentId}`, {
         status: "rejected",
         comment: comment,
-      });
+      })
 
       setData((prevData) =>
         prevData.map((customer) => ({
@@ -167,41 +170,44 @@ export default function PaymentVerification() {
             ),
           })),
         }))
-      );
+      )
 
-      setVisible(false);
-      setComment("");
+      setVisible(false)
+      setComment("")
     } catch (err) {
-      console.error("Reject failed", err);
+      console.error("Reject failed", err)
     } finally {
-      setRejectionLoading(false);
+      setRejectionLoading(false)
     }
-  };
+  }
 
   const filteredData = data.filter((item) =>
     `${item.customer_name} ${item.customer_owner}`
       .toLowerCase()
       .includes(search.toLowerCase())
-  );
+  )
 
   const getUnverifiedPaymentCount = (data: CustomerMachinePayments[]) => {
-    let count = 0;
+    let count = 0
 
     data.forEach((customer) => {
       customer.machines.forEach((machine) => {
         machine.payments.forEach((payment) => {
           if (payment.status !== "approved") {
-            count++;
+            count++
           }
-        });
-      });
-    });
+        })
+      })
+    })
 
-    return count;
-  };
+    return count
+  }
 
-  const unverifiedCount = getUnverifiedPaymentCount(data);
-  const machineCount = data.reduce((sum, customer) => sum + customer.machines.length, 0);
+  const unverifiedCount = getUnverifiedPaymentCount(data)
+  const machineCount = data.reduce(
+    (sum, customer) => sum + customer.machines.length,
+    0
+  )
   const paymentCount = data.reduce(
     (sum, customer) =>
       sum +
@@ -210,7 +216,7 @@ export default function PaymentVerification() {
         0
       ),
     0
-  );
+  )
 
   return (
     <div className="flex flex-1 flex-col gap-5">
@@ -222,15 +228,18 @@ export default function PaymentVerification() {
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Payment Verification</h1>
-                <span className="hidden rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold tracking-wide text-muted-foreground uppercase sm:inline-flex">Workspace</span>
+                <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+                  Payment Verification
+                </h1>
+                <span className="hidden rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold tracking-wide text-muted-foreground uppercase sm:inline-flex">
+                  Workspace
+                </span>
               </div>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 Review payment receipts and pending approvals.
               </p>
             </div>
           </div>
-
         </div>
 
         <div className="grid border-t bg-muted/20 sm:grid-cols-2 sm:divide-x xl:grid-cols-4">
@@ -263,7 +272,7 @@ export default function PaymentVerification() {
 
       <section className="rounded-2xl border bg-background p-4 shadow-sm">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="h-11 bg-muted/15 pl-9"
             placeholder="Search customer or owner"
@@ -291,7 +300,7 @@ export default function PaymentVerification() {
         <div className="space-y-3">
           {filteredData.map((customer) => (
             <Collapsible key={`customer-${customer.customer_id} `}>
-              <div className="overflow-hidden rounded-2xl border bg-background shadow-sm sm:w-full w-[calc(100dvw-30px)]">
+              <div className="w-[calc(100dvw-30px)] overflow-hidden rounded-2xl border bg-background shadow-sm sm:w-full">
                 <CollapsibleTrigger asChild>
                   <Button
                     variant="ghost"
@@ -302,10 +311,10 @@ export default function PaymentVerification() {
                         <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
                       </div>
                       <div className="min-w-0">
-                        <p className="break-words text-base font-bold">
+                        <p className="text-base font-bold break-words">
                           {customer.customer_name}
                         </p>
-                        <p className="mt-1 break-words text-sm text-muted-foreground">
+                        <p className="mt-1 text-sm break-words text-muted-foreground">
                           {customer.customer_owner}
                         </p>
                       </div>
@@ -339,7 +348,7 @@ export default function PaymentVerification() {
                                   <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="break-words font-semibold">
+                                  <p className="font-semibold break-words">
                                     Machine #{machine.serial_no}
                                   </p>
                                   <p className="mt-0.5 text-xs text-muted-foreground">
@@ -361,25 +370,42 @@ export default function PaymentVerification() {
                                   label="Contract"
                                   value={
                                     machine.contract_date
-                                      ? moment(new Date(machine.contract_date)).format("YYYY-MM-DD")
+                                      ? moment(
+                                          new Date(machine.contract_date)
+                                        ).format("YYYY-MM-DD")
                                       : "N/A"
                                   }
                                 />
-                                <InfoTile icon={Zap} label="Power" value={machine.power || "N/A"} />
-                                <InfoTile icon={FileText} label="Source" value={machine.source || "N/A"} />
+                                <InfoTile
+                                  icon={Zap}
+                                  label="Power"
+                                  value={machine.power || "N/A"}
+                                />
+                                <InfoTile
+                                  icon={FileText}
+                                  label="Source"
+                                  value={machine.source || "N/A"}
+                                />
                                 <InfoTile
                                   icon={Hash}
                                   label="Order No"
-                                  value={machine.order_no_arr?.join(", ") || "N/A"}
+                                  value={
+                                    machine.order_no_arr?.join(", ") || "N/A"
+                                  }
                                 />
                               </div>
 
                               <Button
-                                disabled={machineApproveLoadingId === machine.machine_id}
+                                disabled={
+                                  machineApproveLoadingId === machine.machine_id
+                                }
                                 className="w-full gap-2 lg:w-auto"
-                                onClick={() => handleApproveAll(machine.machine_id)}
+                                onClick={() =>
+                                  handleApproveAll(machine.machine_id)
+                                }
                               >
-                                {machineApproveLoadingId === machine.machine_id ? (
+                                {machineApproveLoadingId ===
+                                machine.machine_id ? (
                                   <Spinner className="h-4 w-4" />
                                 ) : (
                                   <CheckCircle2 className="h-4 w-4" />
@@ -397,7 +423,9 @@ export default function PaymentVerification() {
                                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                     <div className="min-w-0 flex-1 space-y-3">
                                       <div className="flex flex-wrap items-center gap-2">
-                                        <StatusPill status={payment.status || "pending"} />
+                                        <StatusPill
+                                          status={payment.status || "pending"}
+                                        />
                                         <span className="rounded-full border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground">
                                           TID: {payment.note || "N/A"}
                                         </span>
@@ -407,7 +435,9 @@ export default function PaymentVerification() {
                                         <InfoTile
                                           icon={Banknote}
                                           label="Amount"
-                                          value={String(payment.amount ?? "N/A")}
+                                          value={String(
+                                            payment.amount ?? "N/A"
+                                          )}
                                         />
                                         <InfoTile
                                           icon={FileText}
@@ -418,7 +448,8 @@ export default function PaymentVerification() {
 
                                       {payment.status === "rejected" && (
                                         <div className="rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-700">
-                                          <strong>Reason:</strong> {payment.comment || "N/A"}
+                                          <strong>Reason:</strong>{" "}
+                                          {payment.comment || "N/A"}
                                         </div>
                                       )}
 
@@ -427,7 +458,10 @@ export default function PaymentVerification() {
                                           <p className="mb-2 text-xs font-medium text-muted-foreground">
                                             Receipt proof
                                           </p>
-                                          <MyImgZooming img={payment.image} className="h-[200px]" />
+                                          <MyImgZooming
+                                            img={payment.image}
+                                            className="h-[200px]"
+                                          />
                                         </div>
                                       )}
                                     </div>
@@ -438,10 +472,15 @@ export default function PaymentVerification() {
                                           <Button
                                             size="sm"
                                             className="flex-1 gap-2 lg:flex-none"
-                                            disabled={approveLoadingId === payment.id}
+                                            disabled={
+                                              approveLoadingId === payment.id
+                                            }
                                             onClick={() => {
-                                              setApproveLoadingId(payment.id);
-                                              handleApprove(payment.id, machine.machine_id);
+                                              setApproveLoadingId(payment.id)
+                                              handleApprove(
+                                                payment.id,
+                                                machine.machine_id
+                                              )
                                             }}
                                           >
                                             {approveLoadingId === payment.id ? (
@@ -456,8 +495,8 @@ export default function PaymentVerification() {
                                             variant="destructive"
                                             className="flex-1 gap-2 lg:flex-none"
                                             onClick={() => {
-                                              setSelectedPayment(payment.id);
-                                              setVisible(true);
+                                              setSelectedPayment(payment.id)
+                                              setVisible(true)
                                             }}
                                           >
                                             <XCircle className="h-4 w-4" />
@@ -522,7 +561,7 @@ export default function PaymentVerification() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
 
 function SummaryTile({
@@ -531,20 +570,22 @@ function SummaryTile({
   value,
   iconClassName,
 }: {
-  icon: ElementType;
-  label: string;
-  value: number;
-  iconClassName: string;
+  icon: ElementType
+  label: string
+  value: number
+  iconClassName: string
 }) {
   return (
-    <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:[&:nth-child(2)]:border-t-0 xl:border-t-0 sm:px-5">
+    <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:px-5 xl:border-t-0 sm:[&:nth-child(2)]:border-t-0">
       <Icon className={`size-4 shrink-0 ${iconClassName}`} />
       <div className="flex min-w-0 items-baseline gap-2">
-        <span className="truncate text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{label}</span>
+        <span className="truncate text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+          {label}
+        </span>
         <span className="text-sm font-bold">{value}</span>
       </div>
     </div>
-  );
+  )
 }
 
 function InfoTile({
@@ -552,9 +593,9 @@ function InfoTile({
   label,
   value,
 }: {
-  icon: ElementType;
-  label: string;
-  value: string;
+  icon: ElementType
+  label: string
+  value: string
 }) {
   return (
     <div className="rounded-xl border bg-background p-3">
@@ -562,11 +603,11 @@ function InfoTile({
         <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
         <div className="min-w-0">
           <p className="text-xs font-medium text-muted-foreground">{label}</p>
-          <p className="mt-1 break-words text-sm font-semibold">{value}</p>
+          <p className="mt-1 text-sm font-semibold break-words">{value}</p>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 function StatusPill({ status }: { status: string }) {
@@ -575,11 +616,13 @@ function StatusPill({ status }: { status: string }) {
       ? "border-emerald-100 bg-emerald-50 text-emerald-700"
       : status === "rejected"
         ? "border-red-100 bg-red-50 text-red-700"
-        : "border-amber-100 bg-amber-50 text-amber-700";
+        : "border-amber-100 bg-amber-50 text-amber-700"
 
   return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${styles}`}>
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${styles}`}
+    >
       {status || "pending"}
     </span>
-  );
+  )
 }

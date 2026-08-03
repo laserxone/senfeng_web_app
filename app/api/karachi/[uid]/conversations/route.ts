@@ -1,13 +1,15 @@
-import pool from '@/config/db';
-import { NextRequest, NextResponse } from 'next/server';
+import pool from "@/config/db"
+import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(req:NextRequest, { params }:{params:Promise<{}>}) {
-  const { searchParams } = new URL(req.url);
-  const userId = searchParams.get("userId");
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{}> }
+) {
+  const { searchParams } = new URL(req.url)
+  const userId = searchParams.get("userId")
   if (!userId) {
-    return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+    return NextResponse.json({ error: "Missing userId" }, { status: 400 })
   }
-
 
   try {
     const result = await pool.query(
@@ -21,7 +23,7 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{}>}) {
       WHERE c.participant_1 = $1 OR c.participant_2 = $1
       ORDER BY c.last_updated DESC`,
       [userId]
-    );
+    )
 
     const countRes = await pool.query(
       `SELECT COUNT(*) AS unread_count
@@ -31,9 +33,9 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{}>}) {
        AND m.sender_id != $1
        AND m.is_read = false`,
       [userId]
-    );
+    )
 
-    const unreadCount = parseInt(countRes.rows[0].unread_count, 10);
+    const unreadCount = parseInt(countRes.rows[0].unread_count, 10)
 
     const conversations = result.rows.map((row) => ({
       id: row.id,
@@ -41,27 +43,34 @@ export async function GET(req:NextRequest, { params }:{params:Promise<{}>}) {
       last_updated: row.last_updated,
       participant_1: row.participant_1_id,
       participant_2: row.participant_2_id,
-      participant_1_info: { id: row.participant_1_id, name: row.participant_1_name },
-      participant_2_info: { id: row.participant_2_id, name: row.participant_2_name },
-      unreadCount
-    }));
+      participant_1_info: {
+        id: row.participant_1_id,
+        name: row.participant_1_name,
+      },
+      participant_2_info: {
+        id: row.participant_2_id,
+        name: row.participant_2_name,
+      },
+      unreadCount,
+    }))
 
-    return NextResponse.json(conversations, { status: 200 });
-  } catch (error:any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(conversations, { status: 200 })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
-
-export async function POST(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
-
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ uid: string }> }
+) {
   try {
-    const { user1, user2 } = await req.json();
+    const { user1, user2 } = await req.json()
 
     const { uid } = await params
 
     if (!user1 || !user2) {
-      return NextResponse.json({ error: "Missing user ids" }, { status: 400 });
+      return NextResponse.json({ error: "Missing user ids" }, { status: 400 })
     }
 
     const existing = await pool.query(
@@ -69,48 +78,56 @@ export async function POST(req:NextRequest, { params }:{params:Promise<{uid:stri
        WHERE (participant_1 = $1 AND participant_2 = $2) 
           OR (participant_1 = $2 AND participant_2 = $1)`,
       [user1, user2]
-    );
+    )
 
     if (existing.rows.length > 0) {
-        const conversation = existing.rows[0];
-         const otherUserId = Number(conversation.participant_1) === Number(uid)
-      ? conversation.participant_2
-      : conversation.participant_1;
+      const conversation = existing.rows[0]
+      const otherUserId =
+        Number(conversation.participant_1) === Number(uid)
+          ? conversation.participant_2
+          : conversation.participant_1
 
-    const userResult = await pool.query(
-      `SELECT id, name, dp FROM users WHERE id = $1`,
-      [otherUserId]
-    );
+      const userResult = await pool.query(
+        `SELECT id, name, dp FROM users WHERE id = $1`,
+        [otherUserId]
+      )
 
-    const otherUser = userResult.rows[0];
-      return NextResponse.json({...existing.rows[0], otherUser}, { status: 200 });
+      const otherUser = userResult.rows[0]
+      return NextResponse.json(
+        { ...existing.rows[0], otherUser },
+        { status: 200 }
+      )
     }
- 
+
     const result = await pool.query(
       `INSERT INTO conversations (participant_1, participant_2) 
        VALUES ($1, $2) RETURNING *`,
       [user1, user2]
-    );
+    )
 
-    const conversation = result.rows[0];
+    const conversation = result.rows[0]
 
-    const otherUserId = Number(conversation.participant_1) === Number(uid)
-      ? conversation.participant_2
-      : conversation.participant_1;
+    const otherUserId =
+      Number(conversation.participant_1) === Number(uid)
+        ? conversation.participant_2
+        : conversation.participant_1
 
     const userResult = await pool.query(
       `SELECT id, name, dp FROM users WHERE id = $1`,
       [Number(otherUserId)]
-    );
+    )
 
-    const otherUser = userResult.rows[0];
+    const otherUser = userResult.rows[0]
 
-    return NextResponse.json({
-      ...conversation.id,
-      otherUser,
-    }, { status: 201 });
-  } catch (error:any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      {
+        ...conversation.id,
+        otherUser,
+      },
+      { status: 201 }
+    )
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 

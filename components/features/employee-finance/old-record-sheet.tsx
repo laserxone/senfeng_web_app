@@ -1,7 +1,7 @@
-import AppCalendar from "@/components/features/calendar/app-calendar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import AppCalendar from "@/components/features/calendar/app-calendar"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
@@ -10,50 +10,60 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import Spinner from "@/components/ui/spinner";
-import { UserSearch } from "@/components/shared/search/user-search";
+} from "@/components/ui/sheet"
+import Spinner from "@/components/ui/spinner"
+import { UserSearch } from "@/components/shared/search/user-search"
 
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { OldRecordProps } from "@/lib/types";
-import { zodResolver } from "@hookform/resolvers/zod";
-import moment from "moment";
-import Link from "next/link";
-import { useState } from "react";
-import { DateRange } from "react-day-picker";
-import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
-import AppCalendarRange from "@/components/features/calendar/app-calendar-range";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { OldRecordProps } from "@/lib/types"
+import { zodResolver } from "@hookform/resolvers/zod"
+import moment from "moment"
+import Link from "next/link"
+import { useState } from "react"
+import { DateRange } from "react-day-picker"
+import { Controller, useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
+import AppCalendarRange from "@/components/features/calendar/app-calendar-range"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 
 const formSchema = z.object({
   start: z.date({ error: "Start date is required." }),
   end: z.date({ error: "End date is required." }),
   condition: z.string({ error: "type is required" }),
-});
+})
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof formSchema>
 
-const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClose: (val: boolean) => void, user_id: number | string }) => {
-  const [loading, setLoading] = useState(false);
-  const [sendTo, setSendTo] = useState<number | null>(null);
-  const [data, setData] = useState<OldRecordProps[]>([]);
-  const { userID, base_route } = useUserDetail();
-  const [sendLoading, setSendLoading] = useState(false);
-  const [filterValue, setFilterValue] = useState("All");
+const OldRecordSheet = ({
+  visible,
+  onClose,
+  user_id,
+}: {
+  visible: boolean
+  onClose: (val: boolean) => void
+  user_id: number | string
+}) => {
+  const [loading, setLoading] = useState(false)
+  const [sendTo, setSendTo] = useState<number | null>(null)
+  const [data, setData] = useState<OldRecordProps[]>([])
+  const { userID, base_route } = useUserDetail()
+  const [sendLoading, setSendLoading] = useState(false)
+  const [filterValue, setFilterValue] = useState("All")
   const [rangeDate, setRangeDate] = useState<DateRange | null | undefined>(null)
-
-
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -62,58 +72,58 @@ const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClo
       end: moment().endOf("month").toDate(),
       condition: "All",
     },
-  });
+  })
 
   async function onSubmit(values: FormValues) {
-    if (!user_id) return;
+    if (!user_id) return
     setData([])
     setRangeDate(null)
-    setLoading(true);
-    let start = values.start.toISOString();
-    let end = values.end.toISOString();
-    let type = values.condition;
+    setLoading(true)
+    let start = values.start.toISOString()
+    let end = values.end.toISOString()
+    let type = values.condition
 
     try {
-      let query = `/${user_id}/feedback?start_date=${start}&end_date=${end}`;
+      let query = `/${user_id}/feedback?start_date=${start}&end_date=${end}`
       if (type === "Customer") {
-        query += "&member=FALSE";
+        query += "&member=FALSE"
       } else if (type === "Member") {
-        query += "&member=TRUE";
+        query += "&member=TRUE"
       }
-      const response = await axios.get(query);
+      const response = await axios.get(query)
 
-      setData(response.data);
+      setData(response.data)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
   function handleClose(val: boolean) {
-    onClose(val);
-    handleClear();
+    onClose(val)
+    handleClear()
   }
 
   function handleClear() {
     form.reset({
       start: moment().startOf("month").toDate(),
       end: moment().endOf("month").toDate(),
-    });
-    setData([]);
+    })
+    setData([])
   }
 
   async function handleSendReport(e: React.MouseEvent<HTMLButtonElement>) {
-    e.preventDefault();
-    setSendLoading(true);
+    e.preventDefault()
+    setSendLoading(true)
 
     try {
       const response = await axios.post(`/${userID}/conversations`, {
         user1: userID,
         user2: sendTo,
-      });
+      })
       if (response.data?.id) {
-        let formData = { type: "feedback", content: visibleData };
-        const startDate = form.getValues("start");
-        const endDate = form.getValues("end");
+        let formData = { type: "feedback", content: visibleData }
+        const startDate = form.getValues("start")
+        const endDate = form.getValues("end")
 
         await axios
           .post(`/${userID}/conversations/${response.data?.id}`, {
@@ -124,46 +134,40 @@ const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClo
             data: JSON.stringify(formData),
           })
           .then(() => {
-            toast.success("Report sent");
-          });
+            toast.success("Report sent")
+          })
       }
     } finally {
-      setSendLoading(false);
+      setSendLoading(false)
     }
   }
 
-
-
-  const uniqueUserNames = [...new Set(data.map((item) => item.user_name))];
+  const uniqueUserNames = [...new Set(data.map((item) => item.user_name))]
 
   const visibleData = data
-    .filter((item) => filterValue === "All" || item.user_name.includes(filterValue))
+    .filter(
+      (item) => filterValue === "All" || item.user_name.includes(filterValue)
+    )
     .filter((item) => {
       if (rangeDate?.from && rangeDate?.to) {
         const start = moment(rangeDate.from).startOf("day")
         const end = moment(rangeDate.to).endOf("day")
 
         return moment(item.feedback_date).isBetween(start, end, null, "[]")
-
       }
       return true
     })
 
-
-
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
-      <SheetContent className="sm:max-w-[95vw] sm:min-w-[95vw] p-4"
-      >
-        <SheetHeader className="p-0 m-0">
+      <SheetContent className="p-4 sm:max-w-[95vw] sm:min-w-[95vw]">
+        <SheetHeader className="m-0 p-0">
           <SheetTitle className="text-2xl">Feedbacks Record</SheetTitle>
           <SheetDescription>Filter data</SheetDescription>
         </SheetHeader>
         <ScrollArea className="h-[calc(100dvh-110px)] pr-4">
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-          >
-            <FieldGroup className="flex flex-row items-end flex-wrap">
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <FieldGroup className="flex flex-row flex-wrap items-end">
               <div>
                 <Controller
                   name="start"
@@ -216,7 +220,10 @@ const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClo
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Select type</FieldLabel>
 
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <SelectTrigger className="w-[200px]">
                           <SelectValue placeholder="Select customer type" />
                         </SelectTrigger>
@@ -244,21 +251,14 @@ const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClo
               <Button disabled={loading} type="submit">
                 {loading && <Spinner />} Filter
               </Button>
-
             </FieldGroup>
-
-
           </form>
 
-
           {data.length > 0 && (
-            <div className="flex flex-wrap items-end gap-4 mt-4">
+            <div className="mt-4 flex flex-wrap items-end gap-4">
               <div className="space-y-2">
                 <FieldLabel>Filter customer date</FieldLabel>
-                <AppCalendarRange
-                  date={rangeDate}
-                  onChange={setRangeDate}
-                />
+                <AppCalendarRange date={rangeDate} onChange={setRangeDate} />
               </div>
 
               <div className="space-y-2">
@@ -285,7 +285,7 @@ const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClo
                 <FieldLabel>Select user</FieldLabel>
                 <UserSearch
                   className="w-[200px]"
-                  onReturn={(val)=>setSendTo(val)}
+                  onReturn={(val) => setSendTo(val)}
                   value={sendTo}
                 />
               </div>
@@ -296,26 +296,20 @@ const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClo
               >
                 {sendLoading && <Spinner />} Send Report
               </Button>
-
-
             </div>
           )}
 
-
-
           {data.length == 0 ? (
-            <div className="flex flex-1 flex-col gap-2 mt-5">
+            <div className="mt-5 flex flex-1 flex-col gap-2">
               <p>No data to display</p>
             </div>
           ) : (
-            <div className="px-4 py-6 space-y-2 relative">
+            <div className="relative space-y-2 px-4 py-6">
               {visibleData.map((fb, index) => (
                 <div key={fb.id} className="relative pl-6">
+                  <div className="absolute top-2 left-[-9px] h-3 w-3 rounded-full border-2 border-background bg-primary shadow-md" />
 
-                  <div className="absolute left-[-9px] top-2 w-3 h-3 bg-primary rounded-full border-2 border-background shadow-md" />
-
-
-                  <Card className="bg-background border border-border shadow-sm">
+                  <Card className="border border-border bg-background shadow-sm">
                     <CardHeader className="pb-0">
                       <div className="text-sm text-muted-foreground">
                         <span className="mr-2">{fb?.user_name}</span>
@@ -331,7 +325,7 @@ const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClo
                       </Link>
                     </CardHeader>
 
-                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-sm">
+                    <CardContent className="grid grid-cols-1 gap-4 pt-2 text-sm sm:grid-cols-2">
                       <div>
                         <span className="font-medium text-foreground">
                           Number:
@@ -345,7 +339,7 @@ const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClo
                         {fb.status}
                       </div>
 
-                      <div className="col-span-full pt-2 border-t mt-2 text-foreground whitespace-pre-line">
+                      <div className="col-span-full mt-2 border-t pt-2 whitespace-pre-line text-foreground">
                         <p className="mt-2">
                           {fb.feedback || (
                             <em className="text-muted-foreground">
@@ -363,7 +357,7 @@ const OldRecordSheet = ({ visible, onClose, user_id }: { visible: boolean, onClo
         </ScrollArea>
       </SheetContent>
     </Sheet>
-  );
-};
+  )
+}
 
-export default OldRecordSheet;
+export default OldRecordSheet

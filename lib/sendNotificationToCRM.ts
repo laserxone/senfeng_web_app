@@ -1,38 +1,56 @@
 import pool from "@/config/db"
 import { sendNotification } from "./sendNotification"
-import { NOTIFICATION_TYPES } from "@/constants/notifications";
+import { NOTIFICATION_TYPES } from "@/constants/notifications"
 
+export async function sendNotificationToCRM(
+  id: string,
+  customer: string,
+  page: string
+) {
+  if (!id) return
 
-export async function sendNotificationToCRM(id : string, customer : string, page : string) {
-  if (!id) return;
+  const leadResult = await pool.query(
+    "SELECT id, designation FROM users WHERE id = $1",
+    [id]
+  )
+  const leadUser = leadResult.rows[0]
 
-  const leadResult = await pool.query('SELECT id, designation FROM users WHERE id = $1', [id]);
-  const leadUser = leadResult.rows[0];
-
-  if (!leadUser || leadUser.designation !== 'Social Media Manager') return;
+  if (!leadUser || leadUser.designation !== "Social Media Manager") return
 
   const crmQuery = await pool.query(
     `SELECT id FROM users WHERE designation = 'Customer Relationship Manager'`
-  );
+  )
 
-  if (crmQuery.rows.length === 0) return;
+  if (crmQuery.rows.length === 0) return
 
-   crmQuery.rows.forEach((crm) => {
-      sendNotification(`${customer} added by social media manager`, page, crm.id, NOTIFICATION_TYPES.customer_added.title, NOTIFICATION_TYPES.customer_added.category);
-    });
+  crmQuery.rows.forEach((crm) => {
+    sendNotification(
+      `${customer} added by social media manager`,
+      page,
+      crm.id,
+      NOTIFICATION_TYPES.customer_added.title,
+      NOTIFICATION_TYPES.customer_added.category
+    )
+  })
 }
 
-
-export async function sendNotificationToCRMWithoutLead( customer : string, page : string) {
-  
-
+export async function sendNotificationToCRMWithoutLead(
+  customer: string,
+  page: string
+) {
   const crmQuery = await pool.query(
     `SELECT id FROM users WHERE designation = 'Customer Relationship Manager'`
-  );
+  )
 
-  if (crmQuery.rows.length === 0) return;
+  if (crmQuery.rows.length === 0) return
 
-   crmQuery.rows.forEach((crm) => {
-      sendNotification(`${customer} added in the systems`, page, crm.id, NOTIFICATION_TYPES.customer_added.title, NOTIFICATION_TYPES.customer_added.category);
-    });
+  crmQuery.rows.forEach((crm) => {
+    sendNotification(
+      `${customer} added in the systems`,
+      page,
+      crm.id,
+      NOTIFICATION_TYPES.customer_added.title,
+      NOTIFICATION_TYPES.customer_added.category
+    )
+  })
 }

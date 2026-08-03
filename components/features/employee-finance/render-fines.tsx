@@ -1,15 +1,14 @@
-import PageTable from "@/components/shared/tables/app-table";
-import { Button } from "@/components/ui/button";
-import { TIMEZONE } from "@/constants/data";
-import axios from "@/lib/axios";
-import { UserFines } from "@/lib/types";
-import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, Filter } from "lucide-react";
-import moment from "moment";
-import momentT from "moment-timezone";
-import { useEffect, useState } from "react";
-import FilterSheet from "@/components/features/users/filter-sheet";
-
+import PageTable from "@/components/shared/tables/app-table"
+import { Button } from "@/components/ui/button"
+import { TIMEZONE } from "@/constants/data"
+import axios from "@/lib/axios"
+import { UserFines } from "@/lib/types"
+import { ColumnDef } from "@tanstack/react-table"
+import { ArrowUpDown, Filter } from "lucide-react"
+import moment from "moment"
+import momentT from "moment-timezone"
+import { useEffect, useState } from "react"
+import FilterSheet from "@/components/features/users/filter-sheet"
 
 const columns: ColumnDef<UserFines>[] = [
   {
@@ -24,7 +23,7 @@ const columns: ColumnDef<UserFines>[] = [
           Date
           <ArrowUpDown />
         </Button>
-      );
+      )
     },
     cell: ({ row }) => (
       <div>
@@ -47,7 +46,7 @@ const columns: ColumnDef<UserFines>[] = [
           Employee
           <ArrowUpDown />
         </Button>
-      );
+      )
     },
     cell: ({ row }) => <div>{row.getValue("user_name")}</div>,
   },
@@ -63,7 +62,7 @@ const columns: ColumnDef<UserFines>[] = [
           Customer
           <ArrowUpDown />
         </Button>
-      );
+      )
     },
     cell: ({ row }) => <div>{row.getValue("customer_name")}</div>,
   },
@@ -80,7 +79,7 @@ const columns: ColumnDef<UserFines>[] = [
           Amount
           <ArrowUpDown />
         </Button>
-      );
+      )
     },
     cell: ({ row }) => <div>{row.getValue("amount")}</div>,
   },
@@ -97,16 +96,24 @@ const columns: ColumnDef<UserFines>[] = [
           Reason
           <ArrowUpDown />
         </Button>
-      );
+      )
     },
     cell: ({ row }) => <div>{row.getValue("reason")}</div>,
   },
-];
+]
 
-const RenderFines = ({ height, onUpdateTotal, userID }: { height?: string, onUpdateTotal?: (item: number) => void, userID: number | string }) => {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [filterVisible, setFilterVisible] = useState(false);
+const RenderFines = ({
+  height,
+  onUpdateTotal,
+  userID,
+}: {
+  height?: string
+  onUpdateTotal?: (item: number) => void
+  userID: number | string
+}) => {
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [filterVisible, setFilterVisible] = useState(false)
   useEffect(() => {
     if (userID) {
       const startDate = momentT
@@ -114,35 +121,35 @@ const RenderFines = ({ height, onUpdateTotal, userID }: { height?: string, onUpd
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString();
+        .toISOString()
       const endDate = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString();
-      fetchData(startDate, endDate);
+        .toISOString()
+      fetchData(startDate, endDate)
     }
-  }, [userID]);
+  }, [userID])
 
   async function fetchData(startDate: string, endDate: string) {
-    setLoading(true);
+    setLoading(true)
     return new Promise((resolve, reject) => {
       axios
         .get(`/${userID}/fine?start_date=${startDate}&end_date=${endDate}`)
         .then((response) => {
-          setData(response.data);
+          setData(response.data)
           onUpdateTotal?.(response.data?.length || 0)
-          resolve(true);
+          resolve(true)
         })
         .catch((e) => {
-          console.log(e);
-          reject(null);
+          console.log(e)
+          reject(null)
         })
         .finally(() => {
-          setLoading(false);
-        });
-    });
+          setLoading(false)
+        })
+    })
   }
 
   return (
@@ -155,21 +162,20 @@ const RenderFines = ({ height, onUpdateTotal, userID }: { height?: string, onUpd
             columns={columns}
             data={data}
             filter
-             onFilterPress={() => setFilterVisible(true)}
+            onFilterPress={() => setFilterVisible(true)}
           />
         </div>
       </div>
-
 
       <FilterSheet
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(val.start, val.end);
+          await fetchData(val.start, val.end)
         }}
       />
     </>
-  );
-};
+  )
+}
 
-export default RenderFines;
+export default RenderFines

@@ -1,38 +1,50 @@
-"use client";
+"use client"
 
-import AppCalendar from "@/components/features/calendar/app-calendar";
-import { RequiredStar } from "@/components/shared/common/RequiredStar";
-import { CitiesSearch } from "@/components/shared/search/cities-search";
-import { IndustrySearch } from "@/components/shared/search/industry-search";
-import { NumberSearch } from "@/components/shared/search/number-search";
-import { UserSearch } from "@/components/shared/search/user-search";
-import Dropzone from "@/components/shared/uploads/dropzone";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import AppCalendar from "@/components/features/calendar/app-calendar"
+import { RequiredStar } from "@/components/shared/common/RequiredStar"
+import { CitiesSearch } from "@/components/shared/search/cities-search"
+import { IndustrySearch } from "@/components/shared/search/industry-search"
+import { NumberSearch } from "@/components/shared/search/number-search"
+import { UserSearch } from "@/components/shared/search/user-search"
+import Dropzone from "@/components/shared/uploads/dropzone"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import Spinner from "@/components/ui/spinner";
-import { storage } from "@/config/firebase";
-import { CountriesList } from "@/constants/data";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { debounce } from "@/lib/debounce";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
-import { MyCustomer } from "@/lib/types";
-import { UploadImage } from "@/lib/uploadFunction";
-import { OfficeContext } from "@/store/context/OfficeContext";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { getDownloadURL, ref } from "firebase/storage";
+  SelectValue,
+} from "@/components/ui/select"
+import Spinner from "@/components/ui/spinner"
+import { storage } from "@/config/firebase"
+import { CountriesList } from "@/constants/data"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { debounce } from "@/lib/debounce"
+import { DeleteFromStorage } from "@/lib/deleteFunction"
+import { MyCustomer } from "@/lib/types"
+import { UploadImage } from "@/lib/uploadFunction"
+import { OfficeContext } from "@/store/context/OfficeContext"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { getDownloadURL, ref } from "firebase/storage"
 import {
   Building2,
   CalendarDays,
@@ -42,23 +54,22 @@ import {
   Settings2,
   Sparkles,
   Trash,
-} from "lucide-react";
-import moment from "moment";
-import Link from "next/link";
-import { useCallback, useContext, useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
+} from "lucide-react"
+import moment from "moment"
+import Link from "next/link"
+import { useCallback, useContext, useEffect, useState } from "react"
+import { Controller, useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
 
 type EditCustomerDialogProps = {
-
-  onRefresh: () => Promise<void>;
-  visible: boolean;
-  onClose: (val: boolean) => void;
-  data: MyCustomer;
-  ownership: boolean | null;
+  onRefresh: () => Promise<void>
+  visible: boolean
+  onClose: (val: boolean) => void
+  data: MyCustomer
+  ownership: boolean | null
   onClickDelete: () => void
-};
+}
 
 const formSchema = z.object({
   company: z.string().min(1, { message: "Company name is required" }),
@@ -78,11 +89,10 @@ const formSchema = z.object({
   ownership: z.number().nullable().optional(),
   created_at: z.date().optional(),
   office: z.string().min(1, { message: "Office is required" }),
-  image: z.string().optional()
-
+  image: z.string().optional(),
 })
 
-type FormSchemaValues = z.infer<typeof formSchema>;
+type FormSchemaValues = z.infer<typeof formSchema>
 
 const EditCustomerDialog = ({
   onRefresh,
@@ -92,20 +102,19 @@ const EditCustomerDialog = ({
   ownership,
   onClickDelete,
 }: EditCustomerDialogProps) => {
-  const [numbers, setNumbers] = useState([""]);
-  const [numberError, setNumberError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [numbers, setNumbers] = useState([""])
+  const [numberError, setNumberError] = useState("")
+  const [loading, setLoading] = useState(false)
   const { userID, isAdmin, customer_delete_access, designation, base_route } =
-    useUserDetail();
-  const [checking, setChecking] = useState(false);
-  const [customerInfo, setCustomerInfo] = useState<MyCustomer[]>([]);
-  const [selectedNumber, setSelectedNumber] = useState(["+92"]);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [originalUrl, setOriginalUrl] = useState<string | null>(null);
+    useUserDetail()
+  const [checking, setChecking] = useState(false)
+  const [customerInfo, setCustomerInfo] = useState<MyCustomer[]>([])
+  const [selectedNumber, setSelectedNumber] = useState(["+92"])
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [originalUrl, setOriginalUrl] = useState<string | null>(null)
   const { state: OfficeState } = useContext(OfficeContext)!
 
-  const canDelete = isAdmin || customer_delete_access;
-
+  const canDelete = isAdmin || customer_delete_access
 
   const form = useForm<FormSchemaValues>({
     resolver: zodResolver(formSchema),
@@ -127,40 +136,40 @@ const EditCustomerDialog = ({
       member: false,
       ownership: null,
       created_at: undefined,
-      office: "islamabad"
+      office: "islamabad",
     },
-  });
+  })
 
-  const { control } = form;
+  const { control } = form
 
   useEffect(() => {
     if (data) {
-      let tempNumbers: string[] = [];
-      let tempSelectedNumber: string[] = [];
+      let tempNumbers: string[] = []
+      let tempSelectedNumber: string[] = []
 
       data?.number?.forEach((num) => {
-        let found = false;
+        let found = false
         for (let country of CountriesList) {
           if (num.startsWith(country.num)) {
-            tempSelectedNumber.push(country.num);
-            tempNumbers.push(num.slice(country.num.length));
-            found = true;
-            break;
+            tempSelectedNumber.push(country.num)
+            tempNumbers.push(num.slice(country.num.length))
+            found = true
+            break
           }
         }
         if (!found) {
-          tempSelectedNumber.push("");
-          tempNumbers.push(num);
+          tempSelectedNumber.push("")
+          tempNumbers.push(num)
         }
-      });
+      })
 
-      setSelectedNumber([...tempSelectedNumber]);
-      setNumbers([...tempNumbers]);
+      setSelectedNumber([...tempSelectedNumber])
+      setNumbers([...tempNumbers])
       if (data.image) {
         getDownloadURL(ref(storage, data.image)).then((url) => {
-          setImageUrl(url);
-          setOriginalUrl(url);
-        });
+          setImageUrl(url)
+          setOriginalUrl(url)
+        })
       }
 
       form.reset({
@@ -181,38 +190,38 @@ const EditCustomerDialog = ({
         pin: data?.pin || "",
         platform: data?.platform || "",
         created_at: data?.created_at ? new Date(data.created_at) : undefined,
-        office: data?.office || ""
-      });
+        office: data?.office || "",
+      })
     }
-  }, [data, form]);
+  }, [data, form])
 
   function handleClose(val: boolean) {
-    form.reset();
-    setLoading(false);
-    onClose(val);
+    form.reset()
+    setLoading(false)
+    onClose(val)
   }
 
   async function onSubmit(values: FormSchemaValues) {
     const hasInvalidNumber = selectedNumber.some((code, index) => {
-      const number = numbers[index];
-      if (!number) return true;
+      const number = numbers[index]
+      if (!number) return true
 
-      const isAllDigits = /^\d+$/.test(number);
-      return !isAllDigits;
-    });
+      const isAllDigits = /^\d+$/.test(number)
+      return !isAllDigits
+    })
 
     if (hasInvalidNumber) {
-      setNumberError("Invalid number format");
-      return;
+      setNumberError("Invalid number format")
+      return
     }
 
-    setNumberError("");
+    setNumberError("")
 
-    setLoading(true);
+    setLoading(true)
 
     const finalData = numbers.map((item, index) => {
-      return selectedNumber[index] + item;
-    });
+      return selectedNumber[index] + item
+    })
 
     const apiData = {
       name: values.company,
@@ -232,93 +241,99 @@ const EditCustomerDialog = ({
       platform: values.platform,
       pin: values.pin,
       created_at: values.created_at,
-      office: values.office
-    };
+      office: values.office,
+    }
 
     try {
-      let backendRoute = `/${userID}/customer/${data.id}`;
+      let backendRoute = `/${userID}/customer/${data.id}`
       if (data.image && !imageUrl) {
-        DeleteFromStorage(data.image);
+        DeleteFromStorage(data.image)
         const response = await axios.put(backendRoute, {
           ...apiData,
           image: null,
-        });
+        })
       } else if (imageUrl && !data.image) {
-        const name = `${OfficeState.value.data}/customer/${data.id
-          }/profile/${moment().valueOf().toString()}.png`;
-        const uploadRef = await UploadImage(imageUrl, name);
+        const name = `${OfficeState.value.data}/customer/${
+          data.id
+        }/profile/${moment().valueOf().toString()}.png`
+        const uploadRef = await UploadImage(imageUrl, name)
         const response = await axios.put(backendRoute, {
           ...apiData,
           image: name,
-        });
+        })
       } else if (originalUrl !== imageUrl) {
-        const name = data.image;
-        const uploadRef = await UploadImage(imageUrl, name);
+        const name = data.image
+        const uploadRef = await UploadImage(imageUrl, name)
       } else {
-        const response = await axios.put(backendRoute, apiData);
+        const response = await axios.put(backendRoute, apiData)
       }
 
-      toast.success("Customer Edited successfully");
-      await onRefresh();
-      handleClose(false);
+      toast.success("Customer Edited successfully")
+      await onRefresh()
+      handleClose(false)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
   const addNumberField = () => {
-    setNumbers((prevState) => [...prevState, ""]);
-    setSelectedNumber((prevState) => [...prevState, "+92"]);
-  };
+    setNumbers((prevState) => [...prevState, ""])
+    setSelectedNumber((prevState) => [...prevState, "+92"])
+  }
 
   const removeNumberField = (index: number) => {
-    setNumbers((prevState) => prevState.filter((_, ind) => ind !== index));
+    setNumbers((prevState) => prevState.filter((_, ind) => ind !== index))
     setSelectedNumber((prevState) =>
       prevState.filter((_, ind) => ind !== index)
-    );
-  };
+    )
+  }
 
   const handleNumberChange = (index: number, value: string) => {
     if (numberError) {
-      setNumberError("");
+      setNumberError("")
     }
     setNumbers((prevState) => {
-      const newState = [...prevState];
-      newState[index] = value;
-      return newState;
-    });
-    if (value) debouncedCheckNumber(selectedNumber[index] + value);
-  };
+      const newState = [...prevState]
+      newState[index] = value
+      return newState
+    })
+    if (value) debouncedCheckNumber(selectedNumber[index] + value)
+  }
 
   const handlePrefixChange = (index: number, value: string) => {
     setSelectedNumber((prevState) => {
-      const newState = [...prevState];
-      newState[index] = value;
-      return newState;
-    });
-  };
+      const newState = [...prevState]
+      newState[index] = value
+      return newState
+    })
+  }
 
   const checkNumberInDatabase = async (number: string) => {
-    setCustomerInfo([]);
-    setChecking(true);
+    setCustomerInfo([])
+    setChecking(true)
     try {
-      const response = await axios.post(`/${userID}/check-number`, { number },
+      const response = await axios.post(
+        `/${userID}/check-number`,
+        { number },
         {
           cancelKey: `check-number-${userID}`,
-        },);
-      const finalData = response.data.filter((item: { id: number }) => item.id !== data.id);
-      setCustomerInfo(finalData);
+        }
+      )
+      const finalData = response.data.filter(
+        (item: { id: number }) => item.id !== data.id
+      )
+      setCustomerInfo(finalData)
     } catch (error) {
-      console.log("Error checking number:", error);
+      console.log("Error checking number:", error)
     } finally {
-      setChecking(false);
+      setChecking(false)
     }
-  };
+  }
 
   const debouncedCheckNumber = useCallback(
     debounce(checkNumberInDatabase, 1000),
     []
-  );
+  )
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -333,7 +348,8 @@ const EditCustomerDialog = ({
                 Edit Customer
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                Update profile, contact, location, ownership, image, and lead details.
+                Update profile, contact, location, ownership, image, and lead
+                details.
               </DialogDescription>
             </div>
           </div>
@@ -343,10 +359,9 @@ const EditCustomerDialog = ({
           <div className="p-3.5">
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground"
+              className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase"
             >
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-
                 {/* Contact Information */}
                 <FieldSet className="gap-3 rounded-xl border border-border bg-muted/20 p-3">
                   <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
@@ -356,13 +371,18 @@ const EditCustomerDialog = ({
 
                   {/* Phone Numbers */}
                   <Field>
-                    <FieldLabel style={{ color: numberError ? "red" : undefined }}>
+                    <FieldLabel
+                      style={{ color: numberError ? "red" : undefined }}
+                    >
                       Phone Number <RequiredStar />
                     </FieldLabel>
 
                     <div className="space-y-2">
                       {numbers.map((num, index) => (
-                        <div key={index} className="grid gap-2 rounded-xl border bg-muted/15 p-2 sm:grid-cols-[112px_1fr_auto] sm:items-center">
+                        <div
+                          key={index}
+                          className="grid gap-2 rounded-xl border bg-muted/15 p-2 sm:grid-cols-[112px_1fr_auto] sm:items-center"
+                        >
                           <div>
                             <NumberSearch
                               value={selectedNumber[index]}
@@ -375,7 +395,9 @@ const EditCustomerDialog = ({
                             disabled={!selectedNumber[index]}
                             placeholder="xxxxxxxxx"
                             value={num}
-                            onChange={(e) => handleNumberChange(index, e.target.value)}
+                            onChange={(e) =>
+                              handleNumberChange(index, e.target.value)
+                            }
                             className="bg-background"
                           />
 
@@ -386,8 +408,8 @@ const EditCustomerDialog = ({
                                 variant="destructive"
                                 size="icon-sm"
                                 onClick={() => {
-                                  removeNumberField(index);
-                                  setCustomerInfo([]);
+                                  removeNumberField(index)
+                                  setCustomerInfo([])
                                 }}
                               >
                                 <Trash size={14} />
@@ -431,7 +453,11 @@ const EditCustomerDialog = ({
                     </div>
                   )}
 
-                  {numberError && <Label className="text-xs text-destructive">{numberError}</Label>}
+                  {numberError && (
+                    <Label className="text-xs text-destructive">
+                      {numberError}
+                    </Label>
+                  )}
 
                   {/* Email */}
                   <Controller
@@ -452,7 +478,10 @@ const EditCustomerDialog = ({
                     render={({ field }) => (
                       <Field>
                         <FieldLabel>Other IDs</FieldLabel>
-                        <Input placeholder="wechat / qq / facebook / twitter" {...field} />
+                        <Input
+                          placeholder="wechat / qq / facebook / twitter"
+                          {...field}
+                        />
                       </Field>
                     )}
                   />
@@ -475,7 +504,9 @@ const EditCustomerDialog = ({
                           Customer <RequiredStar />
                         </FieldLabel>
                         <Input placeholder="Enter customer name" {...field} />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
                       </Field>
                     )}
                   />
@@ -490,7 +521,9 @@ const EditCustomerDialog = ({
                           Company <RequiredStar />
                         </FieldLabel>
                         <Input placeholder="Enter company name" {...field} />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
                       </Field>
                     )}
                   />
@@ -514,7 +547,10 @@ const EditCustomerDialog = ({
                     render={({ field }) => (
                       <Field>
                         <FieldLabel>Industry</FieldLabel>
-                        <IndustrySearch value={field.value} onReturn={field.onChange} />
+                        <IndustrySearch
+                          value={field.value}
+                          onReturn={field.onChange}
+                        />
                       </Field>
                     )}
                   />
@@ -555,8 +591,13 @@ const EditCustomerDialog = ({
                         <FieldLabel>
                           City <RequiredStar />
                         </FieldLabel>
-                        <CitiesSearch value={field.value} onReturn={field.onChange} />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        <CitiesSearch
+                          value={field.value}
+                          onReturn={field.onChange}
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
                       </Field>
                     )}
                   />
@@ -600,16 +641,21 @@ const EditCustomerDialog = ({
                     render={({ field }) => (
                       <Field>
                         <FieldLabel>Platform</FieldLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select platform" />
                           </SelectTrigger>
                           <SelectContent>
-                            {["SOCIAL MEDIA", "SENFENG", "DIRECT"].map((item) => (
-                              <SelectItem key={item} value={item}>
-                                {item}
-                              </SelectItem>
-                            ))}
+                            {["SOCIAL MEDIA", "SENFENG", "DIRECT"].map(
+                              (item) => (
+                                <SelectItem key={item} value={item}>
+                                  {item}
+                                </SelectItem>
+                              )
+                            )}
                           </SelectContent>
                         </Select>
                       </Field>
@@ -626,7 +672,10 @@ const EditCustomerDialog = ({
                           <FieldLabel>
                             Office branch <RequiredStar />
                           </FieldLabel>
-                          <Select value={field.value} onValueChange={field.onChange}>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
                             <SelectTrigger>
                               <SelectValue placeholder="Select office" />
                             </SelectTrigger>
@@ -638,7 +687,9 @@ const EditCustomerDialog = ({
                               ))}
                             </SelectContent>
                           </Select>
-                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
                         </Field>
                       )}
                     />
@@ -652,7 +703,10 @@ const EditCustomerDialog = ({
                       render={({ field }) => (
                         <Field>
                           <FieldLabel>Ownership</FieldLabel>
-                          <UserSearch value={field.value} onReturn={field.onChange} />
+                          <UserSearch
+                            value={field.value}
+                            onReturn={field.onChange}
+                          />
                         </Field>
                       )}
                     />
@@ -666,7 +720,11 @@ const EditCustomerDialog = ({
                       render={({ field }) => (
                         <Field>
                           <FieldLabel>Lead Generated By</FieldLabel>
-                          <UserSearch lead value={field.value} onReturn={field.onChange} />
+                          <UserSearch
+                            lead
+                            value={field.value}
+                            onReturn={field.onChange}
+                          />
                         </Field>
                       )}
                     />
@@ -692,7 +750,7 @@ const EditCustomerDialog = ({
                     Additional Options
                   </FieldLegend>
 
-                  <div className="flex gap-6 flex-wrap items-end">
+                  <div className="flex flex-wrap items-end gap-6">
                     {/* <Controller
                       name="rating"
                       control={control}
@@ -704,14 +762,18 @@ const EditCustomerDialog = ({
                       )}
                     /> */}
 
-                    {(isAdmin || designation === "Customer Relationship Manager") && (
+                    {(isAdmin ||
+                      designation === "Customer Relationship Manager") && (
                       <Controller
                         name="created_at"
                         control={control}
                         render={({ field }) => (
                           <Field>
                             <FieldLabel>Date</FieldLabel>
-                            <AppCalendar date={field.value} onChange={field.onChange} />
+                            <AppCalendar
+                              date={field.value}
+                              onChange={field.onChange}
+                            />
                           </Field>
                         )}
                       />
@@ -724,7 +786,10 @@ const EditCustomerDialog = ({
                         render={({ field }) => (
                           <Field className="rounded-xl border bg-muted/15 p-3">
                             <div className="flex items-center justify-between gap-3">
-                              <FieldLabel htmlFor="member" className="cursor-pointer text-sm font-medium">
+                              <FieldLabel
+                                htmlFor="member"
+                                className="cursor-pointer text-sm font-medium"
+                              >
                                 Member?
                               </FieldLabel>
                               <Checkbox
@@ -745,7 +810,8 @@ const EditCustomerDialog = ({
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-                    Duplicate number checks and required fields are validated before save.
+                    Duplicate number checks and required fields are validated
+                    before save.
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Button
@@ -776,8 +842,8 @@ const EditCustomerDialog = ({
                   <Button
                     type="button"
                     onClick={(e) => {
-                      e.preventDefault();
-                      onClickDelete();
+                      e.preventDefault()
+                      onClickDelete()
                     }}
                     variant="destructive"
                     className="mt-2 w-full"
@@ -787,16 +853,11 @@ const EditCustomerDialog = ({
                 )}
               </div>
             </form>
-
-
-
           </div>
         </ScrollArea>
-
-
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default EditCustomerDialog;
+export default EditCustomerDialog

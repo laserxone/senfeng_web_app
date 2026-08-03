@@ -1,17 +1,15 @@
-
-import pool from "@/config/db";
+import pool from "@/config/db"
 import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(req : NextRequest) {
+export async function GET(req: NextRequest) {
+  const branch = "karachi"
+  const searchParams = req.nextUrl.searchParams
 
-    const branch = "karachi"
-    const searchParams = req.nextUrl.searchParams;
+  try {
+    const month = searchParams.get("month")
+    const year = searchParams.get("year")
 
-    try {
-        const month = searchParams.get('month');
-        const year = searchParams.get('year');
-
-        const salaryQuery = `
+    const salaryQuery = `
             SELECT 
                 u.id AS user_id,
                 u.name,
@@ -27,19 +25,18 @@ export async function GET(req : NextRequest) {
                 AND s.issued = $3
             WHERE u.active IS TRUE AND u.office = '${branch}'
             ORDER BY u.name ASC;
-        `;
+        `
 
-        const salaryResult = await pool.query(salaryQuery, [month, year, true]);
+    const salaryResult = await pool.query(salaryQuery, [month, year, true])
 
-        return NextResponse.json(salaryResult.rows, { status: 200 });
-
-    } catch (error : any) {
-        console.log('Error fetching data: ', error);
-        return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 });
-    }
+    return NextResponse.json(salaryResult.rows, { status: 200 })
+  } catch (error: any) {
+    console.log("Error fetching data: ", error)
+    return NextResponse.json(
+      { message: error.message || "Something went wrong" },
+      { status: 500 }
+    )
+  }
 }
-
-
-
 
 export const revalidate = 0

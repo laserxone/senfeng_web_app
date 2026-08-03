@@ -1,4 +1,3 @@
-
 import pool from "@/config/db"
 import { NextResponse } from "next/server"
 
@@ -13,6 +12,9 @@ export async function GET() {
     return NextResponse.json(users.rows)
   } catch (error) {
     console.error("Error fetching users:", error)
-    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to fetch users" },
+      { status: 500 }
+    )
   }
 }

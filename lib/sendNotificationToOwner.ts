@@ -1,17 +1,20 @@
-import pool from "@/config/db";
-import moment from "moment";
-import admin from "./firebaseAdmin";
-import { NotificationCategory } from "@/constants/notifications";
+import pool from "@/config/db"
+import moment from "moment"
+import admin from "./firebaseAdmin"
+import { NotificationCategory } from "@/constants/notifications"
 
-
-
-export const sendNotificationToOwner = async (description : string, page: string, office: string, category: NotificationCategory, title: string) => {
+export const sendNotificationToOwner = async (
+  description: string,
+  page: string,
+  office: string,
+  category: NotificationCategory,
+  title: string
+) => {
   try {
-
     const ownersResult = await pool.query(
       `SELECT id FROM users WHERE designation = 'Owner' AND office = '${office}'`
-    );
-    const ownerIds = ownersResult.rows.map((owner) => owner.id);
+    )
+    const ownerIds = ownersResult.rows.map((owner) => owner.id)
 
     const TimeStamp = moment().valueOf()
 
@@ -22,21 +25,18 @@ export const sendNotificationToOwner = async (description : string, page: string
       read: false,
       description,
       sendTo: eachId,
-      category
-    }));
+      category,
+    }))
 
-
-
-    const db = admin.firestore();
-    const batch = db.batch();
+    const db = admin.firestore()
+    const batch = db.batch()
 
     notifications.forEach((notification) => {
-      const docRef = db.collection("Notification").doc();
-      batch.set(docRef, notification);
-    });
+      const docRef = db.collection("Notification").doc()
+      batch.set(docRef, notification)
+    })
 
-    await batch.commit();
-
+    await batch.commit()
 
     console.log("Notification sent")
   } catch (error) {

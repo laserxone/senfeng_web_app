@@ -1,13 +1,12 @@
-"use client";
+"use client"
 
-import PageTable from "@/components/shared/tables/app-table";
-import { Button } from "@/components/ui/button";
-import Heading from "@/components/ui/heading";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { ArrowUpDown, ClipboardCheck, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
-
+import PageTable from "@/components/shared/tables/app-table"
+import { Button } from "@/components/ui/button"
+import Heading from "@/components/ui/heading"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { ArrowUpDown, ClipboardCheck, Plus } from "lucide-react"
+import { useEffect, useState } from "react"
 
 import {
   Dialog,
@@ -15,38 +14,39 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 
-
-import { Input } from "@/components/ui/input";
-import { DeliveryType, DispatchPdf } from "@/lib/types";
-import { ColumnDef } from "@tanstack/react-table";
-import Link from "next/link";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import Spinner from "@/components/ui/spinner";
-import { DispatchOrderDialog } from "./dispatch-dialoges";
+import { Input } from "@/components/ui/input"
+import { DeliveryType, DispatchPdf } from "@/lib/types"
+import { ColumnDef } from "@tanstack/react-table"
+import Link from "next/link"
+import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import Spinner from "@/components/ui/spinner"
+import { DispatchOrderDialog } from "./dispatch-dialoges"
 
 export default function MachineDelivery() {
-  const { userID, base_route } = useUserDetail();
-  const [data, setData] = useState<DeliveryType[]>([]);
-  const [selectedDelivery, setSelectedDelivery] = useState<DeliveryType | null>(null);
-  const [loading, setLoading] = useState(false);
+  const { userID, base_route } = useUserDetail()
+  const [data, setData] = useState<DeliveryType[]>([])
+  const [selectedDelivery, setSelectedDelivery] = useState<DeliveryType | null>(
+    null
+  )
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (userID) {
-      fetchData();
+      fetchData()
     }
-  }, [userID]);
+  }, [userID])
 
   async function fetchData() {
-    if (!userID) return;
-    setLoading(true);
+    if (!userID) return
+    setLoading(true)
     try {
-      const response = await axios.get(`/${userID}/delivery`);
-      setData(response.data);
+      const response = await axios.get(`/${userID}/delivery`)
+      setData(response.data)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
@@ -63,10 +63,16 @@ export default function MachineDelivery() {
             Owner
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => (
-        <Link className="hover:underline" target="_blank" href={`/${base_route}/member/${row.original.customer_id}/${row.original.id}`}><div className="ml-2">{row.getValue("customer_owner")}</div></Link>
+        <Link
+          className="hover:underline"
+          target="_blank"
+          href={`/${base_route}/member/${row.original.customer_id}/${row.original.id}`}
+        >
+          <div className="ml-2">{row.getValue("customer_owner")}</div>
+        </Link>
       ),
     },
 
@@ -82,9 +88,17 @@ export default function MachineDelivery() {
             Company
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
-      cell: ({ row }) => <Link className="hover:underline" target="_blank" href={`/${base_route}/member/${row.original.customer_id}/${row.original.id}`}><div>{row.getValue("customer_name")}</div></Link>,
+      cell: ({ row }) => (
+        <Link
+          className="hover:underline"
+          target="_blank"
+          href={`/${base_route}/member/${row.original.customer_id}/${row.original.id}`}
+        >
+          <div>{row.getValue("customer_name")}</div>
+        </Link>
+      ),
     },
     {
       accessorKey: "ownership_name",
@@ -98,7 +112,7 @@ export default function MachineDelivery() {
             Manager
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("ownership_name")}</div>,
     },
@@ -115,7 +129,7 @@ export default function MachineDelivery() {
             Serial No
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("serial_no")}</div>,
     },
@@ -132,7 +146,7 @@ export default function MachineDelivery() {
             Power
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("power")}</div>,
     },
@@ -149,7 +163,7 @@ export default function MachineDelivery() {
             Source
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("source")}</div>,
     },
@@ -158,28 +172,23 @@ export default function MachineDelivery() {
       id: "actions",
       header: "Action",
       cell: ({ row }) => {
-
         return (
           <Button
             size="sm"
             onClick={(e) => {
-              e.stopPropagation();
-              setSelectedDelivery(row.original);
-
+              e.stopPropagation()
+              setSelectedDelivery(row.original)
             }}
           >
             Create DO
           </Button>
-        );
-
+        )
       },
     },
-  ];
-
-
+  ]
 
   const generatePDF = async (item: DispatchPdf) => {
-    const PDFData = { ...item };
+    const PDFData = { ...item }
 
     try {
       const pdfRes = await axios.post(
@@ -192,20 +201,20 @@ export default function MachineDelivery() {
           headers: {
             "Content-Type": "application/json",
           },
-        },
-      );
+        }
+      )
 
       const blob = new Blob([pdfRes.data], {
         type: "application/pdf",
-      });
+      })
 
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
-      setTimeout(() => URL.revokeObjectURL(url), 600000);
+      const url = URL.createObjectURL(blob)
+      window.open(url, "_blank")
+      setTimeout(() => URL.revokeObjectURL(url), 600000)
     } catch (error) {
-      console.log(error);
+      console.log(error)
     }
-  };
+  }
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -221,8 +230,7 @@ export default function MachineDelivery() {
         loading={loading}
         columns={columns}
         data={data}
-
-        onRowClick={(val, event) => { }}
+        onRowClick={(val, event) => {}}
       >
         <MachineChecklist />
       </PageTable>
@@ -235,86 +243,83 @@ export default function MachineDelivery() {
         openPdf={generatePDF}
       />
     </div>
-  );
+  )
 }
 
-
 const MachineChecklist = () => {
-  const [loading, setLoading] = useState(false);
-  const { userID } = useUserDetail();
-  const [open, setOpen] = useState(false);
-  const [saveLoading, setSaveLoading] = useState(false);
-  const [ID, setID] = useState(null);
-  const [form, setForm] = useState<Record<string, any>>({});
+  const [loading, setLoading] = useState(false)
+  const { userID } = useUserDetail()
+  const [open, setOpen] = useState(false)
+  const [saveLoading, setSaveLoading] = useState(false)
+  const [ID, setID] = useState(null)
+  const [form, setForm] = useState<Record<string, any>>({})
 
   async function fetchData() {
-    if (!userID) return;
-    setLoading(true);
+    if (!userID) return
+    setLoading(true)
     try {
-      const response = await axios.get(`/${userID}/settings`);
-      setID(response.data?.id);
-      const apiList = response.data?.machine_checklist;
-      (setForm(apiList), setOpen(true));
+      const response = await axios.get(`/${userID}/settings`)
+      setID(response.data?.id)
+      const apiList = response.data?.machine_checklist
+      ;(setForm(apiList), setOpen(true))
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
-
-
 
   function handleChange(key: string, val: string) {
     setForm((prev) => ({
       ...prev,
       [key]: val,
-    }));
+    }))
   }
 
   function handleChangeKey(oldKey: string, newKey: string) {
-    if (!newKey || oldKey === newKey) return;
+    if (!newKey || oldKey === newKey) return
 
     setForm((prev) => {
-      const updated = { ...prev };
-      if (updated[newKey]) return prev;
+      const updated = { ...prev }
+      if (updated[newKey]) return prev
 
-      updated[newKey] = updated[oldKey];
-      delete updated[oldKey];
+      updated[newKey] = updated[oldKey]
+      delete updated[oldKey]
 
-      return updated;
-    });
+      return updated
+    })
   }
 
   function handleAddNew() {
-    const newKey = `new_key_${Date.now()}`;
+    const newKey = `new_key_${Date.now()}`
 
     setForm((prev) => ({
       ...prev,
       [newKey]: "",
-    }));
+    }))
   }
 
   function onClose() {
-    setOpen(false);
+    setOpen(false)
   }
 
   function normalizeKey(key: string) {
-    return key.toLowerCase().trim().replace(/\s+/g, "_");
+    return key.toLowerCase().trim().replace(/\s+/g, "_")
   }
 
   async function handleSave() {
-    if (!userID || !ID) return;
-    setSaveLoading(true);
+    if (!userID || !ID) return
+    setSaveLoading(true)
     try {
       const formattedForm = Object.fromEntries(
-        Object.entries(form).map(([k, v]) => [normalizeKey(k), v]),
-      );
+        Object.entries(form).map(([k, v]) => [normalizeKey(k), v])
+      )
 
       await axios.put(`/${userID}/settings`, {
         id: ID,
         machine_checklist: formattedForm,
-      });
-      onClose();
+      })
+      onClose()
     } finally {
-      setSaveLoading(false);
+      setSaveLoading(false)
     }
   }
 
@@ -328,11 +333,23 @@ const MachineChecklist = () => {
       <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-lg">
           <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
-            <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><ClipboardCheck className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Configure Machine Checklist</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Add or update the checklist fields required for delivery.</DialogDescription></div></div>
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+                <ClipboardCheck className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <DialogTitle className="text-sm font-semibold text-foreground">
+                  Configure Machine Checklist
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Add or update the checklist fields required for delivery.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
 
           <ScrollArea className="max-h-[calc(100dvh-132px)]">
-            <div className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
+            <div className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase">
               {Object.entries(form).map(([k, v]) => (
                 <div key={k} className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -357,13 +374,17 @@ const MachineChecklist = () => {
                 <Plus /> Add Field
               </Button>
               <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:justify-end">
-                <Button variant="outline" onClick={onClose}>Cancel</Button>
-                <Button disabled={saveLoading} onClick={handleSave}>{saveLoading && <Spinner />}Save</Button>
+                <Button variant="outline" onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button disabled={saveLoading} onClick={handleSave}>
+                  {saveLoading && <Spinner />}Save
+                </Button>
               </div>
             </div>
           </ScrollArea>
         </DialogContent>
       </Dialog>
     </>
-  );
-};
+  )
+}

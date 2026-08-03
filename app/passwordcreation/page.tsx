@@ -1,94 +1,92 @@
 "use client"
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Spinner from "@/components/ui/spinner";
-import { auth } from "@/config/firebase";
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import Spinner from "@/components/ui/spinner"
+import { auth } from "@/config/firebase"
 
-import { cn } from "@/lib/utils";
-import { confirmPasswordReset } from "firebase/auth";
-import { CircleCheck } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { cn } from "@/lib/utils"
+import { confirmPasswordReset } from "firebase/auth"
+import { CircleCheck } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 export default function Page() {
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [validation, setValidation] = useState([false, false]);
-  const [matched, setMatched] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [validation, setValidation] = useState([false, false])
+  const [matched, setMatched] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     if (password.length > 7) {
       if (validation[0] == false)
         setValidation((prevState) => {
-          const newState = [...prevState];
-          newState[0] = true;
-          return newState;
-        });
+          const newState = [...prevState]
+          newState[0] = true
+          return newState
+        })
     } else {
       if (validation[0] == true)
         setValidation((prevState) => {
-          const newState = [...prevState];
-          newState[0] = false;
-          return newState;
-        });
+          const newState = [...prevState]
+          newState[0] = false
+          return newState
+        })
     }
 
     if (!/[0-9]/.test(password)) {
       if (validation[1] == true)
         setValidation((prevState) => {
-          const newState = [...prevState];
-          newState[1] = false;
-          return newState;
-        });
+          const newState = [...prevState]
+          newState[1] = false
+          return newState
+        })
     } else {
       if (validation[1] == false)
         setValidation((prevState) => {
-          const newState = [...prevState];
-          newState[1] = true;
-          return newState;
-        });
+          const newState = [...prevState]
+          newState[1] = true
+          return newState
+        })
     }
 
     if (password == confirmPassword) {
-      if (matched == false) setMatched(true);
+      if (matched == false) setMatched(true)
     } else {
-      if (matched == true) setMatched(false);
+      if (matched == true) setMatched(false)
     }
-  }, [password, confirmPassword]);
+  }, [password, confirmPassword])
 
   async function handlePasswordCreation() {
     setLoading(true)
     try {
-      const oobCode = new URLSearchParams(window.location.search).get(
-        "oobCode"
-      ) ?? "";
-      const mode = new URLSearchParams(window.location.search).get("mode");
-      const continueUrl = new URLSearchParams(window.location.search).get(
-        "continueUrl"
-      ) ?? "http://app.senfenglaserpk.com/login";
+      const oobCode =
+        new URLSearchParams(window.location.search).get("oobCode") ?? ""
+      const mode = new URLSearchParams(window.location.search).get("mode")
+      const continueUrl =
+        new URLSearchParams(window.location.search).get("continueUrl") ??
+        "http://app.senfenglaserpk.com/login"
       confirmPasswordReset(auth, oobCode, password)
         .then(() => {
-          setLoading(false);
-          toast.success("Password creation successfull, login to continue");
-          router.replace(continueUrl);
+          setLoading(false)
+          toast.success("Password creation successfull, login to continue")
+          router.replace(continueUrl)
         })
         .catch((e) => {
           console.log(e)
-          setLoading(false);
-          toast.error(e?.message || "Error password creation");
-        });
+          setLoading(false)
+          toast.error(e?.message || "Error password creation")
+        })
     } catch (error) {
       console.log(error)
     }
@@ -96,7 +94,7 @@ export default function Page() {
   }
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10 w-full">
+    <div className="flex min-h-svh w-full flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
       <div className="flex w-full max-w-sm flex-col gap-6">
         <div className={cn("flex flex-col gap-6")}>
           <Card>
@@ -107,7 +105,6 @@ export default function Page() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-
               <div className="grid gap-6">
                 <div className="grid gap-6">
                   <div className="grid gap-2">
@@ -136,25 +133,36 @@ export default function Page() {
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <div className="flex flex-row gap-2 items-center">
+                    <div className="flex flex-row items-center gap-2">
                       <CircleCheck
                         color={validation[0] ? "#66b2b2" : "#CED3DB"}
                       />
-                      <Label style={{ color: validation[0] ? "green" : "#475467" }}>
+                      <Label
+                        style={{ color: validation[0] ? "green" : "#475467" }}
+                      >
                         Must be at least 8 characters
                       </Label>
                     </div>
-                    <div className="flex flex-row gap-2 items-center">
+                    <div className="flex flex-row items-center gap-2">
                       <CircleCheck
                         color={validation[1] ? "#66b2b2" : "#CED3DB"}
                       />
-                      <Label style={{ color: validation[1] ? "green" : "#475467" }} >
+                      <Label
+                        style={{ color: validation[1] ? "green" : "#475467" }}
+                      >
                         Must contain one number
                       </Label>
                     </div>
                   </div>
 
-                  <Button onClick={handlePasswordCreation} disabled={!validation[0] || !validation[1] || !matched || loading} type="submit" className="w-full">
+                  <Button
+                    onClick={handlePasswordCreation}
+                    disabled={
+                      !validation[0] || !validation[1] || !matched || loading
+                    }
+                    type="submit"
+                    className="w-full"
+                  >
                     {loading && <Spinner />}
                     Proceed
                   </Button>
@@ -166,11 +174,10 @@ export default function Page() {
                   </a>
                 </div>
               </div>
-
             </CardContent>
           </Card>
         </div>
       </div>
     </div>
-  );
+  )
 }

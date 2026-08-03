@@ -1,7 +1,5 @@
-import Applications from "@/components/page-compositions/general/applications";
+import Applications from "@/components/page-compositions/general/applications"
 
-
-export default function Page(){
-
-    return <Applications />
+export default function Page() {
+  return <Applications />
 }

@@ -1,16 +1,15 @@
-import pool from "@/config/db";
-import UploadImageForMobile from "@/lib/uploadImageForMobile";
-import { NextRequest, NextResponse } from "next/server";
+import pool from "@/config/db"
+import UploadImageForMobile from "@/lib/uploadImageForMobile"
+import { NextRequest, NextResponse } from "next/server"
 
-
-
-export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
-
-
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ uid: string }> }
+) {
   const { uid } = await params
   const searchParams = req.nextUrl.searchParams
-  const start_date = searchParams.get('start_date')
-  const end_date = searchParams.get('end_date')
+  const start_date = searchParams.get("start_date")
+  const end_date = searchParams.get("end_date")
 
   try {
     let query = `
@@ -28,82 +27,91 @@ FROM visit r
 LEFT JOIN users u ON r.user_id = u.id
 LEFT JOIN customer c ON r.customer_id = c.id
 WHERE u.id = $1
-    `;
+    `
 
-    const queryParams = [uid];
+    const queryParams = [uid]
 
     if (start_date && end_date) {
-      query += ` AND r.created_at BETWEEN $2 AND $3`;
-      queryParams.push(start_date, end_date);
+      query += ` AND r.created_at BETWEEN $2 AND $3`
+      queryParams.push(start_date, end_date)
     }
 
-    query += ` ORDER BY r.created_at DESC;`;
-    const result = await pool.query(query, queryParams);
+    query += ` ORDER BY r.created_at DESC;`
+    const result = await pool.query(query, queryParams)
     return NextResponse.json(result.rows, { status: 200 })
-
-  } catch (error:any) {
-    console.error('Error fetching data: ', error);
-    return NextResponse.json({ message: error.message || "Something went wrong" }, { status: 500 })
+  } catch (error: any) {
+    console.error("Error fetching data: ", error)
+    return NextResponse.json(
+      { message: error.message || "Something went wrong" },
+      { status: 500 }
+    )
   }
-
-
 }
 
-export async function POST(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ uid: string }> }
+) {
   try {
     const searchParams = req.nextUrl.searchParams
-    const saveLocation = searchParams.get('savelocation')
-    const { image_base64, ...data } = await req.json();
-    const { uid } = await params;
+    const saveLocation = searchParams.get("savelocation")
+    const { image_base64, ...data } = await req.json()
+    const { uid } = await params
 
     if (!data || Object.keys(data).length === 0) {
-      return NextResponse.json({ message: "No data provided for insertion" }, { status: 400 });
+      return NextResponse.json(
+        { message: "No data provided for insertion" },
+        { status: 400 }
+      )
     }
 
     if (data.signature) {
-      const fileName = `karachi/${uid}/signature/${Date.now()}.png`;
-      UploadImageForMobile(data.signature, fileName);
-      data.signature = fileName;
+      const fileName = `karachi/${uid}/signature/${Date.now()}.png`
+      UploadImageForMobile(data.signature, fileName)
+      data.signature = fileName
     }
 
     if (image_base64) {
-      UploadImageForMobile(image_base64, data.image);
+      UploadImageForMobile(image_base64, data.image)
     }
 
-    const fields = Object.keys(data);
-    const values = Object.values(data);
-    const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
+    const fields = Object.keys(data)
+    const values = Object.values(data)
+    const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ")
 
     const query = `
         INSERT INTO visit (${fields.join(", ")})
         VALUES (${placeholders})
         RETURNING *;
-      `;
+      `
 
-    const { rows } = await pool.query(query, values);
-    const newData = rows[0];
+    const { rows } = await pool.query(query, values)
+    const newData = rows[0]
 
     // Get user name
-    const userQuery = `SELECT name FROM users WHERE id = $1;`;
-    const userResult = await pool.query(userQuery, [uid]);
-    const user_name = userResult.rows.length > 0 ? userResult.rows[0].name : null;
+    const userQuery = `SELECT name FROM users WHERE id = $1;`
+    const userResult = await pool.query(userQuery, [uid])
+    const user_name =
+      userResult.rows.length > 0 ? userResult.rows[0].name : null
 
     if (saveLocation) {
       const { location, customer_id } = data
       const url = `https://www.google.com/maps/search/?api=1&query=${location[0]},${location[1]}`
-      await pool.query(`
-        UPDATE customer SET pin = $1 WHERE id = $2`, [url, customer_id])
+      await pool.query(
+        `
+        UPDATE customer SET pin = $1 WHERE id = $2`,
+        [url, customer_id]
+      )
     }
 
-    return NextResponse.json({ ...newData, user_name }, { status: 200 });
-
+    return NextResponse.json({ ...newData, user_name }, { status: 200 })
   } catch (error) {
-    console.error('Error inserting data: ', error);
-    return NextResponse.json({ message: 'Error adding customer' }, { status: 500 });
+    console.error("Error inserting data: ", error)
+    return NextResponse.json(
+      { message: "Error adding customer" },
+      { status: 500 }
+    )
   }
 }
-
-
-
 
 export const revalidate = 0

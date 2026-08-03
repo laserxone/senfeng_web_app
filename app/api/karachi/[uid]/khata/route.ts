@@ -1,9 +1,7 @@
-
-import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import pool from "@/config/db"
+import { NextResponse } from "next/server"
 
 export async function GET() {
-  
   const result = await pool.query(`
     SELECT 
       k.*,
@@ -13,15 +11,15 @@ export async function GET() {
       ON kp.khata_id = k.id
     GROUP BY k.id
     ORDER BY k.created_at DESC
-  `);
+  `)
 
-  return NextResponse.json(result.rows);
+  return NextResponse.json(result.rows)
 }
 
 export async function POST(req: Request) {
-  const body = await req.json();
+  const body = await req.json()
 
-  const { name, start_date, end_date, note } = body;
+  const { name, start_date, end_date, note } = body
 
   const result = await pool.query(
     `
@@ -30,7 +28,7 @@ export async function POST(req: Request) {
     RETURNING *
     `,
     [name, start_date, end_date, note]
-  );
+  )
 
-  return NextResponse.json(result.rows[0]);
+  return NextResponse.json(result.rows[0])
 }

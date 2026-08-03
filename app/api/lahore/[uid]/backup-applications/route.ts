@@ -1,16 +1,16 @@
-import pool from "@/config/db";
-import { NOTIFICATION_TYPES } from "@/constants/notifications";
-import { sendNotification } from "@/lib/sendNotification";
-import { NextRequest, NextResponse } from "next/server";
+import pool from "@/config/db"
+import { NOTIFICATION_TYPES } from "@/constants/notifications"
+import { sendNotification } from "@/lib/sendNotification"
+import { NextRequest, NextResponse } from "next/server"
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(request.url)
 
-    const userId = searchParams.get("user_id");
-    const approverId = searchParams.get("approver_id");
+    const userId = searchParams.get("user_id")
+    const approverId = searchParams.get("approver_id")
 
-    let result;
+    let result
 
     if (userId) {
       result = await pool.query(
@@ -53,9 +53,9 @@ export async function GET(request: NextRequest) {
         ORDER BY ba.created_at DESC
         `,
         [parseInt(userId)]
-      );
+      )
     } else if (approverId) {
-      const approverIdInt = parseInt(approverId);
+      const approverIdInt = parseInt(approverId)
 
       result = await pool.query(
         `
@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
           ba.created_at DESC
         `,
         [approverIdInt]
-      );
+      )
     } else {
       result = await pool.query(`
         SELECT 
@@ -149,27 +149,27 @@ export async function GET(request: NextRequest) {
         LEFT JOIN users approver ON bapp.approver_id = approver.id
         GROUP BY ba.id, u.name, u.designation, ah.name
         ORDER BY ba.created_at DESC
-      `);
+      `)
     }
 
-    return NextResponse.json(result.rows);
+    return NextResponse.json(result.rows)
   } catch (error: any) {
-    console.log("Error fetching backup applications:", error);
+    console.log("Error fetching backup applications:", error)
 
     return NextResponse.json(
       { message: error?.message || "Failed to fetch backup applications" },
       { status: 500 }
-    );
+    )
   }
 }
 
 export async function POST(request: NextRequest) {
-  const client = await pool.connect();
+  const client = await pool.connect()
 
   try {
-    await client.query("BEGIN");
+    await client.query("BEGIN")
 
-    const body = await request.json();
+    const body = await request.json()
 
     const {
       name,
@@ -181,8 +181,8 @@ export async function POST(request: NextRequest) {
       user_id,
       hierarchy_id,
       sale_id,
-      backup_inventory_id
-    } = body;
+      backup_inventory_id,
+    } = body
 
     const applicationResult = await client.query(
       `
@@ -217,11 +217,11 @@ export async function POST(request: NextRequest) {
         user_id,
         hierarchy_id || null,
         sale_id || null,
-        backup_inventory_id || null
+        backup_inventory_id || null,
       ]
-    );
+    )
 
-    const application = applicationResult.rows[0];
+    const application = applicationResult.rows[0]
 
     if (hierarchy_id) {
       const approversResult = await client.query(
@@ -232,7 +232,7 @@ export async function POST(request: NextRequest) {
         ORDER BY approval_order
         `,
         [hierarchy_id]
-      );
+      )
 
       for (const approver of approversResult.rows) {
         await client.query(
@@ -245,12 +245,8 @@ export async function POST(request: NextRequest) {
           )
           VALUES ($1, $2, $3, 'pending')
           `,
-          [
-            application.id,
-            approver.user_id,
-            approver.approval_order,
-          ]
-        );
+          [application.id, approver.user_id, approver.approval_order]
+        )
       }
 
       await client.query(
@@ -260,42 +256,42 @@ export async function POST(request: NextRequest) {
         WHERE id = $1
         `,
         [application.id]
-      );
+      )
 
       if (approversResult.rows.length > 0) {
         const nameQuery = await client.query(
           `SELECT name FROM users WHERE id = $1`,
           [user_id]
-        );
+        )
 
-        const userName = nameQuery.rows?.[0]?.name || "";
-        const sendTo = approversResult.rows?.[0]?.user_id ?? null;
+        const userName = nameQuery.rows?.[0]?.name || ""
+        const sendTo = approversResult.rows?.[0]?.user_id ?? null
 
         sendNotification(
           `${userName} submitted backup application requesting your approval`,
           `applications/backup?b=${application.id}`,
           sendTo,
           NOTIFICATION_TYPES.backup_applied.title,
-          NOTIFICATION_TYPES.backup_applied.category,
-        );
+          NOTIFICATION_TYPES.backup_applied.category
+        )
       }
     }
 
-    await client.query("COMMIT");
+    await client.query("COMMIT")
 
     return NextResponse.json(application, {
       status: 201,
-    });
+    })
   } catch (error) {
-    await client.query("ROLLBACK");
+    await client.query("ROLLBACK")
 
-    console.error("Error creating backup application:", error);
+    console.error("Error creating backup application:", error)
 
     return NextResponse.json(
       { error: "Failed to create backup application" },
       { status: 500 }
-    );
+    )
   } finally {
-    client.release();
+    client.release()
   }
 }

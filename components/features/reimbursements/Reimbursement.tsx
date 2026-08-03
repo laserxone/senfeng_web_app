@@ -1,27 +1,37 @@
-"use client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { AlertCircle, Building2, Calendar, CircleCheck, Download, Filter, MapPin, Plus, ReceiptText, RotateCcw, Search, Trash2, User } from "lucide-react";
+"use client"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
-  useEffect,
-  useMemo,
-  useState
-} from "react";
+  AlertCircle,
+  Building2,
+  Calendar,
+  CircleCheck,
+  Download,
+  Filter,
+  MapPin,
+  Plus,
+  ReceiptText,
+  RotateCcw,
+  Search,
+  Trash2,
+  User,
+} from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
 
-import FilterSheet from "@/components/features/users/filter-sheet";
-import CurrencyFormatter from "@/components/shared/common/currency-formatter";
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
-import { MyImgZooming } from "@/components/shared/media/img-zooming";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import Spinner from "@/components/ui/spinner";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import exportToExcel from "@/lib/exportToExcel";
-import { UserReimbursementType, UserReimbursementTypes } from "@/lib/types";
-import { cn } from "@/lib/utils";
-import moment from "moment";
-import AddReimbursementDialog from "./add-reimbursement";
+import FilterSheet from "@/components/features/users/filter-sheet"
+import CurrencyFormatter from "@/components/shared/common/currency-formatter"
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
+import { MyImgZooming } from "@/components/shared/media/img-zooming"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import Spinner from "@/components/ui/spinner"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import exportToExcel from "@/lib/exportToExcel"
+import { UserReimbursementType, UserReimbursementTypes } from "@/lib/types"
+import { cn } from "@/lib/utils"
+import moment from "moment"
+import AddReimbursementDialog from "./add-reimbursement"
 
 export default function Reimbursement({
   id,
@@ -30,19 +40,19 @@ export default function Reimbursement({
   onFilterReturn,
   onReset,
 }: UserReimbursementTypes) {
-  const [filterVisible, setFilterVisible] = useState(false);
-  const [data, setData] = useState<UserReimbursementType[]>([]);
-  const [resetLoading, setResetLoading] = useState(false);
-  const [selectedForDelete, setSelectedForDelete] = useState<UserReimbursementType | null>(null)
+  const [filterVisible, setFilterVisible] = useState(false)
+  const [data, setData] = useState<UserReimbursementType[]>([])
+  const [resetLoading, setResetLoading] = useState(false)
+  const [selectedForDelete, setSelectedForDelete] =
+    useState<UserReimbursementType | null>(null)
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState("")
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    setData([...passingData]);
-  }, [passingData]);
-
+    setData([...passingData])
+  }, [passingData])
 
   function handleDownload() {
     const headers = [
@@ -52,7 +62,7 @@ export default function Reimbursement({
       "Amount",
       "Description",
       "Submitted By",
-    ];
+    ]
 
     const formattedData = [...data].map((item) => [
       moment(item.date).format("YYYY-MM-DD"),
@@ -61,7 +71,7 @@ export default function Reimbursement({
       Number(item.amount || 0),
       item.description,
       item.submitted_by_name,
-    ]);
+    ])
     exportToExcel(
       headers,
       formattedData,
@@ -70,9 +80,8 @@ export default function Reimbursement({
       "",
       false,
       id
-    );
+    )
   }
-
 
   async function handleDelete() {
     if (!selectedForDelete?.id) return
@@ -85,23 +94,19 @@ export default function Reimbursement({
     }
   }
 
-
-
-
-
   const filtered = useMemo(() => {
-    if (!search.trim()) return data;
-    const q = search.toLowerCase();
+    if (!search.trim()) return data
+    const q = search.toLowerCase()
     return data.filter(
       (r) =>
         r.title?.toLowerCase().includes(q) ||
         r.customer?.toLowerCase().includes(q) ||
         r.city?.toLowerCase().includes(q) ||
         r.description?.toLowerCase().includes(q)
-    );
-  }, [data, search]);
+    )
+  }, [data, search])
 
-  const total = filtered.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const total = filtered.reduce((s, r) => s + Number(r.amount || 0), 0)
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -114,21 +119,26 @@ export default function Reimbursement({
               </div>
               <div>
                 <h3 className="text-sm font-bold">Reimbursements</h3>
-                <p className="text-xs text-muted-foreground">Travel & expense claims</p>
+                <p className="text-xs text-muted-foreground">
+                  Travel & expense claims
+                </p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-
               <div className="rounded-xl border bg-card px-3 py-1.5 shadow-sm ring-1 ring-border/30">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Total</p>
-                <p className="text-sm font-black text-foreground">PKR   <CurrencyFormatter amount={total} /></p>
+                <p className="text-[10px] tracking-wide text-muted-foreground uppercase">
+                  Total
+                </p>
+                <p className="text-sm font-black text-foreground">
+                  PKR <CurrencyFormatter amount={total} />
+                </p>
               </div>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="relative flex-1 min-w-[180px] max-w-sm">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <div className="relative max-w-sm min-w-[180px] flex-1">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -136,13 +146,15 @@ export default function Reimbursement({
                 className="h-8 rounded-lg bg-background pl-9 text-xs"
               />
             </div>
-            <Button size="sm" variant="outline"
-              onClick={() => setFilterVisible(true)}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setFilterVisible(true)}
+            >
               <Filter />
               Filter
             </Button>
-            <Button size="sm" variant="outline"
-              onClick={handleDownload}>
+            <Button size="sm" variant="outline" onClick={handleDownload}>
               <Download />
               Export
             </Button>
@@ -151,11 +163,11 @@ export default function Reimbursement({
               variant="destructive"
               disabled={resetLoading}
               onClick={async () => {
-                setResetLoading(true);
-                const startDate = moment().startOf("month").toISOString();
-                const endDate = moment().endOf("month").toISOString();
-                await onReset(startDate, endDate);
-                setResetLoading(false);
+                setResetLoading(true)
+                const startDate = moment().startOf("month").toISOString()
+                const endDate = moment().endOf("month").toISOString()
+                await onReset(startDate, endDate)
+                setResetLoading(false)
               }}
             >
               {resetLoading ? <Spinner /> : <RotateCcw />}
@@ -170,17 +182,23 @@ export default function Reimbursement({
           {filtered.length === 0 ? (
             <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-xl border border-dashed bg-muted/10">
               <AlertCircle className="size-7 text-muted-foreground" />
-              <p className="text-sm font-medium text-muted-foreground">No reimbursements found</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                No reimbursements found
+              </p>
             </div>
           ) : (
             <div className="space-y-2">
               {filtered.map((item) => (
-                <ReimbursementCard key={item.id} id={id} item={item} onClickDelete={(val) => setSelectedForDelete(val)}
-                  onRefresh={onAddRefresh} />
+                <ReimbursementCard
+                  key={item.id}
+                  id={id}
+                  item={item}
+                  onClickDelete={(val) => setSelectedForDelete(val)}
+                  onRefresh={onAddRefresh}
+                />
               ))}
             </div>
           )}
-
         </div>
       </div>
 
@@ -195,11 +213,9 @@ export default function Reimbursement({
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await onFilterReturn(val.start, val.end);
+          await onFilterReturn(val.start, val.end)
         }}
       />
-
-
 
       <ConfirmationDialog
         loading={deleteLoading}
@@ -210,32 +226,44 @@ export default function Reimbursement({
         onPressCancel={() => setSelectedForDelete(null)}
       />
     </div>
-  );
+  )
 }
 
 const purposeColors: Record<string, string> = {
   "Sales Meeting": "bg-blue-100 text-blue-700 border-blue-200",
-  "Complaint": "bg-rose-100 text-rose-700 border-rose-200",
-  "Overhauling": "bg-amber-100 text-amber-700 border-amber-200",
+  Complaint: "bg-rose-100 text-rose-700 border-rose-200",
+  Overhauling: "bg-amber-100 text-amber-700 border-amber-200",
   "New Installation": "bg-emerald-100 text-emerald-700 border-emerald-200",
   "Final Hand Over": "bg-violet-100 text-violet-700 border-violet-200",
-};
+}
 
-
-function ReimbursementCard({ onRefresh, item, onClickDelete, id }: { id: string | number, item: UserReimbursementType, onClickDelete: (item: UserReimbursementType) => void, onRefresh: () => Promise<void> }) {
-  const purposeClass = purposeColors[item.title] ?? "bg-slate-100 text-slate-700 border-slate-200";
+function ReimbursementCard({
+  onRefresh,
+  item,
+  onClickDelete,
+  id,
+}: {
+  id: string | number
+  item: UserReimbursementType
+  onClickDelete: (item: UserReimbursementType) => void
+  onRefresh: () => Promise<void>
+}) {
+  const purposeClass =
+    purposeColors[item.title] ?? "bg-slate-100 text-slate-700 border-slate-200"
   const { reimbursement_approval } = useUserDetail()
-  const [selectedForApproval, setSelectedForApproval] = useState<number | null>(null)
+  const [selectedForApproval, setSelectedForApproval] = useState<number | null>(
+    null
+  )
 
   async function handleVerify(rid: number) {
     if (!id || !rid) return
     setSelectedForApproval(rid)
     try {
       await axios.put(`/${id}/reimbursement/${rid}`, {
-        verified: true
+        verified: true,
       })
 
-      await onRefresh();
+      await onRefresh()
     } finally {
       setSelectedForApproval(null)
     }
@@ -246,12 +274,20 @@ function ReimbursementCard({ onRefresh, item, onClickDelete, id }: { id: string 
         <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-stretch">
           <div className="flex shrink-0 flex-row items-center justify-between gap-3 rounded-md border bg-gradient-to-br from-muted/40 via-background to-muted/20 px-3 py-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center">
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Amount</p>
-              <p className="mt-0.5 break-words text-lg font-black leading-tight text-foreground">
+              <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Amount
+              </p>
+              <p className="mt-0.5 text-lg leading-tight font-black break-words text-foreground">
                 PKR <CurrencyFormatter amount={item.amount} />
               </p>
             </div>
-            <Badge variant="outline" className={cn("max-w-full rounded-md border px-2 py-0.5 text-[10px] font-semibold", purposeClass)}>
+            <Badge
+              variant="outline"
+              className={cn(
+                "max-w-full rounded-md border px-2 py-0.5 text-[10px] font-semibold",
+                purposeClass
+              )}
+            >
               {item.title}
             </Badge>
           </div>
@@ -260,29 +296,35 @@ function ReimbursementCard({ onRefresh, item, onClickDelete, id }: { id: string 
             <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 py-0.5">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <p className="min-w-0 break-words text-sm font-bold leading-5 text-foreground">
+                  <p className="min-w-0 text-sm leading-5 font-bold break-words text-foreground">
                     {item.customer || "General Expense"}
                   </p>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex flex-wrap gap-2">
                     <Badge variant={"secondary"} className="text-[10px]">
                       {moment(item.date).format("MMM DD YYYY")}
                     </Badge>
-                    <Badge className="text-[10px]" variant={item.verified ? "default" : "destructive"}>{item.verified ? "Approved" : "Pending"}</Badge>
+                    <Badge
+                      className="text-[10px]"
+                      variant={item.verified ? "default" : "destructive"}
+                    >
+                      {item.verified ? "Approved" : "Pending"}
+                    </Badge>
                   </div>
                 </div>
                 {item.description && (
-                  <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-5 text-muted-foreground">
+                  <p className="mt-1 text-xs leading-5 break-words whitespace-pre-wrap text-muted-foreground">
                     {item.description}
                   </p>
                 )}
               </div>
 
               <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
-                {item?.submitted_by_name && <span className="inline-flex items-center gap-1 rounded-md border bg-background px-2 py-1">
-                  <User className="size-3 shrink-0" />
-                  {item.submitted_by_name}
-                </span>
-                }
+                {item?.submitted_by_name && (
+                  <span className="inline-flex items-center gap-1 rounded-md border bg-background px-2 py-1">
+                    <User className="size-3 shrink-0" />
+                    {item.submitted_by_name}
+                  </span>
+                )}
                 <span className="inline-flex items-center gap-1 rounded-md border bg-background px-2 py-1">
                   <Calendar className="size-3 shrink-0" />
                   {moment(item.date).format("YYYY-MM-DD")}
@@ -299,12 +341,25 @@ function ReimbursementCard({ onRefresh, item, onClickDelete, id }: { id: string 
                     <span className="break-words">{item.customer}</span>
                   </span>
                 )}
-                {reimbursement_approval && !item.verified &&
-                  <Button disabled={selectedForApproval === item?.id} size={"sm"} onClick={() => handleVerify(item?.id)}>
-                    {selectedForApproval === item?.id ? <Spinner /> : <CircleCheck className="size-3.5" />}  Approve
+                {reimbursement_approval && !item.verified && (
+                  <Button
+                    disabled={selectedForApproval === item?.id}
+                    size={"sm"}
+                    onClick={() => handleVerify(item?.id)}
+                  >
+                    {selectedForApproval === item?.id ? (
+                      <Spinner />
+                    ) : (
+                      <CircleCheck className="size-3.5" />
+                    )}{" "}
+                    Approve
                   </Button>
-                }
-                <Button onClick={() => onClickDelete(item)} variant={"destructive"} size={"icon-sm"}>
+                )}
+                <Button
+                  onClick={() => onClickDelete(item)}
+                  variant={"destructive"}
+                  size={"icon-sm"}
+                >
                   <Trash2 className="size-3.5" />
                 </Button>
               </div>
@@ -312,20 +367,15 @@ function ReimbursementCard({ onRefresh, item, onClickDelete, id }: { id: string 
 
             {item.image && (
               <div className="shrink-0 overflow-hidden rounded-md border bg-muted/20 p-1 sm:w-24">
-
                 <MyImgZooming img={item.image} />
-
               </div>
             )}
           </div>
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
-
-
-
 
 // const AddPurpose = ({ item, visible, onClose, onUpdate }: { item: UserReimbursementType | null, visible: boolean, onClose: () => void, onUpdate: (val: UserReimbursementType) => void }) => {
 //   const [purpose, setPurpose] = useState("");

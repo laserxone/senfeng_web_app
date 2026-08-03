@@ -1,42 +1,40 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
-import { auth } from "@/config/firebase";
-import { sendPasswordResetEmail } from "firebase/auth";
-import React, { useState } from "react";
-import { toast } from "sonner";
-import Spinner from "@/components/ui/spinner";
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
+import { auth } from "@/config/firebase"
+import { sendPasswordResetEmail } from "firebase/auth"
+import React, { useState } from "react"
+import { toast } from "sonner"
+import Spinner from "@/components/ui/spinner"
 
 export function ForgetPasswordForm() {
-
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("")
+  const [loading, setLoading] = useState(false)
 
   async function handleResetEmail(event: React.FormEvent<HTMLFormElement>) {
-
-    event.preventDefault();
-    setLoading(true);
+    event.preventDefault()
+    setLoading(true)
     await sendPasswordResetEmail(auth, email, {
-      url: `https://app.senfenglaserpk.com/login`
+      url: `https://app.senfenglaserpk.com/login`,
     })
       .then(() => {
-        toast.success("Check your email for reset link.");
+        toast.success("Check your email for reset link.")
       })
       .catch((err) => {
-        console.log(err.message);
-        toast.error(err?.message || "Error sending reset link",);
+        console.log(err.message)
+        toast.error(err?.message || "Error sending reset link")
       })
       .finally(() => {
-        setLoading(false);
-      });
+        setLoading(false)
+      })
   }
 
   return (
@@ -84,5 +82,5 @@ export function ForgetPasswordForm() {
         and <a href="#">Privacy Policy</a>.
       </div> */}
     </div>
-  );
+  )
 }

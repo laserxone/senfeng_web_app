@@ -1,7 +1,7 @@
-import Dropzone from "@/components/shared/uploads/dropzone";
-import { Dispatch, SetStateAction, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import Dropzone from "@/components/shared/uploads/dropzone"
+import { Dispatch, SetStateAction, useEffect } from "react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -9,20 +9,28 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import AppCalendar from "@/components/features/calendar/app-calendar";
-import { ChequeProp } from "@/lib/types";
+} from "@/components/ui/select"
+import AppCalendar from "@/components/features/calendar/app-calendar"
+import { ChequeProp } from "@/lib/types"
 import {
   Banknote,
   CalendarDays,
   ImageUp,
   ListChecks,
   ReceiptText,
-} from "lucide-react";
+} from "lucide-react"
 
-
-
-const ChequeCredit = ({ total, value, setTotal, setValue }: { total: ChequeProp[], value: string | undefined, setTotal: Dispatch<SetStateAction<ChequeProp[]>>, setValue: Dispatch<SetStateAction<string | undefined>> }) => {
+const ChequeCredit = ({
+  total,
+  value,
+  setTotal,
+  setValue,
+}: {
+  total: ChequeProp[]
+  value: string | undefined
+  setTotal: Dispatch<SetStateAction<ChequeProp[]>>
+  setValue: Dispatch<SetStateAction<string | undefined>>
+}) => {
   useEffect(() => {
     if (Number(value) > 0) {
       setTotal(
@@ -31,9 +39,9 @@ const ChequeCredit = ({ total, value, setTotal, setValue }: { total: ChequeProp[
           amount: 0,
           img: "",
         }))
-      );
+      )
     }
-  }, [setTotal, value]);
+  }, [setTotal, value])
 
   function handleUpdateData<K extends keyof ChequeProp>(
     val: ChequeProp[K],
@@ -41,13 +49,13 @@ const ChequeCredit = ({ total, value, setTotal, setValue }: { total: ChequeProp[
     key: K
   ) {
     setTotal((prevState) => {
-      const newState = [...prevState];
-      newState[i][key] = val;
-      return newState;
-    });
+      const newState = [...prevState]
+      newState[i][key] = val
+      return newState
+    })
   }
 
-return (
+  return (
     <div className="flex w-full flex-col gap-4">
       <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
@@ -62,7 +70,7 @@ return (
           </div>
 
           <div className="w-full md:max-w-xs">
-            <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-normal text-slate-500">
+            <Label className="mb-1.5 block text-xs font-semibold tracking-normal text-slate-500 uppercase">
               No. of Installments
             </Label>
             <Select onValueChange={setValue} value={value}>
@@ -123,7 +131,7 @@ return (
 
               <div className="grid grid-cols-1 gap-3 p-3 sm:p-4 lg:grid-cols-2">
                 <div className="flex min-w-0 flex-col gap-1.5">
-                  <Label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-normal text-slate-500">
+                  <Label className="flex items-center gap-1.5 text-xs font-semibold tracking-normal text-slate-500 uppercase">
                     <CalendarDays className="h-3.5 w-3.5" />
                     Deposit date
                   </Label>
@@ -135,7 +143,7 @@ return (
                 </div>
 
                 <div className="flex min-w-0 flex-col gap-1.5">
-                  <Label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-normal text-slate-500">
+                  <Label className="flex items-center gap-1.5 text-xs font-semibold tracking-normal text-slate-500 uppercase">
                     <Banknote className="h-3.5 w-3.5" />
                     Amount
                   </Label>
@@ -146,14 +154,18 @@ return (
                     className="h-11 w-full rounded-xl border-slate-200 bg-slate-50/80 shadow-none"
                     onChange={(e) => {
                       if (!isNaN(Number(e.target.value))) {
-                        handleUpdateData(Number(e.target.value), index, "amount")
+                        handleUpdateData(
+                          Number(e.target.value),
+                          index,
+                          "amount"
+                        )
                       }
                     }}
                   />
                 </div>
 
                 <div className="flex min-w-0 flex-col gap-1.5 lg:col-span-2">
-                  <Label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-normal text-slate-500">
+                  <Label className="flex items-center gap-1.5 text-xs font-semibold tracking-normal text-slate-500 uppercase">
                     <ImageUp className="h-3.5 w-3.5" />
                     Image
                   </Label>
@@ -177,6 +189,6 @@ return (
       )}
     </div>
   )
-};
+}
 
 export default ChequeCredit

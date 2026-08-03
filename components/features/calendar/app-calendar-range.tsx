@@ -1,14 +1,26 @@
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { DateRange } from "react-day-picker";
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { DateRange } from "react-day-picker"
 
-const AppCalendarRange = ({ date, onChange, min = new Date("1900-01-01") }: { date?: DateRange | null, onChange: (val: DateRange | undefined) => void, min?: Date }) => {
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+const AppCalendarRange = ({
+  date,
+  onChange,
+  min = new Date("1900-01-01"),
+}: {
+  date?: DateRange | null
+  onChange: (val: DateRange | undefined) => void
+  min?: Date
+}) => {
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   return (
     <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
       <PopoverTrigger asChild>
@@ -20,7 +32,9 @@ const AppCalendarRange = ({ date, onChange, min = new Date("1900-01-01") }: { da
           )}
         >
           {date?.from && date?.to ? (
-            <span>{format(date.from, "PP")} - {format(date.to, "PP")}</span>
+            <span>
+              {format(date.from, "PP")} - {format(date.to, "PP")}
+            </span>
           ) : date?.from ? (
             <span>{format(date.from, "PP")}</span>
           ) : date?.to ? (
@@ -51,14 +65,13 @@ const AppCalendarRange = ({ date, onChange, min = new Date("1900-01-01") }: { da
             // if (e?.to) {
             //   setIsCalendarOpen(false);
             // }
-
           }}
           disabled={(date) => date < min}
           initialFocus
         />
       </PopoverContent>
     </Popover>
-  );
-};
+  )
+}
 
-export default AppCalendarRange;
+export default AppCalendarRange

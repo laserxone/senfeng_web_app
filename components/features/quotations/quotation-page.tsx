@@ -1,6 +1,6 @@
 "use client"
-import AppTable from "@/components/shared/tables/app-table";
-import { Button } from "@/components/ui/button";
+import AppTable from "@/components/shared/tables/app-table"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -8,30 +8,43 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import Spinner from "@/components/ui/spinner";
-import { QuotationForm } from "@/components/features/quotations/quotation-form";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { QuotationData } from "@/lib/types";
-import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, Download, ExternalLink, FileText, Trash2 } from "lucide-react";
-import moment from "moment";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
-import Heading from "@/components/ui/heading";
-import { QuotationFormEdit } from "./quotation-form-edit";
+} from "@/components/ui/dialog"
+import Spinner from "@/components/ui/spinner"
+import { QuotationForm } from "@/components/features/quotations/quotation-form"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { QuotationData } from "@/lib/types"
+import { ColumnDef } from "@tanstack/react-table"
+import {
+  ArrowUpDown,
+  Download,
+  ExternalLink,
+  FileText,
+  Trash2,
+} from "lucide-react"
+import moment from "moment"
+import { useCallback, useEffect, useState } from "react"
+import { toast } from "sonner"
+import Heading from "@/components/ui/heading"
+import { QuotationFormEdit } from "./quotation-form-edit"
 
 export default function QuotationPage() {
   const [data, setData] = useState<QuotationData[]>([])
   const [loading, setLoading] = useState(false)
   const { userID } = useUserDetail()
-  const [deleteItem, setDeleteItem] = useState<number | string | null | undefined>(null)
-  const [downloadItem, setDownloadItem] = useState<number | string | null | undefined>(null)
+  const [deleteItem, setDeleteItem] = useState<
+    number | string | null | undefined
+  >(null)
+  const [downloadItem, setDownloadItem] = useState<
+    number | string | null | undefined
+  >(null)
   const [open, setOpen] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
-  const [selectedQuotation, setSelectedQuotation] = useState<QuotationData | null>(null)
-  const [openingItem, setOpeningItem] = useState<number | string | null | undefined>(null)
+  const [selectedQuotation, setSelectedQuotation] =
+    useState<QuotationData | null>(null)
+  const [openingItem, setOpeningItem] = useState<
+    number | string | null | undefined
+  >(null)
 
   const fetchData = useCallback(async () => {
     if (!userID) return
@@ -201,9 +214,7 @@ export default function QuotationPage() {
         </Button>
       ),
       cell: ({ row }) => (
-        <div className="font-medium">
-          {row.original.price || "-"}
-        </div>
+        <div className="font-medium">{row.original.price || "-"}</div>
       ),
     },
     {
@@ -260,7 +271,11 @@ export default function QuotationPage() {
 
         return (
           <div className="flex gap-2">
-            <QuotationFormEdit id={currentItem.id} data={currentItem} onRefresh={fetchData} />
+            <QuotationFormEdit
+              id={currentItem.id}
+              data={currentItem}
+              onRefresh={fetchData}
+            />
             <Button
               size="icon"
               variant="outline"
@@ -270,7 +285,11 @@ export default function QuotationPage() {
                 handleDownloadQuotation(currentItem)
               }}
             >
-              {downloadItem === currentItem?.id ? <Spinner /> : <Download className="h-4 w-4" />}
+              {downloadItem === currentItem?.id ? (
+                <Spinner />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
             </Button>
             <Button
               size="icon"
@@ -281,16 +300,17 @@ export default function QuotationPage() {
                 handleDelete(currentItem)
               }}
             >
-              {deleteItem === currentItem?.id ? <Spinner /> : <Trash2 className="h-4 w-4" />}
+              {deleteItem === currentItem?.id ? (
+                <Spinner />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
             </Button>
-
           </div>
         )
       },
     },
   ]
-
-
 
   async function handleDownloadQuotation(quotation: QuotationData) {
     if (!quotation?.id) return
@@ -308,41 +328,34 @@ export default function QuotationPage() {
             "Content-Type": "application/json",
           },
         }
-      );
+      )
 
       const blob = new Blob([pdfRes.data], {
         type: "application/pdf",
-      });
+      })
 
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(blob)
 
-      const link = document.createElement("a");
-      link.href = url;
+      const link = document.createElement("a")
+      link.href = url
 
       const fileName =
         pdfRes.headers["content-disposition"]
           ?.split("filename=")?.[1]
-          ?.replaceAll('"', "") || `Quotation-${quotation.id}.pdf`;
+          ?.replaceAll('"', "") || `Quotation-${quotation.id}.pdf`
 
-      link.download = fileName;
+      link.download = fileName
 
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
 
-      URL.revokeObjectURL(url);
-
-
+      URL.revokeObjectURL(url)
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : "Error creating pdf")
     } finally {
       setDownloadItem(null)
     }
-
-
-
-
-
   }
 
   async function handleOpenQuotation(quotation: QuotationData) {
@@ -362,27 +375,29 @@ export default function QuotationPage() {
 
       const blob = new Blob([pdfRes.data], {
         type: "application/pdf",
-      });
+      })
 
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(blob)
 
-      const link = document.createElement("a");
-      link.href = url;
+      const link = document.createElement("a")
+      link.href = url
 
       const fileName =
         pdfRes.headers["content-disposition"]
           ?.split("filename=")?.[1]
-          ?.replaceAll('"', "") || `Quotation-${quotation.id}.pdf`;
+          ?.replaceAll('"', "") || `Quotation-${quotation.id}.pdf`
 
-      link.download = fileName;
+      link.download = fileName
 
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
 
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(url)
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Error opening quotation")
+      toast.error(
+        error instanceof Error ? error.message : "Error opening quotation"
+      )
     } finally {
       setOpeningItem(null)
     }
@@ -413,9 +428,7 @@ export default function QuotationPage() {
         <Button onClick={() => setOpen(true)}>Create Quotation</Button>
       </div>
 
-      <AppTable data={data}
-        columns={columns}
-        loading={loading} />
+      <AppTable data={data} columns={columns} loading={loading} />
 
       <QuotationForm
         open={open}
@@ -441,19 +454,44 @@ export default function QuotationPage() {
 
           {selectedQuotation ? (
             <div className="grid gap-3 px-5 py-4 sm:grid-cols-2">
-              <QuotationDetail label="Customer / Company" value={selectedQuotation.customer_name} />
-              <QuotationDetail label="Contact Person" value={selectedQuotation.contact_person} />
-              <QuotationDetail label="Contact Number" value={selectedQuotation.contact_number} />
+              <QuotationDetail
+                label="Customer / Company"
+                value={selectedQuotation.customer_name}
+              />
+              <QuotationDetail
+                label="Contact Person"
+                value={selectedQuotation.contact_person}
+              />
+              <QuotationDetail
+                label="Contact Number"
+                value={selectedQuotation.contact_number}
+              />
               <QuotationDetail label="Email" value={selectedQuotation.email} />
-              <QuotationDetail label="Machine Model" value={selectedQuotation.machine_model} />
-              <QuotationDetail label="Machine Power" value={selectedQuotation.machine_power} />
+              <QuotationDetail
+                label="Machine Model"
+                value={selectedQuotation.machine_model}
+              />
+              <QuotationDetail
+                label="Machine Power"
+                value={selectedQuotation.machine_power}
+              />
               <QuotationDetail label="Price" value={selectedQuotation.price} />
               <QuotationDetail
                 label="Date"
-                value={selectedQuotation.date ? moment(selectedQuotation.date).format("YYYY-MM-DD") : undefined}
+                value={
+                  selectedQuotation.date
+                    ? moment(selectedQuotation.date).format("YYYY-MM-DD")
+                    : undefined
+                }
               />
-              <QuotationDetail label="Validity" value={selectedQuotation.validity} />
-              <QuotationDetail label="Delivery Time" value={selectedQuotation.delivery_time} />
+              <QuotationDetail
+                label="Validity"
+                value={selectedQuotation.validity}
+              />
+              <QuotationDetail
+                label="Delivery Time"
+                value={selectedQuotation.delivery_time}
+              />
               <QuotationDetail
                 className="sm:col-span-2"
                 label="Payment Terms"
@@ -463,20 +501,30 @@ export default function QuotationPage() {
           ) : null}
 
           <DialogFooter className="mx-0 mb-0 rounded-none px-5 py-4">
-            <Button variant="outline" onClick={() => handleDetailsOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => handleDetailsOpenChange(false)}
+            >
               Close
             </Button>
             <Button
-              disabled={!selectedQuotation || openingItem === selectedQuotation.id}
-              onClick={() => selectedQuotation && handleOpenQuotation(selectedQuotation)}
+              disabled={
+                !selectedQuotation || openingItem === selectedQuotation.id
+              }
+              onClick={() =>
+                selectedQuotation && handleOpenQuotation(selectedQuotation)
+              }
             >
-              {openingItem === selectedQuotation?.id ? <Spinner /> : <ExternalLink />}
+              {openingItem === selectedQuotation?.id ? (
+                <Spinner />
+              ) : (
+                <ExternalLink />
+              )}
               Open Quotation
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </div>
   )
 }
@@ -492,10 +540,10 @@ function QuotationDetail({
 }) {
   return (
     <div className={`rounded-lg border bg-background px-3 py-2.5 ${className}`}>
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+      <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
         {label}
       </p>
-      <p className="mt-1 break-words text-sm font-medium text-foreground">
+      <p className="mt-1 text-sm font-medium break-words text-foreground">
         {value || "-"}
       </p>
     </div>

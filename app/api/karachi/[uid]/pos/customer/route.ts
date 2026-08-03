@@ -1,56 +1,44 @@
-
-
-import pool from '@/config/db';
-import { NextRequest, NextResponse } from 'next/server';
+import pool from "@/config/db"
+import { NextRequest, NextResponse } from "next/server"
 
 export async function GET() {
+  try {
+    const customer = await pool.query("SELECT * FROM poscustomer_karachi")
 
-
-    try {
-       
-        const customer = await pool.query("SELECT * FROM poscustomer_karachi")
-       
-        return NextResponse.json({ customers: customer.rows }, { status: 200 })
-    } catch (error) {
-        console.log(error)
-        return NextResponse.json({ message: "Processing error" }, { status: 500 })
-    }
-
+    return NextResponse.json({ customers: customer.rows }, { status: 200 })
+  } catch (error) {
+    console.log(error)
+    return NextResponse.json({ message: "Processing error" }, { status: 500 })
+  }
 }
 
-export async function PUT(req:NextRequest) {
+export async function PUT(req: NextRequest) {
+  try {
+    const { name, company, phone, address } = await req.json()
 
-    try {
-        const {
-            name,
-            company,
-            phone,
-            address,
-        } = await req.json();
-
-       
-        const result = await pool.query("SELECT id FROM poscustomer_karachi WHERE phone = $1 LIMIT 1", [phone]);
-        if (result.rows.length > 0) {
-            await pool.query(
-                "UPDATE poscustomer_karachi SET name = $1, customer = $2, phone = $3, address = $4 WHERE id = $5",
-                [name, company, phone, address, result.rows[0].id]
-            );
-        } else {
-            await pool.query(
-                `INSERT INTO poscustomer_karachi 
+    const result = await pool.query(
+      "SELECT id FROM poscustomer_karachi WHERE phone = $1 LIMIT 1",
+      [phone]
+    )
+    if (result.rows.length > 0) {
+      await pool.query(
+        "UPDATE poscustomer_karachi SET name = $1, customer = $2, phone = $3, address = $4 WHERE id = $5",
+        [name, company, phone, address, result.rows[0].id]
+      )
+    } else {
+      await pool.query(
+        `INSERT INTO poscustomer_karachi 
                 (name, customer, phone, address) 
                 VALUES ($1, $2, $3, $4)`,
-                [name, company, phone, address]
-            );
-        }
-
-        return NextResponse.json({ message: "Data saved" }, { status: 200 });
-
-    } catch (error) {
-        console.log(error)
-        return NextResponse.json({ message: "Processing error" }, { status: 500 })
+        [name, company, phone, address]
+      )
     }
 
+    return NextResponse.json({ message: "Data saved" }, { status: 200 })
+  } catch (error) {
+    console.log(error)
+    return NextResponse.json({ message: "Processing error" }, { status: 500 })
+  }
 }
 
 export const revalidate = 0

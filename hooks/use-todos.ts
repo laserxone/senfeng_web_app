@@ -1,9 +1,6 @@
-
-
-import axios from '@/lib/axios';
-import { useEffect, useState } from 'react';
-import useUserDetail from './use-user-detail';
-
+import axios from "@/lib/axios"
+import { useEffect, useState } from "react"
+import useUserDetail from "./use-user-detail"
 
 type TodoProps = {
   id: number
@@ -13,21 +10,20 @@ type TodoProps = {
 }
 
 export function useTodos() {
-     const [tasks, setTasks] = useState<TodoProps[]>([]);
+  const [tasks, setTasks] = useState<TodoProps[]>([])
 
-     const {userID} = useUserDetail()
+  const { userID } = useUserDetail()
 
-    const fetchTasks = async () => {
-        const response = await axios.get(`/${userID}/todo`);
-        setTasks(response.data);
-    };
+  const fetchTasks = async () => {
+    const response = await axios.get(`/${userID}/todo`)
+    setTasks(response.data)
+  }
 
-    useEffect(() => {
-        if (userID) {
-           fetchTasks()
-        }
+  useEffect(() => {
+    if (userID) {
+      fetchTasks()
+    }
+  }, [userID])
 
-    }, [userID]);
-
-    return { tasks, setTasks, fetchTasks };
+  return { tasks, setTasks, fetchTasks }
 }

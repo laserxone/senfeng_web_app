@@ -1,15 +1,11 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader
-} from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import Heading from "@/components/ui/heading";
-import Spinner from "@/components/ui/spinner";
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import Heading from "@/components/ui/heading"
+import Spinner from "@/components/ui/spinner"
 import {
   Table,
   TableBody,
@@ -17,85 +13,88 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { UserSearch } from "@/components/shared/search/user-search";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { MyCustomer } from "@/lib/types";
-import { ArrowRightLeft, CheckCircle2, MapPin, UserRound, UsersRound } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
-
+} from "@/components/ui/table"
+import { UserSearch } from "@/components/shared/search/user-search"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { MyCustomer } from "@/lib/types"
+import {
+  ArrowRightLeft,
+  CheckCircle2,
+  MapPin,
+  UserRound,
+  UsersRound,
+} from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { toast } from "sonner"
 
 export default function Page() {
-  const [fromUserId, setFromUserId] = useState<number | null>(null);
-  const [toUserId, setToUserId] = useState<number | null>(null);
-  const { userID } = useUserDetail();
-  const [customers, setCustomers] = useState<MyCustomer[]>([]);
-  const [selectedCustomers, setSelectedCustomers] = useState<number[]>([]);
-  const [transferLoading, setTransferLoading] = useState(false);
-  const [loading, setLoading] = useState(false);
-
+  const [fromUserId, setFromUserId] = useState<number | null>(null)
+  const [toUserId, setToUserId] = useState<number | null>(null)
+  const { userID } = useUserDetail()
+  const [customers, setCustomers] = useState<MyCustomer[]>([])
+  const [selectedCustomers, setSelectedCustomers] = useState<number[]>([])
+  const [transferLoading, setTransferLoading] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!userID || !fromUserId) return;
-    setCustomers([]);
-    fetchCustomersByUser(fromUserId);
-  }, [fromUserId, userID]);
+    if (!userID || !fromUserId) return
+    setCustomers([])
+    fetchCustomersByUser(fromUserId)
+  }, [fromUserId, userID])
 
   const fetchCustomersByUser = async (userId: number) => {
-    setLoading(true);
+    setLoading(true)
 
     try {
-      const response = await axios.get(`/${userID}/transfer?id=${userId}`);
-      setCustomers(response.data);
+      const response = await axios.get(`/${userID}/transfer?id=${userId}`)
+      setCustomers(response.data)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const allSelected = useMemo(
     () => customers.length > 0 && selectedCustomers.length === customers.length,
-    [customers, selectedCustomers],
-  );
+    [customers, selectedCustomers]
+  )
 
   const toggleSelectAll = () => {
     if (allSelected) {
-      setSelectedCustomers([]);
+      setSelectedCustomers([])
     } else {
-      setSelectedCustomers(customers.map((c) => c.id));
+      setSelectedCustomers(customers.map((c) => c.id))
     }
-  };
+  }
 
   const toggleCustomer = (id: number) => {
     setSelectedCustomers((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
-    );
-  };
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    )
+  }
 
   const handleTransfer = async () => {
-    if (!fromUserId || !toUserId || selectedCustomers.length === 0) return;
+    if (!fromUserId || !toUserId || selectedCustomers.length === 0) return
 
     const payload = {
       from_user_id: fromUserId,
       to_user_id: toUserId,
       ids: selectedCustomers,
-    };
+    }
 
-    setTransferLoading(true);
+    setTransferLoading(true)
 
     try {
-      await axios.post(`/${userID}/transfer`, payload);
-      await fetchCustomersByUser(fromUserId);
-      setSelectedCustomers([]);
-      toast.success("Transferred successfully");
+      await axios.post(`/${userID}/transfer`, payload)
+      await fetchCustomersByUser(fromUserId)
+      setSelectedCustomers([])
+      toast.success("Transferred successfully")
     } finally {
-      setTransferLoading(false);
+      setTransferLoading(false)
     }
-  };
+  }
 
   return (
-
     <div className="flex flex-1 flex-col gap-4 pb-4">
       <section className="overflow-hidden rounded-2xl border bg-background shadow-sm">
         <div className="p-4 sm:p-5">
@@ -106,28 +105,37 @@ export default function Page() {
               description="Reassign customers between owners in just a few clicks"
             />
           </div>
-
         </div>
         <div className="grid border-t bg-muted/20 sm:grid-cols-3 sm:divide-x">
           <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
             <UsersRound className="size-4 text-blue-600 dark:text-blue-400" />
             <div className="flex items-baseline gap-2">
-              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Customers</span>
+              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Customers
+              </span>
               <span className="text-sm font-bold">{customers.length}</span>
             </div>
           </div>
           <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
             <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
             <div className="flex items-baseline gap-2">
-              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Selected</span>
-              <span className="text-sm font-bold">{selectedCustomers.length}</span>
+              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Selected
+              </span>
+              <span className="text-sm font-bold">
+                {selectedCustomers.length}
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
             <ArrowRightLeft className="size-4 text-violet-600 dark:text-violet-400" />
             <div className="flex min-w-0 items-baseline gap-2">
-              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Status</span>
-              <span className="truncate text-sm font-bold">{fromUserId ? "Ready to select" : "Choose source"}</span>
+              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Status
+              </span>
+              <span className="truncate text-sm font-bold">
+                {fromUserId ? "Ready to select" : "Choose source"}
+              </span>
             </div>
           </div>
         </div>
@@ -142,7 +150,8 @@ export default function Page() {
             <div>
               <h2 className="font-semibold">Transfer Setup</h2>
               <p className="text-sm text-muted-foreground">
-                Select source owner, destination owner, then choose customers below.
+                Select source owner, destination owner, then choose customers
+                below.
               </p>
             </div>
           </div>
@@ -228,12 +237,8 @@ export default function Page() {
           </CardHeader>
 
           <CardContent className="relative w-full p-0">
-
-            <div
-              className="relative hidden min-h-[calc(100dvh-270px)] flex-1 md:flex"
-            >
-              <div className="custom-scrollbar absolute bottom-0 left-0 right-0 top-0 flex overflow-auto">
-
+            <div className="relative hidden min-h-[calc(100dvh-270px)] flex-1 md:flex">
+              <div className="custom-scrollbar absolute top-0 right-0 bottom-0 left-0 flex overflow-auto">
                 <Table className="relative min-w-[760px]">
                   <TableHeader>
                     <TableRow className="sticky top-0 z-30 bg-background">
@@ -264,15 +269,18 @@ export default function Page() {
                       customers.map((customer) => (
                         <TableRow
                           key={customer.id}
-                          className={`transition-colors duration-150 ${selectedCustomers.includes(customer.id)
-                            ? "bg-primary/10"
-                            : "hover:bg-muted/30"
-                            }`}
+                          className={`transition-colors duration-150 ${
+                            selectedCustomers.includes(customer.id)
+                              ? "bg-primary/10"
+                              : "hover:bg-muted/30"
+                          }`}
                         >
                           <TableCell>
                             <Checkbox
                               checked={selectedCustomers.includes(customer.id)}
-                              onCheckedChange={() => toggleCustomer(customer.id)}
+                              onCheckedChange={() =>
+                                toggleCustomer(customer.id)
+                              }
                             />
                           </TableCell>
                           <TableCell className="font-medium">
@@ -312,7 +320,7 @@ export default function Page() {
                 </div>
               ) : customers.length > 0 ? (
                 customers.map((customer) => {
-                  const selected = selectedCustomers.includes(customer.id);
+                  const selected = selectedCustomers.includes(customer.id)
 
                   return (
                     <div
@@ -322,18 +330,21 @@ export default function Page() {
                       onClick={() => toggleCustomer(customer.id)}
                       onKeyDown={(event) => {
                         if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          toggleCustomer(customer.id);
+                          event.preventDefault()
+                          toggleCustomer(customer.id)
                         }
                       }}
-                      className={`w-full rounded-2xl border p-3 text-left transition ${selected
-                        ? "border-primary bg-primary/10"
-                        : "bg-background hover:bg-muted/30"
-                        }`}
+                      className={`w-full rounded-2xl border p-3 text-left transition ${
+                        selected
+                          ? "border-primary bg-primary/10"
+                          : "bg-background hover:bg-muted/30"
+                      }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate font-semibold">{customer.name}</p>
+                          <p className="truncate font-semibold">
+                            {customer.name}
+                          </p>
                           <p className="mt-1 truncate text-sm text-muted-foreground">
                             {customer.owner || "No owner"}
                           </p>
@@ -351,7 +362,7 @@ export default function Page() {
                         </span>
                       </div>
                     </div>
-                  );
+                  )
                 })
               ) : (
                 <div className="rounded-2xl border border-dashed bg-muted/15 py-10 text-center text-sm text-muted-foreground">
@@ -363,5 +374,5 @@ export default function Page() {
         </Card>
       )}
     </div>
-  );
+  )
 }

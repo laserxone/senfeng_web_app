@@ -29,14 +29,23 @@ export function PerformanceBarChart({ data }: PerformanceBarChartProps) {
   return (
     <Card className="border border-border bg-card shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-foreground">Performance</CardTitle>
+        <CardTitle className="text-base font-semibold text-foreground">
+          Performance
+        </CardTitle>
         <p className="text-xs text-muted-foreground">Monthly completion rate</p>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="h-[200px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+            <BarChart
+              data={chartData}
+              margin={{ top: 10, right: 10, left: -15, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="#e5e7eb"
+                vertical={false}
+              />
               <XAxis
                 dataKey="name"
                 stroke="#9ca3af"
@@ -74,7 +83,11 @@ export function PerformanceBarChart({ data }: PerformanceBarChartProps) {
         <div className="flex justify-center gap-4 pt-2">
           <div className="text-center">
             <p className="text-lg font-bold text-foreground">
-              {(chartData.reduce((sum, item) => sum + item.rate, 0) / chartData.length).toFixed(1)}%
+              {(
+                chartData.reduce((sum, item) => sum + item.rate, 0) /
+                chartData.length
+              ).toFixed(1)}
+              %
             </p>
             <p className="text-xs text-muted-foreground">Avg Rate</p>
           </div>

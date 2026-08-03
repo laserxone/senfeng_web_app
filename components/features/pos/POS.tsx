@@ -1,11 +1,11 @@
-"use client";
-import axios from "@/lib/axios";
-import { ChangeEvent, useEffect, useState } from "react";
-import { FaMinusCircle, FaPlus } from "react-icons/fa";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+"use client"
+import axios from "@/lib/axios"
+import { ChangeEvent, useEffect, useState } from "react"
+import { FaMinusCircle, FaPlus } from "react-icons/fa"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Table,
   TableBody,
@@ -13,35 +13,41 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
-import "./Button.css";
+} from "@/components/ui/table"
+import { Textarea } from "@/components/ui/textarea"
+import "./Button.css"
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
-import { useDebounce } from "@/hooks/use-debounce";
-import useUserDetail from "@/hooks/use-user-detail";
-import "pdfjs-dist/build/pdf.worker.mjs";
-import "pdfjs-dist/legacy/web/pdf_viewer.css";
-import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import Spinner from "@/components/ui/spinner";
-import { UserSearch } from "@/components/shared/search/user-search";
-import NotificationBadge from "@/components/shared/notifications/NotificationBadge";
-import AddItemDialog from "./add-item-dialog";
-import AddPOSPayment from "./add-pos-payment";
-import DeleteInvoice from "./delete-invoice";
-import EngineerModal from "./engineer-modal";
-import InwardModal from "./inward-modal";
-import OrderStockDialog from "./order-stock-dialog";
-import POSModal from "./pos-modal";
-import SearchResultModal from "./search-result-modal";
-import ViewableInvoice from "./viewable-invoice";
+import { useDebounce } from "@/hooks/use-debounce"
+import useUserDetail from "@/hooks/use-user-detail"
+import "pdfjs-dist/build/pdf.worker.mjs"
+import "pdfjs-dist/legacy/web/pdf_viewer.css"
+import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data"
+import { Checkbox } from "@/components/ui/checkbox"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import Spinner from "@/components/ui/spinner"
+import { UserSearch } from "@/components/shared/search/user-search"
+import NotificationBadge from "@/components/shared/notifications/NotificationBadge"
+import AddItemDialog from "./add-item-dialog"
+import AddPOSPayment from "./add-pos-payment"
+import DeleteInvoice from "./delete-invoice"
+import EngineerModal from "./engineer-modal"
+import InwardModal from "./inward-modal"
+import OrderStockDialog from "./order-stock-dialog"
+import POSModal from "./pos-modal"
+import SearchResultModal from "./search-result-modal"
+import ViewableInvoice from "./viewable-invoice"
 
-import { InvoiceItem, MyCustomer, POSInvoiceReminder, SearchItem, StockProps } from "@/lib/types";
-import Link from "next/link";
-import { toast } from "sonner";
-import OutwardModal from "./outward-modal";
-import LowStock from "./low-stock";
+import {
+  InvoiceItem,
+  MyCustomer,
+  POSInvoiceReminder,
+  SearchItem,
+  StockProps,
+} from "@/lib/types"
+import Link from "next/link"
+import { toast } from "sonner"
+import OutwardModal from "./outward-modal"
+import LowStock from "./low-stock"
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -59,62 +65,66 @@ export type SelectedUser = {
   label: null | string
 }
 
-
 export default function POS() {
-  const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
-  const [stock, setStock] = useState<StockProps[]>([]);
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [createdAt, setCreatedAt] = useState<Date | string>(new Date());
-  const [name, setName] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [address, setAddress] = useState("");
-  const [qty, setQty] = useState<string | number>("");
-  const [price, setPrice] = useState<string | number>("");
-  const [totalAmount, setTotalAmount] = useState(0);
+  const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(
+    null
+  )
+  const [loading, setLoading] = useState(true)
+  const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([])
+  const [stock, setStock] = useState<StockProps[]>([])
+  const [phoneNumber, setPhoneNumber] = useState("")
+  const [createdAt, setCreatedAt] = useState<Date | string>(new Date())
+  const [name, setName] = useState("")
+  const [companyName, setCompanyName] = useState("")
+  const [address, setAddress] = useState("")
+  const [qty, setQty] = useState<string | number>("")
+  const [price, setPrice] = useState<string | number>("")
+  const [totalAmount, setTotalAmount] = useState(0)
 
-  const [other, setOther] = useState("");
+  const [other, setOther] = useState("")
   const [showOther, setShowOther] = useState(false)
-  const [manager, setManager] = useState("");
-  const [nextInvoice, setNextInvoice] = useState(`xxxxxxxx-xxx`);
-  const [addProductVisible, setAddProductVisible] = useState(false);
-  const [searchInvocie, setSearchInvoice] = useState(false);
-  const [itemSearch, setItemSearch] = useState("");
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [pendingLoading, setPendingLoading] = useState(false);
-  const [searchModal, setSearchModal] = useState(false);
-  const [searchItemsResult, setSearchItemsResult] = useState<SearchItem[]>([]);
-  const [selectedSearchItem, setSelectedSearchItem] = useState<SearchItem | null>(null);
-  const [checked, setChecked] = useState(false);
-  const [modal, setModal] = useState(false);
-  const [reminder, setReminder] = useState<POSInvoiceReminder[]>([]);
-  const [warranty, setWarranty] = useState(false);
-  const [warrantyYear, setWarrantyYear] = useState(1);
-  const { userID, designation, base_route } = useUserDetail();
-  const [selectedRadio, setSelectedRadio] = useState("customer");
-  const [selectedUser, setSelectedUser] = useState<SelectedUser>({ id: null, label: null });
-  const [engineerLoading, setEngineerLoading] = useState(false);
-  const [allEngineersData, setAllEngineersData] = useState([]);
-  const [engineersModal, setEngineersModal] = useState(false);
-  const [dialogVisible, setDialogVisible] = useState(false);
-  const [orderStockVisible, setOrderStockVisible] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<number | null>(null);
-  const debouncedUserId = useDebounce(userID, 1000);
-  const [discount, setDiscount] = useState<number | string>("");
-  const [inwardModal, setInwardModal] = useState(false);
-  const [outwardModal, setOutwardModal] = useState(false);
+  const [manager, setManager] = useState("")
+  const [nextInvoice, setNextInvoice] = useState(`xxxxxxxx-xxx`)
+  const [addProductVisible, setAddProductVisible] = useState(false)
+  const [searchInvocie, setSearchInvoice] = useState(false)
+  const [itemSearch, setItemSearch] = useState("")
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [pendingLoading, setPendingLoading] = useState(false)
+  const [searchModal, setSearchModal] = useState(false)
+  const [searchItemsResult, setSearchItemsResult] = useState<SearchItem[]>([])
+  const [selectedSearchItem, setSelectedSearchItem] =
+    useState<SearchItem | null>(null)
+  const [checked, setChecked] = useState(false)
+  const [modal, setModal] = useState(false)
+  const [reminder, setReminder] = useState<POSInvoiceReminder[]>([])
+  const [warranty, setWarranty] = useState(false)
+  const [warrantyYear, setWarrantyYear] = useState(1)
+  const { userID, designation, base_route } = useUserDetail()
+  const [selectedRadio, setSelectedRadio] = useState("customer")
+  const [selectedUser, setSelectedUser] = useState<SelectedUser>({
+    id: null,
+    label: null,
+  })
+  const [engineerLoading, setEngineerLoading] = useState(false)
+  const [allEngineersData, setAllEngineersData] = useState([])
+  const [engineersModal, setEngineersModal] = useState(false)
+  const [dialogVisible, setDialogVisible] = useState(false)
+  const [orderStockVisible, setOrderStockVisible] = useState(false)
+  const [selectedInvoice, setSelectedInvoice] = useState<number | null>(null)
+  const debouncedUserId = useDebounce(userID, 1000)
+  const [discount, setDiscount] = useState<number | string>("")
+  const [inwardModal, setInwardModal] = useState(false)
+  const [outwardModal, setOutwardModal] = useState(false)
   const [total, setTotal] = useState(0)
-
 
   useEffect(() => {
     if (debouncedUserId) {
-      fetchData();
+      fetchData()
     }
-  }, [debouncedUserId]);
+  }, [debouncedUserId])
 
   const handleUpdateInvoice = async () => {
-    await handleInvoiceBackendData();
+    await handleInvoiceBackendData()
     const PDFData = {
       companyName: companyName,
       name: name,
@@ -139,47 +149,44 @@ export default function POS() {
         headers: {
           "Content-Type": "application/json",
         },
-      },
-    );
+      }
+    )
 
     const blob = new Blob([pdfRes.data], {
       type: "application/pdf",
-    });
+    })
 
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
-    setTimeout(() => URL.revokeObjectURL(url), 600000);
-
-  };
+    const url = URL.createObjectURL(blob)
+    window.open(url, "_blank")
+    setTimeout(() => URL.revokeObjectURL(url), 600000)
+  }
 
   const handleInvoiceBackendData = async () => {
-
     try {
-      await axios
-        .put(`/${userID}/pos/update/${selectedSearchItem?.id}`, {
-          olditems: selectedSearchItem,
-          newitems: {
-            name: name,
-            company: companyName,
-            phone: phoneNumber,
-            address: address,
-            manager: manager,
-            invoicenumber: nextInvoice,
-            fields: invoiceItems,
-            payment: selectedSearchItem?.payment || false,
-            discount: discount || 0,
-          },
-        })
+      await axios.put(`/${userID}/pos/update/${selectedSearchItem?.id}`, {
+        olditems: selectedSearchItem,
+        newitems: {
+          name: name,
+          company: companyName,
+          phone: phoneNumber,
+          address: address,
+          manager: manager,
+          invoicenumber: nextInvoice,
+          fields: invoiceItems,
+          payment: selectedSearchItem?.payment || false,
+          discount: discount || 0,
+        },
+      })
     } finally {
-      await fetchData();
-      setSelectedSearchItem(null);
-      setSearchItemsResult([]);
+      await fetchData()
+      setSelectedSearchItem(null)
+      setSearchItemsResult([])
     }
-  };
+  }
 
   const generatePDF = async () => {
     try {
-      const invNumber = await handleUpdateStock();
+      const invNumber = await handleUpdateStock()
       const PDFData = {
         companyName: companyName,
         name: name,
@@ -192,7 +199,7 @@ export default function POS() {
         totalAmount: totalAmount,
         warranty: warranty,
         warrantyYear: warrantyYear,
-        discount: `${discount}`
+        discount: `${discount}`,
       }
       const pdfRes = await axios.post(
         `/${userID}/pos/pdf`,
@@ -204,32 +211,32 @@ export default function POS() {
           headers: {
             "Content-Type": "application/json",
           },
-        },
-      );
+        }
+      )
 
       const blob = new Blob([pdfRes.data], {
         type: "application/pdf",
-      });
+      })
 
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
-      setTimeout(() => URL.revokeObjectURL(url), 600000);
-      await fetchData();
+      const url = URL.createObjectURL(blob)
+      window.open(url, "_blank")
+      setTimeout(() => URL.revokeObjectURL(url), 600000)
+      await fetchData()
       if (checked) {
-        setSelectedInvoice(invNumber?.returning_id);
+        setSelectedInvoice(invNumber?.returning_id)
       } else {
-        setSelectedCustomer(null);
-        setChecked(false);
+        setSelectedCustomer(null)
+        setChecked(false)
       }
-      setTimeout(() => URL.revokeObjectURL(url), 600000);
+      setTimeout(() => URL.revokeObjectURL(url), 600000)
     } catch (error) {
-      console.log(error);
-      setLoading(false);
+      console.log(error)
+      setLoading(false)
     }
-  };
+  }
 
   async function handleUpdateStock() {
-    const modified = stock.filter((item) => item?.modified);
+    const modified = stock.filter((item) => item?.modified)
 
     try {
       const response = await axios.put(`/${userID}/pos`, {
@@ -243,47 +250,43 @@ export default function POS() {
         selecteduser: selectedUser,
         customer_id: selectedCustomer ? selectedCustomer?.id : null,
         discount: discount || 0,
-        payment: selectedCustomer?.id ? checked : false
-      });
+        payment: selectedCustomer?.id ? checked : false,
+      })
 
-      return response.data;
+      return response.data
     } catch (error) {
-      throw error;
+      throw error
     }
   }
 
   const fetchData = async () => {
-    clearAll();
+    clearAll()
     try {
       const response = await axios.get(`/${userID}/pos`)
       if (response.data.stock.length > 0) {
-
-        setStock([...response.data.stock]);
+        setStock([...response.data.stock])
       }
       if (response.data?.reminders) {
-        setReminder(response.data.reminders);
+        setReminder(response.data.reminders)
       }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
-
-
-
+  }
 
   useEffect(() => {
     if (invoiceItems.length > 0) {
-      let total = 0;
-      let dis: Number = Number(discount) || 0;
+      let total = 0
+      let dis: Number = Number(discount) || 0
       invoiceItems.forEach((item) => {
-        total = total + Number(item?.total);
-      });
+        total = total + Number(item?.total)
+      })
 
-      setTotalAmount(total - Number(dis));
+      setTotalAmount(total - Number(dis))
     } else {
-      setTotalAmount(0);
+      setTotalAmount(0)
     }
-  }, [invoiceItems, discount]);
+  }, [invoiceItems, discount])
 
   const handleAddToInvoice = () => {
     if (showOther) {
@@ -296,116 +299,121 @@ export default function POS() {
           description: other || "",
           type: "other",
         },
-      ]);
-      setOther("");
-      setShowOther(false);
+      ])
+      setOther("")
+      setShowOther(false)
     }
-    setShowOther(false);
-    setQty("");
-    setPrice("");
-  };
+    setShowOther(false)
+    setQty("")
+    setPrice("")
+  }
 
-  function handleChange(e: ChangeEvent<HTMLInputElement, HTMLInputElement>, i: number) {
-    const { value, name } = e.target;
+  function handleChange(
+    e: ChangeEvent<HTMLInputElement, HTMLInputElement>,
+    i: number
+  ) {
+    const { value, name } = e.target
     setInvoiceItems((prevItems) =>
       prevItems.map((item, index) =>
         index === i
           ? {
-            ...item,
-            [name]: name === "price" ? value : value,
-            total:
-              name === "price"
-                ? Number(value) * Number(item.qty)
-                : item.total,
-          }
-          : item,
-      ),
-    );
+              ...item,
+              [name]: name === "price" ? value : value,
+              total:
+                name === "price"
+                  ? Number(value) * Number(item.qty)
+                  : item.total,
+            }
+          : item
+      )
+    )
   }
 
   function handleIncrease(item: StockProps) {
-    if (!item.qty || item?.qty < 1) return toast.info("Select a valid item and quantity.");
+    if (!item.qty || item?.qty < 1)
+      return toast.info("Select a valid item and quantity.")
 
     setStock((prevStock) =>
       prevStock.map((eachItem) =>
         eachItem.id === item.id
           ? { ...eachItem, qty: (eachItem?.qty || 0) - 1, modified: true }
-          : eachItem,
-      ),
-    );
+          : eachItem
+      )
+    )
 
     setInvoiceItems((prevItems) => {
-      const existingItem = prevItems.find(
-        (eachItem) => eachItem.id === item.id,
-      );
+      const existingItem = prevItems.find((eachItem) => eachItem.id === item.id)
       if (existingItem) {
-
         return prevItems.map((eachItem) =>
           eachItem.id === item.id
             ? {
-              ...eachItem,
-              qty: (Number(eachItem.qty) + 1),
-              total: Number(eachItem.price || 0) * (Number(eachItem.qty || 0) + 1),
-            }
-            : eachItem,
-        );
+                ...eachItem,
+                qty: Number(eachItem.qty) + 1,
+                total:
+                  Number(eachItem.price || 0) * (Number(eachItem.qty || 0) + 1),
+              }
+            : eachItem
+        )
       } else {
         return [
           ...prevItems,
           {
             ...item,
-            qty: 1, total: Number(item?.price || 0), description: item.name
+            qty: 1,
+            total: Number(item?.price || 0),
+            description: item.name,
           },
-        ];
+        ]
       }
-    });
+    })
   }
 
   function handleDecrease(item: StockProps) {
-    const existing = invoiceItems.find((eachItem) => eachItem.id === item.id);
-    if (!existing) return;
+    const existing = invoiceItems.find((eachItem) => eachItem.id === item.id)
+    if (!existing) return
     setInvoiceItems((prevItems) =>
       prevItems
         .map((eachItem) =>
           eachItem.id === item.id
             ? {
-              ...eachItem,
-              qty: (Number(eachItem.qty) - 1),
-              total: Number(eachItem.price || 0) * (Number(eachItem.qty || 0) - 1),
-            }
-            : eachItem,
+                ...eachItem,
+                qty: Number(eachItem.qty) - 1,
+                total:
+                  Number(eachItem.price || 0) * (Number(eachItem.qty || 0) - 1),
+              }
+            : eachItem
         )
-        .filter((eachItem) => Number(eachItem?.qty || 0) > 0),
-    );
+        .filter((eachItem) => Number(eachItem?.qty || 0) > 0)
+    )
 
     setStock((prevStock) =>
       prevStock.map((eachItem) =>
         eachItem.id === item.id
-          ? { ...eachItem, qty: (Number(eachItem.qty || 0) + 1), modified: true }
-          : eachItem,
-      ),
-    );
+          ? { ...eachItem, qty: Number(eachItem.qty || 0) + 1, modified: true }
+          : eachItem
+      )
+    )
   }
 
   function handleRemove(i: number) {
-    setInvoiceItems((prevItems) => prevItems.filter((_, ind) => ind !== i));
+    setInvoiceItems((prevItems) => prevItems.filter((_, ind) => ind !== i))
   }
 
   function clearAll() {
-    setInvoiceItems([]);
-    setPhoneNumber("");
-    setName("");
-    setCompanyName("");
-    setAddress("");
-    setQty("");
-    setPrice("");
-    setTotalAmount(0);
-    setDiscount("");
-    setOther("");
-    setShowOther(false);
-    setManager("");
-    setNextInvoice("xxxxxxxx-xxx");
-    setSelectedRadio("customer");
+    setInvoiceItems([])
+    setPhoneNumber("")
+    setName("")
+    setCompanyName("")
+    setAddress("")
+    setQty("")
+    setPrice("")
+    setTotalAmount(0)
+    setDiscount("")
+    setOther("")
+    setShowOther(false)
+    setManager("")
+    setNextInvoice("xxxxxxxx-xxx")
+    setSelectedRadio("customer")
   }
 
   async function handleItemSearch() {
@@ -413,29 +421,33 @@ export default function POS() {
       .get(`/${userID}/pos/search/${itemSearch}`)
       .then((response) => {
         if (response.data.length > 0) {
-          const resultWithTotal = response.data.map((item: POSInvoiceReminder) => {
-            const discount = Number(item.discount || 0).toFixed(0);
-            return {
-              ...item,
-              discount,
-            };
-          });
-          setSearchModal(true);
-          setSearchItemsResult(resultWithTotal);
-          setTotal(resultWithTotal.reduce(
-            (sum: any, item: any) => sum + Number(item.total || 0),
-            0
-          ))
+          const resultWithTotal = response.data.map(
+            (item: POSInvoiceReminder) => {
+              const discount = Number(item.discount || 0).toFixed(0)
+              return {
+                ...item,
+                discount,
+              }
+            }
+          )
+          setSearchModal(true)
+          setSearchItemsResult(resultWithTotal)
+          setTotal(
+            resultWithTotal.reduce(
+              (sum: any, item: any) => sum + Number(item.total || 0),
+              0
+            )
+          )
         } else {
-          toast.info("No invoice found");
+          toast.info("No invoice found")
         }
       })
       .catch((e) => {
-        console.log(e);
+        console.log(e)
       })
       .finally(() => {
-        setSearchLoading(false);
-      });
+        setSearchLoading(false)
+      })
   }
 
   async function handleItemSearchAll() {
@@ -443,36 +455,40 @@ export default function POS() {
       .get(`/${userID}/pos/search`)
       .then((response) => {
         if (response.data.length > 0) {
-          const resultWithTotal = response.data.map((item: POSInvoiceReminder) => {
-            const discount = Number(item.discount || 0).toFixed(0);
+          const resultWithTotal = response.data.map(
+            (item: POSInvoiceReminder) => {
+              const discount = Number(item.discount || 0).toFixed(0)
 
-            return {
-              ...item,
-              discount,
-            };
-          });
-          setSearchModal(true);
-          setSearchItemsResult(resultWithTotal);
-          setTotal(resultWithTotal.reduce(
-            (sum: any, item: any) => sum + Number(item.total || 0),
-            0
-          ))
+              return {
+                ...item,
+                discount,
+              }
+            }
+          )
+          setSearchModal(true)
+          setSearchItemsResult(resultWithTotal)
+          setTotal(
+            resultWithTotal.reduce(
+              (sum: any, item: any) => sum + Number(item.total || 0),
+              0
+            )
+          )
         }
       })
       .catch((e) => {
-        console.log(e);
+        console.log(e)
       })
       .finally(() => {
-        setSearchLoading(false);
-      });
+        setSearchLoading(false)
+      })
   }
 
   async function handleReset() {
-    setLoading(true);
-    setSearchItemsResult([]);
-    setSelectedSearchItem(null);
-    setItemSearch("");
-    await fetchData();
+    setLoading(true)
+    setSearchItemsResult([])
+    setSelectedSearchItem(null)
+    setItemSearch("")
+    await fetchData()
   }
 
   async function handlePendingPayments() {
@@ -481,72 +497,75 @@ export default function POS() {
         .get(`/${userID}/pos/search/null?pending=true`)
         .then((response) => {
           if (response.data.length > 0) {
-            const resultWithTotal = response.data.map((item: POSInvoiceReminder) => {
-              return {
-                ...item,
-
-              };
-            });
-            setSearchModal(true);
-            setSearchItemsResult(resultWithTotal);
-            setTotal(resultWithTotal.reduce(
-              (sum: any, item: any) => sum + Number(item.final_amount || 0),
-              0
-            ))
+            const resultWithTotal = response.data.map(
+              (item: POSInvoiceReminder) => {
+                return {
+                  ...item,
+                }
+              }
+            )
+            setSearchModal(true)
+            setSearchItemsResult(resultWithTotal)
+            setTotal(
+              resultWithTotal.reduce(
+                (sum: any, item: any) => sum + Number(item.final_amount || 0),
+                0
+              )
+            )
           }
         })
         .catch((e) => {
-          console.log(e);
+          console.log(e)
         })
         .finally(() => {
-          setPendingLoading(false);
-          resolve();
-        });
-    });
+          setPendingLoading(false)
+          resolve()
+        })
+    })
   }
 
   useEffect(() => {
-    setSelectedUser({ id: null, label: null });
-  }, [selectedRadio]);
+    setSelectedUser({ id: null, label: null })
+  }, [selectedRadio])
 
   async function handleEngineerItems() {
     try {
-      setEngineerLoading(true);
-      const response = await axios.get(`/${userID}/pos/engineer`);
+      setEngineerLoading(true)
+      const response = await axios.get(`/${userID}/pos/engineer`)
 
-      setAllEngineersData(response.data);
-      setEngineersModal(true);
-      return true;
+      setAllEngineersData(response.data)
+      setEngineersModal(true)
+      return true
     } finally {
-      setEngineerLoading(false);
+      setEngineerLoading(false)
     }
   }
 
   function handleInward() {
-    setInwardModal(true);
+    setInwardModal(true)
   }
 
   function handleOutward() {
-    setOutwardModal(true);
+    setOutwardModal(true)
   }
 
   function handleOrderStock() {
-    setDialogVisible(false);
-    setOrderStockVisible(true);
+    setDialogVisible(false)
+    setOrderStockVisible(true)
   }
 
   return loading ? (
-
     <div className="flex min-h-[320px] w-full items-center justify-center">
       <div className="flex items-center gap-3 rounded-md border bg-card px-5 py-4 shadow-sm ring-1 ring-border/30">
         <Spinner />
         <div>
           <p className="text-sm font-bold">Loading POS</p>
-          <p className="text-xs text-muted-foreground">Preparing stock and invoice workspace</p>
+          <p className="text-xs text-muted-foreground">
+            Preparing stock and invoice workspace
+          </p>
         </div>
       </div>
     </div>
-
   ) : (
     <>
       <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-2">
@@ -554,7 +573,9 @@ export default function POS() {
           <div className="flex flex-col gap-2 border-b pb-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-base font-bold">POS Workspace</p>
-              <p className="text-xs text-muted-foreground">Create invoices, manage stock movement and customer billing.</p>
+              <p className="text-xs text-muted-foreground">
+                Create invoices, manage stock movement and customer billing.
+              </p>
             </div>
             <div className="rounded-md bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
               Invoice {nextInvoice}
@@ -564,7 +585,9 @@ export default function POS() {
             <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-sm font-bold">Bill To</p>
-                <p className="text-xs text-muted-foreground">Select customer or engineer before creating invoice.</p>
+                <p className="text-xs text-muted-foreground">
+                  Select customer or engineer before creating invoice.
+                </p>
               </div>
               <RadioGroup
                 defaultValue={selectedRadio}
@@ -573,12 +596,16 @@ export default function POS() {
               >
                 <div className="flex items-center gap-2 rounded-md px-2 py-1">
                   <RadioGroupItem value="customer" id="r1" />
-                  <Label className="text-xs font-semibold" htmlFor="r1">Customer</Label>
+                  <Label className="text-xs font-semibold" htmlFor="r1">
+                    Customer
+                  </Label>
                 </div>
 
                 <div className="flex items-center gap-2 rounded-md px-2 py-1">
                   <RadioGroupItem value="engineer" id="r2" />
-                  <Label className="text-xs font-semibold" htmlFor="r2">Engineer</Label>
+                  <Label className="text-xs font-semibold" htmlFor="r2">
+                    Engineer
+                  </Label>
                 </div>
               </RadioGroup>
             </div>
@@ -587,14 +614,22 @@ export default function POS() {
               <div className="space-y-3 rounded-md border bg-background p-3">
                 {selectedRadio === "engineer" && (
                   <div>
-                    <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Engineer</Label>
+                    <Label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                      Engineer
+                    </Label>
                     <UserSearch
                       value={selectedUser.id}
                       onReturn={(val) => {
-                        setSelectedUser((prevState) => ({ ...prevState, id: val }));
+                        setSelectedUser((prevState) => ({
+                          ...prevState,
+                          id: val,
+                        }))
                       }}
                       onReturnName={(val) => {
-                        setSelectedUser((prevState) => ({ ...prevState, label: val }));
+                        setSelectedUser((prevState) => ({
+                          ...prevState,
+                          label: val,
+                        }))
                       }}
                       placeholder="Select user"
                     />
@@ -602,17 +637,21 @@ export default function POS() {
                 )}
 
                 <div>
-                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Customer Search</Label>
+                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                    Customer Search
+                  </Label>
                   <CustomerSearchWithData
                     value={selectedCustomer}
                     onReturn={(val) => {
-                      setSelectedCustomer(val);
+                      setSelectedCustomer(val)
                       if (val?.number && Array.isArray(val.number))
-                        setPhoneNumber(val.number.length > 0 ? val.number[0] : "");
-                      setName(val?.owner || "");
-                      setCompanyName(val?.name || "");
-                      setManager(val?.ownership_name || "");
-                      setAddress(val?.address || "");
+                        setPhoneNumber(
+                          val.number.length > 0 ? val.number[0] : ""
+                        )
+                      setName(val?.owner || "")
+                      setCompanyName(val?.name || "")
+                      setManager(val?.ownership_name || "")
+                      setAddress(val?.address || "")
                     }}
                   />
                 </div>
@@ -620,23 +659,56 @@ export default function POS() {
 
               <div className="grid gap-3 rounded-md border bg-background p-3 sm:grid-cols-2">
                 <div>
-                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Number</Label>
-                  <Input className="h-8 rounded-md text-sm" disabled={true} placeholder="Phone Number" value={phoneNumber} readOnly />
+                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                    Number
+                  </Label>
+                  <Input
+                    className="h-8 rounded-md text-sm"
+                    disabled={true}
+                    placeholder="Phone Number"
+                    value={phoneNumber}
+                    readOnly
+                  />
                 </div>
                 <div>
-                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Customer</Label>
-                  <Input className="h-8 rounded-md text-sm" disabled={true} placeholder="Name" value={name} readOnly />
+                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                    Customer
+                  </Label>
+                  <Input
+                    className="h-8 rounded-md text-sm"
+                    disabled={true}
+                    placeholder="Name"
+                    value={name}
+                    readOnly
+                  />
                 </div>
                 <div>
-                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Company</Label>
-                  <Input className="h-8 rounded-md text-sm" disabled={true} placeholder="Company Name" value={companyName} readOnly />
+                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                    Company
+                  </Label>
+                  <Input
+                    className="h-8 rounded-md text-sm"
+                    disabled={true}
+                    placeholder="Company Name"
+                    value={companyName}
+                    readOnly
+                  />
                 </div>
                 <div>
-                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Manager</Label>
-                  <Input className="h-8 rounded-md text-sm" placeholder="Manager" value={manager} onChange={(e) => setManager(e.target.value)} />
+                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                    Manager
+                  </Label>
+                  <Input
+                    className="h-8 rounded-md text-sm"
+                    placeholder="Manager"
+                    value={manager}
+                    onChange={(e) => setManager(e.target.value)}
+                  />
                 </div>
                 <div className="sm:col-span-2">
-                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">Address</Label>
+                  <Label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                    Address
+                  </Label>
                   <Textarea
                     className="min-h-16 rounded-md text-sm"
                     placeholder="Enter Address"
@@ -651,7 +723,10 @@ export default function POS() {
             <div className="flex flex-col gap-2 border-b bg-muted/20 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-bold">Invoice Items</p>
-                <p className="text-xs text-muted-foreground">{invoiceItems.length} item{invoiceItems.length === 1 ? "" : "s"} selected</p>
+                <p className="text-xs text-muted-foreground">
+                  {invoiceItems.length} item
+                  {invoiceItems.length === 1 ? "" : "s"} selected
+                </p>
               </div>
               <Button
                 type="button"
@@ -668,10 +743,13 @@ export default function POS() {
                   <TableRow>
                     {["Description", "Quantity", "Unit Price", "Amount"].map(
                       (header, index) => (
-                        <TableHead key={index} className="whitespace-nowrap text-left text-xs">
+                        <TableHead
+                          key={index}
+                          className="text-left text-xs whitespace-nowrap"
+                        >
                           {header}
                         </TableHead>
-                      ),
+                      )
                     )}
                   </TableRow>
                 </TableHeader>
@@ -683,7 +761,7 @@ export default function POS() {
                           name="description"
                           value={item?.description}
                           onChange={(e) => {
-                            handleChange(e, i);
+                            handleChange(e, i)
                           }}
                         />
                       </TableCell>
@@ -697,18 +775,18 @@ export default function POS() {
                           value={item?.price ? Number(item?.price) : ""}
                           onChange={(e) => {
                             if (!isNaN(Number(e.target.value))) {
-                              handleChange(e, i);
+                              handleChange(e, i)
                             }
                           }}
                         />
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2 items-center">
+                        <div className="flex items-center gap-2">
                           <Input readOnly name="total" value={item?.total} />
                           {item?.type === "other" && (
                             <FaMinusCircle
                               onClick={() => handleRemove(i)}
-                              className="text-red-500 cursor-pointer"
+                              className="cursor-pointer text-red-500"
                             />
                           )}
                         </div>
@@ -726,16 +804,16 @@ export default function POS() {
                 (item) =>
                   item.threshold != null &&
                   item.threshold !== undefined &&
-                  (item?.qty || 0) <= item.threshold,
+                  (item?.qty || 0) <= item.threshold
               )}
               onRefresh={async () => {
-                setStock([]);
-                await fetchData();
+                setStock([])
+                await fetchData()
               }}
             />
           </Card>
           <section className="grid gap-3 lg:grid-cols-[1fr_1fr_auto]">
-            <div className="items-center flex overflow-hidden rounded-md border bg-background">
+            <div className="flex items-center overflow-hidden rounded-md border bg-background">
               <div className="flex-1 bg-muted p-2 text-center text-xs font-bold text-muted-foreground">
                 Discount
               </div>
@@ -743,12 +821,12 @@ export default function POS() {
               <Input
                 value={discount ? discount : ""}
                 onChange={(e) => {
-                  const value = e.target.value;
-                  setDiscount(value ? Number(value) : "");
+                  const value = e.target.value
+                  setDiscount(value ? Number(value) : "")
                 }}
                 type="number"
                 placeholder="Enter discount"
-                className="h-9 border-0 text-sm shadow-none focus:border-0 focus:outline-none focus:ring-0 focus-visible:ring-0"
+                className="h-9 border-0 text-sm shadow-none focus:border-0 focus:ring-0 focus:outline-none focus-visible:ring-0"
               />
             </div>
 
@@ -766,16 +844,25 @@ export default function POS() {
             <div
               className="flex cursor-pointer items-center justify-between gap-3 rounded-md border bg-background px-3 py-2 transition hover:bg-muted/40"
               onClick={() => {
-                setPendingLoading(true);
-                handlePendingPayments();
+                setPendingLoading(true)
+                handlePendingPayments()
               }}
             >
-
               <div>
-                <Label className="cursor-pointer text-sm font-bold">Pending Payments</Label>
-                <p className="text-xs text-muted-foreground">Open unpaid invoice records</p>
+                <Label className="cursor-pointer text-sm font-bold">
+                  Pending Payments
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Open unpaid invoice records
+                </p>
               </div>
-              <div className="shrink-0">{pendingLoading ? <Spinner /> : <NotificationBadge count={reminder.length} />}</div>
+              <div className="shrink-0">
+                {pendingLoading ? (
+                  <Spinner />
+                ) : (
+                  <NotificationBadge count={reminder.length} />
+                )}
+              </div>
             </div>
             <div className="flex flex-col gap-2 rounded-md border bg-background px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
@@ -785,7 +872,9 @@ export default function POS() {
                 />
                 <div>
                   <Label className="text-sm font-bold">Include warranty</Label>
-                  <p className="text-xs text-muted-foreground">Attach warranty duration to invoice</p>
+                  <p className="text-xs text-muted-foreground">
+                    Attach warranty duration to invoice
+                  </p>
                 </div>
               </div>
               {warranty && (
@@ -804,17 +893,19 @@ export default function POS() {
           <section className="rounded-md border bg-muted/10 p-3">
             <div className="mb-3 flex flex-col gap-1">
               <p className="text-sm font-bold">POS Actions</p>
-              <p className="text-xs text-muted-foreground">Print, search and manage stock movement from one place.</p>
+              <p className="text-xs text-muted-foreground">
+                Print, search and manage stock movement from one place.
+              </p>
             </div>
             <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
               {selectedSearchItem ? (
                 <Button
                   onClick={() => {
-                    setLoading(true);
-                    handleUpdateInvoice();
+                    setLoading(true)
+                    handleUpdateInvoice()
                   }}
                   disabled={invoiceItems.length === 0}
-                  className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
+                  className="h-16 rounded-md text-center text-xs font-semibold text-wrap whitespace-normal"
                 >
                   Update Invoice
                 </Button>
@@ -822,14 +913,14 @@ export default function POS() {
                 <Button
                   onClick={() => {
                     if (selectedUser?.id) {
-                      setLoading(true);
-                      generatePDF();
+                      setLoading(true)
+                      generatePDF()
                     } else {
-                      setModal(true);
+                      setModal(true)
                     }
                   }}
                   disabled={invoiceItems.length === 0 || !selectedCustomer?.id}
-                  className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
+                  className="h-16 rounded-md text-center text-xs font-semibold text-wrap whitespace-normal"
                 >
                   Print Invoice
                 </Button>
@@ -837,9 +928,9 @@ export default function POS() {
 
               <Button
                 onClick={() => {
-                  setSearchInvoice(!searchInvocie);
+                  setSearchInvoice(!searchInvocie)
                 }}
-                className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
+                className="h-16 rounded-md text-center text-xs font-semibold text-wrap whitespace-normal"
               >
                 Search Invoice
               </Button>
@@ -847,32 +938,34 @@ export default function POS() {
               <Button
                 variant="outline"
                 onClick={handleEngineerItems}
-                className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
+                className="h-16 rounded-md text-center text-xs font-semibold text-wrap whitespace-normal"
               >
-                {engineerLoading && <Spinner />}  <div className="break-words"> Engineer issued items</div>
+                {engineerLoading && <Spinner />}{" "}
+                <div className="break-words"> Engineer issued items</div>
               </Button>
 
               <Button
                 onClick={handleInward}
-                className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
+                className="h-16 rounded-md text-center text-xs font-semibold text-wrap whitespace-normal"
               >
-                <div className="break-words">
-                  Inward Gatepass
-                </div>
+                <div className="break-words">Inward Gatepass</div>
               </Button>
 
               <Button
                 onClick={handleOutward}
-                className="h-16 rounded-md whitespace-normal text-wrap text-center text-xs font-semibold"
+                className="h-16 rounded-md text-center text-xs font-semibold text-wrap whitespace-normal"
               >
                 <div className="break-words">Outward Gatepass</div>
               </Button>
 
-              <LowStock handleOrderStock={handleOrderStock} stock={stock}/>
+              <LowStock handleOrderStock={handleOrderStock} stock={stock} />
 
               {selectedSearchItem && selectedSearchItem?.id && (
-                <Link href={`/${base_route}/pos/${selectedSearchItem?.id}`} target="_blank">
-                  <Button className="h-16 w-full rounded-md whitespace-normal text-wrap text-center text-xs font-semibold">
+                <Link
+                  href={`/${base_route}/pos/${selectedSearchItem?.id}`}
+                  target="_blank"
+                >
+                  <Button className="h-16 w-full rounded-md text-center text-xs font-semibold text-wrap whitespace-normal">
                     <div>Payment Record</div>
                   </Button>
                 </Link>
@@ -882,7 +975,6 @@ export default function POS() {
                 item={selectedSearchItem}
                 onRefresh={() => handleReset()}
               />
-
             </div>
           </section>
 
@@ -903,10 +995,10 @@ export default function POS() {
                     size="sm"
                     className="h-9 rounded-md"
                     onClick={() => {
-                      setSearchLoading(true);
-                      setSearchItemsResult([]);
-                      setSelectedSearchItem(null);
-                      handleItemSearch();
+                      setSearchLoading(true)
+                      setSearchItemsResult([])
+                      setSelectedSearchItem(null)
+                      handleItemSearch()
                     }}
                   >
                     Search
@@ -915,10 +1007,10 @@ export default function POS() {
                     size="sm"
                     className="h-9 rounded-md"
                     onClick={() => {
-                      setSearchLoading(true);
-                      setSearchItemsResult([]);
-                      setSelectedSearchItem(null);
-                      handleItemSearchAll();
+                      setSearchLoading(true)
+                      setSearchItemsResult([])
+                      setSelectedSearchItem(null)
+                      handleItemSearchAll()
                     }}
                   >
                     Open All
@@ -927,7 +1019,12 @@ export default function POS() {
               )}
 
               {searchItemsResult.length > 0 && (
-                <Button size="sm" className="h-9 rounded-md" variant="outline" onClick={() => handleReset()}>
+                <Button
+                  size="sm"
+                  className="h-9 rounded-md"
+                  variant="outline"
+                  onClick={() => handleReset()}
+                >
                   Clear
                 </Button>
               )}
@@ -957,17 +1054,17 @@ export default function POS() {
           onClose={setSearchModal}
           data={searchItemsResult}
           onselect={(val) => {
-            setSearchModal(false);
-            setSelectedSearchItem(val);
-            setPhoneNumber(val.phone);
-            setName(val.name);
-            setManager(val.manager);
-            setCompanyName(val.company);
-            setAddress(val.address);
-            setInvoiceItems(val.fields);
-            setNextInvoice(val.invoicenumber);
-            setDiscount(val.discount);
-            setCreatedAt(val.created_at);
+            setSearchModal(false)
+            setSelectedSearchItem(val)
+            setPhoneNumber(val.phone)
+            setName(val.name)
+            setManager(val.manager)
+            setCompanyName(val.company)
+            setAddress(val.address)
+            setInvoiceItems(val.fields)
+            setNextInvoice(val.invoicenumber)
+            setDiscount(val.discount)
+            setCreatedAt(val.created_at)
           }}
         />
       </div>
@@ -978,9 +1075,9 @@ export default function POS() {
         setChecked={setChecked}
         setModal={setModal}
         onClick={() => {
-          setModal(false);
-          setLoading(true);
-          generatePDF();
+          setModal(false)
+          setLoading(true)
+          generatePDF()
         }}
         customer_id={selectedCustomer ? selectedCustomer?.id : null}
       />
@@ -991,10 +1088,10 @@ export default function POS() {
         part_id={selectedInvoice}
         customer_id={selectedCustomer?.id}
         onRefresh={async () => {
-          setLoading(true);
-          await fetchData();
-          setSelectedCustomer(null);
-          setChecked(false);
+          setLoading(true)
+          await fetchData()
+          setSelectedCustomer(null)
+          setChecked(false)
         }}
       />
 
@@ -1003,8 +1100,8 @@ export default function POS() {
         engineersModal={engineersModal}
         setEngineersModal={setEngineersModal}
         onRefresh={async () => {
-          await handleEngineerItems();
-          await fetchData();
+          await handleEngineerItems()
+          await fetchData()
         }}
       />
 
@@ -1027,8 +1124,8 @@ export default function POS() {
         visible={addProductVisible}
         onClose={(val) => setAddProductVisible(val)}
         onRefresh={async () => {
-          setAddProductVisible(false);
-          await fetchData();
+          setAddProductVisible(false)
+          await fetchData()
         }}
         handleOrderStock={handleOrderStock}
         designation={designation}
@@ -1039,15 +1136,12 @@ export default function POS() {
         onClose={setInwardModal}
         data={stock}
         onRefresh={async () => {
-          setLoading(true);
-          await fetchData();
+          setLoading(true)
+          await fetchData()
         }}
       />
 
-      <OutwardModal
-        visible={outwardModal}
-        onClose={setOutwardModal}
-      />
+      <OutwardModal visible={outwardModal} onClose={setOutwardModal} />
     </>
-  );
+  )
 }

@@ -1,10 +1,13 @@
-import pool from "@/config/db";
-import admin from "@/lib/firebaseAdmin";
-import { NextRequest, NextResponse } from "next/server";
+import pool from "@/config/db"
+import admin from "@/lib/firebaseAdmin"
+import { NextRequest, NextResponse } from "next/server"
 
-export async function PUT(req:NextRequest, { params }:{params:Promise<{cid:string,uid:string}>}) {
-  const { cid: conversationId, uid } = await params;
-  const { userId } = await req.json();
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ cid: string; uid: string }> }
+) {
+  const { cid: conversationId, uid } = await params
+  const { userId } = await req.json()
 
   try {
     await pool.query(
@@ -16,16 +19,16 @@ export async function PUT(req:NextRequest, { params }:{params:Promise<{cid:strin
         AND is_read = false
       `,
       [conversationId, Number(userId)]
-    );
+    )
 
-     const db = admin.firestore();
-     await db.collection('conversations_meta').doc(userId.toString()).set({
-        last_updated: Date.now(),
-    });
+    const db = admin.firestore()
+    await db.collection("conversations_meta").doc(userId.toString()).set({
+      last_updated: Date.now(),
+    })
 
-    return NextResponse.json({ success: true });
-  } catch (error:any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 

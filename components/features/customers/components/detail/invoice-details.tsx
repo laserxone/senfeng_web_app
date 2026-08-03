@@ -1,13 +1,13 @@
-import { MyImgZooming } from "@/components/shared/media/img-zooming";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { MyImgZooming } from "@/components/shared/media/img-zooming"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@/components/ui/collapsible"
+import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Table,
   TableBody,
@@ -15,39 +15,39 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { PartsProps } from "@/lib/types";
-import { Scrollbar } from "@radix-ui/react-scroll-area";
-import { ChevronDown, CreditCard, Package, ReceiptText } from "lucide-react";
-import moment from "moment";
+} from "@/components/ui/table"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { PartsProps } from "@/lib/types"
+import { Scrollbar } from "@radix-ui/react-scroll-area"
+import { ChevronDown, CreditCard, Package, ReceiptText } from "lucide-react"
+import moment from "moment"
 
 export default function InvoiceDetails({ invoice }: { invoice: PartsProps }) {
-  const isMobile = useIsMobile();
+  const isMobile = useIsMobile()
 
   function calculatePartStatus(data: PartsProps) {
     const itemsTotal = (data.fields || []).reduce(
       (sum: number, item: any) => sum + Number(item.total || 0),
       0
-    );
+    )
 
     const totalPaid = (data.payments || []).reduce(
       (sum: number, payment: any) => sum + Number(payment.amount || 0),
       0
-    );
+    )
 
-    const finalAmount = itemsTotal - Number(data.discount || 0);
+    const finalAmount = itemsTotal - Number(data.discount || 0)
 
-    let status = "NA";
+    let status = "NA"
 
     if (itemsTotal === 0) {
-      status = "Paid";
+      status = "Paid"
     } else if (totalPaid === 0) {
-      status = "Pending";
+      status = "Pending"
     } else if (finalAmount - totalPaid !== 0) {
-      status = "Partial";
+      status = "Partial"
     } else {
-      status = "Paid";
+      status = "Paid"
     }
 
     return {
@@ -55,7 +55,7 @@ export default function InvoiceDetails({ invoice }: { invoice: PartsProps }) {
       totalPaid,
       finalAmount,
       status,
-    };
+    }
   }
 
   const stats = calculatePartStatus(invoice)
@@ -72,12 +72,15 @@ export default function InvoiceDetails({ invoice }: { invoice: PartsProps }) {
               <span className="truncate text-sm font-semibold">
                 Invoice #{invoice.invoicenumber}
               </span>
-              {stats?.status === 'Paid' ? (
+              {stats?.status === "Paid" ? (
                 <Badge className="h-5 rounded-full px-2 text-[10px]">
                   {stats?.status}
                 </Badge>
               ) : (
-                <Badge variant="destructive" className="h-5 rounded-full px-2 text-[10px]">
+                <Badge
+                  variant="destructive"
+                  className="h-5 rounded-full px-2 text-[10px]"
+                >
                   {stats?.status}
                 </Badge>
               )}
@@ -126,7 +129,7 @@ export default function InvoiceDetails({ invoice }: { invoice: PartsProps }) {
             </CardHeader>
             <CardContent className="flex flex-col gap-3 px-3 pb-3 text-sm">
               <div className="rounded-lg bg-background p-2 shadow-sm ring-1 ring-black/5">
-                <Label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <Label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                   <Package className="h-3.5 w-3.5" />
                   Products
                 </Label>
@@ -153,7 +156,7 @@ export default function InvoiceDetails({ invoice }: { invoice: PartsProps }) {
               </div>
 
               <div className="rounded-lg bg-background p-2 shadow-sm ring-1 ring-black/5">
-                <Label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <Label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                   <CreditCard className="h-3.5 w-3.5" />
                   Payments
                 </Label>
@@ -196,5 +199,5 @@ export default function InvoiceDetails({ invoice }: { invoice: PartsProps }) {
         </ScrollArea>
       </CollapsibleContent>
     </Collapsible>
-  );
+  )
 }

@@ -1,6 +1,5 @@
-import TeamAttendance from "@/components/features/attendance/teamAttendance";
+import TeamAttendance from "@/components/features/attendance/teamAttendance"
 
-export default function Page(){
-
+export default function Page() {
   return <TeamAttendance />
 }

@@ -6,13 +6,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const YESTERDAY = (() => {
-  const date = new Date();
-  date.setDate(date.getDate() - 1);
-  return date;
-})();
+  const date = new Date()
+  date.setDate(date.getDate() - 1)
+  return date
+})()
 
 export const TOMORROW = (() => {
-  const date = new Date();
-  date.setDate(date.getDate() + 1);
-  return date;
-})();
+  const date = new Date()
+  date.setDate(date.getDate() + 1)
+  return date
+})()

@@ -1,36 +1,48 @@
-"use client";
+"use client"
 
-import { TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react"
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import type { SalesTarget } from "@/lib/types";
-import CircularProgress from "@/components/shared/common/circular-progress";
+import { Card, CardContent } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import type { SalesTarget } from "@/lib/types"
+import CircularProgress from "@/components/shared/common/circular-progress"
 
-export default function TargetOverview({ data, onClick }: { data?: SalesTarget, onClick : ()=> void }) {
-  const achieved = Number(data?.target_achieved || 0);
-  const remaining = Number(data?.remaining_target || 0);
-  const targetTotal = achieved + remaining;
-  const achievement = targetTotal > 0
-    ? Math.round((achieved / targetTotal) * 100)
-    : achieved > 0
-      ? 100
-      : 0;
-  const progressAchievement = Math.min(100, Math.max(0, achievement));
+export default function TargetOverview({
+  data,
+  onClick,
+}: {
+  data?: SalesTarget
+  onClick: () => void
+}) {
+  const achieved = Number(data?.target_achieved || 0)
+  const remaining = Number(data?.remaining_target || 0)
+  const targetTotal = achieved + remaining
+  const achievement =
+    targetTotal > 0
+      ? Math.round((achieved / targetTotal) * 100)
+      : achieved > 0
+        ? 100
+        : 0
+  const progressAchievement = Math.min(100, Math.max(0, achievement))
 
   return (
-    <Card className="h-full w-full overflow-hidden border border-slate-200/80  shadow-sm ring-1 ring-black/5 xl:h-[300px] p-0">
+    <Card className="h-full w-full overflow-hidden border border-slate-200/80 p-0 shadow-sm ring-1 ring-black/5 xl:h-[300px]">
       <CardContent className="grid h-full gap-4 p-4 sm:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-5">
           <div className="border-b border-slate-200/80 pb-3">
             <p className="text-sm font-semibold sm:text-base">Sales Overview</p>
-            <p className="text-xs text-muted-foreground">Monthly target progress</p>
+            <p className="text-xs text-muted-foreground">
+              Monthly target progress
+            </p>
           </div>
           <div>
             <p className="text-xs font-medium text-muted-foreground">
               Total Sales
             </p>
-            <p className="mt-1.5 text-xl font-bold tracking-tight tabular-nums hover:underline cursor-pointer hover:text-blue-600" onClick={onClick}>
+            <p
+              className="mt-1.5 cursor-pointer text-xl font-bold tracking-tight tabular-nums hover:text-blue-600 hover:underline"
+              onClick={onClick}
+            >
               {formatCurrency(achieved)}
             </p>
             <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
@@ -48,7 +60,6 @@ export default function TargetOverview({ data, onClick }: { data?: SalesTarget, 
               className="mt-2 h-2 bg-slate-200/70 [&_[data-slot=progress-indicator]]:bg-indigo-600"
             />
           </div>
-
         </div>
 
         <div className="flex min-h-0 flex-col items-center justify-center gap-3 pt-8">
@@ -67,11 +78,10 @@ export default function TargetOverview({ data, onClick }: { data?: SalesTarget, 
             <BreakdownRow label="Achieved" value={achieved} active />
             <BreakdownRow label="Remaining" value={remaining} />
           </div>
-
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 function BreakdownRow({
@@ -79,22 +89,25 @@ function BreakdownRow({
   value,
   active,
 }: {
-  label: string;
-  value: number;
-  active?: boolean;
+  label: string
+  value: number
+  active?: boolean
 }) {
   return (
     <div className="flex items-center justify-between gap-3 text-sm">
       <div className="flex min-w-0 items-center gap-2">
         <span
-          className={`h-3 w-3 rounded-sm ${active ? "bg-primary" : "bg-muted-foreground/30"
-            }`}
+          className={`h-3 w-3 rounded-sm ${
+            active ? "bg-primary" : "bg-muted-foreground/30"
+          }`}
         />
         <span className="truncate text-muted-foreground">{label}</span>
       </div>
-      <span className="font-semibold tabular-nums">{formatCurrency(value)}</span>
+      <span className="font-semibold tabular-nums">
+        {formatCurrency(value)}
+      </span>
     </div>
-  );
+  )
 }
 
 function formatCurrency(value: number) {
@@ -102,5 +115,5 @@ function formatCurrency(value: number) {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
-  }).format(value);
+  }).format(value)
 }

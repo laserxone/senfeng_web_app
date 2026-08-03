@@ -6,41 +6,50 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
-import Spinner from "@/components/ui/spinner";
-import { ReactNode } from "react";
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import Spinner from "@/components/ui/spinner"
+import { ReactNode } from "react"
 type ConfirmationDialogProps = {
-  title: string;
-  description: string;
-  onPressYes: () => void;
-  onPressCancel: () => void;
-  open: boolean;
-  loading?: boolean;
-  children?: ReactNode | null;
-  valid?: boolean;
-};
-const ConfirmationDialog = ({ title, description, onPressYes,onPressCancel, open, loading, children = null, valid = true }: ConfirmationDialogProps) => {
+  title: string
+  description: string
+  onPressYes: () => void
+  onPressCancel: () => void
+  open: boolean
+  loading?: boolean
+  children?: ReactNode | null
+  valid?: boolean
+}
+const ConfirmationDialog = ({
+  title,
+  description,
+  onPressYes,
+  onPressCancel,
+  open,
+  loading,
+  children = null,
+  valid = true,
+}: ConfirmationDialogProps) => {
   return (
     <AlertDialog open={open}>
-     
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {description}
-          </AlertDialogDescription>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         {children}
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onPressCancel}>Cancel</AlertDialogCancel>
-          <AlertDialogAction disabled={!valid || loading} onClick={() => onPressYes()}>
-           {loading && <Spinner />} Yes
+          <AlertDialogAction
+            disabled={!valid || loading}
+            onClick={() => onPressYes()}
+          >
+            {loading && <Spinner />} Yes
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
-};
+  )
+}
 
 export default ConfirmationDialog

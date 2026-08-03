@@ -1,18 +1,26 @@
-"use client";
+"use client"
 
-import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data";
+import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import type { MyCustomer } from "@/lib/types";
-import { Document, Image as PdfImage, Page, pdf, StyleSheet, Text, View } from "@react-pdf/renderer";
-import { saveAs } from "file-saver";
+} from "@/components/ui/select"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import type { MyCustomer } from "@/lib/types"
+import {
+  Document,
+  Image as PdfImage,
+  Page,
+  pdf,
+  StyleSheet,
+  Text,
+  View,
+} from "@react-pdf/renderer"
+import { saveAs } from "file-saver"
 import {
   Box,
   Camera,
@@ -22,41 +30,44 @@ import {
   ShieldCheck,
   Truck,
   User,
-} from "lucide-react";
-import NextImage from "next/image";
-import type { ChangeEvent, ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+} from "lucide-react"
+import NextImage from "next/image"
+import type { ChangeEvent, ReactNode } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 type CustomerMachineOrder = {
-  id: number;
-  orderNumbers: string[];
-  power: string;
-  model?: string;
-  serial: string;
-};
+  id: number
+  orderNumbers: string[]
+  power: string
+  model?: string
+  serial: string
+}
 
 type GatePassFormValues = {
-  partName: string;
-  partType: string;
-  partNumber: string;
-  partPrice: string;
-  quantity: string;
-  remarks: string;
-  carrierDetails: string;
-  trackingNo: string;
-};
+  partName: string
+  partType: string
+  partNumber: string
+  partPrice: string
+  quantity: string
+  remarks: string
+  carrierDetails: string
+  trackingNo: string
+}
 
 type CheckState = {
-  returnable: boolean;
-  gift: boolean;
-  selfCollection: boolean;
-  courier: boolean;
-  companyDelivery: boolean;
-};
+  returnable: boolean
+  gift: boolean
+  selfCollection: boolean
+  courier: boolean
+  companyDelivery: boolean
+}
 
 export default function GatePassSlip() {
-  const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(null);
-  const [selectedMachine, setSelectedMachine] = useState<CustomerMachineOrder | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(
+    null
+  )
+  const [selectedMachine, setSelectedMachine] =
+    useState<CustomerMachineOrder | null>(null)
   const [formValues, setFormValues] = useState<GatePassFormValues>({
     partName: "",
     partType: "",
@@ -66,52 +77,52 @@ export default function GatePassSlip() {
     remarks: "",
     carrierDetails: "",
     trackingNo: "",
-  });
+  })
   const [checked, setChecked] = useState<CheckState>({
     returnable: false,
     gift: false,
     selfCollection: false,
     courier: false,
     companyDelivery: false,
-  });
-  const [photoDataUrl, setPhotoDataUrl] = useState("");
-  const [photoName, setPhotoName] = useState("");
-  const [pdfLoading, setPdfLoading] = useState(false);
+  })
+  const [photoDataUrl, setPhotoDataUrl] = useState("")
+  const [photoName, setPhotoName] = useState("")
+  const [pdfLoading, setPdfLoading] = useState(false)
 
   const customerNumber = useMemo(() => {
-    if (!selectedCustomer?.number) return "";
+    if (!selectedCustomer?.number) return ""
     return Array.isArray(selectedCustomer.number)
       ? selectedCustomer.number.join(", ")
-      : selectedCustomer.number;
-  }, [selectedCustomer]);
+      : selectedCustomer.number
+  }, [selectedCustomer])
 
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
   const updateFormValue = (key: keyof GatePassFormValues, value: string) => {
-    setFormValues((current) => ({ ...current, [key]: value }));
-  };
+    setFormValues((current) => ({ ...current, [key]: value }))
+  }
 
   const updateChecked = (key: keyof CheckState, value: boolean) => {
-    setChecked((current) => ({ ...current, [key]: value }));
-  };
+    setChecked((current) => ({ ...current, [key]: value }))
+  }
 
   const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const file = event.target.files?.[0]
+    if (!file) return
 
-    setPhotoName(file.name);
-    const reader = new FileReader();
+    setPhotoName(file.name)
+    const reader = new FileReader()
     reader.onload = () => {
-      setPhotoDataUrl(typeof reader.result === "string" ? reader.result : "");
-    };
-    reader.readAsDataURL(file);
-  };
+      setPhotoDataUrl(typeof reader.result === "string" ? reader.result : "")
+    }
+    reader.readAsDataURL(file)
+  }
 
   const handleCreatePdf = async () => {
-    setPdfLoading(true);
+    setPdfLoading(true)
     const docNo = `GP-${Date.now().toString().slice(-6)}-${Math.floor(
       100 + Math.random() * 900
-    )}`;
+    )}`
 
     try {
       const blob = await pdf(
@@ -125,20 +136,20 @@ export default function GatePassSlip() {
           selectedCustomer={selectedCustomer}
           selectedMachine={selectedMachine}
         />
-      ).toBlob();
-      saveAs(blob, `Gate-Pass-${docNo}.pdf`);
+      ).toBlob()
+      saveAs(blob, `Gate-Pass-${docNo}.pdf`)
     } finally {
-      setPdfLoading(false);
+      setPdfLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    setSelectedMachine(null);
-  }, [selectedCustomer?.id]);
+    setSelectedMachine(null)
+  }, [selectedCustomer?.id])
 
   return (
-    <div className="min-h-screen bg-slate-100 p-2 print:bg-white sm:p-3">
-      <div className="mx-auto w-full max-w-[820px] overflow-hidden rounded-md bg-white p-3 shadow-lg ring-1 ring-slate-200 print:shadow-none print:ring-0 sm:rounded-lg sm:p-4">
+    <div className="min-h-screen bg-slate-100 p-2 sm:p-3 print:bg-white">
+      <div className="mx-auto w-full max-w-[820px] overflow-hidden rounded-md bg-white p-3 shadow-lg ring-1 ring-slate-200 sm:rounded-lg sm:p-4 print:shadow-none print:ring-0">
         {/* Header */}
         <header className="relative mb-3 border-b border-blue-700/70 pb-3 sm:mb-4 sm:pb-4">
           <div className="grid gap-3 md:grid-cols-[1fr_auto_180px] md:items-start">
@@ -168,7 +179,7 @@ export default function GatePassSlip() {
 
             <div className="flex justify-start md:justify-center">
               <div className="w-full rounded-md bg-blue-700 px-3 py-2 text-center shadow-sm sm:w-fit sm:px-5">
-                <h2 className="text-sm font-bold uppercase tracking-wide text-white sm:text-base">
+                <h2 className="text-sm font-bold tracking-wide text-white uppercase sm:text-base">
                   Gate Pass / Parts Issuance Slip
                 </h2>
               </div>
@@ -204,14 +215,32 @@ export default function GatePassSlip() {
 
             <div className="grid gap-3 md:grid-cols-2 md:gap-4">
               <div className="space-y-2.5">
-                <InputLine label="Customer Name" value={ selectedCustomer?.owner || selectedCustomer?.name || ""} />
-                <InputLine label="Company Name" value={selectedCustomer?.company || selectedCustomer?.name || ""} />
+                <InputLine
+                  label="Customer Name"
+                  value={
+                    selectedCustomer?.owner || selectedCustomer?.name || ""
+                  }
+                />
+                <InputLine
+                  label="Company Name"
+                  value={
+                    selectedCustomer?.company || selectedCustomer?.name || ""
+                  }
+                />
                 <InputLine label="Contact Number" value={customerNumber} />
               </div>
 
-              <div className="space-y-2.5 border-t border-dashed border-slate-300 pt-3 md:border-l md:border-t-0 md:pl-4 md:pt-0">
-                <InputLine label="City" value={selectedCustomer?.location || ""} />
-                <InputLine label="Machine Model" value={selectedMachine?.serial || selectedMachine?.power || ""} />
+              <div className="space-y-2.5 border-t border-dashed border-slate-300 pt-3 md:border-t-0 md:border-l md:pt-0 md:pl-4">
+                <InputLine
+                  label="City"
+                  value={selectedCustomer?.location || ""}
+                />
+                <InputLine
+                  label="Machine Model"
+                  value={
+                    selectedMachine?.serial || selectedMachine?.power || ""
+                  }
+                />
                 <MachineOrderSelect
                   customerId={selectedCustomer?.id}
                   value={selectedMachine}
@@ -293,7 +322,7 @@ export default function GatePassSlip() {
                 tall
               />
 
-              <div className="sm:col-span-2 flex flex-col items-stretch justify-center gap-2 border-t border-dashed border-slate-300 pt-3 sm:flex-row sm:items-center">
+              <div className="flex flex-col items-stretch justify-center gap-2 border-t border-dashed border-slate-300 pt-3 sm:col-span-2 sm:flex-row sm:items-center">
                 <StatusToggle
                   label="Returnable"
                   color="teal"
@@ -343,7 +372,7 @@ export default function GatePassSlip() {
               </div>
             </div>
 
-            <div className="space-y-3 border-t border-dashed border-slate-300 pt-3 md:border-l md:border-t-0 md:pl-4 md:pt-0">
+            <div className="space-y-3 border-t border-dashed border-slate-300 pt-3 md:border-t-0 md:border-l md:pt-0 md:pl-4">
               <InputBox
                 label="Carrier / Courier Details"
                 value={formValues.carrierDetails}
@@ -372,7 +401,7 @@ export default function GatePassSlip() {
           </div>
         </Section>
 
-        <div className="mt-4 flex justify-stretch print:hidden sm:justify-end">
+        <div className="mt-4 flex justify-stretch sm:justify-end print:hidden">
           <button
             type="button"
             onClick={handleCreatePdf}
@@ -392,7 +421,7 @@ export default function GatePassSlip() {
         </footer>
       </div>
     </div>
-  );
+  )
 }
 
 function GatePassPdfDocument({
@@ -405,19 +434,19 @@ function GatePassPdfDocument({
   selectedCustomer,
   selectedMachine,
 }: {
-  checked: CheckState;
-  customerNumber: string;
-  date: string;
-  docNo: string;
-  formValues: GatePassFormValues;
-  photoDataUrl: string;
-  selectedCustomer: MyCustomer | null;
-  selectedMachine: CustomerMachineOrder | null;
+  checked: CheckState
+  customerNumber: string
+  date: string
+  docNo: string
+  formValues: GatePassFormValues
+  photoDataUrl: string
+  selectedCustomer: MyCustomer | null
+  selectedMachine: CustomerMachineOrder | null
 }) {
-  const customerName = selectedCustomer?.owner || selectedCustomer?.name || "";
-  const companyName = selectedCustomer?.company || selectedCustomer?.name || "";
-  const orderNumbers = selectedMachine?.orderNumbers?.join(", ") || "";
-  const machineModel = selectedMachine?.serial || selectedMachine?.power || "";
+  const customerName = selectedCustomer?.owner || selectedCustomer?.name || ""
+  const companyName = selectedCustomer?.company || selectedCustomer?.name || ""
+  const orderNumbers = selectedMachine?.orderNumbers?.join(", ") || ""
+  const machineModel = selectedMachine?.serial || selectedMachine?.power || ""
 
   return (
     <Document>
@@ -427,13 +456,21 @@ function GatePassPdfDocument({
             <Text style={pdfStyles.brand}>SENFENG</Text>
             <View style={pdfStyles.addressBlock}>
               <Text style={pdfStyles.company}>SENFENG PAKISTAN</Text>
-              <Text style={pdfStyles.small}>Street# 2, Sharif Garden Daroghawaala,</Text>
-              <Text style={pdfStyles.small}>Lahore, Punjab 54000, Pakistan</Text>
-              <Text style={pdfStyles.small}>senfenglaserpakistan@gmail.com</Text>
+              <Text style={pdfStyles.small}>
+                Street# 2, Sharif Garden Daroghawaala,
+              </Text>
+              <Text style={pdfStyles.small}>
+                Lahore, Punjab 54000, Pakistan
+              </Text>
+              <Text style={pdfStyles.small}>
+                senfenglaserpakistan@gmail.com
+              </Text>
             </View>
           </View>
           <View style={pdfStyles.headerCenter}>
-            <Text style={pdfStyles.screenTitle}>Gate Pass / Parts Issuance Slip</Text>
+            <Text style={pdfStyles.screenTitle}>
+              Gate Pass / Parts Issuance Slip
+            </Text>
           </View>
           <View style={pdfStyles.docBox}>
             <View style={pdfStyles.docRow}>
@@ -447,17 +484,45 @@ function GatePassPdfDocument({
           </View>
         </View>
 
-        <PdfSection number="1" title="Customer & Machine Information" color="blue">
+        <PdfSection
+          number="1"
+          title="Customer & Machine Information"
+          color="blue"
+        >
           <View style={pdfStyles.customerGrid}>
             <View style={pdfStyles.customerColumn}>
-              <PdfLineField label="Customer Name" value={customerName} color="blue" />
-              <PdfLineField label="Company Name" value={companyName} color="blue" />
-              <PdfLineField label="Contact Number" value={customerNumber} color="blue" />
+              <PdfLineField
+                label="Customer Name"
+                value={customerName}
+                color="blue"
+              />
+              <PdfLineField
+                label="Company Name"
+                value={companyName}
+                color="blue"
+              />
+              <PdfLineField
+                label="Contact Number"
+                value={customerNumber}
+                color="blue"
+              />
             </View>
             <View style={[pdfStyles.customerColumn, pdfStyles.customerDivider]}>
-              <PdfLineField label="City" value={selectedCustomer?.location || ""} color="blue" />
-              <PdfLineField label="Machine Model" value={machineModel} color="blue" />
-              <PdfLineField label="Machine Serial Number" value={orderNumbers} color="blue" />
+              <PdfLineField
+                label="City"
+                value={selectedCustomer?.location || ""}
+                color="blue"
+              />
+              <PdfLineField
+                label="Machine Model"
+                value={machineModel}
+                color="blue"
+              />
+              <PdfLineField
+                label="Machine Serial Number"
+                value={orderNumbers}
+                color="blue"
+              />
             </View>
           </View>
         </PdfSection>
@@ -475,14 +540,28 @@ function GatePassPdfDocument({
               <View style={pdfStyles.twoCol}>
                 <PdfBoxField label="Part Name" value={formValues.partName} />
                 <PdfBoxField label="Part Type" value={formValues.partType} />
-                <PdfBoxField label="Part Number" value={formValues.partNumber} />
+                <PdfBoxField
+                  label="Part Number"
+                  value={formValues.partNumber}
+                />
                 <PdfBoxField label="Part Price" value={formValues.partPrice} />
                 <PdfBoxField label="Quantity" value={formValues.quantity} />
-                <PdfBoxField label="Remarks / Notes" value={formValues.remarks} />
+                <PdfBoxField
+                  label="Remarks / Notes"
+                  value={formValues.remarks}
+                />
               </View>
               <View style={pdfStyles.statusRow}>
-                <PdfStatusCheck label="Returnable" checked={checked.returnable} color="teal" />
-                <PdfStatusCheck label="Gift / Non-Returnable" checked={checked.gift} color="orange" />
+                <PdfStatusCheck
+                  label="Returnable"
+                  checked={checked.returnable}
+                  color="teal"
+                />
+                <PdfStatusCheck
+                  label="Gift / Non-Returnable"
+                  checked={checked.gift}
+                  color="orange"
+                />
               </View>
             </View>
           </View>
@@ -493,14 +572,28 @@ function GatePassPdfDocument({
             <View style={pdfStyles.deliveryColumn}>
               <Text style={pdfStyles.deliveryTitle}>Mode of Delivery</Text>
               <View style={pdfStyles.deliveryOptions}>
-                <PdfCheck label="Self Collection" checked={checked.selfCollection} />
+                <PdfCheck
+                  label="Self Collection"
+                  checked={checked.selfCollection}
+                />
                 <PdfCheck label="Courier / Cargo" checked={checked.courier} />
-                <PdfCheck label="Company Delivery" checked={checked.companyDelivery} />
+                <PdfCheck
+                  label="Company Delivery"
+                  checked={checked.companyDelivery}
+                />
               </View>
             </View>
             <View style={[pdfStyles.deliveryColumn, pdfStyles.customerDivider]}>
-              <PdfBoxField label="Carrier / Courier Details" value={formValues.carrierDetails} full />
-              <PdfBoxField label="Tracking / AWB No." value={formValues.trackingNo} full />
+              <PdfBoxField
+                label="Carrier / Courier Details"
+                value={formValues.carrierDetails}
+                full
+              />
+              <PdfBoxField
+                label="Tracking / AWB No."
+                value={formValues.trackingNo}
+                full
+              />
             </View>
           </View>
         </PdfSection>
@@ -516,7 +609,7 @@ function GatePassPdfDocument({
         <Text style={pdfStyles.footer}>Thank you for your business!</Text>
       </Page>
     </Document>
-  );
+  )
 }
 
 function PdfSection({
@@ -525,22 +618,24 @@ function PdfSection({
   color,
   children,
 }: {
-  number: string;
-  title: string;
-  color: "blue" | "teal" | "purple" | "orange";
-  children: ReactNode;
+  number: string
+  title: string
+  color: "blue" | "teal" | "purple" | "orange"
+  children: ReactNode
 }) {
-  const colorStyle = pdfSectionColors[color];
+  const colorStyle = pdfSectionColors[color]
 
   return (
     <View style={[pdfStyles.section, { borderColor: colorStyle.border }]}>
-      <View style={[pdfStyles.sectionTab, { backgroundColor: colorStyle.fill }]}>
+      <View
+        style={[pdfStyles.sectionTab, { backgroundColor: colorStyle.fill }]}
+      >
         <Text style={pdfStyles.sectionNumber}>{number}</Text>
         <Text style={pdfStyles.sectionTitle}>{title}</Text>
       </View>
       <View style={pdfStyles.sectionBody}>{children}</View>
     </View>
-  );
+  )
 }
 
 function PdfLineField({
@@ -548,9 +643,9 @@ function PdfLineField({
   value,
   color,
 }: {
-  label: string;
-  value: string;
-  color: "blue" | "teal";
+  label: string
+  value: string
+  color: "blue" | "teal"
 }) {
   return (
     <View style={pdfStyles.lineField}>
@@ -564,7 +659,7 @@ function PdfLineField({
         {value || " "}
       </Text>
     </View>
-  );
+  )
 }
 
 function PdfBoxField({
@@ -572,16 +667,16 @@ function PdfBoxField({
   value,
   full = false,
 }: {
-  label: string;
-  value: string;
-  full?: boolean;
+  label: string
+  value: string
+  full?: boolean
 }) {
   return (
     <View style={full ? pdfStyles.boxFieldFull : pdfStyles.boxField}>
       <Text style={pdfStyles.boxLabel}>{label}</Text>
       <Text style={pdfStyles.boxValue}>{value || " "}</Text>
     </View>
-  );
+  )
 }
 
 function PdfCheck({ label, checked }: { label: string; checked: boolean }) {
@@ -590,7 +685,7 @@ function PdfCheck({ label, checked }: { label: string; checked: boolean }) {
       <Text style={pdfStyles.checkBox}>{checked ? "X" : ""}</Text>
       <Text style={pdfStyles.checkLabel}>{label}</Text>
     </View>
-  );
+  )
 }
 
 function PdfStatusCheck({
@@ -598,11 +693,11 @@ function PdfStatusCheck({
   checked,
   color,
 }: {
-  label: string;
-  checked: boolean;
-  color: "teal" | "orange";
+  label: string
+  checked: boolean
+  color: "teal" | "orange"
 }) {
-  const isTeal = color === "teal";
+  const isTeal = color === "teal"
 
   return (
     <View
@@ -614,14 +709,24 @@ function PdfStatusCheck({
         },
       ]}
     >
-      <Text style={[pdfStyles.statusText, { color: isTeal ? "#0f766e" : "#ea580c" }]}>
+      <Text
+        style={[
+          pdfStyles.statusText,
+          { color: isTeal ? "#0f766e" : "#ea580c" },
+        ]}
+      >
         {label}
       </Text>
-      <Text style={[pdfStyles.statusBox, { borderColor: isTeal ? "#0f766e" : "#ea580c" }]}>
+      <Text
+        style={[
+          pdfStyles.statusBox,
+          { borderColor: isTeal ? "#0f766e" : "#ea580c" },
+        ]}
+      >
         {checked ? "X" : ""}
       </Text>
     </View>
-  );
+  )
 }
 
 function PdfSignature({ title }: { title: string }) {
@@ -632,7 +737,7 @@ function PdfSignature({ title }: { title: string }) {
       <PdfSignatureLine label="Signature:" />
       <PdfSignatureLine label="Date:" />
     </View>
-  );
+  )
 }
 
 function PdfSignatureLine({ label }: { label: string }) {
@@ -641,7 +746,7 @@ function PdfSignatureLine({ label }: { label: string }) {
       <Text style={pdfStyles.signatureLabel}>{label}</Text>
       <Text style={pdfStyles.signatureValue}> </Text>
     </View>
-  );
+  )
 }
 
 const pdfSectionColors = {
@@ -649,7 +754,7 @@ const pdfSectionColors = {
   teal: { fill: "#0f766e", border: "#0d9488" },
   purple: { fill: "#7e22ce", border: "#9333ea" },
   orange: { fill: "#ea580c", border: "#f97316" },
-};
+}
 
 const pdfStyles = StyleSheet.create({
   page: {
@@ -763,7 +868,7 @@ const pdfStyles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 900,
     marginRight: 6,
-    marginTop:5
+    marginTop: 5,
   },
   sectionTitle: {
     color: "#ffffff",
@@ -896,7 +1001,7 @@ const pdfStyles = StyleSheet.create({
     textAlign: "center",
     fontSize: 8,
     fontWeight: 900,
-    marginTop:5
+    marginTop: 5,
   },
   deliveryGrid: {
     flexDirection: "row",
@@ -979,7 +1084,7 @@ const pdfStyles = StyleSheet.create({
     fontSize: 8,
     fontWeight: 800,
   },
-});
+})
 
 function Section({
   number,
@@ -988,21 +1093,23 @@ function Section({
   color,
   children,
 }: {
-  number: string;
-  title: string;
-  icon: ReactNode;
-  color: "blue" | "teal" | "purple" | "orange";
-  children: ReactNode;
+  number: string
+  title: string
+  icon: ReactNode
+  color: "blue" | "teal" | "purple" | "orange"
+  children: ReactNode
 }) {
   const colors = {
     blue: "from-blue-700 to-blue-500 border-blue-600",
     teal: "from-teal-700 to-teal-500 border-teal-600",
     purple: "from-purple-700 to-purple-500 border-purple-600",
     orange: "from-orange-600 to-orange-400 border-orange-500",
-  };
+  }
 
   return (
-    <section className={`mb-3 overflow-hidden rounded-md border ${colors[color].split(" ")[2]} bg-white sm:rounded-lg`}>
+    <section
+      className={`mb-3 overflow-hidden rounded-md border ${colors[color].split(" ")[2]} bg-white sm:rounded-lg`}
+    >
       <div
         className={`flex w-full items-center gap-2 rounded-br-xl bg-gradient-to-r px-3 py-2 text-white sm:w-fit ${colors[color]}`}
       >
@@ -1010,12 +1117,14 @@ function Section({
           {number}
         </span>
         <span className="shrink-0">{icon}</span>
-        <h3 className="min-w-0 text-xs font-bold uppercase tracking-wide sm:text-sm">{title}</h3>
+        <h3 className="min-w-0 text-xs font-bold tracking-wide uppercase sm:text-sm">
+          {title}
+        </h3>
       </div>
 
       <div className="p-2.5 sm:p-3">{children}</div>
     </section>
-  );
+  )
 }
 
 function InputLine({ label, value }: { label: string; value?: string }) {
@@ -1028,7 +1137,7 @@ function InputLine({ label, value }: { label: string; value?: string }) {
         className="h-8 min-w-0 rounded-md border border-blue-300 px-2 text-sm outline-none read-only:bg-blue-50/50"
       />
     </div>
-  );
+  )
 }
 
 function MachineOrderSelect({
@@ -1036,57 +1145,60 @@ function MachineOrderSelect({
   value,
   onReturn,
 }: {
-  customerId?: number;
-  value: CustomerMachineOrder | null;
-  onReturn: (value: CustomerMachineOrder | null) => void;
+  customerId?: number
+  value: CustomerMachineOrder | null
+  onReturn: (value: CustomerMachineOrder | null) => void
 }) {
-  const { userID } = useUserDetail();
-  const [items, setItems] = useState<CustomerMachineOrder[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail()
+  const [items, setItems] = useState<CustomerMachineOrder[]>([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     async function fetchMachines() {
       if (!userID || !customerId) {
-        setItems([]);
-        return;
+        setItems([])
+        return
       }
 
-      setLoading(true);
+      setLoading(true)
       try {
         const response: { data: CustomerMachineOrder[] } = await axios.get(
           `/${userID}/customer/${customerId}/limited`
-        );
-        setItems(response.data || []);
+        )
+        setItems(response.data || [])
       } catch (error) {
-        setItems([]);
+        setItems([])
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
 
-    fetchMachines();
-  }, [customerId, userID]);
+    fetchMachines()
+  }, [customerId, userID])
 
   const placeholder = !customerId
     ? "Select customer first"
     : loading
       ? "Loading machines..."
-      : "Select order / serial";
+      : "Select order / serial"
 
   return (
     <div className="grid gap-1 sm:grid-cols-[118px_1fr] sm:items-center sm:gap-2">
-      <label className="text-xs font-semibold text-slate-800">Machine Serial Number</label>
+      <label className="text-xs font-semibold text-slate-800">
+        Machine Serial Number
+      </label>
       <Select
         value={value ? String(value.id) : ""}
         disabled={!customerId || loading}
         onValueChange={(selectedId) => {
-          const selected = items.find((item) => String(item.id) === selectedId) || null;
-          onReturn(selected);
+          const selected =
+            items.find((item) => String(item.id) === selectedId) || null
+          onReturn(selected)
         }}
       >
         <SelectTrigger
           size="sm"
-          className="h-8 min-w-0 w-full rounded-md border-blue-300 bg-white px-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 [&>span]:truncate"
+          className="h-8 w-full min-w-0 rounded-md border-blue-300 bg-white px-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 [&>span]:truncate"
         >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
@@ -1098,7 +1210,11 @@ function MachineOrderSelect({
           ) : (
             items.map((item) => (
               <SelectItem key={item.id} value={String(item.id)}>
-                {[item.orderNumbers?.join(", "), item.serial, item.model || item.power]
+                {[
+                  item.orderNumbers?.join(", "),
+                  item.serial,
+                  item.model || item.power,
+                ]
                   .filter(Boolean)
                   .join(" - ")}
               </SelectItem>
@@ -1107,7 +1223,7 @@ function MachineOrderSelect({
         </SelectContent>
       </Select>
     </div>
-  );
+  )
 }
 
 function InputBox({
@@ -1116,14 +1232,16 @@ function InputBox({
   onChange,
   tall = false,
 }: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  tall?: boolean;
+  label: string
+  value: string
+  onChange: (value: string) => void
+  tall?: boolean
 }) {
   return (
     <div className={tall ? "sm:row-span-2" : ""}>
-      <label className="mb-1.5 block text-xs font-semibold text-slate-800">{label}</label>
+      <label className="mb-1.5 block text-xs font-semibold text-slate-800">
+        {label}
+      </label>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -1132,7 +1250,7 @@ function InputBox({
         }`}
       />
     </div>
-  );
+  )
 }
 
 function StatusToggle({
@@ -1141,15 +1259,15 @@ function StatusToggle({
   checked,
   onChange,
 }: {
-  label: string;
-  color: "teal" | "orange";
-  checked: boolean;
-  onChange: (value: boolean) => void;
+  label: string
+  color: "teal" | "orange"
+  checked: boolean
+  onChange: (value: boolean) => void
 }) {
   const style =
     color === "teal"
       ? "border-teal-500 bg-teal-50 text-teal-700"
-      : "border-orange-400 bg-orange-50 text-orange-600";
+      : "border-orange-400 bg-orange-50 text-orange-600"
 
   return (
     <label
@@ -1163,7 +1281,7 @@ function StatusToggle({
         className="h-5 w-5 shrink-0 cursor-pointer rounded-md border-2 border-current bg-white accent-current"
       />
     </label>
-  );
+  )
 }
 
 function CheckOption({
@@ -1171,9 +1289,9 @@ function CheckOption({
   checked,
   onChange,
 }: {
-  label: string;
-  checked: boolean;
-  onChange: (value: boolean) => void;
+  label: string
+  checked: boolean
+  onChange: (value: boolean) => void
 }) {
   return (
     <label className="flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-2 font-medium text-slate-700 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
@@ -1185,7 +1303,7 @@ function CheckOption({
       />
       <span className="min-w-0">{label}</span>
     </label>
-  );
+  )
 }
 
 function SignatureCard({ title }: { title: string }) {
@@ -1202,7 +1320,7 @@ function SignatureCard({ title }: { title: string }) {
         <SignatureLine label="Date:" />
       </div>
     </div>
-  );
+  )
 }
 
 function SignatureLine({ label }: { label: string }) {
@@ -1211,5 +1329,5 @@ function SignatureLine({ label }: { label: string }) {
       <span className="font-medium text-slate-700">{label}</span>
       <span className="border-b border-slate-500" />
     </div>
-  );
+  )
 }

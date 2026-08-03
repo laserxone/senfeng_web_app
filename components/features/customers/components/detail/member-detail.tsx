@@ -1,8 +1,8 @@
-"use client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+"use client"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
 
-import axios from "@/lib/axios";
+import axios from "@/lib/axios"
 import {
   Calendar,
   CircleDollarSign,
@@ -16,29 +16,29 @@ import {
   PhoneCall,
   Trash2,
   UserRound,
-  Wrench
-} from "lucide-react";
-import { useRouter } from "next/navigation";
-import { ReactNode, useCallback, useEffect, useState } from "react";
-import { FaWhatsapp } from "react-icons/fa";
+  Wrench,
+} from "lucide-react"
+import { useRouter } from "next/navigation"
+import { ReactNode, useCallback, useEffect, useState } from "react"
+import { FaWhatsapp } from "react-icons/fa"
 
-import CustomerTask from "@/components/features/customer-relations/customer-task";
-import VisitTab from "@/components/features/customer-relations/visit-tab";
-import EditCustomerDialog from "@/components/features/customers/components/edit customer";
-import AddMachine from "@/components/features/machines/add-machine";
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
+import CustomerTask from "@/components/features/customer-relations/customer-task"
+import VisitTab from "@/components/features/customer-relations/visit-tab"
+import EditCustomerDialog from "@/components/features/customers/components/edit customer"
+import AddMachine from "@/components/features/machines/add-machine"
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import Spinner from "@/components/ui/spinner";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@/components/ui/accordion"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import Spinner from "@/components/ui/spinner"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Timeline,
   TimelineDescription,
@@ -46,43 +46,53 @@ import {
   TimelineItem,
   TimelineTime,
   TimelineTitle,
-} from "@/components/ui/timeline";
-import useUserDetail from "@/hooks/use-user-detail";
-import { debounce } from "@/lib/debounce";
-import { GetProfileImage } from "@/lib/getProfileImage";
+} from "@/components/ui/timeline"
+import useUserDetail from "@/hooks/use-user-detail"
+import { debounce } from "@/lib/debounce"
+import { GetProfileImage } from "@/lib/getProfileImage"
 
-import AddFeedbackDialog from "@/components/features/customer-relations/add-feedback";
-import AddParts from "@/components/features/machines/add-parts";
-import CurrencyFormatter from "@/components/shared/common/currency-formatter";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { CustomerFeedbackProps, CustomerTaskProps, CustomerVisitProps, MachineProps, MyCustomer, PartsProps } from "@/lib/types";
-import { Scrollbar } from "@radix-ui/react-scroll-area";
-import { CheckCircle, Clock } from "lucide-react";
-import moment from "moment";
-import Link from "next/link";
-import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
-import "react-circular-progressbar/dist/styles.css";
-import { toast } from "sonner";
-import InvoiceDetails from "./invoice-details";
-
+import AddFeedbackDialog from "@/components/features/customer-relations/add-feedback"
+import AddParts from "@/components/features/machines/add-parts"
+import CurrencyFormatter from "@/components/shared/common/currency-formatter"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { useIsMobile } from "@/hooks/use-mobile"
+import {
+  CustomerFeedbackProps,
+  CustomerTaskProps,
+  CustomerVisitProps,
+  MachineProps,
+  MyCustomer,
+  PartsProps,
+} from "@/lib/types"
+import { Scrollbar } from "@radix-ui/react-scroll-area"
+import { CheckCircle, Clock } from "lucide-react"
+import moment from "moment"
+import Link from "next/link"
+import { buildStyles, CircularProgressbar } from "react-circular-progressbar"
+import "react-circular-progressbar/dist/styles.css"
+import { toast } from "sonner"
+import InvoiceDetails from "./invoice-details"
 
 type MemberDetailProps = {
-  ownership?: boolean;
-  from?: any;
-  customer_id?: any;
-  onReturn?: (a: number, b?: string) => void;
-  onLoading?: (val: boolean) => void;
-  route?: any;
-  height?: string;
-};
+  ownership?: boolean
+  from?: any
+  customer_id?: any
+  onReturn?: (a: number, b?: string) => void
+  onLoading?: (val: boolean) => void
+  route?: any
+  height?: string
+}
 
 type LocalCustomerDetailProps = Omit<MyCustomer, "machines"> & {
-  bill_received: number;
-  bill_total: number;
-  profile_completion: number;
+  bill_received: number
+  bill_total: number
+  profile_completion: number
   lead_name?: string
-  parts: PartsProps[];
+  parts: PartsProps[]
   machines: MachineProps[]
   missing_fields: string[]
 }
@@ -96,118 +106,118 @@ export default function MemberDetail({
   route,
   height,
 }: MemberDetailProps) {
-  const [data, setData] = useState<LocalCustomerDetailProps | null>(null);
-  const { userID, designation, base_route } = useUserDetail();
-  const [feedback, setFeedback] = useState<CustomerFeedbackProps[]>([]);
-  const [editVisible, setEditVisible] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [data, setData] = useState<LocalCustomerDetailProps | null>(null)
+  const { userID, designation, base_route } = useUserDetail()
+  const [feedback, setFeedback] = useState<CustomerFeedbackProps[]>([])
+  const [editVisible, setEditVisible] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
-  const router = useRouter();
-  const [visitData, setVisitData] = useState<CustomerVisitProps[]>([]);
-  const [profileCompletion, setProfileCompletion] = useState(0);
-  const [taskData, setTaskData] = useState<CustomerTaskProps[]>([]);
-  const [activeTab, setActiveTab] = useState("timeline");
-  const isMobile = useIsMobile();
+  const router = useRouter()
+  const [visitData, setVisitData] = useState<CustomerVisitProps[]>([])
+  const [profileCompletion, setProfileCompletion] = useState(0)
+  const [taskData, setTaskData] = useState<CustomerTaskProps[]>([])
+  const [activeTab, setActiveTab] = useState("timeline")
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     if (customer_id && userID) {
-      debouncedFetchCustomerData();
+      debouncedFetchCustomerData()
     }
-  }, [userID, customer_id]);
+  }, [userID, customer_id])
 
   const debouncedFetchCustomerData = debounce(() => {
-    fetchCustomerTask();
-    fetchCustomerVisit();
-    fetchCustomerFeedback();
-    fetchCustomerDashboard();
-  }, 500);
+    fetchCustomerTask()
+    fetchCustomerVisit()
+    fetchCustomerFeedback()
+    fetchCustomerDashboard()
+  }, 500)
 
   async function fetchCustomerTask() {
     axios.get(`/${userID}/customer/${customer_id}/task`).then((response) => {
-      setTaskData(response.data);
-    });
+      setTaskData(response.data)
+    })
   }
   async function fetchCustomerVisit() {
     axios.get(`/${userID}/customer/${customer_id}/visit`).then((response) => {
-      setVisitData(response.data);
-    });
+      setVisitData(response.data)
+    })
   }
   async function fetchCustomerFeedback() {
     axios
       .get(`/${userID}/customer/${customer_id}/feedback`)
       .then((response) => {
-        setFeedback(response.data);
-      });
+        setFeedback(response.data)
+      })
   }
 
   async function fetchCustomerDashboard() {
     if (onLoading) {
-      onLoading(true);
+      onLoading(true)
     }
 
     try {
-      const response = await axios.get(`/${userID}/customer/${customer_id}/dashboard`)
-      const data = response.data.customer;
-      setData(data);
+      const response = await axios.get(
+        `/${userID}/customer/${customer_id}/dashboard`
+      )
+      const data = response.data.customer
+      setData(data)
 
-      const customerCompletion = Number(data.profile_completion) || 0;
-      const machines: MachineProps & { percentage_completion: number }[] = data.machines || [];
+      const customerCompletion = Number(data.profile_completion) || 0
+      const machines: MachineProps & { percentage_completion: number }[] =
+        data.machines || []
 
       const totalMachineCompletion = machines.reduce(
         (sum, item) => sum + Number(item.percentage_completion || 0),
-        0,
-      );
+        0
+      )
 
       const overallCompletion =
-        (customerCompletion + totalMachineCompletion) / (machines.length + 1);
-      setProfileCompletion(Number(overallCompletion.toFixed(0)));
+        (customerCompletion + totalMachineCompletion) / (machines.length + 1)
+      setProfileCompletion(Number(overallCompletion.toFixed(0)))
     } finally {
-      if (onLoading) onLoading(false);
+      if (onLoading) onLoading(false)
     }
-
   }
 
   async function handleDelete(id: number | undefined) {
-    if (!id) return;
-    setDeleteLoading(true);
+    if (!id) return
+    setDeleteLoading(true)
     try {
-      await axios.delete(`/${userID}/customer/${id}`);
-      toast.success("Customer Deleted");
+      await axios.delete(`/${userID}/customer/${id}`)
+      toast.success("Customer Deleted")
 
-      router.push(`/${base_route}/${from}`);
+      router.push(`/${base_route}/${from}`)
     } finally {
-      setDeleteLoading(false);
-      setShowConfirmation(false);
-      setData(null);
+      setDeleteLoading(false)
+      setShowConfirmation(false)
+      setData(null)
     }
   }
 
   const RenderVisitTab = useCallback(() => {
     return (
-
-
       <VisitTab
-        customer_data={data ?
-          {
-            id: data?.id,
-            location: data?.location,
-            owner: data?.owner,
-            number: data?.number,
-            name: data?.name
-          } : null}
+        customer_data={
+          data
+            ? {
+                id: data?.id,
+                location: data?.location,
+                owner: data?.owner,
+                number: data?.number,
+                name: data?.name,
+              }
+            : null
+        }
         id={userID}
         data={visitData}
         height={height}
         onRefresh={fetchCustomerVisit}
       />
-
-
-    );
-  }, [visitData, customer_id, height]);
+    )
+  }, [visitData, customer_id, height])
 
   const RenderTaskTab = useCallback(() => {
-
     return (
       <Card className="flex flex-1">
         <CardContent className="flex flex-1 pt-2">
@@ -220,8 +230,8 @@ export default function MemberDetail({
           />
         </CardContent>
       </Card>
-    );
-  }, [taskData, customer_id]);
+    )
+  }, [taskData, customer_id])
 
   const RenderFeedbackTabs = useCallback(() => {
     return (
@@ -232,17 +242,16 @@ export default function MemberDetail({
         data={feedback || []}
         onRefresh={fetchCustomerDashboard}
       />
-    );
-  }, [data, feedback]);
+    )
+  }, [data, feedback])
 
-
-  const hasMissingFields = !!data?.missing_fields?.length;
-  const isProfileIncomplete = profileCompletion < 100;
+  const hasMissingFields = !!data?.missing_fields?.length
+  const isProfileIncomplete = profileCompletion < 100
 
   return (
     <div className="flex w-full flex-col pb-2">
-      <div className="flex items-center mb-2 justify-between gap-2 flex-wrap">
-        <div className="flex gap-2 items-center">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
           <ProfilePicture
             img={data?.image}
             name={data?.name}
@@ -250,18 +259,18 @@ export default function MemberDetail({
               if (data?.id) {
                 if (designation === "Sales" || designation === "Engineer") {
                   if (data?.ownership === userID) {
-                    setEditVisible(true);
+                    setEditVisible(true)
                   } else {
-                    toast.error("You are not authorized to edit this member");
+                    toast.error("You are not authorized to edit this member")
                   }
                 } else {
-                  setEditVisible(true);
+                  setEditVisible(true)
                 }
               }
             }}
           />
           <div className="flex flex-col">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">
+            <h1 className="text-xl font-bold sm:text-2xl md:text-3xl">
               {data?.name}
             </h1>
 
@@ -276,17 +285,20 @@ export default function MemberDetail({
         </div>
 
         <div className="flex flex-row flex-wrap items-center gap-2">
-          <Label className="text-sm font-bold mb-1 text-gray-700 dark:text-gray-300">
+          <Label className="mb-1 text-sm font-bold text-gray-700 dark:text-gray-300">
             Overall Profile Completion
           </Label>
-          <div className="h-[70px] w-[70px] ">
+          <div className="h-[70px] w-[70px]">
             <Tooltip>
               <TooltipTrigger>
                 <CircularProgressbar
                   value={profileCompletion}
                   text={`${profileCompletion}%`}
                   styles={buildStyles({
-                    pathColor: (hasMissingFields || isProfileIncomplete) ? "#f87171" : "#4ade80",
+                    pathColor:
+                      hasMissingFields || isProfileIncomplete
+                        ? "#f87171"
+                        : "#4ade80",
                     textColor: "#1f2937",
                     trailColor: "#e5e7eb",
                     textSize: "28px",
@@ -298,8 +310,8 @@ export default function MemberDetail({
                 <TooltipContent
                   className={
                     hasMissingFields || isProfileIncomplete
-                      ? "bg-red-600 flex flex-col"
-                      : "bg-green-600 flex flex-col"
+                      ? "flex flex-col bg-red-600"
+                      : "flex flex-col bg-green-600"
                   }
                   arrowColor={
                     hasMissingFields || isProfileIncomplete
@@ -316,14 +328,15 @@ export default function MemberDetail({
                       </p>
                     ))
                   ) : isProfileIncomplete ? (
-                    <p className="text-white">Machine details require completion</p>
+                    <p className="text-white">
+                      Machine details require completion
+                    </p>
                   ) : (
                     <p className="text-white">Profile is complete</p>
                   )}
                 </TooltipContent>
               )}
             </Tooltip>
-
           </div>
         </div>
 
@@ -342,7 +355,7 @@ export default function MemberDetail({
         <ScrollArea
           className={`overflow-x-auto ${isMobile && "max-w-[calc(100vw-45px)]"}`}
         >
-          <TabsList className=" flex justify-start relative gap-2 px-2">
+          <TabsList className="relative flex justify-start gap-2 px-2">
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
             {designation !== "Dealer" && (
               <TabsTrigger value="feedback">
@@ -365,7 +378,7 @@ export default function MemberDetail({
           <Scrollbar orientation="horizontal" />
         </ScrollArea>
 
-        <div className="flex flex-1 w-full mt-2">
+        <div className="mt-2 flex w-full flex-1">
           {activeTab === "timeline" && (
             <RenderTimeline
               height={height}
@@ -376,11 +389,7 @@ export default function MemberDetail({
             />
           )}
 
-          {activeTab === "feedback" && (
-
-            <RenderFeedbackTabs />
-
-          )}
+          {activeTab === "feedback" && <RenderFeedbackTabs />}
 
           {activeTab === "machines" && (
             <CustomersTab
@@ -397,10 +406,7 @@ export default function MemberDetail({
             <PartsTab data={data?.parts || []} height={height} />
           )}
 
-          {activeTab === "visit" &&
-
-            <RenderVisitTab />
-          }
+          {activeTab === "visit" && <RenderVisitTab />}
           {activeTab === "task" && <RenderTaskTab />}
           {activeTab === "about" && <AboutTab data={data} />}
         </div>
@@ -425,59 +431,70 @@ export default function MemberDetail({
         onPressCancel={() => setShowConfirmation(false)}
       />
     </div>
-  );
+  )
 }
 
-const ProfilePicture = ({ img, name, onClick }: { img?: string, name?: string, onClick: () => void }) => {
-  const [localImage, setLocalImage] = useState<string | null>(null);
-  const [hover, setHover] = useState(false);
+const ProfilePicture = ({
+  img,
+  name,
+  onClick,
+}: {
+  img?: string
+  name?: string
+  onClick: () => void
+}) => {
+  const [localImage, setLocalImage] = useState<string | null>(null)
+  const [hover, setHover] = useState(false)
 
   useEffect(() => {
     async function fetchImage() {
       if (img?.includes("http")) {
-        setLocalImage(img);
+        setLocalImage(img)
       } else {
-        const imgResult = await GetProfileImage(img);
-        setLocalImage(imgResult);
+        const imgResult = await GetProfileImage(img)
+        setLocalImage(imgResult)
       }
     }
 
     if (img) {
-      fetchImage();
+      fetchImage()
     }
-  }, [img]);
+  }, [img])
 
   return (
     <div
-      className="relative w-24 h-24"
+      className="relative h-24 w-24"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
-      <Avatar className="w-24 h-24">
-        {localImage && <AvatarImage src={localImage || ""} alt="Profile Picture" />}
+      <Avatar className="h-24 w-24">
+        {localImage && (
+          <AvatarImage src={localImage || ""} alt="Profile Picture" />
+        )}
         <AvatarFallback>{name?.substring(0, 2)}</AvatarFallback>
       </Avatar>
 
       <div
         onClick={onClick}
-        className={`absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 rounded-full cursor-pointer ${hover ? "opacity-100" : "opacity-0"
-          }`}
+        className={`bg-opacity-50 absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black transition-opacity duration-300 ${
+          hover ? "opacity-100" : "opacity-0"
+        }`}
       >
         <Wrench className="h-5 w-5 text-white" />
       </div>
     </div>
-  );
-};
+  )
+}
 
 const ClientCard = ({ data }: { data: LocalCustomerDetailProps | null }) => {
   if (!data) return
-  const joinedNumber = data?.number?.join(", ") || "N/A";
+  const joinedNumber = data?.number?.join(", ") || "N/A"
   const createdAt = data?.created_at
     ? moment(data.created_at).format("YYYY-MM-DD hh:mm A")
-    : "N/A";
+    : "N/A"
 
   return (
-    <Card className="shadow-xl rounded-2xl p-6 w-full bg-white dark:bg-zinc-900 text-zinc-800 dark:text-white">
+    <Card className="w-full rounded-2xl bg-white p-6 text-zinc-800 shadow-xl dark:bg-zinc-900 dark:text-white">
       <CardHeader className="pb-3">
         <CardTitle className="text-2xl font-semibold">
           {data?.name || "Unnamed Customer"}
@@ -493,7 +510,7 @@ const ClientCard = ({ data }: { data: LocalCustomerDetailProps | null }) => {
             <Badge>{`${data.office.toUpperCase()} BRANCH`}</Badge>
           </div>
         )}
-        <div className="text-sm text-green-700 dark:text-green-400 font-medium">
+        <div className="text-sm font-medium text-green-700 dark:text-green-400">
           Lead generated by: {data?.lead_name || "NIL"}
         </div>
 
@@ -520,10 +537,18 @@ const ClientCard = ({ data }: { data: LocalCustomerDetailProps | null }) => {
         </div>
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
-const InfoRow = ({ icon, label, link }: { icon: ReactNode, label: string, link?: string }) => (
+const InfoRow = ({
+  icon,
+  label,
+  link,
+}: {
+  icon: ReactNode
+  label: string
+  link?: string
+}) => (
   <div className="flex items-center gap-3 text-sm">
     <div className="text-muted-foreground">{icon}</div>
     {link ? (
@@ -534,16 +559,24 @@ const InfoRow = ({ icon, label, link }: { icon: ReactNode, label: string, link?:
       <span>{label}</span>
     )}
   </div>
-);
+)
 
-const BillingInformation = ({ total, received, balance }: { total: number | undefined, received: number | undefined, balance: number }) => {
+const BillingInformation = ({
+  total,
+  received,
+  balance,
+}: {
+  total: number | undefined
+  received: number | undefined
+  balance: number
+}) => {
   return (
-    <div className="w-full sm:w-auto p-4 mt-4 bg-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:text-white">
-      <h3 className="text-base sm:text-lg font-semibold text-black dark:text-white">
+    <div className="mt-4 w-full rounded-lg bg-gray-100 p-4 shadow-sm sm:w-auto dark:bg-gray-800 dark:text-white">
+      <h3 className="text-base font-semibold text-black sm:text-lg dark:text-white">
         Billing Summary
       </h3>
 
-      <div className="grid grid-cols-3 gap-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300 mt-2">
+      <div className="mt-2 grid grid-cols-3 gap-4 text-xs text-gray-700 sm:text-sm dark:text-gray-300">
         <p>
           <strong>Bill:</strong>
         </p>
@@ -555,7 +588,7 @@ const BillingInformation = ({ total, received, balance }: { total: number | unde
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 text-xs sm:text-sm mt-2 font-bold">
+      <div className="mt-2 grid grid-cols-3 gap-4 text-xs font-bold sm:text-sm">
         <p>
           <CurrencyFormatter amount={total ?? 0} />
         </p>
@@ -567,11 +600,11 @@ const BillingInformation = ({ total, received, balance }: { total: number | unde
         </p>
       </div>
     </div>
-  );
-};
+  )
+}
 
 function AboutTab({ data }: { data: LocalCustomerDetailProps | null }) {
-  return <ClientCard data={data} />;
+  return <ClientCard data={data} />
 }
 
 function CustomersTab({
@@ -582,35 +615,45 @@ function CustomersTab({
   onReturn,
   route,
 }: {
-  data?: MachineProps[] | [],
+  data?: MachineProps[] | []
   customer_id?: number
   user_id: number | string
   onRefresh: () => Promise<void>
   onReturn?: (a: number, b?: string) => void
   route: string
 }) {
-  const [visible, setVisible] = useState(false);
-  const [visibleParts, setVisibleParts] = useState(false);
-  const { base_route } = useUserDetail();
-  const machineCount = data?.filter((item) => item.type === "Machine").length || 0;
-  const partsCount = data?.filter((item) => item.type !== "Machine").length || 0;
-  const totalValue = data?.reduce((sum, item) => sum + Number(item.price || 0), 0) || 0;
+  const [visible, setVisible] = useState(false)
+  const [visibleParts, setVisibleParts] = useState(false)
+  const { base_route } = useUserDetail()
+  const machineCount =
+    data?.filter((item) => item.type === "Machine").length || 0
+  const partsCount = data?.filter((item) => item.type !== "Machine").length || 0
+  const totalValue =
+    data?.reduce((sum, item) => sum + Number(item.price || 0), 0) || 0
 
-  const RenderEachMachine = ({ machine, index }: {
+  const RenderEachMachine = ({
+    machine,
+    index,
+  }: {
     machine: MachineProps & {
       percentage_completion?: number
-    }, index: number
+    }
+    index: number
   }) => {
     const totalPayments = machine?.payments
       .filter((item) => item.clearance_date)
-      ?.reduce((sum, payment) => sum + Number(payment.amount), 0);
-    const total = Number(machine.price || 0);
-    const paymentComplete = Number(machine.price) === totalPayments;
-    const fullyReady = paymentComplete && machine?.percentage_completion === 100;
+      ?.reduce((sum, payment) => sum + Number(payment.amount), 0)
+    const total = Number(machine.price || 0)
+    const paymentComplete = Number(machine.price) === totalPayments
+    const fullyReady = paymentComplete && machine?.percentage_completion === 100
     return (
-      <AccordionItem key={machine.id} value={`customer-${machine.id}`} className="border-none">
+      <AccordionItem
+        key={machine.id}
+        value={`customer-${machine.id}`}
+        className="border-none"
+      >
         <Card className="overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 transition-shadow hover:shadow-md dark:bg-zinc-950 dark:ring-white/10">
-          <AccordionTrigger className=" p-0 px-3 hover:no-underline">
+          <AccordionTrigger className="p-0 px-3 hover:no-underline">
             <div className="flex w-full flex-wrap items-center justify-between gap-2 text-left">
               <Link
                 className="flex items-center gap-2"
@@ -630,7 +673,10 @@ function CustomersTab({
                       {machine.serial_no}
                     </span>
                     {machine.cancelled_detail && (
-                      <Badge variant="destructive" className="h-5 rounded-full px-2 text-[10px]">
+                      <Badge
+                        variant="destructive"
+                        className="h-5 rounded-full px-2 text-[10px]"
+                      >
                         Cancelled
                       </Badge>
                     )}
@@ -641,7 +687,10 @@ function CustomersTab({
                 </span>
               </Link>
               <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-                <Badge variant="outline" className="h-6 rounded-full bg-background px-2 text-[10px]">
+                <Badge
+                  variant="outline"
+                  className="h-6 rounded-full bg-background px-2 text-[10px]"
+                >
                   {machine?.percentage_completion || 0}% data
                 </Badge>
                 {fullyReady ? (
@@ -650,11 +699,7 @@ function CustomersTab({
                   <Clock className="h-4 w-4 text-amber-500" />
                 )}
                 <Badge
-                  variant={
-                    paymentComplete
-                      ? "default"
-                      : "destructive"
-                  }
+                  variant={paymentComplete ? "default" : "destructive"}
                   className="h-6 rounded-full px-2 text-[10px]"
                 >
                   {paymentComplete ? "Paid" : "Balance"}
@@ -662,19 +707,26 @@ function CustomersTab({
               </div>
             </div>
           </AccordionTrigger>
-          <AccordionContent >
+          <AccordionContent>
             <CardContent className="space-y-2 border-t bg-slate-50/60 px-3 py-3 dark:bg-zinc-900/50">
               <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
                 {machine?.status && (
-                  <CompactDetail label="Status" value={<Badge className="h-5 rounded-full px-2 text-[10px]">{machine?.status}</Badge>} />
+                  <CompactDetail
+                    label="Status"
+                    value={
+                      <Badge className="h-5 rounded-full px-2 text-[10px]">
+                        {machine?.status}
+                      </Badge>
+                    }
+                  />
                 )}
                 <CompactDetail
                   label="Contract"
                   value={
                     machine?.contract_date
                       ? new Date(machine.contract_date).toLocaleDateString(
-                        "en-GB",
-                      )
+                          "en-GB"
+                        )
                       : "N/A"
                   }
                 />
@@ -683,31 +735,42 @@ function CustomersTab({
                     <CompactDetail key={index} label="Order No" value={item} />
                   ))}
 
-                <CompactDetail label="Model No" value={machine?.model_no || machine.serial_no} />
+                <CompactDetail
+                  label="Model No"
+                  value={machine?.model_no || machine.serial_no}
+                />
               </div>
               <BillingInformationMachine payment={[total, totalPayments]} />
             </CardContent>
           </AccordionContent>
         </Card>
       </AccordionItem>
-    );
-  };
+    )
+  }
 
-  const RenderEachPart = ({ machine, index }: {
+  const RenderEachPart = ({
+    machine,
+    index,
+  }: {
     machine: MachineProps & {
       percentage_completion?: number
-    }, index: number
+    }
+    index: number
   }) => {
     const totalPayments = machine?.payments
       .filter((item) => item.clearance_date)
-      ?.reduce((sum, payment) => sum + Number(payment.amount), 0);
-    const total = Number(machine.price || 0);
-    const paymentComplete = Number(machine.price) === totalPayments;
-    const fullyReady = paymentComplete && machine?.percentage_completion === 100;
+      ?.reduce((sum, payment) => sum + Number(payment.amount), 0)
+    const total = Number(machine.price || 0)
+    const paymentComplete = Number(machine.price) === totalPayments
+    const fullyReady = paymentComplete && machine?.percentage_completion === 100
     return (
-      <AccordionItem key={machine.id} value={`customer-${machine.id}`} className="border-none">
+      <AccordionItem
+        key={machine.id}
+        value={`customer-${machine.id}`}
+        className="border-none"
+      >
         <Card className="overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 transition-shadow hover:shadow-md dark:bg-zinc-950 dark:ring-white/10">
-          <AccordionTrigger className=" p-0 px-3 hover:no-underline">
+          <AccordionTrigger className="p-0 px-3 hover:no-underline">
             <div className="flex w-full flex-wrap items-center justify-between gap-2 text-left">
               <Link
                 className="flex items-center gap-2"
@@ -731,7 +794,10 @@ function CustomersTab({
                 </span>
               </Link>
               <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-                <Badge variant="outline" className="h-6 rounded-full bg-background px-2 text-[10px]">
+                <Badge
+                  variant="outline"
+                  className="h-6 rounded-full bg-background px-2 text-[10px]"
+                >
                   {machine?.percentage_completion || 0}% data
                 </Badge>
                 {fullyReady ? (
@@ -740,11 +806,7 @@ function CustomersTab({
                   <Clock className="h-4 w-4 text-amber-500" />
                 )}
                 <Badge
-                  variant={
-                    paymentComplete
-                      ? "default"
-                      : "destructive"
-                  }
+                  variant={paymentComplete ? "default" : "destructive"}
                   className="h-6 rounded-full px-2 text-[10px]"
                 >
                   {paymentComplete ? "Paid" : "Balance"}
@@ -756,15 +818,22 @@ function CustomersTab({
             <CardContent className="space-y-2 border-t bg-slate-50/60 px-3 py-3 dark:bg-zinc-900/50">
               <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
                 {machine?.status && (
-                  <CompactDetail label="Status" value={<Badge className="h-5 rounded-full px-2 text-[10px]">{machine?.status}</Badge>} />
+                  <CompactDetail
+                    label="Status"
+                    value={
+                      <Badge className="h-5 rounded-full px-2 text-[10px]">
+                        {machine?.status}
+                      </Badge>
+                    }
+                  />
                 )}
                 <CompactDetail
                   label="Contract"
                   value={
                     machine?.contract_date
                       ? new Date(machine.contract_date).toLocaleDateString(
-                        "en-GB",
-                      )
+                          "en-GB"
+                        )
                       : "N/A"
                   }
                 />
@@ -773,18 +842,21 @@ function CustomersTab({
                     <CompactDetail key={index} label="Order No" value={item} />
                   ))}
 
-                <CompactDetail label="Model No" value={machine?.model_no || machine.serial_no} />
+                <CompactDetail
+                  label="Model No"
+                  value={machine?.model_no || machine.serial_no}
+                />
               </div>
               <BillingInformationMachine payment={[total, totalPayments]} />
             </CardContent>
           </AccordionContent>
         </Card>
       </AccordionItem>
-    );
-  };
+    )
+  }
 
   return (
-    <Card className="flex flex-1 overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200/80 dark:bg-zinc-950 dark:ring-white/10 p-0">
+    <Card className="flex flex-1 overflow-hidden border-0 bg-white p-0 shadow-sm ring-1 ring-slate-200/80 dark:bg-zinc-950 dark:ring-white/10">
       <CardContent className="flex flex-1 flex-col p-0">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-slate-50/80 px-3 py-2.5 dark:bg-zinc-900/70">
           <div className="min-w-0">
@@ -818,13 +890,10 @@ function CustomersTab({
                 customer_id={customer_id}
                 user_id={user_id}
               />
-
             </div>
           )}
         </div>
         <div className="p-3">
-
-
           {data?.length === 0 ? (
             <div className="flex min-h-28 items-center justify-center rounded-xl border border-dashed bg-slate-50 text-sm text-muted-foreground dark:bg-zinc-900/50">
               No machines or POS records found
@@ -844,29 +913,41 @@ function CustomersTab({
                     machine={machine}
                     index={index + 1}
                   />
-                ),
+                )
               )}
             </Accordion>
           )}
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
-function CompactDetail({ label, value }: { label: string, value: ReactNode }) {
+function CompactDetail({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="min-w-0 rounded-lg border bg-background px-3 py-2">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
         {label}
       </p>
       <div className="mt-0.5 truncate text-sm font-medium">{value}</div>
     </div>
-  );
+  )
 }
 
-function FeedbackTab({ userID, customerID, data, onRefresh, type }: { userID: number | string, customerID: number, data: CustomerFeedbackProps[], onRefresh: () => Promise<void>, type: string }) {
-  const [selectedDelete, setSelectedDelete] = useState<number | null>(null);
+function FeedbackTab({
+  userID,
+  customerID,
+  data,
+  onRefresh,
+  type,
+}: {
+  userID: number | string
+  customerID: number
+  data: CustomerFeedbackProps[]
+  onRefresh: () => Promise<void>
+  type: string
+}) {
+  const [selectedDelete, setSelectedDelete] = useState<number | null>(null)
   const [open, setOpen] = useState(false)
 
   const [localData] = useState(
@@ -874,33 +955,33 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }: { userID: nu
       .filter((item) => item?.type === type)
       .sort(
         (a, b) =>
-          moment(b?.created_at).valueOf() - moment(a?.created_at).valueOf(),
-      ),
-  );
+          moment(b?.created_at).valueOf() - moment(a?.created_at).valueOf()
+      )
+  )
 
   async function handleDelete(id: number) {
-    setSelectedDelete(id);
+    setSelectedDelete(id)
     axios
       .delete(`/${userID}/feedback/${id}`)
       .then(async () => {
-        await onRefresh();
+        await onRefresh()
       })
       .finally(() => {
-        setSelectedDelete(null);
-      });
+        setSelectedDelete(null)
+      })
   }
-
-
 
   return (
     <div className="w-full space-y-2.5 p-1">
       <div className="space-y-1.5">
         <div className="flex items-center justify-between px-1">
           <h3 className="text-sm font-semibold">History</h3>
-          <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs text-muted-foreground">Latest first</span>
 
-            <Button onClick={() => setOpen(!open)}><PhoneCall /> Add Feedback</Button>
+            <Button onClick={() => setOpen(!open)}>
+              <PhoneCall /> Add Feedback
+            </Button>
           </div>
         </div>
 
@@ -934,14 +1015,17 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }: { userID: nu
                     <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Calendar className="h-3.5 w-3.5" />
                       {moment(new Date(item.created_at)).format(
-                        "YYYY-MM-DD hh:mm A",
+                        "YYYY-MM-DD hh:mm A"
                       )}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-1.5">
                     {item.top_follow && (
-                      <Badge variant="outline" className="h-5 rounded-full px-2 text-[10px]">
+                      <Badge
+                        variant="outline"
+                        className="h-5 rounded-full px-2 text-[10px]"
+                      >
                         Top
                       </Badge>
                     )}
@@ -974,7 +1058,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }: { userID: nu
                   </div>
                 </div>
 
-                <p className="whitespace-pre-wrap text-sm leading-5">
+                <p className="text-sm leading-5 whitespace-pre-wrap">
                   {item.feedback}
                 </p>
 
@@ -984,7 +1068,7 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }: { userID: nu
                     <span className="font-medium">Next</span>
                     <span>
                       {moment(new Date(item.next_followup)).format(
-                        "YYYY-MM-DD",
+                        "YYYY-MM-DD"
                       )}
                     </span>
                   </div>
@@ -995,25 +1079,35 @@ function FeedbackTab({ userID, customerID, data, onRefresh, type }: { userID: nu
         )}
       </div>
 
-      <AddFeedbackDialog onClose={() => setOpen(false)} open={open} onRefresh={onRefresh} user_id={userID} customer_id={customerID} />
+      <AddFeedbackDialog
+        onClose={() => setOpen(false)}
+        open={open}
+        onRefresh={onRefresh}
+        user_id={userID}
+        customer_id={customerID}
+      />
     </div>
-  );
+  )
 }
 
-const BillingInformationMachine = ({ payment }: { payment: [number, number] }) => {
-  const formattedTotal = <CurrencyFormatter amount={payment[0]} />;
-  const formattedReceived = <CurrencyFormatter amount={payment[1]} />;
+const BillingInformationMachine = ({
+  payment,
+}: {
+  payment: [number, number]
+}) => {
+  const formattedTotal = <CurrencyFormatter amount={payment[0]} />
+  const formattedReceived = <CurrencyFormatter amount={payment[1]} />
   const formattedBalance = (
     <CurrencyFormatter amount={(payment[0] || 0) - (payment[1] || 0)} />
-  );
+  )
 
   return (
-    <div className="p-4 mt-4 bg-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:text-white">
-      <h3 className="text-base sm:text-lg font-semibold text-black dark:text-white">
+    <div className="mt-4 rounded-lg bg-gray-100 p-4 shadow-sm dark:bg-gray-800 dark:text-white">
+      <h3 className="text-base font-semibold text-black sm:text-lg dark:text-white">
         Billing Summary
       </h3>
 
-      <div className="flex flex-col  sm:flex-row gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 mt-2 justify-between flex-wrap">
+      <div className="mt-2 flex flex-col flex-wrap justify-between gap-2 text-xs text-gray-700 sm:flex-row sm:text-sm dark:text-gray-300">
         <div className="flex flex-col">
           <p>
             <strong>Bill:</strong>
@@ -1024,18 +1118,18 @@ const BillingInformationMachine = ({ payment }: { payment: [number, number] }) =
           <p>
             <strong>Received:</strong>
           </p>
-          <p className="text-green-600 font-bold">{formattedReceived}</p>
+          <p className="font-bold text-green-600">{formattedReceived}</p>
         </div>
         <div className="flex flex-col">
           <p>
             <strong>Balance:</strong>
           </p>
-          <p className="text-red-600 font-bold">{formattedBalance}</p>
+          <p className="font-bold text-red-600">{formattedBalance}</p>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
 const RenderTimeline = ({
   feedbackData,
@@ -1044,16 +1138,18 @@ const RenderTimeline = ({
   customerDetail,
   height,
 }: {
-  feedbackData: CustomerFeedbackProps[],
-  visitData: CustomerVisitProps[],
-  taskData: CustomerTaskProps[],
-  customerDetail: LocalCustomerDetailProps | null,
-  height?: string,
+  feedbackData: CustomerFeedbackProps[]
+  visitData: CustomerVisitProps[]
+  taskData: CustomerTaskProps[]
+  customerDetail: LocalCustomerDetailProps | null
+  height?: string
 }) => {
-  const [timelineData, setTimelineData] = useState<{ id: string, time: string, title: string, description: string }[]>([]);
+  const [timelineData, setTimelineData] = useState<
+    { id: string; time: string; title: string; description: string }[]
+  >([])
 
   useEffect(() => {
-    const localData: any[] = [];
+    const localData: any[] = []
 
     taskData.forEach((task) => {
       localData.push({
@@ -1061,18 +1157,19 @@ const RenderTimeline = ({
         title: `Task: ${task.task_name.split("-")[0]}`,
         description: `Task assigned to ${task.user_name}`,
         time: task.created_at,
-      });
-    });
+      })
+    })
 
     visitData.forEach((visit) => {
       localData.push({
         id: `visit-${visit.id}`,
         title: `Visit by ${visit.user_name}`,
-        description: `Problem: ${visit?.problem || "Nil"}, Solution: ${visit?.solution || "Nil"
-          } Note: ${visit.note}`,
+        description: `Problem: ${visit?.problem || "Nil"}, Solution: ${
+          visit?.solution || "Nil"
+        } Note: ${visit.note}`,
         time: visit.created_at,
-      });
-    });
+      })
+    })
 
     feedbackData.forEach((feedback) => {
       localData.push({
@@ -1080,8 +1177,8 @@ const RenderTimeline = ({
         title: `Feedback taken by ${feedback.user_name}`,
         description: `${feedback.feedback}`,
         time: feedback.created_at,
-      });
-    });
+      })
+    })
 
     if (customerDetail) {
       customerDetail?.machines?.forEach((machine) => {
@@ -1089,86 +1186,95 @@ const RenderTimeline = ({
           localData.push({
             id: `machine-${machine.id}`,
             title: `Sell Parts ${machine.serial_no}`,
-            description: `Power: ${machine.power || "Nil"}, Price: ${machine.price
-              }`,
+            description: `Power: ${machine.power || "Nil"}, Price: ${
+              machine.price
+            }`,
             time: machine.contract_date
               ? machine.contract_date
               : machine.created_at,
-          });
+          })
 
           machine.payments?.forEach((payment) => {
             localData.push({
               id: `payment-${payment.id}`,
               title: `Payment for Parts  ${machine.serial_no}`,
-              description: `Tx: ${payment.note}, Amount: ${payment.amount
-                }, Mode: ${payment.mode}, Received by: ${payment.received_by
-                }, Clearance Date: ${payment.clearance_date
+              description: `Tx: ${payment.note}, Amount: ${
+                payment.amount
+              }, Mode: ${payment.mode}, Received by: ${
+                payment.received_by
+              }, Clearance Date: ${
+                payment.clearance_date
                   ? moment(payment.clearance_date).format("YYYY-MM-DD")
                   : "Pending"
-                }`,
+              }`,
               time: payment.transaction_date,
-            });
-          });
+            })
+          })
         } else {
           localData.push({
             id: `machine-${machine.id}`,
-            title: `Sell Machine ${machine.serial_no} (${machine.source || "Nil"
-              })`,
-            description: `Power: ${machine.power || "Nil"}W, Price: ${machine.price
-              }, Order No: ${machine.order_no_arr?.join(", ")}`,
+            title: `Sell Machine ${machine.serial_no} (${
+              machine.source || "Nil"
+            })`,
+            description: `Power: ${machine.power || "Nil"}W, Price: ${
+              machine.price
+            }, Order No: ${machine.order_no_arr?.join(", ")}`,
             time: machine.contract_date
               ? machine.contract_date
               : machine.created_at,
-          });
+          })
 
           machine.payments?.forEach((payment) => {
             localData.push({
               id: `payment-${payment.id}`,
               title: `Payment for Machine ${machine.serial_no}`,
-              description: `Tx: ${payment.note}, Amount: $${payment.amount
-                }, Mode: ${payment.mode}, Received by: ${payment.received_by
-                }, Clearance Date: ${payment.clearance_date
+              description: `Tx: ${payment.note}, Amount: $${
+                payment.amount
+              }, Mode: ${payment.mode}, Received by: ${
+                payment.received_by
+              }, Clearance Date: ${
+                payment.clearance_date
                   ? moment(payment.clearance_date).format("YYYY-MM-DD")
                   : "Pending"
-                }`,
+              }`,
               time: payment.transaction_date,
-            });
-          });
+            })
+          })
         }
-      });
+      })
 
       localData.push({
         id: `customer-${customerDetail.id}`,
         title: `Customer added`,
-        description: `Company ${customerDetail.name || "Nil"}, Owner: ${customerDetail.owner || "Nil"
-          }, Location: ${customerDetail.location}`,
+        description: `Company ${customerDetail.name || "Nil"}, Owner: ${
+          customerDetail.owner || "Nil"
+        }, Location: ${customerDetail.location}`,
         time: customerDetail.created_at,
-      });
+      })
     }
 
     localData.sort((a, b) => {
-      const dateA = moment(a.time);
-      const dateB = moment(b.time);
+      const dateA = moment(a.time)
+      const dateB = moment(b.time)
 
-      if (dateA.isBefore(dateB)) return 1;
-      if (dateA.isAfter(dateB)) return -1;
+      if (dateA.isBefore(dateB)) return 1
+      if (dateA.isAfter(dateB)) return -1
 
       // Same date: prioritize by type
       const getPriority = (id: string) => {
-        if (id.startsWith("payment-")) return 1;
-        if (id.startsWith("machine-")) return 2;
-        return 3;
-      };
+        if (id.startsWith("payment-")) return 1
+        if (id.startsWith("machine-")) return 2
+        return 3
+      }
 
-      return getPriority(a.id) - getPriority(b.id);
-    });
+      return getPriority(a.id) - getPriority(b.id)
+    })
 
-    setTimelineData(localData);
-  }, [feedbackData, visitData, taskData, customerDetail]);
+    setTimelineData(localData)
+  }, [feedbackData, visitData, taskData, customerDetail])
 
   return (
-    <Card className="flex flex-1 shadow-lg rounded-2xl p-4 self-center">
-
+    <Card className="flex flex-1 self-center rounded-2xl p-4 shadow-lg">
       <Timeline className="mt-4">
         {timelineData.map((item) => (
           <TimelineItem key={item.id}>
@@ -1177,20 +1283,21 @@ const RenderTimeline = ({
                 {moment(item.time).format("YYYY-MM-DD")}
               </TimelineTime>
               <TimelineTitle
-                className={`${item.title.toLowerCase().includes("feedback")
-                  ? "text-orange-500"
-                  : item.title.toLowerCase().includes("customer")
-                    ? "text-blue-500"
-                    : item.title.toLowerCase().includes("payment")
-                      ? "text-green-500"
-                      : item.title.toLowerCase().includes("machine")
-                        ? "text-purple-500"
-                        : item.title.toLowerCase().includes("visit")
-                          ? "text-red-500"
-                          : item.title.toLowerCase().includes("task")
-                            ? "text-yellow-500"
-                            : "text-black"
-                  }`}
+                className={`${
+                  item.title.toLowerCase().includes("feedback")
+                    ? "text-orange-500"
+                    : item.title.toLowerCase().includes("customer")
+                      ? "text-blue-500"
+                      : item.title.toLowerCase().includes("payment")
+                        ? "text-green-500"
+                        : item.title.toLowerCase().includes("machine")
+                          ? "text-purple-500"
+                          : item.title.toLowerCase().includes("visit")
+                            ? "text-red-500"
+                            : item.title.toLowerCase().includes("task")
+                              ? "text-yellow-500"
+                              : "text-black"
+                }`}
               >
                 {item.title}
               </TimelineTitle>
@@ -1201,13 +1308,17 @@ const RenderTimeline = ({
           </TimelineItem>
         ))}
       </Timeline>
-
     </Card>
-  );
-};
+  )
+}
 
-const PartsTab = ({ data, height }: { data?: PartsProps[], height?: string }) => {
-
+const PartsTab = ({
+  data,
+  height,
+}: {
+  data?: PartsProps[]
+  height?: string
+}) => {
   return (
     <Card className="flex flex-1 border-0 p-0">
       {data?.length === 0 ? (
@@ -1216,20 +1327,18 @@ const PartsTab = ({ data, height }: { data?: PartsProps[], height?: string }) =>
         </CardContent>
       ) : (
         <CardContent className="flex flex-1 p-3">
-
           <div className="w-full space-y-2 pr-2">
             {data?.map((item, index) => (
               <InvoiceDetails key={item.id || index} invoice={item} />
             ))}
           </div>
-
         </CardContent>
       )}
     </Card>
-  );
-};
+  )
+}
 
 function toMyCustomer(data: LocalCustomerDetailProps): MyCustomer {
-  const { bill_received, bill_total, profile_completion, parts, ...rest } = data;
-  return { ...rest, machines: [""] };
+  const { bill_received, bill_total, profile_completion, parts, ...rest } = data
+  return { ...rest, machines: [""] }
 }

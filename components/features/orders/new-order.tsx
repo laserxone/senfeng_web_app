@@ -1,36 +1,46 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { useEffect, useState } from "react"
 
-import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import { RequiredStar } from "@/components/shared/common/RequiredStar"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { ShoppingCart } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@/components/ui/dialog"
+import { ShoppingCart } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import Spinner from "@/components/ui/spinner";
-import { Switch } from "@/components/ui/switch";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { InventoryItem, StockProps } from "@/lib/types";
-import { InventorySearch } from "@/components/shared/search/inventory-select";
-import MachineModels from "@/components/features/machines/machine-models";
+} from "@/components/ui/select"
+import Spinner from "@/components/ui/spinner"
+import { Switch } from "@/components/ui/switch"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { InventoryItem, StockProps } from "@/lib/types"
+import { InventorySearch } from "@/components/shared/search/inventory-select"
+import MachineModels from "@/components/features/machines/machine-models"
 
-type InventoryErrors = Partial<Record<keyof InventoryItem, string>>[];
+type InventoryErrors = Partial<Record<keyof InventoryItem, string>>[]
 
-const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: boolean, onClose: (val: boolean) => void, user_id: number | string, onRefresh: () => Promise<void> }) => {
+const CreateOrderDialog = ({
+  visible,
+  onClose,
+  user_id,
+  onRefresh,
+}: {
+  visible: boolean
+  onClose: (val: boolean) => void
+  user_id: number | string
+  onRefresh: () => Promise<void>
+}) => {
   const [items, setItems] = useState<InventoryItem[]>([
     {
       name: "",
@@ -48,60 +58,60 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
       isExisting: false,
       inventory_id: null,
       show: true,
-      location: "Lahore"
+      location: "Lahore",
     },
-  ]);
-  const [errors, setErrors] = useState<InventoryErrors>([]);
-  const [loading, setLoading] = useState(false);
-  const [existingInventory, setExistingInventory] = useState<StockProps[]>([]);
-  const [title, setTitle] = useState("");
-  const { userID } = useUserDetail();
-  const [manual, setManual] = useState(false);
+  ])
+  const [errors, setErrors] = useState<InventoryErrors>([])
+  const [loading, setLoading] = useState(false)
+  const [existingInventory, setExistingInventory] = useState<StockProps[]>([])
+  const [title, setTitle] = useState("")
+  const { userID } = useUserDetail()
+  const [manual, setManual] = useState(false)
 
   useEffect(() => {
     if (visible && userID) {
-      fetchPOSInventory();
+      fetchPOSInventory()
     }
-  }, [visible, userID]);
+  }, [visible, userID])
 
   async function fetchPOSInventory() {
     axios.get(`/${userID}/pos`).then((response) => {
       if (response.data.stock.length > 0) {
-        let resultedData = [...response.data.stock];
-        setExistingInventory([...resultedData]);
+        let resultedData = [...response.data.stock]
+        setExistingInventory([...resultedData])
       }
-    });
+    })
   }
 
- const handleItemChange = <K extends keyof InventoryItem>(
-  index: number,
-  field: K,
-  value: InventoryItem[K]
-) => {
-  setItems((prevItems) => {
-    const newItems = [...prevItems]
+  const handleItemChange = <K extends keyof InventoryItem>(
+    index: number,
+    field: K,
+    value: InventoryItem[K]
+  ) => {
+    setItems((prevItems) => {
+      const newItems = [...prevItems]
 
-    newItems[index] = {
-      ...newItems[index],
-      [field]: value,
-    }
-
-    return newItems
-  })
-
-  setErrors((prevErrors) => {
-    const newErrors = [...prevErrors]
-
-    if (newErrors[index]) {
-      newErrors[index] = {
-        ...newErrors[index],
-        [field]: "",
+      newItems[index] = {
+        ...newItems[index],
+        [field]: value,
       }
-    }
 
-    return newErrors
-  })
-}
+      return newItems
+    })
+
+    setErrors((prevErrors) => {
+      const newErrors = [...prevErrors]
+
+      if (newErrors[index]) {
+        newErrors[index] = {
+          ...newErrors[index],
+          [field]: "",
+        }
+      }
+
+      return newErrors
+    })
+  }
 
   const addItem = () => {
     setItems([
@@ -122,76 +132,76 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
         isExisting: false,
         inventory_id: null,
         show: true,
-        location: "Lahore"
+        location: "Lahore",
       },
-    ]);
-  };
+    ])
+  }
 
   const removeItem = (index: number) => {
-    const newItems = [...items];
-    newItems.splice(index, 1);
-    setItems(newItems);
+    const newItems = [...items]
+    newItems.splice(index, 1)
+    setItems(newItems)
 
-    const newErrors = [...errors];
-    newErrors.splice(index, 1);
-    setErrors(newErrors);
-  };
+    const newErrors = [...errors]
+    newErrors.splice(index, 1)
+    setErrors(newErrors)
+  }
 
   const validateItems = () => {
-    const newErrors: any[] = [];
+    const newErrors: any[] = []
 
     items.forEach((item) => {
-      const itemErrors: any = {};
+      const itemErrors: any = {}
 
       // qty required and positive
       if (!item.qty || item.qty <= 0) {
-        itemErrors.qty = "Quantity is required and must be greater than 0";
+        itemErrors.qty = "Quantity is required and must be greater than 0"
       }
 
       if (item.isExisting) {
         // inventory_id required for existing items
         if (!item.inventory_id) {
-          itemErrors.inventory_id = "Please select an existing inventory item";
+          itemErrors.inventory_id = "Please select an existing inventory item"
         }
       } else {
         if (!item.is_machine)
           if (!item.name || item.name.trim() === "") {
-            itemErrors.name = "Name is required for new items";
+            itemErrors.name = "Name is required for new items"
           }
       }
 
       // if machine, all machine fields required
       if (item.is_machine) {
         if (!item.machine_serial || item.machine_serial.trim() === "") {
-          itemErrors.machine_serial = "Machine serial is required";
+          itemErrors.machine_serial = "Machine serial is required"
         }
         if (!item.machine_model) {
-          itemErrors.machine_model = "Machine model is required";
+          itemErrors.machine_model = "Machine model is required"
         }
         if (!item.machine_source) {
-          itemErrors.machine_source = "Machine source is required";
+          itemErrors.machine_source = "Machine source is required"
         }
         if (!item.machine_power) {
-          itemErrors.machine_power = "Machine power is required";
+          itemErrors.machine_power = "Machine power is required"
         }
       }
 
-      newErrors.push(itemErrors);
-    });
+      newErrors.push(itemErrors)
+    })
 
-    setErrors(newErrors);
+    setErrors(newErrors)
 
     // Return true if no errors
-    return newErrors.every((err) => Object.keys(err).length === 0);
-  };
+    return newErrors.every((err) => Object.keys(err).length === 0)
+  }
 
   const handleSubmit = async () => {
     if (validateItems()) {
-      let processedItems: any[] = [];
+      let processedItems: any[] = []
 
       items.forEach((item) => {
         if (item.is_machine && item.qty > 1) {
-          const baseSerial = parseInt(item.machine_serial, 10);
+          const baseSerial = parseInt(item.machine_serial, 10)
 
           if (!isNaN(baseSerial)) {
             for (let i = 0; i < item.qty; i++) {
@@ -200,41 +210,40 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                 qty: 1,
                 machine_serial: (baseSerial + i).toString(),
                 name: (baseSerial + i).toString(),
-              });
+              })
             }
           } else {
-            processedItems.push(item);
+            processedItems.push(item)
           }
         } else {
-          processedItems.push(item);
+          processedItems.push(item)
         }
-      });
+      })
 
       processedItems.sort((a, b) => {
-        if (a.is_machine === b.is_machine) return 0;
-        return a.is_machine ? 1 : -1;
-      });
+        if (a.is_machine === b.is_machine) return 0
+        return a.is_machine ? 1 : -1
+      })
 
       const payload = {
         user_id: user_id,
         status: "Order Placed",
         items: processedItems,
         title: title,
-
-      };
-      setLoading(true);
+      }
+      setLoading(true)
       try {
-        const response = await axios.post(`/${userID}/neworder`, payload);
-        await onRefresh();
-        handleClose(false);
+        const response = await axios.post(`/${userID}/neworder`, payload)
+        await onRefresh()
+        handleClose(false)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
-  };
+  }
 
   function handleClose(val: boolean) {
-    onClose(val);
+    onClose(val)
     setItems([
       {
         name: "",
@@ -254,20 +263,32 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
         location: "Lahore",
         show: true,
       },
-    ]);
+    ])
 
-    setErrors([]);
+    setErrors([])
   }
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-3xl">
         <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><ShoppingCart className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Create New Order</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Create an order and configure its inventory items.</DialogDescription></div></div>
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+              <ShoppingCart className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <DialogTitle className="text-sm font-semibold text-foreground">
+                Create New Order
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Create an order and configure its inventory items.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <ScrollArea className="max-h-[calc(100dvh-132px)]">
-          <div className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
+          <div className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase">
             <div className="px-2">
               <Label>Shipment name</Label>
               <Input
@@ -276,13 +297,12 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
-
-
             </div>
             {items.map((item, index) => (
-              <div key={index} className="space-y-3 rounded-xl border border-border bg-muted/20 p-3">
-
-
+              <div
+                key={index}
+                className="space-y-3 rounded-xl border border-border bg-muted/20 p-3"
+              >
                 <div className="flex items-center justify-between">
                   <Label className="text-base font-medium">
                     Item #{index + 1}
@@ -302,7 +322,9 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                   </Label>
                   <Select
                     value={item?.location}
-                    onValueChange={(val) => handleItemChange(index, "location", val)}
+                    onValueChange={(val) =>
+                      handleItemChange(index, "location", val)
+                    }
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select location" />
@@ -326,7 +348,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                   </Label>
                 </div>
 
-                <div className="flex items-center gap-2 mt-2">
+                <div className="mt-2 flex items-center gap-2">
                   <Switch
                     checked={item.is_machine}
                     onCheckedChange={(val) =>
@@ -336,7 +358,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                   <Label>Is Machine?</Label>
                 </div>
 
-                <div className="flex items-center gap-2 mt-2">
+                <div className="mt-2 flex items-center gap-2">
                   <Switch
                     checked={item.show}
                     onCheckedChange={(val) =>
@@ -355,32 +377,36 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                         data={existingInventory}
                         value={item.inventory_id}
                         onReturn={(val) => {
-                          handleItemChange(index, "inventory_id", val?.id ?? null);
-                          handleItemChange(index, "name", val?.name ?? "");
+                          handleItemChange(
+                            index,
+                            "inventory_id",
+                            val?.id ?? null
+                          )
+                          handleItemChange(index, "name", val?.name ?? "")
                           handleItemChange(
                             index,
                             "price",
                             parseFloat(val?.price || "0")
-                          );
+                          )
                           handleItemChange(
                             index,
                             "buying_price",
                             parseFloat(val?.buying || "0")
-                          );
+                          )
                           handleItemChange(
                             index,
                             "threshold",
                             parseInt(String(val?.threshold) || "0")
-                          );
+                          )
                           handleItemChange(
                             index,
                             "new_order",
                             parseInt(String(val?.new_order) || "0")
-                          );
+                          )
                         }}
                       />
                       {errors[index]?.inventory_id && (
-                        <p className="text-red-600 text-sm mt-1">
+                        <p className="mt-1 text-sm text-red-600">
                           {errors[index].inventory_id}
                         </p>
                       )}
@@ -398,11 +424,10 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                               parseInt(e.target.value)
                             )
                           }
-                        }
-                        }
+                        }}
                       />
                       {errors[index]?.qty && (
-                        <p className="text-red-600 text-sm mt-1">
+                        <p className="mt-1 text-sm text-red-600">
                           {errors[index].qty}
                         </p>
                       )}
@@ -422,7 +447,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                               }
                             />
                             {errors[index]?.name && (
-                              <p className="text-red-600 text-sm mt-1">
+                              <p className="mt-1 text-sm text-red-600">
                                 {errors[index].name}
                               </p>
                             )}
@@ -443,7 +468,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                               }}
                             />
                             {errors[index]?.qty && (
-                              <p className="text-red-600 text-sm mt-1">
+                              <p className="mt-1 text-sm text-red-600">
                                 {errors[index].qty}
                               </p>
                             )}
@@ -461,8 +486,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                                     parseInt(e.target.value)
                                   )
                                 }
-                              }
-                              }
+                              }}
                             />
                           </div>
                           <div>
@@ -478,8 +502,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                                     parseInt(e.target.value)
                                   )
                                 }
-                              }
-                              }
+                              }}
                             />
                           </div>
                           <div>
@@ -495,8 +518,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                                     parseInt(e.target.value)
                                   )
                                 }
-                              }
-                              }
+                              }}
                             />
                           </div>
                           <div>
@@ -512,20 +534,15 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                                     parseInt(e.target.value)
                                   )
                                 }
-                              }
-                              }
+                              }}
                             />
                           </div>
                         </div>
                       </>
                     )}
 
-
-
-
-
                     {item.is_machine && (
-                      <div className="flex items-center gap-2 mt-2">
+                      <div className="mt-2 flex items-center gap-2">
                         <Switch
                           checked={manual}
                           onCheckedChange={(val) => setManual(val)}
@@ -547,12 +564,12 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                                 index,
                                 "machine_serial",
                                 e.target.value
-                              );
+                              )
                               // handleItemChange(index, "name", e.target.value);
                             }}
                           />
                           {errors[index]?.machine_serial && (
-                            <p className="text-red-600 text-sm mt-1">
+                            <p className="mt-1 text-sm text-red-600">
                               {errors[index].machine_serial}
                             </p>
                           )}
@@ -570,18 +587,19 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                                   index,
                                   "machine_model",
                                   e.target.value
-                                );
+                                )
                               }}
                             />
                           ) : (
-                            <MachineModels value={item.machine_model}
+                            <MachineModels
+                              value={item.machine_model}
                               onValueChange={(val) =>
                                 handleItemChange(index, "machine_model", val)
-                              } />
-
+                              }
+                            />
                           )}
                           {errors[index]?.machine_model && (
-                            <p className="text-red-600 text-sm mt-1">
+                            <p className="mt-1 text-sm text-red-600">
                               {errors[index].machine_model}
                             </p>
                           )}
@@ -599,7 +617,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                                   index,
                                   "machine_source",
                                   e.target.value?.toString()?.toUpperCase()
-                                );
+                                )
                               }}
                             />
                           ) : (
@@ -620,7 +638,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                             </Select>
                           )}
                           {errors[index]?.machine_source && (
-                            <p className="text-red-600 text-sm mt-1">
+                            <p className="mt-1 text-sm text-red-600">
                               {errors[index].machine_source}
                             </p>
                           )}
@@ -639,7 +657,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                                   index,
                                   "machine_power",
                                   e.target.value
-                                );
+                                )
                               }}
                             />
                           ) : (
@@ -660,7 +678,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                             </Select>
                           )}
                           {errors[index]?.machine_power && (
-                            <p className="text-red-600 text-sm mt-1">
+                            <p className="mt-1 text-sm text-red-600">
                               {errors[index].machine_power}
                             </p>
                           )}
@@ -678,8 +696,7 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
                                   parseInt(e.target.value)
                                 )
                               }
-                            }
-                            }
+                            }}
                           />
                         </div>
                       </div>
@@ -690,22 +707,26 @@ const CreateOrderDialog = ({ visible, onClose, user_id, onRefresh }: { visible: 
             ))}
           </div>
 
-        <Button onClick={addItem} className="mx-3.5 mt-3">
-          Add New Item
-        </Button>
+          <Button onClick={addItem} className="mx-3.5 mt-3">
+            Add New Item
+          </Button>
 
-        <div className="mx-3.5 mb-4 mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
-          <Button type="button" variant="secondary" onClick={() => handleClose(false)}>
-            Cancel
-          </Button>
-          <Button disabled={!title || loading} onClick={handleSubmit}>
-            {loading && <Spinner />}Create Order
-          </Button>
-        </div>
+          <div className="mx-3.5 mt-3 mb-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => handleClose(false)}
+            >
+              Cancel
+            </Button>
+            <Button disabled={!title || loading} onClick={handleSubmit}>
+              {loading && <Spinner />}Create Order
+            </Button>
+          </div>
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default CreateOrderDialog;
+export default CreateOrderDialog

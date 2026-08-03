@@ -1,4 +1,4 @@
-"use client";
+"use client"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -6,10 +6,10 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
-import Link from "next/link";
-import { Fragment } from "react";
+} from "@/components/ui/breadcrumb"
+import { useBreadcrumbs } from "@/hooks/use-breadcrumbs"
+import Link from "next/link"
+import { Fragment } from "react"
 
 type BreadcrumbItem = {
   title: string
@@ -17,8 +17,8 @@ type BreadcrumbItem = {
 }
 
 export function Breadcrumbs() {
-  const items = useBreadcrumbs();
-  if (items.length === 0) return null;
+  const items = useBreadcrumbs()
+  if (items.length === 0) return null
   return (
     <Breadcrumb className="hidden md:block">
       <BreadcrumbList className="text-sm">
@@ -26,10 +26,8 @@ export function Breadcrumbs() {
           <Fragment key={item.title}>
             {index !== items.length - 1 && (
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink asChild
-                >
+                <BreadcrumbLink asChild>
                   <Link href={`${item.link}`}>{item.title}</Link>
-
                 </BreadcrumbLink>
               </BreadcrumbItem>
             )}
@@ -43,5 +41,5 @@ export function Breadcrumbs() {
         ))}
       </BreadcrumbList>
     </Breadcrumb>
-  );
+  )
 }

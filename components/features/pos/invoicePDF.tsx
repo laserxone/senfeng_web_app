@@ -6,25 +6,25 @@ import {
   Svg,
   Text,
   View,
-} from "@react-pdf/renderer";
-import CurrencyFormatter from "@/components/shared/common/currency-formatter";
-import moment from "moment";
-import { publicFile } from "@/lib/publicFile";
+} from "@react-pdf/renderer"
+import CurrencyFormatter from "@/components/shared/common/currency-formatter"
+import moment from "moment"
+import { publicFile } from "@/lib/publicFile"
 type InvoicePDFProps = {
-  companyName: string;
-  name: string;
-  phoneNumber: string;
-  address: string;
-  manager: string;
-  nextInvoice: any;
-  invoiceItems: any[];
-  totalAmount: number;
-  warranty?: boolean;
-  warrantyYear?: number;
-  discount: string | number;
-  selectedUser?: any;
-  createdAt?: Date | string; 
-};
+  companyName: string
+  name: string
+  phoneNumber: string
+  address: string
+  manager: string
+  nextInvoice: any
+  invoiceItems: any[]
+  totalAmount: number
+  warranty?: boolean
+  warrantyYear?: number
+  discount: string | number
+  selectedUser?: any
+  createdAt?: Date | string
+}
 const InvoicePDF = ({
   companyName,
   name,
@@ -39,10 +39,9 @@ const InvoicePDF = ({
   selectedUser,
   discount,
   createdAt,
-}:InvoicePDFProps) => {
- 
-const parsed = Number(discount);
-const localDiscount = Number.isFinite(parsed) ? Math.floor(parsed) : 0;
+}: InvoicePDFProps) => {
+  const parsed = Number(discount)
+  const localDiscount = Number.isFinite(parsed) ? Math.floor(parsed) : 0
 
   return (
     <Document>
@@ -114,7 +113,7 @@ const localDiscount = Number.isFinite(parsed) ? Math.floor(parsed) : 0;
                       {header}
                     </Text>
                   </View>
-                ),
+                )
               )}
             </View>
 
@@ -453,8 +452,8 @@ const localDiscount = Number.isFinite(parsed) ? Math.floor(parsed) : 0;
         <Footer />
       </Page>
     </Document>
-  );
-};
+  )
+}
 
 const BankDetail = () => {
   const list = [
@@ -478,7 +477,7 @@ const BankDetail = () => {
       title: "Branch Code",
       value: "0508",
     },
-  ];
+  ]
 
   return (
     <View
@@ -533,8 +532,8 @@ const BankDetail = () => {
         </View>
       ))}
     </View>
-  );
-};
+  )
+}
 
 const FormField = ({
   phoneNumber,
@@ -544,14 +543,14 @@ const FormField = ({
   manager,
   inv,
   selectedUser,
-}:{
-   phoneNumber : string,
-  address : string,
-  companyName : string,
-  name : string,
-  manager : string,
-  inv : string,
-  selectedUser : {id : number, label : string},
+}: {
+  phoneNumber: string
+  address: string
+  companyName: string
+  name: string
+  manager: string
+  inv: string
+  selectedUser: { id: number; label: string }
 }) => {
   return (
     <View style={{ marginBottom: 5 }}>
@@ -610,10 +609,10 @@ const FormField = ({
         </View>
       ))}
     </View>
-  );
-};
+  )
+}
 
-const CompanyDetails = ({ createdAt } : {createdAt ?: Date | string}) => {
+const CompanyDetails = ({ createdAt }: { createdAt?: Date | string }) => {
   return (
     <View
       style={{
@@ -642,7 +641,7 @@ const CompanyDetails = ({ createdAt } : {createdAt ?: Date | string}) => {
         <Text
           style={{
             paddingLeft: 10,
-             fontSize: 11,
+            fontSize: 11,
           }}
         >
           {createdAt
@@ -671,8 +670,8 @@ const CompanyDetails = ({ createdAt } : {createdAt ?: Date | string}) => {
         </Text>
       </View>
     </View>
-  );
-};
+  )
+}
 
 const Header = () => {
   return (
@@ -713,8 +712,8 @@ const Header = () => {
         </Text>
       </View>
     </View>
-  );
-};
+  )
+}
 
 const Disclaimer = () => {
   return (
@@ -734,8 +733,8 @@ const Disclaimer = () => {
         signature.
       </Text>
     </View>
-  );
-};
+  )
+}
 
 const Footer = () => {
   return (
@@ -786,7 +785,7 @@ const Footer = () => {
         <Text style={{ fontSize: 10 }}>www.senfenglaserpk.com</Text>
       </View>
     </View>
-  );
-};
+  )
+}
 
-export default InvoicePDF;
+export default InvoicePDF

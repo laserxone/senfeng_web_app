@@ -1,92 +1,93 @@
-"use client";
+"use client"
 
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import Heading from "@/components/ui/heading";
-import { Input } from "@/components/ui/input";
+} from "@/components/ui/accordion"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import Heading from "@/components/ui/heading"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import Spinner from "@/components/ui/spinner";
-import { UserSearch } from "@/components/shared/search/user-search";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import moment from "moment";
-import { useEffect, useRef, useState } from "react";
-
+} from "@/components/ui/select"
+import Spinner from "@/components/ui/spinner"
+import { UserSearch } from "@/components/shared/search/user-search"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import moment from "moment"
+import { useEffect, useRef, useState } from "react"
 
 type CustomerMachinesResponse = {
-  customer_id: number;
-  customer_name: string;
-  customer_owner: string;
-  customer_owner_name: string;
-  customer_number: string[];
-  machines: Machine[];
-};
+  customer_id: number
+  customer_name: string
+  customer_owner: string
+  customer_owner_name: string
+  customer_number: string[]
+  machines: Machine[]
+}
 
 type Machine = {
-  sale_id: number;
-  serial_no: string;
-  power: string | null;
-  source: string | null;
-  order_no_arr: string[];
-  contract_date: string; 
-  sold_by_name: string;
-  sold_by_id: number;
-  price: string; 
-  speed_money: boolean;
-  speed_money_note: string;
-  speed_money_amount: string | null;
-};
+  sale_id: number
+  serial_no: string
+  power: string | null
+  source: string | null
+  order_no_arr: string[]
+  contract_date: string
+  sold_by_name: string
+  sold_by_id: number
+  price: string
+  speed_money: boolean
+  speed_money_note: string
+  speed_money_amount: string | null
+}
 
 export default function Page() {
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<CustomerMachinesResponse[]>([]);
-  const hasFetched = useRef(false);
-  const [search, setSearch] = useState("");
-  const { userID } = useUserDetail();
+  const [loading, setLoading] = useState(false)
+  const [data, setData] = useState<CustomerMachinesResponse[]>([])
+  const hasFetched = useRef(false)
+  const [search, setSearch] = useState("")
+  const { userID } = useUserDetail()
 
   useEffect(() => {
     if (userID && !hasFetched.current) {
-      hasFetched.current = true;
-      fetchData();
+      hasFetched.current = true
+      fetchData()
     }
-  }, [userID]);
+  }, [userID])
 
   async function fetchData() {
-    setLoading(true);
+    setLoading(true)
     try {
-      const response = await axios.get(`/${userID}/old-commissions`);
-      setData(response.data);
+      const response = await axios.get(`/${userID}/old-commissions`)
+      setData(response.data)
     } catch (err) {
-      console.error("Failed to fetch data:", err);
+      console.error("Failed to fetch data:", err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
-
- 
 
   const filteredData = data.filter((item) =>
     `${item.customer_name} ${item.customer_owner}`
       .toLowerCase()
       .includes(search.toLowerCase())
-  );
+  )
 
   return (
     <div className="flex flex-1 flex-col space-y-4 pb-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
-        <Heading panel title="Old Commissions" description="Clear old commissions" />
+        <Heading
+          panel
+          title="Old Commissions"
+          description="Clear old commissions"
+        />
       </div>
 
       <Input
@@ -106,18 +107,18 @@ export default function Page() {
             <AccordionItem
               key={customer.customer_id}
               value={customer.customer_id.toString()}
-              className="border rounded-lg shadow-sm"
+              className="rounded-lg border shadow-sm"
             >
-              <AccordionTrigger className="px-4 py-3 font-semibold text-lg">
-                <div className="w-full flex flex-col sm:flex-row sm:justify-between">
+              <AccordionTrigger className="px-4 py-3 text-lg font-semibold">
+                <div className="flex w-full flex-col sm:flex-row sm:justify-between">
                   <div>
                     <p>{customer?.customer_name}</p>
                     <p className="text-sm text-muted-foreground">
                       Owner: {customer?.customer_owner}
                     </p>
                   </div>
-                  <div className="text-right whitespace-normal wrap-break-word max-w-sm">
-                    <div className="text-sm text-muted-foreground mt-2 sm:mt-0">
+                  <div className="max-w-sm text-right wrap-break-word whitespace-normal">
+                    <div className="mt-2 text-sm text-muted-foreground sm:mt-0">
                       Number:{" "}
                       {Array.isArray(customer?.customer_number)
                         ? customer?.customer_number?.join(", ")
@@ -130,7 +131,7 @@ export default function Page() {
                 </div>
               </AccordionTrigger>
               <AccordionContent className="bg-muted px-4 py-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {customer.machines.map((machine) => (
                     <RenderEachMachine
                       machine={machine}
@@ -144,11 +145,11 @@ export default function Page() {
                                 machines: cust.machines.filter(
                                   (m) => m.sale_id !== machineId
                                 ),
-                              };
+                              }
                             }
-                            return cust;
-                          });
-                        });
+                            return cust
+                          })
+                        })
                       }}
                     />
                   ))}
@@ -159,39 +160,45 @@ export default function Page() {
         </Accordion>
       )}
     </div>
-  );
+  )
 }
 
-const RenderEachMachine = ({ machine, onReturn } : {machine : Machine, onReturn : (val : number)=> void}) => {
-  const [selectedPercentage, setSelectedPercentage] = useState("2");
-  const [showManual, setShowManual] = useState(false);
-  const [manualNumber, setManualNumber] = useState("");
-  const [selectedUser, setSelectedUser] = useState<number | null>(null);
-  const [commissionAmount, setCommissionAmount] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const { userID } = useUserDetail();
+const RenderEachMachine = ({
+  machine,
+  onReturn,
+}: {
+  machine: Machine
+  onReturn: (val: number) => void
+}) => {
+  const [selectedPercentage, setSelectedPercentage] = useState("2")
+  const [showManual, setShowManual] = useState(false)
+  const [manualNumber, setManualNumber] = useState("")
+  const [selectedUser, setSelectedUser] = useState<number | null>(null)
+  const [commissionAmount, setCommissionAmount] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const { userID } = useUserDetail()
 
   useEffect(() => {
     if (machine?.sold_by_id) {
-      setSelectedUser(machine?.sold_by_id);
+      setSelectedUser(machine?.sold_by_id)
     }
-  }, [machine]);
+  }, [machine])
 
   useEffect(() => {
     if (showManual) {
-      setCommissionAmount(parseFloat(manualNumber) || 0);
+      setCommissionAmount(parseFloat(manualNumber) || 0)
     } else {
       if (selectedPercentage && selectedUser) {
-        const percentage = parseFloat(selectedPercentage);
-        const price = parseFloat(machine?.price) || 0;
-        const amount = (price * percentage) / 100;
-        setCommissionAmount(amount);
+        const percentage = parseFloat(selectedPercentage)
+        const price = parseFloat(machine?.price) || 0
+        const amount = (price * percentage) / 100
+        setCommissionAmount(amount)
       }
     }
-  }, [selectedPercentage, selectedUser, machine, showManual, manualNumber]);
+  }, [selectedPercentage, selectedUser, machine, showManual, manualNumber])
 
-  async function handleClearCommission(machine : Machine) {
-    setLoading(true);
+  async function handleClearCommission(machine: Machine) {
+    setLoading(true)
     const formData = {
       sale_id: machine.sale_id,
       user_id: selectedUser,
@@ -202,26 +209,26 @@ const RenderEachMachine = ({ machine, onReturn } : {machine : Machine, onReturn 
       commission_amount: commissionAmount,
       total_amount: machine.price,
       commission_issued: true,
-    };
+    }
 
     try {
-      await axios.post(`/${userID}/old-commissions`, formData);
-      onReturn(machine.sale_id);
+      await axios.post(`/${userID}/old-commissions`, formData)
+      onReturn(machine.sale_id)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
   useEffect(() => {
     if (selectedPercentage !== "manual") {
-      setShowManual(false);
-      setManualNumber("");
+      setShowManual(false)
+      setManualNumber("")
     }
-  }, [selectedPercentage]);
+  }, [selectedPercentage])
 
   return (
     <Card className="shadow-md">
-      <CardContent className="p-4 space-y-1">
+      <CardContent className="space-y-1 p-4">
         <p className="font-medium text-primary">
           Serial No: {machine.serial_no}
         </p>
@@ -257,10 +264,10 @@ const RenderEachMachine = ({ machine, onReturn } : {machine : Machine, onReturn 
           <Select
             onValueChange={(val) => {
               if (val === "manual") {
-                setSelectedPercentage(val);
-                setShowManual(true);
+                setSelectedPercentage(val)
+                setShowManual(true)
               } else {
-                setSelectedPercentage(val);
+                setSelectedPercentage(val)
               }
             }}
             value={selectedPercentage || ""}
@@ -270,12 +277,12 @@ const RenderEachMachine = ({ machine, onReturn } : {machine : Machine, onReturn 
             </SelectTrigger>
             <SelectContent>
               {Array.from({ length: 9 }, (_, i) => {
-                const val = (i + 1).toString();
+                const val = (i + 1).toString()
                 return (
                   <SelectItem key={val} value={val}>
                     {val}%
                   </SelectItem>
-                );
+                )
               })}
               <SelectItem value={"manual"}>Manual</SelectItem>
             </SelectContent>
@@ -285,7 +292,7 @@ const RenderEachMachine = ({ machine, onReturn } : {machine : Machine, onReturn 
               type="number"
               value={manualNumber}
               onChange={(e) => {
-                setManualNumber(e.target.value);
+                setManualNumber(e.target.value)
               }}
             />
           )}
@@ -293,11 +300,7 @@ const RenderEachMachine = ({ machine, onReturn } : {machine : Machine, onReturn 
             Commission Amount: {commissionAmount}
           </p>
           <Button
-            disabled={
-              loading ||
-              !selectedUser ||
-              commissionAmount < 0
-            }
+            disabled={loading || !selectedUser || commissionAmount < 0}
             onClick={() => handleClearCommission(machine)}
           >
             {loading && <Spinner />} Clear Commission
@@ -305,5 +308,5 @@ const RenderEachMachine = ({ machine, onReturn } : {machine : Machine, onReturn 
         </div>
       </CardContent>
     </Card>
-  );
-};
+  )
+}

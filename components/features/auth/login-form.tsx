@@ -1,68 +1,61 @@
-"use client";
-import { Button } from "@/components/ui/button";
+"use client"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { auth, provider } from "@/config/firebase";
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { auth, provider } from "@/config/firebase"
 
-import { cn } from "@/lib/utils";
-import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
-import Spinner from "@/components/ui/spinner";
+import { cn } from "@/lib/utils"
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth"
+import { Eye, EyeOff } from "lucide-react"
+import { useState } from "react"
+import { toast } from "sonner"
+import Spinner from "@/components/ui/spinner"
 
 export function LoginForm() {
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   async function handleGoogleLogin() {
-    setLoading(true);
+    setLoading(true)
     await signInWithPopup(auth, provider)
       .then(() => {
-        toast.success("Login successful");
+        toast.success("Login successful")
       })
       .catch((err) => {
-        toast.error(err?.message || "Error login",
-        );
+        toast.error(err?.message || "Error login")
       })
       .finally(() => {
-        setLoading(false);
-      });
+        setLoading(false)
+      })
   }
 
   async function handleEmailLogin(event: React.FormEvent<HTMLFormElement>) {
-
-    event.preventDefault();
-    setLoading(true);
+    event.preventDefault()
+    setLoading(true)
     await signInWithEmailAndPassword(auth, email, password)
       .then(() => {
-        toast.success("Login successful");
+        toast.success("Login successful")
       })
       .catch((err) => {
-        console.log(err.message);
-        toast.error(err?.message || "Error login");
+        console.log(err.message)
+        toast.error(err?.message || "Error login")
       })
       .finally(() => {
-        setLoading(false);
-      });
-
-    
+        setLoading(false)
+      })
   }
 
-
   return (
-    <div className={cn("flex flex-col gap-6")} >
+    <div className={cn("flex flex-col gap-6")}>
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome back</CardTitle>
@@ -85,7 +78,6 @@ export function LoginForm() {
                   </svg>
                   Login with Google
                 </Button>
-
               </div>
               <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
                 <span className="relative z-10 bg-background px-2 text-muted-foreground">
@@ -126,13 +118,13 @@ export function LoginForm() {
                     />
                     <div
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-0 h-auto w-auto cursor-pointer"
+                      className="absolute top-1/2 right-2 h-auto w-auto -translate-y-1/2 cursor-pointer p-0"
                       tabIndex={-1}
                     >
                       {showPassword ? (
-                        <EyeOff className="w-5 h-5" />
+                        <EyeOff className="h-5 w-5" />
                       ) : (
-                        <Eye className="w-5 h-5" />
+                        <Eye className="h-5 w-5" />
                       )}
                     </div>
                   </div>
@@ -147,5 +139,5 @@ export function LoginForm() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

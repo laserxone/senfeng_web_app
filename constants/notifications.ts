@@ -1,13 +1,12 @@
-
 export const NOTIFICATION_CATEGORIES = {
   ALL: "all",
   SALES: "sales",
   ENGINEERING: "engineering",
   TASKS: "tasks",
-} as const;
+} as const
 
 export type NotificationCategory =
-  (typeof NOTIFICATION_CATEGORIES)[keyof typeof NOTIFICATION_CATEGORIES];
+  (typeof NOTIFICATION_CATEGORIES)[keyof typeof NOTIFICATION_CATEGORIES]
 
 export const NOTIFICATION_TYPES = {
   task_assigned: {
@@ -22,7 +21,7 @@ export const NOTIFICATION_TYPES = {
     title: "Loan Application Submitted",
     category: NOTIFICATION_CATEGORIES.ALL,
   },
-    loan_application_rejected: {
+  loan_application_rejected: {
     title: "Loan Application Rejected",
     category: NOTIFICATION_CATEGORIES.ALL,
   },
@@ -52,11 +51,11 @@ export const NOTIFICATION_TYPES = {
     title: "Commission Application Submitted",
     category: NOTIFICATION_CATEGORIES.SALES,
   },
-   commission_rejected: {
+  commission_rejected: {
     title: "Commission Application Rejected",
     category: NOTIFICATION_CATEGORIES.SALES,
   },
-   commission_approved: {
+  commission_approved: {
     title: "Commission Application Approved",
     category: NOTIFICATION_CATEGORIES.SALES,
   },
@@ -112,5 +111,4 @@ export const NOTIFICATION_TYPES = {
     title: "Feedback Added",
     category: NOTIFICATION_CATEGORIES.ALL,
   },
-} as const;
-
+} as const

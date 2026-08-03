@@ -1,15 +1,15 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import useUserDetail from "@/hooks/use-user-detail";
-import formatCurrency from "@/lib/formatCurrency";
-import { GetProfileImage } from "@/lib/getProfileImage";
-import { AdminDashboardRecentSales } from "@/lib/types";
-import moment from "moment";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import useUserDetail from "@/hooks/use-user-detail"
+import formatCurrency from "@/lib/formatCurrency"
+import { GetProfileImage } from "@/lib/getProfileImage"
+import { AdminDashboardRecentSales } from "@/lib/types"
+import moment from "moment"
+import Link from "next/link"
+import { useEffect, useState } from "react"
 
-export function Sale({ data } : {data : AdminDashboardRecentSales[]}) {
-  const { base_route } = useUserDetail();
+export function Sale({ data }: { data: AdminDashboardRecentSales[] }) {
+  const { base_route } = useUserDetail()
   return (
     <Card>
       <CardHeader>
@@ -22,7 +22,7 @@ export function Sale({ data } : {data : AdminDashboardRecentSales[]}) {
               key={ind}
               className="flex flex-row items-center justify-between gap-4"
             >
-              <div className="flex  items-center">
+              <div className="flex items-center">
                 <Avatar className="h-9 w-9">
                   <RenderImage img={item.seller_dp} />
 
@@ -31,7 +31,7 @@ export function Sale({ data } : {data : AdminDashboardRecentSales[]}) {
                   </AvatarFallback>
                 </Avatar>
                 <div className="ml-4 space-y-1">
-                  <p className="text-sm font-medium leading-none">
+                  <p className="text-sm leading-none font-medium">
                     {item.seller_name}
                   </p>
                   <Link
@@ -48,10 +48,8 @@ export function Sale({ data } : {data : AdminDashboardRecentSales[]}) {
                   </Link>
                 </div>
               </div>
-              <div className="flex  flex-col items-start">
-                <div className="font-medium">
-                  {formatCurrency(item.price)}
-                </div>
+              <div className="flex flex-col items-start">
+                <div className="font-medium">{formatCurrency(item.price)}</div>
                 <p className="text-sm text-muted-foreground">
                   {moment(item.contract_date).format("YYYY-MM-DD")}
                 </p>
@@ -61,30 +59,27 @@ export function Sale({ data } : {data : AdminDashboardRecentSales[]}) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 const RenderImage = ({ img }: { img: string }) => {
-
   const [localImage, setLocalImage] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchImage() {
       if (img?.includes("http")) {
-        setLocalImage(img);
+        setLocalImage(img)
       } else {
-        const imgResult = await GetProfileImage(img);
-        setLocalImage(imgResult);
+        const imgResult = await GetProfileImage(img)
+        setLocalImage(imgResult)
       }
     }
 
     if (img) {
-      fetchImage();
+      fetchImage()
     }
-  }, [img]);
+  }, [img])
 
   if (!localImage) return null
-  return (
-    <AvatarImage src={localImage} alt="Avatar" />
-  )
+  return <AvatarImage src={localImage} alt="Avatar" />
 }

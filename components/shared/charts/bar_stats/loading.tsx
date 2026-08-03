@@ -1,6 +1,6 @@
 "use client"
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const Loading = () => {
   return (
@@ -14,7 +14,7 @@ const Loading = () => {
           {[1, 2].map((i) => (
             <div
               key={i}
-              className="relative flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
+              className="relative flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
             >
               <Skeleton className="h-3 w-[80px]" />
               <Skeleton className="h-8 w-[100px] sm:h-10" />
@@ -37,7 +37,7 @@ const Loading = () => {
         </div>
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
-export default Loading;
+export default Loading

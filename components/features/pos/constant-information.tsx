@@ -1,13 +1,13 @@
-import { Copy } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { FaPhone } from "react-icons/fa6";
-import { FaGlobe } from "react-icons/fa";
-import moment from "moment";
+import { Copy } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { FaPhone } from "react-icons/fa6"
+import { FaGlobe } from "react-icons/fa"
+import moment from "moment"
 
 const Disclaimer = () => {
   return (
     <div
-      className="text-center text-gray-500 text-sm"
+      className="text-center text-sm text-gray-500"
       style={{ color: "#0072BC", fontWeight: "600" }}
     >
       <Label>
@@ -15,8 +15,8 @@ const Disclaimer = () => {
         signature.
       </Label>
     </div>
-  );
-};
+  )
+}
 
 const Footer = () => {
   return (
@@ -56,51 +56,55 @@ const Footer = () => {
         <Label>www.senfenglaserpk.com</Label>
       </div>
     </div>
-  );
-};
+  )
+}
 
-const CompanyDetails = ({createdAt}) => {
+const CompanyDetails = ({ createdAt }) => {
   return (
     <div className="flex justify-between">
       <div className="flex items-start">
-        <Label className="text-[#7F7F7FFF] font-bold ml-2">Date:</Label>
-        <Label className="text-black ml-2">{createdAt ? moment(new Date(createdAt)).format("YYYY-MM-DD") : moment().format("YYYY-MM-DD")}</Label>
+        <Label className="ml-2 font-bold text-[#7F7F7FFF]">Date:</Label>
+        <Label className="ml-2 text-black">
+          {createdAt
+            ? moment(new Date(createdAt)).format("YYYY-MM-DD")
+            : moment().format("YYYY-MM-DD")}
+        </Label>
       </div>
 
-      <div className="mr-2 gap-0 font-semibold text-sm">
-        <p className="text-[#0072BC] text-lg font-bold mb-0 mt-0">
+      <div className="mr-2 gap-0 text-sm font-semibold">
+        <p className="mt-0 mb-0 text-lg font-bold text-[#0072BC]">
           SENFENG PAKISTAN
         </p>
-        <p className="text-[#7F7F7F] mb-0 mt-0">
+        <p className="mt-0 mb-0 text-[#7F7F7F]">
           Street# 2, Sharif Garden Daroghawala,
         </p>
-        <p className="text-[#7F7F7F] mb-0 mt-0">
+        <p className="mt-0 mb-0 text-[#7F7F7F]">
           Lahore, Punjab 54000, Pakistan
         </p>
-        <p className="text-[#7F7F7F] mb-0 mt-0">
+        <p className="mt-0 mb-0 text-[#7F7F7F]">
           senfenglaserpakistan@gmail.com
         </p>
       </div>
     </div>
-  );
-};
+  )
+}
 
 const Header = ({ onClick }) => {
   return (
-    <div className="flex justify-between items-end ">
+    <div className="flex items-end justify-between">
       <img src="/logo.png" alt="My Local Image" className="h-12 w-[250px]" />
-      <div className="flex  items-center mr-[-20px]">
-        <div className="bg-[#0072BC] rounded-tl-2xl rounded-tr-2xl  w-[250px] h-11 flex items-center justify-center">
+      <div className="mr-[-20px] flex items-center">
+        <div className="flex h-11 w-[250px] items-center justify-center rounded-tl-2xl rounded-tr-2xl bg-[#0072BC]">
           <p className="text-2xl font-semibold text-white">INVOICE</p>
         </div>
         <Copy
           onClick={onClick}
-          className="ml-4 hover:cursor-pointer text-black"
+          className="ml-4 text-black hover:cursor-pointer"
         />
       </div>
     </div>
-  );
-};
+  )
+}
 
 const FormField = ({
   phoneNumber,
@@ -160,8 +164,8 @@ const FormField = ({
         </div>
       ))}
     </div>
-  );
-};
+  )
+}
 
 const BankDetail = () => {
   return (
@@ -170,7 +174,7 @@ const BankDetail = () => {
         <tbody style={{ fontSize: 14 }}>
           <tr style={{ height: 40 }}>
             <td
-              className="border border-gray-300 w-50"
+              className="w-50 border border-gray-300"
               style={{ paddingLeft: 5 }}
             >
               <Label className="text-black">Bank</Label>
@@ -190,7 +194,7 @@ const BankDetail = () => {
             </td>
             <td
               style={{ color: "#0072BC", fontWeight: "700", paddingLeft: 5 }}
-              className="border border-gray-300 "
+              className="border border-gray-300"
             >
               <Label>SENFENG PAKISTAN</Label>
             </td>
@@ -203,7 +207,7 @@ const BankDetail = () => {
             </td>
             <td
               style={{ color: "#0072BC", fontWeight: "700", paddingLeft: 5 }}
-              className="border border-gray-300 "
+              className="border border-gray-300"
             >
               <Label>321618245</Label>
             </td>
@@ -216,7 +220,7 @@ const BankDetail = () => {
             </td>
             <td
               style={{ color: "#0072BC", fontWeight: "700", paddingLeft: 5 }}
-              className="border border-gray-300 "
+              className="border border-gray-300"
             >
               <Label>PK33UNIL0109000321618245</Label>
             </td>
@@ -229,7 +233,7 @@ const BankDetail = () => {
             </td>
             <td
               style={{ color: "#0072BC", fontWeight: "700", paddingLeft: 5 }}
-              className="border border-gray-300 "
+              className="border border-gray-300"
             >
               <Label>0508</Label>
             </td>
@@ -237,7 +241,7 @@ const BankDetail = () => {
         </tbody>
       </table>
     </div>
-  );
-};
+  )
+}
 
-export { BankDetail, CompanyDetails, Disclaimer, Footer, FormField, Header };
+export { BankDetail, CompanyDetails, Disclaimer, Footer, FormField, Header }

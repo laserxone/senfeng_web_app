@@ -1,41 +1,52 @@
-"use client";
-import { CalendarDays, Clock3, ImageIcon, LogIn, LogOut, MapPin, UsersRound } from "lucide-react";
+"use client"
+import {
+  CalendarDays,
+  Clock3,
+  ImageIcon,
+  LogIn,
+  LogOut,
+  MapPin,
+  UsersRound,
+} from "lucide-react"
 
-import { Button } from "@/components/ui/button";
-import { ElementType, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button"
+import { ElementType, useEffect, useMemo, useState } from "react"
 
-import LeaveApproval from "@/components/features/employee-finance/leave-approval";
-import FilterSheet from "@/components/features/users/filter-sheet";
-import PageTable from "@/components/shared/tables/app-table";
-import { Badge } from "@/components/ui/badge";
+import LeaveApproval from "@/components/features/employee-finance/leave-approval"
+import FilterSheet from "@/components/features/users/filter-sheet"
+import PageTable from "@/components/shared/tables/app-table"
+import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { TIMEZONE } from "@/constants/data";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { GetProfileImage } from "@/lib/getProfileImage";
-import { UserAttendanceRecord } from "@/lib/types";
-import { MapProvider } from "@/providers/map-provider";
-import { GoogleMap, Marker } from "@react-google-maps/api";
-import moment from "moment";
-import momentT from "moment-timezone";
-import { useTheme } from "next-themes";
-import { columns } from "./AttendanceColumns";
-import RenderMarkAttendance from "./attendance-marking";
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { TIMEZONE } from "@/constants/data"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { GetProfileImage } from "@/lib/getProfileImage"
+import { UserAttendanceRecord } from "@/lib/types"
+import { MapProvider } from "@/providers/map-provider"
+import { GoogleMap, Marker } from "@react-google-maps/api"
+import moment from "moment"
+import momentT from "moment-timezone"
+import { useTheme } from "next-themes"
+import { columns } from "./AttendanceColumns"
+import RenderMarkAttendance from "./attendance-marking"
 
 export default function TeamAttendance() {
-  const [filterVisible, setFilterVisible] = useState(false);
-  const [data, setData] = useState<UserAttendanceRecord[]>([]);
-  const [visible, setVisible] = useState(false);
-  const [selectedAttendance, setSelectedAttendance] = useState<UserAttendanceRecord | null>(null);
-  const [resetLoading, setResetLoading] = useState(false);
-  const { userID, team_attendance_marking } = useUserDetail();
-  const [approveLeave, setApproveLeave] = useState<UserAttendanceRecord | null>(null);
+  const [filterVisible, setFilterVisible] = useState(false)
+  const [data, setData] = useState<UserAttendanceRecord[]>([])
+  const [visible, setVisible] = useState(false)
+  const [selectedAttendance, setSelectedAttendance] =
+    useState<UserAttendanceRecord | null>(null)
+  const [resetLoading, setResetLoading] = useState(false)
+  const { userID, team_attendance_marking } = useUserDetail()
+  const [approveLeave, setApproveLeave] = useState<UserAttendanceRecord | null>(
+    null
+  )
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -45,39 +56,43 @@ export default function TeamAttendance() {
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString();
+        .toISOString()
       const end_date = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString();
-      fetchData(start_date, end_date);
+        .toISOString()
+      fetchData(start_date, end_date)
     }
-  }, [userID]);
+  }, [userID])
 
-  async function fetchData(start: string, end: string, user: string | undefined | null | number = null) {
+  async function fetchData(
+    start: string,
+    end: string,
+    user: string | undefined | null | number = null
+  ) {
     return new Promise((res) => {
       axios
         .get(
-          `/${userID}/attendance?team=true&start_date=${start}&end_date=${end}&user=${user || ""}`,
+          `/${userID}/attendance?team=true&start_date=${start}&end_date=${end}&user=${user || ""}`
         )
         .then((response) => {
           if (response.data.length > 0) {
             const apiData = response.data.map((item: any) => {
               let status = item?.leave_status
                 ? `Leave ${item?.leave_status}`
-                : "Absent";
+                : "Absent"
 
               if (item?.time_in) {
-                const checkInTime = new Date(item.time_in);
-                const threshold = new Date(item.time_in);
-                threshold.setHours(10, 10, 0, 0);
+                const checkInTime = new Date(item.time_in)
+                const threshold = new Date(item.time_in)
+                threshold.setHours(10, 10, 0, 0)
 
                 if (checkInTime > threshold) {
-                  status = "Late";
+                  status = "Late"
                 } else {
-                  status = "Present";
+                  status = "Present"
                 }
               }
 
@@ -85,54 +100,58 @@ export default function TeamAttendance() {
                 ...item,
                 date: item?.time_in || item?.leave_date,
                 status,
-              };
-            });
-            const convertedData = generateAttendanceData(apiData, start, end);
-            setData(convertedData);
+              }
+            })
+            const convertedData = generateAttendanceData(apiData, start, end)
+            setData(convertedData)
           } else {
-            setData([]);
+            setData([])
           }
         })
         .catch((e) => {
-          console.log(e);
+          console.log(e)
         })
         .finally(() => {
-          res(true);
-        });
-    });
+          res(true)
+        })
+    })
   }
 
-  function generateAttendanceData(rawData: UserAttendanceRecord[], start: string, end: string) {
-    const start_date = moment(start);
-    const end_date = moment(end);
+  function generateAttendanceData(
+    rawData: UserAttendanceRecord[],
+    start: string,
+    end: string
+  ) {
+    const start_date = moment(start)
+    const end_date = moment(end)
 
     const uniqueUsers = Array.from(
-      new Set(rawData.map((item) => item.user_email)),
-    );
+      new Set(rawData.map((item) => item.user_email))
+    )
 
-    const datesInMonth: string[] = [];
-    let current = moment(start_date);
+    const datesInMonth: string[] = []
+    let current = moment(start_date)
     while (current.isSameOrBefore(end_date)) {
-      datesInMonth.push(current.format("YYYY-MM-DD"));
-      current.add(1, "day");
+      datesInMonth.push(current.format("YYYY-MM-DD"))
+      current.add(1, "day")
     }
 
-    const finalData: any = [];
+    const finalData: any = []
 
-    const userMap: any = {};
+    const userMap: any = {}
     rawData.forEach((item) => {
       if (!userMap[item.user_email]) {
-        userMap[item.user_email] = item.user_name;
+        userMap[item.user_email] = item.user_name
       }
-    });
+    })
 
     uniqueUsers.forEach((user) => {
       datesInMonth.forEach((date) => {
         const match = rawData.find(
           (item) =>
             item.user_email === user &&
-            moment(item.date).format("YYYY-MM-DD") === date,
-        );
+            moment(item.date).format("YYYY-MM-DD") === date
+        )
 
         finalData.push({
           ...match,
@@ -148,19 +167,20 @@ export default function TeamAttendance() {
           image_time_out: match?.image_time_out || null,
           location_time_in: match?.location_time_in || null,
           location_time_out: match?.location_time_out || null,
-        });
-      });
-    });
+        })
+      })
+    })
 
-    finalData.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    const today = moment().format("YYYY-MM-DD");
+    finalData.sort(
+      (a: any, b: any) =>
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+    )
+    const today = moment().format("YYYY-MM-DD")
 
-    const filteredData = finalData.filter((item: any) => item.date <= today);
+    const filteredData = finalData.filter((item: any) => item.date <= today)
 
-    return filteredData;
+    return filteredData
   }
-
-
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -172,53 +192,78 @@ export default function TeamAttendance() {
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Attendance</h1>
-                <span className="hidden rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold tracking-wide text-muted-foreground uppercase sm:inline-flex">Team workspace</span>
+                <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+                  Attendance
+                </h1>
+                <span className="hidden rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold tracking-wide text-muted-foreground uppercase sm:inline-flex">
+                  Team workspace
+                </span>
               </div>
-              <p className="mt-0.5 text-xs text-muted-foreground">Review and manage team attendance records.</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Review and manage team attendance records.
+              </p>
             </div>
           </div>
-          {team_attendance_marking && <Button onClick={() => setOpen(true)}>Add Attendance</Button>}
+          {team_attendance_marking && (
+            <Button onClick={() => setOpen(true)}>Add Attendance</Button>
+          )}
         </div>
         <div className="grid border-t bg-muted/20 sm:grid-cols-3 sm:divide-x">
-          <AttendanceMetric icon={<UsersRound className="size-4 text-violet-600 dark:text-violet-400" />} label="Records" value={data.length} />
-          <AttendanceMetric icon={<LogIn className="size-4 text-emerald-600 dark:text-emerald-400" />} label="Checked in" value={data.filter((item) => item.time_in).length} />
-          <AttendanceMetric icon={<CalendarDays className="size-4 text-amber-600 dark:text-amber-400" />} label="Leaves" value={data.filter((item) => item.leave_id).length} />
+          <AttendanceMetric
+            icon={
+              <UsersRound className="size-4 text-violet-600 dark:text-violet-400" />
+            }
+            label="Records"
+            value={data.length}
+          />
+          <AttendanceMetric
+            icon={
+              <LogIn className="size-4 text-emerald-600 dark:text-emerald-400" />
+            }
+            label="Checked in"
+            value={data.filter((item) => item.time_in).length}
+          />
+          <AttendanceMetric
+            icon={
+              <CalendarDays className="size-4 text-amber-600 dark:text-amber-400" />
+            }
+            label="Leaves"
+            value={data.filter((item) => item.leave_id).length}
+          />
         </div>
       </section>
-
 
       <PageTable
         columns={columns}
         data={data}
         onRowClick={(val, event) => {
           if (val?.time_in) {
-            setSelectedAttendance(val);
-            setVisible(true);
+            setSelectedAttendance(val)
+            setVisible(true)
           }
           if (val?.leave_id) {
-            setApproveLeave(val);
+            setApproveLeave(val)
           }
         }}
         onFilterPress={() => setFilterVisible(true)}
         reset
         resetLoading={resetLoading}
         onResetPress={async () => {
-          setResetLoading(true);
+          setResetLoading(true)
           const startDate = momentT
             .tz(TIMEZONE)
             .startOf("month")
             .startOf("day")
             .utc()
-            .toISOString();
+            .toISOString()
           const endDate = momentT
             .tz(TIMEZONE)
             .endOf("month")
             .endOf("day")
             .utc()
-            .toISOString();
-          await fetchData(startDate, endDate);
-          setResetLoading(false);
+            .toISOString()
+          await fetchData(startDate, endDate)
+          setResetLoading(false)
         }}
       />
       <FilterSheet
@@ -226,7 +271,7 @@ export default function TeamAttendance() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(val.start, val.end, val.user);
+          await fetchData(val.start, val.end, val.user)
         }}
       />
 
@@ -245,37 +290,59 @@ export default function TeamAttendance() {
             prevState.map((p) =>
               p?.leave_id === approveLeave?.leave_id
                 ? {
-                  ...p,
-                  leave_status: `Leave ${newStatus}`,
-                  status: `Leave ${newStatus}`,
-                }
-                : p,
-            ),
-          );
+                    ...p,
+                    leave_status: `Leave ${newStatus}`,
+                    status: `Leave ${newStatus}`,
+                  }
+                : p
+            )
+          )
         }}
       />
 
-      <RenderMarkAttendance open={open} onClose={() => setOpen(false)} fetchData={async () => {
-        const startDate = momentT
-          .tz(TIMEZONE)
-          .startOf("month")
-          .startOf("day")
-          .utc()
-          .toISOString();
-        const endDate = momentT
-          .tz(TIMEZONE)
-          .endOf("month")
-          .endOf("day")
-          .utc()
-          .toISOString();
-        await fetchData(startDate, endDate);
-      }} />
+      <RenderMarkAttendance
+        open={open}
+        onClose={() => setOpen(false)}
+        fetchData={async () => {
+          const startDate = momentT
+            .tz(TIMEZONE)
+            .startOf("month")
+            .startOf("day")
+            .utc()
+            .toISOString()
+          const endDate = momentT
+            .tz(TIMEZONE)
+            .endOf("month")
+            .endOf("day")
+            .utc()
+            .toISOString()
+          await fetchData(startDate, endDate)
+        }}
+      />
     </div>
-  );
+  )
 }
 
-function AttendanceMetric({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
-  return <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">{icon}<div className="flex items-baseline gap-2"><span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{label}</span><span className="text-sm font-bold">{value}</span></div></div>;
+function AttendanceMetric({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: number
+}) {
+  return (
+    <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">
+      {icon}
+      <div className="flex items-baseline gap-2">
+        <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+          {label}
+        </span>
+        <span className="text-sm font-bold">{value}</span>
+      </div>
+    </div>
+  )
 }
 
 export const AttendanceDetail = ({
@@ -315,24 +382,21 @@ export const AttendanceDetail = ({
   return (
     <Dialog open={visible} onOpenChange={onClose}>
       <DialogContent
-        className={`
-    w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)]
-    max-h-[95dvh] overflow-hidden rounded-xl border p-0
-    sm:w-full sm:rounded-2xl
-    ${entries.length > 1 ? "lg:max-w-5xl xl:max-w-6xl" : "lg:max-w-4xl"}
-  `}>
-        <DialogHeader className="border-b bg-slate-50 px-3 py-3 dark:bg-slate-950 sm:px-5">
+        className={`max-h-[95dvh] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl border p-0 sm:w-full sm:rounded-2xl ${entries.length > 1 ? "lg:max-w-5xl xl:max-w-6xl" : "lg:max-w-4xl"} `}
+      >
+        <DialogHeader className="border-b bg-slate-50 px-3 py-3 sm:px-5 dark:bg-slate-950">
           <div className="flex items-start gap-3">
-            <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-blue-100 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:ring-blue-900 sm:size-10">
+            <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-blue-100 text-blue-700 ring-1 ring-blue-200 sm:size-10 dark:bg-blue-950/60 dark:text-blue-300 dark:ring-blue-900">
               <Clock3 className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
 
             <div className="min-w-0 flex-1">
-              <DialogTitle className="break-words text-base font-bold tracking-tight sm:text-lg">
+              <DialogTitle className="text-base font-bold tracking-tight break-words sm:text-lg">
                 Attendance Detail
               </DialogTitle>
-              <p className="mt-0.5 break-words text-xs font-medium text-muted-foreground sm:text-sm">
-                {detail?.user_name || detail?.user_email || "Employee"} attendance activity and proof.
+              <p className="mt-0.5 text-xs font-medium break-words text-muted-foreground sm:text-sm">
+                {detail?.user_name || detail?.user_email || "Employee"}{" "}
+                attendance activity and proof.
               </p>
             </div>
           </div>
@@ -343,22 +407,28 @@ export const AttendanceDetail = ({
             <div className="grid gap-2 sm:grid-cols-3">
               <InfoTile
                 label="Date"
-                value={detail?.date ? moment(detail.date).format("YYYY-MM-DD") : "N/A"}
+                value={
+                  detail?.date
+                    ? moment(detail.date).format("YYYY-MM-DD")
+                    : "N/A"
+                }
               />
               <InfoTile label="Status" value={detail?.status || "N/A"} />
               <InfoTile label="Email" value={detail?.user_email || "N/A"} />
             </div>
 
-            <div className={`grid gap-3 ${entries.length > 1 ? "xl:grid-cols-2" : "grid-cols-1"}`}>
+            <div
+              className={`grid gap-3 ${entries.length > 1 ? "xl:grid-cols-2" : "grid-cols-1"}`}
+            >
               {entries.map((entry) => {
                 const Icon = entry.icon
 
                 return (
                   <section
                     key={entry.key}
-                    className="overflow-hidden rounded-2xl border bg-background  flex-wrap"
+                    className="flex-wrap overflow-hidden rounded-2xl border bg-background"
                   >
-                    <div className="border-b bg-slate-50/80 px-3 py-3 dark:bg-slate-900/70 sm:px-4">
+                    <div className="border-b bg-slate-50/80 px-3 py-3 sm:px-4 dark:bg-slate-900/70">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex min-w-0 items-center gap-3">
                           <div
@@ -373,7 +443,9 @@ export const AttendanceDetail = ({
                             </h3>
                             <p className="mt-0.5 truncate text-xs font-medium text-muted-foreground">
                               {entry.time
-                                ? moment(entry.time).format("YYYY-MM-DD hh:mm A")
+                                ? moment(entry.time).format(
+                                    "YYYY-MM-DD hh:mm A"
+                                  )
                                 : "No time recorded"}
                             </p>
                           </div>
@@ -381,10 +453,11 @@ export const AttendanceDetail = ({
 
                         <Badge
                           variant="outline"
-                          className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${entry.position
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
-                            : "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
-                            }`}
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                            entry.position
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
+                              : "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
+                          }`}
                         >
                           {entry.position ? "GPS available" : "No GPS"}
                         </Badge>
@@ -394,10 +467,12 @@ export const AttendanceDetail = ({
                     <div className="space-y-3 p-3 sm:p-4">
                       {entry.note && (
                         <div className="rounded-xl border bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-600 dark:bg-slate-900 dark:text-slate-300">
-                          <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                          <p className="mb-1 text-[11px] font-bold tracking-wide text-slate-400 uppercase">
                             Note
                           </p>
-                          <p className="whitespace-pre-wrap break-words">{entry.note}</p>
+                          <p className="break-words whitespace-pre-wrap">
+                            {entry.note}
+                          </p>
                         </div>
                       )}
 
@@ -459,11 +534,9 @@ const ProofBlock = ({
   </div>
 )
 
-
-
 const InfoTile = ({ label, value }: { label: string; value: string }) => (
   <div className="min-w-0 rounded-xl border bg-white px-3 py-2 dark:bg-slate-950">
-    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+    <p className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">
       {label}
     </p>
     <p className="mt-1 truncate text-sm font-semibold text-slate-900 dark:text-white">

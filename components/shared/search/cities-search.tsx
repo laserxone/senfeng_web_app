@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { Check, ChevronsUpDown } from "lucide-react";
-import * as React from "react";
+import { Check, ChevronsUpDown } from "lucide-react"
+import * as React from "react"
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Command,
   CommandDialog,
@@ -12,17 +12,23 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { PakCities } from "@/constants/data";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/command"
+import { PakCities } from "@/constants/data"
+import { cn } from "@/lib/utils"
 
-export function CitiesSearch({ value, onReturn }: { value: string, onReturn: (val: string) => void }) {
-  const [open, setOpen] = React.useState(false);
+export function CitiesSearch({
+  value,
+  onReturn,
+}: {
+  value: string
+  onReturn: (val: string) => void
+}) {
+  const [open, setOpen] = React.useState(false)
   const [data] = React.useState(
     PakCities.map((item) => {
-      return { value: item.name, label: item.name };
+      return { value: item.name, label: item.name }
     })
-  );
+  )
 
   return (
     <>
@@ -43,8 +49,6 @@ export function CitiesSearch({ value, onReturn }: { value: string, onReturn: (va
       </Button>
 
       <CommandDialog open={open} onOpenChange={setOpen}>
-
-
         <Command>
           <CommandInput placeholder="Search city..." className="h-9" />
           <CommandList>
@@ -55,8 +59,8 @@ export function CitiesSearch({ value, onReturn }: { value: string, onReturn: (va
                   key={index}
                   value={item.label}
                   onSelect={() => {
-                    onReturn(item.value);
-                    setOpen(false);
+                    onReturn(item.value)
+                    setOpen(false)
                   }}
                 >
                   {item.label}
@@ -72,7 +76,6 @@ export function CitiesSearch({ value, onReturn }: { value: string, onReturn: (va
           </CommandList>
         </Command>
       </CommandDialog>
-
     </>
-  );
+  )
 }

@@ -1,69 +1,72 @@
-"use client";
+"use client"
 
-import FilterSheet from "@/components/features/users/filter-sheet";
-import CurrencyFormatter from "@/components/shared/common/currency-formatter";
-import PageTable from "@/components/shared/tables/app-table";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Heading from "@/components/ui/heading";
-import { Skeleton } from "@/components/ui/skeleton";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { FinanceProps } from "@/lib/types";
-import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, Banknote, CircleDollarSign, Clock3 } from "lucide-react";
-import moment from "moment";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import FilterSheet from "@/components/features/users/filter-sheet"
+import CurrencyFormatter from "@/components/shared/common/currency-formatter"
+import PageTable from "@/components/shared/tables/app-table"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import Heading from "@/components/ui/heading"
+import { Skeleton } from "@/components/ui/skeleton"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { FinanceProps } from "@/lib/types"
+import { ColumnDef } from "@tanstack/react-table"
+import { ArrowUpDown, Banknote, CircleDollarSign, Clock3 } from "lucide-react"
+import moment from "moment"
+import Link from "next/link"
+import { useEffect, useState } from "react"
 
 export default function Page() {
-  const [filterVisible, setFilterVisible] = useState(false);
-  const { userID, base_route } = useUserDetail();
-  const [tableData, setTableData] = useState<FinanceProps[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [filterVisible, setFilterVisible] = useState(false)
+  const { userID, base_route } = useUserDetail()
+  const [tableData, setTableData] = useState<FinanceProps[]>([])
+  const [loading, setLoading] = useState(false)
   const [commulative, setCommulative] = useState({
     total: 0,
     pending: 0,
     received: 0,
-  });
-  const [commloading, setCommloading] = useState(false);
-  const [filterDate, setFilterDate] = useState<{ start: string | null, end: string | null }>({ start: null, end: null });
+  })
+  const [commloading, setCommloading] = useState(false)
+  const [filterDate, setFilterDate] = useState<{
+    start: string | null
+    end: string | null
+  }>({ start: null, end: null })
 
   useEffect(() => {
-    if (userID) fetchCommulative();
-  }, [userID]);
+    if (userID) fetchCommulative()
+  }, [userID])
 
   async function fetchCommulative() {
-    setCommloading(true);
+    setCommloading(true)
     axios
       .get(`/${userID}/finance/all`)
       .then((response) => {
-        setCommulative(response.data.summary);
-        setTableData(response.data.items);
+        setCommulative(response.data.summary)
+        setTableData(response.data.items)
       })
       .finally(() => {
-        setCommloading(false);
-      });
+        setCommloading(false)
+      })
   }
 
   const data = tableData.reduce(
     (acc, item) => {
-      const total = Number(item.total_generated || item.machine_price || 0);
-      const received = Number(item.amount || item.total_payment_received || 0);
-      const pending = total - received;
+      const total = Number(item.total_generated || item.machine_price || 0)
+      const received = Number(item.amount || item.total_payment_received || 0)
+      const pending = total - received
 
-      acc.total += total;
-      acc.received += received;
-      acc.pending += pending;
+      acc.total += total
+      acc.received += received
+      acc.pending += pending
 
-      return acc;
+      return acc
     },
     {
       total: 0,
       received: 0,
       pending: 0,
-    },
-  );
+    }
+  )
 
   const columns: ColumnDef<FinanceProps>[] = [
     {
@@ -78,7 +81,7 @@ export default function Page() {
             Owner
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("customer_owner")}</div>,
     },
@@ -95,7 +98,7 @@ export default function Page() {
             Company
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => (
         <Link
@@ -119,7 +122,7 @@ export default function Page() {
             Machine
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => (
         <Link
@@ -144,14 +147,14 @@ export default function Page() {
             Contract Date
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => (
         <div>
           {row.getValue("machine_contract_date")
             ? moment(new Date(row.getValue("machine_contract_date"))).format(
-              "YYYY-MM-DD",
-            )
+                "YYYY-MM-DD"
+              )
             : "-"}
         </div>
       ),
@@ -169,7 +172,7 @@ export default function Page() {
             Sale Person
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("sell_by_name")}</div>,
     },
@@ -186,7 +189,7 @@ export default function Page() {
             Price
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("total_generated")}</div>,
     },
@@ -203,7 +206,7 @@ export default function Page() {
             Received
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("total_payment_received")}</div>,
     },
@@ -220,77 +223,98 @@ export default function Page() {
             Balance
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("total_balance")}</div>,
     },
-  ];
+  ]
 
-  async function fetchData(startDate = "", endDate = "", user: string | null | number = null) {
-
+  async function fetchData(
+    startDate = "",
+    endDate = "",
+    user: string | null | number = null
+  ) {
     try {
-      const response = await axios
-        .get(
-          `/${userID}/finance?start_date=${startDate}&end_date=${endDate}&user=${user || ""}`,
-        )
-      setTableData(response.data);
+      const response = await axios.get(
+        `/${userID}/finance?start_date=${startDate}&end_date=${endDate}&user=${user || ""}`
+      )
+      setTableData(response.data)
       setFilterDate({
         start: startDate,
         end: endDate,
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-
   }
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex items-center justify-between rounded-t-2xl border border-b-0 bg-card p-4 sm:p-5">
-        <Heading
-          panel
-          title={"Finance"}
-          description={"Manage finance"}
-        />
+        <Heading panel title={"Finance"} description={"Manage finance"} />
       </div>
       <div className="!-mt-4 grid overflow-hidden rounded-b-2xl border bg-muted/20 shadow-sm sm:grid-cols-3 sm:divide-x">
         <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
           <Banknote className="size-4 text-violet-600 dark:text-violet-400" />
           <div className="flex min-w-0 items-baseline gap-2">
-            <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Bill generated</span>
-            <span className="truncate text-sm font-bold">{commloading ? <Skeleton className="h-4 w-20" /> : <CurrencyFormatter amount={commulative?.total} />}</span>
+            <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+              Bill generated
+            </span>
+            <span className="truncate text-sm font-bold">
+              {commloading ? (
+                <Skeleton className="h-4 w-20" />
+              ) : (
+                <CurrencyFormatter amount={commulative?.total} />
+              )}
+            </span>
           </div>
         </div>
 
         <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
           <CircleDollarSign className="size-4 text-emerald-600 dark:text-emerald-400" />
           <div className="flex min-w-0 items-baseline gap-2">
-            <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Received</span>
-            <span className="truncate text-sm font-bold">{commloading ? <Skeleton className="h-4 w-20" /> : <CurrencyFormatter amount={commulative?.received} />}</span>
+            <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+              Received
+            </span>
+            <span className="truncate text-sm font-bold">
+              {commloading ? (
+                <Skeleton className="h-4 w-20" />
+              ) : (
+                <CurrencyFormatter amount={commulative?.received} />
+              )}
+            </span>
           </div>
         </div>
 
         <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
           <Clock3 className="size-4 text-red-600 dark:text-red-400" />
           <div className="flex min-w-0 items-baseline gap-2">
-            <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Pending</span>
-            <span className="truncate text-sm font-bold">{commloading ? <Skeleton className="h-4 w-20" /> : <CurrencyFormatter amount={commulative?.pending} />}</span>
+            <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+              Pending
+            </span>
+            <span className="truncate text-sm font-bold">
+              {commloading ? (
+                <Skeleton className="h-4 w-20" />
+              ) : (
+                <CurrencyFormatter amount={commulative?.pending} />
+              )}
+            </span>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-row justify-between flex-wrap gap-4">
-        <Card className="w-full sm:w-auto sm:min-w-[350px] ">
+      <div className="flex flex-row flex-wrap justify-between gap-4">
+        <Card className="w-full sm:w-auto sm:min-w-[350px]">
           <CardContent className="p-0 px-4 py-2">
             {filterDate?.start && (
-              <div className="flex gap-2 items-center flex-wrap">
+              <div className="flex flex-wrap items-center gap-2">
                 <p className="text-xs">From</p>
-                <p className="font-bold text-blue-500 text-md">
+                <p className="text-md font-bold text-blue-500">
                   {moment(filterDate.start).format("YYYY-MM-DD")}
                 </p>
                 <p className="text-xs">to</p>
 
-                <p className="font-bold text-blue-500 text-md">
+                <p className="text-md font-bold text-blue-500">
                   {moment(filterDate.end).format("YYYY-MM-DD")}
                 </p>
               </div>
@@ -305,14 +329,14 @@ export default function Page() {
         <Card className="w-full sm:w-auto sm:min-w-[350px]">
           <CardContent className="p-0 px-4 py-2">
             {filterDate?.start && (
-              <div className="flex gap-2 items-center flex-wrap">
+              <div className="flex flex-wrap items-center gap-2">
                 <p className="text-xs">From</p>
-                <p className="font-bold text-blue-500 text-md">
+                <p className="text-md font-bold text-blue-500">
                   {moment(filterDate.start).format("YYYY-MM-DD")}
                 </p>
                 <p className="text-xs">to</p>
 
-                <p className="font-bold text-blue-500 text-md">
+                <p className="text-md font-bold text-blue-500">
                   {moment(filterDate.end).format("YYYY-MM-DD")}
                 </p>
               </div>
@@ -327,14 +351,14 @@ export default function Page() {
         <Card className="w-full sm:w-auto sm:min-w-[350px]">
           <CardContent className="p-0 px-4 py-2">
             {filterDate?.start && (
-              <div className="flex gap-2 items-center flex-wrap">
+              <div className="flex flex-wrap items-center gap-2">
                 <p className="text-xs">From</p>
-                <p className="font-bold text-blue-500 text-md">
+                <p className="text-md font-bold text-blue-500">
                   {moment(filterDate.start).format("YYYY-MM-DD")}
                 </p>
                 <p className="text-xs">to</p>
 
-                <p className="font-bold text-blue-500 text-md">
+                <p className="text-md font-bold text-blue-500">
                   {moment(filterDate.end).format("YYYY-MM-DD")}
                 </p>
               </div>
@@ -351,7 +375,7 @@ export default function Page() {
         loading={loading}
         columns={columns}
         data={tableData}
-        onRowClick={(val, e) => { }}
+        onRowClick={(val, e) => {}}
         filter
         onFilterPress={() => setFilterVisible(true)}
       />
@@ -360,10 +384,10 @@ export default function Page() {
         visible={filterVisible}
         onClose={setFilterVisible}
         onReturn={async (val) => {
-          setLoading(true);
-          await fetchData(val.start, val.end, userID);
+          setLoading(true)
+          await fetchData(val.start, val.end, userID)
         }}
       />
     </div>
-  );
+  )
 }

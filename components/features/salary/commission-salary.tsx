@@ -1,31 +1,31 @@
-"use client";
+"use client"
 
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import moment from "moment";
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import moment from "moment"
+import Link from "next/link"
+import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import Heading  from "@/components/ui/heading";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import Heading from "@/components/ui/heading"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import Spinner from "@/components/ui/spinner";
-import { CircleDollarSign } from "lucide-react";
+} from "@/components/ui/select"
+import Spinner from "@/components/ui/spinner"
+import { CircleDollarSign } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -33,60 +33,78 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/ui/table"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { CommissionOwnerProps } from "@/lib/types";
+} from "@/components/ui/tooltip"
+import { CommissionOwnerProps } from "@/lib/types"
 
-const CommissionRecord = ({ data, fetchData } : {data : CommissionOwnerProps[], fetchData : ()=> Promise<void>}) => {
-  const [visibleDisapprove, setVisibleDisapprove] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<CommissionOwnerProps | null>(null);
-  const [disapproveMsg, setDisapproveMsg] = useState("");
-  const [disapproveLoading, setDisapproveLoading] = useState(false);
-  const [total, setTotal] = useState(0);
-  const { userID, base_route } = useUserDetail();
+const CommissionRecord = ({
+  data,
+  fetchData,
+}: {
+  data: CommissionOwnerProps[]
+  fetchData: () => Promise<void>
+}) => {
+  const [visibleDisapprove, setVisibleDisapprove] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<CommissionOwnerProps | null>(
+    null
+  )
+  const [disapproveMsg, setDisapproveMsg] = useState("")
+  const [disapproveLoading, setDisapproveLoading] = useState(false)
+  const [total, setTotal] = useState(0)
+  const { userID, base_route } = useUserDetail()
 
   useEffect(() => {
     const totalCommission = data.reduce(
       (sum, item) => sum + Number(item.commission_amount),
       0
-    );
-    setTotal(totalCommission);
-  }, [data]);
+    )
+    setTotal(totalCommission)
+  }, [data])
 
-  const RenderEachRow = ({ item, onRefresh, onDisapprove } : {item : CommissionOwnerProps, onRefresh : ()=> Promise<void>, onDisapprove : ()=>void}) => {
-    const [loading, setLoading] = useState(false);
+  const RenderEachRow = ({
+    item,
+    onRefresh,
+    onDisapprove,
+  }: {
+    item: CommissionOwnerProps
+    onRefresh: () => Promise<void>
+    onDisapprove: () => void
+  }) => {
+    const [loading, setLoading] = useState(false)
 
-    const [selectedPercentage, setSelectedPercentage] = useState<string | null>(null);
-    const [showManual, setShowManual] = useState(false);
-    const [manualNumber, setManualNumber] = useState<string | number>("");
+    const [selectedPercentage, setSelectedPercentage] = useState<string | null>(
+      null
+    )
+    const [showManual, setShowManual] = useState(false)
+    const [manualNumber, setManualNumber] = useState<string | number>("")
 
     async function handleUpdate(
-      id : number,
-      is_approved : boolean | null,
-      approval_date : Date | null,
-      commission_amount : number | string | null
+      id: number,
+      is_approved: boolean | null,
+      approval_date: Date | null,
+      commission_amount: number | string | null
     ) {
-      if (!id) return;
-      setLoading(true);
+      if (!id) return
+      setLoading(true)
       try {
         await axios.put(`/${userID}/commission/${id}`, {
           is_approved: is_approved,
           approval_date: approval_date,
           commission_amount: commission_amount,
-        });
-        await onRefresh();
-        setShowManual(false);
-        setManualNumber("");
-        setSelectedPercentage(null);
+        })
+        await onRefresh()
+        setShowManual(false)
+        setManualNumber("")
+        setSelectedPercentage(null)
       } catch (error) {
-        console.error("Update failed:", error);
+        console.error("Update failed:", error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
 
@@ -101,9 +119,7 @@ const CommissionRecord = ({ data, fetchData } : {data : CommissionOwnerProps[], 
         <TableCell>
           <Link
             target="blank"
-            href={`/${base_route}/member/${item.customer_id}/${
-              item.sale_id
-            }`}
+            href={`/${base_route}/member/${item.customer_id}/${item.sale_id}`}
             className="hover:underline"
           >
             {item.customer_name}
@@ -112,9 +128,7 @@ const CommissionRecord = ({ data, fetchData } : {data : CommissionOwnerProps[], 
         <TableCell>
           <Link
             target="blank"
-            href={`/${base_route}/member/${item.customer_id}/${
-              item.sale_id
-            }`}
+            href={`/${base_route}/member/${item.customer_id}/${item.sale_id}`}
             className="hover:underline"
           >
             {item.customer_owner}
@@ -123,16 +137,16 @@ const CommissionRecord = ({ data, fetchData } : {data : CommissionOwnerProps[], 
         <TableCell>{item.machine_name}</TableCell>
         <TableCell>{item.total_amount}</TableCell>
         <TableCell>
-          <div className="min-h-[40px] flex items-center gap-2">
+          <div className="flex min-h-[40px] items-center gap-2">
             {item.is_approved ? (
               item.commission_amount
             ) : (
               <Select
                 onValueChange={(val) => {
                   if (val === "manual") {
-                    setShowManual(true);
+                    setShowManual(true)
                   } else {
-                    setSelectedPercentage(val);
+                    setSelectedPercentage(val)
                   }
                 }}
                 value={selectedPercentage || ""}
@@ -142,12 +156,12 @@ const CommissionRecord = ({ data, fetchData } : {data : CommissionOwnerProps[], 
                 </SelectTrigger>
                 <SelectContent>
                   {Array.from({ length: 9 }, (_, i) => {
-                    const val = (i + 1).toString();
+                    const val = (i + 1).toString()
                     return (
                       <SelectItem key={val} value={val}>
                         {val}%
                       </SelectItem>
-                    );
+                    )
                   })}
                   <SelectItem value={"manual"}>Manual</SelectItem>
                 </SelectContent>
@@ -157,12 +171,12 @@ const CommissionRecord = ({ data, fetchData } : {data : CommissionOwnerProps[], 
               <Input
                 value={manualNumber}
                 onChange={(e) => {
-                  const value = e.target.value;
-                  const regex = /^\d*\.?\d*$/;
+                  const value = e.target.value
+                  const regex = /^\d*\.?\d*$/
 
                   if (regex.test(value)) {
-                    const numericValue = Number(value);
-                    setManualNumber(numericValue);
+                    const numericValue = Number(value)
+                    setManualNumber(numericValue)
                   }
                 }}
               />
@@ -177,7 +191,7 @@ const CommissionRecord = ({ data, fetchData } : {data : CommissionOwnerProps[], 
           ) : item.commission_issued === true ? (
             <span className="text-green-600">Issued</span>
           ) : item.is_approved === null ? (
-            <div className="flex gap-2 items-center">
+            <div className="flex items-center gap-2">
               <Button
                 disabled={showManual ? !manualNumber : !selectedPercentage}
                 onClick={() =>
@@ -187,7 +201,8 @@ const CommissionRecord = ({ data, fetchData } : {data : CommissionOwnerProps[], 
                     new Date(),
                     showManual
                       ? manualNumber
-                      : (item.total_amount * Number(selectedPercentage || 0)) / 100
+                      : (item.total_amount * Number(selectedPercentage || 0)) /
+                          100
                   )
                 }
               >
@@ -204,13 +219,13 @@ const CommissionRecord = ({ data, fetchData } : {data : CommissionOwnerProps[], 
                     <span className="text-red-600">Disapproved</span>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent className="bg-red-600 mr-2">
+                <TooltipContent className="mr-2 bg-red-600">
                   <p className="text-white">{item.owner_note}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           ) : (
-            <div className="flex gap-2 items-center">
+            <div className="flex items-center gap-2">
               <span className="text-green-600">Approved</span>
               <Button onClick={() => handleUpdate(item.id, null, null, null)}>
                 Undo
@@ -219,12 +234,12 @@ const CommissionRecord = ({ data, fetchData } : {data : CommissionOwnerProps[], 
           )}
         </TableCell>
       </TableRow>
-    );
-  };
+    )
+  }
 
   async function handleDisapprove() {
-    if (!selectedItem?.id) return;
-    setDisapproveLoading(true);
+    if (!selectedItem?.id) return
+    setDisapproveLoading(true)
     try {
       await axios
         .put(`/${userID}/commission/${selectedItem?.id}`, {
@@ -234,13 +249,13 @@ const CommissionRecord = ({ data, fetchData } : {data : CommissionOwnerProps[], 
         .then(async () => {
           await axios.put(`/${userID}/machine/${selectedItem.sale_id}`, {
             payment_lock: false,
-          });
-        });
-      await fetchData();
-      setVisibleDisapprove(false);
-      setDisapproveMsg("");
+          })
+        })
+      await fetchData()
+      setVisibleDisapprove(false)
+      setDisapproveMsg("")
     } finally {
-      setDisapproveLoading(false);
+      setDisapproveLoading(false)
     }
   }
 
@@ -276,16 +291,16 @@ const CommissionRecord = ({ data, fetchData } : {data : CommissionOwnerProps[], 
                     item={item}
                     onRefresh={fetchData}
                     onDisapprove={() => {
-                      setSelectedItem(item);
-                      setVisibleDisapprove(true);
+                      setSelectedItem(item)
+                      setVisibleDisapprove(true)
                     }}
                   />
                 ))}
               </TableBody>
             </Table>
 
-            <div className="flex justify-end mt-4">
-              <div className="bg-green-600 text-white px-6 py-2 rounded-lg shadow font-semibold text-sm">
+            <div className="mt-4 flex justify-end">
+              <div className="rounded-lg bg-green-600 px-6 py-2 text-sm font-semibold text-white shadow">
                 ✅ Total Approved: {total}
               </div>
             </div>
@@ -296,37 +311,48 @@ const CommissionRecord = ({ data, fetchData } : {data : CommissionOwnerProps[], 
       <Dialog
         open={visibleDisapprove}
         onOpenChange={(val) => {
-          setVisibleDisapprove(val);
+          setVisibleDisapprove(val)
         }}
       >
         <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
           <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
             <div className="flex min-w-0 items-center gap-2.5">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-destructive/15 bg-destructive/10 text-destructive"><CircleDollarSign className="h-4 w-4" /></span>
-              <div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Reject Commission</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Provide a clear reason for rejecting this commission.</DialogDescription></div>
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-destructive/15 bg-destructive/10 text-destructive">
+                <CircleDollarSign className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <DialogTitle className="text-sm font-semibold text-foreground">
+                  Reject Commission
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Provide a clear reason for rejecting this commission.
+                </DialogDescription>
+              </div>
             </div>
           </DialogHeader>
           <ScrollArea className="max-h-[calc(100dvh-132px)]">
-          <div className="space-y-3 p-3.5 pb-4">
-            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Rejection Message</Label>
-            <Input
-              placeholder="Enter message"
-              value={disapproveMsg}
-              onChange={(e) => setDisapproveMsg(e.target.value)}
-            />
-            <Button
-              disabled={disapproveLoading || !disapproveMsg}
-              onClick={handleDisapprove}
-              className="h-9 w-full rounded-lg"
-            >
-              {disapproveLoading && <Spinner />} Submit
-            </Button>
-          </div>
+            <div className="space-y-3 p-3.5 pb-4">
+              <Label className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Rejection Message
+              </Label>
+              <Input
+                placeholder="Enter message"
+                value={disapproveMsg}
+                onChange={(e) => setDisapproveMsg(e.target.value)}
+              />
+              <Button
+                disabled={disapproveLoading || !disapproveMsg}
+                onClick={handleDisapprove}
+                className="h-9 w-full rounded-lg"
+              >
+                {disapproveLoading && <Spinner />} Submit
+              </Button>
+            </div>
           </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>
-  );
-};
+  )
+}
 
-export default CommissionRecord;
+export default CommissionRecord

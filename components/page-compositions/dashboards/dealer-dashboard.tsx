@@ -1,95 +1,96 @@
-"use client";
-import { BarStats } from "@/components/shared/charts/bar_stats/page";
-import { Stats } from "@/components/shared/charts/pie_stats/page";
-import { Sale } from "@/components/shared/charts/sales/page";
-import CurrencyFormatter from "@/components/shared/common/currency-formatter";
-import CustomerMap from "@/components/features/customers/components/customer-map";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { PakCities } from "@/constants/data";
-import { useDebounce } from "@/hooks/use-debounce";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { MapProvider } from "@/providers/map-provider";
-import { useEffect, useState } from "react";
+"use client"
+import { BarStats } from "@/components/shared/charts/bar_stats/page"
+import { Stats } from "@/components/shared/charts/pie_stats/page"
+import { Sale } from "@/components/shared/charts/sales/page"
+import CurrencyFormatter from "@/components/shared/common/currency-formatter"
+import CustomerMap from "@/components/features/customers/components/customer-map"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { PakCities } from "@/constants/data"
+import { useDebounce } from "@/hooks/use-debounce"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { MapProvider } from "@/providers/map-provider"
+import { useEffect, useState } from "react"
 type DashboardData = {
-  total_payment_this_month: number;
-  payment_change_percentage: number;
+  total_payment_this_month: number
+  payment_change_percentage: number
 
-  total_machines_sold_this_month: number;
-  machines_sold_change_percentage: number;
+  total_machines_sold_this_month: number
+  machines_sold_change_percentage: number
 
-  total_new_customers_this_month: number;
-  new_customer_change_percentage: number;
+  total_new_customers_this_month: number
+  new_customer_change_percentage: number
 
-  machines_sold_last_3_months: any[]; 
-  recent_sales: any[];
-  industry_count: any[]; 
-};
-export default function DealerDashboard({ id: userID, }: { id: string | number }) {
-  
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [data, setData] = useState<DashboardData>();
-  const [loading, setLoading] = useState(true);
-  const debouncedUserId = useDebounce(userID, 1000);
-
-  
+  machines_sold_last_3_months: any[]
+  recent_sales: any[]
+  industry_count: any[]
+}
+export default function DealerDashboard({
+  id: userID,
+}: {
+  id: string | number
+}) {
+  const [customers, setCustomers] = useState<any[]>([])
+  const [data, setData] = useState<DashboardData>()
+  const [loading, setLoading] = useState(true)
+  const debouncedUserId = useDebounce(userID, 1000)
 
   useEffect(() => {
     if (debouncedUserId) {
-      fetchData();
+      fetchData()
     }
-  }, [debouncedUserId]);
-
+  }, [debouncedUserId])
 
   function fetchData() {
-    fetchCustomerList();
-    fetchDashboardData();
+    fetchCustomerList()
+    fetchDashboardData()
   }
 
   async function fetchDashboardData() {
-   
     axios
       .get(`/${debouncedUserId}/dashboard`)
       .then((response) => {
-        setData(response.data);
+        setData(response.data)
       })
       .catch((e) => console.log(e))
       .finally(() => {
-        setLoading(false);
-      });
+        setLoading(false)
+      })
   }
 
   async function fetchCustomerList() {
     try {
-      let list1 = [];
+      let list1 = []
       axios.get(`/${debouncedUserId}/customer?map=true`).then((response) => {
-        const customerList = response.data;
-        const newArray = mergeArrays(customerList, PakCities);
+        const customerList = response.data
+        const newArray = mergeArrays(customerList, PakCities)
 
-        setCustomers(newArray);
-      });
+        setCustomers(newArray)
+      })
     } catch (error) {
-      console.log(error);
+      console.log(error)
     }
   }
 
-  function mergeArrays(array1 : any[], array2 : any[]) {
+  function mergeArrays(array1: any[], array2: any[]) {
     return array1
       .map((obj1) => {
-        const matchingCity = array2.find((obj2) => obj2?.name === obj1?.location);
+        const matchingCity = array2.find(
+          (obj2) => obj2?.name === obj1?.location
+        )
 
         if (matchingCity) {
           return {
             ...obj1,
             latitude: matchingCity.lat,
             longitude: matchingCity.lng,
-          };
+          }
         } else {
-          return null;
+          return null
         }
       })
-      .filter(Boolean);
+      .filter(Boolean)
   }
 
   return (
@@ -99,7 +100,7 @@ export default function DealerDashboard({ id: userID, }: { id: string | number }
           Hi, Welcome back 👋
         </h2>
       </div>
-      <div className="flex flex-row justify-between flex-wrap gap-4">
+      <div className="flex flex-row flex-wrap justify-between gap-4">
         <Card className="w-full sm:w-auto sm:min-w-[350px]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -123,7 +124,9 @@ export default function DealerDashboard({ id: userID, }: { id: string | number }
               <Skeleton className="h-6 w-32" />
             ) : (
               <div className="text-2xl font-bold">
-                 <CurrencyFormatter amount={data?.total_payment_this_month ?? 0} />
+                <CurrencyFormatter
+                  amount={data?.total_payment_this_month ?? 0}
+                />
               </div>
             )}
             {loading ? (
@@ -212,7 +215,6 @@ export default function DealerDashboard({ id: userID, }: { id: string | number }
         </Card>
       </div>
 
-    
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
         <div className="col-span-4">
           {loading ? (
@@ -228,7 +230,7 @@ export default function DealerDashboard({ id: userID, }: { id: string | number }
             <Sale data={data?.recent_sales || []} />
           )}
         </div>
-     
+
         <div className="col-span-4 md:col-span-3">
           {loading ? (
             <Skeleton className="h-64" />
@@ -237,7 +239,7 @@ export default function DealerDashboard({ id: userID, }: { id: string | number }
           )}
         </div>
       </div>
-    
+
       <div className="mb-5">
         {loading ? (
           <Skeleton className="h-96" />
@@ -250,6 +252,5 @@ export default function DealerDashboard({ id: userID, }: { id: string | number }
         )}
       </div>
     </div>
-  );
+  )
 }
-

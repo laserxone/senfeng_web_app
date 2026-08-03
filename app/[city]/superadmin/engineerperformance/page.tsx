@@ -1,6 +1,5 @@
-import EngineerPerformance from "@/components/features/engineers/engineer-performance";
+import EngineerPerformance from "@/components/features/engineers/engineer-performance"
 
-export default function Page(){
-
-    return <EngineerPerformance />
+export default function Page() {
+  return <EngineerPerformance />
 }

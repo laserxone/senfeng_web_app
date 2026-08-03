@@ -7,7 +7,7 @@ import {
   ReceiptText,
   Trash2,
   UserRound,
-  WalletCards
+  WalletCards,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -53,13 +53,7 @@ import { OfficeExpenseProps } from "@/lib/types"
 import { UploadImage } from "@/lib/uploadFunction"
 import { OfficeContext } from "@/store/context/OfficeContext"
 import { zodResolver } from "@hookform/resolvers/zod"
-import {
-  Document,
-  Page,
-  StyleSheet,
-  Text,
-  View
-} from "@react-pdf/renderer"
+import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer"
 import { ColumnDef } from "@tanstack/react-table"
 import moment from "moment"
 import momentT from "moment-timezone"
@@ -693,7 +687,10 @@ export const AddExpensesDialog = ({
 
         <ScrollArea className="max-h-[calc(100dvh-132px)]">
           <div className="p-3.5 pb-4">
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase"
+            >
               {/* Entry Details */}
               <FieldSet className="gap-3 rounded-xl border border-border bg-muted/20 p-3">
                 <FieldLegend className="px-1 text-sm font-semibold text-foreground">

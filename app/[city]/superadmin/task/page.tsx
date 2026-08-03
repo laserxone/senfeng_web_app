@@ -1,24 +1,22 @@
-"use client";
-import { ArrowUpDown, BadgeCheck, CircleDashed } from "lucide-react";
+"use client"
+import { ArrowUpDown, BadgeCheck, CircleDashed } from "lucide-react"
 
-import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react"
 
+import FilterSheet from "@/components/features/users/filter-sheet"
+import PageTable from "@/components/shared/tables/app-table"
+import Heading from "@/components/ui/heading"
+import { TIMEZONE } from "@/constants/data"
 
-import FilterSheet from "@/components/features/users/filter-sheet";
-import PageTable from "@/components/shared/tables/app-table";
-import Heading from "@/components/ui/heading";
-import { TIMEZONE } from "@/constants/data";
-
-
-import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog";
-import TaskDetail from "@/components/features/tasks/task-detail";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { TaskProps } from "@/lib/types";
-import { ColumnDef } from "@tanstack/react-table";
-import moment from "moment";
-import momentT from "moment-timezone";
+import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog"
+import TaskDetail from "@/components/features/tasks/task-detail"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { TaskProps } from "@/lib/types"
+import { ColumnDef } from "@tanstack/react-table"
+import moment from "moment"
+import momentT from "moment-timezone"
 
 const columns: ColumnDef<TaskProps>[] = [
   {
@@ -33,10 +31,10 @@ const columns: ColumnDef<TaskProps>[] = [
           Status
           <ArrowUpDown />
         </Button>
-      );
+      )
     },
     cell: ({ row }) => (
-      <div className="flex ml-2 gap-1 items-center">
+      <div className="ml-2 flex items-center gap-1">
         <div>
           {row.getValue("status") === "Completed" ? (
             <BadgeCheck color="green" size={"15px"} />
@@ -60,7 +58,7 @@ const columns: ColumnDef<TaskProps>[] = [
           Task Name
           <ArrowUpDown />
         </Button>
-      );
+      )
     },
     cell: ({ row }) => <div>{row.getValue("task_name")}</div>,
   },
@@ -77,7 +75,7 @@ const columns: ColumnDef<TaskProps>[] = [
           Assigned To
           <ArrowUpDown />
         </Button>
-      );
+      )
     },
     cell: ({ row }) => <div>{row.getValue("assigned_to_name")}</div>,
   },
@@ -94,7 +92,7 @@ const columns: ColumnDef<TaskProps>[] = [
           Assign Time
           <ArrowUpDown />
         </Button>
-      );
+      )
     },
     cell: ({ row }) => (
       <div>
@@ -118,7 +116,7 @@ const columns: ColumnDef<TaskProps>[] = [
           Assign Date
           <ArrowUpDown />
         </Button>
-      );
+      )
     },
     cell: ({ row }) => (
       <div>
@@ -126,18 +124,16 @@ const columns: ColumnDef<TaskProps>[] = [
       </div>
     ),
   },
-];
-
-
+]
 
 export default function Page() {
-  const { userID } = useUserDetail();
-  const [data, setData] = useState<TaskProps[]>([]);
-  const [visible, setVisible] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<TaskProps | null>(null);
-  const [addTaskVisible, setAddTaskVisible] = useState(false);
-  const [filterVisible, setFilterVisible] = useState(false);
-  const [dataLoading, setDataLoading] = useState(false);
+  const { userID } = useUserDetail()
+  const [data, setData] = useState<TaskProps[]>([])
+  const [visible, setVisible] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<TaskProps | null>(null)
+  const [addTaskVisible, setAddTaskVisible] = useState(false)
+  const [filterVisible, setFilterVisible] = useState(false)
+  const [dataLoading, setDataLoading] = useState(false)
 
   useEffect(() => {
     if (userID) {
@@ -146,19 +142,23 @@ export default function Page() {
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString();
+        .toISOString()
       const endDate = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString();
-      fetchData("", startDate, endDate);
+        .toISOString()
+      fetchData("", startDate, endDate)
     }
-  }, [userID]);
+  }, [userID])
 
-  async function fetchData(user: number | null | string, start_date: string, end_date: string) {
-    setDataLoading(true);
+  async function fetchData(
+    user: number | null | string,
+    start_date: string,
+    end_date: string
+  ) {
+    setDataLoading(true)
     return new Promise((resolve, reject) => {
       axios
         .get(
@@ -166,19 +166,19 @@ export default function Page() {
         )
         .then((response) => {
           const apiData = response.data.map((item: TaskProps) => {
-            return { ...item, created_at_time: item.created_at };
-          });
+            return { ...item, created_at_time: item.created_at }
+          })
 
-          setData(apiData);
+          setData(apiData)
         })
         .catch((e) => {
-          console.log(e);
+          console.log(e)
         })
         .finally(() => {
-          setDataLoading(false);
-          resolve(true);
-        });
-    });
+          setDataLoading(false)
+          resolve(true)
+        })
+    })
   }
 
   async function handleUpdateMark() {
@@ -187,20 +187,24 @@ export default function Page() {
       .startOf("month")
       .startOf("day")
       .utc()
-      .toISOString();
+      .toISOString()
     const endDate = momentT
       .tz(TIMEZONE)
       .endOf("month")
       .endOf("day")
       .utc()
-      .toISOString();
-    fetchData("", startDate, endDate);
+      .toISOString()
+    fetchData("", startDate, endDate)
   }
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
-        <Heading panel title="Task Management" description="Manage team tasks" />
+        <Heading
+          panel
+          title="Task Management"
+          description="Manage team tasks"
+        />
 
         <AddTaskDialog
           mode="team"
@@ -211,15 +215,15 @@ export default function Page() {
               .startOf("month")
               .startOf("day")
               .utc()
-              .toISOString();
+              .toISOString()
             const endDate = momentT
               .tz(TIMEZONE)
               .endOf("month")
               .endOf("day")
               .utc()
-              .toISOString();
+              .toISOString()
 
-            fetchData("", startDate, endDate);
+            fetchData("", startDate, endDate)
           }}
           user_id={userID}
         />
@@ -231,8 +235,8 @@ export default function Page() {
         columns={columns}
         data={data}
         onRowClick={(val, e) => {
-          setSelectedTask(val);
-          setVisible(true);
+          setSelectedTask(val)
+          setVisible(true)
         }}
         filter
         onFilterPress={() => setFilterVisible(true)}
@@ -251,10 +255,9 @@ export default function Page() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(val.user || "", val.start, val.end);
+          await fetchData(val.user || "", val.start, val.end)
         }}
       />
     </div>
-  );
+  )
 }
-

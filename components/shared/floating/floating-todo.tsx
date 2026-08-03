@@ -99,14 +99,14 @@ export default function FloatingTodo() {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-       <Button
-      size="icon"
-      variant="outline"
-      className="relative rounded-xl"
-      aria-label="Open todo list"
-    >
-      <BellNotification Icon={ListCheck} count={pendingTasks.length} />
-    </Button>
+        <Button
+          size="icon"
+          variant="outline"
+          className="relative rounded-xl"
+          aria-label="Open todo list"
+        >
+          <BellNotification Icon={ListCheck} count={pendingTasks.length} />
+        </Button>
       </SheetTrigger>
 
       <SheetContent

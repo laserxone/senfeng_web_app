@@ -1,22 +1,35 @@
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { MachineProps } from "@/lib/types";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Pencil, Plus, Trash } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { z } from "zod";
-import AppCalendar from "@/components/features/calendar/app-calendar";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { MachineProps } from "@/lib/types"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Pencil, Plus, Trash } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Controller, useForm } from "react-hook-form"
+import { z } from "zod"
+import AppCalendar from "@/components/features/calendar/app-calendar"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field"
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import Spinner from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import Spinner from "@/components/ui/spinner"
+import { Textarea } from "@/components/ui/textarea"
 
 const formSchema = z.object({
   machineModel: z.string().min(1, { message: "Machine model is required." }),
@@ -29,21 +42,28 @@ const formSchema = z.object({
   note: z.string().optional(),
   totalPrice: z.coerce.number<number>({ error: "Price is required" }),
   cnic: z.string().optional(),
-});
+})
 
+type FormValues = z.infer<typeof formSchema>
 
-type FormValues = z.infer<typeof formSchema>;
-
-const EditMachine = (
-  { machine_id, visible, onClose, onRefresh, data }: { machine_id?: number | string, visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, data?: MachineProps }
-
-) => {
-  const [isSpeedMoney, setIsSpeedMoney] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [orderNumbers, setOrderNumbers] = useState([""]);
-  const [orderNumberError, setOrderNumberError] = useState("");
+const EditMachine = ({
+  machine_id,
+  visible,
+  onClose,
+  onRefresh,
+  data,
+}: {
+  machine_id?: number | string
+  visible: boolean
+  onClose: (val: boolean) => void
+  onRefresh: () => Promise<void>
+  data?: MachineProps
+}) => {
+  const [isSpeedMoney, setIsSpeedMoney] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [orderNumbers, setOrderNumbers] = useState([""])
+  const [orderNumberError, setOrderNumberError] = useState("")
   const { userID } = useUserDetail()
-
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -59,7 +79,7 @@ const EditMachine = (
       totalPrice: 0,
       cnic: "",
     },
-  });
+  })
 
   useEffect(() => {
     if (data) {
@@ -67,22 +87,24 @@ const EditMachine = (
         machineModel: data?.serial_no || "",
         power: data?.power || "",
         source: data?.source || "",
-        contractDate: data?.contract_date ? new Date(data.contract_date) : undefined,
+        contractDate: data?.contract_date
+          ? new Date(data.contract_date)
+          : undefined,
         isSpeedMoney: data?.speed_money,
         speedMoney: Number(data?.speed_money_amount ?? 0),
         speedMoneyNote: data?.speed_money_note || "",
         note: data?.note || "",
         totalPrice: Number(data?.price || 0),
         cnic: data?.cnic || "",
-      });
+      })
       if (data?.speed_money) {
-        setIsSpeedMoney(true);
+        setIsSpeedMoney(true)
       }
       // if (data?.order_no_arr && data?.order_no_arr.length > 0) {
       //   setOrderNumbers([...data.order_no_arr]);
       // }
     }
-  }, [data, form, visible]);
+  }, [data, form, visible])
 
   function onSubmit(values: FormValues) {
     // const cleanedOrderNumbers = orderNumbers.filter(
@@ -101,7 +123,7 @@ const EditMachine = (
     //   setOrderNumberError("");
     // }
 
-    setLoading(true);
+    setLoading(true)
     axios
       .put(`/${userID}/machine/${machine_id}`, {
         id: machine_id,
@@ -118,20 +140,20 @@ const EditMachine = (
         cnic: values.cnic,
       })
       .then(async () => {
-        await onRefresh();
-        handleClose(false);
+        await onRefresh()
+        handleClose(false)
       })
       .catch((e) => {
-        console.log(e);
+        console.log(e)
       })
       .finally(() => {
-        setLoading(false);
-      });
+        setLoading(false)
+      })
   }
 
   function handleClose(val: boolean) {
-    form.reset();
-    onClose(val);
+    form.reset()
+    onClose(val)
   }
 
   // const addNumberField = () => {
@@ -157,17 +179,29 @@ const EditMachine = (
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-2xl">
         <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><Pencil className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Edit Machine</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Update machine, pricing, contract, and payment details.</DialogDescription></div></div>
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+              <Pencil className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <DialogTitle className="text-sm font-semibold text-foreground">
+                Edit Machine
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Update machine, pricing, contract, and payment details.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-    
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
-              <div className="space-y-3 p-3.5 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
-
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+          <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
+            <div className="space-y-3 p-3.5 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase">
               {/* Machine Details */}
-              <FieldSet className="border rounded-md p-3 gap-3">
-                <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Machine Details</FieldLegend>
+              <FieldSet className="gap-3 rounded-md border p-3">
+                <FieldLegend className="mb-1 px-1 text-sm text-muted-foreground">
+                  Machine Details
+                </FieldLegend>
 
                 <Controller
                   name="machineModel"
@@ -176,11 +210,12 @@ const EditMachine = (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Machine Model</FieldLabel>
                       <Input disabled={true} placeholder="SF3015G" {...field} />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
                     </Field>
                   )}
                 />
-
 
                 <Controller
                   name="power"
@@ -189,7 +224,9 @@ const EditMachine = (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Power</FieldLabel>
                       <Input placeholder="3000W / 1500W" {...field} />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
                     </Field>
                   )}
                 />
@@ -201,7 +238,9 @@ const EditMachine = (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Source</FieldLabel>
                       <Input placeholder="RAYCUS / IPG" {...field} />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
                     </Field>
                   )}
                 />
@@ -217,11 +256,12 @@ const EditMachine = (
                         className="min-h-24 resize-y"
                         {...field}
                       />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
                     </Field>
                   )}
                 />
-
 
                 {/* <Field>
                   <FieldLabel>Order No</FieldLabel>
@@ -258,8 +298,10 @@ const EditMachine = (
               </FieldSet>
 
               {/* Contract Details */}
-              <FieldSet className="border rounded-md p-3 gap-3">
-                <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Contract Details</FieldLegend>
+              <FieldSet className="gap-3 rounded-md border p-3">
+                <FieldLegend className="mb-1 px-1 text-sm text-muted-foreground">
+                  Contract Details
+                </FieldLegend>
 
                 <Controller
                   name="contractDate"
@@ -267,8 +309,13 @@ const EditMachine = (
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Contract Date</FieldLabel>
-                      <AppCalendar date={field.value} onChange={field.onChange}  />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      <AppCalendar
+                        date={field.value}
+                        onChange={field.onChange}
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
                     </Field>
                   )}
                 />
@@ -280,7 +327,9 @@ const EditMachine = (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Total Price</FieldLabel>
                       <Input placeholder="Enter amount" {...field} />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
                     </Field>
                   )}
                 />
@@ -292,31 +341,35 @@ const EditMachine = (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>CNIC</FieldLabel>
                       <Input placeholder="1234567891234" {...field} />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
                     </Field>
                   )}
                 />
               </FieldSet>
 
               {/* Payment Options */}
-              <FieldSet className="border rounded-md p-3 gap-3">
-                <FieldLegend className="text-sm text-muted-foreground px-1 mb-1">Payment Options</FieldLegend>
+              <FieldSet className="gap-3 rounded-md border p-3">
+                <FieldLegend className="mb-1 px-1 text-sm text-muted-foreground">
+                  Payment Options
+                </FieldLegend>
 
                 <Controller
                   name="isSpeedMoney"
                   control={form.control}
                   render={({ field }) => (
                     <Field>
-                      <div className="flex gap-3 items-center">
+                      <div className="flex items-center gap-3">
                         <FieldLabel>Include Speed Money</FieldLabel>
                         <Checkbox
                           checked={isSpeedMoney}
                           onCheckedChange={(checked: boolean) => {
-                            setIsSpeedMoney(checked);
-                            field.onChange(checked);
+                            setIsSpeedMoney(checked)
+                            field.onChange(checked)
                             if (!checked) {
-                              form.setValue("speedMoney", 0);
-                              form.setValue("speedMoneyNote", "");
+                              form.setValue("speedMoney", 0)
+                              form.setValue("speedMoneyNote", "")
                             }
                           }}
                         />
@@ -334,7 +387,9 @@ const EditMachine = (
                         <Field data-invalid={fieldState.invalid}>
                           <FieldLabel>Speed Money</FieldLabel>
                           <Input placeholder="Amount" {...field} />
-                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
                         </Field>
                       )}
                     />
@@ -346,28 +401,25 @@ const EditMachine = (
                         <Field data-invalid={fieldState.invalid}>
                           <FieldLabel>Note</FieldLabel>
                           <Textarea placeholder="Optional note" {...field} />
-                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
                         </Field>
                       )}
                     />
                   </>
                 )}
               </FieldSet>
-              </div>
-            </ScrollArea>
-            {/* Submit */}
-            <Button className="w-full" type="submit" disabled={loading}>
-              {loading && <Spinner />} Submit
-            </Button>
-          </form>
-
-
-
-
-   
+            </div>
+          </ScrollArea>
+          {/* Submit */}
+          <Button className="w-full" type="submit" disabled={loading}>
+            {loading && <Spinner />} Submit
+          </Button>
+        </form>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default EditMachine;
+export default EditMachine

@@ -1,37 +1,37 @@
-"use client";
+"use client"
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus } from "lucide-react";
-import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Plus } from "lucide-react"
+import { useState } from "react"
+import { Controller, useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 import {
   Field,
   FieldError,
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import Spinner from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { UploadImage } from "@/lib/uploadFunction";
-import moment from "moment";
-import { RequiredStar } from "@/components/shared/common/RequiredStar";
-import Dropzone from "@/components/shared/uploads/dropzone";
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import Spinner from "@/components/ui/spinner"
+import { Textarea } from "@/components/ui/textarea"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { UploadImage } from "@/lib/uploadFunction"
+import moment from "moment"
+import { RequiredStar } from "@/components/shared/common/RequiredStar"
+import Dropzone from "@/components/shared/uploads/dropzone"
 
 export const backupPartSchema = z.object({
   name: z.string().min(1, { message: "Name is required." }),
@@ -40,28 +40,28 @@ export const backupPartSchema = z.object({
   serial_no: z.string().min(1, { message: "Serial number is required." }),
   image: z.string().min(1, { message: "Image is required" }),
   remarks: z.string().optional(),
-});
+})
 
-export type BackupPartFormValues = z.infer<typeof backupPartSchema>;
+export type BackupPartFormValues = z.infer<typeof backupPartSchema>
 
 export type CreatedBackupPart = BackupPartFormValues & {
-  id?: number;
-  status?: string;
-};
+  id?: number
+  status?: string
+}
 
 type AddBackupPartDialogProps = {
-  visible: boolean;
-  onClose: (value: boolean) => void;
-  onRefresh?: () => Promise<void>;
-};
+  visible: boolean
+  onClose: (value: boolean) => void
+  onRefresh?: () => Promise<void>
+}
 
 export default function AddBackupPartDialog({
   visible,
   onClose,
   onRefresh,
 }: AddBackupPartDialogProps) {
-  const [loading, setLoading] = useState(false);
-  const { userID } = useUserDetail();
+  const [loading, setLoading] = useState(false)
+  const { userID } = useUserDetail()
 
   const form = useForm<BackupPartFormValues>({
     resolver: zodResolver(backupPartSchema),
@@ -72,19 +72,19 @@ export default function AddBackupPartDialog({
       serial_no: "",
       remarks: "",
     },
-  });
+  })
 
   async function onSubmit(values: BackupPartFormValues) {
     if (!userID) {
-      toast.error("User is missing.");
-      return;
+      toast.error("User is missing.")
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
     try {
       const name = `Backup-Inventory/${moment().valueOf().toString()}.png`
 
-     await UploadImage(values.image, name, "image/png");
+      await UploadImage(values.image, name, "image/png")
 
       const payload = {
         name: values.name.trim(),
@@ -92,23 +92,25 @@ export default function AddBackupPartDialog({
         size: values.size?.trim() || "",
         serial_no: values.serial_no.trim(),
         remarks: values.remarks?.trim() || "",
-        image: name
-      };
+        image: name,
+      }
 
-      await axios.post(`/${userID}/backup-parts`, payload);
-      await onRefresh?.();
-      toast.success("Backup part added successfully.");
-      handleClose(false);
+      await axios.post(`/${userID}/backup-parts`, payload)
+      await onRefresh?.()
+      toast.success("Backup part added successfully.")
+      handleClose(false)
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Failed to add backup part.");
-      setLoading(false);
+      toast.error(
+        error?.response?.data?.message || "Failed to add backup part."
+      )
+      setLoading(false)
     }
   }
 
   function handleClose(value: boolean) {
-    form.reset();
-    setLoading(false);
-    onClose(value);
+    form.reset()
+    setLoading(false)
+    onClose(value)
   }
 
   return (
@@ -132,7 +134,10 @@ export default function AddBackupPartDialog({
 
         <ScrollArea className="max-h-[calc(100dvh-132px)]">
           <div className="p-3.5">
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase"
+            >
               <FieldSet className="gap-3 rounded-xl border border-border bg-muted/20 p-3">
                 <FieldLegend className="px-1 text-sm font-semibold text-foreground">
                   Part Details
@@ -144,7 +149,9 @@ export default function AddBackupPartDialog({
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Name <RequiredStar /></FieldLabel>
+                        <FieldLabel>
+                          Name <RequiredStar />
+                        </FieldLabel>
                         <Input placeholder="Enter part name" {...field} />
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />
@@ -158,7 +165,9 @@ export default function AddBackupPartDialog({
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Serial No <RequiredStar /></FieldLabel>
+                        <FieldLabel>
+                          Serial No <RequiredStar />
+                        </FieldLabel>
                         <Input placeholder="Enter serial no" {...field} />
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />
@@ -172,7 +181,9 @@ export default function AddBackupPartDialog({
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Power <RequiredStar /></FieldLabel>
+                        <FieldLabel>
+                          Power <RequiredStar />
+                        </FieldLabel>
                         <Input placeholder="Enter power" {...field} />
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />
@@ -186,7 +197,9 @@ export default function AddBackupPartDialog({
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Size <RequiredStar /></FieldLabel>
+                        <FieldLabel>
+                          Size <RequiredStar />
+                        </FieldLabel>
                         <Input placeholder="Enter size" {...field} />
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />
@@ -196,13 +209,14 @@ export default function AddBackupPartDialog({
                   />
                 </div>
 
-
                 <Controller
                   name="image"
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>Nameplate / Parts Image <RequiredStar /></FieldLabel>
+                      <FieldLabel>
+                        Nameplate / Parts Image <RequiredStar />
+                      </FieldLabel>
                       <Dropzone value={field.value} onDrop={field.onChange} />
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />
@@ -228,7 +242,6 @@ export default function AddBackupPartDialog({
                     </Field>
                   )}
                 />
-
               </FieldSet>
 
               <div className="flex items-center justify-end gap-3">
@@ -250,5 +263,5 @@ export default function AddBackupPartDialog({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

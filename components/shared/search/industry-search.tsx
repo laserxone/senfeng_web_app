@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { Check, ChevronsUpDown } from "lucide-react";
-import * as React from "react";
+import { Check, ChevronsUpDown } from "lucide-react"
+import * as React from "react"
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Command,
   CommandDialog,
@@ -12,26 +12,32 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/command"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { cn } from "@/lib/utils"
 
-export function IndustrySearch({ value, onReturn }: { value: string | undefined, onReturn: (val: string) => void }) {
-  const [open, setOpen] = React.useState(false);
-  const [data, setData] = React.useState<{ value: string, label: string }[]>([]);
+export function IndustrySearch({
+  value,
+  onReturn,
+}: {
+  value: string | undefined
+  onReturn: (val: string) => void
+}) {
+  const [open, setOpen] = React.useState(false)
+  const [data, setData] = React.useState<{ value: string; label: string }[]>([])
   const { userID } = useUserDetail()
 
   React.useEffect(() => {
     if (userID) {
       axios.get(`/${userID}/settings`).then((response) => {
         const list = response.data.industry_list.map((item: string) => {
-          return { value: item, label: item };
-        });
-        setData([...list]);
-      });
+          return { value: item, label: item }
+        })
+        setData([...list])
+      })
     }
-  }, [userID]);
+  }, [userID])
 
   return (
     <>
@@ -45,7 +51,6 @@ export function IndustrySearch({ value, onReturn }: { value: string | undefined,
           setOpen(!open)
         }}
       >
-
         {value
           ? data.find((item) => item.value === value)?.label
           : "Select industry..."}
@@ -62,8 +67,8 @@ export function IndustrySearch({ value, onReturn }: { value: string | undefined,
                   key={index}
                   value={item.label}
                   onSelect={() => {
-                    onReturn(item.value);
-                    setOpen(false);
+                    onReturn(item.value)
+                    setOpen(false)
                   }}
                 >
                   {item.label}
@@ -80,5 +85,5 @@ export function IndustrySearch({ value, onReturn }: { value: string | undefined,
         </Command>
       </CommandDialog>
     </>
-  );
+  )
 }

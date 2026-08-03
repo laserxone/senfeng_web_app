@@ -1,5 +1,4 @@
-
-import PageTable from "@/components/shared/tables/app-table";
+import PageTable from "@/components/shared/tables/app-table"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,22 +7,38 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import Spinner from "@/components/ui/spinner";
-import { Resume } from "@/lib/types";
-import { ColumnDef } from "@tanstack/react-table";
-import axios from "axios";
-import { ArrowUpDown, FileText, MoreVertical } from "lucide-react";
-import { useState } from "react";
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import Spinner from "@/components/ui/spinner"
+import { Resume } from "@/lib/types"
+import { ColumnDef } from "@tanstack/react-table"
+import axios from "axios"
+import { ArrowUpDown, FileText, MoreVertical } from "lucide-react"
+import { useState } from "react"
 
-
-
-export default function ResumesTable({ resumes, onRefresh, loading }: { resumes: Resume[], onRefresh: () => Promise<void>, loading: boolean }) {
+export default function ResumesTable({
+  resumes,
+  onRefresh,
+  loading,
+}: {
+  resumes: Resume[]
+  onRefresh: () => Promise<void>
+  loading: boolean
+}) {
   const [openCover, setOpenCover] = useState<string | null>(null)
   const [selectedDelete, setSelectedDelete] = useState<number | null>(null)
 
@@ -40,12 +55,14 @@ export default function ResumesTable({ resumes, onRefresh, loading }: { resumes:
             Application
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
-      cell: ({ row }) => <div className="flex flex-col">
-        <div>{row.getValue("full_name")}</div>
-        <p>{row.original.email_address}</p>
-      </div>,
+      cell: ({ row }) => (
+        <div className="flex flex-col">
+          <div>{row.getValue("full_name")}</div>
+          <p>{row.original.email_address}</p>
+        </div>
+      ),
     },
 
     {
@@ -60,9 +77,8 @@ export default function ResumesTable({ resumes, onRefresh, loading }: { resumes:
             Phone
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
-
     },
     {
       accessorKey: "current_location",
@@ -76,9 +92,8 @@ export default function ResumesTable({ resumes, onRefresh, loading }: { resumes:
             Location
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
-
     },
 
     {
@@ -93,9 +108,8 @@ export default function ResumesTable({ resumes, onRefresh, loading }: { resumes:
             Position
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
-
     },
 
     {
@@ -110,9 +124,8 @@ export default function ResumesTable({ resumes, onRefresh, loading }: { resumes:
             Experience
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
-
     },
 
     {
@@ -127,26 +140,33 @@ export default function ResumesTable({ resumes, onRefresh, loading }: { resumes:
             Status
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
-
     },
 
     {
       id: "actions",
       cell: ({ row }) => {
-        const currentItem = row.original;
+        const currentItem = row.original
 
         return (
           <div className="flex justify-end">
-            {currentItem.cvDownloadUrl
-              ?
+            {currentItem.cvDownloadUrl ? (
               <Button asChild size="sm">
-                <a href={currentItem.cvDownloadUrl} target="_blank" rel="noreferrer" >
+                <a
+                  href={currentItem.cvDownloadUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   Open CV
                 </a>
               </Button>
-              : <Button size="sm" variant="outline" disabled > No CV </Button>}
+            ) : (
+              <Button size="sm" variant="outline" disabled>
+                {" "}
+                No CV{" "}
+              </Button>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -155,7 +175,6 @@ export default function ResumesTable({ resumes, onRefresh, loading }: { resumes:
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" className="w-44">
-
                 {currentItem.cover_letter?.trim()?.length > 0 && (
                   <DropdownMenuItem
                     onClick={() => setOpenCover(currentItem.cover_letter)}
@@ -164,25 +183,23 @@ export default function ResumesTable({ resumes, onRefresh, loading }: { resumes:
                   </DropdownMenuItem>
                 )}
 
-                <DropdownMenuItem onClick={() => setSelectedDelete(currentItem.id)}>
+                <DropdownMenuItem
+                  onClick={() => setSelectedDelete(currentItem.id)}
+                >
                   <div onClick={(e) => e.preventDefault()}>
                     <DeleteDialog resume={currentItem} onRefresh={onRefresh} />
                   </div>
                 </DropdownMenuItem>
-
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        );
+        )
       },
-    }
-  ];
-
+    },
+  ]
 
   return (
-
     <>
-
       <Card className="overflow-hidden rounded-2xl border-border/70 shadow-sm">
         <CardHeader className="border-b bg-muted/15 p-4 sm:p-5">
           <div className="flex items-center gap-3">
@@ -208,12 +225,11 @@ export default function ResumesTable({ resumes, onRefresh, loading }: { resumes:
             </div>
           ) : (
             <PageTable
-            tableWidth="w-[calc(100dvw-60px)]"
+              tableWidth="w-[calc(100dvw-60px)]"
               loading={loading}
               columns={columns}
               data={resumes}
             />
-
           )}
         </CardContent>
       </Card>
@@ -226,23 +242,27 @@ export default function ResumesTable({ resumes, onRefresh, loading }: { resumes:
           </DialogHeader>
 
           <div className="max-h-[calc(88dvh-80px)] overflow-y-auto p-4 sm:p-6">
-            <p className="whitespace-pre-wrap rounded-2xl border bg-muted/20 p-4 text-sm leading-relaxed text-foreground">
+            <p className="rounded-2xl border bg-muted/20 p-4 text-sm leading-relaxed whitespace-pre-wrap text-foreground">
               {openCover || "No cover letter provided."}
             </p>
           </div>
         </DialogContent>
       </Dialog>
     </>
-
-  );
+  )
 }
 
-const DeleteDialog = ({ resume, onRefresh }: { resume: Resume, onRefresh: () => Promise<void> }) => {
+const DeleteDialog = ({
+  resume,
+  onRefresh,
+}: {
+  resume: Resume
+  onRefresh: () => Promise<void>
+}) => {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
   async function handleDelete() {
-
     if (!resume.id) return
     setLoading(true)
     try {
@@ -255,22 +275,16 @@ const DeleteDialog = ({ resume, onRefresh }: { resume: Resume, onRefresh: () => 
   }
   return (
     <>
-      <div
-        className="text-destructive"
-        onClick={() => setOpen(true)}
-      >
+      <div className="text-destructive" onClick={() => setOpen(true)}>
         Delete
       </div>
       <AlertDialog open={open} onOpenChange={setOpen}>
-
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              Delete this application?
-            </AlertDialogTitle>
+            <AlertDialogTitle>Delete this application?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will delete the resume entry and remove
-              the uploaded CV from Firebase Storage.
+              This will delete the resume entry and remove the uploaded CV from
+              Firebase Storage.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -285,12 +299,11 @@ const DeleteDialog = ({ resume, onRefresh }: { resume: Resume, onRefresh: () => 
                 handleDelete()
               }}
             >
-              {loading && <Spinner />}  Delete
+              {loading && <Spinner />} Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
-
   )
 }

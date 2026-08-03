@@ -1,7 +1,5 @@
-
-
-import pool from "@/config/db";
-import { NextResponse } from "next/server";
+import pool from "@/config/db"
+import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
@@ -10,13 +8,13 @@ export async function GET() {
   FROM order_items
   WHERE LOWER(location) = 'lahore'
   ORDER BY machine_serial ASC
-`);
+`)
 
-    return NextResponse.json(queryResult.rows, { status: 200 });
+    return NextResponse.json(queryResult.rows, { status: 200 })
   } catch (error: any) {
     return NextResponse.json(
       { message: error?.message || "Server error" },
-      { status: 500 },
-    );
+      { status: 500 }
+    )
   }
 }

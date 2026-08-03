@@ -1,18 +1,18 @@
-"use client";
-import PageTable from "@/components/shared/tables/app-table";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import Heading from "@/components/ui/heading";
+"use client"
+import PageTable from "@/components/shared/tables/app-table"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import Heading from "@/components/ui/heading"
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { ColumnDef } from "@tanstack/react-table";
+} from "@/components/ui/sheet"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { ColumnDef } from "@tanstack/react-table"
 import {
   ArrowUpDown,
   CalendarDays,
@@ -21,54 +21,54 @@ import {
   MessageSquareText,
   Smile,
   UserRound,
-} from "lucide-react";
-import moment from "moment";
-import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+} from "lucide-react"
+import moment from "moment"
+import Link from "next/link"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useMemo, useState } from "react"
 
 export type FollowUp = {
-  id: number;
-  customer_id: number;
-  created_at: string;
-  next_followup: string | null;
-  feedback: string;
-  user_id: number;
-  top_follow: boolean;
-  status: string;
-  type: string;
-  followup_type: string | null;
-  star: number;
-  customer_name: string;
-  customer_owner: string;
-  user_name: string;
-  customer_member : boolean
-};
+  id: number
+  customer_id: number
+  created_at: string
+  next_followup: string | null
+  feedback: string
+  user_id: number
+  top_follow: boolean
+  status: string
+  type: string
+  followup_type: string | null
+  star: number
+  customer_name: string
+  customer_owner: string
+  user_name: string
+  customer_member: boolean
+}
 
 export default function Page() {
-  const [data, setData] = useState<FollowUp[]>([]);
-  const { userID, base_route } = useUserDetail();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const feedbackId = searchParams.get("f");
+  const [data, setData] = useState<FollowUp[]>([])
+  const { userID, base_route } = useUserDetail()
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const feedbackId = searchParams.get("f")
 
   const selectedFeedback = useMemo(
     () => data.find((item) => String(item.id) === feedbackId) ?? null,
     [data, feedbackId]
-  );
+  )
 
   function updateFeedbackParam(id?: number) {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams.toString())
 
     if (id) {
-      params.set("f", String(id));
+      params.set("f", String(id))
     } else {
-      params.delete("f");
+      params.delete("f")
     }
 
-    const query = params.toString();
-    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    const query = params.toString()
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false })
   }
 
   useEffect(() => {
@@ -78,13 +78,13 @@ export default function Page() {
           return {
             ...item,
             customer_name: item.customer_name || item.customer_owner,
-          };
-        });
-        setData([...temp]);
-      });
+          }
+        })
+        setData([...temp])
+      })
     }
-    if (userID) fetchData();
-  }, [userID]);
+    if (userID) fetchData()
+  }, [userID])
 
   const columns: ColumnDef<FollowUp>[] = [
     {
@@ -99,11 +99,11 @@ export default function Page() {
             Customer
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
 
       cell: ({ row }) => {
-        const item = row.original;
+        const item = row.original
         return (
           <Link
             className="hover:underline"
@@ -112,7 +112,7 @@ export default function Page() {
           >
             <div className="ml-2">{row.getValue("customer_name")}</div>
           </Link>
-        );
+        )
       },
     },
     {
@@ -127,7 +127,7 @@ export default function Page() {
             Feedback
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("feedback")}</div>,
     },
@@ -144,7 +144,7 @@ export default function Page() {
             Status
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => (
         <div>
@@ -173,7 +173,7 @@ export default function Page() {
             Taken By
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => <div>{row.getValue("user_name")}</div>,
     },
@@ -190,7 +190,7 @@ export default function Page() {
             Date
             <ArrowUpDown />
           </Button>
-        );
+        )
       },
       cell: ({ row }) => (
         <div>
@@ -200,12 +200,16 @@ export default function Page() {
         </div>
       ),
     },
-  ];
+  ]
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
-        <Heading panel title="Feedback" description="Manage Feedback from clients" />
+        <Heading
+          panel
+          title="Feedback"
+          description="Manage Feedback from clients"
+        />
       </div>
 
       <PageTable
@@ -223,11 +227,11 @@ export default function Page() {
             : "#"
         }
         onOpenChange={(open) => {
-          if (!open) updateFeedbackParam();
+          if (!open) updateFeedbackParam()
         }}
       />
     </div>
-  );
+  )
 }
 
 function FeedbackDetailSheet({
@@ -236,14 +240,14 @@ function FeedbackDetailSheet({
   customerHref,
   onOpenChange,
 }: {
-  feedback: FollowUp | null;
-  open: boolean;
-  customerHref: string;
-  onOpenChange: (open: boolean) => void;
+  feedback: FollowUp | null
+  open: boolean
+  customerHref: string
+  onOpenChange: (open: boolean) => void
 }) {
-  if (!feedback) return null;
+  if (!feedback) return null
 
-  const satisfactory = feedback.status === "Satisfactory";
+  const satisfactory = feedback.status === "Satisfactory"
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -279,10 +283,10 @@ function FeedbackDetailSheet({
 
         <div className="space-y-3 p-4">
           <section className="rounded-xl border bg-card p-4 shadow-xs">
-            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <p className="mb-1.5 text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
               Customer feedback
             </p>
-            <p className="whitespace-pre-wrap text-sm leading-6 text-foreground">
+            <p className="text-sm leading-6 whitespace-pre-wrap text-foreground">
               {feedback.feedback || "No feedback was provided."}
             </p>
           </section>
@@ -308,21 +312,28 @@ function FeedbackDetailSheet({
             <DetailCard
               icon={CalendarDays}
               label="Feedback date"
-              value={moment(feedback.created_at).isValid()
-                ? moment(feedback.created_at).format("DD MMM YYYY, hh:mm A")
-                : "—"}
+              value={
+                moment(feedback.created_at).isValid()
+                  ? moment(feedback.created_at).format("DD MMM YYYY, hh:mm A")
+                  : "—"
+              }
             />
             <DetailCard
               icon={Clock3}
               label="Next follow-up"
-              value={feedback.next_followup && moment(feedback.next_followup).isValid()
-                ? moment(feedback.next_followup).format("DD MMM YYYY, hh:mm A")
-                : "Not scheduled"}
+              value={
+                feedback.next_followup &&
+                moment(feedback.next_followup).isValid()
+                  ? moment(feedback.next_followup).format(
+                      "DD MMM YYYY, hh:mm A"
+                    )
+                  : "Not scheduled"
+              }
             />
           </section>
 
           <section className="rounded-xl border bg-muted/15 p-4">
-            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <p className="mb-3 text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
               Follow-up information
             </p>
             <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
@@ -344,7 +355,7 @@ function FeedbackDetailSheet({
         </div>
       </SheetContent>
     </Sheet>
-  );
+  )
 }
 
 function DetailCard({
@@ -353,10 +364,10 @@ function DetailCard({
   value,
   children,
 }: {
-  icon: typeof UserRound;
-  label: string;
-  value: string;
-  children?: React.ReactNode;
+  icon: typeof UserRound
+  label: string
+  value: string
+  children?: React.ReactNode
 }) {
   return (
     <div className="rounded-lg border bg-card p-3">
@@ -364,10 +375,10 @@ function DetailCard({
         <Icon className="size-3.5" />
       </div>
       <p className="text-[10px] text-muted-foreground">{label}</p>
-      <p className="mt-0.5 truncate text-xs font-medium leading-5">{value}</p>
+      <p className="mt-0.5 truncate text-xs leading-5 font-medium">{value}</p>
       {children}
     </div>
-  );
+  )
 }
 
 function DetailItem({ label, value }: { label: string; value: string }) {
@@ -376,5 +387,5 @@ function DetailItem({ label, value }: { label: string; value: string }) {
       <dt className="text-[10px] text-muted-foreground">{label}</dt>
       <dd className="mt-0.5 text-xs font-medium capitalize">{value}</dd>
     </div>
-  );
+  )
 }

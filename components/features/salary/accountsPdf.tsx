@@ -7,8 +7,8 @@ import {
   Svg,
   Text,
   View,
-} from "@react-pdf/renderer";
-import moment from "moment";
+} from "@react-pdf/renderer"
+import moment from "moment"
 
 const styles = StyleSheet.create({
   page: {
@@ -153,9 +153,17 @@ const styles = StyleSheet.create({
     height: 15,
     marginRight: 5,
   },
-});
+})
 
-const AccountsPdf = ({ data, headings, total } : {data : any[], total : number, headings : any}) => {
+const AccountsPdf = ({
+  data,
+  headings,
+  total,
+}: {
+  data: any[]
+  total: number
+  headings: any
+}) => {
   return (
     <Document>
       <Page
@@ -237,7 +245,7 @@ const AccountsPdf = ({ data, headings, total } : {data : any[], total : number, 
                   flexDirection: "row",
                   backgroundColor: index % 2 === 0 ? "#f1f1f1" : "white",
                   border: "1px solid #D1D5DB",
-                  borderTopWidth: index !== 0 ?0 : undefined,
+                  borderTopWidth: index !== 0 ? 0 : undefined,
                 }}
               >
                 <View
@@ -290,11 +298,10 @@ const AccountsPdf = ({ data, headings, total } : {data : any[], total : number, 
         <Footer />
       </Page>
     </Document>
-  );
-};
+  )
+}
 
-const FormField = ({ data } : {data : any}) => {
-
+const FormField = ({ data }: { data: any }) => {
   return (
     <View style={{ marginBottom: 5, flex: 1 }}>
       {["Salary Month"].map((label, index) => (
@@ -326,15 +333,17 @@ const FormField = ({ data } : {data : any}) => {
           >
             <Text>
               {index === 0
-                ? data ? moment().month(data).format("MMMM YYYY")
-                : null : null}
+                ? data
+                  ? moment().month(data).format("MMMM YYYY")
+                  : null
+                : null}
             </Text>
           </View>
         </View>
       ))}
     </View>
-  );
-};
+  )
+}
 
 const CompanyDetails = () => {
   return (
@@ -367,8 +376,8 @@ const CompanyDetails = () => {
         </Text>
       </View>
     </View>
-  );
-};
+  )
+}
 
 const Header = () => {
   return (
@@ -381,10 +390,7 @@ const Header = () => {
       }}
     >
       {/* <Text fontSize={60} color={'#0072BC'} fontWeight={'800'}>SENFENG</Text> */}
-      <Image
-        src={"/logo.png"}
-        style={{ height: "40px", width: "200px" }}
-      />
+      <Image src={"/logo.png"} style={{ height: "40px", width: "200px" }} />
       <div
         style={{
           backgroundColor: "#0072BC",
@@ -409,8 +415,8 @@ const Header = () => {
         </Text>
       </div>
     </View>
-  );
-};
+  )
+}
 
 const Disclaimer = () => {
   return (
@@ -430,8 +436,8 @@ const Disclaimer = () => {
         signature.
       </Text>
     </View>
-  );
-};
+  )
+}
 
 const Footer = () => {
   return (
@@ -482,14 +488,14 @@ const Footer = () => {
         <Text style={{ fontSize: 10 }}>www.senfenglaserpk.com</Text>
       </View>
     </View>
-  );
-};
+  )
+}
 
-function formatCurrency(number : number) {
+function formatCurrency(number: number) {
   return new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 0,
     useGrouping: true,
-  }).format(number);
+  }).format(number)
 }
 
-export default AccountsPdf;
+export default AccountsPdf

@@ -1,32 +1,32 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { useEffect, useState } from "react"
 
-import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import { RequiredStar } from "@/components/shared/common/RequiredStar"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { ListRestart } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@/components/ui/dialog"
+import { ListRestart } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import Spinner from "@/components/ui/spinner";
-import { Switch } from "@/components/ui/switch";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { InventoryItem, OrderItem, StockProps } from "@/lib/types";
-import { InventorySearch } from "@/components/shared/search/inventory-select";
-import MachineModels from "@/components/features/machines/machine-models";
+} from "@/components/ui/select"
+import Spinner from "@/components/ui/spinner"
+import { Switch } from "@/components/ui/switch"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { InventoryItem, OrderItem, StockProps } from "@/lib/types"
+import { InventorySearch } from "@/components/shared/search/inventory-select"
+import MachineModels from "@/components/features/machines/machine-models"
 
 type InventoryErrors = Partial<Record<keyof InventoryItem, string>>
 
@@ -36,7 +36,13 @@ const EditOrderDialog = ({
   onRefresh,
   id,
   item,
-}: { visible: boolean, onClose: (val: boolean) => void, onRefresh: () => Promise<void>, id?: number | null, item: OrderItem | null }) => {
+}: {
+  visible: boolean
+  onClose: (val: boolean) => void
+  onRefresh: () => Promise<void>
+  id?: number | null
+  item: OrderItem | null
+}) => {
   const [items, setItems] = useState<InventoryItem>({
     name: "",
     qty: 1,
@@ -53,8 +59,8 @@ const EditOrderDialog = ({
     isExisting: false,
     inventory_id: null,
     location: "",
-    show: true
-  });
+    show: true,
+  })
 
   useEffect(() => {
     if (item) {
@@ -74,98 +80,100 @@ const EditOrderDialog = ({
         isExisting: item.inventory_id ? true : false,
         inventory_id: item.inventory_id,
         location: item.location,
-        show: item.show
-      });
+        show: item.show,
+      })
     }
-  }, [item]);
+  }, [item])
 
-  const [errors, setErrors] = useState<InventoryErrors>();
-  const [loading, setLoading] = useState(false);
-  const [existingInventory, setExistingInventory] = useState<StockProps[]>([]);
+  const [errors, setErrors] = useState<InventoryErrors>()
+  const [loading, setLoading] = useState(false)
+  const [existingInventory, setExistingInventory] = useState<StockProps[]>([])
 
   const { userID } = useUserDetail() as { userID: string }
-  const [manual, setManual] = useState(true);
+  const [manual, setManual] = useState(true)
 
   useEffect(() => {
     if (visible && userID) {
-      fetchPOSInventory();
+      fetchPOSInventory()
     }
-  }, [visible, userID]);
+  }, [visible, userID])
 
   async function fetchPOSInventory() {
     axios.get(`/${userID}/pos`).then((response) => {
       if (response.data.stock.length > 0) {
-        let resultedData = [...response.data.stock];
-        setExistingInventory([...resultedData]);
+        let resultedData = [...response.data.stock]
+        setExistingInventory([...resultedData])
       }
-    });
+    })
   }
 
-  const handleItemChange = <K extends keyof InventoryItem>(field: K, value: InventoryItem[K]) => {
-    setItems((prevState) => ({ ...prevState, [field]: value }));
-    setErrors((prevState) => ({ ...prevState, [field]: "" }));
-  };
+  const handleItemChange = <K extends keyof InventoryItem>(
+    field: K,
+    value: InventoryItem[K]
+  ) => {
+    setItems((prevState) => ({ ...prevState, [field]: value }))
+    setErrors((prevState) => ({ ...prevState, [field]: "" }))
+  }
 
   const validateItems = () => {
-    const itemErrors: any = {};
+    const itemErrors: any = {}
 
     // qty required and positive
     if (!items.qty || items.qty <= 0) {
-      itemErrors.qty = "Quantity is required and must be greater than 0";
+      itemErrors.qty = "Quantity is required and must be greater than 0"
     }
 
     if (items.isExisting) {
       // inventory_id required for existing items
       if (!items.inventory_id) {
-        itemErrors.inventory_id = "Please select an existing inventory item";
+        itemErrors.inventory_id = "Please select an existing inventory item"
       }
     } else {
       if (!items.is_machine)
         if (!items.name || items.name.trim() === "") {
-          itemErrors.name = "Name is required for new items";
+          itemErrors.name = "Name is required for new items"
         }
     }
 
     // if machine, all machine fields required
     if (items.is_machine) {
       if (!items.machine_serial || items.machine_serial.trim() === "") {
-        itemErrors.machine_serial = "Machine serial is required";
+        itemErrors.machine_serial = "Machine serial is required"
       }
       if (!items.machine_model) {
-        itemErrors.machine_model = "Machine model is required";
+        itemErrors.machine_model = "Machine model is required"
       }
       if (!items.machine_source) {
-        itemErrors.machine_source = "Machine source is required";
+        itemErrors.machine_source = "Machine source is required"
       }
       if (!items.machine_power) {
-        itemErrors.machine_power = "Machine power is required";
+        itemErrors.machine_power = "Machine power is required"
       }
     }
 
-    setErrors(itemErrors);
+    setErrors(itemErrors)
 
-    return Object.keys(itemErrors).length === 0;
-  };
+    return Object.keys(itemErrors).length === 0
+  }
 
   const handleSubmit = async () => {
-
     if (validateItems()) {
-      setLoading(true);
+      setLoading(true)
       try {
         const response = await axios.put(
           `/${userID}/neworder/orderitem/${id}`,
           items
-        );
-        await onRefresh();
-        handleClose(false);
+        )
+        await onRefresh()
+        handleClose(false)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
-  };
+  }
 
   function handleClose(val: boolean) {
-    onClose(val);
+    onClose(val)
     setItems({
       name: "",
       qty: 1,
@@ -182,21 +190,33 @@ const EditOrderDialog = ({
       isExisting: false,
       inventory_id: null,
       location: "",
-      show: true
-    });
+      show: true,
+    })
 
-    setErrors({});
+    setErrors({})
   }
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-3xl">
         <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><ListRestart className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Edit Order Item</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Update the selected inventory item and machine details.</DialogDescription></div></div>
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+              <ListRestart className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <DialogTitle className="text-sm font-semibold text-foreground">
+                Edit Order Item
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Update the selected inventory item and machine details.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <ScrollArea className="max-h-[calc(100dvh-132px)]">
-          <div className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
+          <div className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase">
             <div className="space-y-3 rounded-xl border border-border bg-muted/20 p-3">
               <div>
                 <Label>
@@ -232,25 +252,25 @@ const EditOrderDialog = ({
                       data={existingInventory}
                       value={items.inventory_id}
                       onReturn={(val) => {
-                        handleItemChange("inventory_id", val?.id ?? null);
-                        handleItemChange("name", val.name ?? "");
-                        handleItemChange("price", parseFloat(val?.price || "0"));
+                        handleItemChange("inventory_id", val?.id ?? null)
+                        handleItemChange("name", val.name ?? "")
+                        handleItemChange("price", parseFloat(val?.price || "0"))
                         handleItemChange(
                           "buying_price",
                           parseFloat(val?.buying || "0")
-                        );
+                        )
                         handleItemChange(
                           "threshold",
                           parseInt(String(val?.threshold) || "0")
-                        );
+                        )
                         handleItemChange(
                           "new_order",
                           parseInt(String(val?.new_order) || "0")
-                        );
+                        )
                       }}
                     />
                     {errors?.inventory_id && (
-                      <p className="text-red-600 text-sm mt-1">
+                      <p className="mt-1 text-sm text-red-600">
                         {errors.inventory_id}
                       </p>
                     )}
@@ -262,15 +282,12 @@ const EditOrderDialog = ({
                       value={items.qty}
                       onChange={(e) => {
                         if (!isNaN(Number(e.target.value))) {
-                          handleItemChange(
-                            "qty",
-                            parseInt(e.target.value)
-                          )
+                          handleItemChange("qty", parseInt(e.target.value))
                         }
                       }}
                     />
                     {errors?.qty && (
-                      <p className="text-red-600 text-sm mt-1">{errors.qty}</p>
+                      <p className="mt-1 text-sm text-red-600">{errors.qty}</p>
                     )}
                   </div>
                 </>
@@ -288,7 +305,7 @@ const EditOrderDialog = ({
                             }
                           />
                           {errors?.name && (
-                            <p className="text-red-600 text-sm mt-1">
+                            <p className="mt-1 text-sm text-red-600">
                               {errors.name}
                             </p>
                           )}
@@ -308,7 +325,7 @@ const EditOrderDialog = ({
                             }}
                           />
                           {errors?.qty && (
-                            <p className="text-red-600 text-sm mt-1">
+                            <p className="mt-1 text-sm text-red-600">
                               {errors.qty}
                             </p>
                           )}
@@ -326,7 +343,6 @@ const EditOrderDialog = ({
                                 )
                               }
                             }}
-
                           />
                         </div>
                         <div>
@@ -342,7 +358,6 @@ const EditOrderDialog = ({
                                 )
                               }
                             }}
-
                           />
                         </div>
                         <div>
@@ -379,7 +394,7 @@ const EditOrderDialog = ({
                     </>
                   )}
 
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="mt-2 flex items-center gap-2">
                     <Switch
                       checked={items.is_machine}
                       onCheckedChange={(val) =>
@@ -389,18 +404,16 @@ const EditOrderDialog = ({
                     <Label>Is Machine?</Label>
                   </div>
 
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="mt-2 flex items-center gap-2">
                     <Switch
                       checked={items.show}
-                      onCheckedChange={(val) =>
-                        handleItemChange("show", val)
-                      }
+                      onCheckedChange={(val) => handleItemChange("show", val)}
                     />
                     <Label>{items.show ? "Show" : "Hide"}</Label>
                   </div>
 
                   {items.is_machine && (
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="mt-2 flex items-center gap-2">
                       <Switch
                         checked={manual}
                         onCheckedChange={(val) => setManual(val)}
@@ -418,12 +431,12 @@ const EditOrderDialog = ({
                         <Input
                           value={items.machine_serial}
                           onChange={(e) => {
-                            handleItemChange("machine_serial", e.target.value);
-                            handleItemChange("name", e.target.value);
+                            handleItemChange("machine_serial", e.target.value)
+                            handleItemChange("name", e.target.value)
                           }}
                         />
                         {errors?.machine_serial && (
-                          <p className="text-red-600 text-sm mt-1">
+                          <p className="mt-1 text-sm text-red-600">
                             {errors.machine_serial}
                           </p>
                         )}
@@ -437,18 +450,19 @@ const EditOrderDialog = ({
                           <Input
                             value={items.machine_model}
                             onChange={(e) => {
-                              handleItemChange("machine_model", e.target.value);
+                              handleItemChange("machine_model", e.target.value)
                             }}
                           />
                         ) : (
-                          <MachineModels value={items.machine_model}
+                          <MachineModels
+                            value={items.machine_model}
                             onValueChange={(val) =>
                               handleItemChange("machine_model", val)
-                            } />
-
+                            }
+                          />
                         )}
                         {errors?.machine_model && (
-                          <p className="text-red-600 text-sm mt-1">
+                          <p className="mt-1 text-sm text-red-600">
                             {errors.machine_model}
                           </p>
                         )}
@@ -465,7 +479,7 @@ const EditOrderDialog = ({
                               handleItemChange(
                                 "machine_source",
                                 e.target.value?.toString()?.toUpperCase()
-                              );
+                              )
                             }}
                           />
                         ) : (
@@ -486,7 +500,7 @@ const EditOrderDialog = ({
                           </Select>
                         )}
                         {errors?.machine_source && (
-                          <p className="text-red-600 text-sm mt-1">
+                          <p className="mt-1 text-sm text-red-600">
                             {errors.machine_source}
                           </p>
                         )}
@@ -501,7 +515,7 @@ const EditOrderDialog = ({
                           <Input
                             value={items.machine_power}
                             onChange={(e) => {
-                              handleItemChange("machine_power", e.target.value);
+                              handleItemChange("machine_power", e.target.value)
                             }}
                           />
                         ) : (
@@ -522,7 +536,7 @@ const EditOrderDialog = ({
                           </Select>
                         )}
                         {errors?.machine_power && (
-                          <p className="text-red-600 text-sm mt-1">
+                          <p className="mt-1 text-sm text-red-600">
                             {errors.machine_power}
                           </p>
                         )}
@@ -534,10 +548,7 @@ const EditOrderDialog = ({
                           value={items.qty}
                           onChange={(e) => {
                             if (!isNaN(Number(e.target.value))) {
-                              handleItemChange(
-                                "qty",
-                                parseInt(e.target.value)
-                              )
+                              handleItemChange("qty", parseInt(e.target.value))
                             }
                           }}
                         />
@@ -549,18 +560,22 @@ const EditOrderDialog = ({
             </div>
           </div>
 
-        <div className="mx-3.5 mb-4 mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
-          <Button type="button" variant="secondary" onClick={() => handleClose(false)}>
-            Cancel
-          </Button>
-          <Button disabled={loading} onClick={handleSubmit}>
-            {loading && <Spinner />}Update Order Item
-          </Button>
-        </div>
+          <div className="mx-3.5 mt-3 mb-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => handleClose(false)}
+            >
+              Cancel
+            </Button>
+            <Button disabled={loading} onClick={handleSubmit}>
+              {loading && <Spinner />}Update Order Item
+            </Button>
+          </div>
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default EditOrderDialog;
+export default EditOrderDialog

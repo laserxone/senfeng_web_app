@@ -1,10 +1,11 @@
-import pool from "@/config/db";
-import { checkSuperadmin } from "@/lib/checkSuperadmin";
-import { NextRequest, NextResponse } from "next/server";
+import pool from "@/config/db"
+import { checkSuperadmin } from "@/lib/checkSuperadmin"
+import { NextRequest, NextResponse } from "next/server"
 
-
-export async function GET(req:NextRequest, { params }:{params:Promise<{uid:string}>}) {
-
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ uid: string }> }
+) {
   const { uid } = await params
 
   try {
@@ -41,7 +42,8 @@ ORDER BY mi.date ASC;
 
       return NextResponse.json(result.rows, { status: 200 })
     } else {
-      const result = await pool.query(`
+      const result = await pool.query(
+        `
     SELECT 
       mi.*, 
       s.serial_no, 
@@ -71,14 +73,15 @@ ORDER BY mi.date ASC;
         OR s.sell_by = $1
       )
     ORDER BY mi.date ASC;
-  `, [uid])
+  `,
+        [uid]
+      )
 
       return NextResponse.json(result.rows, { status: 200 })
     }
   } catch (error) {
     return NextResponse.json({ message: "Error occured" }, { status: 500 })
   }
-
 }
 
 export const revalidate = 0

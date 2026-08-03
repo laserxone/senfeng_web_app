@@ -264,7 +264,7 @@ export default function Notification() {
 
   return (
     <div className="relative flex min-w-0 flex-1 flex-col gap-4 lg:h-[calc(100dvh-5rem)] lg:overflow-hidden">
-      <section className="relative shrink-0 overflow-hidden rounded-[26px] border border-violet-200/50 bg-gradient-to-br from-violet-100/70 via-card to-slate-100/70 px-5 py-5 text-foreground  sm:px-6 dark:border-white/[0.07] dark:from-violet-950/35 dark:via-card dark:to-slate-900/70">
+      <section className="relative shrink-0 overflow-hidden rounded-[26px] border border-violet-200/50 bg-gradient-to-br from-violet-100/70 via-card to-slate-100/70 px-5 py-5 text-foreground sm:px-6 dark:border-white/[0.07] dark:from-violet-950/35 dark:via-card dark:to-slate-900/70">
         <div className="pointer-events-none absolute -top-24 -right-16 size-56 rounded-full bg-violet-300/20 blur-3xl dark:bg-violet-500/10" />
         <div className="pointer-events-none absolute -bottom-28 left-1/3 size-52 rounded-full bg-slate-300/25 blur-3xl dark:bg-indigo-400/[0.06]" />
         <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/50 to-transparent" />
@@ -281,14 +281,14 @@ export default function Notification() {
               Everything that needs your attention, organized in one calm place.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2.5 ">
-            <div className="min-w-20 rounded-xl border border-border/70 bg-background/65 px-3.5 py-2  backdrop-blur-xl">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="min-w-20 rounded-xl border border-border/70 bg-background/65 px-3.5 py-2 backdrop-blur-xl">
               <p className="text-lg font-bold">{notifications.length}</p>
               <p className="text-[8px] font-bold tracking-[0.16em] text-muted-foreground uppercase">
                 Total
               </p>
             </div>
-            <div className="min-w-20 rounded-xl border border-violet-200/60 bg-violet-100/50 px-3.5 py-2  backdrop-blur-xl dark:border-violet-400/10 dark:bg-violet-400/[0.07]">
+            <div className="min-w-20 rounded-xl border border-violet-200/60 bg-violet-100/50 px-3.5 py-2 backdrop-blur-xl dark:border-violet-400/10 dark:bg-violet-400/[0.07]">
               <p className="text-lg font-bold text-violet-700 dark:text-violet-300">
                 {unreadCount}
               </p>
@@ -297,20 +297,20 @@ export default function Notification() {
               </p>
             </div>
             <div>
-            <Button
-              disabled={!unreadCount || isMarkingAll}
-              onClick={() => void markAllAsRead()}
-            >
-              <CheckCheck />
-              {isMarkingAll ? "Marking..." : "Mark all as read"}
-            </Button>
+              <Button
+                disabled={!unreadCount || isMarkingAll}
+                onClick={() => void markAllAsRead()}
+              >
+                <CheckCheck />
+                {isMarkingAll ? "Marking..." : "Mark all as read"}
+              </Button>
             </div>
           </div>
         </div>
       </section>
 
       <div className="grid min-h-0 min-w-0 flex-1 gap-4 lg:grid-cols-[230px_minmax(0,1fr)]">
-        <aside className="hidden h-full overflow-hidden rounded-[24px] border bg-card/90  backdrop-blur-xl lg:flex lg:flex-col">
+        <aside className="hidden h-full overflow-hidden rounded-[24px] border bg-card/90 backdrop-blur-xl lg:flex lg:flex-col">
           <div className="border-b p-5">
             <p className="text-[10px] font-bold tracking-[0.18em] text-muted-foreground uppercase">
               Browse
@@ -410,7 +410,7 @@ export default function Notification() {
                         ? { animationDelay: "300ms" }
                         : undefined
                     }
-                    className={`group/item relative flex gap-4 overflow-hidden rounded-2xl border bg-background/90 p-4  transition-all hover:-translate-y-0.5 hover:border-primary/20  motion-reduce:transform-none motion-reduce:animate-none ${
+                    className={`group/item relative flex gap-4 overflow-hidden rounded-2xl border bg-background/90 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/20 motion-reduce:transform-none motion-reduce:animate-none ${
                       isBeingMarkedRead || isBeingDeleted
                         ? "animate-out duration-400 fade-out slide-out-to-right-4"
                         : ""

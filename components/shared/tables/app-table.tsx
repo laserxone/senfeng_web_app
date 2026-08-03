@@ -19,7 +19,7 @@ import {
   ChevronRightIcon,
   Filter,
   RotateCcw,
-  Search
+  Search,
 } from "lucide-react"
 
 import {
@@ -95,7 +95,7 @@ const PageTable = <T extends object>({
   tableWidth = "",
   height = "min-h-[calc(100dvh-280px)]",
   hideFooter = false,
-  resetLoading = false
+  resetLoading = false,
 }: PageTableProps<T>) => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -190,8 +190,8 @@ const PageTable = <T extends object>({
       return typeof header === "string"
         ? header
         : column.id
-          .replace(/_/g, " ")
-          .replace(/\b\w/g, (letter) => letter.toUpperCase())
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (letter) => letter.toUpperCase())
     })
 
     const rows = table
@@ -222,7 +222,15 @@ const PageTable = <T extends object>({
     try {
       const { headers, rows } = getVisibleExportData()
       if (!rows.length || !headers.length) return
-      await exportToExcel(headers, rows, "Table-Export.xlsx", false, "", false, userID)
+      await exportToExcel(
+        headers,
+        rows,
+        "Table-Export.xlsx",
+        false,
+        "",
+        false,
+        userID
+      )
     } catch (error) {
       console.error("Error exporting Excel:", error)
     }
@@ -233,11 +241,9 @@ const PageTable = <T extends object>({
       const { headers, rows } = getVisibleExportData()
       if (!rows.length || !headers.length) return
       await exportToPdf(headers, rows, "Table-Export.pdf", userID)
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Error exporting PDF:", error)
     }
-
   }
 
   return (
@@ -261,28 +267,21 @@ const PageTable = <T extends object>({
             <ExportButton
               handleExcelDownload={handleExcelDownload}
               handlePdfDownload={handlePdfDownload}
-              disabled={!table.getRowModel().rows.length} />
+              disabled={!table.getRowModel().rows.length}
+            />
           )}
-          {filter &&
-            <Button
-              onClick={onFilterPress}
-              variant="outline"
-              className="gap-2"
-            >
+          {filter && (
+            <Button onClick={onFilterPress} variant="outline" className="gap-2">
               <Filter className="h-4 w-4" />
               Filter
             </Button>
-
-          }
-          {reset &&
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={onResetPress}
-            >
+          )}
+          {reset && (
+            <Button variant="outline" className="gap-2" onClick={onResetPress}>
               {resetLoading ? <Spinner /> : <RotateCcw className="h-4 w-4" />}
               Reset
-            </Button>}
+            </Button>
+          )}
           {children}
         </div>
       )}
@@ -308,9 +307,9 @@ const PageTable = <T extends object>({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -379,7 +378,7 @@ const PageTable = <T extends object>({
               )}
             </div>
             <div className="flex items-center justify-between gap-2 sm:justify-end">
-              <p className="whitespace-nowrap text-xs font-semibold text-muted-foreground">
+              <p className="text-xs font-semibold whitespace-nowrap text-muted-foreground">
                 Rows per page
               </p>
               <Select

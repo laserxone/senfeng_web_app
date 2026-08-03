@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { Check, ChevronsUpDown } from "lucide-react";
-import * as React from "react";
+import { Check, ChevronsUpDown } from "lucide-react"
+import * as React from "react"
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Command,
   CommandDialog,
@@ -12,41 +12,40 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { PricesProps, PricesSearchProps } from "@/lib/types";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/command"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { PricesProps, PricesSearchProps } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
-
-export function PricesSearch({ value, onReturn }: { value: PricesSearchProps | null, onReturn: (val: PricesSearchProps) => void }) {
-  const [open, setOpen] = React.useState(false);
-  const [data, setData] = React.useState<PricesSearchProps[]>([]);
-  const { userID,} = useUserDetail();
-  
+export function PricesSearch({
+  value,
+  onReturn,
+}: {
+  value: PricesSearchProps | null
+  onReturn: (val: PricesSearchProps) => void
+}) {
+  const [open, setOpen] = React.useState(false)
+  const [data, setData] = React.useState<PricesSearchProps[]>([])
+  const { userID } = useUserDetail()
 
   React.useEffect(() => {
     async function fetchData() {
       axios.get(`/${userID}/prices`).then((response) => {
         if (response.data.length > 0) {
-
           const finalData = response.data.map((item: PricesProps) => {
             return {
               value: item.id,
               label: [item?.model, item.power].join(" "),
               data: item,
-            };
-          });
+            }
+          })
           setData(finalData)
-
         }
-      });
+      })
     }
-    if (userID) fetchData();
-  }, [userID]);
-
-
-
+    if (userID) fetchData()
+  }, [userID])
 
   return (
     <>
@@ -68,7 +67,6 @@ export function PricesSearch({ value, onReturn }: { value: PricesSearchProps | n
 
       <CommandDialog open={open} onOpenChange={setOpen}>
         <Command>
-
           <CommandInput placeholder="Search machine..." className="h-9" />
           <CommandList>
             <CommandEmpty>No user found.</CommandEmpty>
@@ -78,15 +76,15 @@ export function PricesSearch({ value, onReturn }: { value: PricesSearchProps | n
                   key={item.value}
                   value={item.label}
                   onSelect={() => {
-                    onReturn?.(item);
-                    setOpen(false);
+                    onReturn?.(item)
+                    setOpen(false)
                   }}
                 >
                   {item.label}
                   <Check
                     className={cn(
                       "ml-auto",
-                      value?.value === item.value ? "opacity-100" : "opacity-0",
+                      value?.value === item.value ? "opacity-100" : "opacity-0"
                     )}
                   />
                 </CommandItem>
@@ -96,5 +94,5 @@ export function PricesSearch({ value, onReturn }: { value: PricesSearchProps | n
         </Command>
       </CommandDialog>
     </>
-  );
+  )
 }

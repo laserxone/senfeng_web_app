@@ -1,28 +1,38 @@
-"use client";
-import Image from "next/image";
-import { useCallback, useEffect, useRef } from "react";
-import { useDropzone } from "react-dropzone";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+"use client"
+import Image from "next/image"
+import { useCallback, useEffect, useRef } from "react"
+import { useDropzone } from "react-dropzone"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 type DropzoneMultiProps = {
-  onDrop: (files: string[]) => void;
-  title: string;
-  subheading: string;
-  description: string;
-  drag: string;
-  borderColor?: string;
-  value: string[];
-};
-const DropzoneMulti = ({ onDrop, title, subheading, description, drag, borderColor, value }: DropzoneMultiProps) => {
- const updateRefs = useRef<(HTMLInputElement | null)[]>([]);
+  onDrop: (files: string[]) => void
+  title: string
+  subheading: string
+  description: string
+  drag: string
+  borderColor?: string
+  value: string[]
+}
+const DropzoneMulti = ({
+  onDrop,
+  title,
+  subheading,
+  description,
+  drag,
+  borderColor,
+  value,
+}: DropzoneMultiProps) => {
+  const updateRefs = useRef<(HTMLInputElement | null)[]>([])
 
   const onDropAccepted = useCallback(
     (acceptedFiles: File[]) => {
-      const newImageUrls = acceptedFiles.map((file) => URL.createObjectURL(file));
-      onDrop([...value, ...newImageUrls]);
+      const newImageUrls = acceptedFiles.map((file) =>
+        URL.createObjectURL(file)
+      )
+      onDrop([...value, ...newImageUrls])
     },
     [onDrop, value]
-  );
+  )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDropAccepted,
@@ -30,43 +40,49 @@ const DropzoneMulti = ({ onDrop, title, subheading, description, drag, borderCol
       "image/*": [],
     },
     multiple: true,
-  });
+  })
 
-  const handlePaste = useCallback((event: ClipboardEvent) => {
-    const items = event?.clipboardData?.items;
-    if (!items) return
-    const pastedImages = [];
+  const handlePaste = useCallback(
+    (event: ClipboardEvent) => {
+      const items = event?.clipboardData?.items
+      if (!items) return
+      const pastedImages = []
 
-    for (let item of items) {
-      if (item.type.startsWith("image/")) {
-        const file = item.getAsFile();
-        const imageUrl = URL.createObjectURL(file as Blob);
-        pastedImages.push(imageUrl);
+      for (let item of items) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile()
+          const imageUrl = URL.createObjectURL(file as Blob)
+          pastedImages.push(imageUrl)
+        }
       }
-    }
 
-    if (pastedImages.length > 0) {
-      onDrop([...value, ...pastedImages]);
-    }
-  }, [onDrop, value]);
+      if (pastedImages.length > 0) {
+        onDrop([...value, ...pastedImages])
+      }
+    },
+    [onDrop, value]
+  )
 
   useEffect(() => {
-    document.addEventListener("paste", handlePaste);
-    return () => document.removeEventListener("paste", handlePaste);
-  }, [handlePaste]);
+    document.addEventListener("paste", handlePaste)
+    return () => document.removeEventListener("paste", handlePaste)
+  }, [handlePaste])
 
-  const handleFileChange = (event : React.ChangeEvent<HTMLInputElement, HTMLInputElement>, index : number) => {
+  const handleFileChange = (
+    event: React.ChangeEvent<HTMLInputElement, HTMLInputElement>,
+    index: number
+  ) => {
     if (event.target.files && event.target.files[0]) {
-      const newFile = event.target.files[0];
-      const newImageUrl = URL.createObjectURL(newFile);
+      const newFile = event.target.files[0]
+      const newImageUrl = URL.createObjectURL(newFile)
 
-      onDrop(value.map((imgUrl, idx) => (idx === index ? newImageUrl : imgUrl)));
+      onDrop(value.map((imgUrl, idx) => (idx === index ? newImageUrl : imgUrl)))
     }
-  };
+  }
 
-  const handleDelete = (index : number) => {
-    onDrop(value.filter((_, idx) => idx !== index));
-  };
+  const handleDelete = (index: number) => {
+    onDrop(value.filter((_, idx) => idx !== index))
+  }
 
   return (
     <div
@@ -80,19 +96,37 @@ const DropzoneMulti = ({ onDrop, title, subheading, description, drag, borderCol
         ) : value.length === 0 ? (
           <div className="flex flex-col items-center">
             <div className="mb-3 grid h-12 w-12 place-items-center rounded-2xl border bg-background shadow-sm">
-              <Image src="/upload-cloud-02.png" height={24} width={24} alt="Cloud upload" />
+              <Image
+                src="/upload-cloud-02.png"
+                height={24}
+                width={24}
+                alt="Cloud upload"
+              />
             </div>
             <div className="flex flex-col text-center">
-              <span className="text-sm font-semibold text-foreground">{title}</span>
-              <span className="text-sm text-muted-foreground">{subheading}</span>
-              <span className="text-[11px] text-muted-foreground">({description})</span>
+              <span className="text-sm font-semibold text-foreground">
+                {title}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {subheading}
+              </span>
+              <span className="text-[11px] text-muted-foreground">
+                ({description})
+              </span>
             </div>
-            <Input {...getInputProps()} id="image-input" style={{ display: "none" }} />
+            <Input
+              {...getInputProps()}
+              id="image-input"
+              style={{ display: "none" }}
+            />
           </div>
         ) : (
           <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {value.map((imageUrl, index) => (
-              <div key={index} className="relative overflow-hidden rounded-xl border bg-background p-2 shadow-sm">
+              <div
+                key={index}
+                className="relative overflow-hidden rounded-xl border bg-background p-2 shadow-sm"
+              >
                 <img
                   src={imageUrl} // Using the URL directly
                   alt={`Selected ${index}`}
@@ -114,8 +148,7 @@ const DropzoneMulti = ({ onDrop, title, subheading, description, drag, borderCol
                     accept="image/*"
                     style={{ display: "none" }}
                     ref={(el) => {
-                      if (updateRefs.current)
-                        (updateRefs.current[index] = el)
+                      if (updateRefs.current) updateRefs.current[index] = el
                     }}
                     onChange={(e) => handleFileChange(e, index)}
                   />
@@ -126,7 +159,7 @@ const DropzoneMulti = ({ onDrop, title, subheading, description, drag, borderCol
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default DropzoneMulti;
+export default DropzoneMulti

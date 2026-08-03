@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { Check, ChevronsUpDown } from "lucide-react";
-import * as React from "react";
+import { Check, ChevronsUpDown } from "lucide-react"
+import * as React from "react"
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Command,
   CommandDialog,
@@ -12,14 +12,22 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { cn } from "@/lib/utils";
-import { StockProps } from "@/lib/types";
+} from "@/components/ui/command"
+import { cn } from "@/lib/utils"
+import { StockProps } from "@/lib/types"
 
 type InventoryProp = Partial<StockProps>
 
-export function InventorySearch({ value, onReturn, data }: { value: number | null, onReturn: (val: InventoryProp) => void, data: InventoryProp[] }) {
-  const [open, setOpen] = React.useState(false);
+export function InventorySearch({
+  value,
+  onReturn,
+  data,
+}: {
+  value: number | null
+  onReturn: (val: InventoryProp) => void
+  data: InventoryProp[]
+}) {
+  const [open, setOpen] = React.useState(false)
 
   return (
     <>
@@ -33,7 +41,9 @@ export function InventorySearch({ value, onReturn, data }: { value: number | nul
           setOpen(!open)
         }}
       >
-        {value ? data.find((item) => item.id === value)?.name : "Select item..."}
+        {value
+          ? data.find((item) => item.id === value)?.name
+          : "Select item..."}
         <ChevronsUpDown className="opacity-50" />
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
@@ -47,8 +57,8 @@ export function InventorySearch({ value, onReturn, data }: { value: number | nul
                   key={index}
                   value={item.name}
                   onSelect={() => {
-                    onReturn(item);
-                    setOpen(false);
+                    onReturn(item)
+                    setOpen(false)
                   }}
                 >
                   {item.name}
@@ -64,7 +74,6 @@ export function InventorySearch({ value, onReturn, data }: { value: number | nul
           </CommandList>
         </Command>
       </CommandDialog>
-
     </>
-  );
+  )
 }

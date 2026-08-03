@@ -1,48 +1,67 @@
-import axios from "@/lib/axios";
-import { UploadImage } from "@/lib/uploadFunction";
-import { OfficeContext } from "@/store/context/OfficeContext";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Package, Trash2 } from "lucide-react";
-import moment from "moment";
-import { useContext, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { z } from "zod";
-import AppCalendar from "@/components/features/calendar/app-calendar";
-import ChequeCredit from "./cheque-credit";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import Spinner from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
-import { ChequeProp } from "@/lib/types";
-import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase";
+import axios from "@/lib/axios"
+import { UploadImage } from "@/lib/uploadFunction"
+import { OfficeContext } from "@/store/context/OfficeContext"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Package, Trash2 } from "lucide-react"
+import moment from "moment"
+import { useContext, useState } from "react"
+import { Controller, useForm } from "react-hook-form"
+import { z } from "zod"
+import AppCalendar from "@/components/features/calendar/app-calendar"
+import ChequeCredit from "./cheque-credit"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import Spinner from "@/components/ui/spinner"
+import { Textarea } from "@/components/ui/textarea"
+import { ChequeProp } from "@/lib/types"
+import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase"
 
-const formSchema = z
-  .object({
-    serial_no: z.string().min(1, { message: "Name is required." }),
-    contractDate: z.date({ error: "Contract date is required." }),
-    isSpeedMoney: z.boolean().default(false),
-    speedMoney: z.coerce.number<number>().optional(),
-    speedMoneyNote: z.string().optional(),
-    totalPrice: z.coerce.number<number>({ error: "Price is required" }),
-    cnic: z.string().optional(),
-    order_item: z.number().nullable().optional(),
-  })
+const formSchema = z.object({
+  serial_no: z.string().min(1, { message: "Name is required." }),
+  contractDate: z.date({ error: "Contract date is required." }),
+  isSpeedMoney: z.boolean().default(false),
+  speedMoney: z.coerce.number<number>().optional(),
+  speedMoneyNote: z.string().optional(),
+  totalPrice: z.coerce.number<number>({ error: "Price is required" }),
+  cnic: z.string().optional(),
+  order_item: z.number().nullable().optional(),
+})
 
-
-const AddParts = ({ customer_id, user_id,  onRefresh }: { customer_id?: number, user_id: number | string, onRefresh: () => Promise<void> }) => {
-  const [isSpeedMoney, setIsSpeedMoney] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [cheque, setCheque] = useState(false);
-  const [value, setValue] = useState<string>();
-  const [total, setTotal] = useState<ChequeProp[]>([]);
+const AddParts = ({
+  customer_id,
+  user_id,
+  onRefresh,
+}: {
+  customer_id?: number
+  user_id: number | string
+  onRefresh: () => Promise<void>
+}) => {
+  const [isSpeedMoney, setIsSpeedMoney] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [cheque, setCheque] = useState(false)
+  const [value, setValue] = useState<string>()
+  const [total, setTotal] = useState<ChequeProp[]>([])
   const { state: OfficeState } = useContext(OfficeContext)!
-  const [newParts, setNewParts] = useState([{ name: "", model: "", power: "", serial_no: "" }])
+  const [newParts, setNewParts] = useState([
+    { name: "", model: "", power: "", serial_no: "" },
+  ])
   const [errors, setErrors] = useState<any>({})
-   const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false)
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -56,94 +75,91 @@ const AddParts = ({ customer_id, user_id,  onRefresh }: { customer_id?: number, 
       cnic: "",
       order_item: null,
     },
-  });
+  })
 
-  type FormValues = z.infer<typeof formSchema>;
+  type FormValues = z.infer<typeof formSchema>
 
   function validateNewParts() {
-
-    let newErrors: any = {};
+    let newErrors: any = {}
 
     newParts.forEach((part, index) => {
-      let partErrors: any = {};
+      let partErrors: any = {}
 
       Object.entries(part).forEach(([key, value]) => {
         if (!value.trim()) {
-          partErrors[key] = `${key.charAt(0).toUpperCase() + key.slice(1).replace("_", " ")} is required`;
+          partErrors[key] =
+            `${key.charAt(0).toUpperCase() + key.slice(1).replace("_", " ")} is required`
         }
-      });
+      })
 
       if (Object.keys(partErrors).length > 0) {
-        newErrors[index] = partErrors;
+        newErrors[index] = partErrors
       }
-    });
+    })
 
-    setErrors(newErrors);
+    setErrors(newErrors)
 
-    return Object.keys(newErrors).length === 0;
+    return Object.keys(newErrors).length === 0
   }
 
   function onSubmit(values: FormValues) {
     if (!validateNewParts()) return
     setErrors({})
-    setLoading(true);
+    setLoading(true)
     let baseLink = `/${user_id}/machine?cheque=${cheque}`
 
     axios
-      .post(
-        baseLink,
-        {
-          customer_id: customer_id,
-          type: "Parts",
-          speed_money_note: values.speedMoneyNote,
-          speed_money: values.isSpeedMoney,
-          speed_money_amount: values.speedMoney ? Number(values.speedMoney) : 0,
-          serial_no: values.serial_no,
-          sell_by: user_id,
-          commission: true,
-          price: values.totalPrice,
-          contract_date: values.contractDate,
-          cnic: values.cnic,
-          parts_information: newParts
-        }
-      )
+      .post(baseLink, {
+        customer_id: customer_id,
+        type: "Parts",
+        speed_money_note: values.speedMoneyNote,
+        speed_money: values.isSpeedMoney,
+        speed_money_amount: values.speedMoney ? Number(values.speedMoney) : 0,
+        serial_no: values.serial_no,
+        sell_by: user_id,
+        commission: true,
+        price: values.totalPrice,
+        contract_date: values.contractDate,
+        cnic: values.cnic,
+        parts_information: newParts,
+      })
       .then(async (response) => {
         if (response.data?.sale_id) {
           if (cheque) {
-            const saleID = response.data.sale_id;
+            const saleID = response.data.sale_id
 
             const res = await Promise.all(
               total.map(async (item, idx) => {
-                const name = `${OfficeState.value.data
-                  }/customer/${customer_id}/machine/${saleID}/installments/${moment()
-                    .valueOf()
-                    .toString()}_${idx}.png`;
-                const imgRef = await UploadImage(item.img, name);
+                const name = `${
+                  OfficeState.value.data
+                }/customer/${customer_id}/machine/${saleID}/installments/${moment()
+                  .valueOf()
+                  .toString()}_${idx}.png`
+                const imgRef = await UploadImage(item.img, name)
                 return axios.post(`/${user_id}/installments`, {
                   date: item.date,
                   image: name,
                   amount: item.amount,
                   sale_id: saleID,
-                });
+                })
               })
-            );
+            )
 
-            console.log("All installments saved:", res);
-             TriggerFirebaseForChequeAlerts()
+            console.log("All installments saved:", res)
+            TriggerFirebaseForChequeAlerts()
           }
-
         }
-        onRefresh();
-        handleClose(false);
+        onRefresh()
+        handleClose(false)
       })
       .finally(() => {
-        setLoading(false);
-      });
+        setLoading(false)
+      })
   }
 
   function handleClose(val: boolean) {
-    form.reset();
-setOpen(false)
+    form.reset()
+    setOpen(false)
     setNewParts([{ name: "", model: "", power: "", serial_no: "" }])
   }
 
@@ -151,74 +167,95 @@ setOpen(false)
     if (key === "name") {
       return "Laser Source"
     }
-    if (key === 'model') {
+    if (key === "model") {
       return "RAYCUS-RFL-C3000S-CE"
     }
-    if (key === 'power') {
+    if (key === "power") {
       return "3000W"
     }
-    if (key === 'serial_no') {
+    if (key === "serial_no") {
       return "C1000A24B000XXX"
     }
-
   }
 
   return (
     <>
-      <Button className="h-8 rounded-lg px-3" variant="outline" onClick={() => setOpen(true)}>
-                <Package className="h-3.5 w-3.5" />
-                Sell Parts
-              </Button>
-              
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent
-        className={`max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-300 ${cheque ? "sm:max-w-[90vw]" : "sm:max-w-lg"
-          }`}
+      <Button
+        className="h-8 rounded-lg px-3"
+        variant="outline"
+        onClick={() => setOpen(true)}
       >
-        <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-2.5"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary"><Package className="h-4 w-4" /></span><div className="min-w-0"><DialogTitle className="text-sm font-semibold text-foreground">Add New Parts</DialogTitle><DialogDescription className="text-xs text-muted-foreground">Record parts, contract, pricing, and payment details.</DialogDescription></div></div>
-        </DialogHeader>
+        <Package className="h-3.5 w-3.5" />
+        Sell Parts
+      </Button>
 
-        <div className="w-full flex flex-1">
-          <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
-            <div
-              className={`flex gap-6 ${cheque ? "flex-row" : "flex-col"
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent
+          className={`max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-300 ${
+            cheque ? "sm:max-w-[90vw]" : "sm:max-w-lg"
+          }`}
+        >
+          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+                <Package className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <DialogTitle className="text-sm font-semibold text-foreground">
+                  Add New Parts
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Record parts, contract, pricing, and payment details.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="flex w-full flex-1">
+            <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
+              <div
+                className={`flex gap-6 ${
+                  cheque ? "flex-row" : "flex-col"
                 } w-full`}
-            >
-              <div className={`${cheque ? "w-1/2" : "w-full"} space-y-2 p-3.5`}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
-                  <FieldGroup>
+              >
+                <div
+                  className={`${cheque ? "w-1/2" : "w-full"} space-y-2 p-3.5`}
+                >
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase"
+                  >
+                    <FieldGroup>
+                      <Controller
+                        name="serial_no"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel>Name</FieldLabel>
 
-                    <Controller
-                      name="serial_no"
-                      control={form.control}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>Name</FieldLabel>
+                            <Input
+                              placeholder="Enter name e.g: 3KW Upgradation"
+                              {...field}
+                            />
 
-                          <Input
-                            placeholder="Enter name e.g: 3KW Upgradation"
-                            {...field}
-                          />
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
 
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
-
-                    <div className="space-y-4">
-                      {newParts.map((item, index) => (
-                        <div
-                          key={index}
-                          className="rounded-xl border px-3 py-3 space-y-3"
-                        >
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium">
-                              Part {index + 1}
-                            </span>
-                            {/* <Button
+                      <div className="space-y-4">
+                        {newParts.map((item, index) => (
+                          <div
+                            key={index}
+                            className="space-y-3 rounded-xl border px-3 py-3"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium">
+                                Part {index + 1}
+                              </span>
+                              {/* <Button
                               variant="destructive"
                               size="icon"
                               onClick={(e) => {
@@ -230,41 +267,43 @@ setOpen(false)
                             >
                               <Trash2 />
                             </Button> */}
+                            </div>
+
+                            {Object.entries(item).map(([key, val]) => (
+                              <Field key={key}>
+                                <FieldLabel>
+                                  {key.charAt(0).toUpperCase() +
+                                    key.slice(1).replace("_", " ")}
+                                </FieldLabel>
+
+                                <Input
+                                  value={val}
+                                  onChange={(e) => {
+                                    const value = e.target.value
+                                    setNewParts((prev) => {
+                                      const updated = [...prev]
+                                      updated[index] = {
+                                        ...updated[index],
+                                        [key]: value.toUpperCase(),
+                                      }
+                                      return updated
+                                    })
+                                  }}
+                                  placeholder={`Example: ${generatePlaceholder(key)}`}
+                                />
+
+                                {errors[index]?.[key] && (
+                                  <FieldError
+                                    errors={[{ message: errors[index][key] }]}
+                                  />
+                                )}
+                              </Field>
+                            ))}
                           </div>
+                        ))}
+                      </div>
 
-                          {Object.entries(item).map(([key, val]) => (
-                            <Field key={key}>
-                              <FieldLabel>
-                                {key.charAt(0).toUpperCase() +
-                                  key.slice(1).replace("_", " ")}
-                              </FieldLabel>
-
-                              <Input
-                                value={val}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  setNewParts((prev) => {
-                                    const updated = [...prev];
-                                    updated[index] = {
-                                      ...updated[index],
-                                      [key]: value.toUpperCase(),
-                                    };
-                                    return updated;
-                                  });
-                                }}
-                                placeholder={`Example: ${generatePlaceholder(key)}`}
-                              />
-
-                              {errors[index]?.[key] && (
-                                <FieldError errors={[{ message: errors[index][key] }]} />
-                              )}
-                            </Field>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* <Button
+                      {/* <Button
                       onClick={(e) => {
                         e.preventDefault();
                         setNewParts([
@@ -277,164 +316,163 @@ setOpen(false)
                       Add new part
                     </Button> */}
 
-                    <Controller
-                      name="contractDate"
-                      control={form.control}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>Contract Date</FieldLabel>
+                      <Controller
+                        name="contractDate"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel>Contract Date</FieldLabel>
 
-                          <AppCalendar
-                            date={field.value}
-                            onChange={field.onChange}
-                          />
-
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
-
-                    <Controller
-                      name="totalPrice"
-                      control={form.control}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>Total Price</FieldLabel>
-
-                          <Input
-
-                            placeholder="Enter total price"
-                            {...field}
-                          />
-
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
-
-                    <Controller
-                      name="isSpeedMoney"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Field>
-                          <div className="flex gap-4 items-center">
-                            <FieldLabel>Include Speed Money</FieldLabel>
-
-                            <Checkbox
-                              checked={isSpeedMoney}
-                              onCheckedChange={(checked: boolean) => {
-                                setIsSpeedMoney(checked);
-                                field.onChange(checked);
-
-                                if (!checked) {
-                                  form.setValue("speedMoney", 0);
-                                  form.setValue("speedMoneyNote", "");
-                                }
-                              }}
+                            <AppCalendar
+                              date={field.value}
+                              onChange={field.onChange}
                             />
-                          </div>
-                        </Field>
-                      )}
-                    />
 
-                    <Field>
-                      <div className="flex gap-4 items-center">
-                        <FieldLabel>Cheque Credit</FieldLabel>
-                        <Checkbox
-                          checked={cheque}
-                          onCheckedChange={(checked: boolean) => setCheque(checked)}
-                        />
-                      </div>
-                    </Field>
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
 
-                    {isSpeedMoney && (
-                      <>
-                        <Controller
-                          name="speedMoney"
-                          control={form.control}
-                          render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                              <FieldLabel>Speed Money</FieldLabel>
+                      <Controller
+                        name="totalPrice"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel>Total Price</FieldLabel>
 
-                              <Input
-                                placeholder="Enter speed money"
-                                {...field}
+                            <Input placeholder="Enter total price" {...field} />
+
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
+
+                      <Controller
+                        name="isSpeedMoney"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Field>
+                            <div className="flex items-center gap-4">
+                              <FieldLabel>Include Speed Money</FieldLabel>
+
+                              <Checkbox
+                                checked={isSpeedMoney}
+                                onCheckedChange={(checked: boolean) => {
+                                  setIsSpeedMoney(checked)
+                                  field.onChange(checked)
+
+                                  if (!checked) {
+                                    form.setValue("speedMoney", 0)
+                                    form.setValue("speedMoneyNote", "")
+                                  }
+                                }}
                               />
+                            </div>
+                          </Field>
+                        )}
+                      />
 
-                              {fieldState.invalid && (
-                                <FieldError errors={[fieldState.error]} />
-                              )}
-                            </Field>
-                          )}
-                        />
+                      <Field>
+                        <div className="flex items-center gap-4">
+                          <FieldLabel>Cheque Credit</FieldLabel>
+                          <Checkbox
+                            checked={cheque}
+                            onCheckedChange={(checked: boolean) =>
+                              setCheque(checked)
+                            }
+                          />
+                        </div>
+                      </Field>
 
-                        <Controller
-                          name="speedMoneyNote"
-                          control={form.control}
-                          render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                              <FieldLabel>Speed Money Note</FieldLabel>
+                      {isSpeedMoney && (
+                        <>
+                          <Controller
+                            name="speedMoney"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                              <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel>Speed Money</FieldLabel>
 
-                              <Textarea placeholder="Enter note" {...field} />
+                                <Input
+                                  placeholder="Enter speed money"
+                                  {...field}
+                                />
 
-                              {fieldState.invalid && (
-                                <FieldError errors={[fieldState.error]} />
-                              )}
-                            </Field>
-                          )}
-                        />
-                      </>
-                    )}
-
-                    <Controller
-                      name="cnic"
-                      control={form.control}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>CNIC</FieldLabel>
-
-                          <Input
-                            placeholder="example: 1234567891234"
-                            {...field}
+                                {fieldState.invalid && (
+                                  <FieldError errors={[fieldState.error]} />
+                                )}
+                              </Field>
+                            )}
                           />
 
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
+                          <Controller
+                            name="speedMoneyNote"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                              <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel>Speed Money Note</FieldLabel>
+
+                                <Textarea placeholder="Enter note" {...field} />
+
+                                {fieldState.invalid && (
+                                  <FieldError errors={[fieldState.error]} />
+                                )}
+                              </Field>
+                            )}
+                          />
+                        </>
                       )}
-                    />
 
-                    <Button type="submit" disabled={loading} className="w-full">
-                      {loading && <Spinner />} Submit
-                    </Button>
+                      <Controller
+                        name="cnic"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel>CNIC</FieldLabel>
 
-                  </FieldGroup>
-                </form>
-              </div>
-              {cheque && (
-                <div className="w-1/2 border-l pl-4">
-                  <ChequeCredit
-                    setTotal={setTotal}
-                    setValue={setValue}
-                    total={total}
-                    value={value}
-                  />
+                            <Input
+                              placeholder="example: 1234567891234"
+                              {...field}
+                            />
+
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
+
+                      <Button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full"
+                      >
+                        {loading && <Spinner />} Submit
+                      </Button>
+                    </FieldGroup>
+                  </form>
                 </div>
-              )}
-            </div>
-          </ScrollArea>
-        </div>
-      </DialogContent>
-    </Dialog>
+                {cheque && (
+                  <div className="w-1/2 border-l pl-4">
+                    <ChequeCredit
+                      setTotal={setTotal}
+                      setValue={setValue}
+                      total={total}
+                      value={value}
+                    />
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
-  );
-};
+  )
+}
 
-
-
-export default AddParts;
+export default AddParts

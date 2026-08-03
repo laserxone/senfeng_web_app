@@ -1,19 +1,38 @@
-"use client";
-import { ReimbursementAfterSales } from "@/components/features/aftersales/AfterSalesDashboardNew";
-import { AfterSalesReimbursement } from "@/components/features/aftersales/aftersales-types";
-import SalesTeamProgressChartCRM from "@/components/shared/charts/sales_progress/crm-sales-progress";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useDebounce } from "@/hooks/use-debounce";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import formatCurrency from "@/lib/formatCurrency";
-import { AdminTeamTasks, CRMCustomer, CRMDashboardData, CRMLoan, CRMTask, CRMTopFollowup, TeamTaskForAdmin } from "@/lib/types";
-import { OfficeContext } from "@/store/context/OfficeContext";
+"use client"
+import { ReimbursementAfterSales } from "@/components/features/aftersales/AfterSalesDashboardNew"
+import { AfterSalesReimbursement } from "@/components/features/aftersales/aftersales-types"
+import SalesTeamProgressChartCRM from "@/components/shared/charts/sales_progress/crm-sales-progress"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useDebounce } from "@/hooks/use-debounce"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import formatCurrency from "@/lib/formatCurrency"
+import {
+  AdminTeamTasks,
+  CRMCustomer,
+  CRMDashboardData,
+  CRMLoan,
+  CRMTask,
+  CRMTopFollowup,
+  TeamTaskForAdmin,
+} from "@/lib/types"
+import { OfficeContext } from "@/store/context/OfficeContext"
 import {
   Banknote,
   BriefcaseBusiness,
@@ -28,99 +47,94 @@ import {
   PhoneCall,
   Search,
   UserRound,
-  UsersRound
-} from "lucide-react";
-import moment from "moment";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useContext, useEffect, useMemo, useState } from "react";
+  UsersRound,
+} from "lucide-react"
+import moment from "moment"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useContext, useEffect, useMemo, useState } from "react"
 
 export default function CRMDashboard({ userID }: { userID: string | number }) {
-  const [data, setData] = useState<CRMDashboardData>();
-  const [loading, setLoading] = useState(false);
-  const [userTaskData, setUserTaskData] = useState<AdminTeamTasks[]>([]);
+  const [data, setData] = useState<CRMDashboardData>()
+  const [loading, setLoading] = useState(false)
+  const [userTaskData, setUserTaskData] = useState<AdminTeamTasks[]>([])
   const { base_route } = useUserDetail()
-  const debouncedUserId = useDebounce(userID, 1000);
+  const debouncedUserId = useDebounce(userID, 1000)
   const { state: OfficeState } = useContext(OfficeContext)!
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [unassigned, setUnassigned] = useState(false)
   const [topOpen, setTopOpen] = useState(false)
-  const [reimbursementApprovals, setReimbursementApprovals] = useState<AfterSalesReimbursement[]>([])
+  const [reimbursementApprovals, setReimbursementApprovals] = useState<
+    AfterSalesReimbursement[]
+  >([])
   const router = useRouter()
 
   useEffect(() => {
     if (debouncedUserId && OfficeState.value.data) {
-      fetchData();
+      fetchData()
     }
-  }, [debouncedUserId, OfficeState]);
+  }, [debouncedUserId, OfficeState])
 
   function fetchData() {
     setLoading(true)
-    fetchDashboardData();
+    fetchDashboardData()
     fetchReimbursementApprovals()
   }
 
   async function fetchReimbursementApprovals() {
-
-    const start = moment()
-      .startOf("month")
-      .startOf("day")
-      .utc()
-      .toISOString();
-    const end = moment()
-      .endOf("month")
-      .endOf("day")
-      .utc()
-      .toISOString();
+    const start = moment().startOf("month").startOf("day").utc().toISOString()
+    const end = moment().endOf("month").endOf("day").utc().toISOString()
     try {
-      const res = await axios.get(`/${userID}/reimbursementapproval?start_date=${start}&end_date=${end}`);
-      setReimbursementApprovals(res.data);
-
+      const res = await axios.get(
+        `/${userID}/reimbursementapproval?start_date=${start}&end_date=${end}`
+      )
+      setReimbursementApprovals(res.data)
     } finally {
     }
   }
-
 
   async function fetchDashboardData() {
     axios
       .get(`/${debouncedUserId}/dashboard?office=${OfficeState.value.data}`)
       .then((response) => {
-        setData(response.data);
+        setData(response.data)
         if (response.data?.team_task) {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
 
-          const yesterday = new Date(today);
-          yesterday.setDate(today.getDate() - 1);
+          const yesterday = new Date(today)
+          yesterday.setDate(today.getDate() - 1)
 
-          const todayEnd = new Date(today);
-          todayEnd.setHours(23, 59, 59, 999);
+          const todayEnd = new Date(today)
+          todayEnd.setHours(23, 59, 59, 999)
 
-          const splitTasksByDay = response.data.team_task.map((user: { tasks: CRMTask[] }) => {
-            const yesterdayTasks = user.tasks.filter((task) => {
-              const createdAt = new Date(task.created_at);
-              return createdAt >= yesterday && createdAt < today;
-            });
+          const splitTasksByDay = response.data.team_task.map(
+            (user: { tasks: CRMTask[] }) => {
+              const yesterdayTasks = user.tasks.filter((task) => {
+                const createdAt = new Date(task.created_at)
+                return createdAt >= yesterday && createdAt < today
+              })
 
-            const todayTasks = user.tasks.filter((task) => {
-              const createdAt = new Date(task.created_at);
-              return createdAt >= today && createdAt <= todayEnd;
-            });
+              const todayTasks = user.tasks.filter((task) => {
+                const createdAt = new Date(task.created_at)
+                return createdAt >= today && createdAt <= todayEnd
+              })
 
-            return {
-              ...user,
-              yesterdayTasks,
-              todayTasks,
-            };
-          });
+              return {
+                ...user,
+                yesterdayTasks,
+                todayTasks,
+              }
+            }
+          )
 
-          setUserTaskData(splitTasksByDay);
+          setUserTaskData(splitTasksByDay)
         }
       })
       .catch((e) => console.log(e))
       .finally(() => {
-        setLoading(false);
-      });
+        setLoading(false)
+      })
   }
 
   return (
@@ -143,13 +157,13 @@ export default function CRMDashboard({ userID }: { userID: string | number }) {
               label: "Due Delivery Payment",
               value: formatCurrency(data?.total_due_payment ?? 0),
               className: "text-green-700",
-              onClick: () => router.push(`/${base_route}/delivery/due-payments`),
+              onClick: () =>
+                router.push(`/${base_route}/delivery/due-payments`),
             },
             {
               label: "Due Parts Payment",
               value: formatCurrency(data?.pos_stats?.pending ?? 0),
               className: "text-red-600",
-
             },
           ]}
         />
@@ -169,8 +183,9 @@ export default function CRMDashboard({ userID }: { userID: string | number }) {
             },
             {
               label: "With / Without Feedback This Month",
-              value: `${data?.unassigned_customers?.with_feedback?.total ?? 0} / ${data?.unassigned_customers?.without_feedback?.total ?? 0
-                }`,
+              value: `${data?.unassigned_customers?.with_feedback?.total ?? 0} / ${
+                data?.unassigned_customers?.without_feedback?.total ?? 0
+              }`,
               onClick: () => setFeedbackOpen(true),
               className: "text-muted-foreground",
             },
@@ -231,7 +246,9 @@ export default function CRMDashboard({ userID }: { userID: string | number }) {
           <CardHeader className="border-b bg-muted/20 px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <CardTitle className="text-base font-bold">Task status</CardTitle>
+                <CardTitle className="text-base font-bold">
+                  Task status
+                </CardTitle>
                 <CardDescription className="text-xs">
                   Yesterday and today task movement by team member
                 </CardDescription>
@@ -245,13 +262,18 @@ export default function CRMDashboard({ userID }: { userID: string | number }) {
           <CardContent className="p-3">
             <ScrollArea className="h-[420px] pr-2">
               {userTaskData.map((user) => (
-                <div key={user.assigned_user_id} className="mb-3 rounded-md border bg-background p-2.5 last:mb-0">
+                <div
+                  key={user.assigned_user_id}
+                  className="mb-3 rounded-md border bg-background p-2.5 last:mb-0"
+                >
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <h2 className="truncate text-sm font-bold">
                       {user.assigned_user_name}
                     </h2>
                     <span className="rounded-md bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground">
-                      {(user.yesterdayTasks?.length || 0) + (user.todayTasks?.length || 0)} tasks
+                      {(user.yesterdayTasks?.length || 0) +
+                        (user.todayTasks?.length || 0)}{" "}
+                      tasks
                     </span>
                   </div>
 
@@ -266,8 +288,13 @@ export default function CRMDashboard({ userID }: { userID: string | number }) {
         </Card>
       )}
 
-
-      {reimbursementApprovals.length > 0 && <ReimbursementAfterSales userID={userID} data={reimbursementApprovals} onRefresh={fetchReimbursementApprovals} />}
+      {reimbursementApprovals.length > 0 && (
+        <ReimbursementAfterSales
+          userID={userID}
+          data={reimbursementApprovals}
+          onRefresh={fetchReimbursementApprovals}
+        />
+      )}
 
       <FeedbackDialog
         open={feedbackOpen}
@@ -278,35 +305,29 @@ export default function CRMDashboard({ userID }: { userID: string | number }) {
         onClose={() => setFeedbackOpen(false)}
       />
 
-
       <UnassignedDialog
         open={unassigned}
-        data={[
-          ...(data?.total_unassigned?.data ?? []),
-        ]}
+        data={[...(data?.total_unassigned?.data ?? [])]}
         onClose={() => setUnassigned(false)}
       />
 
       <TopDialog
         open={topOpen}
-        data={[
-          ...(data?.top_followup?.data ?? []),
-        ]}
+        data={[...(data?.top_followup?.data ?? [])]}
         onClose={() => setTopOpen(false)}
       />
     </div>
-  );
+  )
 }
-
 
 const TopDialog = ({
   open,
   data = [],
   onClose,
 }: {
-  open: boolean;
-  data: CRMTopFollowup[];
-  onClose: () => void;
+  open: boolean
+  data: CRMTopFollowup[]
+  onClose: () => void
 }) => {
   const { base_route } = useUserDetail()
   return (
@@ -326,7 +347,11 @@ const TopDialog = ({
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <Link target="_blank" href={`/${base_route}/${item?.customer_member ? "member" : "customer"}/${item.customer_id}`} className="hover:underline">
+                      <Link
+                        target="_blank"
+                        href={`/${base_route}/${item?.customer_member ? "member" : "customer"}/${item.customer_id}`}
+                        className="hover:underline"
+                      >
                         <p className="font-semibold">
                           {item.customer_name || "No customer name"}
                         </p>
@@ -337,8 +362,6 @@ const TopDialog = ({
                         <span>{item.customer_owner || "No owner"}</span>
                       </div>
                     </div>
-
-
                   </div>
 
                   <div className="mt-3 rounded-md bg-muted/40 p-3">
@@ -385,7 +408,7 @@ const TopDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 const UnassignedDialog = ({
@@ -393,9 +416,9 @@ const UnassignedDialog = ({
   data = [],
   onClose,
 }: {
-  open: boolean;
-  data: CRMCustomer[];
-  onClose: () => void;
+  open: boolean
+  data: CRMCustomer[]
+  onClose: () => void
 }) => {
   const { base_route } = useUserDetail()
   return (
@@ -415,7 +438,11 @@ const UnassignedDialog = ({
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <Link target="_blank" href={`/${base_route}/${item?.member ? "member" : "customer"}/${item.id}`} className="hover:underline">
+                      <Link
+                        target="_blank"
+                        href={`/${base_route}/${item?.member ? "member" : "customer"}/${item.id}`}
+                        className="hover:underline"
+                      >
                         <p className="font-semibold">
                           {item.name || "No customer name"}
                         </p>
@@ -426,13 +453,7 @@ const UnassignedDialog = ({
                         <span>{item.owner || "No owner"}</span>
                       </div>
                     </div>
-
-
                   </div>
-
-
-
-
                 </div>
               ))
             ) : (
@@ -444,26 +465,25 @@ const UnassignedDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
-
 
 const FeedbackDialog = ({
   open,
   data = [],
   onClose,
 }: {
-  open: boolean;
-  data: CRMCustomer[];
-  onClose: () => void;
+  open: boolean
+  data: CRMCustomer[]
+  onClose: () => void
 }) => {
   const withFeedback = data.filter(
     (item: any) => item.has_feedback_this_month === true
-  );
+  )
 
   const withoutFeedback = data.filter(
     (item: any) => item.has_feedback_this_month === false
-  );
+  )
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -487,27 +507,27 @@ const FeedbackDialog = ({
         </div>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
 const CustomerList = ({
   title,
   count,
   data,
 }: {
-  title: string;
-  count: number;
-  data: CRMCustomer[];
+  title: string
+  count: number
+  data: CRMCustomer[]
 }) => {
   const { base_route } = useUserDetail()
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const pageSize = 10;
+  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState("")
+  const pageSize = 10
   const filteredCustomers = useMemo(() => {
-    const term = search.trim().toLowerCase();
+    const term = search.trim().toLowerCase()
 
     if (!term) {
-      return data;
+      return data
     }
 
     return data.filter((customer: any) => {
@@ -525,33 +545,34 @@ const CustomerList = ({
         customer.numbers,
         customer.customer_phone,
         customer.customer_number,
-      ];
+      ]
 
       return searchableValues
         .flatMap((value) => (Array.isArray(value) ? value : [value]))
         .filter((value) => value !== undefined && value !== null)
         .join(" ")
         .toLowerCase()
-        .includes(term);
-    });
-  }, [data, search]);
-  const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / pageSize));
-  const startItem = filteredCustomers.length === 0 ? 0 : (page - 1) * pageSize + 1;
-  const endItem = Math.min(page * pageSize, filteredCustomers.length);
+        .includes(term)
+    })
+  }, [data, search])
+  const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / pageSize))
+  const startItem =
+    filteredCustomers.length === 0 ? 0 : (page - 1) * pageSize + 1
+  const endItem = Math.min(page * pageSize, filteredCustomers.length)
   const visibleCustomers = useMemo(
     () => filteredCustomers.slice((page - 1) * pageSize, page * pageSize),
     [filteredCustomers, page]
-  );
+  )
 
   useEffect(() => {
-    setPage(1);
-  }, [data, search]);
+    setPage(1)
+  }, [data, search])
 
   useEffect(() => {
     if (page > totalPages) {
-      setPage(totalPages);
+      setPage(totalPages)
     }
-  }, [page, totalPages]);
+  }, [page, totalPages])
 
   return (
     <div className="rounded-lg border">
@@ -587,7 +608,9 @@ const CustomerList = ({
               variant="outline"
               size="icon-sm"
               disabled={page >= totalPages}
-              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              onClick={() =>
+                setPage((current) => Math.min(totalPages, current + 1))
+              }
               aria-label={`Next ${title} page`}
             >
               <ChevronRight className="h-4 w-4" />
@@ -598,7 +621,7 @@ const CustomerList = ({
 
       <div className="border-b p-3">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -618,8 +641,11 @@ const CustomerList = ({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <Link href={`/${base_route}/${customer.member ? "member" : "customer"}/${customer.id}`} className="hover:underline" target="_blank">
-
+                    <Link
+                      href={`/${base_route}/${customer.member ? "member" : "customer"}/${customer.id}`}
+                      className="hover:underline"
+                      target="_blank"
+                    >
                       <p className="font-semibold">
                         {customer.name || "No customer name"}
                       </p>
@@ -630,7 +656,11 @@ const CustomerList = ({
                     </div>
                   </div>
 
-                  <Link href={`/${base_route}/${customer.member ? "member" : "customer"}/${customer.id}`} className="hover:underline" target="_blank">
+                  <Link
+                    href={`/${base_route}/${customer.member ? "member" : "customer"}/${customer.id}`}
+                    className="hover:underline"
+                    target="_blank"
+                  >
                     <span className="text-xs text-muted-foreground">
                       #{customer.id}
                     </span>
@@ -639,7 +669,7 @@ const CustomerList = ({
 
                 <div className="mt-3 space-y-1">
                   {Array.isArray(customer.number) &&
-                    customer.number.length > 0 ? (
+                  customer.number.length > 0 ? (
                     customer.number.map((num: string) => (
                       <a
                         key={num}
@@ -666,19 +696,23 @@ const CustomerList = ({
         </div>
       </ScrollArea>
     </div>
-  );
-};
+  )
+}
 
 const renderTaskCard = (tasks: TeamTaskForAdmin[], label: string) => {
-  const completedCount = tasks.filter((task) => task.status === "Completed").length;
-  const pendingCount = tasks.length - completedCount;
+  const completedCount = tasks.filter(
+    (task) => task.status === "Completed"
+  ).length
+  const pendingCount = tasks.length - completedCount
 
   return (
     <Card className="w-full overflow-hidden rounded-md border-border/70 bg-card shadow-none">
       <CardHeader className="border-b bg-muted/25 px-3 py-2">
         <div className="flex items-center justify-between gap-2">
           <div>
-            <p className="text-sm font-semibold leading-none text-foreground">{label}</p>
+            <p className="text-sm leading-none font-semibold text-foreground">
+              {label}
+            </p>
             <p className="mt-1 text-[11px] text-muted-foreground">
               {tasks.length} total tasks
             </p>
@@ -706,22 +740,24 @@ const renderTaskCard = (tasks: TeamTaskForAdmin[], label: string) => {
         ) : (
           <div className="space-y-1.5">
             {tasks.map((task) => {
-              const completed = task.status === "Completed";
+              const completed = task.status === "Completed"
 
               return (
                 <div
                   key={task.id}
-                  className={`group rounded-md border px-2.5 py-2 text-xs transition hover:bg-muted/30 ${completed
-                    ? "border-emerald-200 bg-emerald-50/60 dark:border-emerald-900/60 dark:bg-emerald-950/20"
-                    : "border-rose-200 bg-rose-50/60 dark:border-rose-900/60 dark:bg-rose-950/20"
-                    }`}
+                  className={`group rounded-md border px-2.5 py-2 text-xs transition hover:bg-muted/30 ${
+                    completed
+                      ? "border-emerald-200 bg-emerald-50/60 dark:border-emerald-900/60 dark:bg-emerald-950/20"
+                      : "border-rose-200 bg-rose-50/60 dark:border-rose-900/60 dark:bg-rose-950/20"
+                  }`}
                 >
                   <div className="flex items-start gap-2">
                     <div
-                      className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md border bg-background ${completed
-                        ? "border-emerald-200 text-emerald-700"
-                        : "border-rose-200 text-rose-600"
-                        }`}
+                      className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md border bg-background ${
+                        completed
+                          ? "border-emerald-200 text-emerald-700"
+                          : "border-rose-200 text-rose-600"
+                      }`}
                     >
                       {completed ? (
                         <CheckCircle2 className="h-3.5 w-3.5" />
@@ -732,14 +768,15 @@ const renderTaskCard = (tasks: TeamTaskForAdmin[], label: string) => {
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="line-clamp-1 font-semibold leading-snug text-foreground">
+                        <p className="line-clamp-1 leading-snug font-semibold text-foreground">
                           {task.title || `Task #${task.id}`}
                         </p>
                         <span
-                          className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${completed
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-rose-100 text-rose-700"
-                            }`}
+                          className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${
+                            completed
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-rose-100 text-rose-700"
+                          }`}
                         >
                           {task.status || "Pending"}
                         </span>
@@ -752,14 +789,14 @@ const renderTaskCard = (tasks: TeamTaskForAdmin[], label: string) => {
                     </div>
                   </div>
                 </div>
-              );
+              )
             })}
           </div>
         )}
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
 function DashboardInfoCard({
   title,
@@ -769,20 +806,22 @@ function DashboardInfoCard({
   items,
   loading,
 }: {
-  title: string;
-  icon: React.ElementType;
-  iconClassName: string;
-  bottomClassName: string;
+  title: string
+  icon: React.ElementType
+  iconClassName: string
+  bottomClassName: string
   items: {
-    label: string;
-    value: string | number;
-    className?: string;
-    onClick?: () => void;
-  }[];
-  loading: boolean;
+    label: string
+    value: string | number
+    className?: string
+    onClick?: () => void
+  }[]
+  loading: boolean
 }) {
   return (
-    <Card className={`overflow-hidden shadow-sm border-b-2 ${bottomClassName} p-0`}>
+    <Card
+      className={`overflow-hidden border-b-2 shadow-sm ${bottomClassName} p-0`}
+    >
       <CardContent className="p-4">
         <div className="mb-3 flex items-center gap-3">
           <div className={`rounded-lg p-2 ${iconClassName}`}>
@@ -795,16 +834,14 @@ function DashboardInfoCard({
         <div className="space-y-3">
           {items.map((item: any) => (
             <div key={item.label}>
-              <p className="text-xs text-muted-foreground">
-                {item.label}
-              </p>
+              <p className="text-xs text-muted-foreground">{item.label}</p>
 
               {loading ? (
                 <Skeleton className="mt-1 h-5 w-20" />
               ) : item.onClick ? (
                 <button
                   onClick={item.onClick}
-                  className={`text-xl font-bold transition hover:opacity-70 cursor-pointer ${item.className}`}
+                  className={`cursor-pointer text-xl font-bold transition hover:opacity-70 ${item.className}`}
                 >
                   {item.value}
                 </button>
@@ -818,16 +855,16 @@ function DashboardInfoCard({
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 function LoansCard({ loans }: { loans: CRMLoan[] }) {
-  const [activeTab, setActiveTab] = useState<"active" | "closed">("active");
+  const [activeTab, setActiveTab] = useState<"active" | "closed">("active")
 
-  const activeLoans = loans.filter((loan) => loan.status === "active");
-  const closedLoans = loans.filter((loan) => loan.status === "closed");
+  const activeLoans = loans.filter((loan) => loan.status === "active")
+  const closedLoans = loans.filter((loan) => loan.status === "closed")
 
-  const filteredLoans = activeTab === "active" ? activeLoans : closedLoans;
+  const filteredLoans = activeTab === "active" ? activeLoans : closedLoans
   const { base_route } = useUserDetail()
   return (
     <Card className="shadow-sm">
@@ -898,7 +935,7 @@ function LoansCard({ loans }: { loans: CRMLoan[] }) {
         </Link>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 function LoanStatus({ title, value }: { title: string; value: number }) {
@@ -907,7 +944,7 @@ function LoanStatus({ title, value }: { title: string; value: number }) {
       <p className="text-xs text-muted-foreground">{title}</p>
       <p className="mt-1 text-xl font-bold">{value}</p>
     </div>
-  );
+  )
 }
 
 function getInitials(name = "") {
@@ -917,5 +954,5 @@ function getInitials(name = "") {
     .slice(0, 2)
     .map((item) => item[0])
     .join("")
-    .toUpperCase();
+    .toUpperCase()
 }

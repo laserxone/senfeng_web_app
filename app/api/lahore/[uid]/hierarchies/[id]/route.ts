@@ -1,13 +1,12 @@
-
-import pool from "@/config/db";
-import { NextRequest, NextResponse } from "next/server";
+import pool from "@/config/db"
+import { NextRequest, NextResponse } from "next/server"
 
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { id } = await params
 
     await pool.query(
       `
@@ -17,16 +16,16 @@ export async function DELETE(
       WHERE id = $1
       `,
       [parseInt(id)]
-    );
+    )
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error deleting hierarchy:", error);
+    console.error("Error deleting hierarchy:", error)
 
     return NextResponse.json(
       { error: "Failed to delete hierarchy" },
       { status: 500 }
-    );
+    )
   }
 }
 
@@ -34,16 +33,16 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const client = await pool.connect();
+  const client = await pool.connect()
 
   try {
-    await client.query("BEGIN");
+    await client.query("BEGIN")
 
-    const { id } = await params;
+    const { id } = await params
 
-    const body = await request.json();
+    const body = await request.json()
 
-    const { name, description, approvers } = body;
+    const { name, description, approvers } = body
 
     // Update hierarchy
     await client.query(
@@ -55,7 +54,7 @@ export async function PUT(
       WHERE id = $3
       `,
       [name, description || null, parseInt(id)]
-    );
+    )
 
     // Remove old approvers
     await client.query(
@@ -64,7 +63,7 @@ export async function PUT(
       WHERE hierarchy_id = $1
       `,
       [parseInt(id)]
-    );
+    )
 
     // Insert updated approvers
     for (let i = 0; i < approvers.length; i++) {
@@ -75,7 +74,7 @@ export async function PUT(
         VALUES ($1, $2, $3)
         `,
         [parseInt(id), approvers[i], i + 1]
-      );
+      )
     }
 
     // Fetch updated hierarchy
@@ -102,23 +101,21 @@ export async function PUT(
       GROUP BY ah.id
       `,
       [parseInt(id)]
-    );
+    )
 
-    await client.query("COMMIT");
+    await client.query("COMMIT")
 
-    return NextResponse.json(
-      updatedHierarchyResult.rows[0]
-    );
+    return NextResponse.json(updatedHierarchyResult.rows[0])
   } catch (error) {
-    await client.query("ROLLBACK");
+    await client.query("ROLLBACK")
 
-    console.error("Error updating hierarchy:", error);
+    console.error("Error updating hierarchy:", error)
 
     return NextResponse.json(
       { error: "Failed to update hierarchy" },
       { status: 500 }
-    );
+    )
   } finally {
-    client.release();
+    client.release()
   }
 }

@@ -1,7 +1,5 @@
-import DocumentManagement from "@/components/page-compositions/general/document-management";
+import DocumentManagement from "@/components/page-compositions/general/document-management"
 
-
-export default function Page () {
-
-    return <DocumentManagement />
+export default function Page() {
+  return <DocumentManagement />
 }

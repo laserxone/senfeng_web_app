@@ -1,29 +1,29 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { ArrowUpDown, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import PageTable from "@/components/shared/tables/app-table";
-import Heading from "@/components/ui/heading";
-import { Label } from "@/components/ui/label";
-import Spinner from "@/components/ui/spinner";
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Input } from "@/components/ui/input"
+import useUserDetail from "@/hooks/use-user-detail"
+import axios from "@/lib/axios"
+import { ArrowUpDown, Trash2 } from "lucide-react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import PageTable from "@/components/shared/tables/app-table"
+import Heading from "@/components/ui/heading"
+import { Label } from "@/components/ui/label"
+import Spinner from "@/components/ui/spinner"
 
-import { storage } from "@/config/firebase";
-import { DeleteFromStorage } from "@/lib/deleteFunction";
-import { PricesProps } from "@/lib/types";
-import { ColumnDef } from "@tanstack/react-table";
-import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import { storage } from "@/config/firebase"
+import { DeleteFromStorage } from "@/lib/deleteFunction"
+import { PricesProps } from "@/lib/types"
+import { ColumnDef } from "@tanstack/react-table"
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage"
 import {
   Download,
   MoreHorizontal,
@@ -31,9 +31,9 @@ import {
   Pencil,
   RefreshCcw,
   Upload,
-} from "lucide-react";
-import { toast } from "sonner";
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
+} from "lucide-react"
+import { toast } from "sonner"
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
 
 import {
   DropdownMenu,
@@ -41,7 +41,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
 
 const emptyForm = {
   model: "",
@@ -51,71 +51,75 @@ const emptyForm = {
   fob_bottom: "",
   ddp_bottom: "",
   description: "",
-};
+}
 
 export default function PricesComponent() {
-  const [loading, setLoading] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [loading, setLoading] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
-  const [data, setData] = useState<PricesProps[]>([]);
+  const [data, setData] = useState<PricesProps[]>([])
   const [deleteLoading, setDeleteLoading] = useState(false)
 
+  const [selectedForDelete, setSelectedForDelete] = useState<
+    | (typeof emptyForm & { id?: number | null; attachment?: string | null })
+    | null
+  >(null)
+  const [formData, setFormData] = useState<
+    typeof emptyForm & { id?: number | null }
+  >(emptyForm)
+  const [isEdit, setIsEdit] = useState(false)
+  const [openDialog, setOpenDialog] = useState(false)
 
-  const [selectedForDelete, setSelectedForDelete] = useState<typeof emptyForm & { id?: number | null, attachment?: string | null } | null>(null)
-  const [formData, setFormData] = useState<typeof emptyForm & { id?: number | null }>(emptyForm);
-  const [isEdit, setIsEdit] = useState(false);
-  const [openDialog, setOpenDialog] = useState(false);
-
-  const { userID, isAdmin } = useUserDetail();
+  const { userID, isAdmin } = useUserDetail()
 
   useEffect(() => {
     if (userID) {
-      fetchData();
+      fetchData()
     }
-  }, [userID]);
+  }, [userID])
 
   async function fetchData() {
     axios.get(`/${userID}/prices`).then((response) => {
-      setData(response.data);
-    });
+      setData(response.data)
+    })
   }
 
   const handleEditClick = (row: PricesProps) => {
-    setFormData(row);
-    setIsEdit(true);
-    setOpenDialog(true);
-  };
+    setFormData(row)
+    setIsEdit(true)
+    setOpenDialog(true)
+  }
 
   const handleAddClick = () => {
-    setFormData(emptyForm);
-    setIsEdit(false);
-    setOpenDialog(true);
-  };
+    setFormData(emptyForm)
+    setIsEdit(false)
+    setOpenDialog(true)
+  }
 
   const handleSave = () => {
-    setLoading(true);
+    setLoading(true)
     if (isEdit) {
       axios
         .put(`/${userID}/prices/${formData.id}`, formData)
         .then(async () => {
-          await fetchData();
+          await fetchData()
         })
         .finally(() => {
-          setLoading(false);
-          setOpenDialog(false);
-        });
+          setLoading(false)
+          setOpenDialog(false)
+        })
     } else {
       axios
         .post(`/${userID}/prices`, formData)
         .then(async () => {
-          await fetchData();
+          await fetchData()
         })
         .finally(() => {
-          setLoading(false);
-          setOpenDialog(false);
-        });
+          setLoading(false)
+          setOpenDialog(false)
+        })
     }
-  };
+  }
 
   const columns = useMemo(() => {
     const baseColumns: ColumnDef<PricesProps>[] = [
@@ -163,90 +167,89 @@ export default function PricesComponent() {
         ),
         cell: ({ row }) => <div>{row.getValue("ddp")}</div>,
       },
-    ];
+    ]
 
     const advancedColumns: ColumnDef<PricesProps>[] = showAdvanced
       ? [
-        {
-          accessorKey: "fob",
-          header: "FOB",
-          cell: ({ row }) => <div>{row.getValue("fob")}</div>,
-        },
-        {
-          accessorKey: "fob_bottom",
-          header: "FOB Bottom",
-          cell: ({ row }) => <div>{row.getValue("fob_bottom")}</div>,
-        },
-        {
-          accessorKey: "ddp_bottom",
-          header: "DDP Bottom",
-          cell: ({ row }) => <div>{row.getValue("ddp_bottom")}</div>,
-        },
-        {
-          accessorKey: "description",
-          header: "Description",
-          cell: ({ row }) => <div>{row.getValue("description")}</div>,
-        },
-      ]
-      : [];
+          {
+            accessorKey: "fob",
+            header: "FOB",
+            cell: ({ row }) => <div>{row.getValue("fob")}</div>,
+          },
+          {
+            accessorKey: "fob_bottom",
+            header: "FOB Bottom",
+            cell: ({ row }) => <div>{row.getValue("fob_bottom")}</div>,
+          },
+          {
+            accessorKey: "ddp_bottom",
+            header: "DDP Bottom",
+            cell: ({ row }) => <div>{row.getValue("ddp_bottom")}</div>,
+          },
+          {
+            accessorKey: "description",
+            header: "Description",
+            cell: ({ row }) => <div>{row.getValue("description")}</div>,
+          },
+        ]
+      : []
 
     const adminColumn: ColumnDef<PricesProps>[] = isAdmin
       ? [
-        {
-          id: "actions",
-          header: "Actions",
-          cell: ({ row }) => (
-            <div className="flex items-center justify-end gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleEditClick(row.original)}
-                className="h-8 gap-1.5"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-                Edit
-              </Button>
+          {
+            id: "actions",
+            header: "Actions",
+            cell: ({ row }) => (
+              <div className="flex items-center justify-end gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleEditClick(row.original)}
+                  className="h-8 gap-1.5"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Edit
+                </Button>
 
-              <Attachment
-                attachment_url={row.original?.attachment_url}
-                attachment={row.original?.attachment}
-                onRefresh={async () => {
-                  await fetchData();
-                }}
-                id={row.original?.id}
-              />
-            </div>
-          ),
-        },
-      ]
-      : [];
+                <Attachment
+                  attachment_url={row.original?.attachment_url}
+                  attachment={row.original?.attachment}
+                  onRefresh={async () => {
+                    await fetchData()
+                  }}
+                  id={row.original?.id}
+                />
+              </div>
+            ),
+          },
+        ]
+      : []
 
     const otherColumn: ColumnDef<PricesProps>[] = !isAdmin
       ? [
-        {
-          id: "actions",
-          header: "Actions",
-          cell: ({ row }) => (
-            <div className="flex gap-2">
-              <Attachment
-                attachment_url={row.original?.attachment_url}
-                attachment={row.original?.attachment}
-                onRefresh={async () => {
-                  await fetchData();
-                }}
-                id={row.original?.id}
-              />
-            </div>
-          ),
-        },
-      ]
-      : [];
+          {
+            id: "actions",
+            header: "Actions",
+            cell: ({ row }) => (
+              <div className="flex gap-2">
+                <Attachment
+                  attachment_url={row.original?.attachment_url}
+                  attachment={row.original?.attachment}
+                  onRefresh={async () => {
+                    await fetchData()
+                  }}
+                  id={row.original?.id}
+                />
+              </div>
+            ),
+          },
+        ]
+      : []
 
-    return [...baseColumns, ...advancedColumns, ...adminColumn, ...otherColumn];
-  }, [userID, isAdmin, showAdvanced]);
+    return [...baseColumns, ...advancedColumns, ...adminColumn, ...otherColumn]
+  }, [userID, isAdmin, showAdvanced])
 
   async function handleDelete() {
-
     if (!selectedForDelete) return
     setDeleteLoading(true)
     try {
@@ -256,9 +259,9 @@ export default function PricesComponent() {
       await axios.delete(`/${userID}/prices/${selectedForDelete?.id}`)
       toast.success("Entry deleted successfully")
       setSelectedForDelete(null)
-      setFormData(emptyForm);
-      setIsEdit(false);
-      setOpenDialog(false);
+      setFormData(emptyForm)
+      setIsEdit(false)
+      setOpenDialog(false)
       await fetchData()
     } finally {
       setDeleteLoading(false)
@@ -328,15 +331,15 @@ export default function PricesComponent() {
                 </tbody>
             </table> */}
 
-      <div className="flex flex-1 min-h-[600px]">
+      <div className="flex min-h-[600px] flex-1">
         <PageTable
           loading={loading}
           columns={columns}
           data={data}
-        // onRowClick={(val) => {
-        //     setImageURL(val);
-        //     setVisible(true);
-        // }}
+          // onRowClick={(val) => {
+          //     setImageURL(val);
+          //     setVisible(true);
+          // }}
         >
           <div className="flex space-x-2">
             <Button
@@ -353,37 +356,46 @@ export default function PricesComponent() {
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
           <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
-            <DialogTitle className="text-sm font-semibold text-foreground">{isEdit ? "Edit Entry" : "Add New Entry"}</DialogTitle>
+            <DialogTitle className="text-sm font-semibold text-foreground">
+              {isEdit ? "Edit Entry" : "Add New Entry"}
+            </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="space-y-3 p-3.5 pb-4">
-          <div className="grid gap-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wide [&_label]:text-muted-foreground">
-            {Object.keys(emptyForm).map((field, i) => (
-              <div key={i}>
-                <Label className="uppercase">
-                  {field.replaceAll("_", " ")}
-                </Label>
-                <Input
-                  placeholder={"Enter " + field.replaceAll("_", " ")}
-                  value={formData[field as keyof typeof formData] || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, [field]: e.target.value })
-                  }
-                />
+          <ScrollArea className="max-h-[calc(100dvh-132px)]">
+            <div className="space-y-3 p-3.5 pb-4">
+              <div className="grid gap-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase">
+                {Object.keys(emptyForm).map((field, i) => (
+                  <div key={i}>
+                    <Label className="uppercase">
+                      {field.replaceAll("_", " ")}
+                    </Label>
+                    <Input
+                      placeholder={"Enter " + field.replaceAll("_", " ")}
+                      value={formData[field as keyof typeof formData] || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, [field]: e.target.value })
+                      }
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          <div>
-            <div className="flex flex-col w-full gap-2">
-              <Button disabled={loading} onClick={handleSave}>
-                {loading && <Spinner />}Save
-              </Button>
-              {formData?.id &&
-                <Button variant={"destructive"} onClick={() => setSelectedForDelete(formData)}>Delete</Button>}
+              <div>
+                <div className="flex w-full flex-col gap-2">
+                  <Button disabled={loading} onClick={handleSave}>
+                    {loading && <Spinner />}Save
+                  </Button>
+                  {formData?.id && (
+                    <Button
+                      variant={"destructive"}
+                      onClick={() => setSelectedForDelete(formData)}
+                    >
+                      Delete
+                    </Button>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-          </div></ScrollArea>
-
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
@@ -396,78 +408,88 @@ export default function PricesComponent() {
         onPressCancel={() => setSelectedForDelete(null)}
       />
     </div>
-  );
+  )
 }
 
-const Attachment = ({ attachment, onRefresh, id, attachment_url }: { attachment?: string | null, onRefresh: () => Promise<void>, id: number, attachment_url?: string | null }) => {
-  const [open, setOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const { userID, isAdmin } = useUserDetail();
-  const [uploadLoading, setUploadLoading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+const Attachment = ({
+  attachment,
+  onRefresh,
+  id,
+  attachment_url,
+}: {
+  attachment?: string | null
+  onRefresh: () => Promise<void>
+  id: number
+  attachment_url?: string | null
+}) => {
+  const [open, setOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const { userID, isAdmin } = useUserDetail()
+  const [uploadLoading, setUploadLoading] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   const uploadFile = async () => {
     if (!selectedFile) {
       toast.info("Please select at least one file to upload.")
-      return;
+      return
     }
 
-    setUploadLoading(true);
-    await handleUpload();
-  };
+    setUploadLoading(true)
+    await handleUpload()
+  }
 
   async function handleUpload() {
     try {
-      if (!selectedFile) return;
+      if (!selectedFile) return
 
       if (attachment) {
-        await DeleteFromStorage(attachment);
+        await DeleteFromStorage(attachment)
       }
 
-      const filePath = `attachments/${Date.now()}_${selectedFile.name}`;
-      const storageRef = ref(storage, filePath);
-      const snapshot = await uploadBytesResumable(storageRef, selectedFile);
-      const downloadURL = await getDownloadURL(snapshot.ref);
+      const filePath = `attachments/${Date.now()}_${selectedFile.name}`
+      const storageRef = ref(storage, filePath)
+      const snapshot = await uploadBytesResumable(storageRef, selectedFile)
+      const downloadURL = await getDownloadURL(snapshot.ref)
 
       await axios.put(`/${userID}/prices/${id}`, {
         attachment: filePath,
         attachment_url: downloadURL,
-      });
+      })
 
-      setSelectedFile(null);
+      setSelectedFile(null)
       if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+        fileInputRef.current.value = ""
       }
 
-      await onRefresh();
+      await onRefresh()
       toast.success("File uploaded successfully")
-      setOpen(false);
+      setOpen(false)
     } catch (error: any) {
       toast.error(error?.message || "Upload failed")
-      console.error("Upload error:", error);
+      console.error("Upload error:", error)
     } finally {
-      setUploadLoading(false);
+      setUploadLoading(false)
     }
   }
 
   async function handleDownload() {
-    window.open(attachment_url || "", "_blank");
+    window.open(attachment_url || "", "_blank")
   }
 
   async function handleDelete() {
     try {
-      if (!attachment) return;
-      setDeleteLoading(true);
-      await DeleteFromStorage(attachment);
+      if (!attachment) return
+      setDeleteLoading(true)
+      await DeleteFromStorage(attachment)
       await axios.put(`/${userID}/prices/${id}`, {
         attachment: "",
         attachment_url: "",
-      });
-      await onRefresh();
+      })
+      await onRefresh()
     } finally {
-      setDeleteLoading(false);
+      setDeleteLoading(false)
       setDeleteOpen(false)
     }
   }
@@ -493,7 +515,10 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }: { attachment?
 
               {isAdmin && (
                 <>
-                  <DropdownMenuItem onClick={() => setOpen(true)} className="gap-2">
+                  <DropdownMenuItem
+                    onClick={() => setOpen(true)}
+                    className="gap-2"
+                  >
                     <RefreshCcw className="h-4 w-4" />
                     Reupload
                   </DropdownMenuItem>
@@ -527,37 +552,40 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }: { attachment?
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
           <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
-            <DialogTitle className="text-sm font-semibold text-foreground">Attach File</DialogTitle>
+            <DialogTitle className="text-sm font-semibold text-foreground">
+              Attach File
+            </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="max-h-[calc(100dvh-132px)]"><div className="space-y-3 p-3.5 pb-4">
-            <div className="rounded-lg border border-dashed p-4">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={(e) => {
-                  if (e.target.files?.length && e.target.files.length > 0) {
-                    setSelectedFile(e.target.files[0]);
-                  }
-                }}
-                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-              />
+          <ScrollArea className="max-h-[calc(100dvh-132px)]">
+            <div className="space-y-3 p-3.5 pb-4">
+              <div className="rounded-lg border border-dashed p-4">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={(e) => {
+                    if (e.target.files?.length && e.target.files.length > 0) {
+                      setSelectedFile(e.target.files[0])
+                    }
+                  }}
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                />
 
-              {selectedFile && (
-                <p className="mt-2 truncate text-xs text-muted-foreground">
-                  Selected: {selectedFile.name}
-                </p>
-              )}
+                {selectedFile && (
+                  <p className="mt-2 truncate text-xs text-muted-foreground">
+                    Selected: {selectedFile.name}
+                  </p>
+                )}
+              </div>
+
+              <Button
+                disabled={uploadLoading || !selectedFile}
+                onClick={uploadFile}
+                className="w-full gap-2"
+              >
+                {uploadLoading ? <Spinner /> : <Upload className="h-4 w-4" />}
+                Upload File
+              </Button>
             </div>
-
-            <Button
-              disabled={uploadLoading || !selectedFile}
-              onClick={uploadFile}
-              className="w-full gap-2"
-            >
-              {uploadLoading ? <Spinner /> : <Upload className="h-4 w-4" />}
-              Upload File
-            </Button>
-          </div>
           </ScrollArea>
         </DialogContent>
       </Dialog>
@@ -571,5 +599,5 @@ const Attachment = ({ attachment, onRefresh, id, attachment_url }: { attachment?
         onPressCancel={() => setDeleteOpen(false)}
       />
     </>
-  );
-};
+  )
+}
